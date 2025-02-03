@@ -57,7 +57,8 @@ class MainActivity : ComponentActivity() {
                                 onAllAppsClick = homeController::onAllAppsClick,
                                 onFavoritesClick = homeController::onFavoritesClick,
                                 onSearchQueryChanged = homeController::onSearchQueryChanged,
-                                onShowProfileClick = homeController::onShowProfileClick
+                                onShowProfileClick = homeController::onShowProfileClick,
+                                onToggleFavorite = homeController::onToggleFavorite
                             )
                         }
                     }

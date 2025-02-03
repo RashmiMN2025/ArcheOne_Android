@@ -11,10 +11,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -26,16 +31,33 @@ import androidx.compose.ui.unit.sp
 import com.example.xone.model.HomeModel
 import com.example.xone.model.HomeItem
 import com.example.xone.ui.theme.*
+import androidx.compose.foundation.clickable
+import androidx.compose.animation.animateContentSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun ProfileHeader(
     model: HomeModel,
     onShowProfileClick: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFDD3825))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFDD3825),
+                        Color(0xFFB82D1C)
+                    )
+                )
+            )
             .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 28.dp)
     ) {
         Row(
@@ -99,7 +121,8 @@ fun HomeScreen(
     onAllAppsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
-    onShowProfileClick: () -> Unit = {},
+    onShowProfileClick: () -> Unit,
+    onToggleFavorite: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -115,38 +138,42 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Search Bar
-        OutlinedTextField(
-            value = model.searchQuery,
-            onValueChange = onSearchQueryChanged,
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
-            placeholder = { 
-                Text(
-                    "Search apps",
-                    color = TextSecondary
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null,
-                    tint = TextSecondary
-                )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = DividerColor,
-                focusedBorderColor = PrimaryBlue,
-                unfocusedContainerColor = SearchBarBackground,
-                focusedContainerColor = SearchBarBackground,
-                cursorColor = PrimaryBlue,
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary
-            ),
-            shape = RoundedCornerShape(8.dp),
-            singleLine = true
-        )
+            shape = RoundedCornerShape(12.dp),
+            shadowElevation = 4.dp,
+            color = SearchBarBackground
+        ) {
+            OutlinedTextField(
+                value = model.searchQuery,
+                onValueChange = onSearchQueryChanged,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                placeholder = { 
+                    Text(
+                        "Search apps",
+                        color = TextSecondary
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = TextSecondary
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent,
+                    cursorColor = PrimaryBlue
+                ),
+                singleLine = true
+            )
+        }
 
         // Toggle Buttons
         if (model.searchQuery.isEmpty()) {
@@ -230,7 +257,9 @@ fun HomeScreen(
                                 rowItems.forEach { item ->
                                     AppItem(
                                         title = item.title,
+                                        isFavorite = item.isFavorite,
                                         onClick = { onItemClick(item.title) },
+                                        onFavoriteClick = { onToggleFavorite(item.title) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -250,14 +279,11 @@ fun HomeScreen(
                 ) {
                     model.categories.forEach { (category, items) ->
                         item {
-                            Text(
-                                text = category,
+                            CategoryHeader(
+                                title = category,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                color = PrimaryBlue,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                         }
@@ -271,7 +297,9 @@ fun HomeScreen(
                                 rowItems.forEach { item ->
                                     AppItem(
                                         title = item.title,
+                                        isFavorite = item.isFavorite,
                                         onClick = { onItemClick(item.title) },
+                                        onFavoriteClick = { onToggleFavorite(item.title) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -297,7 +325,9 @@ fun HomeScreen(
                             rowItems.forEach { item ->
                                 AppItem(
                                     title = item.title,
+                                    isFavorite = item.isFavorite,
                                     onClick = { onItemClick(item.title) },
+                                    onFavoriteClick = { onToggleFavorite(item.title) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -322,7 +352,9 @@ fun HomeScreen(
                             rowItems.forEach { item ->
                                 AppItem(
                                     title = item.title,
+                                    isFavorite = item.isFavorite,
                                     onClick = { onItemClick(item.title) },
+                                    onFavoriteClick = { onToggleFavorite(item.title) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -341,31 +373,105 @@ fun HomeScreen(
 @Composable
 private fun AppItem(
     title: String,
+    isFavorite: Boolean,
     onClick: () -> Unit,
+    onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var isPressed by remember { mutableStateOf(false) }
+    
     Card(
-        onClick = onClick,
+        onClick = {
+            isPressed = true
+            onClick()
+        },
         modifier = modifier
-            .aspectRatio(1f),
+            .aspectRatio(1f)
+            .graphicsLayer {
+                scaleX = if (isPressed) 0.95f else 1f
+                scaleY = if (isPressed) 0.95f else 1f
+            }
+            .animateContentSize(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = CardBackground
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = getColorForApp(title).copy(alpha = 0.1f)
+            // App content in center
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
+                AppIcon(title = title, modifier = Modifier.size(40.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = title,
+                    color = TextPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Replace heart icon with plus/check icon in a circle
+            Surface(
+                shape = CircleShape,
+                color = if (isFavorite) Color(0xFFDD3825).copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+                    .size(19.dp)
+                    .clickable(onClick = onFavoriteClick)
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Check else Icons.Filled.Add,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) Color(0xFFDD3825) else Color.Gray,
+                    modifier = Modifier
+                        .padding(3.dp)
+                        .size(13.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppIcon(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            color = getColorForApp(title).copy(alpha = 0.1f)
+        ) {
+            Box {
+                // Pattern overlay
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val pattern = Path().apply {
+                        moveTo(0f, 0f)
+                        lineTo(size.width, size.height)
+                        moveTo(size.width, 0f)
+                        lineTo(0f, size.height)
+                    }
+                    drawPath(
+                        path = pattern,
+                        color = Color.White.copy(alpha = 0.1f),
+                        style = Stroke(width = 1f)
+                    )
+                }
+                
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
@@ -373,17 +479,51 @@ private fun AppItem(
                     modifier = Modifier.padding(8.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = title,
-                color = TextPrimary,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+        }
+    }
+}
+
+@Composable
+private fun CategoryHeader(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = PrimaryBlue.copy(alpha = 0.1f),
+                modifier = Modifier.padding(vertical = 8.dp)
+            ) {
+                Text(
+                    text = title,
+                    color = PrimaryBlue,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            Divider(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp),
+                color = PrimaryBlue.copy(alpha = 0.1f),
+                thickness = 2.dp
             )
         }
+        
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

@@ -9,9 +9,9 @@ import androidx.compose.runtime.setValue
 
 class HomeController(private val navigator: Navigator) {
     private var _homeModel by mutableStateOf(HomeModel(
-        userName = "Praphulla Kumar Rai",
-        designation = "Graduate Engineer Trainee",
-        department = "Delivery",
+        userName = "John Doe",
+        designation = "Senior Developer",
+        department = "Software Development",
         employeeId = "SH0003",
         showAllApps = false
     ))
@@ -80,5 +80,29 @@ class HomeController(private val navigator: Navigator) {
 
     fun onShowProfileClick() {
         // TODO: Implement profile navigation
+    }
+
+    fun onToggleFavorite(title: String) {
+        val allApps = _homeModel.categories.values.flatten()
+        val updatedApps = allApps.map { app ->
+            if (app.title == title) {
+                app.copy(isFavorite = !app.isFavorite)
+            } else {
+                app
+            }
+        }
+        
+        val updatedCategories = _homeModel.categories.mapValues { (_, apps) ->
+            apps.map { app ->
+                updatedApps.find { it.title == app.title } ?: app
+            }
+        }
+        
+        val updatedFavorites = updatedApps.filter { it.isFavorite }
+        
+        _homeModel = _homeModel.copy(
+            categories = updatedCategories,
+            favorites = updatedFavorites
+        )
     }
 } 
