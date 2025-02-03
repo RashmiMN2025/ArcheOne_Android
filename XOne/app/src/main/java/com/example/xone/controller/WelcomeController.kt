@@ -6,13 +6,10 @@ import com.example.xone.navigation.Navigator
 class WelcomeController(private val navigator: Navigator) {
     private var welcomeModel = WelcomeModel()
     
-    fun getWelcomeData(): WelcomeModel {
-        // Add any logic to prepare/update the model
-        return welcomeModel
-    }
-
+    fun getWelcomeData(): WelcomeModel = welcomeModel
+    
     fun onXOneClick() {
-        // Pure business logic here
+        navigator.navigateToHome()
     }
 
     fun onPulseClick() {
