@@ -32,6 +32,10 @@ import com.example.xone.ui.theme.*
 import android.content.Intent
 import android.net.Uri
 import com.example.xone.model.WelcomeBackgroundModel
+import android.content.Context
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -396,6 +400,31 @@ private fun LocationDetailsContent(
                         }
                     )
                 }
+
+                if (location.hasFloorMap && location.mapFileName != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { openPdfFromAssets(context, location.mapFileName) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "View Floor Map",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
         }
     }
@@ -425,5 +454,34 @@ private fun DetailRow(
             style = MaterialTheme.typography.bodyMedium,
             color = if (onClick != null) Color(0xFFDD3825) else TextSecondary
         )
+    }
+}
+
+private fun openPdfFromAssets(context: Context, fileName: String) {
+    try {
+        // Copy file from assets to cache directory
+        val file = File(context.cacheDir, fileName)
+        context.assets.open(fileName).use { input ->
+            FileOutputStream(file).use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        // Create URI using FileProvider
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            file
+        )
+
+        // Create and start PDF viewer intent
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        }
+        context.startActivity(Intent.createChooser(intent, "Open PDF using"))
+    } catch (e: Exception) {
+        e.printStackTrace()
+        // You might want to show an error message to the user here
     }
 } 
