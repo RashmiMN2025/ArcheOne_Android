@@ -3,7 +3,10 @@ package com.example.xone.navigation
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import android.util.Log
 
 class AndroidNavigator(
     private val context: Context,
@@ -89,6 +92,7 @@ class AndroidNavigator(
     }
 
     override fun navigateToLocations() {
+        Log.d("AndroidNavigator", "Navigating to locations screen")
         navController.navigate("locations")
     }
 
@@ -122,5 +126,9 @@ class AndroidNavigator(
 
     override fun navigateToSAP() {
         // TODO: Implement navigation
+    }
+
+    override fun navigateToChat() {
+        navController.navigate("chat")
     }
 } 

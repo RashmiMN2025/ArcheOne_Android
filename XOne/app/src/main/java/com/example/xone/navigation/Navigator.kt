@@ -29,4 +29,5 @@ interface Navigator {
     fun navigateToSOS()
     fun navigateToTravelExpenses()
     fun navigateToSAP()
+    fun navigateToChat()
 } 

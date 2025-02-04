@@ -15,6 +15,9 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.model.HomeModel
 import com.example.xone.model.HomeItem
+import com.example.xone.model.FooterNavigationModel
 import com.example.xone.ui.theme.*
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.animateContentSize
@@ -41,6 +45,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.xone.model.WelcomeBackgroundModel
 
 @Composable
 fun ProfileHeader(
@@ -123,133 +129,243 @@ fun HomeScreen(
     onSearchQueryChanged: (String) -> Unit,
     onShowProfileClick: () -> Unit,
     onToggleFavorite: (String) -> Unit,
+    onFooterHomeClick: () -> Unit,
+    onFooterChatClick: () -> Unit,
+    onFooterSOSClick: () -> Unit,
+    onFooterProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    val backgroundModel = remember { WelcomeBackgroundModel() }
+
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundColor)
-    ) {
-        ProfileHeader(
-            model = model,
-            onShowProfileClick = onShowProfileClick
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Search Bar
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(12.dp),
-            shadowElevation = 4.dp,
-            color = SearchBarBackground
-        ) {
-            OutlinedTextField(
-                value = model.searchQuery,
-                onValueChange = onSearchQueryChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                placeholder = { 
-                    Text(
-                        "Search apps",
-                        color = TextSecondary
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        backgroundModel.topColor,
+                        backgroundModel.middleColor,
+                        backgroundModel.bottomColor
                     )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = TextSecondary
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent,
-                    cursorColor = PrimaryBlue
-                ),
-                singleLine = true
+                )
             )
-        }
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            ProfileHeader(
+                model = model,
+                onShowProfileClick = onShowProfileClick
+            )
 
-        // Toggle Buttons
-        if (model.searchQuery.isEmpty()) {
-            Row(
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Search Bar
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                shadowElevation = 4.dp,
+                color = SearchBarBackground
             ) {
-                Button(
-                    onClick = onAllAppsClick,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (model.showAllApps) 
-                            Color(0xFFDD3825) else CardBackground,
-                        contentColor = if (model.showAllApps) 
-                            Color.White else TextSecondary
+                OutlinedTextField(
+                    value = model.searchQuery,
+                    onValueChange = onSearchQueryChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    placeholder = { 
+                        Text(
+                            "Search apps",
+                            color = TextSecondary
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = TextSecondary
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.Transparent,
+                        cursorColor = PrimaryBlue
                     ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 0.dp
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (model.showAllApps) Color(0xFFDD3825) else DividerColor
-                    ),
-                    shape = RoundedCornerShape(8.dp)
+                    singleLine = true
+                )
+            }
+
+            // Toggle Buttons
+            if (model.searchQuery.isEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("All Apps")
-                }
-                Button(
-                    onClick = onFavoritesClick,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (model.viewFavorites) 
-                            Color(0xFFDD3825) else CardBackground,
-                        contentColor = if (model.viewFavorites) 
-                            Color.White else TextSecondary
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 0.dp
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Favorites")
+                    Button(
+                        onClick = onAllAppsClick,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (model.showAllApps) 
+                                Color(0xFFDD3825) else CardBackground,
+                            contentColor = if (model.showAllApps) 
+                                Color.White else TextSecondary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 0.dp
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (model.showAllApps) Color(0xFFDD3825) else DividerColor
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("All Apps")
+                    }
+                    Button(
+                        onClick = onFavoritesClick,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (model.viewFavorites) 
+                                Color(0xFFDD3825) else CardBackground,
+                            contentColor = if (model.viewFavorites) 
+                                Color.White else TextSecondary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 0.dp
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Favorites")
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Content
-        Box(modifier = Modifier.weight(1f)) {
-            if (model.searchQuery.isNotEmpty()) {
-                // Search Results
-                if (model.filteredApps.isEmpty()) {
-                    // Show "No results found" message
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No apps found",
-                            color = Color.Gray,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+            // Content
+            Box(modifier = Modifier.weight(1f)) {
+                if (model.searchQuery.isNotEmpty()) {
+                    // Search Results
+                    if (model.filteredApps.isEmpty()) {
+                        // Show "No results found" message
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No apps found",
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp)
+                        ) {
+                            items(model.filteredApps.chunked(3)) { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowItems.forEach { item ->
+                                        AppItem(
+                                            title = item.title,
+                                            isFavorite = item.isFavorite,
+                                            onClick = { onItemClick(item.title) },
+                                            onFavoriteClick = { onToggleFavorite(item.title) },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    repeat(3 - rowItems.size) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
                     }
-                } else {
+                } else if (model.showAllApps) {
+                    // All Apps View with Categories
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
+                        contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        items(model.filteredApps.chunked(3)) { rowItems ->
+                        model.categories.forEach { (category, items) ->
+                            item {
+                                CategoryHeader(
+                                    title = category,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                            items(items.chunked(3)) { rowItems ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowItems.forEach { item ->
+                                        AppItem(
+                                            title = item.title,
+                                            isFavorite = item.isFavorite,
+                                            onClick = { onItemClick(item.title) },
+                                            onFavoriteClick = { onToggleFavorite(item.title) },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    repeat(3 - rowItems.size) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    }
+                } else if (model.viewFavorites) {
+                    // Favorites View
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(model.favorites.chunked(3)) { rowItems ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rowItems.forEach { item ->
+                                    AppItem(
+                                        title = item.title,
+                                        isFavorite = item.isFavorite,
+                                        onClick = { onItemClick(item.title) },
+                                        onFavoriteClick = { onToggleFavorite(item.title) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                } else {
+                    // Default Apps View
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        items(model.defaultApps.chunked(3)) { rowItems ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -271,101 +387,16 @@ fun HomeScreen(
                         }
                     }
                 }
-            } else if (model.showAllApps) {
-                // All Apps View with Categories
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    model.categories.forEach { (category, items) ->
-                        item {
-                            CategoryHeader(
-                                title = category,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                        items(items.chunked(3)) { rowItems ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                rowItems.forEach { item ->
-                                    AppItem(
-                                        title = item.title,
-                                        isFavorite = item.isFavorite,
-                                        onClick = { onItemClick(item.title) },
-                                        onFavoriteClick = { onToggleFavorite(item.title) },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                                repeat(3 - rowItems.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
-                }
-            } else if (model.viewFavorites) {
-                // Favorites View
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(model.favorites.chunked(3)) { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            rowItems.forEach { item ->
-                                AppItem(
-                                    title = item.title,
-                                    isFavorite = item.isFavorite,
-                                    onClick = { onItemClick(item.title) },
-                                    onFavoriteClick = { onToggleFavorite(item.title) },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                            repeat(3 - rowItems.size) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-            } else {
-                // Default Apps View
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(model.defaultApps.chunked(3)) { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            rowItems.forEach { item ->
-                                AppItem(
-                                    title = item.title,
-                                    isFavorite = item.isFavorite,
-                                    onClick = { onItemClick(item.title) },
-                                    onFavoriteClick = { onToggleFavorite(item.title) },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                            repeat(3 - rowItems.size) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
             }
+            
+            // Add footer navigation
+            FooterNavigation(
+                model = model.footerNavigation,
+                onHomeClick = onFooterHomeClick,
+                onChatClick = onFooterChatClick,
+                onSOSClick = onFooterSOSClick,
+                onProfileClick = onFooterProfileClick
+            )
         }
     }
 }
@@ -524,6 +555,82 @@ private fun CategoryHeader(
         }
         
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun FooterNavigation(
+    model: FooterNavigationModel,
+    onHomeClick: () -> Unit,
+    onChatClick: () -> Unit,
+    onSOSClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        color = CardBackground,
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FooterNavigationItem(
+                title = "Home",
+                icon = Icons.Default.Home,
+                isSelected = model.items[0].isSelected,
+                onClick = onHomeClick
+            )
+            FooterNavigationItem(
+                title = "Chat",
+                icon = Icons.Default.Email,
+                isSelected = model.items[1].isSelected,
+                onClick = onChatClick
+            )
+            FooterNavigationItem(
+                title = "SOS",
+                icon = Icons.Default.Warning,
+                isSelected = model.items[2].isSelected,
+                onClick = onSOSClick
+            )
+            FooterNavigationItem(
+                title = "Profile",
+                icon = Icons.Default.Person,
+                isSelected = model.items[3].isSelected,
+                onClick = onProfileClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun FooterNavigationItem(
+    title: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = if (isSelected) PrimaryRed else TextSecondary,
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isSelected) PrimaryRed else TextSecondary
+        )
     }
 }
 

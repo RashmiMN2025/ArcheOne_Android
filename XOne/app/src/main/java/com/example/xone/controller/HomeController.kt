@@ -2,12 +2,13 @@ package com.example.xone.controller
 
 import com.example.xone.model.HomeModel
 import com.example.xone.model.HomeItem
-import com.example.xone.navigation.Navigator
+import com.example.xone.navigation.AndroidNavigator
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import android.util.Log
 
-class HomeController(private val navigator: Navigator) {
+class HomeController(private val navigator: AndroidNavigator) {
     private var _homeModel by mutableStateOf(HomeModel(
         userName = "John Doe",
         designation = "Senior Developer",
@@ -48,7 +49,12 @@ class HomeController(private val navigator: Navigator) {
     }
     
     fun onItemClick(title: String) {
+        Log.d("HomeController", "onItemClick: $title")
         when (title) {
+            "Locations" -> {
+                Log.d("HomeController", "Navigating to Locations")
+                navigator.navigateToLocations()
+            }
             "ID" -> navigator.navigateToID()
             "Asset" -> navigator.navigateToAsset()
             "Timesheet" -> navigator.navigateToTimesheet()
@@ -66,7 +72,6 @@ class HomeController(private val navigator: Navigator) {
             "Client Calendar" -> navigator.navigateToClientCalendar()
             "Greetings" -> navigator.navigateToGreetings()
             "XConnect" -> navigator.navigateToXConnect()
-            "Locations" -> navigator.navigateToLocations()
             "Helpdesk" -> navigator.navigateToHelpdesk()
             "Announcements" -> navigator.navigateToAnnouncements()
             "XProfile" -> navigator.navigateToXProfile()
@@ -104,5 +109,21 @@ class HomeController(private val navigator: Navigator) {
             categories = updatedCategories,
             favorites = updatedFavorites
         )
+    }
+
+    fun onFooterHomeClick() {
+        // Already on home, no action needed
+    }
+
+    fun onFooterChatClick() {
+        navigator.navigateToChat()
+    }
+
+    fun onFooterSOSClick() {
+        navigator.navigateToSOS()
+    }
+
+    fun onFooterProfileClick() {
+        navigator.navigateToXProfile()
     }
 } 

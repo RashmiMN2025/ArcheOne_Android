@@ -18,6 +18,10 @@ import com.example.xone.ui.screens.WelcomeScreen
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.model.WelcomeBackgroundModel
+import com.example.xone.controller.LocationsController
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.example.xone.ui.screens.LocationsScreen
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -35,7 +39,7 @@ class MainActivity : ComponentActivity() {
                 // Initialize controllers
                 welcomeController = WelcomeController(navigator)
                 homeController = HomeController(navigator)
-
+                
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
                         navController = navController,
@@ -58,7 +62,19 @@ class MainActivity : ComponentActivity() {
                                 onFavoritesClick = homeController::onFavoritesClick,
                                 onSearchQueryChanged = homeController::onSearchQueryChanged,
                                 onShowProfileClick = homeController::onShowProfileClick,
-                                onToggleFavorite = homeController::onToggleFavorite
+                                onToggleFavorite = homeController::onToggleFavorite,
+                                onFooterHomeClick = homeController::onFooterHomeClick,
+                                onFooterChatClick = homeController::onFooterChatClick,
+                                onFooterSOSClick = homeController::onFooterSOSClick,
+                                onFooterProfileClick = homeController::onFooterProfileClick
+                            )
+                        }
+                        composable("locations") {
+                            LocationsScreen(
+                                navController = navController,
+                                name = "John Doe", // Replace with actual user data
+                                department = "Software Development",
+                                designation = "Senior Developer"
                             )
                         }
                     }

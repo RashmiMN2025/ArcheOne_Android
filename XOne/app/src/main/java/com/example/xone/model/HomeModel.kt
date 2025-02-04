@@ -51,7 +51,8 @@ data class HomeModel(
             HomeItem("Travel & Expenses", "travel_icon", false),
             HomeItem("SAP", "sap_icon", false)
         )
-    )
+    ),
+    val footerNavigation: FooterNavigationModel = FooterNavigationModel()
 )
 
 data class HomeItem(
