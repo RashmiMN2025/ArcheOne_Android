@@ -1,22 +1,13 @@
 package com.example.xone.navigation
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.ComponentActivity
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import android.util.Log
+import androidx.navigation.NavHostController
 
 class AndroidNavigator(
-    private val context: Context,
-    private val navController: NavController
+    private val navController: NavHostController
 ) : Navigator {
     override fun openPulseLogin() {
-        val pulseUrl = "https://pulse.netcon.in/login"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pulseUrl))
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        context.startActivity(intent)
+        // TODO: Implement pulse login navigation
     }
 
     override fun navigateToHome() {
@@ -24,7 +15,7 @@ class AndroidNavigator(
     }
 
     override fun navigateToID() {
-        // TODO: Implement navigation
+        navController.navigate("id")
     }
 
     override fun navigateToAsset() {
@@ -32,11 +23,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToTimesheet() {
-        // TODO: Implement navigation
+        navController.navigate("timesheet")
     }
 
     override fun navigateToLeave() {
-        // TODO: Implement navigation
+        navController.navigate("leave")
     }
 
     override fun navigateToMyDocuments() {
@@ -44,15 +35,15 @@ class AndroidNavigator(
     }
 
     override fun navigateToMyCareer() {
-        // TODO: Implement navigation
+        navController.navigate("career")
     }
 
     override fun navigateToELearning() {
-        // TODO: Implement navigation
+        navController.navigate("learning")
     }
 
     override fun navigateToGoalSetting() {
-        // TODO: Implement navigation
+        navController.navigate("goals")
     }
 
     override fun navigateToXCard() {
@@ -60,19 +51,19 @@ class AndroidNavigator(
     }
 
     override fun navigateToMedical() {
-        // TODO: Implement navigation
+        navController.navigate("medical")
     }
 
     override fun navigateToFinance() {
-        // TODO: Implement navigation
+        navController.navigate("finance")
     }
 
     override fun navigateToAdmin() {
-        // TODO: Implement navigation
+        navController.navigate("admin")
     }
 
     override fun navigateToHR() {
-        // TODO: Implement navigation
+        navController.navigate("hr")
     }
 
     override fun navigateToHolidayCalendar() {
@@ -80,7 +71,7 @@ class AndroidNavigator(
     }
 
     override fun navigateToClientCalendar() {
-        // TODO: Implement navigation
+        navController.navigate("client_calendar")
     }
 
     override fun navigateToGreetings() {
@@ -97,11 +88,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToHelpdesk() {
-        // TODO: Implement navigation
+        navController.navigate("helpdesk")
     }
 
     override fun navigateToAnnouncements() {
-        // TODO: Implement navigation
+        navController.navigate("announcements")
     }
 
     override fun navigateToXProfile() {
@@ -109,7 +100,7 @@ class AndroidNavigator(
     }
 
     override fun navigateToPasswordReset() {
-        // TODO: Implement navigation
+        navController.navigate("password_reset")
     }
 
     override fun navigateToPolicy() {
@@ -121,11 +112,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToTravelExpenses() {
-        // TODO: Implement navigation
+        navController.navigate("travel_expenses")
     }
 
     override fun navigateToSAP() {
-        // TODO: Implement navigation
+        navController.navigate("sap")
     }
 
     override fun navigateToChat() {

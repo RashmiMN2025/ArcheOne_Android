@@ -59,15 +59,17 @@ fun ProfileHeader(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFDD3825),
-                        Color(0xFFB82D1C)
+                        Color(0xFF808080),  // Lighter grey
+                        Color(0xFF666666)   // Medium grey
                     )
                 )
             )
-            .padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 28.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 40.dp, bottom = 40.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -75,42 +77,51 @@ fun ProfileHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    modifier = Modifier.size(60.dp),
+                    modifier = Modifier.size(65.dp),
                     shape = CircleShape,
                     color = Color.White
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.padding(11.dp),
-                        tint = Color(0xFFDD3825)
+                        modifier = Modifier.padding(12.dp),
+                        tint = Color(0xFF808080)  // Match the header top color
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 
                 Column {
                     Text(
                         text = model.userName,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 18.sp
+                            fontSize = 20.sp,
+                            fontFamily = GeistFontFamily,
+                            fontWeight = FontWeight.SemiBold
                         ),
                         color = Color.White
                     )
                     
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
                         text = model.designation,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            fontFamily = GeistFontFamily,
+                            fontWeight = FontWeight.Medium
                         ),
                         color = Color.White.copy(alpha = 0.8f)
                     )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
                     Text(
                         text = model.department,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            fontFamily = GeistFontFamily,
+                            fontWeight = FontWeight.Medium
                         ),
                         color = Color.White.copy(alpha = 0.8f)
                     )

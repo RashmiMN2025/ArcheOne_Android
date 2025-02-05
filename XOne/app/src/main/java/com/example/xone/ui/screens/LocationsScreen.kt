@@ -3,146 +3,157 @@ package com.example.xone.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.xone.controller.LocationsController
-import com.example.xone.model.Location
-import com.example.xone.model.Country
-import com.example.xone.model.State
-import com.example.xone.model.getCountryFlag
+import com.example.xone.model.LocationInfo
+import com.example.xone.model.StateInfo
 import com.example.xone.ui.theme.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.remember
 import android.content.Intent
 import android.net.Uri
-import com.example.xone.model.WelcomeBackgroundModel
-import android.content.Context
-import androidx.core.content.FileProvider
-import java.io.File
-import java.io.FileOutputStream
+import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationsScreen(
     navController: NavHostController,
-    name: String,
-    department: String,
-    designation: String
+    controller: LocationsController? = null
 ) {
-    val controller = remember { LocationsController() }
-    val state = controller.getCurrentState()
-    val backgroundModel = remember { WelcomeBackgroundModel() }
-
+    val context = LocalContext.current
+    val locationController = controller ?: remember { LocationsController(context) }
+    
+    val state = locationController.getState()
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        backgroundModel.topColor,
-                        backgroundModel.middleColor,
-                        backgroundModel.bottomColor
+                        WelcomeBackgroundTop,
+                        WelcomeBackgroundMiddle,
+                        WelcomeBackgroundBottom
                     )
                 )
             )
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Top Bar - Modified to blend with background
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = {
-                        when {
-                            state.selectedLocation != null && state.selectedState != null -> 
-                                // If we're in Tamil Nadu location, go back to state
-                                controller.selectLocation(null)
-                            state.selectedLocation != null -> 
-                                // For other states' locations, go back to India page
-                                controller.selectState(null)  // This will clear location and go back to India page
-                            state.selectedState != null -> 
-                                controller.selectState(null)
-                            state.selectedCountry != null -> 
-                                controller.selectCountry(null)
-                            else -> 
-                                navController.popBackStack()
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = { 
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                when {
+                                    state.showingStateList -> "${state.selectedLocation?.name} Locations"
+                                    state.showingDetails -> {
+                                        when {
+                                            state.selectedState?.name == "Tamil Nadu" -> state.selectedLocation?.name ?: ""
+                                            else -> state.selectedLocation?.name?.split(",")?.firstOrNull() ?: ""
+                                        }
+                                    }
+                                    else -> "Locations"
+                                },
+                                fontSize = 18.sp,
+                                color = PrimaryBlue,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(start = 32.dp)
+                            )
                         }
-                    }
-                ) {
-                    Icon(
-                        Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.Black
-                    )
-                }
-                Text(
-                    text = when {
-                        state.selectedLocation != null -> state.selectedLocation.name
-                        state.selectedState != null -> state.selectedState.name
-                        state.selectedCountry != null -> state.selectedCountry.name
-                        else -> "Locations"
                     },
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            if (!locationController.onBackPressed()) {
+                                navController.popBackStack()
+                            }
+                        }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = PrimaryBlue
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
                 )
-                Box(modifier = Modifier.width(48.dp))
             }
-
-            // Content
+        ) { padding ->
             when {
-                state.selectedLocation != null -> {
-                    LocationDetailsContent(
-                        location = state.selectedLocation,
-                        onBack = { controller.selectLocation(null) }
-                    )
-                }
-                state.selectedState != null -> {
-                    LocationsGrid(
+                state.showingStateList && state.selectedState?.name == "Tamil Nadu" -> {
+                    // Show Tamil Nadu locations list
+                    LocationList(
                         locations = state.selectedState.locations,
-                        onLocationClick = { controller.selectLocation(it) }
+                        onLocationClick = { location ->
+                            locationController.selectLocation(location)
+                        },
+                        onShowFloorMap = { mapFile ->
+                            locationController.showFloorMap(mapFile)
+                        },
+                        modifier = Modifier.padding(padding),
+                        isTamilNadu = true
                     )
                 }
-                state.selectedCountry != null -> {
-                    if (state.selectedCountry.states != null) {
-                        StatesGrid(
-                            states = state.selectedCountry.states,
-                            onStateClick = { controller.selectState(it) }
-                        )
-                    } else if (state.selectedCountry.location != null) {
-                        LocationDetailsContent(
-                            location = state.selectedCountry.location,
-                            onBack = { controller.selectCountry(null) }
+                state.showingStateList -> {
+                    StateList(
+                        states = state.selectedLocation?.states ?: emptyList(),
+                        onStateClick = { state ->
+                            if (state.name == "Tamil Nadu") {
+                                // Show Tamil Nadu locations directly
+                                locationController.showTamilNaduLocations(state)
+                            } else {
+                                // For other states, show single location directly
+                                locationController.selectStateLocation(state)
+                            }
+                        },
+                        modifier = Modifier.padding(padding)
+                    )
+                }
+                state.showingDetails -> {
+                    val selectedLocation = state.selectedLocation
+                    if (selectedLocation != null) {
+                        LocationDetails(
+                            location = selectedLocation,
+                            onShowFloorMap = { 
+                                selectedLocation.mapFileName?.let { mapFile ->
+                                    locationController.showFloorMap(mapFile)
+                                }
+                            },
+                            modifier = Modifier.padding(padding)
                         )
                     }
                 }
                 else -> {
-                    CountriesGrid(
-                        countries = controller.getCountries(),
-                        onCountryClick = { controller.selectCountry(it) }
+                    LocationList(
+                        locations = locationController.getLocations(),
+                        onLocationClick = locationController::selectLocation,
+                        onShowFloorMap = { mapFile ->
+                            locationController.showFloorMap(mapFile)
+                        },
+                        modifier = Modifier.padding(padding)
                     )
                 }
             }
@@ -150,109 +161,200 @@ fun LocationsScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CountriesGrid(
-    countries: List<Country>,
-    onCountryClick: (Country) -> Unit
+private fun LocationCard(
+    location: LocationInfo,
+    onClick: () -> Unit,
+    onFloorMapClick: (() -> Unit)? = null
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(countries) { country ->
-            CountryCard(
-                country = country,
-                onClick = { onCountryClick(country) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun CountryCard(
-    country: Country,
-    onClick: () -> Unit
-) {
+    val context = LocalContext.current
+    
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFDD3825).copy(alpha = 0.05f),
-                            CardBackground
-                        )
-                    )
-                )
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Text(
+                text = location.name,
+                fontSize = if (location.hasMultipleLocations) 16.sp else 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = location.companyName,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextPrimary
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Country Flag
                 Text(
-                    text = getCountryFlag(country.name),
-                    fontSize = 40.sp,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                
-                // Country Name
-                Text(
-                    text = country.name,
-                    fontSize = 16.sp,
+                    text = "Address:",
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextPrimary,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    color = TextSecondary
                 )
-                
-                // Location Count
-                val locationCount = when {
-                    country.states != null -> country.states.sumOf { it.locations.size }
-                    country.location != null -> 1
-                    else -> 0
-                }
-                
                 Text(
-                    text = "$locationCount ${if (locationCount == 1) "Location" else "Locations"}",
-                    fontSize = 12.sp,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(top = 4.dp)
+                    text = location.address.substringBefore(","),
+                    fontSize = 14.sp,
+                    color = TextSecondary
                 )
+            }
+            Text(
+                text = location.address.substringAfter(",").trim(),
+                fontSize = 14.sp,
+                color = TextSecondary
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Email:",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextSecondary
+                )
+                Text(
+                    text = location.email,
+                    fontSize = 14.sp,
+                    color = PrimaryRed,
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:${location.email}")
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Send email"))
+                    }
+                )
+            }
+
+            if (location.hrName != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = "Phone",
+                        tint = PrimaryRed
+                    )
+                    Text(
+                        text = "${location.hrName}: ${location.hrNumber}",
+                        fontSize = 14.sp,
+                        color = PrimaryRed,
+                        modifier = Modifier.clickable {
+                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                data = Uri.parse("tel:${location.hrNumber}")
+                            }
+                            context.startActivity(intent)
+                        }
+                    )
+                }
+            }
+
+            if (location.adminName != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = "Phone",
+                        tint = PrimaryRed
+                    )
+                    Text(
+                        text = "${location.adminName}: ${location.adminNumber}",
+                        fontSize = 14.sp,
+                        color = PrimaryRed,
+                        modifier = Modifier.clickable {
+                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                data = Uri.parse("tel:${location.adminNumber}")
+                            }
+                            context.startActivity(intent)
+                        }
+                    )
+                }
+            }
+
+            if (location.hasMultipleLocations) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = onClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                        modifier = Modifier.width(160.dp)
+                    ) {
+                        Text(
+                            text = "View Locations",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+            
+            if (location.hasFloorMap && location.mapFileName != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { onFloorMapClick?.invoke() },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("View Floor Map")
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StatesGrid(
-    states: List<State>,
-    onStateClick: (State) -> Unit
+private fun StateList(
+    states: List<StateInfo>,
+    onStateClick: (StateInfo) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(states) { state ->
-            LocationCard(
-                title = state.name,
+            StateCard(
+                state = state,
                 onClick = { onStateClick(state) }
             )
         }
@@ -260,85 +362,22 @@ private fun StatesGrid(
 }
 
 @Composable
-private fun LocationsGrid(
-    locations: List<Location>,
-    onLocationClick: (Location) -> Unit
-) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(locations) { location ->
-            LocationCard(
-                title = location.name,
-                onClick = { onLocationClick(location) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun LocationCard(
-    title: String,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = Color(0xFFDD3825)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                color = TextPrimary
-            )
-        }
-    }
-}
-
-@Composable
-private fun LocationDetailsContent(
-    location: Location,
-    onBack: () -> Unit
+private fun LocationDetails(
+    location: LocationInfo,
+    onShowFloorMap: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-
+    
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = CardBackground
-            ),
-            elevation = CardDefaults.cardElevation(2.dp),
-            shape = RoundedCornerShape(12.dp)
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -347,82 +386,142 @@ private fun LocationDetailsContent(
             ) {
                 Text(
                     text = location.name,
-                    fontSize = 20.sp,
+                    fontSize = if (location.hasMultipleLocations) 16.sp else 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
-
+                
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                DetailRow(
-                    icon = Icons.Default.LocationOn,
-                    text = location.address
+                Text(
+                    text = location.companyName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary
                 )
-
-                if (location.email != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    DetailRow(
-                        icon = Icons.Default.Email,
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Address:",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = location.address.substringBefore(","),
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                }
+                Text(
+                    text = location.address.substringAfter(",").trim(),
+                    fontSize = 14.sp,
+                    color = TextSecondary
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Email:",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
+                    )
+                    Text(
                         text = location.email,
-                        onClick = {
+                        fontSize = 14.sp,
+                        color = PrimaryRed,
+                        modifier = Modifier.clickable {
                             val intent = Intent(Intent.ACTION_SENDTO).apply {
                                 data = Uri.parse("mailto:${location.email}")
                             }
-                            context.startActivity(Intent.createChooser(intent, "Send email using"))
+                            context.startActivity(Intent.createChooser(intent, "Send email"))
                         }
                     )
                 }
 
-                if (location.hrNumber != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    DetailRow(
-                        icon = Icons.Default.Phone,
-                        text = "${location.hrName ?: "HR"}: ${location.hrNumber}",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${location.hrNumber}")
-                            }
-                            context.startActivity(intent)
-                        }
-                    )
-                }
-
-                if (location.adminNumber != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    DetailRow(
-                        icon = Icons.Default.Phone,
-                        text = "${location.adminName ?: "Admin"}: ${location.adminNumber}",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${location.adminNumber}")
-                            }
-                            context.startActivity(intent)
-                        }
-                    )
-                }
-
-                if (location.hasFloorMap && location.mapFileName != null) {
+                if (location.hrName != null) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { openPdfFromAssets(context, location.mapFileName) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = "Phone",
+                            tint = PrimaryRed
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "View Floor Map",
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium
+                            text = "${location.hrName}: ${location.hrNumber}",
+                            fontSize = 14.sp,
+                            color = PrimaryRed,
+                            modifier = Modifier.clickable {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${location.hrNumber}")
+                                }
+                                context.startActivity(intent)
+                            }
                         )
+                    }
+                }
+
+                if (location.adminName != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = "Phone",
+                            tint = PrimaryRed
+                        )
+                        Text(
+                            text = "${location.adminName}: ${location.adminNumber}",
+                            fontSize = 14.sp,
+                            color = PrimaryRed,
+                            modifier = Modifier.clickable {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${location.adminNumber}")
+                                }
+                                context.startActivity(intent)
+                            }
+                        )
+                    }
+                }
+                
+                if (location.hasFloorMap && location.mapFileName != null) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = onShowFloorMap,
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "View Floor Map",
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -431,57 +530,61 @@ private fun LocationDetailsContent(
 }
 
 @Composable
-private fun DetailRow(
-    icon: ImageVector,
-    text: String,
-    onClick: (() -> Unit)? = null
+private fun LocationList(
+    locations: List<LocationInfo>,
+    onLocationClick: (LocationInfo) -> Unit,
+    onShowFloorMap: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    isTamilNadu: Boolean = false
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        verticalAlignment = Alignment.CenterVertically
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color(0xFFDD3825),
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (onClick != null) Color(0xFFDD3825) else TextSecondary
-        )
+        items(locations) { location ->
+            LocationCard(
+                location = location,
+                onClick = { if (!isTamilNadu) onLocationClick(location) },
+                onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
+                    { location.mapFileName?.let { mapFile -> onShowFloorMap(mapFile) } }
+                } else null
+            )
+        }
     }
 }
 
-private fun openPdfFromAssets(context: Context, fileName: String) {
-    try {
-        // Copy file from assets to cache directory
-        val file = File(context.cacheDir, fileName)
-        context.assets.open(fileName).use { input ->
-            FileOutputStream(file).use { output ->
-                input.copyTo(output)
-            }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StateCard(
+    state: StateInfo,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = state.name,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "${state.locations.size} location${if (state.locations.size != 1) "s" else ""}",
+                fontSize = 14.sp,
+                color = TextSecondary
+            )
         }
-
-        // Create URI using FileProvider
-        val uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider",
-            file
-        )
-
-        // Create and start PDF viewer intent
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "application/pdf")
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-        }
-        context.startActivity(Intent.createChooser(intent, "Open PDF using"))
-    } catch (e: Exception) {
-        e.printStackTrace()
-        // You might want to show an error message to the user here
     }
 } 

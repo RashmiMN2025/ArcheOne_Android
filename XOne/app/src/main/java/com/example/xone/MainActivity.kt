@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -26,25 +28,28 @@ import com.example.xone.ui.screens.LocationsScreen
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
     private lateinit var homeController: HomeController
+    private lateinit var locationsController: LocationsController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
+        locationsController = LocationsController(this)
+
         setContent {
+            val navController = rememberNavController()
+            val navigator = AndroidNavigator(navController)
+            welcomeController = WelcomeController(navigator)
+            homeController = HomeController(navigator)
+
             XOneTheme {
-                val navController = rememberNavController()
-                val navigator = AndroidNavigator(this, navController)
-                
-                // Initialize controllers
-                welcomeController = WelcomeController(navigator)
-                homeController = HomeController(navigator)
-                
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     NavHost(
                         navController = navController,
-                        startDestination = "welcome",
-                        modifier = Modifier.padding(innerPadding)
+                        startDestination = "welcome"
                     ) {
                         composable("welcome") {
                             WelcomeScreen(
@@ -72,9 +77,7 @@ class MainActivity : ComponentActivity() {
                         composable("locations") {
                             LocationsScreen(
                                 navController = navController,
-                                name = "John Doe", // Replace with actual user data
-                                department = "Software Development",
-                                designation = "Senior Developer"
+                                controller = locationsController
                             )
                         }
                     }
