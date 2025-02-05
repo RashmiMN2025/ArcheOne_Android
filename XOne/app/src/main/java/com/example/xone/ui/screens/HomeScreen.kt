@@ -47,6 +47,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.xone.model.WelcomeBackgroundModel
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import com.example.xone.R
 
 @Composable
 fun ProfileHeader(
@@ -57,19 +60,15 @@ fun ProfileHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF808080),  // Lighter grey
-                        Color(0xFF666666)   // Medium grey
-                    )
-                )
+                color = Color(0xFF808080),
+                shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
             )
-            .padding(start = 16.dp, end = 16.dp, top = 40.dp, bottom = 40.dp)
+            .padding(start = 27.dp, end = 16.dp, top = 72.dp, bottom = 40.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 12.dp),
+                .padding(top = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -77,7 +76,7 @@ fun ProfileHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    modifier = Modifier.size(65.dp),
+                    modifier = Modifier.size(56.dp),
                     shape = CircleShape,
                     color = Color.White
                 ) {
@@ -85,7 +84,7 @@ fun ProfileHeader(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.padding(12.dp),
-                        tint = Color(0xFF808080)  // Match the header top color
+                        tint = Color(0xFF808080)
                     )
                 }
                 
@@ -95,19 +94,19 @@ fun ProfileHeader(
                     Text(
                         text = model.userName,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 20.sp,
+                            fontSize = 18.sp,
                             fontFamily = GeistFontFamily,
                             fontWeight = FontWeight.SemiBold
                         ),
                         color = Color.White
                     )
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     
                     Text(
                         text = model.designation,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontFamily = GeistFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
@@ -119,7 +118,19 @@ fun ProfileHeader(
                     Text(
                         text = model.department,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
+                            fontFamily = GeistFontFamily,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = model.employeeId,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
                             fontFamily = GeistFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
@@ -169,42 +180,51 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Search Bar
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                shadowElevation = 4.dp,
-                color = SearchBarBackground
-            ) {
-                OutlinedTextField(
-                    value = model.searchQuery,
-                    onValueChange = onSearchQueryChanged,
+            // Only show search bar when in All Apps or Favorites view
+            if (model.showAllApps || model.viewFavorites) {
+                // Search Bar
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    placeholder = { 
-                        Text(
-                            "Search apps",
-                            color = TextSecondary
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = TextSecondary
-                        )
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
-                        cursorColor = PrimaryBlue
-                    ),
-                    singleLine = true
-                )
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    shadowElevation = 4.dp,
+                    color = SearchBarBackground
+                ) {
+                    OutlinedTextField(
+                        value = model.searchQuery,
+                        onValueChange = onSearchQueryChanged,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(55.dp)
+                            .padding(horizontal = 4.dp),
+                        placeholder = { 
+                            Text(
+                                "Search apps",
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.Transparent,
+                            cursorColor = PrimaryBlue
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 12.sp
+                        ),
+                        singleLine = true
+                    )
+                }
             }
 
             // Toggle Buttons
@@ -213,11 +233,11 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
                         onClick = onAllAppsClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.width(120.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (model.showAllApps) 
                                 Color(0xFFDD3825) else CardBackground,
@@ -235,9 +255,12 @@ fun HomeScreen(
                     ) {
                         Text("All Apps")
                     }
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
                     Button(
                         onClick = onFavoritesClick,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.width(120.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (model.viewFavorites) 
                                 Color(0xFFDD3825) else CardBackground,
@@ -258,7 +281,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Content
             Box(modifier = Modifier.weight(1f)) {
@@ -279,12 +302,12 @@ fun HomeScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 16.dp)
+                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp)
                         ) {
                             items(model.filteredApps.chunked(3)) { rowItems ->
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
                                 ) {
                                     rowItems.forEach { item ->
                                         AppItem(
@@ -292,14 +315,15 @@ fun HomeScreen(
                                             isFavorite = item.isFavorite,
                                             onClick = { onItemClick(item.title) },
                                             onFavoriteClick = { onToggleFavorite(item.title) },
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier.weight(1f),
+                                            showFavoriteButton = model.showAllApps || model.viewFavorites
                                         )
                                     }
                                     repeat(3 - rowItems.size) {
                                         Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
                     }
@@ -307,7 +331,7 @@ fun HomeScreen(
                     // All Apps View with Categories
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 16.dp)
+                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
                     ) {
                         model.categories.forEach { (category, items) ->
                             item {
@@ -315,16 +339,13 @@ fun HomeScreen(
                                     title = category,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        .padding(vertical = 8.dp)
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
                             }
                             items(items.chunked(3)) { rowItems ->
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
                                 ) {
                                     rowItems.forEach { item ->
                                         AppItem(
@@ -332,14 +353,15 @@ fun HomeScreen(
                                             isFavorite = item.isFavorite,
                                             onClick = { onItemClick(item.title) },
                                             onFavoriteClick = { onToggleFavorite(item.title) },
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier.weight(1f),
+                                            showFavoriteButton = model.showAllApps || model.viewFavorites
                                         )
                                     }
                                     repeat(3 - rowItems.size) {
                                         Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
                     }
@@ -347,12 +369,12 @@ fun HomeScreen(
                     // Favorites View
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
+                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
                     ) {
                         items(model.favorites.chunked(3)) { rowItems ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(25.dp)
                             ) {
                                 rowItems.forEach { item ->
                                     AppItem(
@@ -360,26 +382,27 @@ fun HomeScreen(
                                         isFavorite = item.isFavorite,
                                         onClick = { onItemClick(item.title) },
                                         onFavoriteClick = { onToggleFavorite(item.title) },
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier.weight(1f),
+                                        showFavoriteButton = model.showAllApps || model.viewFavorites
                                     )
                                 }
                                 repeat(3 - rowItems.size) {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 } else {
                     // Default Apps View
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
+                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
                     ) {
                         items(model.defaultApps.chunked(3)) { rowItems ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(25.dp)
                             ) {
                                 rowItems.forEach { item ->
                                     AppItem(
@@ -387,14 +410,15 @@ fun HomeScreen(
                                         isFavorite = item.isFavorite,
                                         onClick = { onItemClick(item.title) },
                                         onFavoriteClick = { onToggleFavorite(item.title) },
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier.weight(1f),
+                                        showFavoriteButton = false
                                     )
                                 }
                                 repeat(3 - rowItems.size) {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }
@@ -418,7 +442,8 @@ private fun AppItem(
     isFavorite: Boolean,
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showFavoriteButton: Boolean = true
 ) {
     var isPressed by remember { mutableStateOf(false) }
     
@@ -443,45 +468,46 @@ private fun AppItem(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // App content in center
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(12.dp),
+                    .padding(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                AppIcon(title = title, modifier = Modifier.size(40.dp))
-                Spacer(modifier = Modifier.height(8.dp))
+                AppIcon(title = title, modifier = Modifier.size(36.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = title,
                     color = TextPrimary,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            // Replace heart icon with plus/check icon in a circle
-            Surface(
-                shape = CircleShape,
-                color = if (isFavorite) Color(0xFFDD3825).copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f),
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .size(19.dp)
-                    .clickable(onClick = onFavoriteClick)
-            ) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Check else Icons.Filled.Add,
-                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                    tint = if (isFavorite) Color(0xFFDD3825) else Color.Gray,
+            // Only show favorite/plus icon when showFavoriteButton is true
+            if (showFavoriteButton) {
+                Surface(
+                    shape = CircleShape,
+                    color = if (isFavorite) Color(0xFFDD3825).copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f),
                     modifier = Modifier
+                        .align(Alignment.TopEnd)
                         .padding(3.dp)
-                        .size(13.dp)
-                )
+                        .size(16.dp)
+                        .clickable(onClick = onFavoriteClick)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Check else Icons.Filled.Add,
+                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        tint = if (isFavorite) Color(0xFFDD3825) else Color.Gray,
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .size(12.dp)
+                    )
+                }
             }
         }
     }
@@ -493,33 +519,68 @@ private fun AppIcon(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        Surface(
-            modifier = Modifier.size(40.dp),
-            shape = CircleShape,
-            color = getColorForApp(title).copy(alpha = 0.1f)
-        ) {
-            Box {
-                // Pattern overlay
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val pattern = Path().apply {
-                        moveTo(0f, 0f)
-                        lineTo(size.width, size.height)
-                        moveTo(size.width, 0f)
-                        lineTo(0f, size.height)
-                    }
-                    drawPath(
-                        path = pattern,
-                        color = Color.White.copy(alpha = 0.1f),
-                        style = Stroke(width = 1f)
+        // Check if it's a default app
+        when (title) {
+            "My Documents", "ID", "Asset", "XCard", "Leave", 
+            "eLearning", "My Career", "TimeSheet", "Goal" -> {
+                Surface(
+                    modifier = Modifier.size(120.dp),  // Significantly increased from 90.dp to 120.dp
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White
+                ) {
+                    Image(
+                        painter = painterResource(
+                            id = when (title) {
+                                "My Documents" -> R.drawable.mydocuments
+                                "ID" -> R.drawable.id
+                                "Asset" -> R.drawable.asset
+                                "XCard" -> R.drawable.xcard
+                                "Leave" -> R.drawable.leave
+                                "eLearning" -> R.drawable.elearning
+                                "My Career" -> R.drawable.mycareer
+                                "TimeSheet" -> R.drawable.timesheet
+                                "Goal" -> R.drawable.goal
+                                else -> R.drawable.mydocuments
+                            }
+                        ),
+                        contentDescription = title,
+                        modifier = Modifier
+                            .padding(4.dp)  // Reduced padding even more to maximize icon size
+                            .fillMaxSize(),
+                        contentScale = ContentScale.Fit
                     )
                 }
-                
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = getColorForApp(title),
-                    modifier = Modifier.padding(8.dp)
-                )
+            }
+            else -> {
+                // Original placeholder design for non-default apps
+                Surface(
+                    modifier = Modifier.size(40.dp),
+                    shape = CircleShape,
+                    color = getColorForApp(title).copy(alpha = 0.1f)
+                ) {
+                    Box {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val pattern = Path().apply {
+                                moveTo(0f, 0f)
+                                lineTo(size.width, size.height)
+                                moveTo(size.width, 0f)
+                                lineTo(0f, size.height)
+                            }
+                            drawPath(
+                                path = pattern,
+                                color = Color.White.copy(alpha = 0.1f),
+                                style = Stroke(width = 1f)
+                            )
+                        }
+                        
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = getColorForApp(title),
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -531,9 +592,7 @@ private fun CategoryHeader(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -543,23 +602,26 @@ private fun CategoryHeader(
             Surface(
                 shape = RoundedCornerShape(4.dp),
                 color = PrimaryBlue.copy(alpha = 0.1f),
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier
+                    .width(120.dp)
+                    .padding(vertical = 6.dp)
             ) {
                 Text(
                     text = title,
                     color = PrimaryBlue,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 15.sp
+                    ),
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    textAlign = TextAlign.Center
                 )
             }
             
             Spacer(modifier = Modifier.width(12.dp))
             
             Divider(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 16.dp),
+                modifier = Modifier.weight(1f),
                 color = PrimaryBlue.copy(alpha = 0.1f),
                 thickness = 2.dp
             )

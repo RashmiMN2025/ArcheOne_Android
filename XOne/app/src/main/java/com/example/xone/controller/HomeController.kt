@@ -10,11 +10,21 @@ import android.util.Log
 
 class HomeController(private val navigator: AndroidNavigator) {
     private var _homeModel by mutableStateOf(HomeModel(
-        userName = "John Doe",
-        designation = "Senior Developer",
-        department = "Software Development",
-        employeeId = "SH0003",
-        showAllApps = false
+        userName = "Annamalai",  // Changed from "Biswajit Dixit"
+        designation = "Graduate Engineer Trainee",  // Changed from "Senior iOS Developer"
+        department = "Delivery",  // Same as before
+        employeeId = "NT1347",  // Changed from "NT1426"
+        defaultApps = listOf(
+            HomeItem("My Documents", "mydocuments", false),
+            HomeItem("ID", "id", false),
+            HomeItem("Asset", "asset", false),
+            HomeItem("XCard", "xcard", false),
+            HomeItem("Leave", "leave", false),
+            HomeItem("eLearning", "elearning", false),
+            HomeItem("My Career", "mycareer", false),
+            HomeItem("TimeSheet", "timesheet", false),
+            HomeItem("Goal", "goal", false)
+        )
     ))
     
     fun getHomeData(): HomeModel = _homeModel
@@ -35,17 +45,41 @@ class HomeController(private val navigator: AndroidNavigator) {
     }
     
     fun onAllAppsClick() {
-        _homeModel = _homeModel.copy(
-            showAllApps = true,
-            viewFavorites = false
-        )
+        _homeModel = if (_homeModel.showAllApps) {
+            // If All Apps is currently selected, switch to default view
+            _homeModel.copy(
+                showAllApps = false,
+                viewFavorites = false,
+                showSearchAndFavorites = false,
+                searchQuery = ""  // Clear search when going back to default
+            )
+        } else {
+            // If All Apps is not selected, switch to All Apps view
+            _homeModel.copy(
+                showAllApps = true,
+                viewFavorites = false,
+                showSearchAndFavorites = true
+            )
+        }
     }
     
     fun onFavoritesClick() {
-        _homeModel = _homeModel.copy(
-            showAllApps = false,
-            viewFavorites = true
-        )
+        _homeModel = if (_homeModel.viewFavorites) {
+            // If Favorites is currently selected, switch to default view
+            _homeModel.copy(
+                showAllApps = false,
+                viewFavorites = false,
+                showSearchAndFavorites = false,
+                searchQuery = ""  // Clear search when going back to default
+            )
+        } else {
+            // If Favorites is not selected, switch to Favorites view
+            _homeModel.copy(
+                showAllApps = false,
+                viewFavorites = true,
+                showSearchAndFavorites = true
+            )
+        }
     }
     
     fun onItemClick(title: String) {
@@ -125,5 +159,13 @@ class HomeController(private val navigator: AndroidNavigator) {
 
     fun onFooterProfileClick() {
         navigator.navigateToXProfile()
+    }
+
+    fun updateViewMode(showAllApps: Boolean, viewFavorites: Boolean) {
+        _homeModel = _homeModel.copy(
+            showAllApps = showAllApps,
+            viewFavorites = viewFavorites,
+            showSearchAndFavorites = showAllApps || viewFavorites
+        )
     }
 } 

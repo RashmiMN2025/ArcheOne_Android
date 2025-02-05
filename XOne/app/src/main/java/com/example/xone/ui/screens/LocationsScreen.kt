@@ -28,7 +28,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +41,10 @@ fun LocationsScreen(
 ) {
     val context = LocalContext.current
     val locationController = controller ?: remember { LocationsController(context) }
+    
+    LaunchedEffect(Unit) {
+        locationController.resetState()
+    }
     
     val state = locationController.getState()
     
@@ -122,14 +129,13 @@ fun LocationsScreen(
                         states = state.selectedLocation?.states ?: emptyList(),
                         onStateClick = { state ->
                             if (state.name == "Tamil Nadu") {
-                                // Show Tamil Nadu locations directly
                                 locationController.showTamilNaduLocations(state)
                             } else {
-                                // For other states, show single location directly
                                 locationController.selectStateLocation(state)
                             }
                         },
-                        modifier = Modifier.padding(padding)
+                        modifier = Modifier.padding(padding),
+                        controller = locationController
                     )
                 }
                 state.showingDetails -> {
@@ -193,7 +199,7 @@ private fun LocationCard(
             Text(
                 text = location.companyName,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
             
@@ -206,18 +212,20 @@ private fun LocationCard(
                 Text(
                     text = "Address:",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                     color = TextSecondary
                 )
                 Text(
                     text = location.address.substringBefore(","),
                     fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
                     color = TextSecondary
                 )
             }
             Text(
                 text = location.address.substringAfter(",").trim(),
                 fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 color = TextSecondary
             )
             
@@ -230,13 +238,15 @@ private fun LocationCard(
                 Text(
                     text = "Email:",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                     color = TextSecondary
                 )
                 Text(
                     text = location.email,
                     fontSize = 14.sp,
-                    color = PrimaryRed,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:${location.email}")
@@ -260,7 +270,8 @@ private fun LocationCard(
                     Text(
                         text = "${location.hrName}: ${location.hrNumber}",
                         fontSize = 14.sp,
-                        color = PrimaryRed,
+                        color = Color.Black,
+                        textDecoration = TextDecoration.Underline,
                         modifier = Modifier.clickable {
                             val intent = Intent(Intent.ACTION_DIAL).apply {
                                 data = Uri.parse("tel:${location.hrNumber}")
@@ -285,7 +296,8 @@ private fun LocationCard(
                     Text(
                         text = "${location.adminName}: ${location.adminNumber}",
                         fontSize = 14.sp,
-                        color = PrimaryRed,
+                        color = Color.Black,
+                        textDecoration = TextDecoration.Underline,
                         modifier = Modifier.clickable {
                             val intent = Intent(Intent.ACTION_DIAL).apply {
                                 data = Uri.parse("tel:${location.adminNumber}")
@@ -310,7 +322,8 @@ private fun LocationCard(
                         Text(
                             text = "View Locations",
                             color = Color.White,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -333,7 +346,12 @@ private fun LocationCard(
                             tint = Color.White
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("View Floor Map")
+                        Text(
+                            text = "View Floor Map",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -345,22 +363,109 @@ private fun LocationCard(
 private fun StateList(
     states: List<StateInfo>,
     onStateClick: (StateInfo) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    controller: LocationsController
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        items(states) { state ->
-            StateCard(
-                state = state,
-                onClick = { onStateClick(state) }
-            )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Text(
+                    text = "India",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Chennai HQ Button
+                    item {
+                        Button(
+                            onClick = { 
+                                controller.selectSpecialLocation("Chennai")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryRed
+                            ),
+                            shape = RoundedCornerShape(24.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Text(
+                                text = "Chennai, HQ",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    // Coimbatore Button
+                    item {
+                        Button(
+                            onClick = { 
+                                controller.selectSpecialLocation("Coimbatore")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryRed
+                            ),
+                            shape = RoundedCornerShape(24.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Text(
+                                text = "Coimbatore, Registered Office",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    // Other state buttons (excluding Tamil Nadu)
+                    items(states.filter { it.name != "Tamil Nadu" }) { state ->
+                        Button(
+                            onClick = { onStateClick(state) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryRed
+                            ),
+                            shape = RoundedCornerShape(24.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Text(
+                                text = state.name,
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LocationDetails(
     location: LocationInfo,
@@ -369,159 +474,178 @@ private fun LocationDetails(
 ) {
     val context = LocalContext.current
     
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    Card(
+        modifier = modifier.fillMaxWidth().padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = CardBackground),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
+            Text(
+                text = location.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Address section
+            Text(
+                text = "Address",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Gray
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = location.address,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            // Contact Information Section
+            if (location.email != null || location.hrName != null || location.adminName != null) {
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = location.name,
-                    fontSize = if (location.hasMultipleLocations) 16.sp else 14.sp,
+                    text = "Contact Information",
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = Color.Gray
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = location.companyName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TextPrimary
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "Address:",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextSecondary
-                    )
-                    Text(
-                        text = location.address.substringBefore(","),
-                        fontSize = 14.sp,
-                        color = TextSecondary
-                    )
-                }
-                Text(
-                    text = location.address.substringAfter(",").trim(),
-                    fontSize = 14.sp,
-                    color = TextSecondary
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
+                // Email
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:${location.email}")
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Send email"))
+                    }
                 ) {
-                    Text(
-                        text = "Email:",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextSecondary
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = "Email",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = location.email,
                         fontSize = 14.sp,
-                        color = PrimaryRed,
-                        modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:${location.email}")
-                            }
-                            context.startActivity(Intent.createChooser(intent, "Send email"))
-                        }
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textDecoration = TextDecoration.Underline
                     )
                 }
-
+                
+                // HR Contact
                 if (location.hrName != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Phone,
                             contentDescription = "Phone",
-                            tint = PrimaryRed
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
                         )
-                        Text(
-                            text = "${location.hrName}: ${location.hrNumber}",
-                            fontSize = 14.sp,
-                            color = PrimaryRed,
-                            modifier = Modifier.clickable {
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:${location.hrNumber}")
+                        Column {
+                            Text(
+                                text = "HR Manager",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "${location.hrName} : ${location.hrNumber}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier.clickable {
+                                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                                        data = Uri.parse("tel:${location.hrNumber}")
+                                    }
+                                    context.startActivity(intent)
                                 }
-                                context.startActivity(intent)
-                            }
-                        )
-                    }
-                }
-
-                if (location.adminName != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = "Phone",
-                            tint = PrimaryRed
-                        )
-                        Text(
-                            text = "${location.adminName}: ${location.adminNumber}",
-                            fontSize = 14.sp,
-                            color = PrimaryRed,
-                            modifier = Modifier.clickable {
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:${location.adminNumber}")
-                                }
-                                context.startActivity(intent)
-                            }
-                        )
+                            )
+                        }
                     }
                 }
                 
-                if (location.hasFloorMap && location.mapFileName != null) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(
-                        onClick = onShowFloorMap,
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                        modifier = Modifier.fillMaxWidth()
+                // Admin Contact
+                if (location.adminName != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = Color.White
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = "Phone",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Column {
                             Text(
-                                text = "View Floor Map",
+                                text = "IT Admin",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "${location.adminName} : ${location.adminNumber}",
                                 fontSize = 14.sp,
-                                color = Color.White
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier.clickable {
+                                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                                        data = Uri.parse("tel:${location.adminNumber}")
+                                    }
+                                    context.startActivity(intent)
+                                }
                             )
                         }
+                    }
+                }
+            }
+            
+            // Floor Map Button
+            if (location.hasFloorMap && location.mapFileName != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onShowFloorMap,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "View Floor Map",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -560,31 +684,29 @@ private fun StateCard(
     state: StateInfo,
     onClick: () -> Unit
 ) {
-    Card(
+    Button(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        onClick = onClick
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrimaryRed
+        ),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = state.name,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryBlue
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "${state.locations.size} location${if (state.locations.size != 1) "s" else ""}",
-                fontSize = 14.sp,
-                color = TextSecondary
-            )
-        }
+        Text(
+            text = when (state.name) {
+                "Tamil Nadu" -> {
+                    if (state.locations.firstOrNull()?.name == "Chennai") "Chennai, HQ"
+                    else if (state.locations.firstOrNull()?.name == "Coimbatore") "Coimbatore, Registered Office"
+                    else state.name
+                }
+                else -> state.name
+            },
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 } 

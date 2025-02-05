@@ -52,7 +52,8 @@ data class HomeModel(
             HomeItem("SAP", "sap_icon", false)
         )
     ),
-    val footerNavigation: FooterNavigationModel = FooterNavigationModel()
+    val footerNavigation: FooterNavigationModel = FooterNavigationModel(),
+    val showSearchAndFavorites: Boolean = false
 )
 
 data class HomeItem(

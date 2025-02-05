@@ -10,6 +10,24 @@ import com.example.xone.utils.PdfUtils
 class LocationsController(private val context: Context) {
     private var _locationState by mutableStateOf(LocationScreenState())
     
+    private val CHENNAI_LOCATION = LocationInfo(
+        name = "Chennai, HQ",
+        companyName = "Netcon Technologies India Private Ltd.",
+        address = "3rd Floor, Karunaa Corner, Door No.10, Spur Tank Road, Chetpet, Chennai-600031",
+        email = "info@netcon.in",
+        hasFloorMap = true,
+        mapFileName = "chennai_map.pdf"
+    )
+
+    private val COIMBATORE_LOCATION = LocationInfo(
+        name = "Coimbatore, Registered Office",
+        companyName = "Netcon Technologies India Private Ltd.",
+        address = "No. 439, 4th Floor, Lakshmi Complex, Cross Cut Road, Gandhipuram, Coimbatore, Tamil Nadu 641012",
+        email = "info@netcon.in",
+        hasFloorMap = true,
+        mapFileName = "coimbatore_map.pdf"
+    )
+    
     fun getLocations() = _locationState.locations
     
     fun getState() = _locationState
@@ -58,47 +76,19 @@ class LocationsController(private val context: Context) {
                 true
             }
             _locationState.showingDetails -> {
-                // For India locations, go back to states list
-                if (_locationState.selectedLocation?.name == "India") {
-                    if (_locationState.selectedState?.name == "Tamil Nadu") {
-                        _locationState = _locationState.copy(
-                            showingDetails = false,
-                            showingStateList = true,
-                            selectedLocation = _locationState.locations.find { it.name == "India" },
-                            selectedState = _locationState.selectedState
-                        )
-                    } else {
-                        _locationState = _locationState.copy(
-                            showingDetails = false,
-                            showingStateList = true,
-                            selectedLocation = _locationState.locations.find { it.name == "India" },
-                            selectedState = null
-                        )
-                    }
-                } else {
-                    // For other countries, go straight to main locations list
-                    _locationState = _locationState.copy(
-                        showingDetails = false,
-                        showingStateList = false,
-                        selectedState = null,
-                        selectedLocation = null
-                    )
-                }
+                _locationState = _locationState.copy(
+                    showingDetails = false,
+                    showingStateList = true,
+                    selectedLocation = _locationState.locations.find { it.name == "India" }
+                )
                 true
             }
             _locationState.showingStateList -> {
-                if (_locationState.selectedState?.name == "Tamil Nadu") {
-                    _locationState = _locationState.copy(
-                        selectedState = null,
-                        selectedLocation = _locationState.locations.find { it.name == "India" }
-                    )
-                } else {
-                    _locationState = _locationState.copy(
-                        showingStateList = false,
-                        selectedState = null,
-                        selectedLocation = null
-                    )
-                }
+                _locationState = _locationState.copy(
+                    showingStateList = false,
+                    selectedLocation = null,
+                    selectedState = null
+                )
                 true
             }
             else -> false
@@ -183,14 +173,12 @@ class LocationsController(private val context: Context) {
 
     fun selectStateLocation(state: StateInfo) {
         if (state.name == "Tamil Nadu") {
-            // For Tamil Nadu, just show the state's locations
             _locationState = _locationState.copy(
                 selectedState = state,
                 showingStateList = true,
                 showingDetails = false
             )
         } else {
-            // For other states, show the single location
             val location = state.locations.firstOrNull() ?: return
             _locationState = _locationState.copy(
                 selectedLocation = location,
@@ -204,5 +192,30 @@ class LocationsController(private val context: Context) {
     fun showFloorMap(mapFileName: String) {
         PdfUtils.openPdfFromAssets(context, mapFileName)
         _locationState = _locationState.copy(showingFloorMap = true)
+    }
+
+    fun selectSpecialLocation(locationName: String) {
+        val location = when (locationName) {
+            "Chennai" -> CHENNAI_LOCATION
+            "Coimbatore" -> COIMBATORE_LOCATION
+            else -> return
+        }
+        
+        _locationState = _locationState.copy(
+            selectedLocation = location,
+            showingDetails = true,
+            showingStateList = false
+        )
+    }
+
+    fun resetState() {
+        _locationState = _locationState.copy(
+            selectedLocation = null,
+            selectedState = null,
+            showingDetails = false,
+            showingStateList = false,
+            showingFloorMap = false,
+            showingContactInfo = false
+        )
     }
 } 
