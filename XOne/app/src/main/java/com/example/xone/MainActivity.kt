@@ -18,14 +18,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val navigator = AndroidNavigator(this)
-        controller = WelcomeController(navigator)
+        controller = WelcomeController(navigator) // Initialize controller
+
         enableEdgeToEdge()
         setContent {
             XOneTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     WelcomeScreen(
-                        model = controller.getWelcomeData(),
+                        model = controller.getWelcomeData(), // ✅ Pass the WelcomeModel, not the controller
                         onXOneClick = controller::onXOneClick,
                         onPulseClick = controller::onPulseClick,
                         modifier = Modifier.padding(innerPadding)
