@@ -8,8 +8,8 @@ import com.example.xone.controller.LoginController
 import com.example.xone.ui.screens.LoginScreen
 import com.example.xone.ui.theme.XOneTheme
 
-class   LoginActivity : ComponentActivity() {
-    private val loginController = LoginController() // ✅ No extra arguments
+class LoginActivity : ComponentActivity() {
+    private val loginController = LoginController()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

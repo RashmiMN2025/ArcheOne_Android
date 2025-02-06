@@ -23,23 +23,18 @@ import com.example.xone.ui.components.CompanyLogo
 import androidx.compose.material3.Text
 import com.example.xone.OtpVerificationActivity
 import com.example.xone.navigation.AndroidNavigator
+import com.example.xone.navigation.Navigator
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(controller: LoginController, navigator: AndroidNavigator) {
+fun LoginScreen(controller: LoginController, navigator: Navigator) {
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
     var employeeId by remember { mutableStateOf("") }
-    var message by remember { mutableStateOf("") }
-    var isError by remember { mutableStateOf(false) }
-
-    // Show Toast when message updates
-    LaunchedEffect(message) {
-        if (message.isNotEmpty()) {
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        }
-    }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = Modifier
@@ -134,32 +129,52 @@ fun LoginScreen(controller: LoginController, navigator: AndroidNavigator) {
                 shape = MaterialTheme.shapes.medium
             )
 
-            // Send OTP Button
+            // Login Button
             Button(
                 onClick = {
-                    controller.sendOtp(email) { responseMessage, isErrorResponse ->
-                        message = responseMessage
-                        isError = isErrorResponse
-
-                        // On successful OTP sending, navigate to OTP verification screen
-                        if (!isErrorResponse) {
-                            val intent = Intent(context, OtpVerificationActivity::class.java).apply {
-                                putExtra("email", email)
-                                putExtra("mobile", mobile)
-                                putExtra("employeeId", employeeId)
-                            }
-                            context.startActivity(intent)
+                    // Validation is now handled in the controller
+                    isLoading = true
+                    errorMessage = null
+                    
+                    controller.sendOtp(
+                        email = email,
+                        mobile = mobile,
+                        employeeId = employeeId
+                    ) { message, isError ->
+                        isLoading = false
+                        if (!isError) {
+                            Log.d("LoginScreen", "OTP sent successfully")
+                            navigator.navigateToOtpVerification(email, mobile, employeeId)
                         } else {
-                            Toast.makeText(context, responseMessage, Toast.LENGTH_SHORT).show()
+                            Log.e("LoginScreen", "Error sending OTP: $message")
+                            errorMessage = message
                         }
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)) // Red Button
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                enabled = !isLoading
             ) {
-                Text("Login", color = Color.White)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text("Login", color = Color.White)
+                }
+            }
+
+            // Error message
+            errorMessage?.let { error ->
+                Text(
+                    text = error,
+                    color = Color.Red,
+                    modifier = Modifier.padding(top = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

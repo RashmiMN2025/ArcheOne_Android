@@ -17,7 +17,6 @@ import com.example.xone.controller.*
 import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.navigation.AndroidNavigator
-import com.example.xone.model.WelcomeBackgroundModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 
@@ -31,74 +30,64 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val navigator = AndroidNavigator(this)
-        controller = WelcomeController(navigator) // Initialize controller
+        welcomeController = WelcomeController(navigator)
+        homeController = HomeController(navigator)
+        locationsController = LocationsController(this)
+        businessCardController = BusinessCardController(this, navigator)
 
         enableEdgeToEdge()
         
-        locationsController = LocationsController(this)
-
         setContent {
             val navController = rememberNavController()
-            val navigator = AndroidNavigator(navController)
             
-            // Initialize controllers with navigator
-            welcomeController = WelcomeController(navigator)
-            homeController = HomeController(navigator)
-            businessCardController = BusinessCardController(this, navigator)
-
+            navigator.setNavController(navController)
+            
             XOneTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    NavHost(
-                        navController = navController,
-                        startDestination = "welcome"
+                Scaffold { padding ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                        color = MaterialTheme.colorScheme.background
                     ) {
-                        composable("welcome") {
-                            WelcomeScreen(
-                                model = welcomeController.getWelcomeData(),
-                                backgroundModel = WelcomeBackgroundModel(),
-                                onXOneClick = welcomeController::onXOneClick,
-                                onPulseClick = welcomeController::onPulseClick
-                            )
-                        }
-                        composable("home") {
-                            HomeScreen(
-                                model = homeController.getHomeData(),
-                                onItemClick = homeController::onItemClick,
-                                onAllAppsClick = homeController::onAllAppsClick,
-                                onFavoritesClick = homeController::onFavoritesClick,
-                                onSearchQueryChanged = homeController::onSearchQueryChanged,
-                                onShowProfileClick = homeController::onShowProfileClick,
-                                onToggleFavorite = homeController::onToggleFavorite,
-                                onFooterHomeClick = homeController::onFooterHomeClick,
-                                onFooterChatClick = homeController::onFooterChatClick,
-                                onFooterSOSClick = homeController::onFooterSOSClick,
-                                onFooterProfileClick = homeController::onFooterProfileClick,
-                                onXCardClick = homeController::onXCardClick
-                            )
-                        }
-                        composable("locations") {
-                            LocationsScreen(
-                                navController = navController,
-                                controller = locationsController
-                            )
-                        }
-                        composable("business_card") {
-                            BusinessCardScreen(
-                                businessCard = businessCardController.businessCard,
-                                controller = businessCardController
-                            )
+                        NavHost(navController = navController, startDestination = "welcome") {
+                            composable("welcome") {
+                                WelcomeScreen(
+                                    model = welcomeController.getWelcomeData(),
+                                    onXOneClick = welcomeController::onXOneClick,
+                                    onPulseClick = welcomeController::onPulseClick
+                                )
+                            }
+                            composable("home") {
+                                HomeScreen(
+                                    model = homeController.model,
+                                    onItemClick = homeController::onItemClick,
+                                    onAllAppsClick = homeController::onAllAppsClick,
+                                    onFavoritesClick = homeController::onFavoritesClick,
+                                    onSearchQueryChanged = homeController::onSearchQueryChanged,
+                                    onShowProfileClick = homeController::onShowProfileClick,
+                                    onToggleFavorite = homeController::onToggleFavorite,
+                                    onFooterHomeClick = homeController::onFooterHomeClick,
+                                    onFooterChatClick = homeController::onFooterChatClick,
+                                    onFooterSOSClick = homeController::onFooterSOSClick,
+                                    onFooterProfileClick = homeController::onFooterProfileClick,
+                                    onXCardClick = homeController::onXCardClick
+                                )
+                            }
+                            composable("locations") {
+                                LocationsScreen(
+                                    navController = navController,
+                                    controller = locationsController
+                                )
+                            }
+                            composable("business_card") {
+                                BusinessCardScreen(
+                                    businessCard = businessCardController.businessCard,
+                                    controller = businessCardController
+                                )
+                            }
                         }
                     }
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    WelcomeScreen(
-                        model = controller.getWelcomeData(), // ✅ Pass the WelcomeModel, not the controller
-                        onXOneClick = controller::onXOneClick,
-                        onPulseClick = controller::onPulseClick,
-                        modifier = Modifier.padding(innerPadding)
-                    )
                 }
             }
         }

@@ -2,18 +2,19 @@ package com.example.xone.controller
 
 import com.example.xone.model.HomeModel
 import com.example.xone.model.HomeItem
-import com.example.xone.navigation.AndroidNavigator
-import androidx.compose.runtime.mutableStateOf
+import com.example.xone.navigation.Navigator
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import android.util.Log
+import com.example.xone.navigation.AndroidNavigator
 
-class HomeController(private val navigator: AndroidNavigator) {
-    private var _homeModel by mutableStateOf(HomeModel(
-        userName = "Annamalai",  // Changed from "Biswajit Dixit"
-        designation = "Graduate Engineer Trainee",  // Changed from "Senior iOS Developer"
-        department = "Delivery",  // Same as before
-        employeeId = "NT1347",  // Changed from "NT1426"
+class HomeController(private val navigator: Navigator) {
+    var model by mutableStateOf(HomeModel(
+        userName = "Annamalai",
+        designation = "Graduate Engineer Trainee",
+        department = "Delivery",
+        employeeId = "NT1347",
         defaultApps = listOf(
             HomeItem("My Documents", "mydocuments", false),
             HomeItem("ID", "id", false),
@@ -24,13 +25,81 @@ class HomeController(private val navigator: AndroidNavigator) {
             HomeItem("My Career", "mycareer", false),
             HomeItem("TimeSheet", "timesheet", false),
             HomeItem("Goal", "goal", false)
+        ),
+        categories = mapOf(
+            "Productivity" to listOf(
+                HomeItem("Timesheet", "timesheet", false),
+                HomeItem("Leave", "leave", false),
+                HomeItem("My Career", "mycareer", false),
+                HomeItem("eLearning", "elearning", false),
+                HomeItem("Goal Setting/KPI", "goal", false),
+                HomeItem("XCard", "xcard", false),
+                HomeItem("Admin", "admin", false),
+                HomeItem("New Onboarding", "onboarding", false),
+                HomeItem("SOS", "sos", false),
+                HomeItem("XProfile", "xprofile", false)
+            ),
+            "Information" to listOf(
+                HomeItem("Asset", "asset", false),
+                HomeItem("MyDocuments", "mydocuments", false),
+                HomeItem("Holiday Calendar", "holiday", false),
+                HomeItem("Locations", "locations", false),
+                HomeItem("Policy", "policy", false)
+            ),
+            "Social" to listOf(
+                HomeItem("Greetings", "greetings", false),
+                HomeItem("XConnect", "xconnect", false)
+            ),
+            "Enterprise Applications" to listOf(
+                HomeItem("Medical", "medical", false),
+                HomeItem("Finance", "finance", false),
+                HomeItem("Travel & Expenses", "travel", false),
+                HomeItem("SAP", "sap", false)
+            )
         )
     ))
-    
-    fun getHomeData(): HomeModel = _homeModel
-    
+        private set
+
+    fun onItemClick(item: HomeItem) {
+        Log.d("HomeController", "onItemClick: ${item.title}")
+        when (item.title.lowercase()) {
+            "locations" -> {
+                Log.d("HomeController", "Navigating to Locations")
+                navigator.navigateToLocations()
+            }
+            "xcard" -> {
+                Log.d("HomeController", "Navigating to Business Card")
+                navigator.navigateToBusinessCard()
+            }
+            "id" -> navigator.navigateToID()
+            "asset" -> navigator.navigateToAsset()
+            "timesheet" -> navigator.navigateToTimesheet()
+            "leave" -> navigator.navigateToLeave()
+            "my documents", "mydocuments" -> navigator.navigateToMyDocuments()
+            "my career" -> navigator.navigateToMyCareer()
+            "elearning" -> navigator.navigateToELearning()
+            "goal setting/kpi", "goal" -> navigator.navigateToGoalSetting()
+            "medical" -> navigator.navigateToMedical()
+            "finance" -> navigator.navigateToFinance()
+            "admin" -> navigator.navigateToAdmin()
+            "hr" -> navigator.navigateToHR()
+            "holiday calendar" -> navigator.navigateToHolidayCalendar()
+            "client calendar" -> navigator.navigateToClientCalendar()
+            "greetings" -> navigator.navigateToGreetings()
+            "xconnect" -> navigator.navigateToXConnect()
+            "helpdesk" -> navigator.navigateToHelpdesk()
+            "announcements" -> navigator.navigateToAnnouncements()
+            "xprofile" -> navigator.navigateToXProfile()
+            "password reset" -> navigator.navigateToPasswordReset()
+            "policy" -> navigator.navigateToPolicy()
+            "sos" -> navigator.navigateToSOS()
+            "travel & expenses" -> navigator.navigateToTravelExpenses()
+            "sap" -> navigator.navigateToSAP()
+        }
+    }
+
     fun onSearchQueryChanged(query: String) {
-        val allApps = _homeModel.categories.values.flatten()
+        val allApps = model.categories.values.flatten()
         val filtered = if (query.isEmpty()) {
             emptyList()
         } else {
@@ -38,115 +107,36 @@ class HomeController(private val navigator: AndroidNavigator) {
                 it.title.lowercase().contains(query.lowercase()) 
             }
         }
-        _homeModel = _homeModel.copy(
+        model = model.copy(
             searchQuery = query,
             filteredApps = filtered
         )
     }
-    
+
     fun onAllAppsClick() {
-        _homeModel = if (_homeModel.showAllApps) {
-            // If All Apps is currently selected, switch to default view
-            _homeModel.copy(
-                showAllApps = false,
-                viewFavorites = false,
-                showSearchAndFavorites = false,
-                searchQuery = ""  // Clear search when going back to default
-            )
-        } else {
-            // If All Apps is not selected, switch to All Apps view
-            _homeModel.copy(
-                showAllApps = true,
-                viewFavorites = false,
-                showSearchAndFavorites = true
-            )
-        }
+        model = model.copy(showAllApps = true, viewFavorites = false)
     }
-    
+
     fun onFavoritesClick() {
-        _homeModel = if (_homeModel.viewFavorites) {
-            // If Favorites is currently selected, switch to default view
-            _homeModel.copy(
-                showAllApps = false,
-                viewFavorites = false,
-                showSearchAndFavorites = false,
-                searchQuery = ""  // Clear search when going back to default
-            )
-        } else {
-            // If Favorites is not selected, switch to Favorites view
-            _homeModel.copy(
-                showAllApps = false,
-                viewFavorites = true,
-                showSearchAndFavorites = true
-            )
-        }
-    }
-    
-    fun onItemClick(item: HomeItem) {
-        Log.d("HomeController", "onItemClick: ${item.title}")
-        when (item.title) {
-            "Locations" -> {
-                Log.d("HomeController", "Navigating to Locations")
-                navigator.navigateToLocations()
-            }
-            "ID" -> navigator.navigateToID()
-            "Asset" -> navigator.navigateToAsset()
-            "Timesheet" -> navigator.navigateToTimesheet()
-            "Leave" -> navigator.navigateToLeave()
-            "MyDocuments" -> navigator.navigateToMyDocuments()
-            "My Career" -> navigator.navigateToMyCareer()
-            "eLearning" -> navigator.navigateToELearning()
-            "Goal Setting/KPI" -> navigator.navigateToGoalSetting()
-            "XCard" -> navigator.navigateToBusinessCard()
-            "Medical" -> navigator.navigateToMedical()
-            "Finance" -> navigator.navigateToFinance()
-            "Admin" -> navigator.navigateToAdmin()
-            "HR" -> navigator.navigateToHR()
-            "Holiday Calendar" -> navigator.navigateToHolidayCalendar()
-            "Client Calendar" -> navigator.navigateToClientCalendar()
-            "Greetings" -> navigator.navigateToGreetings()
-            "XConnect" -> navigator.navigateToXConnect()
-            "Helpdesk" -> navigator.navigateToHelpdesk()
-            "Announcements" -> navigator.navigateToAnnouncements()
-            "XProfile" -> navigator.navigateToXProfile()
-            "Password Reset" -> navigator.navigateToPasswordReset()
-            "Policy" -> navigator.navigateToPolicy()
-            "SOS" -> navigator.navigateToSOS()
-            "Travel & Expenses" -> navigator.navigateToTravelExpenses()
-            "SAP" -> navigator.navigateToSAP()
-        }
+        model = model.copy(viewFavorites = true, showAllApps = false)
     }
 
     fun onShowProfileClick() {
-        // TODO: Implement profile navigation
+        navigator.navigateToXProfile()
     }
 
     fun onToggleFavorite(item: HomeItem) {
-        val allApps = _homeModel.categories.values.flatten()
-        val updatedApps = allApps.map { app ->
-            if (app.title == item.title) {
-                app.copy(isFavorite = !app.isFavorite)
-            } else {
-                app
+        val updatedCategories = model.categories.mapValues { (_, items) ->
+            items.map { 
+                if (it.title == item.title) it.copy(isFavorite = !it.isFavorite)
+                else it
             }
         }
-        
-        val updatedCategories = _homeModel.categories.mapValues { (_, apps) ->
-            apps.map { app ->
-                updatedApps.find { it.title == app.title } ?: app
-            }
-        }
-        
-        val updatedFavorites = updatedApps.filter { it.isFavorite }
-        
-        _homeModel = _homeModel.copy(
-            categories = updatedCategories,
-            favorites = updatedFavorites
-        )
+        model = model.copy(categories = updatedCategories)
     }
 
     fun onFooterHomeClick() {
-        // Already on home, no action needed
+        // Already on home screen, no action needed
     }
 
     fun onFooterChatClick() {
@@ -159,14 +149,6 @@ class HomeController(private val navigator: AndroidNavigator) {
 
     fun onFooterProfileClick() {
         navigator.navigateToXProfile()
-    }
-
-    fun updateViewMode(showAllApps: Boolean, viewFavorites: Boolean) {
-        _homeModel = _homeModel.copy(
-            showAllApps = showAllApps,
-            viewFavorites = viewFavorites,
-            showSearchAndFavorites = showAllApps || viewFavorites
-        )
     }
 
     fun onXCardClick() {

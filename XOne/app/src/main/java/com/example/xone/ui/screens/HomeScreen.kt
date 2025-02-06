@@ -633,7 +633,7 @@ private fun CategoryHeader(
 }
 
 @Composable
-private fun FooterNavigation(
+fun FooterNavigation(
     model: FooterNavigationModel,
     onHomeClick: () -> Unit,
     onChatClick: () -> Unit,
@@ -641,69 +641,64 @@ private fun FooterNavigation(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp),
-        color = CardBackground,
-        shadowElevation = 8.dp
+            .background(CardBackground)
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            FooterNavigationItem(
-                title = "Home",
-                icon = Icons.Default.Home,
-                isSelected = model.items[0].isSelected,
-                onClick = onHomeClick
-            )
-            FooterNavigationItem(
-                title = "Chat",
-                icon = Icons.Default.Email,
-                isSelected = model.items[1].isSelected,
-                onClick = onChatClick
-            )
-            FooterNavigationItem(
-                title = "SOS",
-                icon = Icons.Default.Warning,
-                isSelected = model.items[2].isSelected,
-                onClick = onSOSClick
-            )
-            FooterNavigationItem(
-                title = "Profile",
-                icon = Icons.Default.Person,
-                isSelected = model.items[3].isSelected,
-                onClick = onProfileClick
-            )
-        }
+        FooterItem(
+            icon = Icons.Default.Home,
+            title = "Home",
+            isSelected = model.showHome,
+            onClick = onHomeClick
+        )
+        FooterItem(
+            icon = Icons.Default.Email,
+            title = "Chat",
+            isSelected = model.showChat,
+            onClick = onChatClick
+        )
+        FooterItem(
+            icon = Icons.Default.Warning,
+            title = "SOS",
+            isSelected = model.showSOS,
+            onClick = onSOSClick
+        )
+        FooterItem(
+            icon = Icons.Default.Person,
+            title = "Profile",
+            isSelected = model.showProfile,
+            onClick = onProfileClick
+        )
     }
 }
 
 @Composable
-private fun FooterNavigationItem(
-    title: String,
+private fun FooterItem(
     icon: ImageVector,
+    title: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clickable(onClick = onClick)
-            .padding(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 12.dp)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = if (isSelected) PrimaryRed else TextSecondary,
+            tint = if (isSelected) Color(0xFF808080) else Color(0xFFBDBDBD),
             modifier = Modifier.size(24.dp)
         )
         Text(
             text = title,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isSelected) PrimaryRed else TextSecondary
+            color = if (isSelected) Color(0xFF808080) else Color(0xFFBDBDBD),
+            fontSize = 12.sp
         )
     }
 } 

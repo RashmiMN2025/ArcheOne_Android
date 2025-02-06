@@ -1,94 +1,76 @@
 package com.example.xone.controller
 
 import android.util.Log
-import okhttp3.*
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.MediaType.Companion.toMediaType
+import com.example.xone.network.RetrofitClient
+import com.example.xone.network.VerifyOtpRequest
+import com.example.xone.navigation.Navigator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.IOException
 
-class OtpVerificationController {
-    private val client = OkHttpClient()
-
-    // Verify OTP and Login
+class OtpVerificationController(private val navigator: Navigator) {
     fun verifyOtp(email: String, mobile: String, employeeId: String, otp: String, callback: (String, Boolean) -> Unit) {
-        val url = "http://172.19.2.240:5000/login"
-
-        // Create JSON request body
-        val jsonBody = JSONObject().apply {
-            put("email", email)
-            put("mobile", mobile)
-            put("employeeid", employeeId)
-            put("otpFromUser", otp)
+        if (otp.isEmpty()) {
+            callback("Please enter OTP", true)
+            return
         }
-        val requestBody = jsonBody.toString().toRequestBody("application/json".toMediaType())
 
-        // Create request
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
+        Log.d("OtpVerificationController", "Verifying OTP...")
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = VerifyOtpRequest(
+                    email = email,
+                    mobile = mobile,
+                    employeeid = employeeId,
+                    otpFromUser = otp
+                )
+                
+                val response = RetrofitClient.apiService.verifyOtp(request).execute()
+                val responseBody = response.body()
+                val errorBody = response.errorBody()?.string()
+                
+                Log.d("OtpVerificationController", "Response code: ${response.code()}")
+                Log.d("OtpVerificationController", "Response body: $responseBody")
 
-        // Execute request
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e("OtpVerificationController", "Network Error: ${e.message}")
-                callback("Network error. Please try again.", true)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!response.isSuccessful) {
-                        callback("Server error. Try again later.", true)
-                        return
+                withContext(Dispatchers.Main) {
+                    when {
+                        response.isSuccessful && responseBody != null -> {
+                            Log.d("OtpVerificationController", "OTP verified successfully")
+                            callback(responseBody.message, false)
+                            // Navigate to home screen
+                            navigator.navigateToHome()
+                        }
+                        errorBody != null -> {
+                            try {
+                                val errorJson = JSONObject(errorBody)
+                                val errorMessage = errorJson.optString("message", "Verification failed")
+                                Log.e("OtpVerificationController", "Error: $errorMessage")
+                                callback(errorMessage, true)
+                            } catch (e: Exception) {
+                                Log.e("OtpVerificationController", "Error parsing error body: ${e.message}")
+                                callback("Verification failed", true)
+                            }
+                        }
+                        else -> {
+                            Log.e("OtpVerificationController", "Empty response")
+                            callback("Verification failed", true)
+                        }
                     }
-
-                    val responseData = response.body?.string()
-                    val jsonResponse = responseData?.let { JSONObject(it) }
-
-                    val message = jsonResponse?.optString("message", "Something went wrong")
-                    val isError = response.code != 200
-
-                    callback(message ?: "Unknown error", isError)
+                }
+            } catch (e: Exception) {
+                Log.e("OtpVerificationController", "Network error: ${e.message}")
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    callback("Network error: ${e.message}", true)
                 }
             }
-        })
+        }
     }
 
-    // Resend OTP
-    fun resendOtp(email: String, callback: (String) -> Unit) {
-        val url = "http://172.19.2.240:5000/send-otp"
-
-        val jsonBody = JSONObject().apply {
-            put("email", email)
-        }
-        val requestBody = jsonBody.toString().toRequestBody("application/json".toMediaType())
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e("OtpVerificationController", "Network Error: ${e.message}")
-                callback("Network error. Please try again.")
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!response.isSuccessful) {
-                        callback("Failed to resend OTP. Try again.")
-                        return
-                    }
-
-                    val responseData = response.body?.string()
-                    val jsonResponse = responseData?.let { JSONObject(it) }
-                    val message = jsonResponse?.optString("message", "OTP resend failed")
-
-                    callback(message ?: "Unknown error")
-                }
-            }
-        })
+    fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {
+        // Implementation for resending OTP
     }
 }

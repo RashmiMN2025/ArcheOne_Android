@@ -28,10 +28,10 @@ import com.example.xone.ui.components.CompanyLogo
 @Composable
 fun OtpVerificationScreen(controller: OtpVerificationController, email: String, mobile: String, employeeId: String) {
     var otp by remember { mutableStateOf("") }
-    var timerStarted by remember { mutableStateOf(true) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var timeLeft by remember { mutableStateOf(60) }
-    var message by remember { mutableStateOf("") }
-    var isError by remember { mutableStateOf(false) }  // Track error state
+    var timerStarted by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
     // Timer logic: Decrease `timeLeft` every second
@@ -48,9 +48,9 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
     val formattedTime = String.format("%02d:%02d", timeLeft / 60, timeLeft % 60)
 
     // Show Toast message for verification feedback
-    LaunchedEffect(message) {
-        if (message.isNotEmpty()) {
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -84,7 +84,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
             // OTP Field
             OutlinedTextField(
                 value = otp,
-                onValueChange = { otp = it },
+                onValueChange = { if (it.length <= 6) otp = it },
                 placeholder = { Text("Enter OTP") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,30 +115,39 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 }
             }
 
+            // Error message
+            errorMessage?.let { error ->
+                Text(
+                    text = error,
+                    color = Color.Red,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             // Verify OTP Button
             Button(
                 onClick = {
-                    controller.verifyOtp(email, mobile, employeeId, otp) { responseMessage, error ->
-                        message = responseMessage
-                        isError = error
-
-                        if (!error) {
-                            val intent = Intent(context, HomeDashboardActivity::class.java)
-                            context.startActivity(intent)
-                        }
-                        else {
-                            // Handle OTP validation failure
-                            Toast.makeText(context, "Invalid OTP. Please try again.", Toast.LENGTH_SHORT).show()
-                        }
+                    isLoading = true
+                    errorMessage = null
+                    controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
+                        isLoading = false
+                        errorMessage = if (isError) message else null
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)), // Red Button
-                enabled = true // Always enabled
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                enabled = !isLoading && otp.length == 6
             ) {
-                Text("Verify OTP", color = Color.White)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text("Verify OTP", color = Color.White)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -149,16 +158,18 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
-                    .clickable {
-                        controller.resendOtp(email) { responseMessage ->
-                            message = responseMessage
-                            timeLeft = 60 // Restart the timer when OTP is resent
-                            timerStarted = true // Start the timer again
+                    .clickable(enabled = timeLeft == 0) {
+                        controller.resendOtp(email, mobile, employeeId) { message ->
+                            errorMessage = if (message.contains("success", ignoreCase = true)) null else message
+                            if (message.contains("success", ignoreCase = true)) {
+                                timeLeft = 60
+                                timerStarted = true
+                            }
                         }
                     },
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color.Black,
-                    textDecoration = TextDecoration.Underline
+                    color = if (timeLeft == 0) Color.Black else Color.Gray,
+                    textDecoration = if (timeLeft == 0) TextDecoration.Underline else TextDecoration.None
                 ),
                 textAlign = TextAlign.Center
             )

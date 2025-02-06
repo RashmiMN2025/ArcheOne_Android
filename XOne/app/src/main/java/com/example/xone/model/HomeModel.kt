@@ -4,60 +4,51 @@ data class HomeModel(
     val userName: String = "",
     val designation: String = "",
     val department: String = "",
-    val employeeId: String = "SH0003",
+    val employeeId: String = "",
     val searchQuery: String = "",
     val showAllApps: Boolean = false,
     val viewFavorites: Boolean = false,
-    val filteredApps: List<HomeItem> = emptyList(),
-    val favorites: List<HomeItem> = emptyList(),
-    val defaultApps: List<HomeItem> = listOf(
-        HomeItem("ID", "id_icon", false),
-        HomeItem("Asset", "asset_icon", false),
-        HomeItem("Timesheet", "timesheet_icon", false),
-        HomeItem("Leave", "leave_icon", false),
-        HomeItem("MyDocuments", "documents_icon", false),
-        HomeItem("My Career", "career_icon", false),
-        HomeItem("eLearning", "learning_icon", false),
-        HomeItem("Goal Setting/KPI", "goal_icon", false),
-        HomeItem("XCard", "xcard_icon", false)
-    ),
+    val showSearchAndFavorites: Boolean = false,
+    val defaultApps: List<HomeItem> = emptyList(),
     val categories: Map<String, List<HomeItem>> = mapOf(
         "Productivity" to listOf(
-            HomeItem("Timesheet", "timesheet_icon", false),
-            HomeItem("Leave", "leave_icon", false),
-            HomeItem("My Career", "career_icon", false),
-            HomeItem("eLearning", "learning_icon", false),
-            HomeItem("Goal Setting/KPI", "goal_icon", false),
-            HomeItem("XCard", "xcard_icon", false),
-            HomeItem("Admin", "admin_icon", false),
-            HomeItem("New Onboarding", "onboarding_icon", false),
-            HomeItem("SOS", "sos_icon", false),
-            HomeItem("XProfile", "profile_icon", false)
+            HomeItem("Timesheet", "timesheet", false),
+            HomeItem("Leave", "leave", false),
+            HomeItem("My Career", "mycareer", false),
+            HomeItem("eLearning", "elearning", false),
+            HomeItem("Goal Setting/KPI", "goal", false),
+            HomeItem("XCard", "xcard", false),
+            HomeItem("Admin", "admin", false),
+            HomeItem("New Onboarding", "onboarding", false),
+            HomeItem("SOS", "sos", false),
+            HomeItem("XProfile", "xprofile", false)
         ),
         "Information" to listOf(
-            HomeItem("Asset", "asset_icon", false),
-            HomeItem("MyDocuments", "documents_icon", false),
-            HomeItem("Holiday Calendar", "holiday_icon", false),
-            HomeItem("Locations", "location_icon", false),
-            HomeItem("Policy", "policy_icon", false)
+            HomeItem("Asset", "asset", false),
+            HomeItem("MyDocuments", "mydocuments", false),
+            HomeItem("Holiday Calendar", "holiday", false),
+            HomeItem("Locations", "locations", false),
+            HomeItem("Policy", "policy", false)
         ),
         "Social" to listOf(
-            HomeItem("Greetings", "greetings_icon", false),
-            HomeItem("XConnect", "xconnect_icon", false)
+            HomeItem("Greetings", "greetings", false),
+            HomeItem("XConnect", "xconnect", false)
         ),
         "Enterprise Applications" to listOf(
-            HomeItem("Finance", "finance_icon", false),
-            HomeItem("Medical", "medical_icon", false),
-            HomeItem("Travel & Expenses", "travel_icon", false),
-            HomeItem("SAP", "sap_icon", false)
+            HomeItem("Medical", "medical", false),
+            HomeItem("Finance", "finance", false),
+            HomeItem("Travel & Expenses", "travel", false),
+            HomeItem("SAP", "sap", false)
         )
     ),
-    val footerNavigation: FooterNavigationModel = FooterNavigationModel(),
-    val showSearchAndFavorites: Boolean = false
+    val filteredApps: List<HomeItem> = emptyList(),
+    val favorites: List<HomeItem> = emptyList(),
+    val footerNavigation: FooterNavigationModel = FooterNavigationModel()
 )
 
 data class HomeItem(
     val title: String,
     val icon: String,
-    val isFavorite: Boolean = false
+    var isFavorite: Boolean = false,
+    val category: String = ""
 ) 
