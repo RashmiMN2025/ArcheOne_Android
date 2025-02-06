@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">XOne</string>
+    <string name="login_activity">Login</string>
 </resources>
