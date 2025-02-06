@@ -7,7 +7,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -17,16 +16,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.model.WelcomeModel
-import com.example.xone.model.WelcomeBackgroundModel
 
-private val BackgroundColor = Color(0xFFF8F3E7)
-private val PrimaryColor = Color(0xFFDD3825)
 private val TextColor = Color.Black
 
 @Composable
 fun WelcomeScreen(
     model: WelcomeModel,
-    backgroundModel: WelcomeBackgroundModel = WelcomeBackgroundModel(),
     onXOneClick: () -> Unit,
     onPulseClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -35,17 +30,19 @@ fun WelcomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(
-                brush = Brush.verticalGradient(
+                Brush.linearGradient(
                     colors = listOf(
-                        backgroundModel.topColor,
-                        backgroundModel.middleColor,
-                        backgroundModel.bottomColor
+                        Color(0xFFE0DCD1), // Light Beige
+                        Color(0xFFC8C8CA), // Light Gray
+                        Color(0xFF474749)  // Dark Gray
                     )
                 )
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
@@ -107,9 +104,7 @@ fun WelcomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryColor
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)) // Red Button
                 ) {
                     Text(
                         text = model.buttons[0].text,
@@ -125,9 +120,7 @@ fun WelcomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryColor
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)) // Red Button
                 ) {
                     Text(
                         text = model.buttons[1].text,
@@ -138,4 +131,4 @@ fun WelcomeScreen(
             }
         }
     }
-} 
+}

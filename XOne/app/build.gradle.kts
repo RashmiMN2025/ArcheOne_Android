@@ -40,7 +40,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -57,4 +56,26 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.gson)
+    implementation(libs.okhttp) // Latest stable version
+    implementation (libs.ui)
+    implementation (libs.material3)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.okhttp.v490)
+    implementation (libs.androidx.ui.v130)
+    implementation (libs.androidx.material3.v101)
+    implementation (libs.androidx.ui.v140) // or latest version
+    implementation (libs.androidx.material3.v110) // Ensure you have material3
+    implementation (libs.androidx.foundation) // or latest version
+    implementation (libs.androidx.material) // for Material components
+    implementation (libs.androidx.runtime.livedata)
+    // Ensure this is included in your build.gradle file
+    implementation (libs.androidx.foundation.vlatestversion)
+    implementation (libs.androidx.ui.vlatestversion)
+    implementation (libs.androidx.ui.v150)
+    implementation (libs.androidx.material3.v120)
+    implementation (libs.androidx.foundation.v150)
 }

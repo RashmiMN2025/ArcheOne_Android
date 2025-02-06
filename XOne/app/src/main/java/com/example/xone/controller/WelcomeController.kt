@@ -5,19 +5,14 @@ import com.example.xone.navigation.Navigator
 
 class WelcomeController(private val navigator: Navigator) {
     private var welcomeModel = WelcomeModel()
-    
+
     fun getWelcomeData(): WelcomeModel = welcomeModel
-    
+
     fun onXOneClick() {
-        navigator.navigateToHome()
+        navigator.navigateToLoginScreen()
     }
 
     fun onPulseClick() {
         navigator.openPulseLogin()
-    }
-    
-    private fun updateModel(newModel: WelcomeModel) {
-        welcomeModel = newModel
-        // Notify view of changes if needed
     }
 } 

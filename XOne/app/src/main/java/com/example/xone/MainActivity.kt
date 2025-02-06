@@ -29,6 +29,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val navigator = AndroidNavigator(this)
+        controller = WelcomeController(navigator) // Initialize controller
+
         enableEdgeToEdge()
         
         locationsController = LocationsController(this)
@@ -88,6 +92,13 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    WelcomeScreen(
+                        model = controller.getWelcomeData(), // ✅ Pass the WelcomeModel, not the controller
+                        onXOneClick = controller::onXOneClick,
+                        onPulseClick = controller::onPulseClick,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
