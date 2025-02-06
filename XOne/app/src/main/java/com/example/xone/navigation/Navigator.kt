@@ -30,4 +30,5 @@ interface Navigator {
     fun navigateToTravelExpenses()
     fun navigateToSAP()
     fun navigateToChat()
+    fun navigateToBusinessCard()
 } 

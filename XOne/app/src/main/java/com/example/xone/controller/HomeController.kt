@@ -82,9 +82,9 @@ class HomeController(private val navigator: AndroidNavigator) {
         }
     }
     
-    fun onItemClick(title: String) {
-        Log.d("HomeController", "onItemClick: $title")
-        when (title) {
+    fun onItemClick(item: HomeItem) {
+        Log.d("HomeController", "onItemClick: ${item.title}")
+        when (item.title) {
             "Locations" -> {
                 Log.d("HomeController", "Navigating to Locations")
                 navigator.navigateToLocations()
@@ -97,7 +97,7 @@ class HomeController(private val navigator: AndroidNavigator) {
             "My Career" -> navigator.navigateToMyCareer()
             "eLearning" -> navigator.navigateToELearning()
             "Goal Setting/KPI" -> navigator.navigateToGoalSetting()
-            "XCard" -> navigator.navigateToXCard()
+            "XCard" -> navigator.navigateToBusinessCard()
             "Medical" -> navigator.navigateToMedical()
             "Finance" -> navigator.navigateToFinance()
             "Admin" -> navigator.navigateToAdmin()
@@ -121,10 +121,10 @@ class HomeController(private val navigator: AndroidNavigator) {
         // TODO: Implement profile navigation
     }
 
-    fun onToggleFavorite(title: String) {
+    fun onToggleFavorite(item: HomeItem) {
         val allApps = _homeModel.categories.values.flatten()
         val updatedApps = allApps.map { app ->
-            if (app.title == title) {
+            if (app.title == item.title) {
                 app.copy(isFavorite = !app.isFavorite)
             } else {
                 app
@@ -167,5 +167,9 @@ class HomeController(private val navigator: AndroidNavigator) {
             viewFavorites = viewFavorites,
             showSearchAndFavorites = showAllApps || viewFavorites
         )
+    }
+
+    fun onXCardClick() {
+        navigator.navigateToBusinessCard()
     }
 } 

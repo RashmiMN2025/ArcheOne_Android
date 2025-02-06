@@ -13,22 +13,19 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.xone.controller.HomeController
-import com.example.xone.controller.WelcomeController
-import com.example.xone.ui.screens.HomeScreen
-import com.example.xone.ui.screens.WelcomeScreen
+import com.example.xone.controller.*
+import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.model.WelcomeBackgroundModel
-import com.example.xone.controller.LocationsController
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
-import com.example.xone.ui.screens.LocationsScreen
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
     private lateinit var homeController: HomeController
     private lateinit var locationsController: LocationsController
+    private lateinit var businessCardController: BusinessCardController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,8 +36,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val navigator = AndroidNavigator(navController)
+            
+            // Initialize controllers with navigator
             welcomeController = WelcomeController(navigator)
             homeController = HomeController(navigator)
+            businessCardController = BusinessCardController(this, navigator)
 
             XOneTheme {
                 Surface(
@@ -71,13 +71,20 @@ class MainActivity : ComponentActivity() {
                                 onFooterHomeClick = homeController::onFooterHomeClick,
                                 onFooterChatClick = homeController::onFooterChatClick,
                                 onFooterSOSClick = homeController::onFooterSOSClick,
-                                onFooterProfileClick = homeController::onFooterProfileClick
+                                onFooterProfileClick = homeController::onFooterProfileClick,
+                                onXCardClick = homeController::onXCardClick
                             )
                         }
                         composable("locations") {
                             LocationsScreen(
                                 navController = navController,
                                 controller = locationsController
+                            )
+                        }
+                        composable("business_card") {
+                            BusinessCardScreen(
+                                businessCard = businessCardController.businessCard,
+                                controller = businessCardController
                             )
                         }
                     }

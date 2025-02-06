@@ -122,4 +122,8 @@ class AndroidNavigator(
     override fun navigateToChat() {
         navController.navigate("chat")
     }
+
+    override fun navigateToBusinessCard() {
+        navController.navigate("business_card")
+    }
 } 
