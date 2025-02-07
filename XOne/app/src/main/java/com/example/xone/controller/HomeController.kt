@@ -11,10 +11,10 @@ import com.example.xone.navigation.AndroidNavigator
 
 class HomeController(private val navigator: Navigator) {
     var model by mutableStateOf(HomeModel(
-        userName = "Annamalai",
-        designation = "Graduate Engineer Trainee",
-        department = "Delivery",
-        employeeId = "NT1347",
+        userName = LoginController.getUserData()?.name ?: "",
+        designation = LoginController.getUserData()?.designation ?: "",
+        department = LoginController.getUserData()?.department ?: "",
+        employeeId = LoginController.getUserData()?.employeeId ?: "",
         defaultApps = listOf(
             HomeItem("My Documents", "mydocuments", false),
             HomeItem("ID", "id", false),
@@ -153,5 +153,14 @@ class HomeController(private val navigator: Navigator) {
 
     fun onXCardClick() {
         navigator.navigateToBusinessCard()
+    }
+
+    fun refreshUserData() {
+        model = model.copy(
+            userName = LoginController.getUserData()?.name ?: "",
+            designation = LoginController.getUserData()?.designation ?: "",
+            department = LoginController.getUserData()?.department ?: "",
+            employeeId = LoginController.getUserData()?.employeeId ?: ""
+        )
     }
 } 

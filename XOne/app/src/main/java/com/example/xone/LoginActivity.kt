@@ -9,12 +9,10 @@ import com.example.xone.ui.screens.LoginScreen
 import com.example.xone.ui.theme.XOneTheme
 
 class LoginActivity : ComponentActivity() {
-    private val loginController = LoginController()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val loginController = LoginController()
         val navigator = AndroidNavigator(this)
+        val loginController = LoginController(this, navigator)
 
         setContent {
             XOneTheme {

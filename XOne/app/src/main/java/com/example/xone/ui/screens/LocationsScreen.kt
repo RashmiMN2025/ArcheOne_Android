@@ -112,27 +112,27 @@ fun LocationsScreen(
             when {
                 state.showingStateList && state.selectedState?.name == "Tamil Nadu" -> {
                     // Show Tamil Nadu locations list
-                    LocationList(
-                        locations = state.selectedState.locations,
-                        onLocationClick = { location ->
-                            locationController.selectLocation(location)
-                        },
-                        onShowFloorMap = { mapFile ->
-                            locationController.showFloorMap(mapFile)
-                        },
+                    LazyColumn(
                         modifier = Modifier.padding(padding),
-                        isTamilNadu = true
-                    )
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(state.selectedState.locations) { location ->
+                            LocationCard(
+                                location = location,
+                                onClick = { locationController.selectLocation(location) },
+                                onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
+                                    { location.mapFileName?.let { mapFile -> locationController.showFloorMap(mapFile) } }
+                                } else null
+                            )
+                        }
+                    }
                 }
                 state.showingStateList -> {
                     StateList(
                         states = state.selectedLocation?.states ?: emptyList(),
                         onStateClick = { state ->
-                            if (state.name == "Tamil Nadu") {
-                                locationController.showTamilNaduLocations(state)
-                            } else {
-                                locationController.selectStateLocation(state)
-                            }
+                            locationController.selectStateLocation(state)
                         },
                         modifier = Modifier.padding(padding),
                         controller = locationController
@@ -190,15 +190,6 @@ private fun LocationCard(
             Text(
                 text = location.name,
                 fontSize = if (location.hasMultipleLocations) 16.sp else 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = location.companyName,
-                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
@@ -394,7 +385,14 @@ private fun StateList(
                     item {
                         Button(
                             onClick = { 
-                                controller.selectSpecialLocation("Chennai")
+                                val tamilNaduState = states.find { it.name == "Tamil Nadu" }
+                                if (tamilNaduState != null) {
+                                    // Find Chennai location specifically
+                                    val chennaiLocation = tamilNaduState.locations.find { it.name == "Chennai, HQ" }
+                                    if (chennaiLocation != null) {
+                                        controller.selectLocation(chennaiLocation)
+                                    }
+                                }
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
@@ -418,7 +416,14 @@ private fun StateList(
                     item {
                         Button(
                             onClick = { 
-                                controller.selectSpecialLocation("Coimbatore")
+                                val tamilNaduState = states.find { it.name == "Tamil Nadu" }
+                                if (tamilNaduState != null) {
+                                    // Find Coimbatore location specifically
+                                    val coimbatoreLocation = tamilNaduState.locations.find { it.name == "Coimbatore, Registered Office" }
+                                    if (coimbatoreLocation != null) {
+                                        controller.selectLocation(coimbatoreLocation)
+                                    }
+                                }
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
@@ -675,38 +680,5 @@ private fun LocationList(
                 } else null
             )
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun StateCard(
-    state: StateInfo,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = PrimaryRed
-        ),
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        Text(
-            text = when (state.name) {
-                "Tamil Nadu" -> {
-                    if (state.locations.firstOrNull()?.name == "Chennai") "Chennai, HQ"
-                    else if (state.locations.firstOrNull()?.name == "Coimbatore") "Coimbatore, Registered Office"
-                    else state.name
-                }
-                else -> state.name
-            },
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 } 

@@ -1,16 +1,23 @@
 package com.example.xone.controller
 
+import android.content.Context
 import android.util.Log
+import com.example.xone.model.UserData
 import com.example.xone.network.RetrofitClient
 import com.example.xone.network.SendOtpRequest
 import com.example.xone.network.VerifyOtpRequest
+import com.example.xone.network.Office
+import com.example.xone.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
-class LoginController {
+class LoginController(
+    private val context: Context,
+    private val navigator: Navigator
+) {
     // First step: Send OTP
     fun sendOtp(
         email: String,
@@ -125,7 +132,19 @@ class LoginController {
                     when {
                         response.isSuccessful && responseBody != null -> {
                             Log.d("LoginController", "Login successful: ${responseBody.message}")
+                            userData = UserData(
+                                name = responseBody.name,
+                                designation = responseBody.designation,
+                                department = responseBody.department,
+                                employeeId = responseBody.employeeid,
+                                email = responseBody.email,
+                                mobile = responseBody.mobile,
+                                location = responseBody.location
+                            )
+                            officesData = responseBody.offices
+                            LocationsController(context).initializeLocations()
                             callback(responseBody.message, false)
+                            navigator.navigateToHome()  // Add navigation to home
                         }
                         errorBody != null -> {
                             try {
@@ -151,6 +170,27 @@ class LoginController {
                     callback("Network error during login: ${e.message}", true)
                 }
             }
+        }
+    }
+
+    // Add companion object to store user data
+    companion object {
+        private var userData: UserData? = null
+        private var officesData: List<Office>? = null
+        
+        fun getUserData(): UserData? = userData
+        fun getOfficesData(): List<Office>? {
+            Log.d("LoginController", "Getting offices data: $officesData")
+            return officesData
+        }
+        
+        fun setUserData(data: UserData) {
+            userData = data
+        }
+        
+        fun setOfficesData(offices: List<Office>) {
+            Log.d("LoginController", "Setting offices data: $offices")
+            officesData = offices
         }
     }
 }

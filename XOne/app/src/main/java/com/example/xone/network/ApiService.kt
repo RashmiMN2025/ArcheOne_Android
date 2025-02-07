@@ -56,6 +56,7 @@ data class Office(
     val address: String,
     val email: String,
     val country: String,
+    val companyName: String? = null,
     val regionaloffice: List<RegionalOffice>
 )
 
@@ -63,6 +64,7 @@ data class RegionalOffice(
     val region: String,
     val id: Int,
     val address: String,
+    val companyName: String? = null,
     val hrContact: String? = null,
     val adminContact: String? = null,
     val email: String? = null

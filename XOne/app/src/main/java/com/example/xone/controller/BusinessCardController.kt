@@ -9,16 +9,28 @@ class BusinessCardController(
     private val context: Context,
     private val navigator: AndroidNavigator
 ) {
-    
-    val businessCard = BusinessCardModel(
+    // Get user data from LoginController
+    val businessCard = LoginController.getUserData()?.let { userData ->
+        BusinessCardModel(
+            companyLogo = R.drawable.netcon,
+            name = userData.name,
+            designation = userData.designation,
+            department = userData.department,
+            email = userData.email,
+            phone = userData.mobile,
+            location = "Bangalore", // Note: Location is not currently part of UserData
+            qrCode = "" // Generate QR code string here
+        )
+    } ?: BusinessCardModel(
+        // Fallback default values if userData is null
         companyLogo = R.drawable.netcon,
-        name = "Annamalai",
-        designation = "Graduate Engineer Trainee",
-        department = "Delivery",
-        email = "annamalai.k@netcon.in",
-        phone = "7838971194",
-        location = "Bangalore",
-        qrCode = "" // Generate QR code string here
+        name = "",
+        designation = "",
+        department = "",
+        email = "",
+        phone = "",
+        location = "",
+        qrCode = ""
     )
     
     fun onDownloadCard() {
