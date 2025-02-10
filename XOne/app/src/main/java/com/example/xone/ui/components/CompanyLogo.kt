@@ -14,7 +14,7 @@ import com.example.xone.R
 fun CompanyLogo(modifier: Modifier = Modifier) {
     // Load your logo image
     Image(
-        painter = painterResource(id = R.drawable.netcon), // Replace 'logo' with your actual logo resource
+        painter = painterResource(id = R.drawable.arche), // Changed from netcon to arche
         contentDescription = "Company Logo",
         modifier = modifier
     )

@@ -12,7 +12,7 @@ class BusinessCardController(
     // Get user data from LoginController
     val businessCard = LoginController.getUserData()?.let { userData ->
         BusinessCardModel(
-            companyLogo = R.drawable.netcon,
+            companyLogo = R.drawable.arche,
             name = userData.name,
             designation = userData.designation,
             department = userData.department,
@@ -23,7 +23,7 @@ class BusinessCardController(
         )
     } ?: BusinessCardModel(
         // Fallback default values if userData is null
-        companyLogo = R.drawable.netcon,
+        companyLogo = R.drawable.arche,
         name = "",
         designation = "",
         department = "",

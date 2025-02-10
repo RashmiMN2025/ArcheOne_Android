@@ -49,8 +49,8 @@ fun WelcomeScreen(
                 modifier = Modifier.padding(start = 16.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.netcon),
-                    contentDescription = "Netcon Logo",
+                    painter = painterResource(id = R.drawable.arche),
+                    contentDescription = "Arche Logo",
                     modifier = Modifier
                         .size(180.dp)
                         .padding(top = 8.dp)

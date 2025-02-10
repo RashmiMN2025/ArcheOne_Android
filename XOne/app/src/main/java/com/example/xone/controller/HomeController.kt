@@ -114,7 +114,10 @@ class HomeController(private val navigator: Navigator) {
     }
 
     fun onAllAppsClick() {
-        model = model.copy(showAllApps = true, viewFavorites = false)
+        model = model.copy(
+            showAllApps = !model.showAllApps,
+            viewFavorites = false
+        )
     }
 
     fun onFavoritesClick() {

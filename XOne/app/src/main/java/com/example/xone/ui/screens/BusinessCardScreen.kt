@@ -26,6 +26,13 @@ import com.example.xone.ui.theme.TextPrimary
 import com.example.xone.ui.theme.WelcomeBackgroundBottom
 import com.example.xone.ui.theme.WelcomeBackgroundMiddle
 import com.example.xone.ui.theme.WelcomeBackgroundTop
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +40,8 @@ fun BusinessCardScreen(
     businessCard: BusinessCardModel,
     controller: BusinessCardController
 ) {
+    var isPortraitView by remember { mutableStateOf(true) }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -45,177 +54,392 @@ fun BusinessCardScreen(
                     )
                 )
             )
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { _, dragAmount ->
+                    when {
+                        dragAmount < -50 && isPortraitView -> isPortraitView = false // Swipe left
+                        dragAmount > 50 && !isPortraitView -> isPortraitView = true  // Swipe right
+                    }
+                }
+            }
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        if (isPortraitView) {
+            PortraitBusinessCard(businessCard, controller)
+        } else {
+            LandscapeBusinessCard(businessCard, controller)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PortraitBusinessCard(
+    businessCard: BusinessCardModel,
+    controller: BusinessCardController
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
+            // Use CenterAlignedTopAppBar instead of TopAppBar
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        "My Business Card",
+                        color = TextPrimary
+                    ) 
+                },
+                navigationIcon = {
+                    IconButton(onClick = { controller.onBackPressed() }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = TextPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+
+        item {
+            // Card Content
+            Card(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(0.85f),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = CardBackground  // Use consistent card background
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(
+                            start = 32.dp,  // Increased left padding to move content right
+                            end = 24.dp,
+                            top = 24.dp,
+                            bottom = 24.dp
+                        )
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Image(
+                        painter = painterResource(id = businessCard.companyLogo),
+                        contentDescription = "Company Logo",
+                        modifier = Modifier.height(20.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = businessCard.name,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.9f
+                        ),
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = businessCard.designation,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                        ),
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = businessCard.department,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                        ),
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // QR Code with white background for better visibility
+                    Surface(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .background(Color.White, RoundedCornerShape(8.dp)),
+                        color = Color.White
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.qr),
+                            contentDescription = "QR Code",
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = businessCard.email,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                        ),
+                        color = Color.Black
+                    )
+                    Text(
+                        text = businessCard.phone,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                        ),
+                        color = Color.Black
+                    )
+                    Text(
+                        text = businessCard.location,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                        ),
+                        color = Color.Black
+                    )
+                }
+            }
+        }
+
+        item {
+            Text(
+                text = "<-- Swipe left to change View",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize * 0.9f
+                ),
+                color = TextPrimary,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        item {
+            // Bottom Buttons
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = { controller.onDownloadCard() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                ) {
+                    Text(
+                        "Download Business Card", 
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Normal
+                        )
+                    )
+                }
+
+                Button(
+                    onClick = { controller.onShareCard() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                ) {
+                    Text(
+                        "Share Business Card", 
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Normal
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LandscapeBusinessCard(
+    businessCard: BusinessCardModel,
+    controller: BusinessCardController
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Update TopAppBar here as well
+        CenterAlignedTopAppBar(
+            title = { 
+                Text(
+                    "My Business Card",
+                    color = TextPrimary
+                ) 
+            },
+            navigationIcon = {
+                IconButton(onClick = { controller.onBackPressed() }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "Back",
+                        tint = TextPrimary
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color.Transparent
+            )
+        )
+
+        Card(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(0.99f)
+                .height(220.dp),  // Reduced height slightly more
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = CardBackground
+            )
         ) {
-            item {
-                // Top Bar
-                TopAppBar(
-                    title = { 
-                        Text(
-                            "My Business Card",
-                            color = TextPrimary
-                        ) 
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { controller.onBackPressed() }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_back),
-                                contentDescription = "Back",
-                                tint = TextPrimary
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1.5f)
+                        .padding(end = 16.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Image(
+                        painter = painterResource(id = businessCard.companyLogo),
+                        contentDescription = "Company Logo",
+                        modifier = Modifier
+                            .height(20.dp)
+                            .offset(y = (-4).dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = businessCard.name,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.7f
+                        ),
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = businessCard.designation,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
+                        ),
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = businessCard.department,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
+                        ),
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = businessCard.email,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
+                        ),
+                        color = Color.Black
+                    )
+                    Text(
+                        text = businessCard.phone,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
+                        ),
+                        color = Color.Black
+                    )
+                    Text(
+                        text = businessCard.location,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
+                        ),
+                        color = Color.Black
+                    )
+                }
+
+                // Right side - QR code only
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(Color.White, RoundedCornerShape(8.dp)),
+                        color = Color.White
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.qr),
+                            contentDescription = "QR Code",
+                            modifier = Modifier.padding(6.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Text(
+            text = "--> Swipe right to change View",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize * 0.9f
+            ),
+            color = TextPrimary,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        // Updated bottom buttons to match portrait layout
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Button(
+                onClick = { controller.onDownloadCard() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+            ) {
+                Text(
+                    "Download Business Card", 
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Normal
                     )
                 )
             }
 
-            item {
-                // Card Content
-                Card(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(0.9f),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = CardBackground  // Use consistent card background
+            Button(
+                onClick = { controller.onShareCard() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+            ) {
+                Text(
+                    "Share Business Card", 
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Normal
                     )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(
-                                start = 32.dp,  // Increased left padding to move content right
-                                end = 24.dp,
-                                top = 24.dp,
-                                bottom = 24.dp
-                            )
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Image(
-                            painter = painterResource(id = businessCard.companyLogo),
-                            contentDescription = "Company Logo",
-                            modifier = Modifier.height(40.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Profile Image Placeholder
-                        Surface(
-                            modifier = Modifier.size(80.dp),
-                            shape = CircleShape,
-                            color = Color.Black.copy(alpha = 0.5f) // Made slightly transparent
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_person),
-                                contentDescription = "Profile",
-                                tint = Color.White,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = businessCard.name,
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = Color.Black
-                        )
-
-                        Text(
-                            text = businessCard.designation,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Black
-                        )
-
-                        Text(
-                            text = businessCard.department,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Black
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // QR Code with white background for better visibility
-                        Surface(
-                            modifier = Modifier
-                                .size(100.dp)
-                                .background(Color.White, RoundedCornerShape(8.dp)),
-                            color = Color.White
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.qr),
-                                contentDescription = "QR Code",
-                                modifier = Modifier.padding(8.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = businessCard.email,
-                            color = Color.Black,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = businessCard.phone,
-                            color = Color.Black,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = businessCard.location,
-                            color = Color.Black,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
-            }
-
-            item {
-                // Bottom Buttons
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Button(
-                        onClick = { controller.onDownloadCard() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
-                    ) {
-                        Text(
-                            "Download Business Card", 
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Normal
-                            )
-                        )
-                    }
-
-                    Button(
-                        onClick = { controller.onShareCard() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
-                    ) {
-                        Text(
-                            "Share Business Card", 
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Normal
-                            )
-                        )
-                    }
-                }
+                )
             }
         }
     }
