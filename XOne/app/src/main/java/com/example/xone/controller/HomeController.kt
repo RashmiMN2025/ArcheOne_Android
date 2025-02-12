@@ -135,7 +135,20 @@ class HomeController(private val navigator: Navigator) {
                 else it
             }
         }
-        model = model.copy(categories = updatedCategories)
+        
+        // Update favorites list
+        val updatedFavorites = if (!item.isFavorite) {
+            // Adding to favorites
+            model.favorites + item.copy(isFavorite = true)
+        } else {
+            // Removing from favorites
+            model.favorites.filter { it.title != item.title }
+        }
+        
+        model = model.copy(
+            categories = updatedCategories,
+            favorites = updatedFavorites
+        )
     }
 
     fun onFooterHomeClick() {

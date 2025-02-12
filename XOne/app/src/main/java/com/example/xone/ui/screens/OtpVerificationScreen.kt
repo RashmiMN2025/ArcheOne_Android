@@ -1,5 +1,6 @@
 package com.example.xone.ui.screens
 
+import com.example.xone.ui.theme.XOneTheme
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.widget.Toast
@@ -23,6 +24,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import com.example.xone.HomeDashboardActivity
 import com.example.xone.controller.OtpVerificationController
 import com.example.xone.ui.components.CompanyLogo
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.xone.controller.LoginController
+import com.example.xone.navigation.AndroidNavigator
+import com.example.xone.navigation.Navigator
+import com.example.xone.ui.preview.PreviewNavigator
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -174,6 +180,32 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 textAlign = TextAlign.Center
             )
 
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun OtpVerificationScreenPreview() {
+    val previewNavigator = PreviewNavigator()
+    
+    XOneTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            OtpVerificationScreen(
+                controller = OtpVerificationController(
+                    navigator = previewNavigator,
+                    loginController = LoginController(
+                        context = LocalContext.current,
+                        navigator = previewNavigator
+                    )
+                ),
+                email = "john.doe@company.com",
+                mobile = "+91 9876543210",
+                employeeId = "EMP123"
+            )
         }
     }
 }

@@ -3,15 +3,17 @@ package com.example.xone.model
 import java.util.*
 
 data class WelcomeModel(
-    val title: String = "Hi there!",
-    val subtitle: String = getTimeBasedGreeting(),
-    val description1: String = "Your journey to XOne",
-    val description2: String = "begins here!",
-    val buttons: List<ButtonModel> = listOf(
-        ButtonModel("XOne"),
-        ButtonModel("Pulse")
+    val title: String = "Welcome to",
+    val subtitle: String = "XOne",
+    val description1: String = "Your one-stop solution",
+    val description2: String = "for everything",
+    val buttons: List<Button> = listOf(
+        Button("Login to XOne"),
+        Button("Login to Pulse")
     )
 ) {
+    data class Button(val text: String)
+
     companion object {
         // Function to determine the dynamic subtitle based on the time of day
         fun getTimeBasedGreeting(): String {

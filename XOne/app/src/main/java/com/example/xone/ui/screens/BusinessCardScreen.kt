@@ -33,6 +33,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
+import androidx.activity.ComponentActivity
+import com.example.xone.ui.theme.XOneTheme
+import com.example.xone.navigation.AndroidNavigator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,12 +90,13 @@ private fun PortraitBusinessCard(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            // Use CenterAlignedTopAppBar instead of TopAppBar
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = { 
                     Text(
                         "My Business Card",
-                        color = TextPrimary
+                        color = TextPrimary,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     ) 
                 },
                 navigationIcon = {
@@ -99,7 +108,7 @@ private fun PortraitBusinessCard(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
                 )
             )
@@ -267,12 +276,13 @@ private fun LandscapeBusinessCard(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Update TopAppBar here as well
-        CenterAlignedTopAppBar(
+        TopAppBar(
             title = { 
                 Text(
                     "My Business Card",
-                    color = TextPrimary
+                    color = TextPrimary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 ) 
             },
             navigationIcon = {
@@ -284,7 +294,7 @@ private fun LandscapeBusinessCard(
                     )
                 }
             },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent
             )
         )
@@ -347,7 +357,7 @@ private fun LandscapeBusinessCard(
                         color = Color.Black
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         text = businessCard.email,
@@ -442,5 +452,80 @@ private fun LandscapeBusinessCard(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BusinessCardScreenPreview() {
+    val previewCard = BusinessCardModel(
+        companyLogo = R.drawable.arche,
+        name = "John Doe",
+        designation = "Software Engineer",
+        department = "Engineering",
+        email = "john.doe@company.com",
+        phone = "+91 9876543210",
+        location = "Bangalore",
+        qrCode = ""
+    )
+    
+    XOneTheme {
+        BusinessCardScreen(
+            businessCard = previewCard,
+            controller = BusinessCardController(
+                context = LocalContext.current,
+                navigator = AndroidNavigator(ComponentActivity())
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PortraitBusinessCardPreview() {
+    val previewCard = BusinessCardModel(
+        companyLogo = R.drawable.arche,
+        name = "John Doe",
+        designation = "Software Engineer",
+        department = "Engineering",
+        email = "john.doe@company.com",
+        phone = "+91 9876543210",
+        location = "Bangalore",
+        qrCode = ""
+    )
+    
+    XOneTheme {
+        PortraitBusinessCard(
+            businessCard = previewCard,
+            controller = BusinessCardController(
+                context = LocalContext.current,
+                navigator = AndroidNavigator(ComponentActivity())
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 800)
+@Composable
+fun LandscapeBusinessCardPreview() {
+    val previewCard = BusinessCardModel(
+        companyLogo = R.drawable.arche,
+        name = "John Doe",
+        designation = "Software Engineer",
+        department = "Engineering",
+        email = "john.doe@company.com",
+        phone = "+91 9876543210",
+        location = "Bangalore",
+        qrCode = ""
+    )
+    
+    XOneTheme {
+        LandscapeBusinessCard(
+            businessCard = previewCard,
+            controller = BusinessCardController(
+                context = LocalContext.current,
+                navigator = AndroidNavigator(ComponentActivity())
+            )
+        )
     }
 } 

@@ -25,6 +25,11 @@ import com.example.xone.OtpVerificationActivity
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.navigation.Navigator
 import android.util.Log
+import androidx.compose.ui.tooling.preview.Preview
+import android.app.Activity
+import com.example.xone.R
+import com.example.xone.ui.theme.XOneTheme
+import com.example.xone.ui.preview.PreviewNavigator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,6 +181,27 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginScreenPreview() {
+    val previewNavigator = PreviewNavigator()
+    
+    XOneTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LoginScreen(
+                controller = LoginController(
+                    context = LocalContext.current,
+                    navigator = previewNavigator
+                ),
+                navigator = previewNavigator
+            )
         }
     }
 }

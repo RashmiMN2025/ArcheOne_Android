@@ -10,14 +10,20 @@ import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.controller.HomeController
 import com.example.xone.controller.LocationsController
 import com.example.xone.controller.BusinessCardController
+import com.example.xone.controller.PolicyController
+import com.example.xone.controller.AssetController
 import com.example.xone.ui.screens.HomeScreen
 import com.example.xone.ui.screens.LocationsScreen
 import com.example.xone.ui.screens.BusinessCardScreen
+import com.example.xone.ui.screens.PolicyScreen
+import com.example.xone.ui.screens.AssetScreen
 import com.example.xone.ui.theme.XOneTheme
 
 class HomeActivity : ComponentActivity() {
     private lateinit var locationsController: LocationsController
     private lateinit var businessCardController: BusinessCardController
+    private lateinit var policyController: PolicyController
+    private lateinit var assetController: AssetController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +37,8 @@ class HomeActivity : ComponentActivity() {
             val controller = HomeController(navigator)
             locationsController = LocationsController(this)
             businessCardController = BusinessCardController(this, navigator)
+            policyController = PolicyController(this, navigator)
+            assetController = AssetController(this, navigator)
 
             XOneTheme {
                 NavHost(navController = navController, startDestination = "home") {
@@ -60,6 +68,20 @@ class HomeActivity : ComponentActivity() {
                         BusinessCardScreen(
                             businessCard = businessCardController.businessCard,
                             controller = businessCardController
+                        )
+                    }
+                    composable("policy") {
+                        PolicyScreen(
+                            model = policyController.model,
+                            onPolicyClick = policyController::onPolicyClick,
+                            onDownloadClick = policyController::onDownloadClick,
+                            onBackClick = policyController::onBackClick
+                        )
+                    }
+                    composable("asset") {
+                        AssetScreen(
+                            model = assetController.model,
+                            controller = assetController
                         )
                     }
                 }

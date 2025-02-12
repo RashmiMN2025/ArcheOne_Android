@@ -35,7 +35,8 @@ import com.example.xone.model.HomeModel
 import com.example.xone.model.HomeItem
 import com.example.xone.model.FooterNavigationModel
 import com.example.xone.ui.theme.*
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.animation.animateContentSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -44,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.xone.model.WelcomeBackgroundModel
@@ -51,6 +53,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import com.example.xone.R
 import com.example.xone.ui.theme.getColorForApp
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun ProfileHeader(
@@ -159,21 +170,23 @@ fun HomeScreen(
     onXCardClick: () -> Unit
 ) {
     val backgroundModel = remember { WelcomeBackgroundModel() }
+    var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
+    var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        backgroundModel.topColor,
-                        backgroundModel.middleColor,
-                        backgroundModel.bottomColor
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            backgroundModel.topColor,
+                            backgroundModel.middleColor,
+                            backgroundModel.bottomColor
+                        )
                     )
                 )
-            )
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        ) {
             ProfileHeader(
                 model = model,
                 onShowProfileClick = onShowProfileClick
@@ -317,7 +330,13 @@ fun HomeScreen(
                                             onClick = { onItemClick(item) },
                                             onFavoriteClick = { onToggleFavorite(item) },
                                             modifier = Modifier.weight(1f),
-                                            showFavoriteButton = model.showAllApps || model.viewFavorites
+                                            showFavoriteButton = model.showAllApps || model.viewFavorites,
+                                            isSelected = item == selectedApp,
+                                            onLongPress = { position -> 
+                                                selectedApp = item
+                                                selectedPosition = position
+                                            },
+                                            shouldBlur = selectedApp != null && item != selectedApp
                                         )
                                     }
                                     repeat(3 - rowItems.size) {
@@ -355,7 +374,13 @@ fun HomeScreen(
                                             onClick = { onItemClick(item) },
                                             onFavoriteClick = { onToggleFavorite(item) },
                                             modifier = Modifier.weight(1f),
-                                            showFavoriteButton = model.showAllApps || model.viewFavorites
+                                            showFavoriteButton = model.showAllApps || model.viewFavorites,
+                                            isSelected = item == selectedApp,
+                                            onLongPress = { position -> 
+                                                selectedApp = item
+                                                selectedPosition = position
+                                            },
+                                            shouldBlur = selectedApp != null && item != selectedApp
                                         )
                                     }
                                     repeat(3 - rowItems.size) {
@@ -368,30 +393,50 @@ fun HomeScreen(
                     }
                 } else if (model.viewFavorites) {
                     // Favorites View
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
-                    ) {
-                        items(model.favorites.chunked(3)) { rowItems ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(25.dp)
-                            ) {
-                                rowItems.forEach { item ->
-                                    AppItem(
-                                        title = item.title,
-                                        isFavorite = item.isFavorite,
-                                        onClick = { onItemClick(item) },
-                                        onFavoriteClick = { onToggleFavorite(item) },
-                                        modifier = Modifier.weight(1f),
-                                        showFavoriteButton = model.showAllApps || model.viewFavorites
-                                    )
+                    if (model.favorites.isEmpty()) {
+                        // Show empty state message when no favorites
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No favorite apps yet",
+                                color = TextSecondary,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                        ) {
+                            items(model.favorites.chunked(3)) { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                ) {
+                                    rowItems.forEach { item ->
+                                        AppItem(
+                                            title = item.title,
+                                            isFavorite = true, // Always true in favorites view
+                                            onClick = { onItemClick(item) },
+                                            onFavoriteClick = { onToggleFavorite(item) },
+                                            modifier = Modifier.weight(1f),
+                                            showFavoriteButton = true,
+                                            isSelected = item == selectedApp,
+                                            onLongPress = { position -> 
+                                                selectedApp = item
+                                                selectedPosition = position
+                                            },
+                                            shouldBlur = selectedApp != null && item != selectedApp
+                                        )
+                                    }
+                                    repeat(3 - rowItems.size) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
                                 }
-                                repeat(3 - rowItems.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 } else {
@@ -412,7 +457,13 @@ fun HomeScreen(
                                         onClick = { onItemClick(item) },
                                         onFavoriteClick = { onToggleFavorite(item) },
                                         modifier = Modifier.weight(1f),
-                                        showFavoriteButton = false
+                                        showFavoriteButton = false,
+                                        isSelected = item == selectedApp,
+                                        onLongPress = { position -> 
+                                            selectedApp = item
+                                            selectedPosition = position
+                                        },
+                                        shouldBlur = selectedApp != null && item != selectedApp
                                     )
                                 }
                                 repeat(3 - rowItems.size) {
@@ -434,6 +485,24 @@ fun HomeScreen(
                 onProfileClick = onFooterProfileClick
             )
         }
+
+        // Show favorite dialog when an app is selected
+        if (selectedApp != null && selectedPosition != null) {
+            FavoriteDialog(
+                title = selectedApp!!.title,
+                isFavorite = selectedApp!!.isFavorite,
+                onConfirm = {
+                    onToggleFavorite(selectedApp!!)
+                    selectedApp = null
+                    selectedPosition = null
+                },
+                onDismiss = {
+                    selectedApp = null
+                    selectedPosition = null
+                },
+                position = selectedPosition
+            )
+        }
     }
 }
 
@@ -444,23 +513,37 @@ private fun AppItem(
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier,
-    showFavoriteButton: Boolean = true
+    showFavoriteButton: Boolean = true,
+    isSelected: Boolean = false,
+    onLongPress: (Pair<Float, Float>) -> Unit,
+    shouldBlur: Boolean = false
 ) {
-    var isPressed by remember { mutableStateOf(false) }
+    var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     
     Card(
-        onClick = {
-            isPressed = true
-            onClick()
-        },
         modifier = modifier
             .aspectRatio(1f)
-            .graphicsLayer {
-                scaleX = if (isPressed) 0.95f else 1f
-                scaleY = if (isPressed) 0.95f else 1f
+            .onGloballyPositioned { coordinates ->
+                // Store the position when the component is laid out
+                val position = coordinates.positionInRoot()
+                itemPosition = Pair(
+                    position.x + (coordinates.size.width / 2),
+                    position.y + coordinates.size.height
+                )
             }
-            .animateContentSize(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onClick() },
+                    onLongPress = { 
+                        // Use the stored position when long pressed
+                        itemPosition?.let { pos -> onLongPress(pos) }
+                    }
+                )
+            }
+            .blur(radius = if (shouldBlur) 10.dp else 0.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 8.dp else 2.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = CardBackground
         ),
@@ -487,28 +570,6 @@ private fun AppItem(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
-
-            // Only show favorite/plus icon when showFavoriteButton is true
-            if (showFavoriteButton) {
-                Surface(
-                    shape = CircleShape,
-                    color = if (isFavorite) Color(0xFFDD3825).copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(3.dp)
-                        .size(16.dp)
-                        .clickable(onClick = onFavoriteClick)
-                ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Filled.Check else Icons.Filled.Add,
-                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                        tint = if (isFavorite) Color(0xFFDD3825) else Color.Gray,
-                        modifier = Modifier
-                            .padding(2.dp)
-                            .size(12.dp)
-                    )
-                }
             }
         }
     }
@@ -700,5 +761,54 @@ private fun FooterItem(
             color = if (isSelected) Color(0xFF808080) else Color(0xFFBDBDBD),
             fontSize = 12.sp
         )
+    }
+}
+
+@Composable
+private fun FavoriteDialog(
+    title: String,
+    isFavorite: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    position: Pair<Float, Float>? = null
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .clickable(onClick = onDismiss)
+    ) {
+        position?.let { (x, y) ->
+            Surface(
+                modifier = Modifier
+                    .width(200.dp)
+                    .offset {
+                        IntOffset(
+                            x = (x - 100).toInt(),
+                            y = y.toInt() + 8
+                        )
+                    }
+                    .clickable(enabled = false) { }, // Prevent click propagation
+                shape = RoundedCornerShape(8.dp),
+                color = Color.White
+            ) {
+                TextButton(
+                    onClick = {
+                        onConfirm()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = if (isFavorite) "Remove from Favorites" else "Add to Favorites",
+                        color = Color(0xFFDD3825),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
     }
 } 

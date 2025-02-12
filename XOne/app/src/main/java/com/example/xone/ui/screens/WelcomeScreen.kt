@@ -1,5 +1,6 @@
 package com.example.xone.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.model.WelcomeModel
+import com.example.xone.ui.theme.XOneTheme
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.activity.ComponentActivity
+import com.example.xone.navigation.AndroidNavigator
+import com.example.xone.ui.preview.PreviewNavigator
 
 private val TextColor = Color.Black
 
@@ -130,5 +137,53 @@ fun WelcomeScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun WelcomeScreenPreview() {
+    val previewModel = WelcomeModel(
+        title = "Welcome to",
+        subtitle = "XOne",
+        description1 = "Your one-stop solution",
+        description2 = "for everything",
+        buttons = listOf(
+            WelcomeModel.Button("Login to XOne"),
+            WelcomeModel.Button("Login to Pulse")
+        )
+    )
+    
+    XOneTheme {
+        WelcomeScreen(
+            model = previewModel,
+            onXOneClick = {},
+            onPulseClick = {},
+            modifier = Modifier
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun WelcomeScreenDarkPreview() {
+    val previewModel = WelcomeModel(
+        title = "Welcome to",
+        subtitle = "XOne",
+        description1 = "Your one-stop solution",
+        description2 = "for everything",
+        buttons = listOf(
+            WelcomeModel.Button("Login to XOne"),
+            WelcomeModel.Button("Login to Pulse")
+        )
+    )
+    
+    XOneTheme {
+        WelcomeScreen(
+            model = previewModel,
+            onXOneClick = {},
+            onPulseClick = {},
+            modifier = Modifier
+        )
     }
 }

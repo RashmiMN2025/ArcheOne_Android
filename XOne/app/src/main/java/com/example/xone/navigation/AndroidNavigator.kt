@@ -55,9 +55,12 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         navController?.navigate("business_card")
     }
 
+    override fun navigateToAsset() {
+        navController?.navigate("asset")
+    }
+
     // Other navigation methods with default empty implementations
     override fun navigateToID() {}
-    override fun navigateToAsset() {}
     override fun navigateToTimesheet() {}
     override fun navigateToLeave() {}
     override fun navigateToMyDocuments() {}
@@ -77,7 +80,10 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToAnnouncements() {}
     override fun navigateToXProfile() {}
     override fun navigateToPasswordReset() {}
-    override fun navigateToPolicy() {}
+    override fun navigateToPolicy() {
+        Log.d("AndroidNavigator", "Navigating to policy screen")
+        navController?.navigate("policy")
+    }
     override fun navigateToSOS() {}
     override fun navigateToTravelExpenses() {}
     override fun navigateToSAP() {}
