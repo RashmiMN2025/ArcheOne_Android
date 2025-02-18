@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.xone.R
 
@@ -16,12 +15,14 @@ fun CompanyLogo(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(id = R.drawable.arche), // Changed from netcon to arche
         contentDescription = "Company Logo",
-        modifier = modifier
+        modifier = Modifier
+            .height(40.dp)  // Reduced from 30.dp to 20.dp
+            .then(modifier)  // Apply any other modifiers after setting height
     )
 }
 
 @Preview
 @Composable
 fun PreviewCompanyLogo() {
-    CompanyLogo(modifier = Modifier.height(120.dp)) // Adjust the size of the logo
+    CompanyLogo()  // No need to pass height modifier anymore
 }

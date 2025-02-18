@@ -29,6 +29,7 @@ import com.example.xone.controller.LoginController
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.navigation.Navigator
 import com.example.xone.ui.preview.PreviewNavigator
+import com.example.xone.ui.components.UniversalLoader
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -80,12 +81,12 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             // Company Logo
             CompanyLogo(modifier = Modifier.height(120.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // OTP Field
             OutlinedTextField(
@@ -146,14 +147,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 enabled = !isLoading && otp.length == 6
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White
-                    )
-                } else {
-                    Text("Verify OTP", color = Color.White)
-                }
+                Text("Verify OTP", color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -180,6 +174,8 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 textAlign = TextAlign.Center
             )
 
+            // Replace the existing loading indicator with UniversalLoader
+            UniversalLoader(isLoading = isLoading)
         }
     }
 }

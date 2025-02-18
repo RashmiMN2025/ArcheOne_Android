@@ -139,7 +139,8 @@ class LoginController(
                                 employeeId = responseBody.employeeid,
                                 email = responseBody.email,
                                 mobile = responseBody.mobile,
-                                location = responseBody.location
+                                location = responseBody.location,
+                                services = responseBody.services
                             )
                             officesData = responseBody.offices
                             LocationsController(context).initializeLocations()

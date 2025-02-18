@@ -1,5 +1,7 @@
 package com.example.xone.model
 
+import com.example.xone.network.Service
+
 data class UserData(
     val name: String,
     val designation: String,
@@ -7,5 +9,6 @@ data class UserData(
     val employeeId: String,
     val email: String,
     val mobile: String,
-    val location: String = ""
+    val location: String = "",
+    val services: List<Service> = emptyList()
 ) 

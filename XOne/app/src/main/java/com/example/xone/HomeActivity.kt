@@ -20,6 +20,7 @@ import com.example.xone.ui.screens.AssetScreen
 import com.example.xone.ui.theme.XOneTheme
 
 class HomeActivity : ComponentActivity() {
+    private lateinit var controller: HomeController
     private lateinit var locationsController: LocationsController
     private lateinit var businessCardController: BusinessCardController
     private lateinit var policyController: PolicyController
@@ -34,7 +35,7 @@ class HomeActivity : ComponentActivity() {
             navigator.setNavController(navController)
             
             // Initialize controllers
-            val controller = HomeController(navigator)
+            controller = HomeController(navigator, this)
             locationsController = LocationsController(this)
             businessCardController = BusinessCardController(this, navigator)
             policyController = PolicyController(this, navigator)
@@ -48,7 +49,6 @@ class HomeActivity : ComponentActivity() {
                             onItemClick = controller::onItemClick,
                             onAllAppsClick = controller::onAllAppsClick,
                             onFavoritesClick = controller::onFavoritesClick,
-                            onSearchQueryChanged = controller::onSearchQueryChanged,
                             onShowProfileClick = controller::onShowProfileClick,
                             onToggleFavorite = controller::onToggleFavorite,
                             onFooterHomeClick = controller::onFooterHomeClick,

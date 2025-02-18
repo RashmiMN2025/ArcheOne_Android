@@ -8,6 +8,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -23,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.activity.ComponentActivity
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.ui.preview.PreviewNavigator
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 private val TextColor = Color.Black
 
@@ -37,7 +39,7 @@ fun WelcomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(
-                Brush.linearGradient(
+                Brush.verticalGradient(
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
@@ -48,94 +50,59 @@ fun WelcomeScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize(),  // Removed horizontal padding from Column
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(start = 16.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp),  // Fixed height for top section
+                contentAlignment = Alignment.Center
             ) {
+                // Top Arche Logo
                 Image(
                     painter = painterResource(id = R.drawable.arche),
                     contentDescription = "Arche Logo",
                     modifier = Modifier
-                        .size(180.dp)
-                        .padding(top = 8.dp)
+                        .size(140.dp)
                 )
-
-                Spacer(modifier = Modifier.height(48.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = model.title,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextColor
-                    )
-
-                    Text(
-                        text = model.subtitle,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextColor
-                    )
-
-                    Text(
-                        text = model.description1,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextColor
-                    )
-
-                    Text(
-                        text = model.description2,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextColor
-                    )
-                }
             }
 
-            Column(
+            // Adjusted weight to move One logo up slightly
+            Spacer(modifier = Modifier.weight(0.7f))
+
+            // Center Arche One Logo
+            Image(
+                painter = painterResource(id = R.drawable.arche_one),
+                contentDescription = "Arche One Logo",
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 48.dp)
+                    .size(450.dp)
+            )
+
+            // Increased weight to push button down further
+            Spacer(modifier = Modifier.weight(2.8f))
+
+            // Get Started Button
+            Button(
+                onClick = onXOneClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFDD3825)
+                ),
+                shape = RoundedCornerShape(28.dp)
             ) {
-                Button(
-                    onClick = onXOneClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)) // Red Button
-                ) {
-                    Text(
-                        text = model.buttons[0].text,
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Button(
-                    onClick = onPulseClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)) // Red Button
-                ) {
-                    Text(
-                        text = model.buttons[1].text,
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                }
+                Text(
+                    text = "Get Started",
+                    fontSize = 18.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }
@@ -143,20 +110,9 @@ fun WelcomeScreen(
 @Preview(showBackground = true)
 @Composable
 fun WelcomeScreenPreview() {
-    val previewModel = WelcomeModel(
-        title = "Welcome to",
-        subtitle = "XOne",
-        description1 = "Your one-stop solution",
-        description2 = "for everything",
-        buttons = listOf(
-            WelcomeModel.Button("Login to XOne"),
-            WelcomeModel.Button("Login to Pulse")
-        )
-    )
-    
     XOneTheme {
         WelcomeScreen(
-            model = previewModel,
+            model = WelcomeModel(),
             onXOneClick = {},
             onPulseClick = {},
             modifier = Modifier

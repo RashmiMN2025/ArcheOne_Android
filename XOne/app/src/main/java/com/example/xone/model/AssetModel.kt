@@ -6,13 +6,24 @@ data class AssetModel(
     val mobile: String = "",
     val email: String = "",
     val location: String = "",
+    val department: String = "",
+    val designation: String = "",
     val assetDetails: AssetDetails = AssetDetails(),
-    val issueDescription: String = ""
+    val reportingTo: String = "",
+    val divisionHead: String = "",
+    val division: String = "",
+    val issueDescription: String = "",
+    val isLoading: Boolean = false,
+    val error: String? = null
 )
 
 data class AssetDetails(
-    val serialNo: String = "N/A",
-    val deviceModel: String = "N/A",
-    val dateOfIssue: String = "N/A",
-    val configuration: String = "N/A"
+    val serialNo: String = "",
+    val deviceModel: String = "",
+    val dateOfIssue: String = "",
+    val configuration: String = "",
+    val assetType: String = "",
+    val assetId: String = "",
+    val purchaseDate: String = "",
+    val oldAssetId: String = ""
 ) 

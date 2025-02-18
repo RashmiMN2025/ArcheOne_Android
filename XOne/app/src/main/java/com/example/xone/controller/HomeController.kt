@@ -8,13 +8,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import android.util.Log
 import com.example.xone.navigation.AndroidNavigator
+import android.content.Context
+import com.example.xone.utils.PreferencesManager
 
-class HomeController(private val navigator: Navigator) {
+class HomeController(
+    private val navigator: Navigator,
+    private val context: Context
+) {
+    private val preferencesManager = PreferencesManager(context)
+    
     var model by mutableStateOf(HomeModel(
         userName = LoginController.getUserData()?.name ?: "",
         designation = LoginController.getUserData()?.designation ?: "",
         department = LoginController.getUserData()?.department ?: "",
         employeeId = LoginController.getUserData()?.employeeId ?: "",
+        showAllApps = true,
         defaultApps = listOf(
             HomeItem("My Documents", "mydocuments", false),
             HomeItem("ID", "id", false),
@@ -26,37 +34,21 @@ class HomeController(private val navigator: Navigator) {
             HomeItem("TimeSheet", "timesheet", false),
             HomeItem("Goal", "goal", false)
         ),
-        categories = mapOf(
-            "Productivity" to listOf(
-                HomeItem("Timesheet", "timesheet", false),
-                HomeItem("Leave", "leave", false),
-                HomeItem("My Career", "mycareer", false),
-                HomeItem("eLearning", "elearning", false),
-                HomeItem("Goal Setting/KPI", "goal", false),
-                HomeItem("XCard", "xcard", false),
-                HomeItem("Admin", "admin", false),
-                HomeItem("New Onboarding", "onboarding", false),
-                HomeItem("SOS", "sos", false),
-                HomeItem("XProfile", "xprofile", false)
-            ),
-            "Information" to listOf(
-                HomeItem("Asset", "asset", false),
-                HomeItem("MyDocuments", "mydocuments", false),
-                HomeItem("Holiday Calendar", "holiday", false),
-                HomeItem("Locations", "locations", false),
-                HomeItem("Policy", "policy", false)
-            ),
-            "Social" to listOf(
-                HomeItem("Greetings", "greetings", false),
-                HomeItem("XConnect", "xconnect", false)
-            ),
-            "Enterprise Applications" to listOf(
-                HomeItem("Medical", "medical", false),
-                HomeItem("Finance", "finance", false),
-                HomeItem("Travel & Expenses", "travel", false),
-                HomeItem("SAP", "sap", false)
-            )
-        )
+        categories = LoginController.getUserData()?.let { userData ->
+            userData.services
+                .groupBy { it.category }
+                .mapValues { (_, services) ->
+                    services.map { service ->
+                        HomeItem(
+                            title = service.service,
+                            icon = service.icon ?: service.service.lowercase().replace(" ", ""),
+                            isFavorite = false,
+                            category = service.category
+                        )
+                    }
+                }
+        } ?: emptyMap(),
+        favorites = preferencesManager.getFavorites()
     ))
         private set
 
@@ -98,30 +90,22 @@ class HomeController(private val navigator: Navigator) {
         }
     }
 
-    fun onSearchQueryChanged(query: String) {
-        val allApps = model.categories.values.flatten()
-        val filtered = if (query.isEmpty()) {
-            emptyList()
-        } else {
-            allApps.filter { 
-                it.title.lowercase().contains(query.lowercase()) 
-            }
-        }
-        model = model.copy(
-            searchQuery = query,
-            filteredApps = filtered
-        )
-    }
-
     fun onAllAppsClick() {
+        Log.d("HomeController", "All Apps clicked. Current state: ${model.showAllApps}")
         model = model.copy(
-            showAllApps = !model.showAllApps,
+            showAllApps = true,
             viewFavorites = false
         )
+        Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
     }
 
     fun onFavoritesClick() {
-        model = model.copy(viewFavorites = true, showAllApps = false)
+        Log.d("HomeController", "Favorites clicked. Current state: ${model.viewFavorites}")
+        model = model.copy(
+            viewFavorites = true,
+            showAllApps = false
+        )
+        Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
     }
 
     fun onShowProfileClick() {
@@ -129,25 +113,52 @@ class HomeController(private val navigator: Navigator) {
     }
 
     fun onToggleFavorite(item: HomeItem) {
+        val currentFavorites = model.favorites.toMutableMap()
+        val category = item.category.ifEmpty { "Default" }
+        
+        val categoryFavorites = currentFavorites[category]?.toMutableList() ?: mutableListOf()
+        
+        if (item.isFavorite) {
+            // Remove from favorites
+            categoryFavorites.removeAll { it.title == item.title }
+            if (categoryFavorites.isEmpty()) {
+                currentFavorites.remove(category)
+            } else {
+                currentFavorites[category] = categoryFavorites
+            }
+        } else {
+            // Add to favorites
+            categoryFavorites.add(item.copy(isFavorite = true))
+            currentFavorites[category] = categoryFavorites
+        }
+
+        // Update model and save to preferences
+        model = model.copy(favorites = currentFavorites)
+        preferencesManager.saveFavorites(currentFavorites)
+
+        // Update item's favorite status in categories
         val updatedCategories = model.categories.mapValues { (_, items) ->
             items.map { 
-                if (it.title == item.title) it.copy(isFavorite = !it.isFavorite)
-                else it
+                if (it.title == item.title) {
+                    it.copy(isFavorite = !it.isFavorite)
+                } else {
+                    it
+                }
             }
         }
-        
-        // Update favorites list
-        val updatedFavorites = if (!item.isFavorite) {
-            // Adding to favorites
-            model.favorites + item.copy(isFavorite = true)
-        } else {
-            // Removing from favorites
-            model.favorites.filter { it.title != item.title }
+
+        // Update default apps
+        val updatedDefaultApps = model.defaultApps.map { 
+            if (it.title == item.title) {
+                it.copy(isFavorite = !it.isFavorite)
+            } else {
+                it
+            }
         }
-        
+
         model = model.copy(
             categories = updatedCategories,
-            favorites = updatedFavorites
+            defaultApps = updatedDefaultApps
         )
     }
 
@@ -178,5 +189,13 @@ class HomeController(private val navigator: Navigator) {
             department = LoginController.getUserData()?.department ?: "",
             employeeId = LoginController.getUserData()?.employeeId ?: ""
         )
+    }
+
+    fun getCurrentViewItems(): List<HomeItem> {
+        return when {
+            model.viewFavorites -> model.favorites.values.flatten()
+            model.showAllApps -> model.categories.values.flatten()
+            else -> model.defaultApps
+        }
     }
 } 

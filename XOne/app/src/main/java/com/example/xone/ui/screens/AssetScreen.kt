@@ -1,5 +1,6 @@
 package com.example.xone.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,12 +14,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.controller.AssetController
 import com.example.xone.model.AssetModel
 import com.example.xone.ui.theme.PrimaryRed
+import com.example.xone.ui.components.UniversalLoader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,15 +42,12 @@ fun AssetScreen(
                 )
             )
     ) {
-        // Top Bar
         TopAppBar(
             title = { 
                 Text(
                     "Asset Information",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
                     color = Color.Black
-                )
+                ) 
             },
             navigationIcon = {
                 IconButton(onClick = { controller.onBackPressed() }) {
@@ -63,94 +63,114 @@ fun AssetScreen(
             )
         )
 
-        // Content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    // User Information Section
+            when {
+                model.isLoading -> {
+                    UniversalLoader(isLoading = model.isLoading)
+                }
+                model.error != null -> {
                     Text(
-                        "User Informations",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        text = model.error,
+                        color = Color.Red,
+                        modifier = Modifier.align(Alignment.Center)
                     )
-                    
-                    InfoRow("Name", model.name)
-                    InfoRow("Employee ID", model.employeeId)
-                    InfoRow("Mobile No", model.mobile)
-                    InfoRow("Email", model.email)
-                    InfoRow("Location", model.location)
-                    
-                    Divider(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        color = Color.LightGray
-                    )
-
-                    // Asset Details Section
-                    Text(
-                        "Asset Details",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    
-                    InfoRow("Serial No", model.assetDetails.serialNo)
-                    InfoRow("Device Model", model.assetDetails.deviceModel)
-                    InfoRow("Date Of Issue", model.assetDetails.dateOfIssue)
-                    InfoRow("Configuration", model.assetDetails.configuration)
-                    
-                    Divider(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        color = Color.LightGray
-                    )
-
-                    // Report Issue Section
-                    Text(
-                        "Report An Issue",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    
-                    OutlinedTextField(
-                        value = model.issueDescription,
-                        onValueChange = controller::onIssueDescriptionChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        placeholder = { Text("Please describe your issue") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.LightGray,
-                            focusedBorderColor = PrimaryRed
+                }
+                else -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
                         )
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Button(
-                        onClick = controller::onSubmitIssue,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
                     ) {
-                        Text(
-                            "Submit",
-                            color = Color.White
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            // User Information Section
+                            Text(
+                                "User Informations",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+                            
+                            InfoRow("Name", model.name)
+                            InfoRow("Employee ID", model.employeeId)
+                            InfoRow("Mobile No", model.mobile)
+                            InfoRow("Email", model.email)
+                            InfoRow("Location", model.location)
+                            
+                            Divider(
+                                modifier = Modifier.padding(vertical = 16.dp),
+                                color = Color.LightGray
+                            )
+
+                            // Asset Details Section
+                            Text(
+                                "Asset Details",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+                            
+                            with(model.assetDetails) {
+                                InfoRow("Serial No", serialNo)
+                                InfoRow("Device Model", deviceModel)
+                                InfoRow("Date Of Issue", dateOfIssue)
+                                InfoRow("Configuration", configuration)
+                            }
+
+                            Divider(
+                                modifier = Modifier.padding(vertical = 16.dp),
+                                color = Color.LightGray
+                            )
+
+                            // Report An Issue Section
+                            Text(
+                                "Report An Issue",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            OutlinedTextField(
+                                value = model.issueDescription,
+                                onValueChange = { controller.onIssueDescriptionChange(it) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp),
+                                placeholder = { Text("Please describe your issue") },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray
+                                )
+                            )
+
+                            Button(
+                                onClick = { controller.onSubmitIssue() },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = PrimaryRed
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    "Submit",
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -163,8 +183,7 @@ private fun InfoRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.Start
+            .padding(vertical = 4.dp)
     ) {
         Text(
             "$label : ",
@@ -173,7 +192,7 @@ private fun InfoRow(label: String, value: String) {
             color = Color.Black
         )
         Text(
-            value,
+            text = value.ifEmpty { "N/A" },
             fontSize = 16.sp,
             color = Color.Gray
         )

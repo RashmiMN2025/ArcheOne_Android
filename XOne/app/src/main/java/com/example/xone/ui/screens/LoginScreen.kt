@@ -30,6 +30,7 @@ import android.app.Activity
 import com.example.xone.R
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.ui.preview.PreviewNavigator
+import com.example.xone.ui.components.UniversalLoader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,12 +62,12 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             // Company Logo
             CompanyLogo(modifier = Modifier.height(120.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Email Field
             OutlinedTextField(
@@ -137,7 +138,6 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             // Login Button
             Button(
                 onClick = {
-                    // Validation is now handled in the controller
                     isLoading = true
                     errorMessage = null
                     
@@ -162,14 +162,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 enabled = !isLoading
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White
-                    )
-                } else {
-                    Text("Login", color = Color.White)
-                }
+                Text("Login", color = Color.White)
             }
 
             // Error message
@@ -182,6 +175,9 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 )
             }
         }
+
+        // Replace the existing loading indicator with UniversalLoader
+        UniversalLoader(isLoading = isLoading)
     }
 }
 

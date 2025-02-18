@@ -62,6 +62,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun ProfileHeader(
@@ -71,38 +72,53 @@ fun ProfileHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(180.dp)
+            .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
             .background(
-                color = Color(0xFF808080),
-                shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
+                color = Color(0xFF808080)
             )
-            .padding(start = 27.dp, end = 16.dp, top = 72.dp, bottom = 40.dp)
     ) {
+        // Background image with clip
+        Image(
+            painter = painterResource(id = R.drawable.header_home),
+            contentDescription = "Header Background",
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)),
+            contentScale = ContentScale.Crop
+        )
+
+        // Content without overlay
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp),
+                .padding(start = 27.dp, end = 16.dp, top = 50.dp, bottom = 16.dp),  // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Surface(
-                    modifier = Modifier.size(56.dp),
+                    modifier = Modifier
+                        .size(64.dp, 70.dp)  // Changed from square size to width: 64.dp, height: 70.dp
+                        .padding(top = 8.dp),
                     shape = CircleShape,
                     color = Color.White
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.padding(12.dp),
-                        tint = Color(0xFF808080)
+                        modifier = Modifier.padding(14.dp),
+                        tint = Color.Black
                     )
                 }
                 
                 Spacer(modifier = Modifier.width(20.dp))
                 
-                Column {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
                         text = model.userName,
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -110,10 +126,8 @@ fun ProfileHeader(
                             fontFamily = GeistFontFamily,
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = Color.White
+                        color = Color.Black
                     )
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
                     
                     Text(
                         text = model.designation,
@@ -122,10 +136,8 @@ fun ProfileHeader(
                             fontFamily = GeistFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color.Black
                     )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
                         text = model.department,
@@ -134,10 +146,8 @@ fun ProfileHeader(
                             fontFamily = GeistFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color.Black
                     )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
                         text = model.employeeId,
@@ -146,7 +156,7 @@ fun ProfileHeader(
                             fontFamily = GeistFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color.Black
                     )
                 }
             }
@@ -160,7 +170,6 @@ fun HomeScreen(
     onItemClick: (HomeItem) -> Unit,
     onAllAppsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
-    onSearchQueryChanged: (String) -> Unit,
     onShowProfileClick: () -> Unit,
     onToggleFavorite: (HomeItem) -> Unit,
     onFooterHomeClick: () -> Unit,
@@ -194,104 +203,55 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Only show search bar when in All Apps or Favorites view
-            if (model.showAllApps || model.viewFavorites) {
-                // Search Bar
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 12.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    shadowElevation = 4.dp,
-                    color = SearchBarBackground
-                ) {
-                    OutlinedTextField(
-                        value = model.searchQuery,
-                        onValueChange = onSearchQueryChanged,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(55.dp)
-                            .padding(horizontal = 4.dp),
-                        placeholder = { 
-                            Text(
-                                "Search apps",
-                                color = TextSecondary,
-                                fontSize = 12.sp
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = null,
-                                tint = TextSecondary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent,
-                            cursorColor = PrimaryBlue
-                        ),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 12.sp
-                        ),
-                        singleLine = true
-                    )
-                }
-            }
-
             // Toggle Buttons
-            if (model.searchQuery.isEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = onAllAppsClick,
+                    modifier = Modifier.width(120.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (model.showAllApps) 
+                            Color(0xFFDD3825) else CardBackground,
+                        contentColor = if (model.showAllApps) 
+                            Color.White else TextSecondary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 0.dp
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (model.showAllApps) Color(0xFFDD3825) else DividerColor
+                    ),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Button(
-                        onClick = onAllAppsClick,
-                        modifier = Modifier.width(120.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (model.showAllApps) 
-                                Color(0xFFDD3825) else CardBackground,
-                            contentColor = if (model.showAllApps) 
-                                Color.White else TextSecondary
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (model.showAllApps) Color(0xFFDD3825) else DividerColor
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("All Apps")
-                    }
-                    
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
-                    Button(
-                        onClick = onFavoritesClick,
-                        modifier = Modifier.width(120.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (model.viewFavorites) 
-                                Color(0xFFDD3825) else CardBackground,
-                            contentColor = if (model.viewFavorites) 
-                                Color.White else TextSecondary
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Favorites")
-                    }
+                    Text("All Apps")
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Button(
+                    onClick = onFavoritesClick,
+                    modifier = Modifier.width(120.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (model.viewFavorites) 
+                            Color(0xFFDD3825) else CardBackground,
+                        contentColor = if (model.viewFavorites) 
+                            Color.White else TextSecondary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 0.dp
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Favorites")
                 }
             }
 
@@ -299,55 +259,7 @@ fun HomeScreen(
 
             // Content
             Box(modifier = Modifier.weight(1f)) {
-                if (model.searchQuery.isNotEmpty()) {
-                    // Search Results
-                    if (model.filteredApps.isEmpty()) {
-                        // Show "No results found" message
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No apps found",
-                                color = Color.Gray,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp)
-                        ) {
-                            items(model.filteredApps.chunked(3)) { rowItems ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
-                                ) {
-                                    rowItems.forEach { item ->
-                                        AppItem(
-                                            title = item.title,
-                                            isFavorite = item.isFavorite,
-                                            onClick = { onItemClick(item) },
-                                            onFavoriteClick = { onToggleFavorite(item) },
-                                            modifier = Modifier.weight(1f),
-                                            showFavoriteButton = model.showAllApps || model.viewFavorites,
-                                            isSelected = item == selectedApp,
-                                            onLongPress = { position -> 
-                                                selectedApp = item
-                                                selectedPosition = position
-                                            },
-                                            shouldBlur = selectedApp != null && item != selectedApp
-                                        )
-                                    }
-                                    repeat(3 - rowItems.size) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
-                        }
-                    }
-                } else if (model.showAllApps) {
+                if (model.showAllApps) {
                     // All Apps View with Categories
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -410,32 +322,43 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
                         ) {
-                            items(model.favorites.chunked(3)) { rowItems ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
-                                ) {
-                                    rowItems.forEach { item ->
-                                        AppItem(
-                                            title = item.title,
-                                            isFavorite = true, // Always true in favorites view
-                                            onClick = { onItemClick(item) },
-                                            onFavoriteClick = { onToggleFavorite(item) },
-                                            modifier = Modifier.weight(1f),
-                                            showFavoriteButton = true,
-                                            isSelected = item == selectedApp,
-                                            onLongPress = { position -> 
-                                                selectedApp = item
-                                                selectedPosition = position
-                                            },
-                                            shouldBlur = selectedApp != null && item != selectedApp
-                                        )
-                                    }
-                                    repeat(3 - rowItems.size) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
+                            model.favorites.forEach { (category, items) ->
+                                item {
+                                    CategoryHeader(
+                                        title = category,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                    )
                                 }
-                                Spacer(modifier = Modifier.height(12.dp))
+                                
+                                items(items.chunked(3)) { rowItems ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                    ) {
+                                        rowItems.forEach { item ->
+                                            AppItem(
+                                                title = item.title,
+                                                isFavorite = true,
+                                                onClick = { onItemClick(item) },
+                                                onFavoriteClick = { onToggleFavorite(item) },
+                                                modifier = Modifier.weight(1f),
+                                                showFavoriteButton = true,
+                                                isSelected = item == selectedApp,
+                                                onLongPress = { position -> 
+                                                    selectedApp = item
+                                                    selectedPosition = position
+                                                },
+                                                shouldBlur = selectedApp != null && item != selectedApp
+                                            )
+                                        }
+                                        repeat(3 - rowItems.size) {
+                                            Spacer(modifier = Modifier.weight(1f))
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
                             }
                         }
                     }
@@ -583,31 +506,44 @@ private fun AppIcon(
     Box(modifier = modifier) {
         // Check if it's a default app
         when (title) {
-            "My Documents", "ID", "Asset", "XCard", "Leave", 
-            "eLearning", "My Career", "TimeSheet", "Goal" -> {
+            "My Documents", "MyDocuments", "ID", "Asset", "XCard", "Leave",
+            "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
+            "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "XConnect",
+            "Locations", "Travel & Expenses", "Policy" -> {
                 Surface(
-                    modifier = Modifier.size(120.dp),  // Significantly increased from 90.dp to 120.dp
+                    modifier = Modifier.size(120.dp),
                     shape = RoundedCornerShape(12.dp),
                     color = Color.White
                 ) {
                     Image(
                         painter = painterResource(
-                            id = when (title) {
-                                "My Documents" -> R.drawable.mydocuments
-                                "ID" -> R.drawable.id
-                                "Asset" -> R.drawable.asset
-                                "XCard" -> R.drawable.xcard
-                                "Leave" -> R.drawable.leave
-                                "eLearning" -> R.drawable.elearning
-                                "My Career" -> R.drawable.mycareer
-                                "TimeSheet" -> R.drawable.timesheet
-                                "Goal" -> R.drawable.goal
+                            id = when (title.lowercase().replace(" ", "")) {
+                                "mydocuments" -> R.drawable.mydocuments
+                                "id" -> R.drawable.id
+                                "asset" -> R.drawable.asset
+                                "xcard" -> R.drawable.xcard
+                                "leave" -> R.drawable.leave
+                                "elearning" -> R.drawable.elearning
+                                "mycareer" -> R.drawable.mycareer
+                                "timesheet" -> R.drawable.timesheet
+                                "goalsetting/kpi", "goal" -> R.drawable.goals
+                                "admin" -> R.drawable.admin
+                                "finance" -> R.drawable.finance
+                                "sap" -> R.drawable.sap
+                                "sos" -> R.drawable.sos
+                                "holidaycalendar" -> R.drawable.holiday
+                                "greetings" -> R.drawable.greetings
+                                "medical" -> R.drawable.medical
+                                "xconnect" -> R.drawable.xconnect
+                                "locations" -> R.drawable.locations
+                                "travel&expenses" -> R.drawable.travel
+                                "policy" -> R.drawable.policy
                                 else -> R.drawable.mydocuments
                             }
                         ),
                         contentDescription = title,
                         modifier = Modifier
-                            .padding(4.dp)  // Reduced padding even more to maximize icon size
+                            .padding(4.dp)
                             .fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
@@ -653,43 +589,16 @@ private fun CategoryHeader(
     title: String,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Surface(
-                shape = RoundedCornerShape(4.dp),
-                color = PrimaryBlue.copy(alpha = 0.1f),
-                modifier = Modifier
-                    .width(120.dp)
-                    .padding(vertical = 6.dp)
-            ) {
-                Text(
-                    text = title,
-                    color = PrimaryBlue,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 15.sp
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    textAlign = TextAlign.Center
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Divider(
-                modifier = Modifier.weight(1f),
-                color = PrimaryBlue.copy(alpha = 0.1f),
-                thickness = 2.dp
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            color = TextPrimary,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
     }
 }
 

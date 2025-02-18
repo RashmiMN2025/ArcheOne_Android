@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
 
         val navigator = AndroidNavigator(this)
         welcomeController = WelcomeController(navigator)
-        homeController = HomeController(navigator)
+        homeController = HomeController(navigator, this)
         locationsController = LocationsController(this)
         businessCardController = BusinessCardController(this, navigator)
 
@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
                                     onItemClick = homeController::onItemClick,
                                     onAllAppsClick = homeController::onAllAppsClick,
                                     onFavoritesClick = homeController::onFavoritesClick,
-                                    onSearchQueryChanged = homeController::onSearchQueryChanged,
                                     onShowProfileClick = homeController::onShowProfileClick,
                                     onToggleFavorite = homeController::onToggleFavorite,
                                     onFooterHomeClick = homeController::onFooterHomeClick,
