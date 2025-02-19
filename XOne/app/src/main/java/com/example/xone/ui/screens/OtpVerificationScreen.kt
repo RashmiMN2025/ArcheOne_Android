@@ -25,6 +25,7 @@ import com.example.xone.HomeDashboardActivity
 import com.example.xone.controller.OtpVerificationController
 import com.example.xone.ui.components.CompanyLogo
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import com.example.xone.controller.LoginController
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.navigation.Navigator
@@ -94,7 +95,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 onValueChange = { if (it.length <= 6) otp = it },
                 placeholder = { Text("Enter OTP") },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
@@ -142,12 +143,20 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                     }
                 },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.85f)
+                    .height(65.dp)
                     .padding(top = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFDD3825),
+                    disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                ),
                 enabled = !isLoading && otp.length == 6
             ) {
-                Text("Verify OTP", color = Color.White)
+                Text(
+                    "Verify OTP",
+                    color = Color.White,
+                    fontSize = 18.sp
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

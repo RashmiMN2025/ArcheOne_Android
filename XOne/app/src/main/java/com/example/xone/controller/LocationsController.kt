@@ -126,7 +126,7 @@ class LocationsController(private val context: Context) {
                 showingDetails = false
             )
         } else {
-            // For individual locations (including Chennai and Coimbatore)
+            // For individual locations (including non-Indian locations)
             _locationState = _locationState.copy(
                 selectedLocation = location,
                 showingDetails = true,
@@ -163,28 +163,13 @@ class LocationsController(private val context: Context) {
                 true
             }
             _locationState.showingDetails -> {
-                if (_locationState.selectedLocation?.name in listOf("Chennai, HQ", "Coimbatore, Registered Office") || 
-                    _locationState.selectedState?.name in listOf(
-                        "Karnataka", "Telangana", "Kerala", "Maharashtra", "Delhi", 
-                        "Uttar Pradesh", "Gujarat", "Andhra Pradesh", "Chhattisgarh", "Haryana"
-                    )) {
-                    // For Indian locations, go back to India page
-                    val indiaLocation = _locationState.locations.find { it.name == "India" }
-                    _locationState = _locationState.copy(
-                        showingDetails = false,
-                        showingStateList = true,
-                        selectedLocation = indiaLocation,
-                        selectedState = null
-                    )
-                } else {
-                    // For non-Indian locations (USA, Singapore, etc.), go back to main locations list
-                    _locationState = _locationState.copy(
-                        showingDetails = false,
-                        showingStateList = false,
-                        selectedLocation = null,
-                        selectedState = null
-                    )
-                }
+                // For all locations, go back to main locations list
+                _locationState = _locationState.copy(
+                    showingDetails = false,
+                    showingStateList = false,
+                    selectedLocation = null,
+                    selectedState = null
+                )
                 true
             }
             _locationState.showingStateList -> {

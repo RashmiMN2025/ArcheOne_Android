@@ -13,12 +13,20 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.navigation
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavOptions
 import com.example.xone.controller.*
 import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.navigation.AndroidNavigator
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -79,7 +87,33 @@ class MainActivity : ComponentActivity() {
                                     controller = locationsController
                                 )
                             }
-                            composable("business_card") {
+                            composable(
+                                route = "business_card",
+                                enterTransition = {
+                                    slideIntoContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                        animationSpec = tween(300)
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutOfContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                        animationSpec = tween(300)
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideIntoContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                        animationSpec = tween(300)
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutOfContainer(
+                                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                        animationSpec = tween(300)
+                                    )
+                                }
+                            ) {
                                 BusinessCardScreen(
                                     businessCard = businessCardController.businessCard,
                                     controller = businessCardController

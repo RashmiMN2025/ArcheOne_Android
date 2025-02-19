@@ -27,6 +27,7 @@ import com.example.xone.navigation.Navigator
 import android.util.Log
 import androidx.compose.ui.tooling.preview.Preview
 import android.app.Activity
+import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.ui.preview.PreviewNavigator
@@ -75,7 +76,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 onValueChange = { email = it },
                 placeholder = { Text("Enter Email ID") },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,  // White background
@@ -97,7 +98,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 onValueChange = { mobile = it },
                 placeholder = { Text("Enter Mobile Number") },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,  // White background
@@ -119,7 +120,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 onValueChange = { employeeId = it },
                 placeholder = { Text("Enter Employee ID") },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.95f)
                     .padding(bottom = 32.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,  // White background
@@ -157,12 +158,20 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     }
                 },
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.85f)
+                    .height(65.dp)
                     .padding(top = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFDD3825),
+                    disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                ),
                 enabled = !isLoading
             ) {
-                Text("Login", color = Color.White)
+                Text(
+                    "Login",
+                    color = Color.White,
+                    fontSize = 18.sp
+                )
             }
 
             // Error message

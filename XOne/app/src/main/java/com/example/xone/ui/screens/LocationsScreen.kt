@@ -299,24 +299,22 @@ private fun LocationCard(
                 }
             }
 
-            if (location.hasMultipleLocations) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = onClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
+                    modifier = Modifier.width(160.dp)
                 ) {
-                    Button(
-                        onClick = onClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                        modifier = Modifier.width(160.dp)
-                    ) {
-                        Text(
-                            text = "View Locations",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        text = "View Location",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
             

@@ -9,6 +9,8 @@ import androidx.navigation.NavController
 import com.example.xone.LoginActivity
 import com.example.xone.OtpVerificationActivity
 import com.example.xone.HomeActivity
+import com.example.xone.MyDocumentsActivity
+import com.example.xone.XConnectActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -63,7 +65,10 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToID() {}
     override fun navigateToTimesheet() {}
     override fun navigateToLeave() {}
-    override fun navigateToMyDocuments() {}
+    override fun navigateToMyDocuments() {
+        val intent = Intent(activity, MyDocumentsActivity::class.java)
+        activity.startActivity(intent)
+    }
     override fun navigateToMyCareer() {}
     override fun navigateToELearning() {}
     override fun navigateToGoalSetting() {}
@@ -75,7 +80,10 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToHolidayCalendar() {}
     override fun navigateToClientCalendar() {}
     override fun navigateToGreetings() {}
-    override fun navigateToXConnect() {}
+    override fun navigateToXConnect() {
+        val intent = Intent(activity, XConnectActivity::class.java)
+        activity.startActivity(intent)
+    }
     override fun navigateToHelpdesk() {}
     override fun navigateToAnnouncements() {}
     override fun navigateToXProfile() {}

@@ -63,6 +63,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
+import com.example.xone.ui.components.EmptyFavorites
 
 @Composable
 fun ProfileHeader(
@@ -183,146 +185,95 @@ fun HomeScreen(
     var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+        // Main content with conditional blur
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            backgroundModel.topColor,
-                            backgroundModel.middleColor,
-                            backgroundModel.bottomColor
+                .blur(radius = if (selectedApp != null) 10.dp else 0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                backgroundModel.topColor,
+                                backgroundModel.middleColor,
+                                backgroundModel.bottomColor
+                            )
                         )
                     )
-                )
-        ) {
-            ProfileHeader(
-                model = model,
-                onShowProfileClick = onShowProfileClick
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Toggle Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.Center
             ) {
-                Button(
-                    onClick = onAllAppsClick,
-                    modifier = Modifier.width(120.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (model.showAllApps) 
-                            Color(0xFFDD3825) else CardBackground,
-                        contentColor = if (model.showAllApps) 
-                            Color.White else TextSecondary
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 0.dp
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (model.showAllApps) Color(0xFFDD3825) else DividerColor
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("All Apps")
-                }
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                Button(
-                    onClick = onFavoritesClick,
-                    modifier = Modifier.width(120.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (model.viewFavorites) 
-                            Color(0xFFDD3825) else CardBackground,
-                        contentColor = if (model.viewFavorites) 
-                            Color.White else TextSecondary
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 0.dp
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Favorites")
-                }
-            }
+                ProfileHeader(
+                    model = model,
+                    onShowProfileClick = onShowProfileClick
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Content
-            Box(modifier = Modifier.weight(1f)) {
-                if (model.showAllApps) {
-                    // All Apps View with Categories
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
+                // Toggle Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = onAllAppsClick,
+                        modifier = Modifier.width(120.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (model.showAllApps) 
+                                Color(0xFFDD3825) else CardBackground,
+                            contentColor = if (model.showAllApps) 
+                                Color.White else TextSecondary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 0.dp
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (model.showAllApps) Color(0xFFDD3825) else DividerColor
+                        ),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        model.categories.forEach { (category, items) ->
-                            item {
-                                CategoryHeader(
-                                    title = category,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                )
-                            }
-                            items(items.chunked(3)) { rowItems ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
-                                ) {
-                                    rowItems.forEach { item ->
-                                        AppItem(
-                                            title = item.title,
-                                            isFavorite = item.isFavorite,
-                                            onClick = { onItemClick(item) },
-                                            onFavoriteClick = { onToggleFavorite(item) },
-                                            modifier = Modifier.weight(1f),
-                                            showFavoriteButton = model.showAllApps || model.viewFavorites,
-                                            isSelected = item == selectedApp,
-                                            onLongPress = { position -> 
-                                                selectedApp = item
-                                                selectedPosition = position
-                                            },
-                                            shouldBlur = selectedApp != null && item != selectedApp
-                                        )
-                                    }
-                                    repeat(3 - rowItems.size) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
-                        }
+                        Text("All Apps")
                     }
-                } else if (model.viewFavorites) {
-                    // Favorites View
-                    if (model.favorites.isEmpty()) {
-                        // Show empty state message when no favorites
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No favorite apps yet",
-                                color = TextSecondary,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    } else {
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    Button(
+                        onClick = onFavoritesClick,
+                        modifier = Modifier.width(120.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (model.viewFavorites) 
+                                Color(0xFFDD3825) else CardBackground,
+                            contentColor = if (model.viewFavorites) 
+                                Color.White else TextSecondary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 0.dp
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Favorites")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Content
+                Box(modifier = Modifier.weight(1f)) {
+                    if (model.showAllApps) {
+                        // All Apps View with Categories
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
                         ) {
-                            model.favorites.forEach { (category, items) ->
+                            model.categories.forEach { (category, items) ->
                                 item {
                                     CategoryHeader(
                                         title = category,
@@ -331,7 +282,6 @@ fun HomeScreen(
                                             .padding(vertical = 8.dp)
                                     )
                                 }
-                                
                                 items(items.chunked(3)) { rowItems ->
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -340,11 +290,11 @@ fun HomeScreen(
                                         rowItems.forEach { item ->
                                             AppItem(
                                                 title = item.title,
-                                                isFavorite = true,
+                                                isFavorite = item.isFavorite,
                                                 onClick = { onItemClick(item) },
                                                 onFavoriteClick = { onToggleFavorite(item) },
                                                 modifier = Modifier.weight(1f),
-                                                showFavoriteButton = true,
+                                                showFavoriteButton = model.showAllApps || model.viewFavorites,
                                                 isSelected = item == selectedApp,
                                                 onLongPress = { position -> 
                                                     selectedApp = item
@@ -361,55 +311,145 @@ fun HomeScreen(
                                 }
                             }
                         }
-                    }
-                } else {
-                    // Default Apps View
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
-                    ) {
-                        items(model.defaultApps.chunked(3)) { rowItems ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(25.dp)
+                    } else if (model.viewFavorites) {
+                        // Favorites View
+                        if (model.favorites.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                rowItems.forEach { item ->
-                                    AppItem(
-                                        title = item.title,
-                                        isFavorite = item.isFavorite,
-                                        onClick = { onItemClick(item) },
-                                        onFavoriteClick = { onToggleFavorite(item) },
-                                        modifier = Modifier.weight(1f),
-                                        showFavoriteButton = false,
-                                        isSelected = item == selectedApp,
-                                        onLongPress = { position -> 
-                                            selectedApp = item
-                                            selectedPosition = position
-                                        },
-                                        shouldBlur = selectedApp != null && item != selectedApp
-                                    )
-                                }
-                                repeat(3 - rowItems.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
+                                EmptyFavorites()
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                            ) {
+                                model.favorites.forEach { (category, items) ->
+                                    item {
+                                        CategoryHeader(
+                                            title = category,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp)
+                                        )
+                                    }
+                                    
+                                    items(items.chunked(3)) { rowItems ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                        ) {
+                                            rowItems.forEach { item ->
+                                                AppItem(
+                                                    title = item.title,
+                                                    isFavorite = true,
+                                                    onClick = { onItemClick(item) },
+                                                    onFavoriteClick = { onToggleFavorite(item) },
+                                                    modifier = Modifier.weight(1f),
+                                                    showFavoriteButton = true,
+                                                    isSelected = item == selectedApp,
+                                                    onLongPress = { position -> 
+                                                        selectedApp = item
+                                                        selectedPosition = position
+                                                    },
+                                                    shouldBlur = selectedApp != null && item != selectedApp
+                                                )
+                                            }
+                                            repeat(3 - rowItems.size) {
+                                                Spacer(modifier = Modifier.weight(1f))
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
                                 }
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    } else {
+                        // Default Apps View
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                        ) {
+                            items(model.defaultApps.chunked(3)) { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                ) {
+                                    rowItems.forEach { item ->
+                                        AppItem(
+                                            title = item.title,
+                                            isFavorite = item.isFavorite,
+                                            onClick = { onItemClick(item) },
+                                            onFavoriteClick = { onToggleFavorite(item) },
+                                            modifier = Modifier.weight(1f),
+                                            showFavoriteButton = false,
+                                            isSelected = item == selectedApp,
+                                            onLongPress = { position -> 
+                                                selectedApp = item
+                                                selectedPosition = position
+                                            },
+                                            shouldBlur = selectedApp != null && item != selectedApp
+                                        )
+                                    }
+                                    repeat(3 - rowItems.size) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
                         }
                     }
                 }
+                
+                // Add footer navigation
+                FooterNavigation(
+                    model = model.footerNavigation,
+                    onHomeClick = onFooterHomeClick,
+                    onChatClick = onFooterChatClick,
+                    onSOSClick = onFooterSOSClick,
+                    onProfileClick = onFooterProfileClick
+                )
             }
-            
-            // Add footer navigation
-            FooterNavigation(
-                model = model.footerNavigation,
-                onHomeClick = onFooterHomeClick,
-                onChatClick = onFooterChatClick,
-                onSOSClick = onFooterSOSClick,
-                onProfileClick = onFooterProfileClick
-            )
         }
 
-        // Show favorite dialog when an app is selected
+        // Overlay the selected app without blur
+        if (selectedApp != null) {
+            selectedPosition?.let { (x, y) ->
+                val density = LocalDensity.current
+                val itemSize = 80.dp
+                val scaleFactor = 1.1f
+
+                Box(
+                    modifier = Modifier
+                        .offset {
+                            IntOffset(
+                                x = (x - with(density) { itemSize.toPx() } / 2).toInt(),
+                                y = (y - with(density) { itemSize.toPx() }).toInt()
+                            )
+                        }
+                ) {
+                    AppItem(
+                        title = selectedApp!!.title,
+                        isFavorite = selectedApp!!.isFavorite,
+                        onClick = { },
+                        onFavoriteClick = { },
+                        modifier = Modifier
+                            .size(itemSize)
+                            .graphicsLayer(
+                                scaleX = scaleFactor,
+                                scaleY = scaleFactor
+                            ),
+                        showFavoriteButton = true,
+                        isSelected = true,
+                        onLongPress = { },
+                        shouldBlur = false  // Keep this false to maintain brightness
+                    )
+                }
+            }
+        }
+
+        // Show favorite dialog
         if (selectedApp != null && selectedPosition != null) {
             FavoriteDialog(
                 title = selectedApp!!.title,
@@ -458,17 +498,20 @@ private fun AppItem(
                 detectTapGestures(
                     onTap = { onClick() },
                     onLongPress = { 
-                        // Use the stored position when long pressed
                         itemPosition?.let { pos -> onLongPress(pos) }
                     }
                 )
             }
-            .blur(radius = if (shouldBlur) 10.dp else 0.dp),
+            .graphicsLayer(
+                scaleX = if (isSelected) 1.1f else 1f,
+                scaleY = if (isSelected) 1.1f else 1f,
+                alpha = 1f
+            ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (isSelected) 8.dp else 2.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackground
+            containerColor = if (shouldBlur && !isSelected) Color.White.copy(alpha = 0.5f) else Color.White
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -509,7 +552,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "XCard", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "XConnect",
-            "Locations", "Travel & Expenses", "Policy" -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding","XProfile"  -> {
                 Surface(
                     modifier = Modifier.size(120.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -538,6 +581,8 @@ private fun AppIcon(
                                 "locations" -> R.drawable.locations
                                 "travel&expenses" -> R.drawable.travel
                                 "policy" -> R.drawable.policy
+                                "newonboarding" -> R.drawable.new_onboarding
+
                                 else -> R.drawable.mydocuments
                             }
                         ),
@@ -618,12 +663,30 @@ fun FooterNavigation(
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        FooterItem(
-            icon = Icons.Default.Home,
-            title = "Home",
-            isSelected = model.showHome,
-            onClick = onHomeClick
-        )
+        // Home item with arche_tri logo
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .clickable(onClick = onHomeClick)
+                .padding(horizontal = 12.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.arche_tri),
+                contentDescription = "Home",
+                modifier = Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(
+                    if (model.showHome) Color(0xFFDD3825) else Color(0xFFBDBDBD)
+                )
+            )
+            Text(
+                text = "Home",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (model.showHome) Color(0xFFDD3825) else Color(0xFFBDBDBD),
+                fontSize = 12.sp
+            )
+        }
+
+        // Other footer items remain unchanged
         FooterItem(
             icon = Icons.Default.Email,
             title = "Chat",
@@ -688,35 +751,50 @@ private fun FavoriteDialog(
             .clickable(onClick = onDismiss)
     ) {
         position?.let { (x, y) ->
-            Surface(
+            val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+            val dialogWidth = 160.dp
+            val density = LocalDensity.current
+            
+            val dialogWidthPx = with(density) { dialogWidth.toPx() }
+            val screenWidthPx = with(density) { screenWidth.toPx() }
+            val itemHeightPx = with(density) { 80.dp.toPx() }
+            val scaleFactor = 1.1f // Same scale factor as the zoomed app
+            
+            // Calculate x position (centered with the app)
+            val xOffset = when {
+                x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
+                x - (dialogWidthPx / 2) < 0 -> 16f
+                else -> x - (dialogWidthPx / 2)
+            }
+            
+            // Position dialog right at the bottom edge of the zoomed app
+            val scaledItemHeight = itemHeightPx * scaleFactor
+            val yOffset = y + 86f  // Increased from 6f to 16f for a more noticeable gap
+
+            Card(
                 modifier = Modifier
-                    .width(200.dp)
+                    .width(dialogWidth)
                     .offset {
                         IntOffset(
-                            x = (x - 100).toInt(),
-                            y = y.toInt() + 8
+                            x = xOffset.toInt(),
+                            y = yOffset.toInt()
                         )
                     }
-                    .clickable(enabled = false) { }, // Prevent click propagation
-                shape = RoundedCornerShape(8.dp),
-                color = Color.White
+                    .clickable(enabled = false) { },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                TextButton(
-                    onClick = {
-                        onConfirm()
-                    },
+                Text(
+                    text = if (isFavorite) "Remove from Favourite" else "Add to Favourite",
+                    fontSize = 13.sp,
+                    color = Color.Black,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = if (isFavorite) "Remove from Favorites" else "Add to Favorites",
-                        color = Color(0xFFDD3825),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                        .clickable { onConfirm() }
+                        .padding(vertical = 8.dp),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
