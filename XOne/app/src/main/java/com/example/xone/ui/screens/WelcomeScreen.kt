@@ -50,59 +50,57 @@ fun WelcomeScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),  // Removed horizontal padding from Column
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
+            // Top section with logo
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),  // Fixed height for top section
-                contentAlignment = Alignment.Center
+                    .weight(0.4f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                // Top Arche Logo
+                Spacer(modifier = Modifier.height(0.dp))
+                
+                // Center One Logo
                 Image(
-                    painter = painterResource(id = R.drawable.arche),
-                    contentDescription = "Arche Logo",
+                    painter = painterResource(id = R.drawable.arche_one),
+                    contentDescription = "One Logo",
                     modifier = Modifier
-                        .size(140.dp)
+                        .size(300.dp)
                 )
             }
 
-            // Adjusted weight to move One logo up slightly
-            Spacer(modifier = Modifier.weight(0.7f))
-
-            // Center Arche One Logo
-            Image(
-                painter = painterResource(id = R.drawable.arche_one),
-                contentDescription = "Arche One Logo",
+            // Bottom section with button
+            Column(
                 modifier = Modifier
-                    .size(450.dp)
-            )
-
-            // Increased weight to push button down further
-            Spacer(modifier = Modifier.weight(2.8f))
-
-            // Get Started Button
-            Button(
-                onClick = onXOneClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFDD3825)
-                ),
-                shape = RoundedCornerShape(28.dp)
+                    .weight(1.6f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
             ) {
-                Text(
-                    text = "Get Started",
-                    fontSize = 18.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                // Get Started Button
+                Button(
+                    onClick = onXOneClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDD3825)
+                    ),
+                    shape = RoundedCornerShape(28.dp)
+                ) {
+                    Text(
+                        text = "Get Started",
+                        fontSize = 18.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(48.dp))
+            }
         }
     }
 }

@@ -39,7 +39,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(top = 25.dp)
             ) {
-                IconButton(onClick = { /* Handle back navigation */ }) {
+                IconButton(onClick = { }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
@@ -81,8 +81,8 @@ fun Section(title: String, items: List<String>, controller: MyDocumentsControlle
     Column {
         Text(text = title, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
         Column {
-            for (row in items.chunked(2)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            for (row in items.chunked(1)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
                     row.forEach { item ->
                         DocumentCard(name = item, controller = controller, context = context, employeeId = employeeId) // ✅ Pass context
                     }
@@ -94,7 +94,7 @@ fun Section(title: String, items: List<String>, controller: MyDocumentsControlle
 
 
 @Composable
-fun DocumentCard(name: String, controller: MyDocumentsController, context: Context, employeeId: String) { // ✅ Accept context
+fun DocumentCard(name: String, controller: MyDocumentsController, context: Context, employeeId: String) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             controller.onUploadClick(name, uri, employeeId)
@@ -104,46 +104,59 @@ fun DocumentCard(name: String, controller: MyDocumentsController, context: Conte
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .width(170.dp)
-            .height(110.dp)
-            .padding(bottom = 10.dp),
+            .fillMaxWidth() // Make card take full width
+            .height(60.dp)
+            .padding(bottom = 1.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFDD3825))
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize().align(Alignment.CenterStart)
-            ) {
-                Text(
-                    text = name,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-            Row(
-                modifier = Modifier.align(Alignment.BottomEnd).padding(2.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_upload),
-                    contentDescription = "Upload",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp).clickable { launcher.launch("application/pdf") }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            // Document Name (Left Side)
+            Text(
+                text = name,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f) // Push icons to the end
+            )
+
+            // Icons (Right Side)
+            Row {
+                // Upload Icon inside a White Circle
+                Box(
+                    modifier = Modifier
+                        .size(25.dp)
+                        .background(Color.White, shape = RoundedCornerShape(50)) // Circular background
+                        .clickable { launcher.launch("application/pdf") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_upload), // Change to new upload icon
+                        contentDescription = "Upload",
+                        tint = Color(0xFFDD3825), // Match the card's color
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                // View Icon (Without Background)
                 Icon(
                     painter = painterResource(id = R.drawable.ic_view),
                     contentDescription = "View",
                     tint = Color.White,
-                    modifier = Modifier.size(20.dp).clickable { controller.onViewClick(context, name) } // ✅ Pass context
+                    modifier = Modifier
+                        .size(25.dp)
+                        .clickable { controller.onViewClick(context, name) }
                 )
             }
         }
     }
 }
+
 
 
