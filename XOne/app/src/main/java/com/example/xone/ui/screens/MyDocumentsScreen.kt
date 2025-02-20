@@ -22,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import com.example.xone.R
 
 @Composable
-fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, employeeId: String) { // ✅ Pass context
+fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, employeeId: String, onBackPressed: () -> Unit) { // ✅ Pass context
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -39,7 +39,9 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(top = 25.dp)
             ) {
-                IconButton(onClick = { }) {
+                IconButton(
+                    onClick = onBackPressed
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
@@ -50,20 +52,30 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     text = "My Documents",
                     color = Color.Black,
                     fontSize = 20.sp,
-                    modifier = Modifier.padding(start = 80.dp).align(Alignment.CenterVertically)
+                    modifier = Modifier.padding(start = 60.dp).align(Alignment.CenterVertically)
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Box(
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)).background(Color.White).padding(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+                    .padding(16.dp)
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
                     Text(
                         text = "Upload or view your personal and professional documents here",
-                        fontSize = 25.sp,
-                        modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally).padding(bottom = 16.dp)
+                        fontSize = 22.sp,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .padding(bottom = 16.dp),
                     )
 
                     Section("Personal Documents", listOf("Aadhar Card", "Passport", "PAN Card"), controller, context, employeeId) // ✅ Pass context

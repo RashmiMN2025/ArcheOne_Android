@@ -16,7 +16,12 @@ class MyDocumentsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             XOneTheme {
-                MyDocumentsScreen(controller = controller, context = this, employeeId = employeeId)
+                MyDocumentsScreen(
+                    controller = controller,
+                    context = this,
+                    employeeId = employeeId,
+                    onBackPressed = { finish() }
+                )
             }
         }
     }

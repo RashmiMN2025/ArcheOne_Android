@@ -1,7 +1,5 @@
 package com.example.xone.ui.screens
 
-import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -21,14 +19,10 @@ import androidx.compose.ui.Alignment
 import com.example.xone.controller.LoginController
 import com.example.xone.ui.components.CompanyLogo
 import androidx.compose.material3.Text
-import com.example.xone.OtpVerificationActivity
-import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.navigation.Navigator
 import android.util.Log
 import androidx.compose.ui.tooling.preview.Preview
-import android.app.Activity
 import androidx.compose.ui.unit.sp
-import com.example.xone.R
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.ui.preview.PreviewNavigator
 import com.example.xone.ui.components.UniversalLoader

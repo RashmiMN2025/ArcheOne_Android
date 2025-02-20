@@ -15,24 +15,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun XConnectScreen(
-    onBackPressed: () -> Unit
-) {
-    var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("All Posts", "Case Studies", "Blogs", "Skill Support")
+fun XConnectScreen(onBackPressed: () -> Unit) {
+    var selectedTab by remember { mutableStateOf("All Posts") }
+
+    // Tab Options
+    val tabs = listOf("All Posts", "Case Studies", "Blogs", "Skill Support", "Jobs")
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.linearGradient(
+                Brush.verticalGradient(
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
@@ -40,144 +35,70 @@ fun XConnectScreen(
                     )
                 )
             )
+            .verticalScroll(rememberScrollState()) // Make the whole screen scrollable
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Top Bar
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 25.dp)
+                    .padding(vertical = 25.dp),
             ) {
-                IconButton(onClick = onBackPressed) {
+                IconButton(
+                    onClick = onBackPressed
+                ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
+                        painter = painterResource(id = R.drawable.ic_back), // Add menu icon in drawable folder
+                        contentDescription = "Menu",
                         tint = Color.Black
                     )
                 }
+
+                // **Centered Title**
                 Text(
                     text = "XConnect",
                     color = Color.Black,
                     fontSize = 20.sp,
                     modifier = Modifier
-                        .padding(start = 80.dp)
+                        .padding(start = 100.dp)
                         .align(Alignment.CenterVertically)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Tab Row
-            ScrollableTabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = Color.Transparent,
-                contentColor = Color.Black,
-                edgePadding = 0.dp,
-                indicator = { tabPositions ->
-                    // Empty indicator as we'll use custom tab styling
-                }
+            // **Tabs Row (Scrollable)**
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .horizontalScroll(rememberScrollState()) // Make tabs scrollable
             ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .background(
-                                color = if (selectedTab == index) Color(0xFFDD3825) else Color.White,
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                tabs.forEach { tab ->
+                    Button(
+                        onClick = { selectedTab = tab },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedTab == tab) Color(0xFFFF5C5C) else Color(0xFFE0E0E0),
+                            contentColor = if (selectedTab == tab) Color.White else Color.Black
+                        ),
+                        modifier = Modifier.height(40.dp)
                     ) {
-                        Text(
-                            text = title,
-                            color = if (selectedTab == index) Color.White else Color.Black,
-                            fontSize = 14.sp
-                        )
+                        Text(text = tab)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Content based on selected tab
+            // **Content Section**
             when (selectedTab) {
-                0 -> AllPostsContent()
-                1 -> HorizontalSection("Case Studies", getCaseStudies())
-                2 -> HorizontalSection("Blogs", getBlogs())
-                3 -> HorizontalSection("Skill Support", getSkillSupport())
-            }
-        }
-    }
-}
-
-@Composable
-fun PostCard(imageRes: Int, title: String, description: String) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .width(160.dp)
-            .height(200.dp)
-            .padding(4.dp)
-            .clickable { /* Handle card click */ },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Text(
-                text = description,
-                fontSize = 12.sp,
-                color = Color.Gray,
-                maxLines = 2
-            )
-        }
-    }
-}
-
-@Composable
-fun HorizontalSection(title: String, posts: List<Post>) {
-    Column {
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(end = 16.dp)
-        ) {
-            items(posts) { post ->
-                PostCard(
-                    imageRes = post.imageRes,
-                    title = post.title,
-                    description = post.description
-                )
+                "All Posts" -> AllPostsContent()
+                "Case Studies" -> HorizontalSection(title = "Case Studies", posts = getCaseStudies())
+                "Blogs" -> HorizontalSection(title = "Blogs", posts = getBlogs())
+                "Skill Support" -> HorizontalSection(title = "Skill Support", posts = getSkillSupport())
+                "Jobs" -> HorizontalSection(title = "Jobs", posts = getJobs())
             }
         }
     }
@@ -185,16 +106,40 @@ fun HorizontalSection(title: String, posts: List<Post>) {
 
 @Composable
 fun AllPostsContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        HorizontalSection("Case Studies", getCaseStudies())
-        HorizontalSection("Blogs", getBlogs())
-        HorizontalSection("Skill Support", getSkillSupport())
-        HorizontalSection("Jobs", getJobs())
+    Column(modifier = Modifier.fillMaxSize()) {
+        HorizontalSection(title = "Case Studies", posts = getCaseStudies())
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalSection(title = "Blogs", posts = getBlogs())
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalSection(title = "Skill Support", posts = getSkillSupport())
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalSection(title = "Jobs", posts = getJobs())
+    }
+}
+
+@Composable
+fun HorizontalSection(title: String, posts: List<Post>) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()) // Make each section horizontally scrollable
+        ) {
+            posts.forEach { post ->
+                PostCard(
+                    imageRes = post.imageRes,
+                    title = post.title,
+                    description = post.description
+                )
+            }
+        }
     }
 }
 
@@ -208,7 +153,7 @@ fun getCaseStudies(): List<Post> {
         Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
         Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
         Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-        )
+    )
 }
 
 fun getBlogs(): List<Post> {
@@ -230,6 +175,49 @@ fun getJobs(): List<Post> {
         Post(R.drawable.netcon, "Software Engineer", "Openings in Development..."),
         Post(R.drawable.netcon, "Data Analyst", "Analyze Business Data...")
     )
+}
+
+@Composable
+fun PostCard(imageRes: Int, title: String, description: String) {
+    Card(
+        shape = RoundedCornerShape(20.dp), // Increased rounded corners
+        modifier = Modifier
+            .width(200.dp)
+            .height(250.dp)
+            .padding(4.dp) // Added space between cards
+            .clickable { /* Handle card click */ },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.Center, // Align content in the center
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth() // Ensure image fills the card width
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(20.dp)) // Increased rounded corners for image
+            )
+            Spacer(modifier = Modifier.height(4.dp)) // Reduced space between image and text
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = description,
+                fontSize = 10.sp,
+                color = Color.Gray,
+                maxLines = 1
+            )
+        }
+    }
 }
 
 

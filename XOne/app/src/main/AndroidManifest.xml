@@ -57,20 +57,6 @@
             android:theme="@style/Theme.XOne">
         </activity>
 
-        <!-- HOME Dashboard Activity -->
-        <activity
-            android:name=".HomeDashboardActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:label="Home Dashboard"
-            android:theme="@style/Theme.XOne"
-            android:launchMode="singleTop">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
         <!-- My Documents Activity -->
         <activity
             android:name=".MyDocumentsActivity"
@@ -97,7 +83,7 @@
         <!-- Add WebViewActivity -->
         <activity
             android:name=".WebViewActivity"
-            android:exported="false"
+            android:exported="true"
             android:screenOrientation="portrait"
             android:label="Document Viewer"
             android:theme="@style/Theme.XOne" />
@@ -105,9 +91,17 @@
         <!-- Add XConnectActivity -->
         <activity
             android:name=".XConnectActivity"
-            android:exported="false"
+            android:exported="true"
             android:screenOrientation="portrait"
             android:label="XConnect"
+            android:theme="@style/Theme.XOne" />
+
+        <!-- Add XConnectActivity -->
+        <activity
+            android:name=".ui.screens.SOSActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="SOS"
             android:theme="@style/Theme.XOne" />
 
     </application>

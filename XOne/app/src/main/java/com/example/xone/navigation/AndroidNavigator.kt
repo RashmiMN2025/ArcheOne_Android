@@ -1,6 +1,5 @@
 package com.example.xone.navigation
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -11,6 +10,7 @@ import com.example.xone.OtpVerificationActivity
 import com.example.xone.HomeActivity
 import com.example.xone.MyDocumentsActivity
 import com.example.xone.XConnectActivity
+import com.example.xone.ui.screens.SOSActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -92,7 +92,10 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to policy screen")
         navController?.navigate("policy")
     }
-    override fun navigateToSOS() {}
+    override fun navigateToSOS() {
+        val intent = Intent(activity, SOSActivity::class.java)
+        activity.startActivity(intent)
+    }
     override fun navigateToTravelExpenses() {}
     override fun navigateToSAP() {}
     override fun navigateToChat() {}
