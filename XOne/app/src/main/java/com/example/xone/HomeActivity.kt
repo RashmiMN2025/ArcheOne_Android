@@ -12,11 +12,13 @@ import com.example.xone.controller.LocationsController
 import com.example.xone.controller.BusinessCardController
 import com.example.xone.controller.PolicyController
 import com.example.xone.controller.AssetController
+import com.example.xone.controller.ProfileController
 import com.example.xone.ui.screens.HomeScreen
 import com.example.xone.ui.screens.LocationsScreen
 import com.example.xone.ui.screens.BusinessCardScreen
 import com.example.xone.ui.screens.PolicyScreen
 import com.example.xone.ui.screens.AssetScreen
+import com.example.xone.ui.screens.ProfileScreen
 import com.example.xone.ui.theme.XOneTheme
 
 class HomeActivity : ComponentActivity() {
@@ -25,6 +27,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var businessCardController: BusinessCardController
     private lateinit var policyController: PolicyController
     private lateinit var assetController: AssetController
+    private lateinit var profileController: ProfileController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +43,7 @@ class HomeActivity : ComponentActivity() {
             businessCardController = BusinessCardController(this, navigator)
             policyController = PolicyController(this, navigator)
             assetController = AssetController(this, navigator)
+            profileController = ProfileController(this, navigator)
 
             XOneTheme {
                 NavHost(navController = navController, startDestination = "home") {
@@ -82,6 +86,11 @@ class HomeActivity : ComponentActivity() {
                         AssetScreen(
                             model = assetController.model,
                             controller = assetController
+                        )
+                    }
+                    composable("profile") {
+                        ProfileScreen(
+                            controller = profileController
                         )
                     }
                 }
