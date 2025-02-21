@@ -7,7 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import android.util.Log
-import com.example.xone.navigation.AndroidNavigator
 import android.content.Context
 import com.example.xone.utils.PreferencesManager
 
@@ -67,7 +66,10 @@ class HomeController(
             "asset" -> navigator.navigateToAsset()
             "timesheet" -> navigator.navigateToTimesheet()
             "leave" -> navigator.navigateToLeave()
-            "my documents", "mydocuments" -> navigator.navigateToMyDocuments()
+            "my documents", "mydocuments" -> {
+                Log.d("MyDocuments", "Navigating to My Documents")
+                navigator.navigateToMyDocuments()
+            }
             "my career" -> navigator.navigateToMyCareer()
             "elearning" -> navigator.navigateToELearning()
             "goal setting/kpi", "goal" -> navigator.navigateToGoalSetting()
@@ -78,13 +80,19 @@ class HomeController(
             "holiday calendar" -> navigator.navigateToHolidayCalendar()
             "client calendar" -> navigator.navigateToClientCalendar()
             "greetings" -> navigator.navigateToGreetings()
-            "xconnect" -> navigator.navigateToXConnect()
+            "xconnect" -> {
+                Log.d("XConnect", "Navigating to XConnect")
+                navigator.navigateToXConnect()
+            }
             "helpdesk" -> navigator.navigateToHelpdesk()
             "announcements" -> navigator.navigateToAnnouncements()
             "xprofile" -> navigator.navigateToXProfile()
             "password reset" -> navigator.navigateToPasswordReset()
             "policy" -> navigator.navigateToPolicy()
-            "sos" -> navigator.navigateToSOS()
+            "sos" -> {
+                Log.d("SOS", "Navigating to SOS")
+                navigator.navigateToSOS()
+            }
             "travel & expenses" -> navigator.navigateToTravelExpenses()
             "sap" -> navigator.navigateToSAP()
         }

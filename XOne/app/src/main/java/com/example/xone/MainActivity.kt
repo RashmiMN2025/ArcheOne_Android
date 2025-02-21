@@ -13,20 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.compose.navigation
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavOptions
 import com.example.xone.controller.*
 import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.navigation.AndroidNavigator
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -61,9 +53,7 @@ class MainActivity : ComponentActivity() {
                         NavHost(navController = navController, startDestination = "welcome") {
                             composable("welcome") {
                                 WelcomeScreen(
-                                    model = welcomeController.getWelcomeData(),
                                     onXOneClick = welcomeController::onXOneClick,
-                                    onPulseClick = welcomeController::onPulseClick
                                 )
                             }
                             composable("home") {

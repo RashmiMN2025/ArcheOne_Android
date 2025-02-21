@@ -2,7 +2,6 @@ package com.example.xone.ui.screens
 
 import com.example.xone.ui.theme.XOneTheme
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,8 +25,6 @@ import com.example.xone.ui.components.CompanyLogo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.example.xone.controller.LoginController
-import com.example.xone.navigation.AndroidNavigator
-import com.example.xone.navigation.Navigator
 import com.example.xone.ui.preview.PreviewNavigator
 import com.example.xone.ui.components.UniversalLoader
 
