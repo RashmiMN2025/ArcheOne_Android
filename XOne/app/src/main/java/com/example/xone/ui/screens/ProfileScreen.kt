@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -70,7 +71,7 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Menu Items
                 MenuItems(
@@ -91,10 +92,10 @@ fun ProfileScreen(
                 // Version
                 Text(
                     text = controller.model.version,
-                    color = Color.Gray,
-                    fontSize = 18.sp,
+                    color = Color.White,
+                    fontSize = 16.sp,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 40.dp)
                 )
             }
         }
@@ -109,7 +110,8 @@ private fun ProfileHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(220.dp)
+            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
     ) {
         // Background image
         Image(
@@ -124,12 +126,14 @@ private fun ProfileHeader(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 24.dp)
+                .padding(top = 32.dp)
         ) {
             // Profile Icon
             Surface(
-                modifier = Modifier.size(80.dp),
-                shape = RoundedCornerShape(40.dp),
+                modifier = Modifier
+                    .padding(top = 24.dp)
+                    .size(80.dp),
+                shape = CircleShape,
                 color = Color.Black
             ) {
                 Icon(

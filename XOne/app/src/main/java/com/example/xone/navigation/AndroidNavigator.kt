@@ -96,4 +96,8 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToTravelExpenses() {}
     override fun navigateToSAP() {}
     override fun navigateToChat() {}
+    override fun navigateToProfile() {
+        Log.d("AndroidNavigator", "Navigating to profile screen")
+        navController?.navigate("profile")
+    }
 }

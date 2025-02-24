@@ -109,7 +109,7 @@ class LoginController(
             return
         }
 
-        Log.d("LoginController", "Verifying OTP and logging in...")
+        Log.d("LoginController", "Verifying OTP: $otp for email: $email")
         
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -120,13 +120,16 @@ class LoginController(
                     otpFromUser = otp
                 )
                 
+                // Log the request body
+                Log.d("LoginController", "OTP verification request: $request")
+                
                 val response = RetrofitClient.apiService.verifyOtp(request).execute()
                 val responseBody = response.body()
                 val errorBody = response.errorBody()?.string()
                 
-                Log.d("LoginController", "Login response code: ${response.code()}")
-                Log.d("LoginController", "Login response body: $responseBody")
-                Log.d("LoginController", "Login error body: $errorBody")
+                Log.d("LoginController", "OTP verification response code: ${response.code()}")
+                Log.d("LoginController", "OTP verification response body: $responseBody")
+                Log.d("LoginController", "OTP verification error body: $errorBody")
 
                 withContext(Dispatchers.Main) {
                     when {

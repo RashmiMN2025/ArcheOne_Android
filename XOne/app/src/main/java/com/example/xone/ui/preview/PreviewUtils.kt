@@ -35,4 +35,5 @@ class PreviewNavigator : Navigator {
     override fun navigateToSAP() {}
     override fun navigateToChat() {}
     override fun navigateToBusinessCard() {}
+    override fun navigateToProfile() {}
 } 

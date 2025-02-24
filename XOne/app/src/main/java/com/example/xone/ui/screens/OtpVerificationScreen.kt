@@ -31,6 +31,7 @@ import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.navigation.Navigator
 import com.example.xone.ui.preview.PreviewNavigator
 import com.example.xone.ui.components.UniversalLoader
+import android.util.Log
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -137,9 +138,20 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 onClick = {
                     isLoading = true
                     errorMessage = null
+                    if (otp.length != 6) {  // Add validation
+                        errorMessage = "Please enter a valid 6-digit OTP"
+                        isLoading = false
+                        return@Button
+                    }
                     controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
                         isLoading = false
-                        errorMessage = if (isError) message else null
+                        if (isError) {
+                            Log.e("OtpVerification", "Error verifying OTP: $message")
+                            errorMessage = message
+                        } else {
+                            Log.d("OtpVerification", "OTP verification successful")
+                            errorMessage = null
+                        }
                     }
                 },
                 modifier = Modifier

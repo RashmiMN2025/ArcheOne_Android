@@ -175,7 +175,7 @@ class HomeController(
     }
 
     fun onFooterProfileClick() {
-        navigator.navigateToXProfile()
+        navigator.navigateToProfile()
     }
 
     fun onXCardClick() {
