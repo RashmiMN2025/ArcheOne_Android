@@ -198,26 +198,14 @@ class LocationsController(private val context: Context) {
     }
 
     fun selectStateLocation(state: StateInfo) {
-        if (state.name == "Tamil Nadu") {
-            // Find the specific location based on which button was clicked
-            val location = state.locations.firstOrNull()
-            if (location != null) {
-                _locationState = _locationState.copy(
-                    selectedLocation = location,
-                    selectedState = state,
-                    showingStateList = false,
-                    showingDetails = true
-                )
-            }
-        } else {
-            val location = state.locations.firstOrNull() ?: return
-            _locationState = _locationState.copy(
-                selectedLocation = location,
-                selectedState = state,
-                showingStateList = false,
-                showingDetails = true
-            )
-        }
+        // Handle all states consistently, including Tamil Nadu
+        val location = state.locations.firstOrNull() ?: return
+        _locationState = _locationState.copy(
+            selectedLocation = location,
+            selectedState = state,  // Always set the selectedState so back navigation works correctly
+            showingStateList = false,
+            showingDetails = true
+        )
     }
 
     fun resetState() {

@@ -385,11 +385,7 @@ private fun StateList(
                             onClick = { 
                                 val tamilNaduState = states.find { it.name == "Tamil Nadu" }
                                 if (tamilNaduState != null) {
-                                    // Find Chennai location specifically
-                                    val chennaiLocation = tamilNaduState.locations.find { it.name == "Chennai, HQ" }
-                                    if (chennaiLocation != null) {
-                                        controller.selectLocation(chennaiLocation)
-                                    }
+                                    controller.selectStateLocation(tamilNaduState)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -416,11 +412,7 @@ private fun StateList(
                             onClick = { 
                                 val tamilNaduState = states.find { it.name == "Tamil Nadu" }
                                 if (tamilNaduState != null) {
-                                    // Find Coimbatore location specifically
-                                    val coimbatoreLocation = tamilNaduState.locations.find { it.name == "Coimbatore, Registered Office" }
-                                    if (coimbatoreLocation != null) {
-                                        controller.selectLocation(coimbatoreLocation)
-                                    }
+                                    controller.selectStateLocation(tamilNaduState)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
