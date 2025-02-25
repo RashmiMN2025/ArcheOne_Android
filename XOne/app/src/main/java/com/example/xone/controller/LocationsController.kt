@@ -163,13 +163,25 @@ class LocationsController(private val context: Context) {
                 true
             }
             _locationState.showingDetails -> {
-                // For all locations, go back to main locations list
-                _locationState = _locationState.copy(
-                    showingDetails = false,
-                    showingStateList = false,
-                    selectedLocation = null,
-                    selectedState = null
-                )
+                // If we're showing details of a state within India
+                if (_locationState.selectedState != null) {
+                    // Go back to India page
+                    val indiaLocation = _locationState.locations.find { it.name == "India" }
+                    _locationState = _locationState.copy(
+                        showingDetails = false,
+                        showingStateList = true,
+                        selectedLocation = indiaLocation,
+                        selectedState = null
+                    )
+                } else {
+                    // For other countries or India itself, go back to main locations list
+                    _locationState = _locationState.copy(
+                        showingDetails = false,
+                        showingStateList = false,
+                        selectedLocation = null,
+                        selectedState = null
+                    )
+                }
                 true
             }
             _locationState.showingStateList -> {
