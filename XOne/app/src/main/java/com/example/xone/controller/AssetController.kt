@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.xone.network.AssetRequest
 
 class AssetController(
     private val context: Context,
@@ -32,25 +33,39 @@ class AssetController(
     private fun fetchAssetDetails(employeeId: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitClient.apiService.getAssetDetails(employeeId).execute()
+                val request = AssetRequest(employeeId = employeeId)
+                val response = RetrofitClient.apiService.getAssetDetails(request).execute()
                 
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body()?.details?.isNotEmpty() == true) {
-                        val asset = response.body()!!.details[0]
-                        model = model.copy(
-                            name = asset.username,
-                            employeeId = asset.Employee_Code ?: "",
-                            mobile = asset.mobile_number,
-                            email = asset.mail_id,
-                            location = asset.location,
-                            assetDetails = AssetDetails(
-                                serialNo = asset.serial_number,
-                                deviceModel = asset.model,
-                                dateOfIssue = asset.date_of_issue,
-                                configuration = asset.configuration
-                            ),
-                            isLoading = false
-                        )
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseBody = response.body()!!
+                        val asset = responseBody.details.firstOrNull()
+                        
+                        if (asset != null) {
+                            model = model.copy(
+                                name = responseBody.username,
+                                employeeId = responseBody.Employee_Code,
+                                mobile = responseBody.mobile_number,
+                                email = responseBody.mail_id,
+                                location = responseBody.location,
+                                department = responseBody.department,
+                                designation = responseBody.designation,
+                                assetDetails = AssetDetails(
+                                    serialNo = asset.serial_number,
+                                    deviceModel = asset.model,
+                                    dateOfIssue = formatDate(asset.date_of_issue),
+                                    configuration = asset.configuration,
+                                    assetType = asset.asset_type,
+                                    purchaseDate = formatDate(asset.purchase_date ?: "")
+                                ),
+                                isLoading = false
+                            )
+                        } else {
+                            model = model.copy(
+                                error = "No asset details found",
+                                isLoading = false
+                            )
+                        }
                     } else {
                         model = model.copy(
                             error = "Failed to load asset details",
@@ -66,6 +81,20 @@ class AssetController(
                     )
                 }
             }
+        }
+    }
+
+    // Helper function to format Excel date number to readable date
+    private fun formatDate(excelDate: String): String {
+        return try {
+            val days = excelDate.toDouble().toInt()
+            val calendar = java.util.Calendar.getInstance()
+            calendar.set(1900, 0, 1) // Excel date system starts from 1900-01-01
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, days - 2) // Subtract 2 to account for Excel's date system
+            val dateFormat = java.text.SimpleDateFormat("dd-MMM-yy", java.util.Locale.US)
+            dateFormat.format(calendar.time)
+        } catch (e: Exception) {
+            excelDate // Return original string if parsing fails
         }
     }
 

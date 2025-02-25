@@ -13,8 +13,8 @@ interface ApiService {
     @POST("login")
     fun verifyOtp(@Body request: VerifyOtpRequest): Call<VerifyOtpResponse>
 
-    @GET("assets/{employeeId}")
-    fun getAssetDetails(@Path("employeeId") employeeId: String): Call<AssetResponse>
+    @POST("assets")
+    fun getAssetDetails(@Body request: AssetRequest): Call<AssetResponse>
 }
 
 data class SendOtpRequest(
@@ -78,6 +78,13 @@ data class RegionalOffice(
 
 data class AssetResponse(
     val status: Int,
+    val department: String,
+    val designation: String,
+    val location: String,
+    val mail_id: String,
+    val Employee_Code: String,
+    val mobile_number: String,
+    val username: String,
     val details: List<AssetDetail>
 )
 
@@ -85,24 +92,11 @@ data class AssetDetail(
     val asset_type: String,
     val configuration: String,
     val date_of_issue: String,
-    val department: String,
-    val designation: String,
-    val division: String,
-    val divisional_head: String?,
-    val location: String,
-    val mail_id: String,
-    val mobile_number: String,
     val model: String,
-    val new_asset_id: String,
-    val old_asset_id: String,
-    val reporting_to: String,
-    val serial_number: String,
-    val username: String,
     val purchase_date: String?,
-    val Blood_group: String?,
-    val Emergency_Contact: String?,
-    val Employee_Code: String?,
-    val Manager: String?,
-    val PAN: String?,
-    val UAN: String?
+    val serial_number: String
+)
+
+data class AssetRequest(
+    val employeeId: String
 )
