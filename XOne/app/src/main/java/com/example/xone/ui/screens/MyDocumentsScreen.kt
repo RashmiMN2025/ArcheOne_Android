@@ -1,6 +1,7 @@
 package com.example.xone.ui.screens
 
 import android.content.Context
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -19,10 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.controller.MyDocumentsController
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.xone.R
 
 @Composable
-fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, employeeId: String, onBackPressed: () -> Unit) { // ✅ Pass context
+fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, employeeId: String, onBackPressed: () -> Unit) {
+    val personalDocs by controller.personalDocs.observeAsState(emptyMap())
+    val professionalDocs by controller.professionalDocs.observeAsState(emptyMap())
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -39,9 +46,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(top = 25.dp)
             ) {
-                IconButton(
-                    onClick = onBackPressed
-                ) {
+                IconButton(onClick = onBackPressed) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
@@ -53,7 +58,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     color = Color.Black,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 60.dp).align(Alignment.CenterVertically)
+                    modifier = Modifier.padding(start = 60.dp)
                 )
             }
 
@@ -68,58 +73,49 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "Upload or view your personal and professional documents here",
                         fontSize = 22.sp,
                         color = Color.Black,
-                        modifier = Modifier
-                            .padding(bottom = 16.dp),
+                        modifier = Modifier.padding(bottom = 20.dp),
                     )
 
-                    Section("Personal Documents", listOf("Aadhar Card", "Passport", "PAN Card"), controller, context, employeeId) // ✅ Pass context
+                    Section("Personal Documents", listOf("Aadhar Card", "Passport", "PAN Card"), personalDocs, controller, context, employeeId, true)
                     Spacer(modifier = Modifier.height(24.dp))
-                    Section("Professional Documents", listOf("Offer Letter", "Certificate", "Experience Letter"), controller, context, employeeId) // ✅ Pass context
+                    Section("Professional Documents", listOf("Offer Letter", "Certificate", "Experience Letter"), professionalDocs, controller, context, employeeId, false)
                 }
             }
         }
     }
 }
 
-
 @Composable
-fun Section(title: String, items: List<String>, controller: MyDocumentsController, context: Context, employeeId: String) { // ✅ Add context
+fun Section(title: String, items: List<String>, filePaths: Map<String, String>, controller: MyDocumentsController, context: Context, employeeId: String, isPersonal: Boolean) {
     Column {
-        Text(text = title, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp))
+        Text(text = title, fontSize = 18.sp, modifier = Modifier.padding(bottom = 10.dp))
         Column {
-            for (row in items.chunked(1)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 5.dp)) {
-                    row.forEach { item ->
-                        DocumentCard(name = item, controller = controller, context = context, employeeId = employeeId) // ✅ Pass context
-                    }
-                }
+            items.forEach { item ->
+                DocumentCard(item, filePaths[item], controller, context, employeeId, isPersonal)
             }
         }
     }
 }
 
-
 @Composable
-fun DocumentCard(name: String, controller: MyDocumentsController, context: Context, employeeId: String) {
+fun DocumentCard(name: String, filePath: String?, controller: MyDocumentsController, context: Context, employeeId: String, isPersonal: Boolean) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             controller.onUploadClick(name, uri, employeeId)
         }
     }
-
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .fillMaxWidth() // Make card take full width
+            .fillMaxWidth()
             .height(60.dp)
-            .padding(bottom = 1.dp),
+            .padding(bottom = 2.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFDD3825))
     ) {
         Row(
@@ -128,48 +124,51 @@ fun DocumentCard(name: String, controller: MyDocumentsController, context: Conte
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Document Name (Left Side)
             Text(
                 text = name,
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f) // Push icons to the end
+                modifier = Modifier.weight(1f)
             )
 
-            // Icons (Right Side)
             Row {
-                // Upload Icon inside a White Circle
+                // Upload button
                 Box(
                     modifier = Modifier
                         .size(25.dp)
-                        .background(Color.White, shape = RoundedCornerShape(50)) // Circular background
+                        .background(Color.White, shape = RoundedCornerShape(50))
                         .clickable { launcher.launch("application/pdf") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_upload), // Change to new upload icon
+                        painter = painterResource(id = R.drawable.ic_upload),
                         contentDescription = "Upload",
-                        tint = Color(0xFFDD3825), // Match the card's color
+                        tint = Color(0xFFDD3825),
                         modifier = Modifier.size(20.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                // View Icon (Without Background)
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_view),
-                    contentDescription = "View",
-                    tint = Color.White,
+                // View button (always visible, but shows a toast if filePath is empty)
+                Box(
                     modifier = Modifier
                         .size(25.dp)
-                        .clickable { controller.onViewClick(context, name) }
-                )
+                        .background(Color.White, shape = RoundedCornerShape(50))
+                        .clickable {
+                            controller.onViewClick(context, name, isPersonal)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_view),
+                        contentDescription = "View",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
 }
-
-
-

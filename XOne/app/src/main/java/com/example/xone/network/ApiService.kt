@@ -2,11 +2,15 @@ package com.example.xone.network
 
 import com.example.xone.model.SOSRequest
 import com.google.gson.annotations.SerializedName
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface ApiService {
@@ -21,7 +25,28 @@ interface ApiService {
 
     @POST("/sos")
     suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
+
+    @Multipart
+    @POST("/upload")
+    fun uploadDocument(
+        @Part file: MultipartBody.Part,
+        @Part("employeeId") employeeId: RequestBody,
+        @Part("documentType") documentType: RequestBody
+    ): Call<DocumentUploadResponse>
 }
+
+data class DocumentUploadResponse(
+    val personalDoc: List<Document>,
+    val professionalDoc: List<Document>,
+    val status: Int,
+    val message: String
+)
+
+data class Document(
+    val id: Int,
+    val docName: String,
+    val filePath: String,
+    val doc_type: String)
 
 data class SOSResponse(
     @SerializedName("message") val message: String
