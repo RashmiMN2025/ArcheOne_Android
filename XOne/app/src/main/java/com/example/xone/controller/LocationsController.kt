@@ -29,7 +29,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing Indian office with ${office.regionaloffice.size} regional offices")
                         locationsList.add(LocationInfo(
                             name = "India",
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = true,
@@ -40,7 +40,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing ${office.country} office")
                         locationsList.add(LocationInfo(
                             name = office.country,
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = false
@@ -93,7 +93,7 @@ class LocationsController(private val context: Context) {
                             "Coimbatore" -> "Coimbatore, Registered Office"
                             else -> office.region
                         },
-                        companyName = office.companyName ?: "",
+                        companyName = office.companyName ?: "Arche Global Pvt Ltd",
                         address = office.address,
                         email = office.email ?: "info@netcon.in",
                         hasFloorMap = office.region in listOf("Chennai", "Coimbatore", "Bangalore", "Karnataka"),
@@ -233,7 +233,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing Indian office with ${office.regionaloffice.size} regional offices")
                         locationsList.add(LocationInfo(
                             name = "India",
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = true,
@@ -244,7 +244,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing ${office.country} office")
                         locationsList.add(LocationInfo(
                             name = office.country,
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = false
