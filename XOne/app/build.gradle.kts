@@ -78,5 +78,7 @@ dependencies {
     implementation (libs.androidx.ui.v150)
     implementation (libs.androidx.material3.v120)
     implementation (libs.androidx.foundation.v150)
-    implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
+    implementation(libs.logging.interceptor)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 }

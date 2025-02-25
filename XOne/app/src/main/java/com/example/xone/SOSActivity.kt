@@ -15,7 +15,7 @@ class SOSActivity : ComponentActivity() {
             val controller = SOSController(context = this)
 
             if (showRaiseConcern) {
-                RaiseConcernScreen(onBackPress = { showRaiseConcern = false })
+                RaiseConcernScreen(onBackPressed = { showRaiseConcern = false })
             } else {
                 SOSScreen(
                     controller,

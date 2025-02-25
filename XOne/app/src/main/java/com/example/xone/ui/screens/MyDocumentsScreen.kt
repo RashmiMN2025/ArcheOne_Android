@@ -52,6 +52,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     text = "My Documents",
                     color = Color.Black,
                     fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 60.dp).align(Alignment.CenterVertically)
                 )
             }

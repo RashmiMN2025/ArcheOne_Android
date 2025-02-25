@@ -1,16 +1,16 @@
 package com.example.xone.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.ui.theme.XOneTheme
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun WelcomeScreen(
@@ -27,34 +26,37 @@ fun WelcomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige
-                        Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
-                    )
-                )
-            ),
-        contentAlignment = Alignment.Center
     ) {
+        // Full-Screen Background Image
+        Image(
+            painter = painterResource(id = R.drawable.background_image), // Replace with actual image name
+            contentDescription = "Background Image",
+            modifier = Modifier
+                .fillMaxSize() // Ensures it covers the full screen
+                .align(Alignment.Center),
+            contentScale = ContentScale.FillBounds // 🔥 Stretches to fit the entire screen exactly
+        )
+
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Middle Logo
             Image(
-                painter = painterResource(id = R.drawable.arche_one), // Place one.png in res/drawable
+                painter = painterResource(id = R.drawable.arche_one), // Replace with your logo
                 contentDescription = "One Logo",
                 modifier = Modifier
-                    .size(400.dp)
+                    .size(450.dp)
                     .fillMaxWidth()
+                    .offset(y = (-40).dp) // Moves image slightly **up**
             )
 
             // Get Started Button
             Button(
-                onClick = onXOneClick, // ✅ Navigates only when clicked
+                onClick = onXOneClick,
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .padding(bottom = 40.dp)

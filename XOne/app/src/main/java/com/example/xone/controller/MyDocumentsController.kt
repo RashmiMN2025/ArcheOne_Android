@@ -31,7 +31,7 @@ class MyDocumentsController(private val context: Context) {
             .build()
 
         val request = Request.Builder()
-            .url("http://172.19.2.240:5000/upload")
+            .url("https://pulse.netcon.in:7000/upload")
             .post(requestBody)
             .build()
 
@@ -71,8 +71,6 @@ class MyDocumentsController(private val context: Context) {
         intent.putExtra("fileUrl", filePath) // Encode spaces
         context.startActivity(intent)
     }
-
-
 
 
     private fun getFileFromUri(context: Context, uri: Uri): File? {

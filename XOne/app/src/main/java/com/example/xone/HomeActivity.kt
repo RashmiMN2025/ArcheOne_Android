@@ -12,11 +12,13 @@ import com.example.xone.controller.LocationsController
 import com.example.xone.controller.BusinessCardController
 import com.example.xone.controller.PolicyController
 import com.example.xone.controller.AssetController
+import com.example.xone.controller.HolidayCalendarController
 import com.example.xone.ui.screens.HomeScreen
 import com.example.xone.ui.screens.LocationsScreen
 import com.example.xone.ui.screens.BusinessCardScreen
 import com.example.xone.ui.screens.PolicyScreen
 import com.example.xone.ui.screens.AssetScreen
+import com.example.xone.ui.screens.HolidayCalendarScreen
 import com.example.xone.ui.theme.XOneTheme
 
 class HomeActivity : ComponentActivity() {
@@ -28,12 +30,12 @@ class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         setContent {
             val navController = rememberNavController()
             val navigator = AndroidNavigator(this)
             navigator.setNavController(navController)
-            
+
             // Initialize controllers
             controller = HomeController(navigator, this)
             locationsController = LocationsController(this)
@@ -84,8 +86,17 @@ class HomeActivity : ComponentActivity() {
                             controller = assetController
                         )
                     }
+
+                    composable("holiday_calendar") {
+                        HolidayCalendarScreen(
+                            controller = HolidayCalendarController(navigator), // Pass navigator here
+                            onBackPressed = { navigator.navigateToHome() } // Use navigator for back action
+                        )
+                    }
+
+
                 }
             }
         }
     }
-} 
+}

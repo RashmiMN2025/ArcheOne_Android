@@ -18,14 +18,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
+import com.example.xone.network.RetrofitClient.apiService
+import com.example.xone.model.SOSRequest
+import kotlinx.coroutines.launch
 
 @Composable
-fun RaiseConcernScreen(onBackPress: () -> Unit) {
+fun RaiseConcernScreen(onBackPressed: () -> Unit) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -35,6 +38,38 @@ fun RaiseConcernScreen(onBackPress: () -> Unit) {
 
     val categories = listOf("Technical Issue", "HR Issue", "Security Concern", "Other")
     var expanded by remember { mutableStateOf(false) }
+    var isSubmitting by remember { mutableStateOf(false) }
+
+    suspend fun submitConcern() {
+        if (email.isBlank() || issueDescription.isBlank()) {
+            Toast.makeText(context, "Email and Issue Description are required", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        isSubmitting = true
+        val request = SOSRequest(name, email, mobile, selectedCategory, issueDescription)
+
+        try {
+            val response = apiService.submitSOS(request)
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                if (responseBody != null) {
+                    Toast.makeText(context, responseBody.message, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Success, but no message received!", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+                Toast.makeText(context, "Failed: $errorMessage", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        } finally {
+            isSubmitting = false
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -47,12 +82,11 @@ fun RaiseConcernScreen(onBackPress: () -> Unit) {
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Back button and title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(top = 25.dp)
             ) {
-                IconButton(onClick = { onBackPress() }) {
+                IconButton(onClick = onBackPressed) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
@@ -69,20 +103,13 @@ fun RaiseConcernScreen(onBackPress: () -> Unit) {
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            // Reusable function for text fields
             @Composable
-            fun customOutlinedTextField(
-                value: String,
-                onValueChange: (String) -> Unit,
-                placeholder: String
-            ) {
+            fun customOutlinedTextField(value: String, onValueChange: (String) -> Unit, placeholder: String) {
                 OutlinedTextField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = { Text(placeholder) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
@@ -98,16 +125,10 @@ fun RaiseConcernScreen(onBackPress: () -> Unit) {
                 )
             }
 
-            // Name Field
             customOutlinedTextField(name, { name = it }, "Enter your name")
-
-            // Email Field
             customOutlinedTextField(email, { email = it }, "Enter your email")
-
-            // Mobile Field
             customOutlinedTextField(mobile, { mobile = it }, "Enter mobile number")
 
-            // Dropdown for Issue Category with Arrow Icon
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -116,26 +137,12 @@ fun RaiseConcernScreen(onBackPress: () -> Unit) {
                     .clickable { expanded = true }
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = selectedCategory,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Dropdown",
-                        tint = Color.Black
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = selectedCategory, color = Color.Black, modifier = Modifier.weight(1f))
+                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Dropdown", tint = Color.Black)
                 }
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     categories.forEach { category ->
                         DropdownMenuItem(
                             text = { Text(text = category) },
@@ -148,15 +155,11 @@ fun RaiseConcernScreen(onBackPress: () -> Unit) {
                 }
             }
 
-            // Issue Description Field
             OutlinedTextField(
                 value = issueDescription,
                 onValueChange = { issueDescription = it },
                 placeholder = { Text("Please describe your issue") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp)
-                    .padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth().height(140.dp).padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -167,28 +170,19 @@ fun RaiseConcernScreen(onBackPress: () -> Unit) {
                 ),
                 textStyle = TextStyle(color = Color.Black),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions.Default,
-                shape = MaterialTheme.shapes.medium
+                keyboardActions = KeyboardActions.Default
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Submit Button
             Button(
-                onClick = {
-                    Toast.makeText(context, "Issue submitted!", Toast.LENGTH_SHORT).show()
-                },
+                onClick = { coroutineScope.launch { submitConcern() } },
+                enabled = !isSubmitting,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
-                Text(text = "Submit", color = Color.White)
+                Text(
+                    text = "Submit",
+                    color = Color.White)
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun PreviewRaiseConcernScreen() {
-    RaiseConcernScreen(onBackPress = {})
 }

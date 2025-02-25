@@ -1,5 +1,8 @@
 package com.example.xone.network
 
+import com.example.xone.model.SOSRequest
+import com.google.gson.annotations.SerializedName
+import retrofit2.Response
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -15,7 +18,14 @@ interface ApiService {
 
     @GET("assets/{employeeId}")
     fun getAssetDetails(@Path("employeeId") employeeId: String): Call<AssetResponse>
+
+    @POST("/sos")
+    suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
 }
+
+data class SOSResponse(
+    @SerializedName("message") val message: String
+)
 
 data class SendOtpRequest(
     val email: String,

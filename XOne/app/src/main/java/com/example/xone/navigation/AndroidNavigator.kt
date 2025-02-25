@@ -66,6 +66,7 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToTimesheet() {}
     override fun navigateToLeave() {}
     override fun navigateToMyDocuments() {
+        Log.d("AndroidNavigator", "Navigating to MyDocuments screen")
         val intent = Intent(activity, MyDocumentsActivity::class.java)
         activity.startActivity(intent)
     }
@@ -77,10 +78,14 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToFinance() {}
     override fun navigateToAdmin() {}
     override fun navigateToHR() {}
-    override fun navigateToHolidayCalendar() {}
+    override fun navigateToHolidayCalendar() {
+        Log.d("AndroidNavigator", "Navigating to policy screen")
+        navController?.navigate("holiday_calendar")
+    }
     override fun navigateToClientCalendar() {}
     override fun navigateToGreetings() {}
     override fun navigateToXConnect() {
+        Log.d("AndroidNavigator", "Navigating to XConnect screen")
         val intent = Intent(activity, XConnectActivity::class.java)
         activity.startActivity(intent)
     }
@@ -93,6 +98,7 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         navController?.navigate("policy")
     }
     override fun navigateToSOS() {
+        Log.d("AndroidNavigator", "Navigating to SOS screen")
         val intent = Intent(activity, SOSActivity::class.java)
         activity.startActivity(intent)
     }
