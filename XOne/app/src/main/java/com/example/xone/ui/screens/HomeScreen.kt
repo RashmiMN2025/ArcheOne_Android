@@ -268,7 +268,7 @@ fun HomeScreen(
                 // Content
                 Box(modifier = Modifier.weight(1f)) {
                     if (model.showAllApps) {
-                        // All Apps View with Categories
+                        // All Apps View
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
@@ -282,6 +282,7 @@ fun HomeScreen(
                                             .padding(vertical = 8.dp)
                                     )
                                 }
+                                
                                 items(items.chunked(3)) { rowItems ->
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -363,40 +364,6 @@ fun HomeScreen(
                                         Spacer(modifier = Modifier.height(12.dp))
                                     }
                                 }
-                            }
-                        }
-                    } else {
-                        // Default Apps View
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
-                        ) {
-                            items(model.defaultApps.chunked(3)) { rowItems ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(25.dp)
-                                ) {
-                                    rowItems.forEach { item ->
-                                        AppItem(
-                                            title = item.title,
-                                            isFavorite = item.isFavorite,
-                                            onClick = { onItemClick(item) },
-                                            onFavoriteClick = { onToggleFavorite(item) },
-                                            modifier = Modifier.weight(1f),
-                                            showFavoriteButton = false,
-                                            isSelected = item == selectedApp,
-                                            onLongPress = { position -> 
-                                                selectedApp = item
-                                                selectedPosition = position
-                                            },
-                                            shouldBlur = selectedApp != null && item != selectedApp
-                                        )
-                                    }
-                                    repeat(3 - rowItems.size) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
                     }

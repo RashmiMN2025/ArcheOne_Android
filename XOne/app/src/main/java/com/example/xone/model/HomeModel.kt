@@ -8,7 +8,6 @@ data class HomeModel(
     val showAllApps: Boolean = true,
     val viewFavorites: Boolean = false,
     val showSearchAndFavorites: Boolean = true,
-    val defaultApps: List<HomeItem> = emptyList(),
     val categories: Map<String, List<HomeItem>> = emptyMap(),
     val favorites: Map<String, List<HomeItem>> = emptyMap(),
     val footerNavigation: FooterNavigationModel = FooterNavigationModel()
