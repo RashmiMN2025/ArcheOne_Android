@@ -20,8 +20,8 @@ interface ApiService {
     @POST("login")
     fun verifyOtp(@Body request: VerifyOtpRequest): Call<VerifyOtpResponse>
 
-    @GET("assets/{employeeId}")
-    fun getAssetDetails(@Path("employeeId") employeeId: String): Call<AssetResponse>
+    @POST("assets")
+    fun getAssetDetails(@Body request: AssetRequest): Call<AssetResponse>
 
     @POST("/sos")
     suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
