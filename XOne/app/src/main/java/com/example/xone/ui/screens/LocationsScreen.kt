@@ -194,7 +194,16 @@ private fun LocationCard(
                 color = TextPrimary
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = location.companyName,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
             
             Row(
                 verticalAlignment = Alignment.Top,
@@ -223,7 +232,7 @@ private fun LocationCard(
             Spacer(modifier = Modifier.height(16.dp))
             
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
@@ -385,11 +394,7 @@ private fun StateList(
                             onClick = { 
                                 val tamilNaduState = states.find { it.name == "Tamil Nadu" }
                                 if (tamilNaduState != null) {
-                                    // Find Chennai location specifically
-                                    val chennaiLocation = tamilNaduState.locations.find { it.name == "Chennai, HQ" }
-                                    if (chennaiLocation != null) {
-                                        controller.selectLocation(chennaiLocation)
-                                    }
+                                    controller.selectStateLocation(tamilNaduState)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -416,11 +421,7 @@ private fun StateList(
                             onClick = { 
                                 val tamilNaduState = states.find { it.name == "Tamil Nadu" }
                                 if (tamilNaduState != null) {
-                                    // Find Coimbatore location specifically
-                                    val coimbatoreLocation = tamilNaduState.locations.find { it.name == "Coimbatore, Registered Office" }
-                                    if (coimbatoreLocation != null) {
-                                        controller.selectLocation(coimbatoreLocation)
-                                    }
+                                    controller.selectStateLocation(tamilNaduState)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -494,23 +495,39 @@ private fun LocationDetails(
                 color = TextPrimary
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Address section
-            Text(
-                text = "Address",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Gray
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = location.address,
+                text = location.companyName,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Address:",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextSecondary
+                )
+                Text(
+                    text = location.address.substringBefore(","),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextSecondary
+                )
+            }
+            Text(
+                text = location.address.substringAfter(",").trim(),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextSecondary
             )
 
             // Contact Information Section

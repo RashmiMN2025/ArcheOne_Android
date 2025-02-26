@@ -29,7 +29,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing Indian office with ${office.regionaloffice.size} regional offices")
                         locationsList.add(LocationInfo(
                             name = "India",
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = true,
@@ -40,7 +40,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing ${office.country} office")
                         locationsList.add(LocationInfo(
                             name = office.country,
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = false
@@ -93,7 +93,7 @@ class LocationsController(private val context: Context) {
                             "Coimbatore" -> "Coimbatore, Registered Office"
                             else -> office.region
                         },
-                        companyName = office.companyName ?: "",
+                        companyName = office.companyName ?: "Arche Global Pvt Ltd",
                         address = office.address,
                         email = office.email ?: "info@netcon.in",
                         hasFloorMap = office.region in listOf("Chennai", "Coimbatore", "Bangalore", "Karnataka"),
@@ -163,13 +163,25 @@ class LocationsController(private val context: Context) {
                 true
             }
             _locationState.showingDetails -> {
-                // For all locations, go back to main locations list
-                _locationState = _locationState.copy(
-                    showingDetails = false,
-                    showingStateList = false,
-                    selectedLocation = null,
-                    selectedState = null
-                )
+                // If we're showing details of a state within India
+                if (_locationState.selectedState != null) {
+                    // Go back to India page
+                    val indiaLocation = _locationState.locations.find { it.name == "India" }
+                    _locationState = _locationState.copy(
+                        showingDetails = false,
+                        showingStateList = true,
+                        selectedLocation = indiaLocation,
+                        selectedState = null
+                    )
+                } else {
+                    // For other countries or India itself, go back to main locations list
+                    _locationState = _locationState.copy(
+                        showingDetails = false,
+                        showingStateList = false,
+                        selectedLocation = null,
+                        selectedState = null
+                    )
+                }
                 true
             }
             _locationState.showingStateList -> {
@@ -186,26 +198,14 @@ class LocationsController(private val context: Context) {
     }
 
     fun selectStateLocation(state: StateInfo) {
-        if (state.name == "Tamil Nadu") {
-            // Find the specific location based on which button was clicked
-            val location = state.locations.firstOrNull()
-            if (location != null) {
-                _locationState = _locationState.copy(
-                    selectedLocation = location,
-                    selectedState = state,
-                    showingStateList = false,
-                    showingDetails = true
-                )
-            }
-        } else {
-            val location = state.locations.firstOrNull() ?: return
-            _locationState = _locationState.copy(
-                selectedLocation = location,
-                selectedState = state,
-                showingStateList = false,
-                showingDetails = true
-            )
-        }
+        // Handle all states consistently, including Tamil Nadu
+        val location = state.locations.firstOrNull() ?: return
+        _locationState = _locationState.copy(
+            selectedLocation = location,
+            selectedState = state,  // Always set the selectedState so back navigation works correctly
+            showingStateList = false,
+            showingDetails = true
+        )
     }
 
     fun resetState() {
@@ -233,7 +233,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing Indian office with ${office.regionaloffice.size} regional offices")
                         locationsList.add(LocationInfo(
                             name = "India",
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = true,
@@ -244,7 +244,7 @@ class LocationsController(private val context: Context) {
                         Log.d("LocationsController", "Processing ${office.country} office")
                         locationsList.add(LocationInfo(
                             name = office.country,
-                            companyName = office.companyName ?: "Netcon Technologies",
+                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
                             address = office.address,
                             email = office.email ?: "info@netcon.in",
                             hasMultipleLocations = false

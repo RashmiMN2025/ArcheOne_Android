@@ -22,17 +22,6 @@ class HomeController(
         department = LoginController.getUserData()?.department ?: "",
         employeeId = LoginController.getUserData()?.employeeId ?: "",
         showAllApps = true,
-        defaultApps = listOf(
-            HomeItem("My Documents", "mydocuments", false),
-            HomeItem("ID", "id", false),
-            HomeItem("Asset", "asset", false),
-            HomeItem("XCard", "xcard", false),
-            HomeItem("Leave", "leave", false),
-            HomeItem("eLearning", "elearning", false),
-            HomeItem("My Career", "mycareer", false),
-            HomeItem("TimeSheet", "timesheet", false),
-            HomeItem("Goal", "goal", false)
-        ),
         categories = LoginController.getUserData()?.let { userData ->
             userData.services
                 .groupBy { it.category }
@@ -41,7 +30,7 @@ class HomeController(
                         HomeItem(
                             title = service.service,
                             icon = service.icon ?: service.service.lowercase().replace(" ", ""),
-                            isFavorite = false,
+                            isFavorite = service.favourite,
                             category = service.category
                         )
                     }
@@ -155,18 +144,8 @@ class HomeController(
             }
         }
 
-        // Update default apps
-        val updatedDefaultApps = model.defaultApps.map { 
-            if (it.title == item.title) {
-                it.copy(isFavorite = !it.isFavorite)
-            } else {
-                it
-            }
-        }
-
         model = model.copy(
-            categories = updatedCategories,
-            defaultApps = updatedDefaultApps
+            categories = updatedCategories
         )
     }
 
@@ -183,7 +162,7 @@ class HomeController(
     }
 
     fun onFooterProfileClick() {
-        navigator.navigateToXProfile()
+        navigator.navigateToProfile()
     }
 
     fun onXCardClick() {
@@ -202,8 +181,7 @@ class HomeController(
     fun getCurrentViewItems(): List<HomeItem> {
         return when {
             model.viewFavorites -> model.favorites.values.flatten()
-            model.showAllApps -> model.categories.values.flatten()
-            else -> model.defaultApps
+            else -> model.categories.values.flatten()
         }
     }
 } 
