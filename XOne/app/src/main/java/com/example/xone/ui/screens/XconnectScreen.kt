@@ -29,8 +29,9 @@ import com.example.xone.model.SocialArticle
 
 @Composable
 fun XConnectScreen(onBackPressed: () -> Unit) {
+    val context = LocalContext.current
+    val socialController = remember { SocialController(context) }
     var selectedTab by remember { mutableStateOf("All Posts") }
-    val socialController = remember { SocialController() }
 
     // Tab Options
     val tabs = listOf("All Posts", "Case Studies", "Blogs", "Jobs")
@@ -152,7 +153,11 @@ fun CaseStudiesContent(socialController: SocialController) {
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
             caseStudies.forEach { article ->
-                ArticleCard(article)
+                ArticleCard(
+                    article = article,
+                    type = "Case Studies",
+                    socialController = socialController
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -172,7 +177,11 @@ fun BlogsContent(socialController: SocialController) {
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
             blogs.forEach { article ->
-                ArticleCard(article)
+                ArticleCard(
+                    article = article,
+                    type = "Blogs",
+                    socialController = socialController
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -192,8 +201,64 @@ fun JobsContent(socialController: SocialController) {
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
             jobs.forEach { job ->
-                JobCard(job)
+                JobCard(
+                    job = job,
+                    socialController = socialController
+                )
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun JobCard(job: Job, socialController: SocialController) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { 
+                socialController.openInBrowser("Jobs", job.Slug)
+            },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(job.Image)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = job.Title,
+                modifier = Modifier
+                    .size(120.dp)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.ic_back),
+                placeholder = painterResource(id = R.drawable.ic_back)
+            )
+            
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = job.Title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = job.Description,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
@@ -214,13 +279,18 @@ fun HorizontalSection(title: String, articles: List<SocialArticle>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()) // Make each section horizontally scrollable
+                .horizontalScroll(rememberScrollState())
         ) {
             articles.forEach { article ->
                 PostCard(
                     title = article.title,
                     description = article.description,
-                    imageUrl = article.imageUrl
+                    imageUrl = article.imageUrl,
+                    type = title,
+                    slug = article.id,
+                    socialController = LocalContext.current.let { 
+                        remember { SocialController(it) }
+                    }
                 )
             }
         }
@@ -242,13 +312,18 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()) // Make each section horizontally scrollable
+                .horizontalScroll(rememberScrollState())
         ) {
             jobs.forEach { job ->
                 PostCard(
                     title = job.Title,
                     description = job.Description,
-                    imageUrl = job.Image
+                    imageUrl = job.Image,
+                    type = "Jobs",
+                    slug = job.Slug,
+                    socialController = LocalContext.current.let { 
+                        remember { SocialController(it) }
+                    }
                 )
             }
         }
@@ -256,13 +331,14 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
 }
 
 @Composable
-fun ArticleCard(article: SocialArticle) {
+fun ArticleCard(article: SocialArticle, type: String, socialController: SocialController) {
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { /* Handle card click */ },
+            .clickable { 
+                socialController.openInBrowser(type, article.id)
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -309,67 +385,23 @@ fun ArticleCard(article: SocialArticle) {
 }
 
 @Composable
-fun JobCard(job: Job) {
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { /* Handle job click */ },
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Use AsyncImage with error and loading states
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(job.Image)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = job.Title,
-                modifier = Modifier
-                    .size(120.dp)
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop,
-                // Show a placeholder while loading or if error
-                error = painterResource(id = R.drawable.ic_back),
-                placeholder = painterResource(id = R.drawable.ic_back)
-            )
-            
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
-            ) {
-                Text(
-                    text = job.Title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = job.Description,
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PostCard(title: String, description: String, imageUrl: String) {
+fun PostCard(
+    title: String, 
+    description: String, 
+    imageUrl: String,
+    type: String,
+    slug: String,
+    socialController: SocialController
+) {
     Card(
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier
             .width(200.dp)
             .height(250.dp)
             .padding(4.dp)
-            .clickable { /* Handle card click */ },
+            .clickable { 
+                socialController.openInBrowser(type, slug)
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

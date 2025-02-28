@@ -1,5 +1,8 @@
 package com.example.xone.controller
 
+import android.content.Intent
+import android.net.Uri
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,7 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 
-class SocialController {
+class SocialController(private val context: Context) {
     private var _socialState by mutableStateOf(SocialContent())
     val socialContent: SocialContent get() = _socialState
     
@@ -114,5 +117,18 @@ class SocialController {
             job.Title.contains("Security") ||
             job.Title.contains("Practice")
         }
+    }
+
+    fun openInBrowser(type: String, slug: String) {
+        val baseUrl = "https://arche.global"
+        val url = when (type) {
+            "Case Studies" -> "$baseUrl/case-studies/$slug"
+            "Blogs" -> "$baseUrl/blog/$slug"
+            else -> "$baseUrl/jobs/$slug"
+        }
+        
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
     }
 } 
