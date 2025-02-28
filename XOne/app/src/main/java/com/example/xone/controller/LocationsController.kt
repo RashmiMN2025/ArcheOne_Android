@@ -65,9 +65,10 @@ class LocationsController(private val context: Context) {
                 "Chennai" -> "Tamil Nadu"
                 "Coimbatore" -> "Tamil Nadu"
                 "Karnataka" -> "Karnataka"
+                "Bangalore" -> "Karnataka"
                 "Telangana" -> "Telangana"
                 "Kerala" -> "Kerala"
-                "Maharashtra" -> "Maharashtra"
+                "Mumbai, Maharashtra", "Thane, Maharashtra" -> "Maharashtra"
                 "New Delhi" -> "Delhi"
                 "Uttar Pradesh" -> "Uttar Pradesh"
                 "Gujarat" -> "Gujarat"
@@ -87,6 +88,12 @@ class LocationsController(private val context: Context) {
             StateInfo(
                 name = stateName,
                 locations = offices.map { office ->
+                    // Log the raw contact information to debug
+                    Log.d("LocationsController", "Office ${office.region} HR: ${office.hrName}/${office.hrContact}, Admin: ${office.adminName}/${office.adminContact}")
+                    
+                    // In the createIndianStates method, add debug logging
+                    Log.d("LocationsController", "Office ${office.region} redirection: ${office.redirection}")
+                    
                     LocationInfo(
                         name = when (office.region) {
                             "Chennai" -> "Chennai, HQ"
@@ -103,10 +110,11 @@ class LocationsController(private val context: Context) {
                             "Karnataka", "Bangalore" -> "bangalore_map.pdf"
                             else -> null
                         },
-                        hrNumber = office.hrContact?.split("-")?.lastOrNull()?.trim(),
-                        hrName = office.hrContact?.split("-")?.firstOrNull()?.trim(),
-                        adminNumber = office.adminContact?.split("-")?.lastOrNull()?.trim(),
-                        adminName = office.adminContact?.split("-")?.firstOrNull()?.trim()
+                        hrName = office.hrName?.takeIf { it.isNotEmpty() },
+                        hrNumber = office.hrContact?.takeIf { it.isNotEmpty() },
+                        adminName = office.adminName?.takeIf { it.isNotEmpty() },
+                        adminNumber = office.adminContact?.takeIf { it.isNotEmpty() },
+                        redirection = office.redirection
                     )
                 }
             )

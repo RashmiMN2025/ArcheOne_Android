@@ -10,5 +10,7 @@ data class UserData(
     val email: String,
     val mobile: String,
     val location: String = "",
-    val services: List<Service> = emptyList()
+    val services: List<Service> = emptyList(),
+    val profilePic: String? = null,
+    val sosContact: String? = null
 ) 

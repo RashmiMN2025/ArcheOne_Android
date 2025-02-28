@@ -12,7 +12,8 @@ data class LocationInfo(
     val hrName: String? = null,
     val adminName: String? = null,
     val adminNumber: String? = null,
-    val states: List<StateInfo>? = null
+    val states: List<StateInfo>? = null,
+    val redirection: String? = null
 )
 
 data class StateInfo(

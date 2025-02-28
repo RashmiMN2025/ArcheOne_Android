@@ -10,18 +10,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import androidx.compose.foundation.Image
+import androidx.compose.ui.platform.LocalContext
 import com.example.xone.R
+import com.example.xone.controller.SocialController
+import com.example.xone.model.Job
+import com.example.xone.model.SocialArticle
 
 @Composable
 fun XConnectScreen(onBackPressed: () -> Unit) {
     var selectedTab by remember { mutableStateOf("All Posts") }
+    val socialController = remember { SocialController() }
 
     // Tab Options
-    val tabs = listOf("All Posts", "Case Studies", "Blogs", "Skill Support", "Jobs")
+    val tabs = listOf("All Posts", "Case Studies", "Blogs", "Jobs")
 
     Box(
         modifier = Modifier
@@ -52,13 +64,13 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                     onClick = onBackPressed
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_back), // Add menu icon in drawable folder
-                        contentDescription = "Menu",
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "Back",
                         tint = Color.Black
                     )
                 }
 
-                // **Centered Title**
+                // Centered Title
                 Text(
                     text = "XConnect",
                     color = Color.Black,
@@ -69,56 +81,128 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                 )
             }
 
-            // **Tabs Row (Scrollable)**
+            // Tabs Row (Scrollable)
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(bottom = 16.dp)
-                    .horizontalScroll(rememberScrollState()) // Make tabs scrollable
             ) {
                 tabs.forEach { tab ->
-                    Button(
-                        onClick = { selectedTab = tab },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTab == tab) Color(0xFFFF5C5C) else Color(0xFFE0E0E0),
-                            contentColor = if (selectedTab == tab) Color.White else Color.Black
-                        ),
-                        modifier = Modifier.height(40.dp)
-                    ) {
-                        Text(text = tab)
-                    }
+                    TabItem(
+                        text = tab,
+                        isSelected = selectedTab == tab,
+                        onTabSelected = { selectedTab = tab }
+                    )
                 }
             }
 
-            // **Content Section**
+            // Content based on selected tab
             when (selectedTab) {
-                "All Posts" -> AllPostsContent()
-                "Case Studies" -> HorizontalSection(title = "Case Studies", posts = getCaseStudies())
-                "Blogs" -> HorizontalSection(title = "Blogs", posts = getBlogs())
-                "Skill Support" -> HorizontalSection(title = "Skill Support", posts = getSkillSupport())
-                "Jobs" -> HorizontalSection(title = "Jobs", posts = getJobs())
+                "All Posts" -> AllPostsContent(socialController)
+                "Case Studies" -> CaseStudiesContent(socialController)
+                "Blogs" -> BlogsContent(socialController)
+                "Jobs" -> JobsContent(socialController)
             }
         }
     }
 }
 
 @Composable
-fun AllPostsContent() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        HorizontalSection(title = "Case Studies", posts = getCaseStudies())
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalSection(title = "Blogs", posts = getBlogs())
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalSection(title = "Skill Support", posts = getSkillSupport())
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalSection(title = "Jobs", posts = getJobs())
+fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .padding(end = 8.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (isSelected) Color(0xFF474749) else Color.White)
+            .clickable { onTabSelected() }
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            color = if (isSelected) Color.White else Color(0xFF474749),
+            fontSize = 16.sp
+        )
     }
 }
 
 @Composable
-fun HorizontalSection(title: String, posts: List<Post>) {
+fun AllPostsContent(socialController: SocialController) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        HorizontalSection(title = "Case Studies", articles = socialController.getCaseStudies())
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        HorizontalSection(title = "Blogs", articles = socialController.getBlogs())
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        HorizontalJobsSection(title = "Jobs", jobs = socialController.getJobPostings())
+    }
+}
+
+@Composable
+fun CaseStudiesContent(socialController: SocialController) {
+    val caseStudies = socialController.getCaseStudies()
+    if (caseStudies.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No case studies available", color = Color.Gray)
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            caseStudies.forEach { article ->
+                ArticleCard(article)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun BlogsContent(socialController: SocialController) {
+    val blogs = socialController.getBlogs()
+    if (blogs.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No blogs available", color = Color.Gray)
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            blogs.forEach { article ->
+                ArticleCard(article)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun JobsContent(socialController: SocialController) {
+    val jobs = socialController.getJobPostings()
+    if (jobs.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No jobs available", color = Color.Gray)
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            jobs.forEach { job ->
+                JobCard(job)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun HorizontalSection(title: String, articles: List<SocialArticle>) {
+    if (articles.isEmpty()) return
+    
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
@@ -132,90 +216,196 @@ fun HorizontalSection(title: String, posts: List<Post>) {
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()) // Make each section horizontally scrollable
         ) {
-            posts.forEach { post ->
+            articles.forEach { article ->
                 PostCard(
-                    imageRes = post.imageRes,
-                    title = post.title,
-                    description = post.description
+                    title = article.title,
+                    description = article.description,
+                    imageUrl = article.imageUrl
                 )
             }
         }
     }
 }
 
-// **Dummy Post Data**
-data class Post(val imageRes: Int, val title: String, val description: String)
+@Composable
+fun HorizontalJobsSection(title: String, jobs: List<Job>) {
+    if (jobs.isEmpty()) return
+    
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
-fun getCaseStudies(): List<Post> {
-    return listOf(
-        Post(R.drawable.arche, "Bangalore Airport", "Third Largest Airport..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-    )
-}
-
-fun getBlogs(): List<Post> {
-    return listOf(
-        Post(R.drawable.netcon, "Data Center", "Mastering Data Center..."),
-        Post(R.drawable.netcon, "Cloud", "Exploring Hybrid Cloud...")
-    )
-}
-
-fun getSkillSupport(): List<Post> {
-    return listOf(
-        Post(R.drawable.arche, "L1-L2 Cyber Security", "Cybersecurity Essentials..."),
-        Post(R.drawable.arche, "Wireless Networks", "Introduction to Wireless...")
-    )
-}
-
-fun getJobs(): List<Post> {
-    return listOf(
-        Post(R.drawable.netcon, "Software Engineer", "Openings in Development..."),
-        Post(R.drawable.netcon, "Data Analyst", "Analyze Business Data...")
-    )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()) // Make each section horizontally scrollable
+        ) {
+            jobs.forEach { job ->
+                PostCard(
+                    title = job.Title,
+                    description = job.Description,
+                    imageUrl = job.Image
+                )
+            }
+        }
+    }
 }
 
 @Composable
-fun PostCard(imageRes: Int, title: String, description: String) {
+fun ArticleCard(article: SocialArticle) {
     Card(
-        shape = RoundedCornerShape(20.dp), // Increased rounded corners
+        shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .width(200.dp)
-            .height(250.dp)
-            .padding(4.dp) // Added space between cards
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
             .clickable { /* Handle card click */ },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.Center, // Align content in the center
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // Use AsyncImage with error and loading states
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(article.imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = article.title,
                 modifier = Modifier
-                    .fillMaxWidth() // Ensure image fills the card width
+                    .size(120.dp)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+                // Show a placeholder while loading or if error
+                error = painterResource(id = R.drawable.ic_back),
+                placeholder = painterResource(id = R.drawable.ic_back)
+            )
+            
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = article.title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = article.description,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun JobCard(job: Job) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { /* Handle job click */ },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // Use AsyncImage with error and loading states
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(job.Image)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = job.Title,
+                modifier = Modifier
+                    .size(120.dp)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+                // Show a placeholder while loading or if error
+                error = painterResource(id = R.drawable.ic_back),
+                placeholder = painterResource(id = R.drawable.ic_back)
+            )
+            
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = job.Title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = job.Description,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PostCard(title: String, description: String, imageUrl: String) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .width(200.dp)
+            .height(250.dp)
+            .padding(4.dp)
+            .clickable { /* Handle card click */ },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Use AsyncImage with error and loading states
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = title,
+                modifier = Modifier
                     .height(120.dp)
-                    .clip(RoundedCornerShape(20.dp)) // Increased rounded corners for image
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop,
+                // Show a placeholder while loading or if error
+                error = painterResource(id = R.drawable.ic_back),
+                placeholder = painterResource(id = R.drawable.ic_back)
             )
-            Spacer(modifier = Modifier.height(4.dp)) // Reduced space between image and text
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = description,
-                fontSize = 10.sp,
-                color = Color.Gray,
-                maxLines = 1
-            )
+            
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
