@@ -22,19 +22,37 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 
-class BusinessCardController(
+interface BusinessCardController {
+    fun onBackPressed()
+    fun onDownloadCard(bitmap: Bitmap)
+    fun onShareCard(bitmap: Bitmap)
+}
+
+class BusinessCardControllerImpl(
     private val context: Context,
     private val navigator: AndroidNavigator
-) {
-    private val notificationManager = ContextCompat.getSystemService(
-        context,
-        NotificationManager::class.java
-    ) as NotificationManager
+) : BusinessCardController {
+    // Safely access notification manager - will be null in preview
+    private val notificationManager by lazy {
+        try {
+            ContextCompat.getSystemService(
+                context,
+                NotificationManager::class.java
+            )
+        } catch (e: Exception) {
+            Log.d("BusinessCardController", "NotificationManager not available - likely in preview mode")
+            null
+        }
+    }
 
     init {
-        createNotificationChannel()
+        // Only create channel if notification manager is available
+        if (notificationManager != null) {
+            createNotificationChannel()
+        }
     }
 
     private fun createNotificationChannel() {
@@ -48,7 +66,7 @@ class BusinessCardController(
                 enableLights(true)
                 enableVibration(true)
             }
-            notificationManager.createNotificationChannel(channel)
+            notificationManager?.createNotificationChannel(channel)
         }
     }
 
@@ -87,7 +105,7 @@ class BusinessCardController(
         qrCode = ""
     )
     
-    fun onDownloadCard(bitmap: Bitmap) {
+    override fun onDownloadCard(bitmap: Bitmap) {
         try {
             // Create a file in the Downloads directory
             val fileName = "business_card_${System.currentTimeMillis()}.png"
@@ -122,7 +140,7 @@ class BusinessCardController(
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
 
-                // Build and show notification with high priority
+                // Build notification
                 val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification_download)
                     .setContentTitle("Business Card Downloaded")
@@ -132,9 +150,9 @@ class BusinessCardController(
                     .setContentIntent(pendingIntent)
                     .build()
 
-                // Use a unique notification ID
+                // Use a unique notification ID and safely access notificationManager
                 val notificationId = System.currentTimeMillis().toInt()
-                notificationManager.notify(notificationId, notification)
+                notificationManager?.notify(notificationId, notification)
             }
 
             // Show toast
@@ -154,7 +172,7 @@ class BusinessCardController(
         }
     }
     
-    fun onShareCard(bitmap: Bitmap) {
+    override fun onShareCard(bitmap: Bitmap) {
         try {
             // Save bitmap to cache directory
             val cachePath = File(context.cacheDir, "images")
@@ -190,11 +208,11 @@ class BusinessCardController(
         }
     }
     
-    fun onBackPressed() {
+    override fun onBackPressed() {
         navigator.navigateToHome()  // Navigate back to home screen
     }
 
     companion object {
-        private const val CHANNEL_ID = "business_card_downloads"
+        const val CHANNEL_ID = "business_card_channel"
     }
 } 

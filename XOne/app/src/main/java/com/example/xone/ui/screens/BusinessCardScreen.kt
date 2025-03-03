@@ -54,6 +54,7 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.platform.LocalDensity
 import android.util.TypedValue
+import android.content.Context
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -388,15 +389,15 @@ private fun LandscapeBusinessCard(
                         contentDescription = "Company Logo",
                         modifier = Modifier
                             .weight(0.3f)
-                            .height(32.dp)
+                            .height(35.dp)
                     )
 
-                    // Right section - Text content with reduced text sizes
+                    // Right section with text content
                     Column(
                         modifier = Modifier
                             .weight(0.7f)
-                            .padding(start = 24.dp, top = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                            .padding(start = 24.dp, top = 2.dp),
+                        verticalArrangement = Arrangement.Top
                     ) {
                         Text(
                             text = businessCard.name,
@@ -407,6 +408,8 @@ private fun LandscapeBusinessCard(
                             color = Color.Black
                         )
 
+                        Spacer(modifier = Modifier.height(2.dp))
+
                         Text(
                             text = businessCard.designation,
                             style = MaterialTheme.typography.bodyLarge.copy(
@@ -415,7 +418,7 @@ private fun LandscapeBusinessCard(
                             color = Color.Black
                         )
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
                             text = businessCard.email,
@@ -433,14 +436,15 @@ private fun LandscapeBusinessCard(
                             color = Color.Black
                         )
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.weight(2f))
 
                         Text(
                             text = "www.arche.global",
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 13.sp
                             ),
-                            color = Color.Black
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 10.dp)
                         )
                     }
                 }
@@ -528,6 +532,13 @@ private fun LandscapeBusinessCard(
     }
 }
 
+// Add this MockBusinessCardController class near your preview methods
+private class MockBusinessCardController(val businessCard: BusinessCardModel) : BusinessCardController {
+    override fun onBackPressed() {}
+    override fun onDownloadCard(bitmap: Bitmap) {}
+    override fun onShareCard(bitmap: Bitmap) {}
+}
+
 @Preview(showBackground = true)
 @Composable
 fun BusinessCardScreenPreview() {
@@ -545,10 +556,7 @@ fun BusinessCardScreenPreview() {
     XOneTheme {
         BusinessCardScreen(
             businessCard = previewCard,
-            controller = BusinessCardController(
-                context = LocalContext.current,
-                navigator = AndroidNavigator(ComponentActivity())
-            )
+            controller = MockBusinessCardController(previewCard)
         )
     }
 }
@@ -570,10 +578,7 @@ fun PortraitBusinessCardPreview() {
     XOneTheme {
         PortraitBusinessCard(
             businessCard = previewCard,
-            controller = BusinessCardController(
-                context = LocalContext.current,
-                navigator = AndroidNavigator(ComponentActivity())
-            )
+            controller = MockBusinessCardController(previewCard)
         )
     }
 }
@@ -595,11 +600,86 @@ fun LandscapeBusinessCardPreview() {
     XOneTheme {
         LandscapeBusinessCard(
             businessCard = previewCard,
-            controller = BusinessCardController(
-                context = LocalContext.current,
-                navigator = AndroidNavigator(ComponentActivity())
-            )
+            controller = MockBusinessCardController(previewCard)
         )
+    }
+}
+
+@Preview(showBackground = true, name = "Business Card - Portrait")
+@Composable
+fun BusinessCardPortraitPreview() {
+    // Create sample data
+    val sampleCard = BusinessCardModel(
+        companyLogo = R.drawable.arche,
+        name = "Alex Johnson",
+        designation = "Senior Software Engineer",
+        department = "Engineering",
+        email = "alex.johnson@arche.global",
+        phone = "+91 9876543210",
+        location = "Bangalore",
+        qrCode = ""
+    )
+    
+    XOneTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop,
+                                WelcomeBackgroundMiddle,
+                                WelcomeBackgroundBottom
+                            )
+                        )
+                    )
+            ) {
+                PortraitBusinessCard(
+                    businessCard = sampleCard,
+                    controller = MockBusinessCardController(sampleCard)
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Business Card - Landscape", widthDp = 800, heightDp = 400)
+@Composable
+fun BusinessCardLandscapePreview() {
+    // Create sample data
+    val sampleCard = BusinessCardModel(
+        companyLogo = R.drawable.arche,
+        name = "Alex Johnson",
+        designation = "Senior Software Engineer",
+        department = "Engineering",
+        email = "alex.johnson@arche.global",
+        phone = "+91 9876543210",
+        location = "Bangalore",
+        qrCode = ""
+    )
+    
+    XOneTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop,
+                                WelcomeBackgroundMiddle,
+                                WelcomeBackgroundBottom
+                            )
+                        )
+                    )
+            ) {
+                LandscapeBusinessCard(
+                    businessCard = sampleCard,
+                    controller = MockBusinessCardController(sampleCard)
+                )
+            }
+        }
     }
 }
 

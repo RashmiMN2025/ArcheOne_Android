@@ -9,7 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.controller.HomeController
 import com.example.xone.controller.LocationsController
-import com.example.xone.controller.BusinessCardController
+import com.example.xone.controller.BusinessCardControllerImpl
 import com.example.xone.controller.PolicyController
 import com.example.xone.controller.AssetController
 import com.example.xone.controller.HolidayCalendarController
@@ -26,7 +26,7 @@ import com.example.xone.ui.theme.XOneTheme
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
     private lateinit var locationsController: LocationsController
-    private lateinit var businessCardController: BusinessCardController
+    private lateinit var businessCardController: BusinessCardControllerImpl
     private lateinit var policyController: PolicyController
     private lateinit var assetController: AssetController
     private lateinit var profileController: ProfileController
@@ -42,7 +42,7 @@ class HomeActivity : ComponentActivity() {
             // Initialize controllers
             controller = HomeController(navigator, this)
             locationsController = LocationsController(this)
-            businessCardController = BusinessCardController(this, navigator)
+            businessCardController = BusinessCardControllerImpl(this, navigator)
             policyController = PolicyController(this, navigator)
             assetController = AssetController(this, navigator)
             profileController = ProfileController(this, navigator)

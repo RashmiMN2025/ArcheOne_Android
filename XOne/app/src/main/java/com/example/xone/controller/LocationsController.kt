@@ -1,10 +1,14 @@
 package com.example.xone.controller
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.xone.WebViewActivity
 import com.example.xone.model.*
 import com.example.xone.utils.PdfUtils
 import com.example.xone.network.Office as NetworkOffice
@@ -103,13 +107,8 @@ class LocationsController(private val context: Context) {
                         companyName = office.companyName ?: "Arche Global Pvt Ltd",
                         address = office.address,
                         email = office.email ?: "info@netcon.in",
-                        hasFloorMap = office.region in listOf("Chennai", "Coimbatore", "Bangalore", "Karnataka"),
-                        mapFileName = when(office.region) {
-                            "Chennai" -> "chennai_map.pdf"
-                            "Coimbatore" -> "coimbatore_map.pdf"
-                            "Karnataka", "Bangalore" -> "bangalore_map.pdf"
-                            else -> null
-                        },
+                        hasFloorMap = !office.floorMap.isNullOrEmpty(),
+                        mapFileName = office.floorMap,
                         hrName = office.hrName?.takeIf { it.isNotEmpty() },
                         hrNumber = office.hrContact?.takeIf { it.isNotEmpty() },
                         adminName = office.adminName?.takeIf { it.isNotEmpty() },
@@ -151,9 +150,26 @@ class LocationsController(private val context: Context) {
         )
     }
     
-    fun showFloorMap(mapFileName: String) {
-        PdfUtils.openPdfFromAssets(context, mapFileName)
-        _locationState = _locationState.copy(showingFloorMap = true)
+    fun showFloorMap(mapUrl: String) {
+        Log.d("LocationsController", "Attempting to open floor map in browser: $mapUrl")
+        try {
+            // Open in browser
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse(mapUrl)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            
+            context.startActivity(intent)
+            _locationState = _locationState.copy(showingFloorMap = true)
+            Log.d("LocationsController", "Opened floor map in browser")
+        } catch (e: Exception) {
+            Log.e("LocationsController", "Error opening floor map: ${e.message}")
+            Toast.makeText(
+                context,
+                "Unable to open PDF. Please check your connection or try again later.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
     
     fun showContactInfo(show: Boolean) {

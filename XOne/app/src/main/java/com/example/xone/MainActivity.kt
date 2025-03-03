@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
     private lateinit var homeController: HomeController
     private lateinit var locationsController: LocationsController
-    private lateinit var businessCardController: BusinessCardController
+    private lateinit var businessCardController: BusinessCardControllerImpl
     private val NOTIFICATION_PERMISSION_CODE = 123
 
     private fun requestNotificationPermission() {
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
         welcomeController = WelcomeController(navigator)
         homeController = HomeController(navigator, this)
         locationsController = LocationsController(this)
-        businessCardController = BusinessCardController(this, navigator)
+        businessCardController = BusinessCardControllerImpl(this, navigator)
 
         enableEdgeToEdge()
         

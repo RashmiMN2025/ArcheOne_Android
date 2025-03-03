@@ -26,6 +26,10 @@ import com.example.xone.R
 import com.example.xone.controller.SocialController
 import com.example.xone.model.Job
 import com.example.xone.model.SocialArticle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun XConnectScreen(onBackPressed: () -> Unit) {
@@ -33,7 +37,7 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
     val socialController = remember { SocialController(context) }
     var selectedTab by remember { mutableStateOf("All Posts") }
 
-    // Tab Options
+    // Updated tab options
     val tabs = listOf("All Posts", "Case Studies", "Blogs", "Jobs")
 
     Box(
@@ -87,7 +91,8 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 tabs.forEach { tab ->
                     TabItem(
@@ -114,15 +119,18 @@ fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
     Box(
         modifier = Modifier
             .padding(end = 8.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) Color(0xFF474749) else Color.White)
+            .background(
+                color = if (isSelected) Color(0xFFDD3825) else Color.White,  // Red background when selected
+                shape = RoundedCornerShape(8.dp)  // Changed from 24.dp to 8.dp for less rounded corners
+            )
             .clickable { onTabSelected() }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)  // Reduced padding for a more compact look
     ) {
         Text(
             text = text,
-            color = if (isSelected) Color.White else Color(0xFF474749),
-            fontSize = 16.sp
+            color = if (isSelected) Color.White else Color.Black,
+            fontSize = 14.sp,  // Slightly smaller font size
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
         )
     }
 }
@@ -190,22 +198,38 @@ fun BlogsContent(socialController: SocialController) {
 
 @Composable
 fun JobsContent(socialController: SocialController) {
-    val jobs = socialController.getJobPostings()
-    if (jobs.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("No jobs available", color = Color.Gray)
-        }
-    } else {
-        Column(modifier = Modifier.fillMaxSize()) {
-            jobs.forEach { job ->
-                JobCard(
-                    job = job,
-                    socialController = socialController
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 12.dp)
+    ) {
+        Text(
+            text = "Jobs",
+            fontSize = 22.sp,  // Slightly smaller from 24.sp
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Start  // Left align the title
+        )
+        
+        val jobs = socialController.getJobPostings()
+        if (jobs.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No jobs available", color = Color.Gray)
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                jobs.forEach { job ->
+                    JobCard(job = job, socialController = socialController)
+                }
             }
         }
     }
@@ -216,14 +240,20 @@ fun JobCard(job: Job, socialController: SocialController) {
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .fillMaxWidth(0.95f)
+            .padding(vertical = 8.dp)
             .clickable { 
                 socialController.openInBrowser("Jobs", job.Slug)
             },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Job Image
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(job.Image)
@@ -231,37 +261,60 @@ fun JobCard(job: Job, socialController: SocialController) {
                     .build(),
                 contentDescription = job.Title,
                 modifier = Modifier
-                    .size(120.dp)
-                    .padding(8.dp)
+                    .fillMaxWidth()
+                    .height(180.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop,
                 error = painterResource(id = R.drawable.ic_back),
                 placeholder = painterResource(id = R.drawable.ic_back)
             )
             
-            Column(
+            // Job Title
+            Text(
+                text = job.Title,
+                fontSize = 18.sp,  // Smaller from 20.sp
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(top = 12.dp),
+                textAlign = TextAlign.Center
+            )
+            
+            // Experience
+            Text(
+                text = "Experience : ${extractExperience(job.Description)}",
+                fontSize = 14.sp,  // Smaller from 16.sp
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 4.dp),
+                textAlign = TextAlign.Center
+            )
+            
+            // Apply Button
+            Button(
+                onClick = { socialController.openInBrowser("Jobs", job.Slug) },
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
+                    .fillMaxWidth(0.9f)  // Wider button (from 0.8f)
+                    .padding(top = 16.dp),  // Increased top padding from 12.dp
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = job.Title,
+                    text = "Apply",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = job.Description,
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
+                    color = Color.White,
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
         }
     }
+}
+
+// Helper function to extract experience from description
+private fun extractExperience(description: String): String {
+    // Try to find experience mention in the description
+    val experiencePattern = "(\\d+[-]\\d+\\s*(?:years|yrs))".toRegex(RegexOption.IGNORE_CASE)
+    val match = experiencePattern.find(description)
+    return match?.value ?: "Not specified"
 }
 
 @Composable
@@ -333,16 +386,17 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
 @Composable
 fun ArticleCard(article: SocialArticle, type: String, socialController: SocialController) {
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 8.dp)
             .clickable { 
                 socialController.openInBrowser(type, article.id)
             },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Use AsyncImage with error and loading states
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Image section
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(article.imageUrl)
@@ -350,35 +404,60 @@ fun ArticleCard(article: SocialArticle, type: String, socialController: SocialCo
                     .build(),
                 contentDescription = article.title,
                 modifier = Modifier
-                    .size(120.dp)
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .fillMaxWidth()
+                    .height(220.dp),
                 contentScale = ContentScale.Crop,
-                // Show a placeholder while loading or if error
                 error = painterResource(id = R.drawable.ic_back),
                 placeholder = painterResource(id = R.drawable.ic_back)
             )
             
+            // Content section
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
                 Text(
                     text = article.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    color = Color.Black,
+                    lineHeight = 20.sp
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = article.description,
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = article.description,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        maxLines = 4,  // Show 4 lines
+                        lineHeight = 18.sp,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    
+                    // Overlay "Read More" at the bottom right with background
+                    Text(
+                        text = "Read More",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFFDD3825),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(top = 54.dp)  // Position at fourth line (3 lines × 18sp)
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0f),
+                                        Color.White
+                                    ),
+                                    startX = -40f
+                                )
+                            )
+                            .padding(start = 40.dp, end = 0.dp)
+                    )
+                }
             }
         }
     }
