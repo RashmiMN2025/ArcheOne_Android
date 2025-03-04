@@ -90,9 +90,9 @@
             android:label="XConnect"
             android:theme="@style/Theme.XOne" />
 
-        <!-- Add XConnectActivity -->
+        <!-- Update the SOSActivity declaration -->
         <activity
-            android:name=".ui.screens.SOSActivity"
+            android:name=".SOSActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:label="SOS"

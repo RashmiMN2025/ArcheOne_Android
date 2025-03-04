@@ -34,12 +34,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.CircleShape
+import com.example.xone.model.FooterNavigationModel
+import com.example.xone.ui.components.FooterScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationsScreen(
     navController: NavHostController,
-    controller: LocationsController? = null
+    controller: LocationsController,
 ) {
     val context = LocalContext.current
     val locationController = controller ?: remember { LocationsController(context) }
@@ -56,9 +58,9 @@ fun LocationsScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
+                        Color(0xFFE0DCD1),  // Light Beige/Grey
+                        Color(0xFFC8C8CA),  // Light Grey
+                        Color(0xFF474749)   // Dark Grey
                     )
                 )
             )
@@ -174,15 +176,19 @@ fun LocationsScreen(
 private fun LocationCard(
     location: LocationInfo,
     onClick: () -> Unit,
-    onFloorMapClick: (() -> Unit)? = null
+    onFloorMapClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        onClick = onClick
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -191,9 +197,9 @@ private fun LocationCard(
         ) {
             Text(
                 text = location.name,
-                fontSize = if (location.hasMultipleLocations) 16.sp else 14.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = Color.Black
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -390,62 +396,8 @@ private fun StateList(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Chennai HQ Button
-                    item {
-                        Button(
-                            onClick = { 
-                                val tamilNaduState = states.find { it.name == "Tamil Nadu" }
-                                if (tamilNaduState != null) {
-                                    controller.selectStateLocation(tamilNaduState)
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryRed
-                            ),
-                            shape = RoundedCornerShape(24.dp),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            Text(
-                                text = "Chennai, HQ",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-
-                    // Coimbatore Button
-                    item {
-                        Button(
-                            onClick = { 
-                                val tamilNaduState = states.find { it.name == "Tamil Nadu" }
-                                if (tamilNaduState != null) {
-                                    controller.selectStateLocation(tamilNaduState)
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryRed
-                            ),
-                            shape = RoundedCornerShape(24.dp),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            Text(
-                                text = "Coimbatore, Registered Office",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-
-                    // Other state buttons (excluding Tamil Nadu)
-                    items(states.filter { it.name != "Tamil Nadu" }) { state ->
+                    // Display ALL states from the API response without filtering
+                    items(states) { state ->
                         Button(
                             onClick = { onStateClick(state) },
                             modifier = Modifier.fillMaxWidth(),

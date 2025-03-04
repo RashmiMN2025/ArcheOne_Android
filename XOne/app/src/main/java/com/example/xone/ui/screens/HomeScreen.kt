@@ -630,18 +630,18 @@ fun FooterNavigation(
                 contentDescription = "Home",
                 modifier = Modifier.size(24.dp),
                 colorFilter = ColorFilter.tint(
-                    if (model.showHome) Color(0xFFDD3825) else Color(0xFFBDBDBD)
+                    if (model.showHome) Color(0xFFDD3825) else Color(0xFF808080)
                 )
             )
             Text(
                 text = "Home",
                 style = MaterialTheme.typography.bodySmall,
-                color = if (model.showHome) Color(0xFFDD3825) else Color(0xFFBDBDBD),
+                color = if (model.showHome) Color(0xFFDD3825) else Color(0xFF808080),
                 fontSize = 12.sp
             )
         }
 
-        // Other footer items remain unchanged
+        // Other footer items
         FooterItem(
             icon = Icons.Default.Email,
             title = "Chat",
@@ -679,13 +679,13 @@ private fun FooterItem(
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = if (isSelected) Color(0xFF808080) else Color(0xFFBDBDBD),
+            tint = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
             modifier = Modifier.size(24.dp)
         )
         Text(
             text = title,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isSelected) Color(0xFF808080) else Color(0xFFBDBDBD),
+            color = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
             fontSize = 12.sp
         )
     }

@@ -61,27 +61,10 @@ class LocationsController(private val context: Context) {
     }
 
     private fun createIndianStates(regionalOffices: List<NetworkRegionalOffice>): List<StateInfo> {
-        // Group regional offices by state
         val stateMap = mutableMapOf<String, MutableList<NetworkRegionalOffice>>()
-        
+
         regionalOffices.forEach { office ->
-            val stateName = when (office.region) {
-                "Chennai" -> "Tamil Nadu"
-                "Coimbatore" -> "Tamil Nadu"
-                "Karnataka" -> "Karnataka"
-                "Bangalore" -> "Karnataka"
-                "Telangana" -> "Telangana"
-                "Kerala" -> "Kerala"
-                "Mumbai, Maharashtra", "Thane, Maharashtra" -> "Maharashtra"
-                "New Delhi" -> "Delhi"
-                "Uttar Pradesh" -> "Uttar Pradesh"
-                "Gujarat" -> "Gujarat"
-                "Andhra Pradesh" -> "Andhra Pradesh"
-                "Chhattisgarh" -> "Chhattisgarh"
-                "Haryana" -> "Haryana"
-                else -> office.region
-            }
-            
+            val stateName = office.region
             if (!stateMap.containsKey(stateName)) {
                 stateMap[stateName] = mutableListOf()
             }
@@ -92,18 +75,8 @@ class LocationsController(private val context: Context) {
             StateInfo(
                 name = stateName,
                 locations = offices.map { office ->
-                    // Log the raw contact information to debug
-                    Log.d("LocationsController", "Office ${office.region} HR: ${office.hrName}/${office.hrContact}, Admin: ${office.adminName}/${office.adminContact}")
-                    
-                    // In the createIndianStates method, add debug logging
-                    Log.d("LocationsController", "Office ${office.region} redirection: ${office.redirection}")
-                    
                     LocationInfo(
-                        name = when (office.region) {
-                            "Chennai" -> "Chennai, HQ"
-                            "Coimbatore" -> "Coimbatore, Registered Office"
-                            else -> office.region
-                        },
+                        name = office.region,  // Use exact region name from API
                         companyName = office.companyName ?: "Arche Global Pvt Ltd",
                         address = office.address,
                         email = office.email ?: "info@netcon.in",

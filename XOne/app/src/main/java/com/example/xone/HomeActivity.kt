@@ -1,27 +1,27 @@
 package com.example.xone
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.xone.navigation.AndroidNavigator
-import com.example.xone.controller.HomeController
-import com.example.xone.controller.LocationsController
-import com.example.xone.controller.BusinessCardControllerImpl
-import com.example.xone.controller.PolicyController
-import com.example.xone.controller.AssetController
-import com.example.xone.controller.HolidayCalendarController
-import com.example.xone.controller.ProfileController
-import com.example.xone.ui.screens.HomeScreen
-import com.example.xone.ui.screens.LocationsScreen
-import com.example.xone.ui.screens.BusinessCardScreen
-import com.example.xone.ui.screens.PolicyScreen
-import com.example.xone.ui.screens.AssetScreen
-import com.example.xone.ui.screens.HolidayCalendarScreen
-import com.example.xone.ui.screens.ProfileScreen
+import com.example.xone.controller.*
+import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
+import com.example.xone.model.FooterNavigationModel
+import com.example.xone.ui.components.FooterScaffold
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -30,26 +30,67 @@ class HomeActivity : ComponentActivity() {
     private lateinit var policyController: PolicyController
     private lateinit var assetController: AssetController
     private lateinit var profileController: ProfileController
+    private lateinit var sosController: SOSController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Check if we need to navigate to a specific destination
+        val destination = intent.getStringExtra("destination")
+
         setContent {
-            val navController = rememberNavController()
-            val navigator = AndroidNavigator(this)
-            navigator.setNavController(navController)
-
-            // Initialize controllers
-            controller = HomeController(navigator, this)
-            locationsController = LocationsController(this)
-            businessCardController = BusinessCardControllerImpl(this, navigator)
-            policyController = PolicyController(this, navigator)
-            assetController = AssetController(this, navigator)
-            profileController = ProfileController(this, navigator)
-
             XOneTheme {
-                NavHost(navController = navController, startDestination = "home") {
-                    composable("home") {
+                val navController = rememberNavController()
+                val navigator = AndroidNavigator(this)
+                navigator.setNavController(navController)
+
+                // Initialize controllers with correct parameter order
+                controller = HomeController(navigator, this)
+                locationsController = LocationsController(this)
+                businessCardController = BusinessCardControllerImpl(this, navigator)
+                policyController = PolicyController(this, navigator)
+                assetController = AssetController(this, navigator)
+                profileController = ProfileController(this, navigator)
+                sosController = SOSController(this)
+
+                // If we have a destination, navigate to it
+                LaunchedEffect(destination) {
+                    destination?.let {
+                        navController.navigate(it)
+                    }
+                }
+
+                NavHost(
+                    navController = navController,
+                    startDestination = "home"
+                ) {
+                    composable(
+                        route = "home",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
                         HomeScreen(
                             model = controller.model,
                             onItemClick = controller::onItemClick,
@@ -64,19 +105,100 @@ class HomeActivity : ComponentActivity() {
                             onXCardClick = controller::onXCardClick
                         )
                     }
-                    composable("locations") {
+                    
+                    composable(
+                        route = "locations",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
                         LocationsScreen(
                             navController = navController,
                             controller = locationsController
                         )
                     }
-                    composable("business_card") {
+                    
+                    composable(
+                        route = "business_card",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
                         BusinessCardScreen(
                             businessCard = businessCardController.businessCard,
                             controller = businessCardController
                         )
                     }
-                    composable("policy") {
+                    
+                    composable(
+                        route = "policy",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
                         PolicyScreen(
                             model = policyController.model,
                             onPolicyClick = policyController::onPolicyClick,
@@ -84,28 +206,178 @@ class HomeActivity : ComponentActivity() {
                             onBackClick = policyController::onBackClick
                         )
                     }
-                    composable("asset") {
+                    
+                    composable(
+                        route = "asset",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
                         AssetScreen(
                             model = assetController.model,
                             controller = assetController
                         )
                     }
-
-                    composable("holiday_calendar") {
+                    
+                    composable(
+                        route = "holiday_calendar",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
                         HolidayCalendarScreen(
-                            controller = HolidayCalendarController(navigator), // Pass navigator here
-                            onBackPressed = { navigator.navigateToHome() } // Use navigator for back action
+                            controller = HolidayCalendarController(navigator),
+                            onBackPressed = { navigator.navigateToHome() }
                         )
                     }
-
-
-                    composable("profile") {
+                    
+                    composable(
+                        route = "profile",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
                         ProfileScreen(
-                            controller = profileController
+                            controller = profileController,
+                            footerNavigation = FooterNavigationModel(
+                                showHome = false,
+                                showChat = false,
+                                showSOS = false,
+                                showProfile = true
+                            ),
+                            onFooterHomeClick = { navController.navigate("home") },
+                            onFooterChatClick = { /* Implement chat navigation */ },
+                            onFooterSOSClick = { navController.navigate("sos") },
+                            onFooterProfileClick = { /* Already on Profile screen */ }
                         )
+                    }
+                    
+                    composable(
+                        route = "sos",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        var showRaiseConcern by remember { mutableStateOf(false) }
+                        
+                        if (showRaiseConcern) {
+                            RaiseConcernScreen(onBackPressed = { showRaiseConcern = false })
+                        } else {
+                            SOSScreen(
+                                controller = sosController,
+                                onNavigateToRaiseConcern = { showRaiseConcern = true },
+                                onBackPressed = { navController.popBackStack() },
+                                footerNavigation = FooterNavigationModel(
+                                    showHome = false,
+                                    showChat = false,
+                                    showSOS = true,
+                                    showProfile = false
+                                ),
+                                onFooterHomeClick = { navController.navigate("home") },
+                                onFooterChatClick = { /* Implement chat navigation */ },
+                                onFooterSOSClick = { /* Already on SOS screen */ },
+                                onFooterProfileClick = { navController.navigate("profile") }
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+    
+    override fun onBackPressed() {
+        if (intent.getStringExtra("destination") == "profile") {
+            // If we navigated directly to profile, go back to home
+            val intent = Intent(this, HomeActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            finish()
+        } else {
+            super.onBackPressed()
         }
     }
 }

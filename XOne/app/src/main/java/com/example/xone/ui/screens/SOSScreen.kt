@@ -18,73 +18,94 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.controller.SOSController
+import com.example.xone.model.FooterNavigationModel
+import com.example.xone.ui.components.FooterScaffold
 
 @Composable
 fun SOSScreen(
     controller: SOSController,
     onNavigateToRaiseConcern: () -> Unit,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    footerNavigation: FooterNavigationModel = FooterNavigationModel(showSOS = true),
+    onFooterHomeClick: () -> Unit = {},
+    onFooterChatClick: () -> Unit = {},
+    onFooterSOSClick: () -> Unit = {},
+    onFooterProfileClick: () -> Unit = {}
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                )
-            )
+    FooterScaffold(
+        footerNavigation = footerNavigation,
+        onFooterHomeClick = onFooterHomeClick,
+        onFooterChatClick = onFooterChatClick,
+        onFooterSOSClick = onFooterSOSClick,
+        onFooterProfileClick = onFooterProfileClick
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 25.dp)
-            ) {
-                IconButton(
-                    onClick = onBackPressed
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
                     )
-                }
-                Text(
-                    text = "SOS",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(start = 130.dp)
                 )
-            }
-
-            Box(
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 50.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
             ) {
+                // Main content
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(16.dp)
                 ) {
-                    Text(
-                        text = "SOS Assistance",
-                        fontSize = 22.sp,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 25.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 25.dp)
+                    ) {
+                        IconButton(
+                            onClick = onBackPressed
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_back),
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                        Text(
+                            text = "SOS",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(start = 130.dp)
+                        )
+                    }
 
-                    SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall() })
-                    SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
-                    SOSButton(text = "View Emergency Contact", onClick = { controller.viewEmergencyContact() })
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 50.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "SOS Assistance",
+                                fontSize = 22.sp,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 25.dp)
+                            )
+
+                            SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall() })
+                            SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
+                            SOSButton(text = "View Emergency Contact", onClick = { controller.viewEmergencyContact() })
+                        }
+                    }
                 }
             }
         }

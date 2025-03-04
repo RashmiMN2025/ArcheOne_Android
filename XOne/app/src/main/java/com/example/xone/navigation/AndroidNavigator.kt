@@ -10,7 +10,8 @@ import com.example.xone.OtpVerificationActivity
 import com.example.xone.HomeActivity
 import com.example.xone.MyDocumentsActivity
 import com.example.xone.XConnectActivity
-import com.example.xone.ui.screens.SOSActivity
+import com.example.xone.SOSActivity
+import com.example.xone.R
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -41,10 +42,17 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
 
     override fun navigateToHome() {
-        val intent = Intent(activity, HomeActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        Log.d("AndroidNavigator", "Navigating to home screen")
+        if (activity !is HomeActivity) {
+            val intent = Intent(activity, HomeActivity::class.java)
+            activity.startActivity(intent)
+            activity.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            activity.finish()
+        } else {
+            navController?.navigate("home") {
+                popUpTo("home") { inclusive = true }
+            }
         }
-        activity.startActivity(intent)
     }
 
     override fun navigateToLocations() {
@@ -99,8 +107,13 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
     override fun navigateToSOS() {
         Log.d("AndroidNavigator", "Navigating to SOS screen")
-        val intent = Intent(activity, SOSActivity::class.java)
-        activity.startActivity(intent)
+        if (activity is HomeActivity) {
+            navController?.navigate("sos")
+        } else {
+            val intent = Intent(activity, SOSActivity::class.java)
+            activity.startActivity(intent)
+            activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
     }
     override fun navigateToTravelExpenses() {}
     override fun navigateToSAP() {}
