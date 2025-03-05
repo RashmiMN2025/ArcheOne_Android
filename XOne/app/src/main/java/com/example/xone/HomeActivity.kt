@@ -20,6 +20,7 @@ import com.example.xone.ui.screens.BusinessCardScreen
 import com.example.xone.ui.screens.PolicyScreen
 import com.example.xone.ui.screens.AssetScreen
 import com.example.xone.ui.screens.HolidayCalendarScreen
+import com.example.xone.ui.screens.MonthDetailScreen
 import com.example.xone.ui.screens.ProfileScreen
 import com.example.xone.ui.theme.XOneTheme
 
@@ -94,10 +95,21 @@ class HomeActivity : ComponentActivity() {
                     composable("holiday_calendar") {
                         HolidayCalendarScreen(
                             controller = HolidayCalendarController(navigator), // Pass navigator here
-                            onBackPressed = { navigator.navigateToHome() } // Use navigator for back action
+                            onBackPressed = { navigator.navigateToHome() }, // Use navigator for back action
+                            onMonthClick = { month ->
+                                navController.navigate("monthDetail/$month")
+                            }
                         )
                     }
 
+                    composable("monthDetail/{month}") { backStackEntry ->
+                        val month = backStackEntry.arguments?.getString("month")?.toIntOrNull() ?: 1
+                        MonthDetailScreen(
+                            month = month,
+                            controller = HolidayCalendarController(),
+                            onBackPressed = { navigator.navigateToHolidayCalendar() }
+                        )
+                    }
 
                     composable("profile") {
                         ProfileScreen(

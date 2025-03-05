@@ -33,7 +33,7 @@ class AssetController(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val request = AssetRequest(employeeId = employeeId)
-                val response = RetrofitClient.apiService.getAssetDetails(request).execute()
+                val response = RetrofitClient.apiService.getAssetDetails(request.toString()).execute()
                 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {

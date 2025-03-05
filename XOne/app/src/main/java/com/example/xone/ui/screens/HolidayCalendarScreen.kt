@@ -1,6 +1,7 @@
 package com.example.xone.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -26,7 +27,8 @@ import java.util.*
 @Composable
 fun HolidayCalendarScreen(
     controller: HolidayCalendarController,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    onMonthClick: (Int) -> Unit
 ) {
     val holidays = remember { controller.getHolidays() }
 
@@ -79,7 +81,10 @@ fun HolidayCalendarScreen(
                         for (col in 0 until 3) {
                             val monthIndex = row * 3 + col + 1
                             if (monthIndex <= 12) {
-                                MonthView(monthIndex, holidays.filter { it.month == monthIndex })
+                                MonthView(
+                                    monthIndex,
+                                    holidays.filter { it.month == monthIndex },
+                                    onMonthClick = onMonthClick)
                             }
                         }
                     }
@@ -90,7 +95,7 @@ fun HolidayCalendarScreen(
 }
 
 @Composable
-fun MonthView(month: Int, holidays: List<Holiday>) {
+fun MonthView(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) {
     val monthName = YearMonth.of(2025, month)
         .month
         .getDisplayName(TextStyle.SHORT, Locale.ENGLISH) // Get month name (e.g., "Jan")
@@ -100,6 +105,7 @@ fun MonthView(month: Int, holidays: List<Holiday>) {
         modifier = Modifier
             .width(115.dp) // Adjusted width
             .padding(2.dp)
+            .clickable { onMonthClick(month)}
     ) {
         Text(
             text = monthName,
@@ -157,8 +163,12 @@ fun DateView(date: Int, isHoliday: Boolean) {
 
 
 // Preview of Holiday Calendar
-@Preview(showBackground = true)
-@Composable
-fun PreviewHolidayCalendarScreen() {
-    HolidayCalendarScreen(controller = HolidayCalendarController(), onBackPressed = {})
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewHolidayCalendarScreen() {
+//    HolidayCalendarScreen(
+//        controller = HolidayCalendarController(),
+//        onBackPressed = {},
+//        onMonthClick = ()
+//    )
+//}
