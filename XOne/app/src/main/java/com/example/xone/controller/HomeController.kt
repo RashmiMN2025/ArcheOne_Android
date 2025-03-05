@@ -9,6 +9,9 @@ import androidx.compose.runtime.setValue
 import android.util.Log
 import android.content.Context
 import com.example.xone.utils.PreferencesManager
+import android.content.Intent
+import com.example.xone.SOSActivity
+import com.example.xone.model.FooterNavigationModel
 
 class HomeController(
     private val navigator: Navigator,
@@ -36,7 +39,13 @@ class HomeController(
                     }
                 }
         } ?: emptyMap(),
-        favorites = preferencesManager.getFavorites()
+        favorites = preferencesManager.getFavorites(),
+        footerNavigation = FooterNavigationModel(
+            showHome = true,
+            showChat = false,
+            showSOS = false,
+            showProfile = false
+        )
     ))
         private set
 
@@ -158,6 +167,7 @@ class HomeController(
     }
 
     fun onFooterSOSClick() {
+        // Use the navigator to navigate to SOS screen
         navigator.navigateToSOS()
     }
 

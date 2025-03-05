@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.controller.BusinessCardController
 import com.example.xone.model.BusinessCardModel
@@ -41,6 +42,19 @@ import android.app.Activity
 import androidx.activity.ComponentActivity
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.navigation.AndroidNavigator
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.ComposeView
+import android.graphics.Bitmap
+import androidx.compose.ui.platform.LocalView
+import android.view.View
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.platform.LocalDensity
+import android.util.TypedValue
+import android.content.Context
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +99,10 @@ private fun PortraitBusinessCard(
     businessCard: BusinessCardModel,
     controller: BusinessCardController
 ) {
+    val view = LocalView.current
+    val scope = rememberCoroutineScope()
+    val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
+    
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -119,36 +137,48 @@ private fun PortraitBusinessCard(
             Card(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(0.85f),
+                    .fillMaxWidth(0.85f)
+                    .height(450.dp)
+                    .onGloballyPositioned { coordinates ->
+                        val bounds = coordinates.boundsInRoot()
+                        val cornerRadius = TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP,
+                            16f,
+                            view.resources.displayMetrics
+                        )
+                        cardBounds.value = android.graphics.Rect(
+                            bounds.left.toInt(),
+                            bounds.top.toInt(),
+                            bounds.right.toInt(),
+                            bounds.bottom.toInt()
+                        )
+                    },
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = CardBackground  // Use consistent card background
-                )
+                    containerColor = Color.White
+                ),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(
-                            start = 32.dp,  // Increased left padding to move content right
-                            end = 24.dp,
-                            top = 24.dp,
-                            bottom = 24.dp
-                        )
+                        .padding(top = 70.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
                         .fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Image(
                         painter = painterResource(id = businessCard.companyLogo),
                         contentDescription = "Company Logo",
-                        modifier = Modifier.height(20.dp)
+                        modifier = Modifier.height(24.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(48.dp))
 
                     Text(
                         text = businessCard.name,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.9f
+                            fontSize = 28.sp
                         ),
                         color = Color.Black
                     )
@@ -156,55 +186,42 @@ private fun PortraitBusinessCard(
                     Text(
                         text = businessCard.designation,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                            fontSize = 18.sp
                         ),
                         color = Color.Black
                     )
+
+                    Spacer(modifier = Modifier.height(48.dp))
 
                     Text(
-                        text = businessCard.department,
+                        text = "Arche Global Pvt. Ltd.",
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         ),
                         color = Color.Black
                     )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // QR Code with white background for better visibility
-                    Surface(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .background(Color.White, RoundedCornerShape(8.dp)),
-                        color = Color.White
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.qr),
-                            contentDescription = "QR Code",
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         text = businessCard.email,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                            fontSize = 16.sp
                         ),
                         color = Color.Black
                     )
+
                     Text(
                         text = businessCard.phone,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                            fontSize = 16.sp
                         ),
                         color = Color.Black
                     )
+
                     Text(
-                        text = businessCard.location,
+                        text = "www.arche.global",
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.9f
+                            fontSize = 16.sp
                         ),
                         color = Color.Black
                     )
@@ -214,11 +231,18 @@ private fun PortraitBusinessCard(
 
         item {
             Text(
-                text = "<-- Swipe left to change View",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = MaterialTheme.typography.bodyMedium.fontSize * 0.9f
-                ),
+                text = "Swipe right to change View -->",
+                style = MaterialTheme.typography.bodyMedium,
                 color = TextPrimary,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        item {
+            Text(
+                text = "You can update your location in profile",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
@@ -229,39 +253,59 @@ private fun PortraitBusinessCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { controller.onDownloadCard() },
+                    onClick = { 
+                        scope.launch {
+                            cardBounds.value?.let { bounds ->
+                                val bitmap = captureCardArea(view, bounds)
+                                controller.onDownloadCard(bitmap)
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                    shape = RoundedCornerShape(28.dp)
                 ) {
                     Text(
-                        "Download Business Card", 
+                        "Download Business Card",
                         color = Color.White,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Normal
+                            fontSize = 18.sp
                         )
                     )
                 }
 
                 Button(
-                    onClick = { controller.onShareCard() },
+                    onClick = { 
+                        scope.launch {
+                            cardBounds.value?.let { bounds ->
+                                val bitmap = captureCardArea(view, bounds)
+                                controller.onShareCard(bitmap)
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                    shape = RoundedCornerShape(28.dp)
                 ) {
                     Text(
-                        "Share Business Card", 
+                        "Share Business Card",
                         color = Color.White,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Normal
+                            fontSize = 18.sp
                         )
                     )
                 }
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -272,187 +316,227 @@ private fun LandscapeBusinessCard(
     businessCard: BusinessCardModel,
     controller: BusinessCardController
 ) {
-    Column(
+    val view = LocalView.current
+    val scope = rememberCoroutineScope()
+    val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
+    
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopAppBar(
-            title = { 
-                Text(
-                    "My Business Card",
-                    color = TextPrimary,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                ) 
-            },
-            navigationIcon = {
-                IconButton(onClick = { controller.onBackPressed() }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = TextPrimary
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent
+        item {
+            TopAppBar(
+                title = { 
+                    Text(
+                        "My Business Card",
+                        color = TextPrimary,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    ) 
+                },
+                navigationIcon = {
+                    IconButton(onClick = { controller.onBackPressed() }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = TextPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
-        )
+        }
 
-        Card(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(0.99f)
-                .height(220.dp),  // Reduced height slightly more
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = CardBackground
-            )
-        ) {
-            Row(
+        item {
+            // Main Card
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(16.dp)
+                    .fillMaxWidth(0.95f)
+                    .height(240.dp)
+                    .onGloballyPositioned { coordinates ->
+                        val bounds = coordinates.boundsInRoot()
+                        val cornerRadius = TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP,
+                            16f,
+                            view.resources.displayMetrics
+                        )
+                        cardBounds.value = android.graphics.Rect(
+                            bounds.left.toInt(),
+                            bounds.top.toInt(),
+                            bounds.right.toInt(),
+                            bounds.bottom.toInt()
+                        )
+                    },
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Column(
+                Row(
                     modifier = Modifier
-                        .weight(1.5f)
-                        .padding(end = 16.dp),
-                    horizontalAlignment = Alignment.Start
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Left section - Logo
                     Image(
                         painter = painterResource(id = businessCard.companyLogo),
                         contentDescription = "Company Logo",
                         modifier = Modifier
-                            .height(20.dp)
-                            .offset(y = (-4).dp)
+                            .weight(0.3f)
+                            .height(35.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = businessCard.name,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = MaterialTheme.typography.headlineMedium.fontSize * 0.7f
-                        ),
-                        color = Color.Black
-                    )
-
-                    Text(
-                        text = businessCard.designation,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
-                        ),
-                        color = Color.Black
-                    )
-
-                    Text(
-                        text = businessCard.department,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
-                        ),
-                        color = Color.Black
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = businessCard.email,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
-                        ),
-                        color = Color.Black
-                    )
-                    Text(
-                        text = businessCard.phone,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
-                        ),
-                        color = Color.Black
-                    )
-                    Text(
-                        text = businessCard.location,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize * 0.7f
-                        ),
-                        color = Color.Black
-                    )
-                }
-
-                // Right side - QR code only
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Surface(
+                    // Right section with text content
+                    Column(
                         modifier = Modifier
-                            .size(80.dp)
-                            .background(Color.White, RoundedCornerShape(8.dp)),
-                        color = Color.White
+                            .weight(0.7f)
+                            .padding(start = 24.dp, top = 2.dp),
+                        verticalArrangement = Arrangement.Top
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.qr),
-                            contentDescription = "QR Code",
-                            modifier = Modifier.padding(6.dp)
+                        Text(
+                            text = businessCard.name,
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp
+                            ),
+                            color = Color.Black
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Text(
+                            text = businessCard.designation,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 15.sp
+                            ),
+                            color = Color.Black
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = businessCard.email,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 13.sp
+                            ),
+                            color = Color.Black
+                        )
+
+                        Text(
+                            text = businessCard.phone,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 13.sp
+                            ),
+                            color = Color.Black
+                        )
+
+                        Spacer(modifier = Modifier.weight(2f))
+
+                        Text(
+                            text = "www.arche.global",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 13.sp
+                            ),
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 10.dp)
                         )
                     }
                 }
             }
         }
 
-        Text(
-            text = "--> Swipe right to change View",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = MaterialTheme.typography.bodyMedium.fontSize * 0.9f
-            ),
-            color = TextPrimary,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
+        item {
+            Text(
+                text = "<-- Swipe left to change View",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
 
-        // Updated bottom buttons to match portrait layout
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Button(
-                onClick = { controller.onDownloadCard() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
-            ) {
-                Text(
-                    "Download Business Card", 
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Normal
-                    )
-                )
-            }
+        item {
+            Text(
+                text = "You can update your location in profile",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
 
-            Button(
-                onClick = { controller.onShareCard() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+        item {
+            // Bottom Buttons
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    "Share Business Card", 
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Normal
+                Button(
+                    onClick = { 
+                        scope.launch {
+                            cardBounds.value?.let { bounds ->
+                                val bitmap = captureCardArea(view, bounds)
+                                controller.onDownloadCard(bitmap)
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                    shape = RoundedCornerShape(28.dp)
+                ) {
+                    Text(
+                        "Download Business Card",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 18.sp
+                        )
                     )
-                )
+                }
+
+                Button(
+                    onClick = { 
+                        scope.launch {
+                            cardBounds.value?.let { bounds ->
+                                val bitmap = captureCardArea(view, bounds)
+                                controller.onShareCard(bitmap)
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                    shape = RoundedCornerShape(28.dp)
+                ) {
+                    Text(
+                        "Share Business Card",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 18.sp
+                        )
+                    )
+                }
             }
         }
+
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
+}
+
+// Add this MockBusinessCardController class near your preview methods
+private class MockBusinessCardController(val businessCard: BusinessCardModel) : BusinessCardController {
+    override fun onBackPressed() {}
+    override fun onDownloadCard(bitmap: Bitmap) {}
+    override fun onShareCard(bitmap: Bitmap) {}
 }
 
 @Preview(showBackground = true)
@@ -472,10 +556,7 @@ fun BusinessCardScreenPreview() {
     XOneTheme {
         BusinessCardScreen(
             businessCard = previewCard,
-            controller = BusinessCardController(
-                context = LocalContext.current,
-                navigator = AndroidNavigator(ComponentActivity())
-            )
+            controller = MockBusinessCardController(previewCard)
         )
     }
 }
@@ -497,10 +578,7 @@ fun PortraitBusinessCardPreview() {
     XOneTheme {
         PortraitBusinessCard(
             businessCard = previewCard,
-            controller = BusinessCardController(
-                context = LocalContext.current,
-                navigator = AndroidNavigator(ComponentActivity())
-            )
+            controller = MockBusinessCardController(previewCard)
         )
     }
 }
@@ -522,10 +600,141 @@ fun LandscapeBusinessCardPreview() {
     XOneTheme {
         LandscapeBusinessCard(
             businessCard = previewCard,
-            controller = BusinessCardController(
-                context = LocalContext.current,
-                navigator = AndroidNavigator(ComponentActivity())
-            )
+            controller = MockBusinessCardController(previewCard)
         )
+    }
+}
+
+@Preview(showBackground = true, name = "Business Card - Portrait")
+@Composable
+fun BusinessCardPortraitPreview() {
+    // Create sample data
+    val sampleCard = BusinessCardModel(
+        companyLogo = R.drawable.arche,
+        name = "Alex Johnson",
+        designation = "Senior Software Engineer",
+        department = "Engineering",
+        email = "alex.johnson@arche.global",
+        phone = "+91 9876543210",
+        location = "Bangalore",
+        qrCode = ""
+    )
+    
+    XOneTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop,
+                                WelcomeBackgroundMiddle,
+                                WelcomeBackgroundBottom
+                            )
+                        )
+                    )
+            ) {
+                PortraitBusinessCard(
+                    businessCard = sampleCard,
+                    controller = MockBusinessCardController(sampleCard)
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Business Card - Landscape", widthDp = 800, heightDp = 400)
+@Composable
+fun BusinessCardLandscapePreview() {
+    // Create sample data
+    val sampleCard = BusinessCardModel(
+        companyLogo = R.drawable.arche,
+        name = "Alex Johnson",
+        designation = "Senior Software Engineer",
+        department = "Engineering",
+        email = "alex.johnson@arche.global",
+        phone = "+91 9876543210",
+        location = "Bangalore",
+        qrCode = ""
+    )
+    
+    XOneTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop,
+                                WelcomeBackgroundMiddle,
+                                WelcomeBackgroundBottom
+                            )
+                        )
+                    )
+            ) {
+                LandscapeBusinessCard(
+                    businessCard = sampleCard,
+                    controller = MockBusinessCardController(sampleCard)
+                )
+            }
+        }
+    }
+}
+
+private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitmap {
+    // Take a screenshot of the entire view
+    view.isDrawingCacheEnabled = true
+    val fullBitmap = Bitmap.createBitmap(view.drawingCache)
+    view.isDrawingCacheEnabled = false
+    
+    return try {
+        // Create a bitmap with transparency support
+        val result = Bitmap.createBitmap(
+            cardBounds.width(),
+            cardBounds.height(),
+            Bitmap.Config.ARGB_8888
+        )
+        
+        // Create a canvas to draw the cropped area
+        val canvas = android.graphics.Canvas(result)
+        
+        // Create a paint object with anti-aliasing
+        val paint = android.graphics.Paint().apply {
+            isAntiAlias = true
+        }
+        
+        // Create a path for rounded corners
+        val path = android.graphics.Path().apply {
+            // Add a rounded rectangle path
+            val cornerRadius = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                16f,
+                view.resources.displayMetrics
+            )
+            addRoundRect(
+                android.graphics.RectF(0f, 0f, cardBounds.width().toFloat(), cardBounds.height().toFloat()),
+                cornerRadius,
+                cornerRadius,
+                android.graphics.Path.Direction.CW
+            )
+        }
+        
+        // Clip the canvas to the rounded rectangle path
+        canvas.clipPath(path)
+        
+        // Draw the cropped portion of the original bitmap
+        canvas.drawBitmap(
+            fullBitmap,
+            -cardBounds.left.toFloat(),
+            -cardBounds.top.toFloat(),
+            paint
+        )
+        
+        result
+    } catch (e: IllegalArgumentException) {
+        e.printStackTrace()
+        fullBitmap
     }
 } 

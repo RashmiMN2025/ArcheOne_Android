@@ -1,5 +1,6 @@
 package com.example.xone.controller
 
+import Policy
 import android.content.Context
 import android.util.Log
 import com.example.xone.model.UserData
@@ -131,24 +132,33 @@ class LoginController(
                 Log.d("LoginController", "OTP verification response body: $responseBody")
                 Log.d("LoginController", "OTP verification error body: $errorBody")
 
+                // Inside the verifyOtpAndLogin method, after receiving the response
+                Log.d("LoginController", "Full response body: ${response.body()}")
+                // If using Gson, you can also log the raw JSON
+                val gson = com.google.gson.Gson()
+                Log.d("LoginController", "Raw JSON: ${gson.toJson(response.body())}")
+
                 withContext(Dispatchers.Main) {
                     when {
                         response.isSuccessful && responseBody != null -> {
                             Log.d("LoginController", "Login successful: ${responseBody.message}")
                             userData = UserData(
-                                name = responseBody.name,
-                                designation = responseBody.designation,
-                                department = responseBody.department,
-                                employeeId = responseBody.employeeid,
-                                email = responseBody.email,
-                                mobile = responseBody.mobile,
-                                location = responseBody.location,
-                                services = responseBody.services
+                                name = responseBody.user.name,
+                                designation = responseBody.user.designation,
+                                department = responseBody.user.department,
+                                employeeId = responseBody.user.employeeid,
+                                email = responseBody.user.email,
+                                mobile = responseBody.user.mobile,
+                                location = responseBody.user.location,
+                                services = responseBody.services ?: emptyList(),
+                                profilePic = responseBody.profile_pic,
+                                sosContact = responseBody.sos
                             )
                             officesData = responseBody.offices
+                            policiesData = responseBody.policiesList
                             LocationsController(context).initializeLocations()
                             callback(responseBody.message, false)
-                            navigator.navigateToHome()  // Add navigation to home
+                            navigator.navigateToHome()
                         }
                         errorBody != null -> {
                             try {
@@ -181,11 +191,17 @@ class LoginController(
     companion object {
         private var userData: UserData? = null
         private var officesData: List<Office>? = null
+        private var policiesData: List<Policy>? = null
         
         fun getUserData(): UserData? = userData
         fun getOfficesData(): List<Office>? {
             Log.d("LoginController", "Getting offices data: $officesData")
             return officesData
+        }
+        
+        fun getPoliciesData(): List<Policy>? {
+            Log.d("LoginController", "Getting policies data: $policiesData")
+            return policiesData
         }
         
         fun setUserData(data: UserData) {
@@ -195,6 +211,11 @@ class LoginController(
         fun setOfficesData(offices: List<Office>) {
             Log.d("LoginController", "Setting offices data: $offices")
             officesData = offices
+        }
+        
+        fun setPoliciesData(policies: List<Policy>) {
+            Log.d("LoginController", "Setting policies data: $policies")
+            policiesData = policies
         }
     }
 }

@@ -10,18 +10,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import androidx.compose.foundation.Image
+import androidx.compose.ui.platform.LocalContext
 import com.example.xone.R
+import com.example.xone.controller.SocialController
+import com.example.xone.model.Job
+import com.example.xone.model.SocialArticle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun XConnectScreen(onBackPressed: () -> Unit) {
+    val context = LocalContext.current
+    val socialController = remember { SocialController(context) }
     var selectedTab by remember { mutableStateOf("All Posts") }
 
-    // Tab Options
-    val tabs = listOf("All Posts", "Case Studies", "Blogs", "Skill Support", "Jobs")
+    // Updated tab options
+    val tabs = listOf("All Posts", "Case Studies", "Blogs", "Jobs")
 
     Box(
         modifier = Modifier
@@ -52,13 +69,13 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                     onClick = onBackPressed
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_back), // Add menu icon in drawable folder
-                        contentDescription = "Menu",
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "Back",
                         tint = Color.Black
                     )
                 }
 
-                // **Centered Title**
+                // Centered Title
                 Text(
                     text = "XConnect",
                     color = Color.Black,
@@ -69,56 +86,241 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                 )
             }
 
-            // **Tabs Row (Scrollable)**
+            // Tabs Row (Scrollable)
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .horizontalScroll(rememberScrollState()) // Make tabs scrollable
+                    .horizontalScroll(rememberScrollState())
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 tabs.forEach { tab ->
-                    Button(
-                        onClick = { selectedTab = tab },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedTab == tab) Color(0xFFFF5C5C) else Color(0xFFE0E0E0),
-                            contentColor = if (selectedTab == tab) Color.White else Color.Black
-                        ),
-                        modifier = Modifier.height(40.dp)
-                    ) {
-                        Text(text = tab)
-                    }
+                    TabItem(
+                        text = tab,
+                        isSelected = selectedTab == tab,
+                        onTabSelected = { selectedTab = tab }
+                    )
                 }
             }
 
-            // **Content Section**
+            // Content based on selected tab
             when (selectedTab) {
-                "All Posts" -> AllPostsContent()
-                "Case Studies" -> HorizontalSection(title = "Case Studies", posts = getCaseStudies())
-                "Blogs" -> HorizontalSection(title = "Blogs", posts = getBlogs())
-                "Skill Support" -> HorizontalSection(title = "Skill Support", posts = getSkillSupport())
-                "Jobs" -> HorizontalSection(title = "Jobs", posts = getJobs())
+                "All Posts" -> AllPostsContent(socialController)
+                "Case Studies" -> CaseStudiesContent(socialController)
+                "Blogs" -> BlogsContent(socialController)
+                "Jobs" -> JobsContent(socialController)
             }
         }
     }
 }
 
 @Composable
-fun AllPostsContent() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        HorizontalSection(title = "Case Studies", posts = getCaseStudies())
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalSection(title = "Blogs", posts = getBlogs())
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalSection(title = "Skill Support", posts = getSkillSupport())
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalSection(title = "Jobs", posts = getJobs())
+fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .padding(end = 8.dp)
+            .background(
+                color = if (isSelected) Color(0xFFDD3825) else Color.White,  // Red background when selected
+                shape = RoundedCornerShape(8.dp)  // Changed from 24.dp to 8.dp for less rounded corners
+            )
+            .clickable { onTabSelected() }
+            .padding(horizontal = 16.dp, vertical = 8.dp)  // Reduced padding for a more compact look
+    ) {
+        Text(
+            text = text,
+            color = if (isSelected) Color.White else Color.Black,
+            fontSize = 14.sp,  // Slightly smaller font size
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+        )
     }
 }
 
 @Composable
-fun HorizontalSection(title: String, posts: List<Post>) {
+fun AllPostsContent(socialController: SocialController) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        HorizontalSection(title = "Case Studies", articles = socialController.getCaseStudies())
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        HorizontalSection(title = "Blogs", articles = socialController.getBlogs())
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        HorizontalJobsSection(title = "Jobs", jobs = socialController.getJobPostings())
+    }
+}
+
+@Composable
+fun CaseStudiesContent(socialController: SocialController) {
+    val caseStudies = socialController.getCaseStudies()
+    if (caseStudies.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No case studies available", color = Color.Gray)
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            caseStudies.forEach { article ->
+                ArticleCard(
+                    article = article,
+                    type = "Case Studies",
+                    socialController = socialController
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun BlogsContent(socialController: SocialController) {
+    val blogs = socialController.getBlogs()
+    if (blogs.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No blogs available", color = Color.Gray)
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            blogs.forEach { article ->
+                ArticleCard(
+                    article = article,
+                    type = "Blogs",
+                    socialController = socialController
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun JobsContent(socialController: SocialController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 12.dp)
+    ) {
+        Text(
+            text = "Jobs",
+            fontSize = 22.sp,  // Slightly smaller from 24.sp
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Start  // Left align the title
+        )
+        
+        val jobs = socialController.getJobPostings()
+        if (jobs.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No jobs available", color = Color.Gray)
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                jobs.forEach { job ->
+                    JobCard(job = job, socialController = socialController)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun JobCard(job: Job, socialController: SocialController) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth(0.95f)
+            .padding(vertical = 8.dp)
+            .clickable { 
+                socialController.openInBrowser("Jobs", job.Slug)
+            },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Job Image
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(job.Image)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = job.Title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.ic_back),
+                placeholder = painterResource(id = R.drawable.ic_back)
+            )
+            
+            // Job Title
+            Text(
+                text = job.Title,
+                fontSize = 18.sp,  // Smaller from 20.sp
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(top = 12.dp),
+                textAlign = TextAlign.Center
+            )
+            
+            // Experience
+            Text(
+                text = "Experience : ${extractExperience(job.Description)}",
+                fontSize = 14.sp,  // Smaller from 16.sp
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 4.dp),
+                textAlign = TextAlign.Center
+            )
+            
+            // Apply Button
+            Button(
+                onClick = { socialController.openInBrowser("Jobs", job.Slug) },
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)  // Wider button (from 0.8f)
+                    .padding(top = 16.dp),  // Increased top padding from 12.dp
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Apply",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+// Helper function to extract experience from description
+private fun extractExperience(description: String): String {
+    // Try to find experience mention in the description
+    val experiencePattern = "(\\d+[-]\\d+\\s*(?:years|yrs))".toRegex(RegexOption.IGNORE_CASE)
+    val match = experiencePattern.find(description)
+    return match?.value ?: "Not specified"
+}
+
+@Composable
+fun HorizontalSection(title: String, articles: List<SocialArticle>) {
+    if (articles.isEmpty()) return
+    
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
@@ -130,92 +332,191 @@ fun HorizontalSection(title: String, posts: List<Post>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()) // Make each section horizontally scrollable
+                .horizontalScroll(rememberScrollState())
         ) {
-            posts.forEach { post ->
+            articles.forEach { article ->
                 PostCard(
-                    imageRes = post.imageRes,
-                    title = post.title,
-                    description = post.description
+                    title = article.title,
+                    description = article.description,
+                    imageUrl = article.imageUrl,
+                    type = title,
+                    slug = article.id,
+                    socialController = LocalContext.current.let { 
+                        remember { SocialController(it) }
+                    }
                 )
             }
         }
     }
 }
 
-// **Dummy Post Data**
-data class Post(val imageRes: Int, val title: String, val description: String)
+@Composable
+fun HorizontalJobsSection(title: String, jobs: List<Job>) {
+    if (jobs.isEmpty()) return
+    
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
-fun getCaseStudies(): List<Post> {
-    return listOf(
-        Post(R.drawable.arche, "Bangalore Airport", "Third Largest Airport..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-        Post(R.drawable.arche, "Hyderabad City", "Cutting-Edge Smart..."),
-    )
-}
-
-fun getBlogs(): List<Post> {
-    return listOf(
-        Post(R.drawable.netcon, "Data Center", "Mastering Data Center..."),
-        Post(R.drawable.netcon, "Cloud", "Exploring Hybrid Cloud...")
-    )
-}
-
-fun getSkillSupport(): List<Post> {
-    return listOf(
-        Post(R.drawable.arche, "L1-L2 Cyber Security", "Cybersecurity Essentials..."),
-        Post(R.drawable.arche, "Wireless Networks", "Introduction to Wireless...")
-    )
-}
-
-fun getJobs(): List<Post> {
-    return listOf(
-        Post(R.drawable.netcon, "Software Engineer", "Openings in Development..."),
-        Post(R.drawable.netcon, "Data Analyst", "Analyze Business Data...")
-    )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+        ) {
+            jobs.forEach { job ->
+                PostCard(
+                    title = job.Title,
+                    description = job.Description,
+                    imageUrl = job.Image,
+                    type = "Jobs",
+                    slug = job.Slug,
+                    socialController = LocalContext.current.let { 
+                        remember { SocialController(it) }
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable
-fun PostCard(imageRes: Int, title: String, description: String) {
+fun ArticleCard(article: SocialArticle, type: String, socialController: SocialController) {
     Card(
-        shape = RoundedCornerShape(20.dp), // Increased rounded corners
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { 
+                socialController.openInBrowser(type, article.id)
+            },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Image section
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(article.imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = article.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.ic_back),
+                placeholder = painterResource(id = R.drawable.ic_back)
+            )
+            
+            // Content section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = article.title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    lineHeight = 20.sp
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = article.description,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        maxLines = 4,  // Show 4 lines
+                        lineHeight = 18.sp,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    
+                    // Overlay "Read More" at the bottom right with background
+                    Text(
+                        text = "Read More",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFFDD3825),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(top = 54.dp)  // Position at fourth line (3 lines × 18sp)
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0f),
+                                        Color.White
+                                    ),
+                                    startX = -40f
+                                )
+                            )
+                            .padding(start = 40.dp, end = 0.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PostCard(
+    title: String, 
+    description: String, 
+    imageUrl: String,
+    type: String,
+    slug: String,
+    socialController: SocialController
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
         modifier = Modifier
             .width(200.dp)
             .height(250.dp)
-            .padding(4.dp) // Added space between cards
-            .clickable { /* Handle card click */ },
+            .padding(4.dp)
+            .clickable { 
+                socialController.openInBrowser(type, slug)
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.Center, // Align content in the center
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Use AsyncImage with error and loading states
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = title,
                 modifier = Modifier
-                    .fillMaxWidth() // Ensure image fills the card width
                     .height(120.dp)
-                    .clip(RoundedCornerShape(20.dp)) // Increased rounded corners for image
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop,
+                // Show a placeholder while loading or if error
+                error = painterResource(id = R.drawable.ic_back),
+                placeholder = painterResource(id = R.drawable.ic_back)
             )
-            Spacer(modifier = Modifier.height(4.dp)) // Reduced space between image and text
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = description,
-                fontSize = 10.sp,
-                color = Color.Gray,
-                maxLines = 1
-            )
+            
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

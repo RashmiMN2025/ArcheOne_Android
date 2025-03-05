@@ -1,6 +1,8 @@
 package com.example.xone.network
 
+import Policy
 import com.example.xone.model.SOSRequest
+import com.example.xone.model.SocialContent
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -20,8 +22,8 @@ interface ApiService {
     @POST("login")
     fun verifyOtp(@Body request: VerifyOtpRequest): Call<VerifyOtpResponse>
 
-    @GET("assets/{employeeId}")
-    fun getAssetDetails(@Path("employeeId") employeeId: String): Call<AssetResponse>
+    @POST("assets")
+    fun getAssetDetails(@Body request: AssetRequest): Call<AssetResponse>
 
     @POST("/sos")
     suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
@@ -33,6 +35,9 @@ interface ApiService {
         @Part("employeeId") employeeId: RequestBody,
         @Part("documentType") documentType: RequestBody
     ): Call<DocumentUploadResponse>
+
+    @GET("social")
+    suspend fun getSocialContent(): Response<SocialContent>
 }
 
 data class DocumentUploadResponse(
@@ -73,15 +78,22 @@ data class VerifyOtpRequest(
 data class VerifyOtpResponse(
     val message: String,
     val status: Int,
+    val user: User,
+    val services: List<Service> = emptyList(),
+    val profile_pic: String? = null,
+    val sos: String? = null,
+    val policiesList: List<Policy> = emptyList(),
+    val offices: List<Office> = emptyList()
+)
+
+data class User(
     val email: String,
     val name: String,
+    val employeeid: String,
     val designation: String,
     val department: String,
     val location: String,
-    val mobile: String,
-    val employeeid: String,
-    val services: List<Service>,
-    val offices: List<Office>
+    val mobile: String
 )
 
 data class Service(
@@ -106,9 +118,13 @@ data class RegionalOffice(
     val id: Int,
     val address: String,
     val companyName: String? = null,
-    val hrContact: String? = null,
+    val adminName: String? = null,
     val adminContact: String? = null,
-    val email: String? = null
+    val hrName: String? = null,
+    val hrContact: String? = null,
+    val email: String? = null,
+    val floorMap: String? = null,
+    val redirection: String? = null
 )
 
 data class AssetResponse(

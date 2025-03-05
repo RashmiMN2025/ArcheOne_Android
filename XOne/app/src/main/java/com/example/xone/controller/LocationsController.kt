@@ -1,10 +1,14 @@
 package com.example.xone.controller
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.xone.WebViewActivity
 import com.example.xone.model.*
 import com.example.xone.utils.PdfUtils
 import com.example.xone.network.Office as NetworkOffice
@@ -57,26 +61,10 @@ class LocationsController(private val context: Context) {
     }
 
     private fun createIndianStates(regionalOffices: List<NetworkRegionalOffice>): List<StateInfo> {
-        // Group regional offices by state
         val stateMap = mutableMapOf<String, MutableList<NetworkRegionalOffice>>()
-        
+
         regionalOffices.forEach { office ->
-            val stateName = when (office.region) {
-                "Chennai" -> "Tamil Nadu"
-                "Coimbatore" -> "Tamil Nadu"
-                "Karnataka" -> "Karnataka"
-                "Telangana" -> "Telangana"
-                "Kerala" -> "Kerala"
-                "Maharashtra" -> "Maharashtra"
-                "New Delhi" -> "Delhi"
-                "Uttar Pradesh" -> "Uttar Pradesh"
-                "Gujarat" -> "Gujarat"
-                "Andhra Pradesh" -> "Andhra Pradesh"
-                "Chhattisgarh" -> "Chhattisgarh"
-                "Haryana" -> "Haryana"
-                else -> office.region
-            }
-            
+            val stateName = office.region
             if (!stateMap.containsKey(stateName)) {
                 stateMap[stateName] = mutableListOf()
             }
@@ -88,25 +76,17 @@ class LocationsController(private val context: Context) {
                 name = stateName,
                 locations = offices.map { office ->
                     LocationInfo(
-                        name = when (office.region) {
-                            "Chennai" -> "Chennai, HQ"
-                            "Coimbatore" -> "Coimbatore, Registered Office"
-                            else -> office.region
-                        },
+                        name = office.region,  // Use exact region name from API
                         companyName = office.companyName ?: "Arche Global Pvt Ltd",
                         address = office.address,
                         email = office.email ?: "info@netcon.in",
-                        hasFloorMap = office.region in listOf("Chennai", "Coimbatore", "Bangalore", "Karnataka"),
-                        mapFileName = when(office.region) {
-                            "Chennai" -> "chennai_map.pdf"
-                            "Coimbatore" -> "coimbatore_map.pdf"
-                            "Karnataka", "Bangalore" -> "bangalore_map.pdf"
-                            else -> null
-                        },
-                        hrNumber = office.hrContact?.split("-")?.lastOrNull()?.trim(),
-                        hrName = office.hrContact?.split("-")?.firstOrNull()?.trim(),
-                        adminNumber = office.adminContact?.split("-")?.lastOrNull()?.trim(),
-                        adminName = office.adminContact?.split("-")?.firstOrNull()?.trim()
+                        hasFloorMap = !office.floorMap.isNullOrEmpty(),
+                        mapFileName = office.floorMap,
+                        hrName = office.hrName?.takeIf { it.isNotEmpty() },
+                        hrNumber = office.hrContact?.takeIf { it.isNotEmpty() },
+                        adminName = office.adminName?.takeIf { it.isNotEmpty() },
+                        adminNumber = office.adminContact?.takeIf { it.isNotEmpty() },
+                        redirection = office.redirection
                     )
                 }
             )
@@ -143,9 +123,26 @@ class LocationsController(private val context: Context) {
         )
     }
     
-    fun showFloorMap(mapFileName: String) {
-        PdfUtils.openPdfFromAssets(context, mapFileName)
-        _locationState = _locationState.copy(showingFloorMap = true)
+    fun showFloorMap(mapUrl: String) {
+        Log.d("LocationsController", "Attempting to open floor map in browser: $mapUrl")
+        try {
+            // Open in browser
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse(mapUrl)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            
+            context.startActivity(intent)
+            _locationState = _locationState.copy(showingFloorMap = true)
+            Log.d("LocationsController", "Opened floor map in browser")
+        } catch (e: Exception) {
+            Log.e("LocationsController", "Error opening floor map: ${e.message}")
+            Toast.makeText(
+                context,
+                "Unable to open PDF. Please check your connection or try again later.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
     
     fun showContactInfo(show: Boolean) {

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-files-path
+        name="business_cards"
+        path="BusinessCards" />
+    <cache-path
+        name="shared_images"
+        path="images/" />
+    <external-path
+        name="external_files"
+        path="Download/BusinessCards" />
+</paths> 

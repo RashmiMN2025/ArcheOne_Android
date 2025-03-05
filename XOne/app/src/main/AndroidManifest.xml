@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -29,15 +32,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
-        </provider>
 
         <!-- Add LoginActivity -->
         <activity
@@ -96,13 +90,24 @@
             android:label="XConnect"
             android:theme="@style/Theme.XOne" />
 
-        <!-- Add XConnectActivity -->
+        <!-- Update the SOSActivity declaration -->
         <activity
-            android:name=".ui.screens.SOSActivity"
+            android:name=".SOSActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:label="SOS"
             android:theme="@style/Theme.XOne" />
+
+        <!-- Keep only this FileProvider at the end -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

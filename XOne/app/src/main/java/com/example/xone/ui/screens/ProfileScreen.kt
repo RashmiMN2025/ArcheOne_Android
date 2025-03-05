@@ -35,11 +35,17 @@ import com.example.xone.model.ProfileModel
 import com.example.xone.model.ProfileMenuItem
 import com.example.xone.ui.preview.PreviewNavigator
 import androidx.compose.ui.layout.ContentScale
+import com.example.xone.model.FooterNavigationModel
 
 @Composable
 fun ProfileScreen(
     controller: ProfileController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    footerNavigation: FooterNavigationModel = FooterNavigationModel(showProfile = true),
+    onFooterHomeClick: () -> Unit = { controller.onBackPressed() },
+    onFooterChatClick: () -> Unit = {},
+    onFooterSOSClick: () -> Unit = {},
+    onFooterProfileClick: () -> Unit = {}
 ) {
     Box(
         modifier = modifier
@@ -67,7 +73,7 @@ fun ProfileScreen(
             // Rest of the content with padding
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(1f)
                     .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -95,9 +101,18 @@ fun ProfileScreen(
                     color = Color.White,
                     fontSize = 16.sp,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.padding(bottom = 40.dp)
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
+            
+            // Footer navigation
+            FooterNavigation(
+                model = footerNavigation,
+                onHomeClick = onFooterHomeClick,
+                onChatClick = onFooterChatClick,
+                onSOSClick = onFooterSOSClick,
+                onProfileClick = onFooterProfileClick
+            )
         }
     }
 }

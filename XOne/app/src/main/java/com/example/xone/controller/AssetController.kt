@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.xone.network.AssetRequest
+import com.example.xone.model.SOSRequest
 
 class AssetController(
     private val context: Context,
@@ -106,9 +107,45 @@ class AssetController(
             Toast.makeText(context, "Please describe your issue", Toast.LENGTH_SHORT).show()
             return
         }
-        // TODO: Implement API call to submit issue
-        Toast.makeText(context, "Issue submitted successfully", Toast.LENGTH_SHORT).show()
-        navigator.navigateToHome()
+
+        // Get user data from LoginController
+        val userData = LoginController.getUserData()
+        if (userData == null) {
+            Toast.makeText(context, "User data not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Create SOS request
+        val request = SOSRequest(
+            name = userData.name,
+            email = userData.email,
+            mobile = userData.mobile,
+            category = "Technical Issue", // Always use Technical Issue for asset concerns
+            query = model.issueDescription
+        )
+
+        // Launch coroutine to make API call
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.apiService.submitSOS(request)
+                
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(context, "Issue reported successfully", Toast.LENGTH_SHORT).show()
+                        // Clear the issue description and navigate back
+                        model = model.copy(issueDescription = "")
+                        navigator.navigateToHome()
+                    } else {
+                        val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
+                        Toast.makeText(context, "Failed to submit issue: $errorMessage", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     fun onBackPressed() {
