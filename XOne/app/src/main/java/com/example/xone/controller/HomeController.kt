@@ -20,12 +20,12 @@ class HomeController(
     private val preferencesManager = PreferencesManager(context)
     
     var model by mutableStateOf(HomeModel(
-        userName = LoginController.getUserData()?.name ?: "",
-        designation = LoginController.getUserData()?.designation ?: "",
-        department = LoginController.getUserData()?.department ?: "",
-        employeeId = LoginController.getUserData()?.employeeId ?: "",
+        userName = OtpVerificationController.getUserData()?.name ?: "",
+        designation = OtpVerificationController.getUserData()?.designation ?: "",
+        department = OtpVerificationController.getUserData()?.department ?: "",
+        employeeId = OtpVerificationController.getUserData()?.employeeId ?: "",
         showAllApps = true,
-        categories = LoginController.getUserData()?.let { userData ->
+        categories = OtpVerificationController.getUserData()?.let { userData ->
             userData.services
                 .groupBy { it.category }
                 .mapValues { (_, services) ->
@@ -56,7 +56,7 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Locations")
                 navigator.navigateToLocations()
             }
-            "xcard" -> {
+            "business card" -> {
                 Log.d("HomeController", "Navigating to Business Card")
                 navigator.navigateToBusinessCard()
             }
@@ -78,7 +78,7 @@ class HomeController(
             "holiday calendar" -> navigator.navigateToHolidayCalendar()
             "client calendar" -> navigator.navigateToClientCalendar()
             "greetings" -> navigator.navigateToGreetings()
-            "xconnect" -> {
+            "connect" -> {
                 Log.d("XConnect", "Navigating to XConnect")
                 navigator.navigateToXConnect()
             }
@@ -181,10 +181,10 @@ class HomeController(
 
     fun refreshUserData() {
         model = model.copy(
-            userName = LoginController.getUserData()?.name ?: "",
-            designation = LoginController.getUserData()?.designation ?: "",
-            department = LoginController.getUserData()?.department ?: "",
-            employeeId = LoginController.getUserData()?.employeeId ?: ""
+            userName = OtpVerificationController.getUserData()?.name ?: "",
+            designation = OtpVerificationController.getUserData()?.designation ?: "",
+            department = OtpVerificationController.getUserData()?.department ?: "",
+            employeeId = OtpVerificationController.getUserData()?.employeeId ?: ""
         )
     }
 

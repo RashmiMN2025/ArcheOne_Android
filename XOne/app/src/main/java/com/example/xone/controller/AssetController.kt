@@ -24,7 +24,7 @@ class AssetController(
         private set
 
     init {
-        val employeeId = LoginController.getUserData()?.employeeId?.trim() ?: ""
+        val employeeId = OtpVerificationController.getUserData()?.employeeId?.trim() ?: ""
         if (employeeId.isNotBlank()) {
             fetchAssetDetails("nt$employeeId")
         }
@@ -34,13 +34,13 @@ class AssetController(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val request = AssetRequest(employeeId = employeeId)
-                val response = RetrofitClient.apiService.getAssetDetails(request.toString()).execute()
-                
+                val response = RetrofitClient.apiService.getAssetDetails(request).execute()
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val responseBody = response.body()!!
                         val asset = responseBody.details.firstOrNull()
-                        
+
                         if (asset != null) {
                             model = model.copy(
                                 name = responseBody.username,
@@ -109,7 +109,7 @@ class AssetController(
         }
 
         // Get user data from LoginController
-        val userData = LoginController.getUserData()
+        val userData = OtpVerificationController.getUserData()
         if (userData == null) {
             Toast.makeText(context, "User data not found", Toast.LENGTH_SHORT).show()
             return
@@ -128,7 +128,7 @@ class AssetController(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitClient.apiService.submitSOS(request)
-                
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         Toast.makeText(context, "Issue reported successfully", Toast.LENGTH_SHORT).show()

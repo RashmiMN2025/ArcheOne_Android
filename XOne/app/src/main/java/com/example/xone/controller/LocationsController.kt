@@ -13,14 +13,14 @@ import com.example.xone.model.*
 import com.example.xone.utils.PdfUtils
 import com.example.xone.network.Office as NetworkOffice
 import com.example.xone.network.RegionalOffice as NetworkRegionalOffice
-import com.example.xone.controller.LoginController
+import com.example.xone.controller.OtpVerificationController
 
 class LocationsController(private val context: Context) {
     private var _locationState by mutableStateOf(LocationScreenState())
     
     init {
         // Initialize locations from login response
-        val offices = LoginController.getOfficesData()
+        val offices = OtpVerificationController.getOfficesData()
         Log.d("LocationsController", "Received offices data: $offices")
         
         if (offices != null) {
@@ -217,7 +217,7 @@ class LocationsController(private val context: Context) {
     }
 
     fun initializeLocations() {
-        val offices = LoginController.getOfficesData()
+        val offices = OtpVerificationController.getOfficesData()
         Log.d("LocationsController", "Reinitializing with offices data: $offices")
         
         if (offices != null) {

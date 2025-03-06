@@ -62,7 +62,6 @@ fun SOSScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 25.dp)
                     ) {
                         IconButton(
                             onClick = onBackPressed

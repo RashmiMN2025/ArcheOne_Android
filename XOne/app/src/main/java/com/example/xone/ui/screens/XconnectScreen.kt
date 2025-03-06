@@ -77,7 +77,7 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
 
                 // Centered Title
                 Text(
-                    text = "XConnect",
+                    text = "Connect",
                     color = Color.Black,
                     fontSize = 20.sp,
                     modifier = Modifier

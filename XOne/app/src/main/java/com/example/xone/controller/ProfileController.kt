@@ -13,8 +13,8 @@ class ProfileController(
 ) {
     var model by mutableStateOf(
         ProfileModel(
-            name = LoginController.getUserData()?.name ?: "",
-            email = LoginController.getUserData()?.email ?: ""
+            name = OtpVerificationController.getUserData()?.name ?: "",
+            email = OtpVerificationController.getUserData()?.email ?: ""
         )
     )
         internal set

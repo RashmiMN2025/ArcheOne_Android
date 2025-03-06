@@ -504,10 +504,10 @@ private fun AppIcon(
     Box(modifier = modifier) {
         // Check if it's a default app
         when (title) {
-            "My Documents", "MyDocuments", "ID", "Asset", "XCard", "Leave",
+            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
-            "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "XConnect",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding","XProfile"  -> {
+            "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding","Profile"  -> {
                 Surface(
                     modifier = Modifier.size(120.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -519,7 +519,7 @@ private fun AppIcon(
                                 "mydocuments" -> R.drawable.mydocuments
                                 "id" -> R.drawable.id
                                 "asset" -> R.drawable.asset
-                                "xcard" -> R.drawable.xcard
+                                "business card" -> R.drawable.xcard
                                 "leave" -> R.drawable.leave
                                 "elearning" -> R.drawable.elearning
                                 "mycareer" -> R.drawable.mycareer
@@ -532,7 +532,7 @@ private fun AppIcon(
                                 "holidaycalendar" -> R.drawable.holiday
                                 "greetings" -> R.drawable.greetings
                                 "medical" -> R.drawable.medical
-                                "xconnect" -> R.drawable.xconnect
+                                "connect" -> R.drawable.xconnect
                                 "locations" -> R.drawable.locations
                                 "travel&expenses" -> R.drawable.travel
                                 "policy" -> R.drawable.policy

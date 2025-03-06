@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.core.splashscreen)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -55,10 +56,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation ("io.coil-kt:coil:2.4.0")
-    implementation ("io.coil-kt:coil-compose:2.4.0")
-
+    implementation(libs.androidx.navigation.compose)
+    implementation (libs.coil)
+    implementation (libs.coil.compose)
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation (libs.gson)
@@ -75,7 +75,6 @@ dependencies {
     implementation (libs.androidx.foundation) // or latest version
     implementation (libs.androidx.material) // for Material components
     implementation (libs.androidx.runtime.livedata)
-    // Ensure this is included in your build.gradle file
     implementation (libs.androidx.foundation.vlatestversion)
     implementation (libs.androidx.ui.vlatestversion)
     implementation (libs.androidx.ui.v150)
@@ -84,4 +83,7 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation (libs.androidx.core.ktx.v1120)
+    implementation (libs.androidx.appcompat)
+    implementation (libs.material)  // Material 3
 }

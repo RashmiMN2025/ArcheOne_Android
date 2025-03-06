@@ -284,7 +284,19 @@ class HomeActivity : ComponentActivity() {
                     ) {
                         HolidayCalendarScreen(
                             controller = HolidayCalendarController(navigator),
-                            onBackPressed = { navigator.navigateToHome() }
+                            onBackPressed = { navigator.navigateToHome() },
+                            onMonthClick = { month ->
+                                navController.navigate("monthDetail/$month")
+                            }
+                        )
+                    }
+
+                    composable("monthDetail/{month}") { backStackEntry ->
+                        val month = backStackEntry.arguments?.getString("month")?.toIntOrNull() ?: 1
+                        MonthDetailScreen(
+                            month = month,
+                            controller = HolidayCalendarController(),
+                            onBackPressed = { navController.popBackStack() }
                         )
                     }
                     

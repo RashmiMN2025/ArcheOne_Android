@@ -46,7 +46,7 @@ fun HolidayCalendarScreen(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(top = 25.dp) // Adjusted top padding
+                modifier = Modifier.fillMaxWidth().padding(top = 30.dp) // Adjusted top padding
             ) {
                 IconButton(
                     onClick = onBackPressed
@@ -104,7 +104,7 @@ fun MonthView(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) 
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .width(115.dp) // Adjusted width
-            .padding(2.dp)
+//            .padding(2.dp)
             .clickable { onMonthClick(month)}
     ) {
         Text(
@@ -149,7 +149,7 @@ fun DateView(date: Int, isHoliday: Boolean) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(16.dp) // Adjusted size
-//            .padding(2.dp)
+            .padding(1.dp)
             .then(if (isHoliday) Modifier.clip(CircleShape).background(Color(0xFFDD3825)) else Modifier) // Apply circle only for holidays
     ) {
         Text(
@@ -161,14 +161,13 @@ fun DateView(date: Int, isHoliday: Boolean) {
     }
 }
 
-
-// Preview of Holiday Calendar
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewHolidayCalendarScreen() {
-//    HolidayCalendarScreen(
-//        controller = HolidayCalendarController(),
-//        onBackPressed = {},
-//        onMonthClick = ()
-//    )
-//}
+@Preview(showBackground = true)
+@Composable
+fun PreviewHolidayCalendarScreen() {
+    val mockController = HolidayCalendarController()
+    HolidayCalendarScreen(
+        controller = mockController,
+        onBackPressed = {},
+        onMonthClick = {}
+    )
+}

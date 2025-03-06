@@ -1,5 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.XOne" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Normal App Theme -->
+    </style>
 
-    <style name="Theme.XOne" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.XOne.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
 </resources>

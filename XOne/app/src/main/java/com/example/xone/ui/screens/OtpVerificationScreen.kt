@@ -1,6 +1,5 @@
 package com.example.xone.ui.screens
 
-import com.example.xone.ui.theme.XOneTheme
 import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -22,10 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextDecoration
 import com.example.xone.controller.OtpVerificationController
 import com.example.xone.ui.components.CompanyLogo
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import com.example.xone.controller.LoginController
-import com.example.xone.ui.preview.PreviewNavigator
 import com.example.xone.ui.components.UniversalLoader
 import android.util.Log
 
@@ -134,20 +130,14 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 onClick = {
                     isLoading = true
                     errorMessage = null
-                    if (otp.length != 6) {  // Add validation
+                    if (otp.length != 6) {
                         errorMessage = "Please enter a valid 6-digit OTP"
                         isLoading = false
                         return@Button
                     }
                     controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
                         isLoading = false
-                        if (isError) {
-                            Log.e("OtpVerification", "Error verifying OTP: $message")
-                            errorMessage = message
-                        } else {
-                            Log.d("OtpVerification", "OTP verification successful")
-                            errorMessage = null
-                        }
+                        errorMessage = if (isError) message else null
                     }
                 },
                 modifier = Modifier
@@ -193,32 +183,6 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
 
             // Replace the existing loading indicator with UniversalLoader
             UniversalLoader(isLoading = isLoading)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun OtpVerificationScreenPreview() {
-    val previewNavigator = PreviewNavigator()
-    
-    XOneTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            OtpVerificationScreen(
-                controller = OtpVerificationController(
-                    navigator = previewNavigator,
-                    loginController = LoginController(
-                        context = LocalContext.current,
-                        navigator = previewNavigator
-                    )
-                ),
-                email = "john.doe@company.com",
-                mobile = "+91 9876543210",
-                employeeId = "EMP123"
-            )
         }
     }
 }

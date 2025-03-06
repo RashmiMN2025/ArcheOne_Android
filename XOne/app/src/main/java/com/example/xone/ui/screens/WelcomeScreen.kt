@@ -49,16 +49,27 @@ fun WelcomeScreen(
                 painter = painterResource(id = R.drawable.arche_one), // Replace with your logo
                 contentDescription = "One Logo",
                 modifier = Modifier
-                    .size(450.dp)
+                    .size(400.dp) // Adjusted size
                     .fillMaxWidth()
-                    .offset(y = (-40).dp) // Moves image slightly **up**
+                    .offset(y = (-50).dp) // Moves image **further up**
             )
+
+            // Tagline Below Logo
+            Text(
+                text = "Workplace, Simplified",
+                fontSize = 14.sp,
+                color = Color(0xFFDD3825), // Red Color
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.offset(y = (-180).dp) // Moves **text up** for better positioning
+            )
+
+            Spacer(modifier = Modifier.weight(1f)) // Push button down
 
             // Get Started Button
             Button(
                 onClick = onXOneClick,
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
+                    .fillMaxWidth(0.9f)
                     .padding(bottom = 40.dp)
                     .height(48.dp),
                 shape = RoundedCornerShape(24.dp),

@@ -82,7 +82,7 @@ class BusinessCardControllerImpl(
     }
 
     // Get user data from LoginController
-    val businessCard = LoginController.getUserData()?.let { userData ->
+    val businessCard = OtpVerificationController.getUserData()?.let { userData ->
         BusinessCardModel(
             companyLogo = R.drawable.arche,
             name = userData.name,

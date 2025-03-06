@@ -10,17 +10,20 @@ import retrofit2.Response
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
-import retrofit2.http.Path
 
 interface ApiService {
     @POST("send-otp")
     fun sendOtp(@Body request: SendOtpRequest): Call<SendOtpResponse>
 
+    @POST("otpVerify")
+    fun verifyOtp(@Body request: VerifyOtpRequest): Call<OtpVerifyResponse>
+
     @POST("login")
-    fun verifyOtp(@Body request: VerifyOtpRequest): Call<VerifyOtpResponse>
+    fun login(@Header("Authorization") token: String, @Body request: LoginRequest): Call<VerifyOtpResponse>
 
     @POST("assets")
     fun getAssetDetails(@Body request: AssetRequest): Call<AssetResponse>
@@ -60,7 +63,7 @@ data class SOSResponse(
 data class SendOtpRequest(
     val email: String,
     val mobile: String,
-    val employeeid: String
+    val employeeId: String
 )
 
 data class SendOtpResponse(
@@ -71,14 +74,26 @@ data class SendOtpResponse(
 data class VerifyOtpRequest(
     val email: String,
     val mobile: String,
-    val employeeid: String,
+    val employeeId: String,
     val otpFromUser: String
+)
+
+data class OtpVerifyResponse(
+    val status: Int,
+    val message: String,
+    val token: String
+)
+
+data class LoginRequest(
+    val email: String,
+    val mobile: String,
+    val employeeId: String
 )
 
 data class VerifyOtpResponse(
     val message: String,
     val status: Int,
-    val user: User,
+    val user: User?,
     val services: List<Service> = emptyList(),
     val profile_pic: String? = null,
     val sos: String? = null,
@@ -87,13 +102,13 @@ data class VerifyOtpResponse(
 )
 
 data class User(
-    val email: String,
     val name: String,
-    val employeeid: String,
     val designation: String,
     val department: String,
-    val location: String,
-    val mobile: String
+    val employeeid: String,
+    val email: String,
+    val mobile: String,
+    val location: String
 )
 
 data class Service(
