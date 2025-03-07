@@ -18,27 +18,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.controller.SOSController
-import com.example.xone.model.FooterNavigationModel
-import com.example.xone.ui.components.FooterScaffold
 
 @Composable
 fun SOSScreen(
     controller: SOSController,
     onNavigateToRaiseConcern: () -> Unit,
     onBackPressed: () -> Unit,
-    footerNavigation: FooterNavigationModel = FooterNavigationModel(showSOS = true),
-    onFooterHomeClick: () -> Unit = {},
-    onFooterChatClick: () -> Unit = {},
-    onFooterSOSClick: () -> Unit = {},
-    onFooterProfileClick: () -> Unit = {}
 ) {
-    FooterScaffold(
-        footerNavigation = footerNavigation,
-        onFooterHomeClick = onFooterHomeClick,
-        onFooterChatClick = onFooterChatClick,
-        onFooterSOSClick = onFooterSOSClick,
-        onFooterProfileClick = onFooterProfileClick
-    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -62,6 +48,7 @@ fun SOSScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(top = 25.dp)
                     ) {
                         IconButton(
                             onClick = onBackPressed
@@ -109,7 +96,6 @@ fun SOSScreen(
             }
         }
     }
-}
 
 @Composable
 fun SOSButton(text: String, onClick: () -> Unit) {

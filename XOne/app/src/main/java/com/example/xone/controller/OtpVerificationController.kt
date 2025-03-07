@@ -1,7 +1,7 @@
 package com.example.xone.controller
 
-import Policy
 import android.util.Log
+import com.example.xone.model.PolicyModel
 import com.example.xone.navigation.Navigator
 import com.example.xone.network.*
 import kotlinx.coroutines.CoroutineScope
@@ -109,20 +109,27 @@ class OtpVerificationController(
                 sosContact = response.sos
             )
         }
+
         officesData = response.offices
-        policiesData = response.policiesList
+        policiesData = response.policiesList.map { policy ->
+            PolicyModel.Policy(
+                policyName = policy.policyName, // Ensure correct property mapping
+                filePath = policy.filePath
+            )
+        }
         Log.d("UserData", "User data saved: $userData")
     }
+
 
     // Companion object for storing user data
     companion object {
         private var userData: UserData? = null
         private var officesData: List<Office>? = null
-        private var policiesData: List<Policy>? = null
+        private var policiesData: List<PolicyModel.Policy>? = null
 
         fun getUserData(): UserData? = userData
         fun getOfficesData(): List<Office>? = officesData
-        fun getPoliciesData(): List<Policy>? = policiesData
+        fun getPoliciesData(): List<PolicyModel.Policy>? = policiesData
     }
 
     fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {
