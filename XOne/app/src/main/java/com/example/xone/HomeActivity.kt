@@ -19,7 +19,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.controller.HomeController
 import com.example.xone.controller.LocationsController
-import com.example.xone.controller.BusinessCardController
 import com.example.xone.controller.PolicyController
 import com.example.xone.controller.AssetController
 import com.example.xone.controller.HolidayCalendarController
@@ -378,16 +377,6 @@ class HomeActivity : ComponentActivity() {
                                 controller = sosController,
                                 onNavigateToRaiseConcern = { showRaiseConcern = true },
                                 onBackPressed = { navController.popBackStack() },
-                                footerNavigation = FooterNavigationModel(
-                                    showHome = false,
-                                    showChat = false,
-                                    showSOS = true,
-                                    showProfile = false
-                                ),
-                                onFooterHomeClick = { navController.navigate("home") },
-                                onFooterChatClick = { /* Implement chat navigation */ },
-                                onFooterSOSClick = { /* Already on SOS screen */ },
-                                onFooterProfileClick = { navController.navigate("profile") }
                             )
                         }
                     }

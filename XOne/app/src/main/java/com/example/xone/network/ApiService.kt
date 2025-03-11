@@ -1,6 +1,6 @@
 package com.example.xone.network
 
-import Policy
+import com.example.xone.model.PolicyModel
 import com.example.xone.model.SOSRequest
 import com.example.xone.model.SocialContent
 import com.google.gson.annotations.SerializedName
@@ -97,7 +97,7 @@ data class VerifyOtpResponse(
     val services: List<Service> = emptyList(),
     val profile_pic: String? = null,
     val sos: String? = null,
-    val policiesList: List<Policy> = emptyList(),
+    val policiesList: List<PolicyModel.Policy> = emptyList(),
     val offices: List<Office> = emptyList()
 )
 

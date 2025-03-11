@@ -150,22 +150,16 @@ fun DocumentCard(name: String, filePath: String?, controller: MyDocumentsControl
                 Spacer(modifier = Modifier.width(10.dp))
 
                 // View button (always visible, but shows a toast if filePath is empty)
-                Box(
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_view),
+                    contentDescription = "View",
+                    tint = Color.White, // Make the icon white
                     modifier = Modifier
-                        .size(25.dp)
-                        .background(Color.White, shape = RoundedCornerShape(50))
+                        .size(30.dp)
                         .clickable {
                             controller.onViewClick(context, name, isPersonal)
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_view),
-                        contentDescription = "View",
-                        tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                        }
+                )
             }
         }
     }

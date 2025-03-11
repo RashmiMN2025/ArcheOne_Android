@@ -8,7 +8,7 @@ class SOSController(private val context: Context) {
 
     fun makeSOSCall() {
         val callIntent = Intent(Intent.ACTION_DIAL).apply {
-            data = Uri.parse("tel: 1234567890") // Replace with actual emergency number
+            data = Uri.parse("tel:") // Replace with actual emergency number
         }
         context.startActivity(callIntent)
     }
