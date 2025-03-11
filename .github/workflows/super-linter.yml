@@ -8,9 +8,9 @@ name: Lint Code Base
 
 on:
   push:
-    branches: [ "RasmiDev" ]
+    branches: [ "development" ]
   pull_request:
-    branches: [ "RasmiDev" ]
+    branches: [ "development" ]
 jobs:
   run-lint:
     runs-on: ubuntu-latest
