@@ -10,8 +10,8 @@ import com.example.xone.OtpVerificationActivity
 import com.example.xone.HomeActivity
 import com.example.xone.MyDocumentsActivity
 import com.example.xone.XConnectActivity
+import com.example.xone.SOSActivity
 import com.example.xone.R
-import com.example.xone.ui.screens.SOSActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null

@@ -9,6 +9,8 @@ import androidx.compose.runtime.setValue
 import android.util.Log
 import android.content.Context
 import com.example.xone.utils.PreferencesManager
+import android.content.Intent
+import com.example.xone.SOSActivity
 import com.example.xone.model.FooterNavigationModel
 
 class HomeController(
