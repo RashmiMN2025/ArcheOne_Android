@@ -86,4 +86,5 @@ dependencies {
     implementation (libs.androidx.core.ktx.v1120)
     implementation (libs.androidx.appcompat)
     implementation (libs.material)  // Material 3
+    implementation (libs.accompanist.pager)
 }

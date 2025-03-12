@@ -48,7 +48,7 @@ fun PolicyScreen(
                             text = "Policies",
                             style = MaterialTheme.typography.titleLarge,
                             color = Color.Black,
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier.padding(start = 130.dp)
                         )
                     }
                 },

@@ -1,6 +1,7 @@
 package com.example.xone
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,9 +14,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.controller.HomeController
 import com.example.xone.controller.LocationsController
@@ -35,7 +38,9 @@ import com.example.xone.controller.*
 import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.model.FooterNavigationModel
+import com.example.xone.model.SosBlogModel
 import com.example.xone.ui.components.FooterScaffold
+import com.google.gson.Gson
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -65,7 +70,7 @@ class HomeActivity : ComponentActivity() {
                 policyController = PolicyController(this, navigator)
                 assetController = AssetController(this, navigator)
                 profileController = ProfileController(this, navigator)
-                sosController = SOSController(this)
+                sosController = SOSController(application)
 
                 // If we have a destination, navigate to it
                 LaunchedEffect(destination) {
@@ -377,7 +382,24 @@ class HomeActivity : ComponentActivity() {
                                 controller = sosController,
                                 onNavigateToRaiseConcern = { showRaiseConcern = true },
                                 onBackPressed = { navController.popBackStack() },
+                                onSOSBlogClick = { blogId ->
+                                    // Convert blog object to JSON and pass it as a parameter
+                                    val blogJson = Uri.encode(Gson().toJson(blogId))
+                                    navController.navigate("sosDetail/$blogJson")
+                                }
                             )
+                        }
+                    }
+
+                    composable(
+                        "sosDetail/{blog}",
+                        arguments = listOf(navArgument("blog") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val json = backStackEntry.arguments?.getString("blog")
+                        val blog = Gson().fromJson(json, SosBlogModel::class.java)
+
+                        SOSDetailScreen(blog = blog) {
+                            navController.popBackStack()
                         }
                     }
                 }
