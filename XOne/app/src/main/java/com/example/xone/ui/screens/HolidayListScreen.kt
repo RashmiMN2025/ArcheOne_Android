@@ -169,24 +169,23 @@ fun HolidayListScreen(
 fun HolidayItem(holiday: Holiday) {
     Card(
         modifier = Modifier
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(8.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Holiday name with type indicator
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(2f)
             ) {
-                // Indicator for holiday type
+                // Color indicator based on holiday type
                 Box(
                     modifier = Modifier
                         .size(12.dp)
@@ -194,7 +193,7 @@ fun HolidayItem(holiday: Holiday) {
                         .background(
                             when (holiday.holidayType) {
                                 "Yes" -> Color(0xFFDD3825)  // Red for mandatory holidays
-                                "RH" -> Color(0xFFFFA500)   // Orange for restricted holidays
+                                "RH" -> Color(0xFF2196F3)   // Blue for RH holidays
                                 else -> Color.Gray          // Gray for others
                             }
                         )
@@ -202,18 +201,35 @@ fun HolidayItem(holiday: Holiday) {
                 
                 Spacer(modifier = Modifier.width(8.dp))
                 
-                Text(
-                    text = holiday.name,
-                    color = Color.Black,
-                    fontSize = 14.sp
-                )
+                Column {
+                    Text(
+                        text = holiday.name,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = formatDate(holiday.date),
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
             }
             
-            // Date
+            // Holiday type badge
             Text(
-                text = formatDate(holiday.date),
-                color = Color.DarkGray,
-                fontSize = 14.sp,
+                text = when(holiday.holidayType) {
+                    "Yes" -> "Holiday"
+                    "RH" -> "RH"
+                    else -> "Other"
+                },
+                fontSize = 12.sp,
+                color = when(holiday.holidayType) {
+                    "Yes" -> Color(0xFFDD3825)
+                    "RH" -> Color(0xFF2196F3)
+                    else -> Color.Gray
+                },
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.End
             )

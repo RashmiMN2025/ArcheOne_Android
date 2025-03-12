@@ -122,7 +122,7 @@ fun HolidayCalendarScreen(
             ) {
                 Text(
                     text = "Year 2025",
-                    fontSize = 23.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -169,6 +169,19 @@ fun HolidayCalendarScreen(
                     )
                 }
             } else {
+                // Legend for holiday types
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LegendItem(color = Color(0xFFDD3825), text = "Holidays")
+                    Spacer(modifier = Modifier.width(16.dp))
+                    LegendItem(color = Color(0xFF2196F3), text = "RH")
+                }
+                
                 // Calendar grid
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -255,12 +268,16 @@ fun MonthDates(month: Int, holidays: List<Holiday>) {
                               else if (dayCounter <= totalDays) dayCounter++ 
                               else 0
                     
-                    // Check specifically for holidays with type = "Yes"
-                    val isHoliday = holidays.any { 
+                    // Check for both mandatory and regional holidays
+                    val mandatoryHoliday = holidays.any { 
                         it.day == date && it.holidayType == "Yes" 
                     }
                     
-                    DateView(date, isHoliday)
+                    val regionalHoliday = holidays.any { 
+                        it.day == date && it.holidayType == "RH" 
+                    }
+                    
+                    DateView(date, mandatoryHoliday, regionalHoliday)
                 }
             }
         }
@@ -268,18 +285,21 @@ fun MonthDates(month: Int, holidays: List<Holiday>) {
 }
 
 @Composable
-fun DateView(date: Int, isHoliday: Boolean) {
+fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(12.dp)
             .then(
-                if (isHoliday) 
-                    Modifier
+                when {
+                    isMandatoryHoliday -> Modifier
                         .clip(CircleShape)
-                        .background(Color(0xFFDD3825))
-                else 
-                    Modifier
+                        .background(Color(0xFFDD3825)) // Red for mandatory holidays
+                    isRegionalHoliday -> Modifier
+                        .clip(CircleShape)
+                        .background(Color(0xFF2196F3)) // Blue for RH holidays
+                    else -> Modifier
+                }
             )
     ) {
         if (date > 0) {
@@ -287,8 +307,8 @@ fun DateView(date: Int, isHoliday: Boolean) {
                 text = date.toString(),
                 fontSize = 8.sp,
                 lineHeight = 8.sp,
-                color = if (isHoliday) Color.White else Color.Black,
-                fontWeight = if (isHoliday) FontWeight.Bold else FontWeight.Normal
+                color = if (isMandatoryHoliday || isRegionalHoliday) Color.White else Color.Black,
+                fontWeight = if (isMandatoryHoliday || isRegionalHoliday) FontWeight.Bold else FontWeight.Normal
             )
         }
     }
@@ -301,8 +321,11 @@ fun PreviewHolidayCalendarScreen() {
     val previewHolidays = listOf(
         Holiday("New Year", "01-01-2025", "Yes"),
         Holiday("Republic Day", "26-01-2025", "Yes"),
+        Holiday("Pongal", "15-01-2025", "RH"),  // Regional holiday
         Holiday("Labor Day", "01-05-2025", "Yes"),
+        Holiday("Good Friday", "18-04-2025", "RH"),  // Regional holiday
         Holiday("Independence Day", "15-08-2025", "Yes"),
+        Holiday("Janmashtami", "16-08-2025", "RH"),  // Regional holiday
         Holiday("Gandhi Jayanti", "02-10-2025", "Yes"),
         Holiday("Christmas", "25-12-2025", "Yes")
     )
@@ -359,7 +382,7 @@ fun PreviewHolidayCalendarScreen() {
             ) {
                 Text(
                     text = "Year 2025",
-                    fontSize = 23.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -393,6 +416,19 @@ fun PreviewHolidayCalendarScreen() {
 
             // Calendar grid - only show if API level allows
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Legend for holiday types
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LegendItem(color = Color(0xFFDD3825), text = "Holidays")
+                    Spacer(modifier = Modifier.width(16.dp))
+                    LegendItem(color = Color(0xFF2196F3), text = "RH")
+                }
+                
                 // Calendar grid
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -428,5 +464,25 @@ fun PreviewHolidayCalendarScreen() {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LegendItem(color: Color, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = Color.Black
+        )
     }
 }

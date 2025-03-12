@@ -48,7 +48,7 @@ fun MonthDetailScreen(
                         .filter { holiday ->
                             try {
                                 val date = LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                                date.monthValue == month && holiday.isApplicable
+                                date.monthValue == month && (holiday.holidayType == "Yes" || holiday.holidayType == "RH")
                             } catch (e: Exception) {
                                 false
                             }
@@ -99,25 +99,25 @@ fun MonthDetailScreen(
                         .size(48.dp)
                         .align(Alignment.CenterStart)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_back),
+                    contentDescription = "Back",
+                    tint = Color.Black
+                )
+            }
                 
-                Text(
+            Text(
                     text = YearMonth.of(2025, month)
                         .month
                         .getDisplayName(TextStyle.FULL, Locale.getDefault()),
-                    color = Color.Black,
-                    fontSize = 20.sp,
+                color = Color.Black,
+                fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.align(Alignment.Center)
-                )
-            }
+            )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
             if (holidaysState.value is NetworkResult.Loading) {
                 Box(
@@ -141,6 +141,19 @@ fun MonthDetailScreen(
                     )
                 }
             } else {
+                // Legend for holiday types
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LegendItem(color = Color(0xFFDD3825), text = "Holidays")
+                    Spacer(modifier = Modifier.width(16.dp))
+                    LegendItem(color = Color(0xFF2196F3), text = "RH")
+                }
+                
                 // Holiday list header
                 Row(
                     modifier = Modifier
@@ -207,7 +220,7 @@ fun HolidayDetailItem(holiday: Holiday) {
                         .background(
                             when (holiday.holidayType) {
                                 "Yes" -> Color(0xFFDD3825)  // Red for mandatory holidays
-                                "RH" -> Color(0xFFFFA500)   // Orange for restricted holidays
+                                "RH" -> Color(0xFF2196F3)   // Blue for RH holidays
                                 else -> Color.Gray          // Gray for others
                             }
                         )
@@ -240,5 +253,25 @@ private fun formatDetailDate(dateStr: String): String {
         date.format(DateTimeFormatter.ofPattern("MMMM d"))
     } catch (e: Exception) {
         dateStr
+    }
+}
+
+@Composable
+private fun LegendItem(color: Color, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = Color.Black
+        )
     }
 }
