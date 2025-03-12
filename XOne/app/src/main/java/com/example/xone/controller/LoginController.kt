@@ -7,7 +7,6 @@ import com.example.xone.network.*
 import com.example.xone.navigation.Navigator
 import kotlinx.coroutines.*
 import org.json.JSONObject
-import Policy
 
 class LoginController(
     private val context: Context,

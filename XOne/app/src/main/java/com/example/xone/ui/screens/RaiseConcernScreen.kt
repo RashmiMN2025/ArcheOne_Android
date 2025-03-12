@@ -81,12 +81,19 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
             )
             .padding(16.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(top = 25.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 25.dp)
             ) {
-                IconButton(onClick = onBackPressed) {
+                IconButton(
+                    onClick = onBackPressed
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
