@@ -3,6 +3,7 @@ package com.example.xone.network
 import com.example.xone.model.PolicyModel
 import com.example.xone.model.SOSRequest
 import com.example.xone.model.SocialContent
+import com.example.xone.model.CalendarResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -41,6 +42,12 @@ interface ApiService {
 
     @GET("social")
     suspend fun getSocialContent(): Response<SocialContent>
+
+    @POST("calendar")
+    suspend fun getCalendar(@Body request: CalendarRequest): Response<CalendarResponse>
+
+    @GET("calendar")
+    fun getHolidays(): Call<CalendarResponse>
 }
 
 data class DocumentUploadResponse(
@@ -165,4 +172,8 @@ data class AssetDetail(
 
 data class AssetRequest(
     val employeeId: String
+)
+
+data class CalendarRequest(
+    val state: String
 )

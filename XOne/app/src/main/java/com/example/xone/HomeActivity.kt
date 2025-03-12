@@ -1,6 +1,7 @@
 package com.example.xone
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +24,7 @@ import com.example.xone.controller.PolicyController
 import com.example.xone.controller.AssetController
 import com.example.xone.controller.HolidayCalendarController
 import com.example.xone.controller.ProfileController
+import com.example.xone.repository.UserRepository
 import com.example.xone.ui.screens.HomeScreen
 import com.example.xone.ui.screens.LocationsScreen
 import com.example.xone.ui.screens.BusinessCardScreen
@@ -36,6 +38,7 @@ import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.model.FooterNavigationModel
 import com.example.xone.ui.components.FooterScaffold
+import com.example.xone.network.RetrofitClient
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -45,12 +48,19 @@ class HomeActivity : ComponentActivity() {
     private lateinit var assetController: AssetController
     private lateinit var profileController: ProfileController
     private lateinit var sosController: SOSController
+    private lateinit var holidayCalendarController: HolidayCalendarController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Check if we need to navigate to a specific destination
         val destination = intent.getStringExtra("destination")
+
+        // Initialize controllers that need context
+        holidayCalendarController = HolidayCalendarController(
+            RetrofitClient.apiService,
+            UserRepository(this)
+        )
 
         setContent {
             XOneTheme {
@@ -282,10 +292,16 @@ class HomeActivity : ComponentActivity() {
                         }
                     ) {
                         HolidayCalendarScreen(
-                            controller = HolidayCalendarController(navigator),
+                            controller = holidayCalendarController,
                             onBackPressed = { navigator.navigateToHome() },
                             onMonthClick = { month ->
                                 navController.navigate("monthDetail/$month")
+                            },
+                            onHolidayListClick = { pdfUrl ->
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse(pdfUrl)
+                                }
+                                startActivity(intent)
                             }
                         )
                     }
@@ -294,7 +310,7 @@ class HomeActivity : ComponentActivity() {
                         val month = backStackEntry.arguments?.getString("month")?.toIntOrNull() ?: 1
                         MonthDetailScreen(
                             month = month,
-                            controller = HolidayCalendarController(),
+                            controller = holidayCalendarController,
                             onBackPressed = { navController.popBackStack() }
                         )
                     }

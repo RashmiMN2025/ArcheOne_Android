@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xone.R
@@ -24,48 +25,28 @@ import com.example.xone.controller.HolidayCalendarController
 import com.example.xone.model.Holiday
 import com.example.xone.utils.NetworkResult
 import java.time.LocalDate
-import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.*
 
 @Composable
-fun MonthDetailScreen(
-    month: Int,
+fun HolidayListScreen(
     controller: HolidayCalendarController,
     onBackPressed: () -> Unit
 ) {
     val holidaysState = controller.holidays.observeAsState()
     
-    var monthHolidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
+    var holidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
     
     // Update holidays when LiveData changes
     LaunchedEffect(holidaysState.value) {
         when (val result = holidaysState.value) {
             is NetworkResult.Success -> {
                 result.data?.let { calendarResponse ->
-                    monthHolidays = calendarResponse.holidays
-                        .filter { holiday ->
-                            try {
-                                val date = LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                                date.monthValue == month && holiday.isApplicable
-                            } catch (e: Exception) {
-                                false
-                            }
-                        }
+                    holidays = calendarResponse.holidays.filter { it.isApplicable }
                 }
             }
             is NetworkResult.Error -> {
-                // If API fails, use default holidays filtered by month
-                monthHolidays = controller.getDefaultHolidays()
-                    .filter { holiday ->
-                        try {
-                            val date = LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                            date.monthValue == month
-                        } catch (e: Exception) {
-                            false
-                        }
-                    }
+                // If API fails, use default holidays
+                holidays = controller.getDefaultHolidays()
             }
             is NetworkResult.Loading, null -> {
                 // Show loading state
@@ -93,6 +74,7 @@ fun MonthDetailScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             ) {
+                // Back button aligned to the left
                 IconButton(
                     onClick = onBackPressed,
                     modifier = Modifier
@@ -106,10 +88,9 @@ fun MonthDetailScreen(
                     )
                 }
                 
+                // Title centered in the Box
                 Text(
-                    text = YearMonth.of(2025, month)
-                        .month
-                        .getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                    text = "Holiday List 2025",
                     color = Color.Black,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
@@ -119,6 +100,7 @@ fun MonthDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Loading indicator when fetching holidays
             if (holidaysState.value is NetworkResult.Loading) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -128,13 +110,14 @@ fun MonthDetailScreen(
                         color = Color(0xFFDD3825)
                     )
                 }
-            } else if (monthHolidays.isEmpty()) {
+            } else if (holidays.isEmpty()) {
+                // Empty state
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize()
                 ) {
                     Text(
-                        text = "No holidays in this month",
+                        text = "No holidays found",
                         color = Color.Gray,
                         fontSize = 16.sp,
                         textAlign = TextAlign.Center
@@ -168,12 +151,13 @@ fun MonthDetailScreen(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
+                // Holiday list
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(monthHolidays) { holiday ->
-                        HolidayDetailItem(holiday = holiday)
+                    items(holidays) { holiday ->
+                        HolidayItem(holiday = holiday)
                     }
                 }
             }
@@ -182,9 +166,10 @@ fun MonthDetailScreen(
 }
 
 @Composable
-fun HolidayDetailItem(holiday: Holiday) {
+fun HolidayItem(holiday: Holiday) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(8.dp)
@@ -196,10 +181,12 @@ fun HolidayDetailItem(holiday: Holiday) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Holiday name with type indicator
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(2f)
             ) {
+                // Indicator for holiday type
                 Box(
                     modifier = Modifier
                         .size(12.dp)
@@ -222,8 +209,9 @@ fun HolidayDetailItem(holiday: Holiday) {
                 )
             }
             
+            // Date
             Text(
-                text = formatDetailDate(holiday.date),
+                text = formatDate(holiday.date),
                 color = Color.DarkGray,
                 fontSize = 14.sp,
                 modifier = Modifier.weight(1f),
@@ -233,12 +221,12 @@ fun HolidayDetailItem(holiday: Holiday) {
     }
 }
 
-private fun formatDetailDate(dateStr: String): String {
+private fun formatDate(dateStr: String): String {
     return try {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
         val date = LocalDate.parse(dateStr, formatter)
-        date.format(DateTimeFormatter.ofPattern("MMMM d"))
+        date.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
     } catch (e: Exception) {
-        dateStr
+        dateStr // Return original string if parsing fails
     }
-}
+} 
