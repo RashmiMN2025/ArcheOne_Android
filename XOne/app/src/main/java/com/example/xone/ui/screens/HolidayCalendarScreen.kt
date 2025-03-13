@@ -191,10 +191,10 @@ fun HolidayCalendarScreen(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            for (col in 0 until 3) {
-                                val monthIndex = row * 3 + col + 1
-                                if (monthIndex <= 12) {
+                    ) {
+                        for (col in 0 until 3) {
+                            val monthIndex = row * 3 + col + 1
+                            if (monthIndex <= 12) {
                                     Box(
                                         modifier = Modifier
                                             .padding(horizontal = 4.dp)
@@ -229,19 +229,19 @@ fun MonthCard(month: Int, holidays: List<Holiday>) {
         Column(
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
+    ) {
+        Text(
                 text = YearMonth.of(2025, month)
                     .month
                     .getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
             Spacer(modifier = Modifier.height(1.dp))
-            
-            MonthDates(month, holidays)
+
+        MonthDates(month, holidays)
         }
     }
 }
@@ -303,7 +303,7 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean)
             )
     ) {
         if (date > 0) {
-            Text(
+        Text(
                 text = date.toString(),
                 fontSize = 8.sp,
                 lineHeight = 8.sp,

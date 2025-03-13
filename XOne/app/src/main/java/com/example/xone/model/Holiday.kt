@@ -13,7 +13,8 @@ data class HolidayResponse(
 data class Holiday(
     @SerializedName("name") val name: String,
     @SerializedName("date") val date: String,  // Format: "DD-MM-YYYY"
-    @SerializedName("holiday_type") val holidayType: String  // "Yes", "RH", or "NA"
+    @SerializedName("holiday_type") val holidayType: String,  // "Yes", "RH", or "NA"
+    @SerializedName("icon") val icon: String? = null  // URL to the holiday icon
 ) {
     val isApplicable: Boolean
         get() = holidayType == "Yes" || holidayType == "RH"
