@@ -209,12 +209,13 @@ private fun LogoutConfirmationDialog(
                 Spacer(modifier = Modifier.height(10.dp))
                 
                 // Cancel button
-                TextButton(
+                Button(
                     onClick = onDismiss,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
                         .padding(horizontal = 24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF6F4EE)),
                     shape = RoundedCornerShape(100.dp)
                 ) {
                     Text(
