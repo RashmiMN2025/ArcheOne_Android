@@ -130,6 +130,13 @@ class OtpVerificationController(
         fun getUserData(): UserData? = userData
         fun getOfficesData(): List<Office>? = officesData
         fun getPoliciesData(): List<PolicyModel.Policy>? = policiesData
+        
+        fun clearUserData() {
+            userData = null
+            officesData = null
+            policiesData = null
+            Log.d("UserData", "User data cleared during logout")
+        }
     }
 
     fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {

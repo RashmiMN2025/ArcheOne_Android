@@ -28,8 +28,11 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
 
     override fun navigateToLoginScreen() {
         val intent = Intent(activity, LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                       Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                       Intent.FLAG_ACTIVITY_CLEAR_TOP
         activity.startActivity(intent)
+        activity.finish()
     }
 
     override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String) {

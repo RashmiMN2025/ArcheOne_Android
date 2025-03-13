@@ -32,6 +32,9 @@ interface ApiService {
     @POST("/sos")
     suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
 
+    @POST("/logout")
+    fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
+
     @Multipart
     @POST("/upload")
     fun uploadDocument(
@@ -49,6 +52,15 @@ interface ApiService {
     @GET("calendar")
     fun getHolidays(): Call<CalendarResponse>
 }
+
+data class LogoutRequest(
+    val employeeId: String
+)
+
+data class LogoutResponse(
+    val status: Int,
+    val message: String
+)
 
 data class DocumentUploadResponse(
     val personalDoc: List<Document>,

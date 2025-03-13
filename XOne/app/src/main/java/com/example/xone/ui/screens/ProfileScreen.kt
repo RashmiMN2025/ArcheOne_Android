@@ -8,14 +8,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,10 +27,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.xone.R
 import com.example.xone.controller.ProfileController
 import com.example.xone.model.ProfileModel
@@ -47,6 +51,9 @@ fun ProfileScreen(
     onFooterSOSClick: () -> Unit = {},
     onFooterProfileClick: () -> Unit = {}
 ) {
+    // State to control the visibility of the logout confirmation dialog
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -88,7 +95,7 @@ fun ProfileScreen(
                             "Address/Coordinates" -> controller.onAddressClick()
                             "Emergency Contact" -> controller.onEmergencyContactClick()
                             "Documents" -> controller.onDocumentsClick()
-                            "Log out" -> controller.onLogoutClick()
+                            "Log out" -> showLogoutDialog = true // Show logout dialog instead of direct action
                         }
                     }
                 )
@@ -113,6 +120,113 @@ fun ProfileScreen(
                 onSOSClick = onFooterSOSClick,
                 onProfileClick = onFooterProfileClick
             )
+        }
+        
+        // Logout confirmation dialog
+        if (showLogoutDialog) {
+            LogoutConfirmationDialog(
+                onConfirm = { 
+                    showLogoutDialog = false
+                    controller.onLogoutClick()
+                },
+                onDismiss = { 
+                    showLogoutDialog = false 
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LogoutConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(horizontal = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(28.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Icon without background, increased size
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    tint = Color(0xFFDD3825),
+                    modifier = Modifier.size(44.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                // Title
+                Text(
+                    text = "Log Out",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Confirmation message
+                Text(
+                    text = "Are you sure you want to log out of\nyour account?",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+                
+                Spacer(modifier = Modifier.height(28.dp))
+                
+                // Logout button
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .padding(horizontal = 24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                    shape = RoundedCornerShape(100.dp)
+                ) {
+                    Text(
+                        text = "Log Out",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Cancel button
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(100.dp)
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
 }
@@ -262,4 +376,82 @@ fun ProfileScreenPreview() {
     )
     
     ProfileScreen(controller = previewController)
+}
+
+@Composable
+fun FooterNavigation(
+    model: FooterNavigationModel,
+    onHomeClick: () -> Unit,
+    onChatClick: () -> Unit,
+    onSOSClick: () -> Unit,
+    onProfileClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp),
+        color = Color.White,
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FooterItem(
+                icon = Icons.Default.Home,
+                title = "Home",
+                isSelected = model.showHome,
+                onClick = onHomeClick
+            )
+            FooterItem(
+                icon = Icons.Default.Email,
+                title = "Chat",
+                isSelected = model.showChat,
+                onClick = onChatClick
+            )
+            FooterItem(
+                icon = Icons.Default.Warning,
+                title = "SOS",
+                isSelected = model.showSOS,
+                onClick = onSOSClick
+            )
+            FooterItem(
+                icon = Icons.Default.Person,
+                title = "Profile",
+                isSelected = model.showProfile,
+                onClick = onProfileClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun FooterItem(
+    icon: ImageVector,
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = title,
+            tint = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
+            fontSize = 12.sp
+        )
+    }
 } 

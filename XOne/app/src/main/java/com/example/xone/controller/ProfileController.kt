@@ -1,11 +1,19 @@
 package com.example.xone.controller
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.xone.model.ProfileModel
 import com.example.xone.navigation.Navigator
+import com.example.xone.network.LogoutRequest
+import com.example.xone.network.LogoutResponse
+import com.example.xone.network.RetrofitClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import android.util.Log
 
 class ProfileController(
     private val context: Context,
@@ -36,8 +44,62 @@ class ProfileController(
     }
 
     fun onLogoutClick() {
-        // TODO: Implement logout functionality later
-        navigator.navigateToLoginScreen()
+        // Get the employeeId from the stored user data
+        val employeeId = OtpVerificationController.getUserData()?.employeeId ?: ""
+        
+        if (employeeId.isEmpty()) {
+            // If no employeeId is available, simply navigate to login screen
+            Toast.makeText(context, "No user session found. Logging out...", Toast.LENGTH_SHORT).show()
+            navigator.navigateToLoginScreen()
+            return
+        }
+        
+        // Create the logout request
+        val request = LogoutRequest(employeeId = employeeId)
+        
+        // Show a loading message
+        Toast.makeText(context, "Logging out...", Toast.LENGTH_SHORT).show()
+        
+        // Make the API call
+        RetrofitClient.apiService.logout(request).enqueue(object : Callback<LogoutResponse> {
+            override fun onResponse(call: Call<LogoutResponse>, response: Response<LogoutResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val responseBody = response.body()!!
+                    
+                    if (responseBody.status == 200) {
+                        // Successful logout
+                        Toast.makeText(context, responseBody.message, Toast.LENGTH_SHORT).show()
+                        
+                        // Clear user data
+                        OtpVerificationController.clearUserData()
+                    } else {
+                        // Server returned non-200 status
+                        Toast.makeText(context, "Logout failed: ${responseBody.message}", Toast.LENGTH_SHORT).show()
+                        Log.e("ProfileController", "Logout failed with status: ${responseBody.status}, message: ${responseBody.message}")
+                    }
+                } else {
+                    // HTTP error response
+                    val errorMsg = "Logout failed: ${response.code()} ${response.message()}"
+                    Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                    Log.e("ProfileController", errorMsg)
+                }
+                
+                // Navigate to login screen regardless of the result
+                // This ensures the user can log in again even if the logout API call fails
+                // This call will now clear the back stack to prevent returning to the profile page
+                navigator.navigateToLoginScreen()
+            }
+            
+            override fun onFailure(call: Call<LogoutResponse>, t: Throwable) {
+                // Network error
+                val errorMsg = "Network error during logout: ${t.message}"
+                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                Log.e("ProfileController", errorMsg, t)
+                
+                // Navigate to login screen anyway
+                navigator.navigateToLoginScreen()
+            }
+        })
     }
 
     fun onBackPressed() {
