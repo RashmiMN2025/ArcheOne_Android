@@ -14,9 +14,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.xone.navigation.AndroidNavigator
 import com.example.xone.controller.HomeController
 import com.example.xone.controller.LocationsController
@@ -37,8 +39,10 @@ import com.example.xone.controller.*
 import com.example.xone.ui.screens.*
 import com.example.xone.ui.theme.XOneTheme
 import com.example.xone.model.FooterNavigationModel
+import com.example.xone.model.SosBlogModel
 import com.example.xone.ui.components.FooterScaffold
 import com.example.xone.network.RetrofitClient
+import com.google.gson.Gson
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -75,7 +79,7 @@ class HomeActivity : ComponentActivity() {
                 policyController = PolicyController(this, navigator)
                 assetController = AssetController(this, navigator)
                 profileController = ProfileController(this, navigator)
-                sosController = SOSController(this)
+                sosController = SOSController(application)
 
                 // If we have a destination, navigate to it
                 LaunchedEffect(destination) {
@@ -129,7 +133,7 @@ class HomeActivity : ComponentActivity() {
                             onXCardClick = controller::onXCardClick
                         )
                     }
-                    
+
                     composable(
                         route = "locations",
                         enterTransition = {
@@ -162,7 +166,7 @@ class HomeActivity : ComponentActivity() {
                             controller = locationsController
                         )
                     }
-                    
+
                     composable(
                         route = "business_card",
                         enterTransition = {
@@ -195,7 +199,7 @@ class HomeActivity : ComponentActivity() {
                             controller = businessCardController
                         )
                     }
-                    
+
                     composable(
                         route = "policy",
                         enterTransition = {
@@ -230,7 +234,7 @@ class HomeActivity : ComponentActivity() {
                             onBackClick = policyController::onBackClick
                         )
                     }
-                    
+
                     composable(
                         route = "asset",
                         enterTransition = {
@@ -263,7 +267,7 @@ class HomeActivity : ComponentActivity() {
                             controller = assetController
                         )
                     }
-                    
+
                     composable(
                         route = "holiday_calendar",
                         enterTransition = {
@@ -314,7 +318,7 @@ class HomeActivity : ComponentActivity() {
                             onBackPressed = { navController.popBackStack() }
                         )
                     }
-                    
+
                     composable(
                         route = "profile",
                         enterTransition = {
@@ -356,7 +360,7 @@ class HomeActivity : ComponentActivity() {
                             onFooterProfileClick = { /* Already on Profile screen */ }
                         )
                     }
-                    
+
                     composable(
                         route = "sos",
                         enterTransition = {
@@ -385,7 +389,7 @@ class HomeActivity : ComponentActivity() {
                         }
                     ) {
                         var showRaiseConcern by remember { mutableStateOf(false) }
-                        
+
                         if (showRaiseConcern) {
                             RaiseConcernScreen(onBackPressed = { showRaiseConcern = false })
                         } else {
@@ -393,14 +397,31 @@ class HomeActivity : ComponentActivity() {
                                 controller = sosController,
                                 onNavigateToRaiseConcern = { showRaiseConcern = true },
                                 onBackPressed = { navController.popBackStack() },
+                                onSOSBlogClick = { blogId ->
+                                    // Convert blog object to JSON and pass it as a parameter
+                                    val blogJson = Uri.encode(Gson().toJson(blogId))
+                                    navController.navigate("sosDetail/$blogJson")
+                                }
                             )
+                        }
+                    }
+
+                    composable(
+                        "sosDetail/{blog}",
+                        arguments = listOf(navArgument("blog") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val json = backStackEntry.arguments?.getString("blog")
+                        val blog = Gson().fromJson(json, SosBlogModel::class.java)
+
+                        SOSDetailScreen(blog = blog) {
+                            navController.popBackStack()
                         }
                     }
                 }
             }
         }
     }
-    
+
     override fun onBackPressed() {
         if (intent.getStringExtra("destination") == "profile") {
             // If we navigated directly to profile, go back to home

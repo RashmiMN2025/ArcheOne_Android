@@ -1,4 +1,5 @@
 [versions]
+accompanistPager = "0.30.1"
 agp = "8.8.0"
 androidxComposeUiUi = "1.7.7"
 androidxFoundation = "1.7.7"
@@ -37,6 +38,7 @@ generativeai = "0.9.0"
 coreSplashscreen = "1.0.1"
 
 [libraries]
+accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-ktx-v1120 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }

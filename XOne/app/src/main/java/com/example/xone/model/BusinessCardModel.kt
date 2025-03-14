@@ -8,5 +8,5 @@ data class BusinessCardModel(
     val email: String,
     val phone: String,
     val location: String,
-    val qrCode: String // You might want to generate this dynamically
+    val website: String,
 ) 

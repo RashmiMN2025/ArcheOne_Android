@@ -4,6 +4,7 @@ import com.example.xone.model.PolicyModel
 import com.example.xone.model.SOSRequest
 import com.example.xone.model.SocialContent
 import com.example.xone.model.CalendarResponse
+import com.example.xone.model.SosBlogModel
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -117,7 +118,8 @@ data class VerifyOtpResponse(
     val profile_pic: String? = null,
     val sos: String? = null,
     val policiesList: List<PolicyModel.Policy> = emptyList(),
-    val offices: List<Office> = emptyList()
+    val offices: List<Office> = emptyList(),
+    val sosBlogs: List<SosBlogModel>
 )
 
 data class User(
