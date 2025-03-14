@@ -37,6 +37,9 @@ import android.view.View
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
 import android.util.TypedValue
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.onFocusChanged
 
 @Composable
 fun BusinessCardScreen(
@@ -138,7 +141,7 @@ private fun PortraitBusinessCard(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(0.85f)
-                    .height(450.dp)
+                    .height(500.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
                         cardBounds.value = android.graphics.Rect(
@@ -162,7 +165,7 @@ private fun PortraitBusinessCard(
                     Image(
                         painter = painterResource(id = businessCard.companyLogo),
                         contentDescription = "Company Logo",
-                        modifier = Modifier.height(24.dp)
+                        modifier = Modifier.height(30.dp)
                     )
 
                     Spacer(modifier = Modifier.height(48.dp))
@@ -171,14 +174,14 @@ private fun PortraitBusinessCard(
                         text = businessCard.name,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp
+                            fontSize = 30.sp
                         ),
                         color = Color.Black
                     )
 
                     Text(
                         text = businessCard.designation,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
                         color = Color.Black
                     )
 
@@ -280,23 +283,62 @@ private fun PortraitBusinessCard(
     if (controller.showEditLocationDialog.value) {
         AlertDialog(
             onDismissRequest = { controller.showEditLocationDialog.value = false },
-            title = { Text(text = "Edit Location") },
+            containerColor = Color(0xFFF5F5F5), // Light gray background for the dialog
+            title = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Edit Location", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            },
             text = {
+                var isFocused by remember { mutableStateOf(false) }
+
                 TextField(
                     value = newLocation,
                     onValueChange = { newLocation = it },
-                    label = { Text("Enter new location") },
-                    singleLine = true
+                    placeholder = { Text("Enter new location") }, // ✅ Placeholder disappears on input
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Black,
+                        unfocusedIndicatorColor = Color.Black,
+                        cursorColor = Color.Black,
+                        focusedContainerColor = Color.White, // ✅ Background white
+                        unfocusedContainerColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { isFocused = it.isFocused }, // ✅ Tracks focus
+                    keyboardOptions = KeyboardOptions.Default,
+                    keyboardActions = KeyboardActions(
+                        onDone = { isFocused = false }
+                    )
                 )
+
             },
             confirmButton = {
-                Button(onClick = { controller.onLocationUpdated(newLocation) }) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { controller.showEditLocationDialog.value = false }) {
-                    Text("Cancel")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly // Center-align buttons
+                ) {
+                    Button(
+                        onClick = { controller.showEditLocationDialog.value = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                        modifier = Modifier.weight(0.6f) // Equal width
+                    ) {
+                        Text("Cancel", color = Color.White)
+                    }
+
+                    Button(
+                        onClick = { controller.onLocationUpdated(newLocation) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)), // Red color
+                        modifier = Modifier.weight(0.6f) // Equal width
+                    ) {
+                        Text("Save", color = Color.White)
+                    }
                 }
             }
         )
@@ -313,6 +355,7 @@ private fun LandscapeBusinessCard(
     val view = LocalView.current
     val scope = rememberCoroutineScope()
     val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
+    var newLocation by remember { mutableStateOf("") }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -337,6 +380,24 @@ private fun LandscapeBusinessCard(
                         )
                     }
                 },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                cardBounds.value?.let { bounds ->
+                                    val bitmap = captureCardArea(view, bounds)
+                                    controller.onShareCard(bitmap)
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_share),
+                            contentDescription = "Share",
+                            tint = TextPrimary
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
                 )
@@ -349,14 +410,9 @@ private fun LandscapeBusinessCard(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(0.95f)
-                    .height(240.dp)
+                    .height(300.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
-                        val cornerRadius = TypedValue.applyDimension(
-                            TypedValue.COMPLEX_UNIT_DIP,
-                            16f,
-                            view.resources.displayMetrics
-                        )
                         cardBounds.value = android.graphics.Rect(
                             bounds.left.toInt(),
                             bounds.top.toInt(),
@@ -365,9 +421,7 @@ private fun LandscapeBusinessCard(
                         )
                     },
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Row(
@@ -397,18 +451,16 @@ private fun LandscapeBusinessCard(
                             text = businessCard.name,
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 22.sp
+                                fontSize = 25.sp
                             ),
                             color = Color.Black
                         )
 
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(1.dp))
 
                         Text(
                             text = businessCard.designation,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 15.sp
-                            ),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 10.sp),
                             color = Color.Black
                         )
 
@@ -416,29 +468,29 @@ private fun LandscapeBusinessCard(
 
                         Text(
                             text = businessCard.email,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 13.sp
-                            ),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
                             color = Color.Black
                         )
 
                         Text(
                             text = businessCard.phone,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 13.sp
-                            ),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
                             color = Color.Black
+                        )
+
+                        Text(
+                            text = controller.businessCard.location,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 10.dp)
                         )
 
                         Spacer(modifier = Modifier.weight(2f))
 
                         Text(
-                            text = "www.arche.global",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 13.sp
-                            ),
-                            color = Color.Black,
-                            modifier = Modifier.padding(bottom = 10.dp)
+                            text = businessCard.website,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                            color = Color.Black
                         )
                     }
                 }
@@ -450,15 +502,6 @@ private fun LandscapeBusinessCard(
                 text = "<-- Swipe left to change View",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextPrimary,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
-
-        item {
-            Text(
-                text = "You can update your location in profile",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
@@ -487,21 +530,12 @@ private fun LandscapeBusinessCard(
                     Text(
                         "Download Business Card",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 18.sp
-                        )
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
                     )
                 }
 
                 Button(
-                    onClick = {
-                        scope.launch {
-                            cardBounds.value?.let { bounds ->
-                                val bitmap = captureCardArea(view, bounds)
-                                controller.onShareCard(bitmap)
-                            }
-                        }
-                    },
+                    onClick = { controller.onEditLocation() }, // Updated to just open dialog
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -510,11 +544,9 @@ private fun LandscapeBusinessCard(
                     shape = RoundedCornerShape(28.dp)
                 ) {
                     Text(
-                        "Share Business Card",
+                        "Edit Location",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 18.sp
-                        )
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
                     )
                 }
             }
@@ -524,7 +556,73 @@ private fun LandscapeBusinessCard(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+
+    // Show Edit Location Dialog
+    if (controller.showEditLocationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { controller.showEditLocationDialog.value = false },
+            containerColor = Color(0xFFF5F5F5), // Light gray background for the dialog
+            title = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Edit Location", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            },
+            text = {
+                var isFocused by remember { mutableStateOf(false) }
+
+                TextField(
+                    value = newLocation,
+                    onValueChange = { newLocation = it },
+                    placeholder = { Text("Enter new location") }, // ✅ Placeholder disappears on input
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Black,
+                        unfocusedIndicatorColor = Color.Black,
+                        cursorColor = Color.Black,
+                        focusedContainerColor = Color.White, // ✅ Background white
+                        unfocusedContainerColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { isFocused = it.isFocused }, // ✅ Tracks focus
+                    keyboardOptions = KeyboardOptions.Default,
+                    keyboardActions = KeyboardActions(
+                        onDone = { isFocused = false }
+                    )
+                )
+
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly // Center-align buttons
+                ) {
+                    Button(
+                        onClick = { controller.showEditLocationDialog.value = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                        modifier = Modifier.weight(0.6f) // Equal width
+                    ) {
+                        Text("Cancel", color = Color.White)
+                    }
+
+                    Button(
+                        onClick = { controller.onLocationUpdated(newLocation) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)), // Red color
+                        modifier = Modifier.weight(0.6f) // Equal width
+                    ) {
+                        Text("Save", color = Color.White)
+                    }
+                }
+            }
+        )
+    }
 }
+
 
 private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitmap {
     // Take a screenshot of the entire view
