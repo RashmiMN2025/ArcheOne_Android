@@ -3,9 +3,6 @@ package com.example.xone.controller
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.platform.ComposeView
 import androidx.core.content.FileProvider
 import com.example.xone.R
 import com.example.xone.model.BusinessCardModel
@@ -23,18 +20,44 @@ import androidx.core.content.ContextCompat
 import android.Manifest
 import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
+import android.widget.Toast
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 
 interface BusinessCardController {
+    val showEditLocationDialog: MutableState<Boolean> // Add this
+    val businessCard: BusinessCardModel // Expose businessCard
     fun onBackPressed()
     fun onDownloadCard(bitmap: Bitmap)
     fun onShareCard(bitmap: Bitmap)
+    fun onEditLocation()
+    fun onLocationUpdated(newLocation: String)
 }
 
 class BusinessCardControllerImpl(
     private val context: Context,
     private val navigator: AndroidNavigator
 ) : BusinessCardController {
+
+    override val showEditLocationDialog: MutableState<Boolean> = mutableStateOf(false)
+
+    override val businessCard: BusinessCardModel
+        get() = _businessCard.value  // Expose as read-only
+
+    override fun onEditLocation() {
+        showEditLocationDialog.value = true  // Open the dialog
+    }
+
+    override fun onLocationUpdated(newLocation: String) {
+        if (newLocation.isNotEmpty()) {
+            _businessCard.value = _businessCard.value.copy(location = newLocation)  // Update MutableState
+            showEditLocationDialog.value = false  // Close the dialog
+            Toast.makeText(context, "Location updated!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Location cannot be empty!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Safely access notification manager - will be null in preview
     private val notificationManager by lazy {
         try {
@@ -81,18 +104,19 @@ class BusinessCardControllerImpl(
         }
     }
 
-    // Get user data from LoginController
-    val businessCard = OtpVerificationController.getUserData()?.let { userData ->
-        BusinessCardModel(
-            companyLogo = R.drawable.arche,
-            name = userData.name,
-            designation = userData.designation,
-            department = userData.department,
-            email = userData.email,
-            phone = userData.mobile,
-            location = "Bangalore", // Note: Location is not currently part of UserData
-            qrCode = "" // Generate QR code string here
-        )
+    // Change _businessCard to MutableState
+    private val _businessCard = mutableStateOf(
+        OtpVerificationController.getUserData()?.let { userData ->
+            BusinessCardModel(
+                companyLogo = R.drawable.arche,
+                name = userData.name,
+                designation = userData.designation,
+                department = userData.department,
+                email = userData.email,
+                phone = userData.mobile,
+                location = userData.location, // Location from userData
+                website = "www.arche.global"
+            )
     } ?: BusinessCardModel(
         // Fallback default values if userData is null
         companyLogo = R.drawable.arche,
@@ -102,9 +126,10 @@ class BusinessCardControllerImpl(
         email = "",
         phone = "",
         location = "",
-        qrCode = ""
+        website = "",
     )
-    
+    )
+
     override fun onDownloadCard(bitmap: Bitmap) {
         try {
             // Create a file in the Downloads directory
@@ -114,7 +139,7 @@ class BusinessCardControllerImpl(
             if (!businessCardsDir.exists()) {
                 businessCardsDir.mkdirs()
             }
-            
+
             val imageFile = File(businessCardsDir, fileName)
             FileOutputStream(imageFile).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
@@ -127,12 +152,12 @@ class BusinessCardControllerImpl(
                     "${context.packageName}.provider",
                     imageFile
                 )
-                
+
                 val viewIntent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(contentUri, "image/png")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                
+
                 val pendingIntent = PendingIntent.getActivity(
                     context,
                     0,
@@ -171,7 +196,7 @@ class BusinessCardControllerImpl(
             ).show()
         }
     }
-    
+
     override fun onShareCard(bitmap: Bitmap) {
         try {
             // Save bitmap to cache directory
@@ -207,7 +232,7 @@ class BusinessCardControllerImpl(
             ).show()
         }
     }
-    
+
     override fun onBackPressed() {
         navigator.navigateToHome()  // Navigate back to home screen
     }
@@ -215,4 +240,4 @@ class BusinessCardControllerImpl(
     companion object {
         const val CHANNEL_ID = "business_card_channel"
     }
-} 
+}

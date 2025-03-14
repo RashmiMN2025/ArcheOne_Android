@@ -3,7 +3,6 @@ package com.example.xone.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,10 +17,6 @@ import androidx.compose.ui.unit.sp
 import com.example.xone.R
 import com.example.xone.controller.BusinessCardController
 import com.example.xone.model.BusinessCardModel
-import com.example.xone.ui.theme.BackgroundColor
-import com.example.xone.ui.theme.CardBackground
-import com.example.xone.ui.theme.PrimaryRed
-import com.example.xone.ui.theme.getColorForApp
 import androidx.compose.foundation.lazy.LazyColumn
 import com.example.xone.ui.theme.TextPrimary
 import com.example.xone.ui.theme.WelcomeBackgroundBottom
@@ -34,36 +29,22 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.platform.LocalContext
-import android.app.Activity
-import androidx.activity.ComponentActivity
-import com.example.xone.ui.theme.XOneTheme
-import com.example.xone.navigation.AndroidNavigator
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.ComposeView
 import android.graphics.Bitmap
 import androidx.compose.ui.platform.LocalView
 import android.view.View
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.platform.LocalDensity
 import android.util.TypedValue
-import android.content.Context
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BusinessCardScreen(
     businessCard: BusinessCardModel,
     controller: BusinessCardController
 ) {
     var isPortraitView by remember { mutableStateOf(true) }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -102,26 +83,45 @@ private fun PortraitBusinessCard(
     val view = LocalView.current
     val scope = rememberCoroutineScope()
     val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
-    
+    var newLocation by remember { mutableStateOf("") }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         "My Business Card",
                         color = TextPrimary,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { controller.onBackPressed() }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
+                            tint = TextPrimary
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                cardBounds.value?.let { bounds ->
+                                    val bitmap = captureCardArea(view, bounds)
+                                    controller.onShareCard(bitmap)
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_share),
+                            contentDescription = "Share",
                             tint = TextPrimary
                         )
                     }
@@ -141,11 +141,6 @@ private fun PortraitBusinessCard(
                     .height(450.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
-                        val cornerRadius = TypedValue.applyDimension(
-                            TypedValue.COMPLEX_UNIT_DIP,
-                            16f,
-                            view.resources.displayMetrics
-                        )
                         cardBounds.value = android.graphics.Rect(
                             bounds.left.toInt(),
                             bounds.top.toInt(),
@@ -154,9 +149,7 @@ private fun PortraitBusinessCard(
                         )
                     },
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
@@ -185,9 +178,7 @@ private fun PortraitBusinessCard(
 
                     Text(
                         text = businessCard.designation,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 18.sp
-                        ),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
                         color = Color.Black
                     )
 
@@ -204,25 +195,25 @@ private fun PortraitBusinessCard(
 
                     Text(
                         text = businessCard.email,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 16.sp
-                        ),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                         color = Color.Black
                     )
 
                     Text(
                         text = businessCard.phone,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 16.sp
-                        ),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                         color = Color.Black
                     )
 
                     Text(
-                        text = "www.arche.global",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 16.sp
-                        ),
+                        text = controller.businessCard.location,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = businessCard.website,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                         color = Color.Black
                     )
                 }
@@ -239,21 +230,10 @@ private fun PortraitBusinessCard(
         }
 
         item {
-            Text(
-                text = "You can update your location in profile",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
-
-        item {
             // Bottom Buttons
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = { 
+                    onClick = {
                         scope.launch {
                             cardBounds.value?.let { bounds ->
                                 val bitmap = captureCardArea(view, bounds)
@@ -271,21 +251,12 @@ private fun PortraitBusinessCard(
                     Text(
                         "Download Business Card",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 18.sp
-                        )
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
                     )
                 }
 
                 Button(
-                    onClick = { 
-                        scope.launch {
-                            cardBounds.value?.let { bounds ->
-                                val bitmap = captureCardArea(view, bounds)
-                                controller.onShareCard(bitmap)
-                            }
-                        }
-                    },
+                    onClick = { controller.onEditLocation() }, // Updated to just open dialog
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -294,21 +265,44 @@ private fun PortraitBusinessCard(
                     shape = RoundedCornerShape(28.dp)
                 ) {
                     Text(
-                        "Share Business Card",
+                        "Edit Location",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 18.sp
-                        )
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
                     )
                 }
             }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        item { Spacer(modifier = Modifier.height(16.dp)) }
+    }
+
+    // Show Edit Location Dialog
+    if (controller.showEditLocationDialog.value) {
+        AlertDialog(
+            onDismissRequest = { controller.showEditLocationDialog.value = false },
+            title = { Text(text = "Edit Location") },
+            text = {
+                TextField(
+                    value = newLocation,
+                    onValueChange = { newLocation = it },
+                    label = { Text("Enter new location") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(onClick = { controller.onLocationUpdated(newLocation) }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { controller.showEditLocationDialog.value = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -319,20 +313,20 @@ private fun LandscapeBusinessCard(
     val view = LocalView.current
     val scope = rememberCoroutineScope()
     val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
-    
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         "My Business Card",
                         color = TextPrimary,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { controller.onBackPressed() }) {
@@ -475,7 +469,7 @@ private fun LandscapeBusinessCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(
-                    onClick = { 
+                    onClick = {
                         scope.launch {
                             cardBounds.value?.let { bounds ->
                                 val bitmap = captureCardArea(view, bounds)
@@ -500,7 +494,7 @@ private fun LandscapeBusinessCard(
                 }
 
                 Button(
-                    onClick = { 
+                    onClick = {
                         scope.launch {
                             cardBounds.value?.let { bounds ->
                                 val bitmap = captureCardArea(view, bounds)
@@ -532,163 +526,12 @@ private fun LandscapeBusinessCard(
     }
 }
 
-// Add this MockBusinessCardController class near your preview methods
-private class MockBusinessCardController(val businessCard: BusinessCardModel) : BusinessCardController {
-    override fun onBackPressed() {}
-    override fun onDownloadCard(bitmap: Bitmap) {}
-    override fun onShareCard(bitmap: Bitmap) {}
-}
-
-@Preview(showBackground = true)
-@Composable
-fun BusinessCardScreenPreview() {
-    val previewCard = BusinessCardModel(
-        companyLogo = R.drawable.arche,
-        name = "John Doe",
-        designation = "Software Engineer",
-        department = "Engineering",
-        email = "john.doe@company.com",
-        phone = "+91 9876543210",
-        location = "Bangalore",
-        qrCode = ""
-    )
-    
-    XOneTheme {
-        BusinessCardScreen(
-            businessCard = previewCard,
-            controller = MockBusinessCardController(previewCard)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PortraitBusinessCardPreview() {
-    val previewCard = BusinessCardModel(
-        companyLogo = R.drawable.arche,
-        name = "John Doe",
-        designation = "Software Engineer",
-        department = "Engineering",
-        email = "john.doe@company.com",
-        phone = "+91 9876543210",
-        location = "Bangalore",
-        qrCode = ""
-    )
-    
-    XOneTheme {
-        PortraitBusinessCard(
-            businessCard = previewCard,
-            controller = MockBusinessCardController(previewCard)
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 800)
-@Composable
-fun LandscapeBusinessCardPreview() {
-    val previewCard = BusinessCardModel(
-        companyLogo = R.drawable.arche,
-        name = "John Doe",
-        designation = "Software Engineer",
-        department = "Engineering",
-        email = "john.doe@company.com",
-        phone = "+91 9876543210",
-        location = "Bangalore",
-        qrCode = ""
-    )
-    
-    XOneTheme {
-        LandscapeBusinessCard(
-            businessCard = previewCard,
-            controller = MockBusinessCardController(previewCard)
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Business Card - Portrait")
-@Composable
-fun BusinessCardPortraitPreview() {
-    // Create sample data
-    val sampleCard = BusinessCardModel(
-        companyLogo = R.drawable.arche,
-        name = "Alex Johnson",
-        designation = "Senior Software Engineer",
-        department = "Engineering",
-        email = "alex.johnson@arche.global",
-        phone = "+91 9876543210",
-        location = "Bangalore",
-        qrCode = ""
-    )
-    
-    XOneTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                WelcomeBackgroundTop,
-                                WelcomeBackgroundMiddle,
-                                WelcomeBackgroundBottom
-                            )
-                        )
-                    )
-            ) {
-                PortraitBusinessCard(
-                    businessCard = sampleCard,
-                    controller = MockBusinessCardController(sampleCard)
-                )
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Business Card - Landscape", widthDp = 800, heightDp = 400)
-@Composable
-fun BusinessCardLandscapePreview() {
-    // Create sample data
-    val sampleCard = BusinessCardModel(
-        companyLogo = R.drawable.arche,
-        name = "Alex Johnson",
-        designation = "Senior Software Engineer",
-        department = "Engineering",
-        email = "alex.johnson@arche.global",
-        phone = "+91 9876543210",
-        location = "Bangalore",
-        qrCode = ""
-    )
-    
-    XOneTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                WelcomeBackgroundTop,
-                                WelcomeBackgroundMiddle,
-                                WelcomeBackgroundBottom
-                            )
-                        )
-                    )
-            ) {
-                LandscapeBusinessCard(
-                    businessCard = sampleCard,
-                    controller = MockBusinessCardController(sampleCard)
-                )
-            }
-        }
-    }
-}
-
 private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitmap {
     // Take a screenshot of the entire view
     view.isDrawingCacheEnabled = true
     val fullBitmap = Bitmap.createBitmap(view.drawingCache)
     view.isDrawingCacheEnabled = false
-    
+
     return try {
         // Create a bitmap with transparency support
         val result = Bitmap.createBitmap(
@@ -696,15 +539,15 @@ private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitm
             cardBounds.height(),
             Bitmap.Config.ARGB_8888
         )
-        
+
         // Create a canvas to draw the cropped area
         val canvas = android.graphics.Canvas(result)
-        
+
         // Create a paint object with anti-aliasing
         val paint = android.graphics.Paint().apply {
             isAntiAlias = true
         }
-        
+
         // Create a path for rounded corners
         val path = android.graphics.Path().apply {
             // Add a rounded rectangle path
@@ -720,10 +563,10 @@ private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitm
                 android.graphics.Path.Direction.CW
             )
         }
-        
+
         // Clip the canvas to the rounded rectangle path
         canvas.clipPath(path)
-        
+
         // Draw the cropped portion of the original bitmap
         canvas.drawBitmap(
             fullBitmap,
@@ -731,10 +574,10 @@ private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitm
             -cardBounds.top.toFloat(),
             paint
         )
-        
+
         result
     } catch (e: IllegalArgumentException) {
         e.printStackTrace()
         fullBitmap
     }
-} 
+}

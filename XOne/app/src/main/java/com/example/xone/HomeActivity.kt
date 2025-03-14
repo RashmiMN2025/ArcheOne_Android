@@ -124,7 +124,7 @@ class HomeActivity : ComponentActivity() {
                             onXCardClick = controller::onXCardClick
                         )
                     }
-                    
+
                     composable(
                         route = "locations",
                         enterTransition = {
@@ -157,7 +157,7 @@ class HomeActivity : ComponentActivity() {
                             controller = locationsController
                         )
                     }
-                    
+
                     composable(
                         route = "business_card",
                         enterTransition = {
@@ -190,7 +190,7 @@ class HomeActivity : ComponentActivity() {
                             controller = businessCardController
                         )
                     }
-                    
+
                     composable(
                         route = "policy",
                         enterTransition = {
@@ -225,7 +225,7 @@ class HomeActivity : ComponentActivity() {
                             onBackClick = policyController::onBackClick
                         )
                     }
-                    
+
                     composable(
                         route = "asset",
                         enterTransition = {
@@ -258,7 +258,7 @@ class HomeActivity : ComponentActivity() {
                             controller = assetController
                         )
                     }
-                    
+
                     composable(
                         route = "holiday_calendar",
                         enterTransition = {
@@ -303,7 +303,7 @@ class HomeActivity : ComponentActivity() {
                             onBackPressed = { navController.popBackStack() }
                         )
                     }
-                    
+
                     composable(
                         route = "profile",
                         enterTransition = {
@@ -345,7 +345,7 @@ class HomeActivity : ComponentActivity() {
                             onFooterProfileClick = { /* Already on Profile screen */ }
                         )
                     }
-                    
+
                     composable(
                         route = "sos",
                         enterTransition = {
@@ -374,7 +374,7 @@ class HomeActivity : ComponentActivity() {
                         }
                     ) {
                         var showRaiseConcern by remember { mutableStateOf(false) }
-                        
+
                         if (showRaiseConcern) {
                             RaiseConcernScreen(onBackPressed = { showRaiseConcern = false })
                         } else {
@@ -406,7 +406,7 @@ class HomeActivity : ComponentActivity() {
             }
         }
     }
-    
+
     override fun onBackPressed() {
         if (intent.getStringExtra("destination") == "profile") {
             // If we navigated directly to profile, go back to home
