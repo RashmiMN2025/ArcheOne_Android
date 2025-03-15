@@ -5,26 +5,42 @@ plugins {
 }
 
 android {
-    namespace = "com.example.xone"
+    namespace = "com.archeGlobal.one"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.xone"
-        minSdk = 24
+        applicationId = "com.archeGlobal.one"
+        minSdk = 21
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("/Users/netcon/Documents/AndroidSignedIn/your_keystore.jks") // Update the keystore name
+            storePassword = "Android@12345"
+            keyAlias = "key0"
+            keyPassword = "Android@12345"
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            isCrunchPngs = true
+            proguardFiles += file("proguard-rules-r8.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
