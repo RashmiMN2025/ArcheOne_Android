@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,52 +19,48 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
+import androidx.compose.foundation.background
+import com.airbnb.lottie.compose.*
+
+
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+
 
 @Composable
-fun UniversalLoader(
-    isLoading: Boolean,
-    modifier: Modifier = Modifier
-) {
+fun UniversalLoader(isLoading: Boolean) {
     if (isLoading) {
         Dialog(
             onDismissRequest = { },
             properties = DialogProperties(
                 dismissOnBackPress = false,
-                dismissOnClickOutside = false
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false // Ensures it takes full width
             )
         ) {
-            Card(
+            Box(
                 modifier = Modifier
-                    .size(100.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 8.dp
-                )
+                    .fillMaxSize() // Ensures full screen coverage
+                    .background(Color.Black.copy(alpha = 0.3f)), // Dark transparent overlay
+                contentAlignment = Alignment.Center
             ) {
-                Column(
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_animation))
+                val progress by animateLottieCompositionAsState(
+                    composition,
+                    iterations = LottieConstants.IterateForever
+                )
+
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Loading...",
-                        color = Color.Black
-                    )
-                }
+                        .size(40.dp) // Adjust size as needed
+                )
             }
         }
     }
 }
+
 
 @Composable
 fun EmptyFavorites(

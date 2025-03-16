@@ -23,7 +23,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("/Users/netcon/Documents/AndroidSignedIn/your_keystore.jks") // Update the keystore name
+            storeFile = file("/Users/netcon/Documents/AndroidSignedIn/your_keystore.jks")
             storePassword = "Android@12345"
             keyAlias = "key0"
             keyPassword = "Android@12345"
@@ -32,8 +32,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -56,15 +56,48 @@ android {
 }
 
 dependencies {
+    // AndroidX Core and Lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.appcompat)
+
+    // Compose
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.foundation)
+    
+    // Material Design
+    implementation(libs.material)
+    
+    // Splash Screen
     implementation(libs.androidx.core.splashscreen)
+    
+    // Image Loading
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
+    
+    // Network
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    
+    // Accompanist
+    implementation(libs.accompanist.pager)
+    implementation("com.airbnb.android:lottie-compose:6.0.0")
+
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,35 +105,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.androidx.navigation.compose)
-    implementation (libs.coil)
-    implementation (libs.coil.compose)
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
-    implementation (libs.gson)
-    implementation(libs.okhttp) // Latest stable version
-    implementation (libs.ui)
-    implementation (libs.material3)
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
-    implementation (libs.okhttp.v490)
-    implementation (libs.androidx.ui.v130)
-    implementation (libs.androidx.material3.v101)
-    implementation (libs.androidx.ui.v140) // or latest version
-    implementation (libs.androidx.material3.v110) // Ensure you have material3
-    implementation (libs.androidx.foundation) // or latest version
-    implementation (libs.androidx.material) // for Material components
-    implementation (libs.androidx.runtime.livedata)
-    implementation (libs.androidx.foundation.vlatestversion)
-    implementation (libs.androidx.ui.vlatestversion)
-    implementation (libs.androidx.ui.v150)
-    implementation (libs.androidx.material3.v120)
-    implementation (libs.androidx.foundation.v150)
-    implementation(libs.logging.interceptor)
-    implementation(libs.retrofit)
-    implementation(libs.converter.gson)
-    implementation (libs.androidx.core.ktx.v1120)
-    implementation (libs.androidx.appcompat)
-    implementation (libs.material)  // Material 3
-    implementation (libs.accompanist.pager)
 }
