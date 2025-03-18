@@ -1,6 +1,7 @@
 package com.archeGlobal.one.model
 
 import com.archeGlobal.one.network.Service
+import com.archeGlobal.one.network.UserDetails
 
 data class UserData(
     val name: String,
@@ -12,5 +13,6 @@ data class UserData(
     val location: String = "",
     val services: List<Service> = emptyList(),
     val profilePic: String? = null,
-    val sosContact: String? = null
+    val sosContact: String? = null,
+    val userDetails: UserDetails? = null
 ) 

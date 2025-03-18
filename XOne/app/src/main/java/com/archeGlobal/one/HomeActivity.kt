@@ -42,6 +42,7 @@ import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.network.RetrofitClient
 import com.google.gson.Gson
+import com.archeGlobal.one.controller.AddressController
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -52,6 +53,8 @@ class HomeActivity : ComponentActivity() {
     private lateinit var profileController: ProfileController
     private lateinit var sosController: SOSController
     private lateinit var holidayCalendarController: HolidayCalendarController
+    private lateinit var aboutMeController: AboutMeController
+    private lateinit var addressController: AddressController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +82,8 @@ class HomeActivity : ComponentActivity() {
                 assetController = AssetController(this, navigator)
                 profileController = ProfileController(this, navigator)
                 sosController = SOSController(application)
+                aboutMeController = AboutMeController(navigator)
+                addressController = AddressController(navigator)
 
                 // If we have a destination, navigate to it
                 LaunchedEffect(destination) {
@@ -357,6 +362,80 @@ class HomeActivity : ComponentActivity() {
                             onFooterChatClick = { /* Implement chat navigation */ },
                             onFooterSOSClick = { navController.navigate("sos") },
                             onFooterProfileClick = { /* Already on Profile screen */ }
+                        )
+                    }
+
+                    composable(
+                        route = "aboutme",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        AboutMeScreen(
+                            controller = aboutMeController,
+                            footerNavigation = FooterNavigationModel(
+                                showHome = true,
+                                showChat = false,
+                                showSOS = false,
+                                showProfile = false
+                            ),
+                            onFooterHomeClick = { navController.navigate("home") },
+                            onFooterChatClick = { /* Implement chat navigation */ },
+                            onFooterSOSClick = { navController.navigate("sos") },
+                            onFooterProfileClick = { navController.navigate("profile") }
+                        )
+                    }
+
+                    composable(
+                        route = "addressdetails",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        AddressDetailsScreen(
+                            controller = addressController
                         )
                     }
 
