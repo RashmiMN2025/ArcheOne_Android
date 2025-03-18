@@ -26,8 +26,31 @@ class HolidayCalendarController(
     private val _holidayFileUrl = MutableLiveData<String>()
     val holidayFileUrl: LiveData<String> = _holidayFileUrl
     
+    // Set to track hidden holidays by their date string
+    private val _hiddenHolidays = mutableSetOf<String>()
+    
+    // LiveData to notify when hidden holidays change
+    private val _hiddenHolidaysUpdated = MutableLiveData<Boolean>(false)
+    val hiddenHolidaysUpdated: LiveData<Boolean> = _hiddenHolidaysUpdated
+    
     init {
         fetchHolidays()
+    }
+    
+    // Method to hide a holiday by its date
+    fun hideHoliday(holiday: Holiday) {
+        _hiddenHolidays.add(holiday.date)
+        _hiddenHolidaysUpdated.value = !(_hiddenHolidaysUpdated.value ?: false)
+    }
+    
+    // Method to check if a holiday is hidden
+    fun isHolidayHidden(holiday: Holiday): Boolean {
+        return _hiddenHolidays.contains(holiday.date)
+    }
+    
+    // Method to get filtered holidays that are not hidden
+    fun getVisibleHolidays(holidays: List<Holiday>): List<Holiday> {
+        return holidays.filter { !_hiddenHolidays.contains(it.date) }
     }
     
     fun fetchHolidays() {

@@ -31,6 +31,9 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.interaction.MutableInteractionSource
 
 @Composable
 fun MonthDetailScreen(
@@ -39,17 +42,19 @@ fun MonthDetailScreen(
     onBackPressed: () -> Unit
 ) {
     val holidaysState = controller.holidays.observeAsState()
-    var selectedMonth by remember { mutableStateOf(month) }
+    val hiddenHolidaysUpdated = controller.hiddenHolidaysUpdated.observeAsState()
     
+    var selectedMonth by remember { mutableStateOf(month) }
     var monthHolidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
     var selectedHoliday by remember { mutableStateOf<Holiday?>(null) }
     
-    // Update holidays when LiveData changes or when month changes
-    LaunchedEffect(holidaysState.value, selectedMonth) {
+    // Update holidays when LiveData changes, month changes, or hidden holidays are updated
+    LaunchedEffect(holidaysState.value, selectedMonth, hiddenHolidaysUpdated.value) {
         when (val result = holidaysState.value) {
             is NetworkResult.Success -> {
                 result.data?.let { calendarResponse ->
-                    monthHolidays = calendarResponse.holidays
+                    // Filter holidays by month and hide status
+                    val allMonthHolidays = calendarResponse.holidays
                         .filter { holiday ->
                             try {
                                 val date = LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
@@ -58,11 +63,13 @@ fun MonthDetailScreen(
                                 false
                             }
                         }
+                    // Filter out hidden holidays
+                    monthHolidays = controller.getVisibleHolidays(allMonthHolidays)
                 }
             }
             is NetworkResult.Error -> {
                 // If API fails, use default holidays filtered by month
-                monthHolidays = controller.getDefaultHolidays()
+                val allMonthHolidays = controller.getDefaultHolidays()
                     .filter { holiday ->
                         try {
                             val date = LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
@@ -71,10 +78,17 @@ fun MonthDetailScreen(
                             false
                         }
                     }
+                // Filter out hidden holidays
+                monthHolidays = controller.getVisibleHolidays(allMonthHolidays)
             }
             is NetworkResult.Loading, null -> {
                 // Show loading state
             }
+        }
+        
+        // If the selected holiday is now hidden, clear the selection
+        if (selectedHoliday != null && controller.isHolidayHidden(selectedHoliday!!)) {
+            selectedHoliday = null
         }
     }
 
@@ -91,11 +105,23 @@ fun MonthDetailScreen(
                     colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
                 )
             )
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                selectedHoliday = null
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
+                .clickable(
+                    enabled = true,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { /* Consume click to prevent it from reaching the background */ }
+                )
         ) {
             // Top Bar with back button
             Box(
@@ -220,7 +246,13 @@ fun MonthDetailScreen(
                 } else {
                     // Holiday Details Box (shows when a holiday is selected)
                     selectedHoliday?.let { holiday ->
-                        HolidayDetailsBox(holiday = holiday)
+                        HolidayDetailsBox(
+                            holiday = holiday,
+                            onHideHoliday = {
+                                controller.hideHoliday(holiday)
+                                selectedHoliday = null
+                            }
+                        )
                     }
                 }
             }
@@ -229,7 +261,7 @@ fun MonthDetailScreen(
 }
 
 @Composable
-fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday) -> Unit) {
+fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday?) -> Unit) {
     val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
     val yearMonth = YearMonth.of(2025, month)
     val daysInMonth = yearMonth.lengthOfMonth()
@@ -312,7 +344,8 @@ fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday
                                     }
                                 )
                                 .clickable {
-                                    holiday?.let { onDateClick(it) }
+                                    // Pass the holiday if this date has one, otherwise pass null to clear selection
+                                    onDateClick(holiday)
                                 }
                         ) {
                             Text(
@@ -343,11 +376,20 @@ fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday
 }
 
 @Composable
-fun HolidayDetailsBox(holiday: Holiday) {
+fun HolidayDetailsBox(
+    holiday: Holiday,
+    onHideHoliday: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 12.dp)
+            // Keep the clickable to prevent clicks from propagating to parent
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { /* Prevent click from reaching background */ }
+            ),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
@@ -356,6 +398,7 @@ fun HolidayDetailsBox(holiday: Holiday) {
             modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Replace the header row containing title and close button with just the title
             Text(
                 text = "Holiday Details",
                 fontSize = 18.sp,
@@ -482,9 +525,14 @@ private fun DefaultIndianFlag() {
 }
 
 @Composable
-fun HolidayDetailItem(holiday: Holiday) {
+fun HolidayDetailItem(
+    holiday: Holiday,
+    onItemClick: (Holiday) -> Unit = {}
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onItemClick(holiday) },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(8.dp)
