@@ -135,4 +135,9 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to address details screen")
         navController?.navigate("addressdetails")
     }
+    
+    override fun navigateToEmergencyContact() {
+        Log.d("AndroidNavigator", "Navigating to emergency contact screen")
+        navController?.navigate("emergencycontact")
+    }
 }

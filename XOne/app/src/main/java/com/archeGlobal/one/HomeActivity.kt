@@ -43,6 +43,7 @@ import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.network.RetrofitClient
 import com.google.gson.Gson
 import com.archeGlobal.one.controller.AddressController
+import com.archeGlobal.one.controller.EmergencyContactController
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -55,6 +56,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var holidayCalendarController: HolidayCalendarController
     private lateinit var aboutMeController: AboutMeController
     private lateinit var addressController: AddressController
+    private lateinit var emergencyContactController: EmergencyContactController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +86,7 @@ class HomeActivity : ComponentActivity() {
                 sosController = SOSController(application)
                 aboutMeController = AboutMeController(navigator)
                 addressController = AddressController(navigator)
+                emergencyContactController = EmergencyContactController(navigator)
 
                 // If we have a destination, navigate to it
                 LaunchedEffect(destination) {
@@ -436,6 +439,38 @@ class HomeActivity : ComponentActivity() {
                     ) {
                         AddressDetailsScreen(
                             controller = addressController
+                        )
+                    }
+
+                    composable(
+                        route = "emergencycontact",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            ) + fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        EmergencyContactScreen(
+                            controller = emergencyContactController
                         )
                     }
 

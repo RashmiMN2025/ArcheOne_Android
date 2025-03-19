@@ -38,4 +38,5 @@ class PreviewNavigator : Navigator {
     override fun navigateToProfile() {}
     override fun navigateToAboutMe() {}
     override fun navigateToAddressDetails() {}
+    override fun navigateToEmergencyContact() {}
 } 
