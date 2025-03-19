@@ -34,4 +34,6 @@ interface Navigator {
     fun navigateToChat()
     fun navigateToBusinessCard()
     fun navigateToProfile()
+    fun navigateToAboutMe()
+    fun navigateToAddressDetails()
 } 

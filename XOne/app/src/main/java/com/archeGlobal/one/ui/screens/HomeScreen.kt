@@ -424,6 +424,34 @@ fun HomeScreen(
     }
 }
 
+// Add this helper function to format long titles
+private fun formatServiceTitle(title: String): String {
+    // Special cases for specific long titles
+    return when (title) {
+        "Holiday Calendar" -> "Holiday\nCalendar"
+        "New Onboarding" -> "New\nOnboarding"
+        "Travel & Expenses" -> "Travel &\nExpenses"
+        "Goal Setting/KPI" -> "Goal\nSetting/KPI"
+        "Business Card" -> "Business\nCard"
+        "My Documents" -> "My\nDocuments"
+        else -> {
+            // General rule for other multi-word titles longer than 10 characters
+            if (title.contains(" ") && title.length > 10) {
+                // Find the middle space to split approximately in half
+                val spaces = title.indices.filter { title[it] == ' ' }
+                if (spaces.isNotEmpty()) {
+                    val middleSpaceIndex = spaces[spaces.size / 2]
+                    title.substring(0, middleSpaceIndex) + "\n" + title.substring(middleSpaceIndex + 1)
+                } else {
+                    title
+                }
+            } else {
+                title
+            }
+        }
+    }
+}
+
 @Composable
 private fun AppItem(
     title: String,
@@ -437,6 +465,8 @@ private fun AppItem(
     shouldBlur: Boolean = false
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    // Format the title for better display
+    val formattedTitle = formatServiceTitle(title)
     
     Card(
         modifier = modifier
@@ -476,21 +506,38 @@ private fun AppItem(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(10.dp),
+                    .padding(6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                AppIcon(title = title, modifier = Modifier.size(36.dp))
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = title,
-                    color = TextPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Spacer(modifier = Modifier.height(2.dp))
+                
+                // Icon at the top
+                AppIcon(title = title, modifier = Modifier.size(34.dp))
+                
+                // Text at the bottom with more space
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 30.dp)
+                ) {
+                    Text(
+                        text = formattedTitle,
+                        color = TextPrimary,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        lineHeight = 13.sp,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(2.dp))
             }
         }
     }
@@ -519,7 +566,7 @@ private fun AppIcon(
                                 "mydocuments" -> R.drawable.mydocuments
                                 "id" -> R.drawable.id
                                 "asset" -> R.drawable.asset
-                                "business card" -> R.drawable.xcard
+                                "businesscard" -> R.drawable.xcard
                                 "leave" -> R.drawable.leave
                                 "elearning" -> R.drawable.elearning
                                 "mycareer" -> R.drawable.mycareer

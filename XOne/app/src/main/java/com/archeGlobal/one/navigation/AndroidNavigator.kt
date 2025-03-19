@@ -125,4 +125,14 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to profile screen")
         navController?.navigate("profile")
     }
+    
+    override fun navigateToAboutMe() {
+        Log.d("AndroidNavigator", "Navigating to about me screen")
+        navController?.navigate("aboutme")
+    }
+    
+    override fun navigateToAddressDetails() {
+        Log.d("AndroidNavigator", "Navigating to address details screen")
+        navController?.navigate("addressdetails")
+    }
 }

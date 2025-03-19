@@ -29,10 +29,12 @@ class ProfileController(
 
     fun onAboutMeClick() {
         // Navigate to About Me screen
+        navigator.navigateToAboutMe()
     }
 
     fun onAddressClick() {
         // Navigate to Address screen
+        navigator.navigateToAddressDetails()
     }
 
     fun onEmergencyContactClick() {

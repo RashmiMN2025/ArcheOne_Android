@@ -58,6 +58,14 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Business Card")
                 navigator.navigateToBusinessCard()
             }
+            "profile connect" -> {
+                Log.d("HomeController", "Navigating to Profile Connect")
+                navigator.navigateToProfile()
+            }
+            "profile" -> {
+                Log.d("HomeController", "Navigating to Profile")
+                navigator.navigateToProfile()
+            }
             "id" -> navigator.navigateToID()
             "asset" -> navigator.navigateToAsset()
             "timesheet" -> navigator.navigateToTimesheet()

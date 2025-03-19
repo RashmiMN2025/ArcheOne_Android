@@ -305,7 +305,9 @@ private fun PortraitBusinessCard(
                         unfocusedIndicatorColor = Color.Black,
                         cursorColor = Color.Black,
                         focusedContainerColor = Color.White, // ✅ Background white
-                        unfocusedContainerColor = Color.White
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -583,7 +585,9 @@ private fun LandscapeBusinessCard(
                         unfocusedIndicatorColor = Color.Black,
                         cursorColor = Color.Black,
                         focusedContainerColor = Color.White, // ✅ Background white
-                        unfocusedContainerColor = Color.White
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     ),
                     modifier = Modifier
                         .fillMaxWidth()

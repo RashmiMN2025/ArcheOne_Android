@@ -107,7 +107,8 @@ class OtpVerificationController(
                 location = it.location,
                 services = response.services ?: emptyList(),
                 profilePic = response.profile_pic,
-                sosContact = response.sos
+                sosContact = response.sos,
+                userDetails = it.userDetails
             )
         }
 

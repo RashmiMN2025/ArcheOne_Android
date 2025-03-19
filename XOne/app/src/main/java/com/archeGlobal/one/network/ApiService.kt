@@ -129,7 +129,28 @@ data class User(
     val employeeid: String,
     val email: String,
     val mobile: String,
-    val location: String
+    val location: String,
+    val state: String? = null,
+    val userDetails: UserDetails? = null
+)
+
+data class UserDetails(
+    val reporting_manager: String = "",
+    val divisional_head: String = "",
+    val pan: String = "",
+    val uan: String = "",
+    val blood_group: String = "",
+    val permanent_address: String = "",
+    val temporary_address: String = "",
+    val emergency_contact_name: String = "",
+    val emergency_contact_relation: String = "",
+    val emergency_contact: String = "",
+    val documents: List<UserDocument> = emptyList()
+)
+
+data class UserDocument(
+    val document_name: String = "",
+    val doc_data: String = ""
 )
 
 data class Service(

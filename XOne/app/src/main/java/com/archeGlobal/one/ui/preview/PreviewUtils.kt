@@ -36,4 +36,6 @@ class PreviewNavigator : Navigator {
     override fun navigateToChat() {}
     override fun navigateToBusinessCard() {}
     override fun navigateToProfile() {}
+    override fun navigateToAboutMe() {}
+    override fun navigateToAddressDetails() {}
 } 
