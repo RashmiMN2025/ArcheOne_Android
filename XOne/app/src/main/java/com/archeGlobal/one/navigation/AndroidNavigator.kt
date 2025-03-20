@@ -11,7 +11,7 @@ import com.archeGlobal.one.HomeActivity
 import com.archeGlobal.one.MyDocumentsActivity
 import com.archeGlobal.one.XConnectActivity
 import com.archeGlobal.one.R
-import com.archeGlobal.one.ui.screens.SOSActivity
+import com.archeGlobal.one.SOSActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null

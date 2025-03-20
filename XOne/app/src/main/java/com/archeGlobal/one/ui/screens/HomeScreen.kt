@@ -507,14 +507,14 @@ private fun AppItem(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(6.dp),
+                    .padding(8.dp),  // Increased from 6.dp to 8.dp
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Spacer(modifier = Modifier.height(2.dp))
                 
                 // Icon at the top
-                AppIcon(title = title, modifier = Modifier.size(34.dp))
+                AppIcon(title = title, modifier = Modifier.size(38.dp))
                 
                 // Text at the bottom with more space
                 Box(
@@ -557,7 +557,7 @@ private fun AppIcon(
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
             "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect"  -> {
                 Surface(
-                    modifier = Modifier.size(120.dp),
+                    modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
                     color = Color.White
                 ) {
@@ -591,7 +591,7 @@ private fun AppIcon(
                         ),
                         contentDescription = title,
                         modifier = Modifier
-                            .padding(4.dp)
+                            .padding(5.dp)
                             .fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
@@ -600,7 +600,7 @@ private fun AppIcon(
             else -> {
                 // Original placeholder design for non-default apps
                 Surface(
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(44.dp),
                     shape = CircleShape,
                     color = getColorForApp(title).copy(alpha = 0.1f)
                 ) {

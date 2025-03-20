@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -22,6 +24,8 @@ import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.ui.components.FooterScaffold
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
@@ -30,117 +34,141 @@ fun SOSScreen(
     controller: SOSController,
     onNavigateToRaiseConcern: () -> Unit,
     onBackPressed: () -> Unit,
-    onSOSBlogClick: (SosBlogModel) -> Unit
+    onSOSBlogClick: (SosBlogModel) -> Unit,
+    onFooterHomeClick: () -> Unit = {},
+    onFooterChatClick: () -> Unit = {},
+    onFooterSOSClick: () -> Unit = {},
+    onFooterProfileClick: () -> Unit = {}
 ) {
     val sosBlogs by controller.sosBlogs.collectAsState()
     val pagerState = rememberPagerState()
     val coroutineScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+    
+    // Create FooterNavigationModel with SOS selected
+    val footerNavigation = FooterNavigationModel(
+        showHome = false,
+        showChat = false,
+        showSOS = true,
+        showProfile = false
+    )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                )
-            ),
-        contentAlignment = Alignment.Center
+    // Wrap with FooterScaffold for bottom navigation
+    FooterScaffold(
+        footerNavigation = footerNavigation,
+        onFooterHomeClick = onFooterHomeClick,
+        onFooterChatClick = onFooterChatClick,
+        onFooterSOSClick = onFooterSOSClick,
+        onFooterProfileClick = onFooterProfileClick
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
+                    )
+                )
         ) {
-            // Header with back button
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top =40.dp)
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(bottom = 16.dp), // Add bottom padding to ensure content is visible above the navigation bar
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                IconButton(onClick = onBackPressed) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
+                // Header with back button
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp)
+                ) {
+                    IconButton(onClick = onBackPressed) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+                    Text(
+                        text = "SOS",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(start = 140.dp)
                     )
                 }
-                Text(
-                    text = "SOS",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(start = 140.dp)
-                )
-            }
 
-            // White Box for SOS Assistance & SOS Information
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .padding(16.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // White Box for SOS Assistance & SOS Information
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .padding(16.dp)
                 ) {
-
-                    Spacer(modifier = Modifier.height(5.dp))
-                    // SOS Assistance
-                    Text(
-                        text = "SOS Assistance",
-                        fontSize = 22.sp,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 20.dp)
-                    )
-
-                    SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("1234567890") })
-                    SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
-                    SOSButton(text = "View Emergency Contact", onClick = { controller.viewEmergencyContact() })
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // SOS Information Section
-                    Text(
-                        text = "SOS Information",
-                        fontSize = 22.sp,
-                        color = Color.Black,
-                        modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Pager for blogs (Only one blog visible at a time)
-                    HorizontalPager(
-                        count = sosBlogs.size,
-                        state = pagerState,
-                        modifier = Modifier.fillMaxWidth()
-                    ) { page ->
-                        SOSBlogItem(sosBlogs[page], onClick = { onSOSBlogClick(sosBlogs[page]) })
-                    }
-
-                    // Pagination Dots
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        horizontalArrangement = Arrangement.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        sosBlogs.forEachIndexed { index, _ ->
-                            Box(
-                                modifier = Modifier
-                                    .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
-                                    .padding(4.dp)
-                                    .background(
-                                        color = if (index == pagerState.currentPage) Color(0xFFDD3825) else Color.LightGray,
-                                        shape = CircleShape
-                                    )
-                                    .clickable {
-                                        coroutineScope.launch {
-                                            pagerState.animateScrollToPage(index)
+
+                        Spacer(modifier = Modifier.height(5.dp))
+                        // SOS Assistance
+                        Text(
+                            text = "SOS Assistance",
+                            fontSize = 22.sp,
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 20.dp)
+                        )
+
+                        SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("1234567890") })
+                        SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
+                        SOSButton(text = "View Emergency Contact", onClick = { controller.viewEmergencyContact() })
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // SOS Information Section
+                        Text(
+                            text = "SOS Information",
+                            fontSize = 22.sp,
+                            color = Color.Black,
+                            modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Pager for blogs (Only one blog visible at a time)
+                        HorizontalPager(
+                            count = sosBlogs.size,
+                            state = pagerState,
+                            modifier = Modifier.fillMaxWidth()
+                        ) { page ->
+                            SOSBlogItem(sosBlogs[page], onClick = { onSOSBlogClick(sosBlogs[page]) })
+                        }
+
+                        // Pagination Dots
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            sosBlogs.forEachIndexed { index, _ ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
+                                        .padding(4.dp)
+                                        .background(
+                                            color = if (index == pagerState.currentPage) Color(0xFFDD3825) else Color.LightGray,
+                                            shape = CircleShape
+                                        )
+                                        .clickable {
+                                            coroutineScope.launch {
+                                                pagerState.animateScrollToPage(index)
+                                            }
                                         }
-                                    }
-                            )
+                                )
+                            }
                         }
                     }
                 }
