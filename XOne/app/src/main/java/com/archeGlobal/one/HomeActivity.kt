@@ -396,17 +396,7 @@ class HomeActivity : ComponentActivity() {
                         }
                     ) {
                         AboutMeScreen(
-                            controller = aboutMeController,
-                            footerNavigation = FooterNavigationModel(
-                                showHome = true,
-                                showChat = false,
-                                showSOS = false,
-                                showProfile = false
-                            ),
-                            onFooterHomeClick = { navController.navigate("home") },
-                            onFooterChatClick = { /* Implement chat navigation */ },
-                            onFooterSOSClick = { navController.navigate("sos") },
-                            onFooterProfileClick = { navController.navigate("profile") }
+                            controller = aboutMeController
                         )
                     }
 

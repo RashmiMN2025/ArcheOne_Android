@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import com.archeGlobal.one.ui.components.EmptyFavorites
+import com.archeGlobal.one.ui.components.FooterScaffold
 
 @Composable
 fun ProfileHeader(
@@ -172,149 +173,104 @@ fun HomeScreen(
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
     var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Main content with conditional blur
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(radius = if (selectedApp != null) 10.dp else 0.dp)
-        ) {
-            Column(
+    // Wrap with FooterScaffold for bottom navigation
+    FooterScaffold(
+        footerNavigation = model.footerNavigation,
+        onFooterHomeClick = onFooterHomeClick,
+        onFooterChatClick = onFooterChatClick,
+        onFooterSOSClick = onFooterSOSClick,
+        onFooterProfileClick = onFooterProfileClick
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Main content with conditional blur
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                backgroundModel.topColor,
-                                backgroundModel.middleColor,
-                                backgroundModel.bottomColor
+                    .blur(radius = if (selectedApp != null) 10.dp else 0.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    backgroundModel.topColor,
+                                    backgroundModel.middleColor,
+                                    backgroundModel.bottomColor
+                                )
                             )
                         )
-                    )
-            ) {
-                ProfileHeader(
-                    model = model,
-                    onShowProfileClick = onShowProfileClick
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Toggle Buttons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Button(
-                        onClick = onAllAppsClick,
-                        modifier = Modifier.width(120.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (model.showAllApps) 
-                                Color(0xFFDD3825) else CardBackground,
-                            contentColor = if (model.showAllApps) 
-                                Color.White else TextSecondary
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (model.showAllApps) Color(0xFFDD3825) else DividerColor
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("All Apps")
-                    }
-                    
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
-                    Button(
-                        onClick = onFavoritesClick,
-                        modifier = Modifier.width(120.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (model.viewFavorites) 
-                                Color(0xFFDD3825) else CardBackground,
-                            contentColor = if (model.viewFavorites) 
-                                Color.White else TextSecondary
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Favorites")
-                    }
-                }
+                    ProfileHeader(
+                        model = model,
+                        onShowProfileClick = onShowProfileClick
+                    )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                // Content
-                Box(modifier = Modifier.weight(1f)) {
-                    if (model.showAllApps) {
-                        // All Apps View
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
+                    // Toggle Buttons
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Button(
+                            onClick = onAllAppsClick,
+                            modifier = Modifier.width(120.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (model.showAllApps) 
+                                    Color(0xFFDD3825) else CardBackground,
+                                contentColor = if (model.showAllApps) 
+                                    Color.White else TextSecondary
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (model.showAllApps) Color(0xFFDD3825) else DividerColor
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
-                            model.categories.forEach { (category, items) ->
-                                item {
-                                    CategoryHeader(
-                                        title = category,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
-                                    )
-                                }
-                                
-                                items(items.chunked(3)) { rowItems ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(25.dp)
-                                    ) {
-                                        rowItems.forEach { item ->
-                                            AppItem(
-                                                title = item.title,
-                                                isFavorite = item.isFavorite,
-                                                onClick = { onItemClick(item) },
-                                                onFavoriteClick = { onToggleFavorite(item) },
-                                                modifier = Modifier.weight(1f),
-                                                showFavoriteButton = model.showAllApps || model.viewFavorites,
-                                                isSelected = item == selectedApp,
-                                                onLongPress = { position -> 
-                                                    selectedApp = item
-                                                    selectedPosition = position
-                                                },
-                                                shouldBlur = selectedApp != null && item != selectedApp
-                                            )
-                                        }
-                                        repeat(3 - rowItems.size) {
-                                            Spacer(modifier = Modifier.weight(1f))
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                }
-                            }
+                            Text("All Apps")
                         }
-                    } else if (model.viewFavorites) {
-                        // Favorites View
-                        if (model.favorites.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                EmptyFavorites()
-                            }
-                        } else {
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        Button(
+                            onClick = onFavoritesClick,
+                            modifier = Modifier.width(120.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (model.viewFavorites) 
+                                    Color(0xFFDD3825) else CardBackground,
+                                contentColor = if (model.viewFavorites) 
+                                    Color.White else TextSecondary
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Favorites")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Content
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (model.showAllApps) {
+                            // All Apps View
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
                             ) {
-                                model.favorites.forEach { (category, items) ->
+                                model.categories.forEach { (category, items) ->
                                     item {
                                         CategoryHeader(
                                             title = category,
@@ -332,11 +288,11 @@ fun HomeScreen(
                                             rowItems.forEach { item ->
                                                 AppItem(
                                                     title = item.title,
-                                                    isFavorite = true,
+                                                    isFavorite = item.isFavorite,
                                                     onClick = { onItemClick(item) },
                                                     onFavoriteClick = { onToggleFavorite(item) },
                                                     modifier = Modifier.weight(1f),
-                                                    showFavoriteButton = true,
+                                                    showFavoriteButton = model.showAllApps || model.viewFavorites,
                                                     isSelected = item == selectedApp,
                                                     onLongPress = { position -> 
                                                         selectedApp = item
@@ -353,73 +309,118 @@ fun HomeScreen(
                                     }
                                 }
                             }
+                        } else if (model.viewFavorites) {
+                            // Favorites View
+                            if (model.favorites.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    EmptyFavorites()
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                                ) {
+                                    model.favorites.forEach { (category, items) ->
+                                        item {
+                                            CategoryHeader(
+                                                title = category,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp)
+                                            )
+                                        }
+                                        
+                                        items(items.chunked(3)) { rowItems ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                            ) {
+                                                rowItems.forEach { item ->
+                                                    AppItem(
+                                                        title = item.title,
+                                                        isFavorite = true,
+                                                        onClick = { onItemClick(item) },
+                                                        onFavoriteClick = { onToggleFavorite(item) },
+                                                        modifier = Modifier.weight(1f),
+                                                        showFavoriteButton = true,
+                                                        isSelected = item == selectedApp,
+                                                        onLongPress = { position -> 
+                                                            selectedApp = item
+                                                            selectedPosition = position
+                                                        },
+                                                        shouldBlur = selectedApp != null && item != selectedApp
+                                                    )
+                                                }
+                                                repeat(3 - rowItems.size) {
+                                                    Spacer(modifier = Modifier.weight(1f))
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                
-                // Add footer navigation
-                FooterNavigation(
-                    model = model.footerNavigation,
-                    onHomeClick = onFooterHomeClick,
-                    onChatClick = onFooterChatClick,
-                    onSOSClick = onFooterSOSClick,
-                    onProfileClick = onFooterProfileClick
-                )
             }
-        }
 
-        // Overlay the selected app without blur
-        if (selectedApp != null) {
-            selectedPosition?.let { (x, y) ->
-                val density = LocalDensity.current
-                val itemSize = 80.dp
-                val scaleFactor = 1.1f
+            // Overlay the selected app without blur
+            if (selectedApp != null) {
+                selectedPosition?.let { (x, y) ->
+                    val density = LocalDensity.current
+                    val itemSize = 80.dp
+                    val scaleFactor = 1.1f
 
-                Box(
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(
-                                x = (x - with(density) { itemSize.toPx() } / 2).toInt(),
-                                y = (y - with(density) { itemSize.toPx() }).toInt()
-                            )
-                        }
-                ) {
-                    AppItem(
-                        title = selectedApp!!.title,
-                        isFavorite = selectedApp!!.isFavorite,
-                        onClick = { },
-                        onFavoriteClick = { },
+                    Box(
                         modifier = Modifier
-                            .size(itemSize)
-                            .graphicsLayer(
-                                scaleX = scaleFactor,
-                                scaleY = scaleFactor
-                            ),
-                        showFavoriteButton = true,
-                        isSelected = true,
-                        onLongPress = { },
-                        shouldBlur = false  // Keep this false to maintain brightness
-                    )
+                            .offset {
+                                IntOffset(
+                                    x = (x - with(density) { itemSize.toPx() } / 2).toInt(),
+                                    y = (y - with(density) { itemSize.toPx() }).toInt()
+                                )
+                            }
+                    ) {
+                        AppItem(
+                            title = selectedApp!!.title,
+                            isFavorite = selectedApp!!.isFavorite,
+                            onClick = { },
+                            onFavoriteClick = { },
+                            modifier = Modifier
+                                .size(itemSize)
+                                .graphicsLayer(
+                                    scaleX = scaleFactor,
+                                    scaleY = scaleFactor
+                                ),
+                            showFavoriteButton = true,
+                            isSelected = true,
+                            onLongPress = { },
+                            shouldBlur = false  // Keep this false to maintain brightness
+                        )
+                    }
                 }
             }
-        }
 
-        // Show favorite dialog
-        if (selectedApp != null && selectedPosition != null) {
-            FavoriteDialog(
-                title = selectedApp!!.title,
-                isFavorite = selectedApp!!.isFavorite,
-                onConfirm = {
-                    onToggleFavorite(selectedApp!!)
-                    selectedApp = null
-                    selectedPosition = null
-                },
-                onDismiss = {
-                    selectedApp = null
-                    selectedPosition = null
-                },
-                position = selectedPosition
-            )
+            // Show favorite dialog
+            if (selectedApp != null && selectedPosition != null) {
+                FavoriteDialog(
+                    title = selectedApp!!.title,
+                    isFavorite = selectedApp!!.isFavorite,
+                    onConfirm = {
+                        onToggleFavorite(selectedApp!!)
+                        selectedApp = null
+                        selectedPosition = null
+                    },
+                    onDismiss = {
+                        selectedApp = null
+                        selectedPosition = null
+                    },
+                    position = selectedPosition
+                )
+            }
         }
     }
 }
@@ -645,95 +646,6 @@ private fun CategoryHeader(
                 fontWeight = FontWeight.Bold
             ),
             modifier = Modifier.padding(vertical = 8.dp)
-        )
-    }
-}
-
-@Composable
-fun FooterNavigation(
-    model: FooterNavigationModel,
-    onHomeClick: () -> Unit,
-    onChatClick: () -> Unit,
-    onSOSClick: () -> Unit,
-    onProfileClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(CardBackground)
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        // Home item with arche_tri logo
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .clickable(onClick = onHomeClick)
-                .padding(horizontal = 12.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.arche_tri),
-                contentDescription = "Home",
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(
-                    if (model.showHome) Color(0xFFDD3825) else Color(0xFF808080)
-                )
-            )
-            Text(
-                text = "Home",
-                style = MaterialTheme.typography.bodySmall,
-                color = if (model.showHome) Color(0xFFDD3825) else Color(0xFF808080),
-                fontSize = 12.sp
-            )
-        }
-
-        // Other footer items
-        FooterItem(
-            icon = Icons.Default.Email,
-            title = "Chat",
-            isSelected = model.showChat,
-            onClick = onChatClick
-        )
-        FooterItem(
-            icon = Icons.Default.Warning,
-            title = "SOS",
-            isSelected = model.showSOS,
-            onClick = onSOSClick
-        )
-        FooterItem(
-            icon = Icons.Default.Person,
-            title = "Profile",
-            isSelected = model.showProfile,
-            onClick = onProfileClick
-        )
-    }
-}
-
-@Composable
-private fun FooterItem(
-    icon: ImageVector,
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = title,
-            tint = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
-            fontSize = 12.sp
         )
     }
 }

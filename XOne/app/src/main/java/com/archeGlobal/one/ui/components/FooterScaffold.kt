@@ -7,7 +7,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.archeGlobal.one.model.FooterNavigationModel
-import com.archeGlobal.one.ui.screens.FooterNavigation
 
 @Composable
 fun FooterScaffold(
@@ -20,7 +19,7 @@ fun FooterScaffold(
 ) {
     Scaffold(
         bottomBar = {
-            FooterNavigation(
+            BottomNavigationBar(
                 model = footerNavigation,
                 onHomeClick = onFooterHomeClick,
                 onChatClick = onFooterChatClick,

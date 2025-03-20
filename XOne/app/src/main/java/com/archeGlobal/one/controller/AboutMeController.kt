@@ -32,6 +32,6 @@ class AboutMeController(
     ))
     
     fun onBackPressed() {
-        navigator.navigateToHome()
+        navigator.navigateToProfile()
     }
 } 

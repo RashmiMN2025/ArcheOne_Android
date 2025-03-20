@@ -25,12 +25,18 @@ import com.archeGlobal.one.controller.EmergencyContactController
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.model.FooterNavigationModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmergencyContactScreen(
     controller: EmergencyContactController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    footerNavigation: FooterNavigationModel = FooterNavigationModel(showProfile = true),
+    onFooterHomeClick: () -> Unit = { controller.onBackPressed() },
+    onFooterChatClick: () -> Unit = {},
+    onFooterSOSClick: () -> Unit = {},
+    onFooterProfileClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     

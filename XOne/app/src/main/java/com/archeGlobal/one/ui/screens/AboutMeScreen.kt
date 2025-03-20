@@ -24,6 +24,7 @@ import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.components.FooterScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
