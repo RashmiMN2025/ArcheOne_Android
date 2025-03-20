@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import com.archeGlobal.one.model.FooterNavigationModel
-import com.archeGlobal.one.ui.screens.FooterNavigation
 
 @Composable
 fun FooterScaffold(
@@ -20,12 +20,13 @@ fun FooterScaffold(
 ) {
     Scaffold(
         bottomBar = {
-            FooterNavigation(
+            BottomNavigationBar(
                 model = footerNavigation,
                 onHomeClick = onFooterHomeClick,
                 onChatClick = onFooterChatClick,
                 onSOSClick = onFooterSOSClick,
-                onProfileClick = onFooterProfileClick
+                onProfileClick = onFooterProfileClick,
+                modifier = Modifier.zIndex(1f) // Ensure navigation bar is always on top
             )
         }
     ) { paddingValues ->

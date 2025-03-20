@@ -43,6 +43,7 @@ import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.network.RetrofitClient
 import com.google.gson.Gson
 import com.archeGlobal.one.controller.AddressController
+import com.archeGlobal.one.controller.EmergencyContactController
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -55,6 +56,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var holidayCalendarController: HolidayCalendarController
     private lateinit var aboutMeController: AboutMeController
     private lateinit var addressController: AddressController
+    private lateinit var emergencyContactController: EmergencyContactController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +86,7 @@ class HomeActivity : ComponentActivity() {
                 sosController = SOSController(application)
                 aboutMeController = AboutMeController(navigator)
                 addressController = AddressController(navigator)
+                emergencyContactController = EmergencyContactController(navigator)
 
                 // If we have a destination, navigate to it
                 LaunchedEffect(destination) {
@@ -99,28 +102,16 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "home",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         HomeScreen(
@@ -141,28 +132,16 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "locations",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         LocationsScreen(
@@ -174,28 +153,16 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "business_card",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         BusinessCardScreen(
@@ -207,28 +174,16 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "policy",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         PolicyScreen(
@@ -242,28 +197,16 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "asset",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         AssetScreen(
@@ -275,28 +218,16 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "holiday_calendar",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         HolidayCalendarScreen(
@@ -326,28 +257,16 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "profile",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         ProfileScreen(
@@ -368,70 +287,36 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "aboutme",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         AboutMeScreen(
-                            controller = aboutMeController,
-                            footerNavigation = FooterNavigationModel(
-                                showHome = true,
-                                showChat = false,
-                                showSOS = false,
-                                showProfile = false
-                            ),
-                            onFooterHomeClick = { navController.navigate("home") },
-                            onFooterChatClick = { /* Implement chat navigation */ },
-                            onFooterSOSClick = { navController.navigate("sos") },
-                            onFooterProfileClick = { navController.navigate("profile") }
+                            controller = aboutMeController
                         )
                     }
 
                     composable(
                         route = "addressdetails",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         AddressDetailsScreen(
@@ -440,32 +325,26 @@ class HomeActivity : ComponentActivity() {
                     }
 
                     composable(
-                        route = "sos",
+                        route = "emergencycontact",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeIn(animationSpec = tween(300))
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            ) + fadeOut(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
+                        EmergencyContactScreen(
+                            controller = emergencyContactController
+                        )
+                    }
+
+                    composable("sos") {
                         var showRaiseConcern by remember { mutableStateOf(false) }
 
                         if (showRaiseConcern) {
@@ -479,6 +358,22 @@ class HomeActivity : ComponentActivity() {
                                     // Convert blog object to JSON and pass it as a parameter
                                     val blogJson = Uri.encode(Gson().toJson(blogId))
                                     navController.navigate("sosDetail/$blogJson")
+                                },
+                                onFooterHomeClick = { 
+                                    // Navigate to home screen
+                                    navController.navigate("home") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                },
+                                onFooterChatClick = {
+                                    // TODO: Navigate to Chat screen when available
+                                },
+                                onFooterSOSClick = {
+                                    // Already on SOS screen, do nothing
+                                },
+                                onFooterProfileClick = {
+                                    // Navigate to profile
+                                    navController.navigate("profile")
                                 }
                             )
                         }
@@ -491,9 +386,29 @@ class HomeActivity : ComponentActivity() {
                         val json = backStackEntry.arguments?.getString("blog")
                         val blog = Gson().fromJson(json, SosBlogModel::class.java)
 
-                        SOSDetailScreen(blog = blog) {
-                            navController.popBackStack()
-                        }
+                        SOSDetailScreen(
+                            blog = blog,
+                            onBackPressed = { navController.popBackStack() },
+                            onFooterHomeClick = { 
+                                // Navigate to home screen
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = true }
+                                }
+                            },
+                            onFooterChatClick = {
+                                // TODO: Navigate to Chat screen when available
+                            },
+                            onFooterSOSClick = {
+                                // Go back to main SOS screen
+                                navController.navigate("sos") {
+                                    popUpTo("sos") { inclusive = true }
+                                }
+                            },
+                            onFooterProfileClick = {
+                                // Navigate to profile
+                                navController.navigate("profile")
+                            }
+                        )
                     }
                 }
             }

@@ -39,6 +39,7 @@ class ProfileController(
 
     fun onEmergencyContactClick() {
         // Navigate to Emergency Contact screen
+        navigator.navigateToEmergencyContact()
     }
 
     fun onDocumentsClick() {

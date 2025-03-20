@@ -36,4 +36,5 @@ interface Navigator {
     fun navigateToProfile()
     fun navigateToAboutMe()
     fun navigateToAddressDetails()
+    fun navigateToEmergencyContact()
 } 

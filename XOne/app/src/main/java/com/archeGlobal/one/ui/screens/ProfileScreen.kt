@@ -38,6 +38,7 @@ import com.archeGlobal.one.model.ProfileMenuItem
 import com.archeGlobal.one.ui.preview.PreviewNavigator
 import androidx.compose.ui.layout.ContentScale
 import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.ui.components.FooterScaffold
 
 @Composable
 fun ProfileScreen(
@@ -52,85 +53,84 @@ fun ProfileScreen(
     // State to control the visibility of the logout confirmation dialog
     var showLogoutDialog by remember { mutableStateOf(false) }
     
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1),  // Light Beige/Grey
-                        Color(0xFFC8C8CA),  // Light Grey
-                        Color(0xFF474749)   // Dark Grey
+    FooterScaffold(
+        footerNavigation = footerNavigation,
+        onFooterHomeClick = onFooterHomeClick,
+        onFooterChatClick = onFooterChatClick,
+        onFooterSOSClick = onFooterSOSClick,
+        onFooterProfileClick = onFooterProfileClick
+    ) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFE0DCD1),  // Light Beige/Grey
+                            Color(0xFFC8C8CA),  // Light Grey
+                            Color(0xFF474749)   // Dark Grey
+                        )
                     )
                 )
-            )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Header
-            ProfileHeader(
-                name = controller.model.name,
-                email = controller.model.email
-            )
-
-            // Rest of the content with padding
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                // Profile Header
+                ProfileHeader(
+                    name = controller.model.name,
+                    email = controller.model.email
+                )
 
-                // Menu Items
-                MenuItems(
-                    items = controller.model.menuItems,
-                    onItemClick = { title ->
-                        when (title) {
-                            "About Me" -> controller.onAboutMeClick()
-                            "Address/Coordinates" -> controller.onAddressClick()
-                            "Emergency Contact" -> controller.onEmergencyContactClick()
-                            "Documents" -> controller.onDocumentsClick()
-                            "Log out" -> showLogoutDialog = true // Show logout dialog instead of direct action
+                // Rest of the content with padding
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Menu Items
+                    MenuItems(
+                        items = controller.model.menuItems,
+                        onItemClick = { title ->
+                            when (title) {
+                                "About Me" -> controller.onAboutMeClick()
+                                "Address/Coordinates" -> controller.onAddressClick()
+                                "Emergency Contact" -> controller.onEmergencyContactClick()
+                                "Documents" -> controller.onDocumentsClick()
+                                "Log out" -> showLogoutDialog = true // Show logout dialog instead of direct action
+                            }
                         }
-                    }
-                )
+                    )
 
-                Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(1f))
 
-                // Version
-                Text(
-                    text = controller.model.version,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                    // Version
+                    Text(
+                        text = controller.model.version,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
             }
             
-            // Footer navigation
-            FooterNavigation(
-                model = footerNavigation,
-                onHomeClick = onFooterHomeClick,
-                onChatClick = onFooterChatClick,
-                onSOSClick = onFooterSOSClick,
-                onProfileClick = onFooterProfileClick
-            )
-        }
-        
-        // Logout confirmation dialog
-        if (showLogoutDialog) {
-            LogoutConfirmationDialog(
-                onConfirm = { 
-                    showLogoutDialog = false
-                    controller.onLogoutClick()
-                },
-                onDismiss = { 
-                    showLogoutDialog = false 
-                }
-            )
+            // Logout confirmation dialog
+            if (showLogoutDialog) {
+                LogoutConfirmationDialog(
+                    onConfirm = { 
+                        showLogoutDialog = false
+                        controller.onLogoutClick()
+                    },
+                    onDismiss = { 
+                        showLogoutDialog = false 
+                    }
+                )
+            }
         }
     }
 }
@@ -375,82 +375,4 @@ fun ProfileScreenPreview() {
     )
     
     ProfileScreen(controller = previewController)
-}
-
-@Composable
-fun FooterNavigation(
-    model: FooterNavigationModel,
-    onHomeClick: () -> Unit,
-    onChatClick: () -> Unit,
-    onSOSClick: () -> Unit,
-    onProfileClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp),
-        color = Color.White,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            FooterItem(
-                icon = Icons.Default.Home,
-                title = "Home",
-                isSelected = model.showHome,
-                onClick = onHomeClick
-            )
-            FooterItem(
-                icon = Icons.Default.Email,
-                title = "Chat",
-                isSelected = model.showChat,
-                onClick = onChatClick
-            )
-            FooterItem(
-                icon = Icons.Default.Warning,
-                title = "SOS",
-                isSelected = model.showSOS,
-                onClick = onSOSClick
-            )
-            FooterItem(
-                icon = Icons.Default.Person,
-                title = "Profile",
-                isSelected = model.showProfile,
-                onClick = onProfileClick
-            )
-        }
-    }
-}
-
-@Composable
-private fun FooterItem(
-    icon: ImageVector,
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = title,
-            tint = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isSelected) Color(0xFFDD3825) else Color(0xFF808080),
-            fontSize = 12.sp
-        )
-    }
 } 

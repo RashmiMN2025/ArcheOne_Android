@@ -11,7 +11,7 @@ import com.archeGlobal.one.HomeActivity
 import com.archeGlobal.one.MyDocumentsActivity
 import com.archeGlobal.one.XConnectActivity
 import com.archeGlobal.one.R
-import com.archeGlobal.one.ui.screens.SOSActivity
+import com.archeGlobal.one.SOSActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -134,5 +134,10 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToAddressDetails() {
         Log.d("AndroidNavigator", "Navigating to address details screen")
         navController?.navigate("addressdetails")
+    }
+    
+    override fun navigateToEmergencyContact() {
+        Log.d("AndroidNavigator", "Navigating to emergency contact screen")
+        navController?.navigate("emergencycontact")
     }
 }
