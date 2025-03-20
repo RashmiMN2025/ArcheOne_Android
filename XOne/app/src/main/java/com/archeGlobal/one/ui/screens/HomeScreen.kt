@@ -555,7 +555,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding","Profile"  -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect"  -> {
                 Surface(
                     modifier = Modifier.size(120.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -585,7 +585,7 @@ private fun AppIcon(
                                 "travel&expenses" -> R.drawable.travel
                                 "policy" -> R.drawable.policy
                                 "newonboarding" -> R.drawable.new_onboarding
-
+                                "profileconnect" -> R.drawable.profile
                                 else -> R.drawable.mydocuments
                             }
                         ),
