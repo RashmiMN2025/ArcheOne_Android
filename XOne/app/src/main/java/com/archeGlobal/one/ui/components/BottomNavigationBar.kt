@@ -95,7 +95,7 @@ fun BottomNavigationBar(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Email,
+                            painterResource(id = R.drawable.chat),
                             contentDescription = "Chat",
                             modifier = Modifier.size(20.dp),
                             tint = if (model.showChat) selectedColor else unselectedColor
@@ -131,7 +131,7 @@ fun BottomNavigationBar(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Warning,
+                            painterResource(id = R.drawable.sostab),
                             contentDescription = "SOS",
                             modifier = Modifier.size(20.dp),
                             tint = if (model.showSOS) selectedColor else unselectedColor
