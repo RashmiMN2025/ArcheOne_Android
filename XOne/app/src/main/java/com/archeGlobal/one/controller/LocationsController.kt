@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.*
 import com.archeGlobal.one.network.Office as NetworkOffice
 import com.archeGlobal.one.network.RegionalOffice as NetworkRegionalOffice
@@ -121,17 +122,18 @@ class LocationsController(private val context: Context) {
     }
     
     fun showFloorMap(mapUrl: String) {
-        Log.d("LocationsController", "Attempting to open floor map in browser: $mapUrl")
+        Log.d("LocationsController", "Attempting to open floor map in WebViewActivity: $mapUrl")
         try {
-            // Open in browser
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse(mapUrl)
+            // Open in the WebViewActivity to display PDF within the app
+            val intent = Intent(context, WebViewActivity::class.java).apply {
+                putExtra("fileUrl", mapUrl)
+                putExtra("title", "Floor Map") // Using just "Floor Map" as the title
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             
             context.startActivity(intent)
             _locationState = _locationState.copy(showingFloorMap = true)
-            Log.d("LocationsController", "Opened floor map in browser")
+            Log.d("LocationsController", "Opened floor map in WebViewActivity")
         } catch (e: Exception) {
             Log.e("LocationsController", "Error opening floor map: ${e.message}")
             Toast.makeText(

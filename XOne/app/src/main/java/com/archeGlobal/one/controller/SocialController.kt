@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.Job
 import com.archeGlobal.one.model.SocialArticle
 import com.archeGlobal.one.model.SocialContent
@@ -125,8 +126,17 @@ class SocialController(private val context: Context) {
             else -> "$baseUrl/jobs/$slug"
         }
         
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        // Use WebViewActivity instead of external browser
+        val intent = Intent(context, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", url)
+            putExtra("title", when (type) {
+                "Case Studies" -> "Case Study"
+                "Blogs" -> "Blog"
+                else -> "Job Details"
+            })
+        }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
+        Log.d("SocialController", "Opening $type link in WebViewActivity: $url")
     }
 } 

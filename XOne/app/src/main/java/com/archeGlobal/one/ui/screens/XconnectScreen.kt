@@ -24,12 +24,24 @@ import com.archeGlobal.one.controller.SocialController
 import com.archeGlobal.one.model.Job
 import com.archeGlobal.one.model.SocialArticle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun XConnectScreen(onBackPressed: () -> Unit) {
     val context = LocalContext.current
     val socialController = remember { SocialController(context) }
     var selectedTab by remember { mutableStateOf("All Posts") }
+    var searchQuery by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // Updated tab options
     val tabs = listOf("All Posts", "Case Studies", "Blogs", "Jobs")
@@ -70,14 +82,17 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                 }
 
                 // Centered Title
-                Text(
-                    text = "Connect",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    modifier = Modifier
-                        .padding(start = 100.dp)
-                        .align(Alignment.CenterVertically)
-                )
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Connect",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
 
             // Tabs Row (Scrollable)
@@ -96,13 +111,74 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                     )
                 }
             }
+            
+            // Search Bar
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                color = Color.Transparent
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Search
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onSearch = {
+                                    keyboardController?.hide()
+                                }
+                            ),
+                            decorationBox = { innerTextField ->
+                                Box {
+                                    if (searchQuery.isEmpty()) {
+                                        Text(
+                                            text = "Search...",
+                                            color = Color.Gray.copy(alpha = 0.6f),
+                                            fontSize = 16.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
 
-            // Content based on selected tab
+            // Content based on selected tab and search query
             when (selectedTab) {
-                "All Posts" -> AllPostsContent(socialController)
-                "Case Studies" -> CaseStudiesContent(socialController)
-                "Blogs" -> BlogsContent(socialController)
-                "Jobs" -> JobsContent(socialController)
+                "All Posts" -> AllPostsContent(socialController, searchQuery)
+                "Case Studies" -> CaseStudiesContent(socialController, searchQuery)
+                "Blogs" -> BlogsContent(socialController, searchQuery)
+                "Jobs" -> JobsContent(socialController, searchQuery)
             }
         }
     }
@@ -130,30 +206,83 @@ fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
 }
 
 @Composable
-fun AllPostsContent(socialController: SocialController) {
+fun AllPostsContent(socialController: SocialController, searchQuery: String) {
+    // Filter case studies, blogs and jobs based on search query
+    val filteredCaseStudies = socialController.getCaseStudies().filter {
+        it.title.contains(searchQuery, ignoreCase = true) || 
+        it.description.contains(searchQuery, ignoreCase = true)
+    }
+    
+    val filteredBlogs = socialController.getBlogs().filter {
+        it.title.contains(searchQuery, ignoreCase = true) || 
+        it.description.contains(searchQuery, ignoreCase = true)
+    }
+    
+    val filteredJobs = socialController.getJobPostings().filter {
+        it.Title.contains(searchQuery, ignoreCase = true) || 
+        it.Description.contains(searchQuery, ignoreCase = true)
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        HorizontalSection(title = "Case Studies", articles = socialController.getCaseStudies())
-        Spacer(modifier = Modifier.height(16.dp))
+        if (filteredCaseStudies.isNotEmpty()) {
+            HorizontalSection(title = "Case Studies", articles = filteredCaseStudies)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         
-        HorizontalSection(title = "Blogs", articles = socialController.getBlogs())
-        Spacer(modifier = Modifier.height(16.dp))
+        if (filteredBlogs.isNotEmpty()) {
+            HorizontalSection(title = "Blogs", articles = filteredBlogs)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         
-        HorizontalJobsSection(title = "Jobs", jobs = socialController.getJobPostings())
+        if (filteredJobs.isNotEmpty()) {
+            HorizontalJobsSection(title = "Jobs", jobs = filteredJobs)
+        }
+        
+        // If all sections are empty after filtering, show a message
+        if (filteredCaseStudies.isEmpty() && filteredBlogs.isEmpty() && filteredJobs.isEmpty() && searchQuery.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No results found for '$searchQuery'",
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun CaseStudiesContent(socialController: SocialController) {
-    val caseStudies = socialController.getCaseStudies()
+fun CaseStudiesContent(socialController: SocialController, searchQuery: String) {
+    val caseStudies = socialController.getCaseStudies().filter {
+        searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true) || 
+        it.description.contains(searchQuery, ignoreCase = true)
+    }
+    
     if (caseStudies.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("No case studies available", color = Color.Gray)
+            Text(
+                text = if (searchQuery.isEmpty()) "No case studies available" 
+                       else "No case studies found for '$searchQuery'",
+                color = Color.Gray
+            )
         }
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "Case Studies",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
             caseStudies.forEach { article ->
                 ArticleCard(
                     article = article,
@@ -167,17 +296,32 @@ fun CaseStudiesContent(socialController: SocialController) {
 }
 
 @Composable
-fun BlogsContent(socialController: SocialController) {
-    val blogs = socialController.getBlogs()
+fun BlogsContent(socialController: SocialController, searchQuery: String) {
+    val blogs = socialController.getBlogs().filter {
+        searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true) || 
+        it.description.contains(searchQuery, ignoreCase = true)
+    }
+    
     if (blogs.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("No blogs available", color = Color.Gray)
+            Text(
+                text = if (searchQuery.isEmpty()) "No blogs available" 
+                       else "No blogs found for '$searchQuery'",
+                color = Color.Gray
+            )
         }
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "Blogs",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
             blogs.forEach { article ->
                 ArticleCard(
                     article = article,
@@ -191,7 +335,12 @@ fun BlogsContent(socialController: SocialController) {
 }
 
 @Composable
-fun JobsContent(socialController: SocialController) {
+fun JobsContent(socialController: SocialController, searchQuery: String) {
+    val jobs = socialController.getJobPostings().filter {
+        searchQuery.isEmpty() || it.Title.contains(searchQuery, ignoreCase = true) || 
+        it.Description.contains(searchQuery, ignoreCase = true)
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -199,31 +348,29 @@ fun JobsContent(socialController: SocialController) {
     ) {
         Text(
             text = "Jobs",
-            fontSize = 22.sp,  // Slightly smaller from 24.sp
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
-            modifier = Modifier
-                .padding(vertical = 16.dp)
-                .fillMaxWidth(),
-            textAlign = TextAlign.Start  // Left align the title
+            modifier = Modifier.padding(bottom = 12.dp)
         )
         
-        val jobs = socialController.getJobPostings()
         if (jobs.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No jobs available", color = Color.Gray)
+                Text(
+                    text = if (searchQuery.isEmpty()) "No jobs available" 
+                           else "No jobs found for '$searchQuery'",
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
             }
         } else {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                jobs.forEach { job ->
-                    JobCard(job = job, socialController = socialController)
-                }
+            jobs.forEach { job ->
+                JobCard(job = job, socialController = socialController)
             }
         }
     }
@@ -244,7 +391,7 @@ fun JobCard(job: Job, socialController: SocialController) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(8.dp),  // Even more reduced padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Job Image
@@ -256,47 +403,51 @@ fun JobCard(job: Job, socialController: SocialController) {
                 contentDescription = job.Title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(150.dp)  // Further reduced height
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop,
                 error = painterResource(id = R.drawable.ic_back),
                 placeholder = painterResource(id = R.drawable.ic_back)
             )
             
-            // Job Title
+            // Job Title with minimal padding
             Text(
                 text = job.Title,
-                fontSize = 18.sp,  // Smaller from 20.sp
+                fontSize = 16.sp,  // Smaller text
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.padding(top = 12.dp),
-                textAlign = TextAlign.Center
+                modifier = Modifier.padding(top = 4.dp),  // Minimal top padding
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             
-            // Experience
+            // Experience with absolutely minimal spacing
             Text(
                 text = "Experience : ${extractExperience(job.Description)}",
-                fontSize = 14.sp,  // Smaller from 16.sp
+                fontSize = 14.sp,
                 color = Color.Gray,
-                modifier = Modifier.padding(top = 4.dp),
-                textAlign = TextAlign.Center
+                modifier = Modifier.padding(top = 1.dp, bottom = 0.dp),  // Almost no space
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             
-            // Apply Button
+            // Apply Button with minimal spacing
             Button(
                 onClick = { socialController.openInBrowser("Jobs", job.Slug) },
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)  // Wider button (from 0.8f)
-                    .padding(top = 16.dp),  // Increased top padding from 12.dp
+                    .fillMaxWidth(0.9f)
+                    .padding(top = 2.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "Apply",
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,  // Smaller text for button
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    modifier = Modifier.padding(vertical = 0.dp)  // No vertical padding
                 )
             }
         }
@@ -319,7 +470,9 @@ fun HorizontalSection(title: String, articles: List<SocialArticle>) {
         Text(
             text = title,
             fontSize = 20.sp,
-            modifier = Modifier.padding(bottom = 8.dp)
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
         )
 
         Row(
@@ -352,7 +505,9 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
         Text(
             text = title,
             fontSize = 20.sp,
-            modifier = Modifier.padding(bottom = 8.dp)
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
         )
 
         Row(
@@ -362,15 +517,83 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
                 .horizontalScroll(rememberScrollState())
         ) {
             jobs.forEach { job ->
-                PostCard(
+                // Using a compact job card for horizontal scrolling view
+                CompactJobCard(
                     title = job.Title,
-                    description = job.Description,
+                    experience = extractExperience(job.Description),
                     imageUrl = job.Image,
-                    type = "Jobs",
                     slug = job.Slug,
                     socialController = LocalContext.current.let { 
                         remember { SocialController(it) }
                     }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CompactJobCard(
+    title: String,
+    experience: String,
+    imageUrl: String,
+    slug: String,
+    socialController: SocialController
+) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .width(150.dp)
+            .height(150.dp)
+            .padding(4.dp)
+            .clickable { 
+                socialController.openInBrowser("Jobs", slug)
+            },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Job Image
+            Box(
+                modifier = Modifier
+                    .weight(0.7f)
+                    .fillMaxWidth()
+                    .background(Color(0xFF6D34C9)) // Purple background like in the image
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.ic_back),
+                    placeholder = painterResource(id = R.drawable.ic_back)
+                )
+            }
+            
+            // Job info in a compact format
+            Column(
+                modifier = Modifier
+                    .weight(0.3f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Text(
+                    text = "Experience : $experience",
+                    fontSize = 10.sp,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp) // Minimal spacing
                 )
             }
         }
@@ -427,7 +650,7 @@ fun ArticleCard(article: SocialArticle, type: String, socialController: SocialCo
                         fontSize = 14.sp,
                         color = Color.Gray,
                         maxLines = 4,  // Show 4 lines
-                        lineHeight = 18.sp,
+                        lineHeight = 16.sp,  // Reduced from 18.sp
                         overflow = TextOverflow.Ellipsis
                     )
                     
@@ -439,7 +662,7 @@ fun ArticleCard(article: SocialArticle, type: String, socialController: SocialCo
                         color = Color(0xFFDD3825),
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(top = 54.dp)  // Position at fourth line (3 lines × 18sp)
+                            .padding(top = 48.dp)  // Adjusted position for reduced line height (4 lines × 16sp = 64 - some overlap)
                             .background(
                                 Brush.horizontalGradient(
                                     colors = listOf(
@@ -508,6 +731,7 @@ fun PostCard(
                     fontSize = 12.sp,
                     color = Color.Gray,
                     maxLines = 3,
+                    lineHeight = 14.sp,
                     overflow = TextOverflow.Ellipsis
                 )
             }

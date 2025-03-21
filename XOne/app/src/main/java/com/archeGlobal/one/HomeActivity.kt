@@ -3,6 +3,7 @@ package com.archeGlobal.one
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -19,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.controller.HomeController
 import com.archeGlobal.one.controller.LocationsController
@@ -237,10 +239,12 @@ class HomeActivity : ComponentActivity() {
                                 navController.navigate("monthDetail/$month")
                             },
                             onHolidayListClick = { pdfUrl ->
-                                val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    data = Uri.parse(pdfUrl)
+                                val intent = Intent(this@HomeActivity, WebViewActivity::class.java).apply {
+                                    putExtra("fileUrl", pdfUrl)
+                                    putExtra("title", "Holiday List")
                                 }
                                 startActivity(intent)
+                                Log.d("HomeActivity", "Opening holiday list PDF in WebViewActivity: $pdfUrl")
                             }
                         )
                     }
