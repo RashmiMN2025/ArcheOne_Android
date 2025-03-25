@@ -6,46 +6,40 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.navigation.NavType
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.archeGlobal.one.WebViewActivity
-import com.archeGlobal.one.navigation.AndroidNavigator
-import com.archeGlobal.one.controller.HomeController
-import com.archeGlobal.one.controller.LocationsController
-import com.archeGlobal.one.controller.PolicyController
-import com.archeGlobal.one.controller.AssetController
-import com.archeGlobal.one.controller.HolidayCalendarController
-import com.archeGlobal.one.controller.ProfileController
-import com.archeGlobal.one.repository.UserRepository
-import com.archeGlobal.one.ui.screens.HomeScreen
-import com.archeGlobal.one.ui.screens.LocationsScreen
-import com.archeGlobal.one.ui.screens.BusinessCardScreen
-import com.archeGlobal.one.ui.screens.PolicyScreen
-import com.archeGlobal.one.ui.screens.AssetScreen
-import com.archeGlobal.one.ui.screens.HolidayCalendarScreen
-import com.archeGlobal.one.ui.screens.MonthDetailScreen
-import com.archeGlobal.one.ui.screens.ProfileScreen
+import androidx.navigation.NavType
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.*
-import com.archeGlobal.one.ui.screens.*
-import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.repository.UserRepository
+import com.archeGlobal.one.ui.screens.*
+import com.archeGlobal.one.ui.theme.XOneTheme
 import com.google.gson.Gson
-import com.archeGlobal.one.controller.AddressController
-import com.archeGlobal.one.controller.EmergencyContactController
+import kotlinx.coroutines.launch
+import java.net.URLDecoder
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
@@ -65,6 +59,7 @@ class HomeActivity : ComponentActivity() {
 
         // Check if we need to navigate to a specific destination
         val destination = intent.getStringExtra("destination")
+        val navigateTo = intent.getStringExtra("navigateTo")
 
         // Initialize controllers that need context
         holidayCalendarController = HolidayCalendarController(
@@ -90,9 +85,13 @@ class HomeActivity : ComponentActivity() {
                 addressController = AddressController(navigator)
                 emergencyContactController = EmergencyContactController(navigator)
 
-                // If we have a destination, navigate to it
-                LaunchedEffect(destination) {
+                // If we have a destination or navigateTo, navigate to it
+                LaunchedEffect(destination, navigateTo) {
                     destination?.let {
+                        navController.navigate(it)
+                    }
+                    
+                    navigateTo?.let {
                         navController.navigate(it)
                     }
                 }
@@ -191,7 +190,6 @@ class HomeActivity : ComponentActivity() {
                         PolicyScreen(
                             model = policyController.model,
                             onPolicyClick = policyController::onPolicyClick,
-                            onDownloadClick = policyController::onDownloadClick,
                             onBackClick = policyController::onBackClick
                         )
                     }
@@ -345,6 +343,35 @@ class HomeActivity : ComponentActivity() {
                     ) {
                         EmergencyContactScreen(
                             controller = emergencyContactController
+                        )
+                    }
+
+                    composable(
+                        route = "pdf_viewer/{pdfUrl}?title={title}",
+                        arguments = listOf(
+                            navArgument("pdfUrl") { type = NavType.StringType },
+                            navArgument("title") { type = NavType.StringType }
+                        ),
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) { backStackEntry ->
+                        val pdfUrl = URLDecoder.decode(backStackEntry.arguments?.getString("pdfUrl") ?: "", "UTF-8")
+                        val title = backStackEntry.arguments?.getString("title") ?: "PDF Viewer"
+                        
+                        PDFViewerScreen(
+                            pdfUrl = pdfUrl,
+                            title = title,
+                            onBackClick = { navController.popBackStack() }
                         )
                     }
 

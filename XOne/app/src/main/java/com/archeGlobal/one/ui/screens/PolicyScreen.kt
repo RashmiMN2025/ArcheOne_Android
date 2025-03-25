@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.sp
 fun PolicyScreen(
     model: PolicyModel,
     onPolicyClick: (PolicyModel.Policy) -> Unit,
-    onDownloadClick: (PolicyModel.Policy) -> Unit,
     onBackClick: () -> Unit
 ) {
     Box(
@@ -42,13 +41,16 @@ fun PolicyScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
-                title = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                title = { 
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
                             text = "Policies",
                             style = MaterialTheme.typography.titleLarge,
                             color = Color.Black,
-                            modifier = Modifier.padding(start = 130.dp)
+                            textAlign = TextAlign.Center
                         )
                     }
                 },
@@ -57,9 +59,13 @@ fun PolicyScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
                     }
                 },
+                actions = {
+                    // Add invisible spacer with same size as navigation icon for balance
+                    Spacer(modifier = Modifier.width(48.dp))
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
-
+            
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -85,8 +91,7 @@ fun PolicyScreen(
                         items(model.policies) { policy ->
                             PolicyCard(
                                 policy = policy,
-                                onViewClick = { onPolicyClick(policy) },
-                                onDownloadClick = { onDownloadClick(policy) }
+                                onViewClick = { onPolicyClick(policy) }
                             )
                         }
                     }
@@ -100,8 +105,7 @@ fun PolicyScreen(
 @Composable
 private fun PolicyCard(
     policy: PolicyModel.Policy,
-    onViewClick: () -> Unit,
-    onDownloadClick: () -> Unit
+    onViewClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -120,29 +124,14 @@ private fun PolicyCard(
                 modifier = Modifier.weight(1f)
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconButton(onClick = onViewClick, modifier = Modifier.size(22.dp)) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_view),
-                        contentDescription = "View",
-                        modifier = Modifier.size(30.dp),
-                        colorFilter = ColorFilter.tint(Color.White)
-                    )
-                }
-
-                IconButton(onClick = onDownloadClick, modifier = Modifier.size(22.dp)) {
-                    Box(
-                        modifier = Modifier.size(25.dp).background(Color.White, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_download),
-                            contentDescription = "Download",
-                            modifier = Modifier.size(20.dp),
-                            colorFilter = ColorFilter.tint(Color(0xFFDD3825))
-                        )
-                    }
-                }
+            // Only show view button, download button removed
+            IconButton(onClick = onViewClick, modifier = Modifier.size(30.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_view),
+                    contentDescription = "View",
+                    modifier = Modifier.size(30.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
             }
         }
     }

@@ -140,4 +140,9 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to emergency contact screen")
         navController?.navigate("emergencycontact")
     }
+    
+    override fun navigateToPDFViewer(pdfUrl: String, title: String) {
+        Log.d("AndroidNavigator", "Navigating to PDF viewer screen: $pdfUrl")
+        navController?.navigate("pdf_viewer/$pdfUrl?title=$title")
+    }
 }

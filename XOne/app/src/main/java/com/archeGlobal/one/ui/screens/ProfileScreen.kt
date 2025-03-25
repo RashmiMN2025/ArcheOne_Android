@@ -278,7 +278,7 @@ private fun ProfileHeader(
 
             Text(
                 text = name,
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )

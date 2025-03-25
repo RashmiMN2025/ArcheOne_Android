@@ -174,7 +174,7 @@ private fun PortraitBusinessCard(
                         text = businessCard.name,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 30.sp
+                            fontSize = 24.sp
                         ),
                         color = Color.Black
                     )
@@ -453,7 +453,7 @@ private fun LandscapeBusinessCard(
                             text = businessCard.name,
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 25.sp
+                                fontSize = 18.sp
                             ),
                             color = Color.Black
                         )
@@ -462,7 +462,7 @@ private fun LandscapeBusinessCard(
 
                         Text(
                             text = businessCard.designation,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 10.sp),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
                             color = Color.Black
                         )
 

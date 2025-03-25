@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
+import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.navigation.Navigator
 import okhttp3.*
@@ -20,10 +21,13 @@ class PolicyController(
     val model = PolicyModel(policies = OtpVerificationController.getPoliciesData() ?: emptyList())
 
     fun onPolicyClick(policy: PolicyModel.Policy) {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.setDataAndType(Uri.parse(policy.filePath), "application/pdf")
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        // Use WebViewActivity to open PDF (similar to how holiday list is opened)
+        val intent = Intent(context, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", policy.filePath)
+            putExtra("title", policy.policyName)
+        }
         context.startActivity(intent)
+        Log.d("PolicyController", "Opening policy PDF in WebViewActivity: ${policy.filePath}")
     }
 
     fun onDownloadClick(policy: PolicyModel.Policy) {

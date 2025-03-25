@@ -37,4 +37,5 @@ interface Navigator {
     fun navigateToAboutMe()
     fun navigateToAddressDetails()
     fun navigateToEmergencyContact()
+    fun navigateToPDFViewer(pdfUrl: String, title: String)
 } 

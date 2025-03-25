@@ -10,6 +10,7 @@ import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.LogoutRequest
 import com.archeGlobal.one.network.LogoutResponse
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -19,6 +20,8 @@ class ProfileController(
     private val context: Context,
     private val navigator: Navigator
 ) {
+    private val userDataManager = UserDataManager.getInstance(context)
+    
     var model by mutableStateOf(
         ProfileModel(
             name = OtpVerificationController.getUserData()?.name ?: "",
@@ -53,6 +56,8 @@ class ProfileController(
         if (employeeId.isEmpty()) {
             // If no employeeId is available, simply navigate to login screen
             Toast.makeText(context, "No user session found. Logging out...", Toast.LENGTH_SHORT).show()
+            // Clear all user data
+            userDataManager.clearUserData()
             navigator.navigateToLoginScreen()
             return
         }
@@ -73,8 +78,8 @@ class ProfileController(
                         // Successful logout
                         Toast.makeText(context, responseBody.message, Toast.LENGTH_SHORT).show()
                         
-                        // Clear user data
-                        OtpVerificationController.clearUserData()
+                        // Clear user data from central manager
+                        userDataManager.clearUserData()
                     } else {
                         // Server returned non-200 status
                         Toast.makeText(context, "Logout failed: ${responseBody.message}", Toast.LENGTH_SHORT).show()
@@ -87,9 +92,11 @@ class ProfileController(
                     Log.e("ProfileController", errorMsg)
                 }
                 
+                // Clear user data regardless of the response
+                userDataManager.clearUserData()
+                
                 // Navigate to login screen regardless of the result
                 // This ensures the user can log in again even if the logout API call fails
-                // This call will now clear the back stack to prevent returning to the profile page
                 navigator.navigateToLoginScreen()
             }
             
@@ -98,6 +105,9 @@ class ProfileController(
                 val errorMsg = "Network error during logout: ${t.message}"
                 Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
                 Log.e("ProfileController", errorMsg, t)
+                
+                // Clear user data even on failure
+                userDataManager.clearUserData()
                 
                 // Navigate to login screen anyway
                 navigator.navigateToLoginScreen()

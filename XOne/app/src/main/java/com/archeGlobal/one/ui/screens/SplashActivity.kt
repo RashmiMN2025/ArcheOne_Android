@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -17,28 +18,44 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.MainActivity
+import com.archeGlobal.one.HomeActivity
+import com.archeGlobal.one.LoginActivity
 import com.archeGlobal.one.R
+import com.archeGlobal.one.utils.UserDataManager
 
 class SplashActivity : ComponentActivity() {
+    private lateinit var userDataManager: UserDataManager
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        
+        userDataManager = UserDataManager.getInstance(applicationContext)
+        
         // Set Splash Screen UI
         setContent {
-            SplashScreen()
+            XOneSplashScreen()
         }
 
-        // Delay for 2 seconds and then open MainActivity
+        // Delay for 2 seconds and then check if user is logged in
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, MainActivity::class.java))
+            // Check if user has a valid auth token
+            val isLoggedIn = userDataManager.isLoggedIn()
+            Log.d("SplashActivity", "Login status: $isLoggedIn, userData: ${userDataManager.getUserData()?.name}")
+            
+            if (isLoggedIn) {
+                // User is logged in, go to Home screen
+                startActivity(Intent(this, HomeActivity::class.java))
+            } else {
+                // User is not logged in, go to Login screen
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
             finish()
         }, 2000)
     }
 }
 
 @Composable
-fun SplashScreen() {
+fun XOneSplashScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -59,4 +76,4 @@ fun SplashScreen() {
             )
         }
     }
-}
+} 

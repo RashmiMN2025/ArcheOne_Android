@@ -26,7 +26,7 @@ class AssetController(
     init {
         val employeeId = OtpVerificationController.getUserData()?.employeeId?.trim() ?: ""
         if (employeeId.isNotBlank()) {
-            fetchAssetDetails("nt$employeeId")
+            fetchAssetDetails("$employeeId")
         }
     }
 

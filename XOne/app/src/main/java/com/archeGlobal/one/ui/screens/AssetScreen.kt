@@ -42,10 +42,17 @@ fun AssetScreen(
     ) {
         TopAppBar(
             title = { 
-                Text(
-                    "Asset Information",
-                    color = Color.Black
-                ) 
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Asset Information",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.Black,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             },
             navigationIcon = {
                 IconButton(onClick = { controller.onBackPressed() }) {
@@ -55,6 +62,10 @@ fun AssetScreen(
                         tint = Color.Black
                     )
                 }
+            },
+            actions = {
+                // Add invisible spacer with same size as navigation icon for balance
+                Spacer(modifier = Modifier.width(48.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent
@@ -145,10 +156,12 @@ fun AssetScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(120.dp),
-                                placeholder = { Text("Please describe your issue") },
+                                placeholder = { Text("Please describe your issue", color = Color.Gray) },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.Gray
+                                    focusedBorderColor = Color.Gray,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black
                                 )
                             )
 
@@ -187,12 +200,12 @@ private fun InfoRow(label: String, value: String) {
             "$label : ",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = Color.Black
+            color = Color.Gray
         )
         Text(
             text = value.ifEmpty { "N/A" },
             fontSize = 16.sp,
-            color = Color.Gray
+            color = Color.Black
         )
     }
 } 

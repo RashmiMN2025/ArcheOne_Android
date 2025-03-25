@@ -18,103 +18,133 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class SocialController(private val context: Context) {
+    // Get reference to the data provider
+    private val dataProvider = SocialDataProvider.getInstance(context)
+    
+    // Local state for UI
     private var _socialState by mutableStateOf(SocialContent())
     val socialContent: SocialContent get() = _socialState
     
     init {
-        fetchSocialContent()
+        // If data is already loaded, use it immediately; otherwise fetch it
+        if (dataProvider.isLoaded) {
+            _socialState = dataProvider.socialContent
+            Log.d("SocialController", "Using preloaded social content data")
+        } else {
+            // Ensure data is being loaded
+            dataProvider.preloadData()
+            
+            // Also trigger a local fetch to update the UI state when data becomes available
+            fetchSocialContent()
+        }
     }
     
     private fun fetchSocialContent() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val apiService = RetrofitClient.apiService
-                val response = apiService.getSocialContent()
+                // Wait for data to be available or timeout after 10 seconds
+                var attempts = 0
+                while (!dataProvider.isLoaded && attempts < 20) {
+                    attempts++
+                    kotlinx.coroutines.delay(500)
+                }
                 
-                if (response.isSuccessful) {
-                    val socialData = response.body()
-                    withContext(Dispatchers.Main) {
-                        if (socialData != null) {
-                            _socialState = socialData as SocialContent
-                            Log.d("SocialController", "Fetched ${socialData.jobs.size} jobs")
-                        } else {
-                            Log.e("SocialController", "Social data response was null")
-                        }
+                withContext(Dispatchers.Main) {
+                    if (dataProvider.isLoaded) {
+                        _socialState = dataProvider.socialContent
+                        Log.d("SocialController", "Updated UI with preloaded data")
+                    } else {
+                        Log.e("SocialController", "Timed out waiting for data")
                     }
-                } else {
-                    Log.e("SocialController", "Failed to fetch social data: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("SocialController", "Exception fetching social data", e)
+                Log.e("SocialController", "Exception waiting for social data", e)
             }
         }
     }
     
     fun getJobs(): List<Job> {
-        return _socialState.jobs
+        return if (dataProvider.isLoaded) {
+            dataProvider.jobs
+        } else {
+            _socialState.jobs
+        }
     }
     
     fun getBlogs(): List<SocialArticle> {
-        // Directly map the blogs list to SocialArticle objects
-        return _socialState.blogs.map { blog ->
-            SocialArticle(
-                id = blog.Slug,
-                title = blog.Title,
-                description = blog.Description,
-                imageUrl = blog.Image,
-                content = blog.Content
-            )
+        return if (dataProvider.isLoaded) {
+            dataProvider.blogs
+        } else {
+            // Fallback to local processing
+            _socialState.blogs.map { blog ->
+                SocialArticle(
+                    id = blog.Slug,
+                    title = blog.Title,
+                    description = blog.Description,
+                    imageUrl = blog.Image,
+                    content = blog.Content
+                )
+            }
         }
     }
     
     fun getCaseStudies(): List<SocialArticle> {
-        // Use actual case studies from the API if available
-        if (_socialState.caseStudies.isNotEmpty()) {
-            return _socialState.caseStudies.map { caseStudy ->
-                SocialArticle(
-                    id = caseStudy.Slug,
-                    title = caseStudy.Title,
-                    description = caseStudy.Description,
-                    imageUrl = caseStudy.Image,
-                    content = caseStudy.Content
-                )
+        return if (dataProvider.isLoaded) {
+            dataProvider.caseStudies
+        } else {
+            // Fallback to local processing if data isn't preloaded
+            // Use actual case studies from the API if available
+            if (_socialState.caseStudies.isNotEmpty()) {
+                _socialState.caseStudies.map { caseStudy ->
+                    SocialArticle(
+                        id = caseStudy.Slug,
+                        title = caseStudy.Title,
+                        description = caseStudy.Description,
+                        imageUrl = caseStudy.Image,
+                        content = caseStudy.Content
+                    )
+                }
+            } else {
+                // Fallback to filtering jobs if case studies aren't available
+                _socialState.jobs.filter { 
+                    it.Title.contains("Guide") || 
+                    it.Title.contains("Strategy") ||
+                    it.Slug.contains("guide") ||
+                    it.Slug.contains("strategy")
+                }.map { job ->
+                    SocialArticle(
+                        id = job.Slug,
+                        title = job.Title,
+                        description = job.Description,
+                        imageUrl = job.Image,
+                        content = job.Content
+                    )
+                }
             }
-        }
-        
-        // Fallback to filtering jobs if case studies aren't available
-        return _socialState.jobs.filter { 
-            it.Title.contains("Guide") || 
-            it.Title.contains("Strategy") ||
-            it.Slug.contains("guide") ||
-            it.Slug.contains("strategy")
-        }.map { job ->
-            SocialArticle(
-                id = job.Slug,
-                title = job.Title,
-                description = job.Description,
-                imageUrl = job.Image,
-                content = job.Content
-            )
         }
     }
     
     fun getJobPostings(): List<Job> {
-        // Get actual job listings
-        return _socialState.jobs.filter { job ->
-            // Jobs have specific characteristics like experience requirements
-            job.Description.contains("Experience") ||
-            job.Description.contains("yrs") ||
-            job.Title.contains("Manager") ||
-            job.Title.contains("Engineer") ||
-            job.Title.contains("Lead") ||
-            job.Title.contains("L1") ||
-            job.Title.contains("L2") ||
-            job.Title.contains("L3") ||
-            job.Title.contains("SME") ||
-            job.Title.contains("Sales") ||
-            job.Title.contains("Presales") ||
-            job.Title.contains("Security") ||
-            job.Title.contains("Practice")
+        return if (dataProvider.isLoaded) {
+            dataProvider.jobs
+        } else {
+            // Fallback to local processing
+            _socialState.jobs.filter { job ->
+                // Jobs have specific characteristics like experience requirements
+                job.Description.contains("Experience") ||
+                job.Description.contains("yrs") ||
+                job.Title.contains("Manager") ||
+                job.Title.contains("Engineer") ||
+                job.Title.contains("Lead") ||
+                job.Title.contains("L1") ||
+                job.Title.contains("L2") ||
+                job.Title.contains("L3") ||
+                job.Title.contains("SME") ||
+                job.Title.contains("Sales") ||
+                job.Title.contains("Presales") ||
+                job.Title.contains("Security") ||
+                job.Title.contains("Practice")
+            }
         }
     }
 

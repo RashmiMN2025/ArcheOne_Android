@@ -26,6 +26,7 @@ class HomeController(
         categories = OtpVerificationController.getUserData()?.let { userData ->
             userData.services
                 .groupBy { it.category }
+                .toSortedMap(String.CASE_INSENSITIVE_ORDER)
                 .mapValues { (_, services) ->
                     services.map { service ->
                         HomeItem(
@@ -144,9 +145,12 @@ class HomeController(
             currentFavorites[category] = categoryFavorites
         }
 
+        // Sort favorites by category and update model
+        val sortedFavorites = currentFavorites.toSortedMap(String.CASE_INSENSITIVE_ORDER)
+        
         // Update model and save to preferences
-        model = model.copy(favorites = currentFavorites)
-        preferencesManager.saveFavorites(currentFavorites)
+        model = model.copy(favorites = sortedFavorites)
+        preferencesManager.saveFavorites(sortedFavorites)
 
         // Update item's favorite status in categories
         val updatedCategories = model.categories.mapValues { (_, items) ->

@@ -3,6 +3,10 @@ package com.archeGlobal.one.utils
 import android.content.Context
 import android.content.SharedPreferences
 import com.archeGlobal.one.model.HomeItem
+import com.archeGlobal.one.model.PolicyModel
+import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.model.UserData
+import com.archeGlobal.one.network.Office
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -22,13 +26,135 @@ class PreferencesManager(context: Context) {
         val json = sharedPreferences.getString(KEY_FAVORITES, null)
         return if (json != null) {
             val type = object : TypeToken<Map<String, List<HomeItem>>>() {}.type
-            gson.fromJson(json, type)
+            val favorites: Map<String, List<HomeItem>> = gson.fromJson(json, type)
+            // Ensure favorites are sorted alphabetically by category
+            favorites.toSortedMap(String.CASE_INSENSITIVE_ORDER)
         } else {
             emptyMap()
         }
     }
+    
+    // Save the authentication token
+    fun saveAuthToken(token: String) {
+        sharedPreferences.edit().putString(KEY_AUTH_TOKEN, token).apply()
+    }
+    
+    // Get the saved authentication token
+    fun getAuthToken(): String? {
+        return sharedPreferences.getString(KEY_AUTH_TOKEN, null)
+    }
+    
+    // Check if user is logged in
+    fun isLoggedIn(): Boolean {
+        return getAuthToken() != null
+    }
+    
+    // Clear auth token on logout
+    fun clearAuthToken() {
+        sharedPreferences.edit().remove(KEY_AUTH_TOKEN).apply()
+    }
+    
+    // Save user data
+    fun saveUserData(userData: UserData?) {
+        if (userData == null) {
+            sharedPreferences.edit().remove(KEY_USER_DATA).apply()
+        } else {
+            val json = gson.toJson(userData)
+            sharedPreferences.edit().putString(KEY_USER_DATA, json).apply()
+        }
+    }
+    
+    // Get user data
+    fun getUserData(): UserData? {
+        val json = sharedPreferences.getString(KEY_USER_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<UserData>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+    
+    // Save offices data
+    fun saveOfficesData(offices: List<Office>?) {
+        if (offices == null) {
+            sharedPreferences.edit().remove(KEY_OFFICES_DATA).apply()
+        } else {
+            val json = gson.toJson(offices)
+            sharedPreferences.edit().putString(KEY_OFFICES_DATA, json).apply()
+        }
+    }
+    
+    // Get offices data
+    fun getOfficesData(): List<Office>? {
+        val json = sharedPreferences.getString(KEY_OFFICES_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<Office>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+    
+    // Save policies data
+    fun savePoliciesData(policies: List<PolicyModel.Policy>?) {
+        if (policies == null) {
+            sharedPreferences.edit().remove(KEY_POLICIES_DATA).apply()
+        } else {
+            val json = gson.toJson(policies)
+            sharedPreferences.edit().putString(KEY_POLICIES_DATA, json).apply()
+        }
+    }
+    
+    // Get policies data
+    fun getPoliciesData(): List<PolicyModel.Policy>? {
+        val json = sharedPreferences.getString(KEY_POLICIES_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<PolicyModel.Policy>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+    
+    // Save SOS blogs data
+    fun saveSosBlogsData(sosBlogs: List<SosBlogModel>?) {
+        if (sosBlogs == null) {
+            sharedPreferences.edit().remove(KEY_SOS_BLOGS_DATA).apply()
+        } else {
+            val json = gson.toJson(sosBlogs)
+            sharedPreferences.edit().putString(KEY_SOS_BLOGS_DATA, json).apply()
+        }
+    }
+    
+    // Get SOS blogs data
+    fun getSosBlogsData(): List<SosBlogModel>? {
+        val json = sharedPreferences.getString(KEY_SOS_BLOGS_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<SosBlogModel>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+    
+    // Clear all user-related data on logout
+    fun clearAllUserData() {
+        sharedPreferences.edit().apply {
+            remove(KEY_AUTH_TOKEN)
+            remove(KEY_USER_DATA)
+            remove(KEY_OFFICES_DATA)
+            remove(KEY_POLICIES_DATA)
+            remove(KEY_SOS_BLOGS_DATA)
+        }.apply()
+    }
 
     companion object {
         private const val KEY_FAVORITES = "favorites"
+        private const val KEY_AUTH_TOKEN = "auth_token"
+        private const val KEY_USER_DATA = "user_data"
+        private const val KEY_OFFICES_DATA = "offices_data"
+        private const val KEY_POLICIES_DATA = "policies_data"
+        private const val KEY_SOS_BLOGS_DATA = "sos_blogs_data"
     }
 } 

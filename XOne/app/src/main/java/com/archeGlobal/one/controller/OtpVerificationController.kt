@@ -1,21 +1,26 @@
 package com.archeGlobal.one.controller
 
+import android.content.Context
 import android.util.Log
+import com.archeGlobal.one.XOneApplication
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
+import com.archeGlobal.one.utils.PreferencesManager
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.archeGlobal.one.model.UserData
-
 
 class OtpVerificationController(
     private val navigator: Navigator,
-    private val loginController: LoginController
+    private val loginController: LoginController,
+    private val context: Context
 ) {
+    private val userDataManager = UserDataManager.getInstance(context)
 
     fun verifyOtp(
         email: String,
@@ -36,6 +41,7 @@ class OtpVerificationController(
                     Log.d("OtpVerification", "Token received: $token")
 
                     if (token.isNotEmpty()) {
+                        // Save the token for future use
                         loginWithToken(token, email, mobile, employeeId, callback)
                     } else {
                         callback("OTP verified, but no token received!", true)
@@ -70,12 +76,14 @@ class OtpVerificationController(
                 val request = LoginRequest(email, mobile, employeeId)
                 Log.d("LoginProcess", "Sending login request with token: Bearer $token")
 
-                val response = RetrofitClient.apiService.login(" $token", request).execute()
+                val response = RetrofitClient.apiService.login(token, request).execute()
                 val responseBody = response.body()
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && responseBody != null && responseBody.status == 200) {
-                        saveUserData(responseBody)
+                        // Save all user data through the centralized UserDataManager
+                        userDataManager.saveUserDataFromResponse(responseBody, token)
+                        
                         Log.d("LoginProcess", "Login successful")
                         callback("Login successful", false)
                         navigator.navigateToHome()
@@ -94,68 +102,20 @@ class OtpVerificationController(
         }
     }
 
-    // Save user data after successful login
-    private fun saveUserData(response: VerifyOtpResponse) {
-        userData = response.user?.let {
-            UserData(
-                name = it.name,
-                designation = it.designation,
-                department = it.department,
-                employeeId = it.employeeid,
-                email = it.email,
-                mobile = it.mobile,
-                location = it.location,
-                services = response.services ?: emptyList(),
-                profilePic = response.profile_pic,
-                sosContact = response.sos,
-                userDetails = it.userDetails
-            )
-        }
-
-        officesData = response.offices
-        policiesData = response.policiesList.map { policy ->
-            PolicyModel.Policy(
-                policyName = policy.policyName, // Ensure correct property mapping
-                filePath = policy.filePath
-            )
-        }
-
-        sosBlogsData = response.sosBlogs?.map { sosBlog ->
-            SosBlogModel(
-                name = sosBlog.name,
-                description = sosBlog.description,
-                imageUrl = sosBlog.imageUrl,
-                details = sosBlog.details
-            )
-        } ?: emptyList()
-
-        Log.d("UserData", "User data saved: $userData")
-        Log.d("PoliciesData", "Policies saved: $policiesData")
-        Log.d("SOSBlogsData", "SOS Blogs saved: $sosBlogsData")
+    fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {
+        // Implement the resendOtp functionality if needed
     }
-
-
-    // Companion object for storing user data
+    
     companion object {
-        private var userData: UserData? = null
-        private var officesData: List<Office>? = null
-        private var policiesData: List<PolicyModel.Policy>? = null
-        private var sosBlogsData: List<SosBlogModel>? = null
-
-        fun getUserData(): UserData? = userData
-        fun getOfficesData(): List<Office>? = officesData
-        fun getPoliciesData(): List<PolicyModel.Policy>? = policiesData
+        // Helper methods to access user data from UserDataManager
+        fun getUserData(): UserData? = UserDataManager.getInstance(XOneApplication.getInstance()).getUserData()
+        fun getOfficesData(): List<Office>? = UserDataManager.getInstance(XOneApplication.getInstance()).getOfficesData()
+        fun getPoliciesData(): List<PolicyModel.Policy>? = UserDataManager.getInstance(XOneApplication.getInstance()).getPoliciesData()
+        fun getSosBlogsData(): List<SosBlogModel>? = UserDataManager.getInstance(XOneApplication.getInstance()).getSosBlogsData()
         
         fun clearUserData() {
-            userData = null
-            officesData = null
-            policiesData = null
+            UserDataManager.getInstance(XOneApplication.getInstance()).clearUserData()
             Log.d("UserData", "User data cleared during logout")
         }
-        fun getSosBlogsData(): List<SosBlogModel>? = sosBlogsData
-    }
-
-    fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {
-
     }
 }

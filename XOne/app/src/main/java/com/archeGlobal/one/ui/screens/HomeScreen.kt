@@ -293,12 +293,11 @@ fun HomeScreen(
                                                     onFavoriteClick = { onToggleFavorite(item) },
                                                     modifier = Modifier.weight(1f),
                                                     showFavoriteButton = model.showAllApps || model.viewFavorites,
-                                                    isSelected = item == selectedApp,
+                                                    isSelected = false, // Never set to true here
                                                     onLongPress = { position -> 
                                                         selectedApp = item
                                                         selectedPosition = position
-                                                    },
-                                                    shouldBlur = selectedApp != null && item != selectedApp
+                                                    }
                                                 )
                                             }
                                             repeat(3 - rowItems.size) {
@@ -346,12 +345,11 @@ fun HomeScreen(
                                                         onFavoriteClick = { onToggleFavorite(item) },
                                                         modifier = Modifier.weight(1f),
                                                         showFavoriteButton = true,
-                                                        isSelected = item == selectedApp,
+                                                        isSelected = false, // Never set to true here
                                                         onLongPress = { position -> 
                                                             selectedApp = item
                                                             selectedPosition = position
-                                                        },
-                                                        shouldBlur = selectedApp != null && item != selectedApp
+                                                        }
                                                     )
                                                 }
                                                 repeat(3 - rowItems.size) {
@@ -368,58 +366,140 @@ fun HomeScreen(
                 }
             }
 
-            // Overlay the selected app without blur
+            // Semi-transparent overlay when an app is selected
+            if (selectedApp != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .blur(radius = 8.dp)
+                        .clickable(onClick = {
+                            selectedApp = null
+                            selectedPosition = null
+                        })
+                )
+            }
+
+            // Overlay the selected app
             if (selectedApp != null) {
                 selectedPosition?.let { (x, y) ->
                     val density = LocalDensity.current
                     val itemSize = 80.dp
-                    val scaleFactor = 1.1f
-
+                    val scaleFactor = 1.2f  // Slightly bigger than original
+                    val itemSizePx = with(density) { itemSize.toPx() }
+                    
                     Box(
                         modifier = Modifier
                             .offset {
                                 IntOffset(
-                                    x = (x - with(density) { itemSize.toPx() } / 2).toInt(),
-                                    y = (y - with(density) { itemSize.toPx() }).toInt()
+                                    x = (x - itemSizePx * scaleFactor / 2).toInt(),
+                                    y = (y - itemSizePx - 15).toInt() // Position exactly above with exact pixel offset
                                 )
                             }
                     ) {
-                        AppItem(
-                            title = selectedApp!!.title,
-                            isFavorite = selectedApp!!.isFavorite,
-                            onClick = { },
-                            onFavoriteClick = { },
+                        val formattedTitle = formatServiceTitle(selectedApp!!.title)
+                        
+                        Card(
                             modifier = Modifier
-                                .size(itemSize)
-                                .graphicsLayer(
-                                    scaleX = scaleFactor,
-                                    scaleY = scaleFactor
-                                ),
-                            showFavoriteButton = true,
-                            isSelected = true,
-                            onLongPress = { },
-                            shouldBlur = false  // Keep this false to maintain brightness
-                        )
+                                .size(itemSize * scaleFactor),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    
+                                    // Icon at the top - slightly larger
+                                    AppIcon(title = selectedApp!!.title, modifier = Modifier.size(46.dp))
+                                    
+                                    // Text at the bottom with more space
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 30.dp)
+                                    ) {
+                                        Text(
+                                            text = formattedTitle,
+                                            color = TextPrimary,
+                                            fontSize = 10.sp, // Keep same as original
+                                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.Center,
+                                            maxLines = 2,
+                                            lineHeight = 13.sp,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                                .align(Alignment.Center)
+                                        )
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }
 
             // Show favorite dialog
             if (selectedApp != null && selectedPosition != null) {
-                FavoriteDialog(
-                    title = selectedApp!!.title,
-                    isFavorite = selectedApp!!.isFavorite,
-                    onConfirm = {
-                        onToggleFavorite(selectedApp!!)
-                        selectedApp = null
-                        selectedPosition = null
-                    },
-                    onDismiss = {
-                        selectedApp = null
-                        selectedPosition = null
-                    },
-                    position = selectedPosition
-                )
+                selectedPosition?.let { (x, y) ->
+                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+                    val dialogWidth = 160.dp  // Return to original width
+                    val density = LocalDensity.current
+                    
+                    val dialogWidthPx = with(density) { dialogWidth.toPx() }
+                    val screenWidthPx = with(density) { screenWidth.toPx() }
+                    val itemSizePx = with(density) { 80.dp.toPx() }
+                    val scaleFactor = 1.1f // Same as app scale factor
+                    
+                    // Calculate x position (centered with the app)
+                    val xOffset = when {
+                        x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
+                        x - (dialogWidthPx / 2) < 0 -> 16f
+                        else -> x - (dialogWidthPx / 2)
+                    }
+                    
+                    // Position dialog just a tiny bit above the enlarged app
+                    val yOffset = y - itemSizePx - 235
+                    
+                    Card(
+                        modifier = Modifier
+                            .width(dialogWidth)
+                            .offset {
+                                IntOffset(
+                                    x = xOffset.toInt(),
+                                    y = yOffset.toInt()
+                                )
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Text(
+                            text = if (selectedApp!!.isFavorite) "Remove from Favourites" else "Add to Favourites",
+                            fontSize = 13.sp,
+                            color = Color.Black,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { 
+                                    onToggleFavorite(selectedApp!!)
+                                    selectedApp = null
+                                    selectedPosition = null
+                                }
+                                .padding(vertical = 8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
@@ -462,8 +542,7 @@ private fun AppItem(
     modifier: Modifier = Modifier,
     showFavoriteButton: Boolean = true,
     isSelected: Boolean = false,
-    onLongPress: (Pair<Float, Float>) -> Unit,
-    shouldBlur: Boolean = false
+    onLongPress: (Pair<Float, Float>) -> Unit
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     // Format the title for better display
@@ -477,7 +556,7 @@ private fun AppItem(
                 val position = coordinates.positionInRoot()
                 itemPosition = Pair(
                     position.x + (coordinates.size.width / 2),
-                    position.y + coordinates.size.height
+                    position.y + (coordinates.size.height / 2) // Store the center point
                 )
             }
             .pointerInput(Unit) {
@@ -487,17 +566,12 @@ private fun AppItem(
                         itemPosition?.let { pos -> onLongPress(pos) }
                     }
                 )
-            }
-            .graphicsLayer(
-                scaleX = if (isSelected) 1.1f else 1f,
-                scaleY = if (isSelected) 1.1f else 1f,
-                alpha = 1f
-            ),
+            },
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 8.dp else 2.dp
+            defaultElevation = 2.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = if (shouldBlur && !isSelected) Color.White.copy(alpha = 0.5f) else Color.White
+            containerColor = Color.White
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -507,7 +581,7 @@ private fun AppItem(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(8.dp),  // Increased from 6.dp to 8.dp
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -647,69 +721,5 @@ private fun CategoryHeader(
             ),
             modifier = Modifier.padding(vertical = 8.dp)
         )
-    }
-}
-
-@Composable
-private fun FavoriteDialog(
-    title: String,
-    isFavorite: Boolean,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    position: Pair<Float, Float>? = null
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
-            .clickable(onClick = onDismiss)
-    ) {
-        position?.let { (x, y) ->
-            val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-            val dialogWidth = 160.dp
-            val density = LocalDensity.current
-            
-            val dialogWidthPx = with(density) { dialogWidth.toPx() }
-            val screenWidthPx = with(density) { screenWidth.toPx() }
-            val itemHeightPx = with(density) { 80.dp.toPx() }
-            val scaleFactor = 1.1f // Same scale factor as the zoomed app
-            
-            // Calculate x position (centered with the app)
-            val xOffset = when {
-                x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
-                x - (dialogWidthPx / 2) < 0 -> 16f
-                else -> x - (dialogWidthPx / 2)
-            }
-            
-            // Position dialog right at the bottom edge of the zoomed app
-            val scaledItemHeight = itemHeightPx * scaleFactor
-            val yOffset = y + 86f  // Increased from 6f to 16f for a more noticeable gap
-
-            Card(
-                modifier = Modifier
-                    .width(dialogWidth)
-                    .offset {
-                        IntOffset(
-                            x = xOffset.toInt(),
-                            y = yOffset.toInt()
-                        )
-                    }
-                    .clickable(enabled = false) { },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Text(
-                    text = if (isFavorite) "Remove from Favourite" else "Add to Favourite",
-                    fontSize = 13.sp,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onConfirm() }
-                        .padding(vertical = 8.dp),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
     }
 } 

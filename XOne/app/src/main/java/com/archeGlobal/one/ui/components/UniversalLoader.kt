@@ -70,7 +70,7 @@ fun EmptyFavorites(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .offset(y = (-160).dp),
+            .offset(y = (-120).dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

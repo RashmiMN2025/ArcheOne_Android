@@ -32,17 +32,25 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFE0DCD1), // Light Beige
+                        Color(0xFFC8C8CA), // Light Gray
+                        Color(0xFF474749)  // Dark Gray
+                    )
                 )
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(top = 25.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 15.dp, bottom = 10.dp)
             ) {
                 IconButton(onClick = onBackPressed) {
                     Icon(
@@ -51,51 +59,102 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                         tint = Color.Black
                     )
                 }
-                Text(
-                    text = "My Documents",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 60.dp)
-                )
+                
+                // Centered Title
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "My Documents",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Box(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .padding(16.dp)
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
                 ) {
                     Text(
                         text = "Upload or view your personal and professional documents here",
-                        fontSize = 22.sp,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        modifier = Modifier.padding(bottom = 20.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 32.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
 
-                    Section("Personal Documents", listOf("Aadhar Card", "Passport", "PAN Card"), personalDocs, controller, context, employeeId, true)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Section("Professional Documents", listOf("Offer Letter", "Certificate", "Experience Letter"), professionalDocs, controller, context, employeeId, false)
-                }
-            }
-        }
-    }
-}
+                    Text(
+                        text = "Personal Documents",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        listOf("Aadhar Card", "Passport", "PAN Card").forEach { item ->
+                            DocumentCard(item, personalDocs[item], controller, context, employeeId, true)
+                        }
+                    }
 
-@Composable
-fun Section(title: String, items: List<String>, filePaths: Map<String, String>, controller: MyDocumentsController, context: Context, employeeId: String, isPersonal: Boolean) {
-    Column {
-        Text(text = title, fontSize = 18.sp, modifier = Modifier.padding(bottom = 10.dp))
-        Column {
-            items.forEach { item ->
-                DocumentCard(item, filePaths[item], controller, context, employeeId, isPersonal)
+                    Text(
+                        text = "Professional Documents",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        listOf("Offer Letter", "Certificate", "Experience Letter").forEach { item ->
+                            DocumentCard(item, professionalDocs[item], controller, context, employeeId, false)
+                        }
+                    }
+                    
+                    // Note about file size limit
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp)
+                    ) {
+                        Text(
+                            text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.DarkGray,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
@@ -109,57 +168,55 @@ fun DocumentCard(name: String, filePath: String?, controller: MyDocumentsControl
         }
     }
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
-            .padding(bottom = 2.dp),
+            .height(48.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFDD3825))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = name,
                 color = Color.White,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f)
             )
 
-            Row {
-                // Upload button
-                Box(
-                    modifier = Modifier
-                        .size(25.dp)
-                        .background(Color.White, shape = RoundedCornerShape(50))
-                        .clickable { launcher.launch("application/pdf") },
-                    contentAlignment = Alignment.Center
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Upload button (white circle with red arrow)
+                IconButton(
+                    onClick = { launcher.launch("image/*|application/pdf") }, // Accept images and PDFs
+                    modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_upload),
+                        painter = painterResource(id = R.drawable.ic_upload_circle),
                         contentDescription = "Upload",
-                        tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(20.dp)
+                        tint = Color.Unspecified, // Use the colors defined in the vector drawable
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
-
-                // View button (always visible, but shows a toast if filePath is empty)
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_view),
-                    contentDescription = "View",
-                    tint = Color.White, // Make the icon white
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clickable {
-                            controller.onViewClick(context, name, isPersonal)
-                        }
-                )
+                // View button (eye icon)
+                IconButton(
+                    onClick = { controller.onViewClick(context, name, isPersonal) },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_view_eye),
+                        contentDescription = "View",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }

@@ -201,32 +201,14 @@ private fun LocationCard(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            Text(
-                text = location.companyName,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            
             Spacer(modifier = Modifier.height(8.dp))
             
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = "Address:",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextSecondary
-                )
-                Text(
-                    text = location.address.substringBefore(","),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextSecondary
-                )
-            }
+            Text(
+                text = location.address.substringBefore(","),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextSecondary
+            )
             Text(
                 text = location.address.substringAfter(",").trim(),
                 fontSize = 14.sp,
@@ -250,7 +232,7 @@ private fun LocationCard(
                     text = location.email,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = TextSecondary,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -448,13 +430,6 @@ private fun LocationDetails(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            Text(
-                text = location.companyName,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            
             Spacer(modifier = Modifier.height(8.dp))
             
             Row(
@@ -465,12 +440,6 @@ private fun LocationDetails(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = "Address",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Gray
-                    )
                     Text(
                         text = location.address,
                         fontSize = 14.sp,
@@ -546,7 +515,7 @@ private fun LocationDetails(
                             text = location.email,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black,
+                            color = TextSecondary,
                             textDecoration = TextDecoration.Underline
                         )
                     }

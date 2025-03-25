@@ -33,6 +33,9 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -278,7 +281,7 @@ fun CaseStudiesContent(socialController: SocialController, searchQuery: String) 
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "Case Studies",
-                fontSize = 20.sp,
+                fontSize = 18.sp,  // Reduced from 20sp to 18sp
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -317,7 +320,7 @@ fun BlogsContent(socialController: SocialController, searchQuery: String) {
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "Blogs",
-                fontSize = 20.sp,
+                fontSize = 18.sp,  // Reduced from 20sp to 18sp
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -348,7 +351,7 @@ fun JobsContent(socialController: SocialController, searchQuery: String) {
     ) {
         Text(
             text = "Jobs",
-            fontSize = 20.sp,
+            fontSize = 18.sp,  // Reduced from 20sp to 18sp
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -391,63 +394,66 @@ fun JobCard(job: Job, socialController: SocialController) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),  // Even more reduced padding
+                .padding(12.dp),  // Increased padding for better spacing
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Job Image
+            // Job Image with placeholder
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(job.Image)
                     .crossfade(true)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
                     .build(),
                 contentDescription = job.Title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)  // Further reduced height
+                    .height(150.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop,
-                error = painterResource(id = R.drawable.ic_back),
-                placeholder = painterResource(id = R.drawable.ic_back)
+                error = painterResource(id = R.drawable.ic_image_placeholder),
+                placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )
             
-            // Job Title with minimal padding
+            // Job Title with improved spacing
             Text(
                 text = job.Title,
-                fontSize = 16.sp,  // Smaller text
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.padding(top = 4.dp),  // Minimal top padding
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),  // Better spacing
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             
-            // Experience with absolutely minimal spacing
+            // Experience with improved visibility
             Text(
-                text = "Experience : ${extractExperience(job.Description)}",
+                text = "Experience: ${extractExperience(job.Description)}",
                 fontSize = 14.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(top = 1.dp, bottom = 0.dp),  // Almost no space
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF505050),  // Darker gray for better readability
+                modifier = Modifier.padding(bottom = 8.dp),  // Added bottom padding
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             
-            // Apply Button with minimal spacing
+            // Apply Button with better spacing
             Button(
                 onClick = { socialController.openInBrowser("Jobs", job.Slug) },
                 modifier = Modifier
                     .fillMaxWidth(0.9f)
-                    .padding(top = 2.dp),
+                    .padding(top = 4.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "Apply",
-                    fontSize = 14.sp,  // Smaller text for button
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.padding(vertical = 0.dp)  // No vertical padding
+                    modifier = Modifier.padding(vertical = 4.dp)  // Added some vertical padding
                 )
             }
         }
@@ -469,7 +475,7 @@ fun HorizontalSection(title: String, articles: List<SocialArticle>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            fontSize = 20.sp,
+            fontSize = 18.sp,  // Reduced from 20sp to 18sp
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
@@ -504,20 +510,20 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            fontSize = 20.sp,
+            fontSize = 18.sp,  // Reduced from 20sp to 18sp
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
+                .padding(bottom = 8.dp)
         ) {
             jobs.forEach { job ->
-                // Using a compact job card for horizontal scrolling view
                 CompactJobCard(
                     title = job.Title,
                     experience = extractExperience(job.Description),
@@ -544,7 +550,7 @@ fun CompactJobCard(
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .width(150.dp)
-            .height(150.dp)
+            .height(175.dp) // Increased height to accommodate experience text
             .padding(4.dp)
             .clickable { 
                 socialController.openInBrowser("Jobs", slug)
@@ -552,10 +558,10 @@ fun CompactJobCard(
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Job Image
+            // Job Image with placeholder
             Box(
                 modifier = Modifier
-                    .weight(0.7f)
+                    .weight(0.6f) // Reduced weight of the image slightly
                     .fillMaxWidth()
                     .background(Color(0xFF6D34C9)) // Purple background like in the image
             ) {
@@ -563,21 +569,23 @@ fun CompactJobCard(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(imageUrl)
                         .crossfade(true)
+                        .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
                         .build(),
                     contentDescription = title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    error = painterResource(id = R.drawable.ic_back),
-                    placeholder = painterResource(id = R.drawable.ic_back)
+                    error = painterResource(id = R.drawable.ic_image_placeholder),
+                    placeholder = painterResource(id = R.drawable.ic_image_placeholder)
                 )
             }
             
             // Job info in a compact format
             Column(
                 modifier = Modifier
-                    .weight(0.3f)
+                    .weight(0.4f) // Increased weight for the text content
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .padding(horizontal = 8.dp, vertical = 6.dp) // More vertical padding
             ) {
                 Text(
                     text = title,
@@ -587,13 +595,15 @@ fun CompactJobCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 
+                // Made experience text more visible with better spacing
                 Text(
-                    text = "Experience : $experience",
-                    fontSize = 10.sp,
+                    text = "Experience: $experience",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
                     color = Color.Gray,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 2.dp) // Minimal spacing
+                    modifier = Modifier.padding(top = 4.dp) // Increased spacing for visibility
                 )
             }
         }
@@ -603,7 +613,7 @@ fun CompactJobCard(
 @Composable
 fun ArticleCard(article: SocialArticle, type: String, socialController: SocialController) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(10.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
@@ -613,68 +623,68 @@ fun ArticleCard(article: SocialArticle, type: String, socialController: SocialCo
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Image section
+            // Image section with placeholder
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(article.imageUrl)
                     .crossfade(true)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
                     .build(),
                 contentDescription = article.title,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp),
                 contentScale = ContentScale.Crop,
-                error = painterResource(id = R.drawable.ic_back),
-                placeholder = painterResource(id = R.drawable.ic_back)
+                error = painterResource(id = R.drawable.ic_image_placeholder),
+                placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )
             
             // Content section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally // Center align the content
             ) {
                 Text(
                     text = article.title,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    lineHeight = 20.sp
+                    lineHeight = 19.sp,
+                    textAlign = TextAlign.Center // Center align the text
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = article.description,
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        maxLines = 4,  // Show 4 lines
-                        lineHeight = 16.sp,  // Reduced from 18.sp
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    
-                    // Overlay "Read More" at the bottom right with background
-                    Text(
-                        text = "Read More",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFFDD3825),
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(top = 48.dp)  // Adjusted position for reduced line height (4 lines × 16sp = 64 - some overlap)
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0f),
-                                        Color.White
-                                    ),
-                                    startX = -40f
-                                )
-                            )
-                            .padding(start = 40.dp, end = 0.dp)
-                    )
-                }
+                // Use AnnotatedString to style "Read More" differently
+                Text(
+                    text = buildAnnotatedString {
+                        // Truncate description if needed
+                        val truncatedDescription = if (article.description.length > 150) {
+                            article.description.substring(0, 150)
+                        } else {
+                            article.description
+                        }
+                        
+                        append(truncatedDescription)
+                        append("... ")
+                        withStyle(style = SpanStyle(
+                            color = Color(0xFFDD3825),  // Red color
+                            fontWeight = FontWeight.Bold  // Make it bold for better visibility
+                        )) {
+                            append("Read More")
+                        }
+                    },
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                    maxLines = 4,  // Increased from 3 to 4 to ensure "Read More" is visible
+                    lineHeight = 15.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -690,10 +700,10 @@ fun PostCard(
     socialController: SocialController
 ) {
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(10.dp),
         modifier = Modifier
             .width(200.dp)
-            .height(250.dp)
+            .height(240.dp)
             .padding(4.dp)
             .clickable { 
                 socialController.openInBrowser(type, slug)
@@ -701,38 +711,45 @@ fun PostCard(
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Use AsyncImage with error and loading states
+            // Use AsyncImage with improved placeholder
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .crossfade(true)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
                     .build(),
                 contentDescription = title,
                 modifier = Modifier
                     .height(120.dp)
                     .fillMaxWidth(),
                 contentScale = ContentScale.Crop,
-                // Show a placeholder while loading or if error
-                error = painterResource(id = R.drawable.ic_back),
-                placeholder = painterResource(id = R.drawable.ic_back)
+                error = painterResource(id = R.drawable.ic_image_placeholder),
+                placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )
             
-            Column(modifier = Modifier.padding(8.dp)) {
+            Column(
+                modifier = Modifier.padding(8.dp, 8.dp, 8.dp, 4.dp), // Reduced bottom padding
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
                     text = title,
-                    fontSize = 16.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    lineHeight = 16.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp)) // Reduced spacing
                 Text(
                     text = description,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     color = Color.Gray,
                     maxLines = 3,
-                    lineHeight = 14.sp,
-                    overflow = TextOverflow.Ellipsis
+                    lineHeight = 13.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
                 )
             }
         }
