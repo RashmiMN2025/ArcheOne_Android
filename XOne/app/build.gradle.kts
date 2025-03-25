@@ -23,7 +23,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("/Users/netcon/Documents/AndroidSignedIn/your_keystore.jks")
+            storeFile = file("/Keystore.jks")
             storePassword = "Android@12345"
             keyAlias = "key0"
             keyPassword = "Android@12345"
