@@ -103,7 +103,22 @@ class OtpVerificationController(
     }
 
     fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {
-        // Implement the resendOtp functionality if needed
+        val request = SendOtpRequest(email, mobile, employeeId) // Assuming your request requires only an email
+
+        RetrofitClient.apiService.sendOtp(request).enqueue(object : retrofit2.Callback<SendOtpResponse> {
+            override fun onResponse(call: retrofit2.Call<SendOtpResponse>, response: retrofit2.Response<SendOtpResponse>) {
+                if (response.isSuccessful && response.body()?.status == 200) {
+                    callback("OTP sent successfully.")
+                } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Failed to resend OTP"
+                    callback(errorMessage)
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<SendOtpResponse>, t: Throwable) {
+                callback("Network error: ${t.message}")
+            }
+        })
     }
     
     companion object {

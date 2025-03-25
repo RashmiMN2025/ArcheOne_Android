@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.theme.XOneTheme
 import androidx.compose.ui.tooling.preview.Preview
 import com.archeGlobal.one.R
+
 @Composable
 fun WelcomeScreen(
     onXOneClick: () -> Unit,

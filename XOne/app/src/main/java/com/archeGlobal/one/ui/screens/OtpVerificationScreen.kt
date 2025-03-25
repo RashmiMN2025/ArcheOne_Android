@@ -35,14 +35,15 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
     val context = LocalContext.current
 
     // Timer logic: Decrease `timeLeft` every second
-    LaunchedEffect(timerStarted) {
-        if (timerStarted) {
+    LaunchedEffect(timeLeft) {
+        if (timeLeft > 0) {
             while (timeLeft > 0) {
                 kotlinx.coroutines.delay(1000)
                 timeLeft -= 1
             }
         }
     }
+
 
     // Format time into MM:SS
     val formattedTime = String.format("%02d:%02d", timeLeft / 60, timeLeft % 60)
@@ -168,8 +169,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                         controller.resendOtp(email, mobile, employeeId) { message ->
                             errorMessage = if (message.contains("success", ignoreCase = true)) null else message
                             if (message.contains("success", ignoreCase = true)) {
-                                timeLeft = 60
-                                timerStarted = true
+                                timeLeft = 60  // ✅ Reset timer properly
                             }
                         }
                     },
@@ -179,9 +179,8 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 ),
                 textAlign = TextAlign.Center
             )
-
-            // Replace the existing loading indicator with UniversalLoader
-            UniversalLoader(isLoading = isLoading)
         }
+        // Replace the existing loading indicator with UniversalLoader
+        UniversalLoader(isLoading = isLoading)
     }
 }
