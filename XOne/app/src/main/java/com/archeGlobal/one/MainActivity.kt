@@ -1,12 +1,15 @@
 package com.archeGlobal.one
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.archeGlobal.one.controller.*
+import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.navigation.AndroidNavigator
@@ -30,6 +34,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var homeController: HomeController
     private lateinit var locationsController: LocationsController
     private lateinit var businessCardController: BusinessCardControllerImpl
+    private lateinit var preferencesManager: PreferencesManager
     private val NOTIFICATION_PERMISSION_CODE = 123
 
     private fun requestNotificationPermission() {
@@ -52,8 +57,33 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestNotificationPermission()
 
+        preferencesManager = PreferencesManager(applicationContext)
+        
+        // Get the flag indicating whether to show the welcome screen
+        val showWelcomeScreen = intent.getBooleanExtra("showWelcomeScreen", false)
+
+        // Disable back button when showing welcome screen
+        if (showWelcomeScreen) {
+            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // This is the first launch, so just finish the app when back is pressed
+                    finish()
+                }
+            })
+        }
+        
         val navigator = AndroidNavigator(this)
-        welcomeController = WelcomeController(navigator)
+        
+        // Create a custom WelcomeController that marks first launch as complete
+        welcomeController = object : WelcomeController(navigator) {
+            override fun onXOneClick() {
+                // Mark first launch as complete
+                preferencesManager.setFirstLaunchComplete()
+                // Continue with normal navigation
+                super.onXOneClick()
+            }
+        }
+        
         homeController = HomeController(navigator, this)
         locationsController = LocationsController(this)
         businessCardController = BusinessCardControllerImpl(this, navigator)
@@ -73,7 +103,10 @@ class MainActivity : ComponentActivity() {
                             .padding(padding),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        NavHost(navController = navController, startDestination = "welcome") {
+                        // Set the start destination based on whether we should show the welcome screen
+                        val startDestination = if (showWelcomeScreen) "welcome" else "home"
+                        
+                        NavHost(navController = navController, startDestination = startDestination) {
                             composable("welcome") {
                                 WelcomeScreen(
                                     onXOneClick = welcomeController::onXOneClick,

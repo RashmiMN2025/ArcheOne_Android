@@ -20,34 +20,46 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.HomeActivity
 import com.archeGlobal.one.LoginActivity
+import com.archeGlobal.one.MainActivity
 import com.archeGlobal.one.R
+import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
 
 class SplashActivity : ComponentActivity() {
     private lateinit var userDataManager: UserDataManager
+    private lateinit var preferencesManager: PreferencesManager
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         userDataManager = UserDataManager.getInstance(applicationContext)
+        preferencesManager = PreferencesManager(applicationContext)
         
         // Set Splash Screen UI
         setContent {
             XOneSplashScreen()
         }
 
-        // Delay for 2 seconds and then check if user is logged in
+        // Delay for 2 seconds and then check if it's first launch or user is logged in
         Handler(Looper.getMainLooper()).postDelayed({
-            // Check if user has a valid auth token
-            val isLoggedIn = userDataManager.isLoggedIn()
-            Log.d("SplashActivity", "Login status: $isLoggedIn, userData: ${userDataManager.getUserData()?.name}")
-            
-            if (isLoggedIn) {
-                // User is logged in, go to Home screen
-                startActivity(Intent(this, HomeActivity::class.java))
+            // Check if this is the first launch of the app
+            if (preferencesManager.isFirstLaunch()) {
+                // First launch, show welcome screen
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    putExtra("showWelcomeScreen", true)
+                })
             } else {
-                // User is not logged in, go to Login screen
-                startActivity(Intent(this, LoginActivity::class.java))
+                // Not first launch, check if user is logged in
+                val isLoggedIn = userDataManager.isLoggedIn()
+                Log.d("SplashActivity", "Login status: $isLoggedIn, userData: ${userDataManager.getUserData()?.name}")
+                
+                if (isLoggedIn) {
+                    // User is logged in, go to Home screen
+                    startActivity(Intent(this, HomeActivity::class.java))
+                } else {
+                    // User is not logged in, go to Login screen
+                    startActivity(Intent(this, LoginActivity::class.java))
+                }
             }
             finish()
         }, 2000)

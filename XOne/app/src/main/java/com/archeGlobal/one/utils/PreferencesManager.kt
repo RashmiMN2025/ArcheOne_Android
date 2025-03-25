@@ -156,5 +156,16 @@ class PreferencesManager(context: Context) {
         private const val KEY_OFFICES_DATA = "offices_data"
         private const val KEY_POLICIES_DATA = "policies_data"
         private const val KEY_SOS_BLOGS_DATA = "sos_blogs_data"
+        private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
+    }
+    
+    // Check if this is the first launch of the app
+    fun isFirstLaunch(): Boolean {
+        return sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
+    }
+    
+    // Mark that the app has been launched before
+    fun setFirstLaunchComplete() {
+        sharedPreferences.edit().putBoolean(KEY_IS_FIRST_LAUNCH, false).apply()
     }
 } 
