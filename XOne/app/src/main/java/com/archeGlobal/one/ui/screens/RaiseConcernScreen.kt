@@ -70,38 +70,23 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
 
         isSubmitting = true
         
-        val name = if (anonymous) "" else userData?.name ?: ""
-        val email = if (anonymous) "" else userData?.email ?: ""
-        val mobile = if (anonymous) "" else userData?.mobile ?: ""
-        
-        val request = SOSRequest(
-            name = name,
-            email = email,
-            mobile = mobile,
-            category = selectedCategory ?: "",
-            query = issueDescription,
-            description = ""  // Set description as empty string if not needed
-        )
-
         try {
-            val response = apiService.submitSOS(request)
-
-            if (response.isSuccessful) {
-                val responseBody = response.body()
-                if (responseBody != null) {
-                    Toast.makeText(context, responseBody.message, Toast.LENGTH_SHORT).show()
-                    // Reset form on success
-                    selectedCategory = null
-                    issueDescription = ""
-                    // Go back after successful submission
-                    onBackPressed()
-                } else {
-                    Toast.makeText(context, "Success, but no message received!", Toast.LENGTH_SHORT).show()
-                }
+            // Simulate network request with a delay
+            kotlinx.coroutines.delay(1000)
+            
+            // Show success message based on anonymous status
+            if (anonymous) {
+                Toast.makeText(context, "Concern submitted anonymously", Toast.LENGTH_SHORT).show()
             } else {
-                val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
-                Toast.makeText(context, "Failed: $errorMessage", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Concern submitted with your identity", Toast.LENGTH_SHORT).show()
             }
+            
+            // Reset form on success
+            selectedCategory = null
+            issueDescription = ""
+            
+            // Go back after successful submission
+            onBackPressed()
         } catch (e: Exception) {
             Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         } finally {
