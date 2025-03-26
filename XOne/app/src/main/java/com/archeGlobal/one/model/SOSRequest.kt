@@ -7,5 +7,11 @@ data class SOSRequest(
     @SerializedName("email") val email: String,
     @SerializedName("mobile") val mobile: String,
     @SerializedName("category") val category: String, // Ensure this matches backend
-    @SerializedName("query") val query: String // Ensure this matches backend
+    @SerializedName("query") val query: String, // Ensure this matches backend
+    @SerializedName("description") val description: String
+)
+
+data class SOSResponse(
+    val status: Boolean,
+    val message: String
 )

@@ -106,6 +106,14 @@
             android:label="SOS"
             android:theme="@style/Theme.XOne" />
 
+        <!-- Add RaiseConcernActivity -->
+        <activity
+            android:name=".RaiseConcernActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:label="Raise a Concern"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Keep only this FileProvider at the end -->
         <provider
             android:name="androidx.core.content.FileProvider"

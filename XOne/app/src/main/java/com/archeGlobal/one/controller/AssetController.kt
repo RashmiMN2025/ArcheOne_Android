@@ -165,7 +165,8 @@ class AssetController(
             email = email,
             mobile = mobile,
             category = "Other", // Using "Other" category as requested
-            query = description
+            query = description,
+            description = "" // Add missing parameter with empty string as default
         )
         
         Log.d("AssetController", "Created SOS request: $request")

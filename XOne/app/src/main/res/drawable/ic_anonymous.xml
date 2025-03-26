@@ -1,0 +1,23 @@
+<vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M480,480Q529,480 564.5,444.5Q600,409 600,360Q600,311 564.5,275.5Q529,240 480,240Q431,240 395.5,275.5Q360,311 360,360Q360,409 395.5,444.5Q431,480 480,480ZM200,760L200,640Q200,606 217,579Q234,552 264,536Q324,504 385,488Q446,472 480,472Q514,472 574.5,488Q635,504 696,536Q726,552 743,579Q760,606 760,640L760,760L200,760ZM290,680L670,680L670,640Q670,622 660,609Q650,596 630,586Q582.41,559.62 533.7,543.81Q485,528 480,528Q474,528 424.5,543.81Q375,559.62 330,586Q310,596 300,609Q290,622 290,640L290,680ZM480,408Q450,408 429,387Q408,366 408,336Q408,306 429,285Q450,264 480,264Q510,264 531,285Q552,306 552,336Q552,366 531,387Q510,408 480,408ZM480,336L480,336L480,336L480,336L480,336L480,336ZM480,604L480,604L480,604L480,604L480,604L480,604Z"/>
+    
+    <!-- Add question mark icon -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M480,200m-80,0a80,80 0,1 1,160 0a80,80 0,1 1,-160 0"
+        android:strokeWidth="1"/>
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M480,160L480,240"
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="40"
+        android:strokeLineCap="round"/>
+</vector> 

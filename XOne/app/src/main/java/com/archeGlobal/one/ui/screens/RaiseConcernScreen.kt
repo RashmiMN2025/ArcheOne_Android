@@ -4,50 +4,84 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
 import com.archeGlobal.one.network.RetrofitClient.apiService
 import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RaiseConcernScreen(onBackPressed: () -> Unit) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var mobile by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Select Issue Category") }
+    
+    // Get user data
+    val userDataManager = remember { UserDataManager.getInstance(context) }
+    val userData = remember { userDataManager.getUserData() }
+    
+    // Form state
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
     var issueDescription by remember { mutableStateOf("") }
-
-    val categories = listOf("Technical Issue", "HR Issue", "Security Concern", "Other")
     var expanded by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
-
-    suspend fun submitConcern() {
-        if (email.isBlank() || issueDescription.isBlank()) {
-            Toast.makeText(context, "Email and Issue Description are required", Toast.LENGTH_SHORT).show()
+    var showAnonymousDialog by remember { mutableStateOf(false) }
+    
+    // Categories based on the screenshot
+    val categories = listOf(
+        "Medical Emergency",
+        "Fire Safety",
+        "Security Risk",
+        "Workplace Safety",
+        "Non-Compliance",
+        "POSH",
+        "Other Issue"
+    )
+    
+    // Submit functions
+    suspend fun submitConcern(anonymous: Boolean) {
+        if (selectedCategory == null || issueDescription.isBlank()) {
+            Toast.makeText(context, "Please select a category and describe your issue", Toast.LENGTH_SHORT).show()
             return
         }
 
         isSubmitting = true
-        val request = SOSRequest(name, email, mobile, selectedCategory, issueDescription)
+        
+        val name = if (anonymous) "" else userData?.name ?: ""
+        val email = if (anonymous) "" else userData?.email ?: ""
+        val mobile = if (anonymous) "" else userData?.mobile ?: ""
+        
+        val request = SOSRequest(
+            name = name,
+            email = email,
+            mobile = mobile,
+            category = selectedCategory ?: "",
+            query = issueDescription,
+            description = ""  // Set description as empty string if not needed
+        )
 
         try {
             val response = apiService.submitSOS(request)
@@ -56,6 +90,11 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 val responseBody = response.body()
                 if (responseBody != null) {
                     Toast.makeText(context, responseBody.message, Toast.LENGTH_SHORT).show()
+                    // Reset form on success
+                    selectedCategory = null
+                    issueDescription = ""
+                    // Go back after successful submission
+                    onBackPressed()
                 } else {
                     Toast.makeText(context, "Success, but no message received!", Toast.LENGTH_SHORT).show()
                 }
@@ -70,7 +109,6 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -79,23 +117,22 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                     colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
                 )
             )
-            .padding(16.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(16.dp)
         ) {
+            // Top app bar
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 25.dp)
             ) {
-                IconButton(
-                    onClick = onBackPressed
-                ) {
+                IconButton(onClick = onBackPressed) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
+                        imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
                         tint = Color.Black
                     )
@@ -104,19 +141,36 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                     text = "Raise a Concern",
                     color = Color.Black,
                     fontSize = 20.sp,
-                    modifier = Modifier.padding(start = 80.dp)
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
                 )
+                // Empty space for alignment
+                Spacer(modifier = Modifier.width(48.dp))
             }
 
-            Spacer(modifier = Modifier.height(25.dp))
-
-            @Composable
-            fun customOutlinedTextField(value: String, onValueChange: (String) -> Unit, placeholder: String) {
+            Spacer(modifier = Modifier.height(40.dp))
+            
+            // Category dropdown
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
                 OutlinedTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    placeholder = { Text(placeholder) },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    value = selectedCategory ?: "",
+                    onValueChange = { },
+                    readOnly = true,
+                    placeholder = { Text("Select Issue category") },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Dropdown",
+                            tint = Color.Black
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
@@ -125,48 +179,91 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    textStyle = TextStyle(color = Color.Black),
-                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    keyboardActions = KeyboardActions.Default,
-                    shape = MaterialTheme.shapes.medium
+                    shape = RoundedCornerShape(8.dp)
                 )
-            }
-
-            customOutlinedTextField(name, { name = it }, "Enter your name")
-            customOutlinedTextField(email, { email = it }, "Enter your email")
-            customOutlinedTextField(mobile, { mobile = it }, "Enter mobile number")
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp)
-                    .background(Color.White, shape = MaterialTheme.shapes.medium)
-                    .clickable { expanded = true }
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = selectedCategory, color = Color.Black, modifier = Modifier.weight(1f))
-                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = "Dropdown", tint = Color.Black)
-                }
-
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    categories.forEach { category ->
-                        DropdownMenuItem(
-                            text = { Text(text = category) },
-                            onClick = {
-                                selectedCategory = category
-                                expanded = false
-                            }
+                
+                // Invisible clickable box over the TextField to trigger dropdown
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { expanded = true }
+                )
+                
+                // This will position the dropdown below the TextField 
+                // with exact same width as parent
+                if (expanded) {
+                    // Popup dialog instead of standard DropdownMenu to match the design
+                    Dialog(
+                        onDismissRequest = { expanded = false },
+                        properties = DialogProperties(
+                            dismissOnBackPress = true,
+                            dismissOnClickOutside = true,
+                            usePlatformDefaultWidth = false
                         )
+                    ) {
+                        // The main container with padding to match the screen layout
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            // Dropdown menu card
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    categories.forEach { category ->
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                        ) {
+                                            Text(
+                                                text = category,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { 
+                                                        selectedCategory = category
+                                                        expanded = false
+                                                    }
+                                                    .padding(vertical = 16.dp, horizontal = 16.dp),
+                                                fontSize = 16.sp,
+                                                color = Color.Black
+                                            )
+                                            
+                                            // Add divider between items except for the last one
+                                            if (category != categories.last()) {
+                                                Divider(
+                                                    color = Color.LightGray,
+                                                    thickness = 1.dp,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-
+            
+            // Issue description
             OutlinedTextField(
                 value = issueDescription,
                 onValueChange = { issueDescription = it },
                 placeholder = { Text("Please describe your issue") },
-                modifier = Modifier.fillMaxWidth().height(140.dp).padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -177,18 +274,129 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 ),
                 textStyle = TextStyle(color = Color.Black),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions.Default
+                keyboardActions = KeyboardActions.Default,
+                shape = RoundedCornerShape(8.dp)
             )
-
+            
+            // Submit button
             Button(
-                onClick = { coroutineScope.launch { submitConcern() } },
+                onClick = { showAnonymousDialog = true },
                 enabled = !isSubmitting,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "Submit",
-                    color = Color.White)
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
+        }
+        
+        // Anonymous submission dialog
+        if (showAnonymousDialog) {
+            Dialog(onDismissRequest = { showAnonymousDialog = false }) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Icon
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .padding(bottom = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_anonymous),
+                                contentDescription = "Anonymous Icon",
+                                tint = Color(0xFFDD3825),
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
+                        
+                        // Title
+                        Text(
+                            text = "Submit Anonymously?",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                        
+                        // Description
+                        Text(
+                            text = "Would you like to submit this concern anonymously? Your identity will not be disclosed.",
+                            fontSize = 16.sp,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 24.dp)
+                        )
+                        
+                        // Submit anonymously button
+                        Button(
+                            onClick = { 
+                                showAnonymousDialog = false
+                                coroutineScope.launch { submitConcern(anonymous = true) }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .padding(bottom = 8.dp),
+                            shape = RoundedCornerShape(28.dp)
+                        ) {
+                            Text(
+                                text = "Submit Anonymously",
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+                        }
+                        
+                        // Submit with identity button
+                        OutlinedButton(
+                            onClick = { 
+                                showAnonymousDialog = false
+                                coroutineScope.launch { submitConcern(anonymous = false) }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(28.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                        ) {
+                            Text(
+                                text = "Submit with Identity",
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Show loading indicator when submitting
+        if (isSubmitting) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
             }
         }
     }

@@ -21,7 +21,10 @@ class SOSActivity : ComponentActivity() {
         setContent {
             SOSScreen(
                 controller = controller,
-                onNavigateToRaiseConcern = { /* Navigate to Raise Concern */ },
+                onNavigateToRaiseConcern = { 
+                    val intent = Intent(this, RaiseConcernActivity::class.java)
+                    startActivity(intent)
+                },
                 onBackPressed = { finish() },
                 onSOSBlogClick = { blog ->
                     val intent = Intent(this, SOSDetailActivity::class.java)
