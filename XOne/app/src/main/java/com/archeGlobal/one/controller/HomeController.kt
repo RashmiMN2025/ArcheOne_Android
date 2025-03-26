@@ -10,6 +10,7 @@ import android.util.Log
 import android.content.Context
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.utils.ImageCache
 
 class HomeController(
     private val navigator: Navigator,
@@ -22,6 +23,7 @@ class HomeController(
         designation = OtpVerificationController.getUserData()?.designation ?: "",
         department = OtpVerificationController.getUserData()?.department ?: "",
         employeeId = OtpVerificationController.getUserData()?.employeeId ?: "",
+        profilePicture = OtpVerificationController.getUserData()?.profilePic,
         showAllApps = true,
         categories = OtpVerificationController.getUserData()?.let { userData ->
             userData.services
@@ -194,7 +196,8 @@ class HomeController(
             userName = OtpVerificationController.getUserData()?.name ?: "",
             designation = OtpVerificationController.getUserData()?.designation ?: "",
             department = OtpVerificationController.getUserData()?.department ?: "",
-            employeeId = OtpVerificationController.getUserData()?.employeeId ?: ""
+            employeeId = OtpVerificationController.getUserData()?.employeeId ?: "",
+            profilePicture = OtpVerificationController.getUserData()?.profilePic
         )
     }
 
@@ -203,5 +206,25 @@ class HomeController(
             model.viewFavorites -> model.favorites.values.flatten()
             else -> model.categories.values.flatten()
         }
+    }
+
+    fun updateProfilePicture(profilePicUrl: String?) {
+        Log.d("HomeController", "Updating profile picture to: $profilePicUrl")
+        
+        // Invalidate the image cache first to ensure fresh loading
+        ImageCache.invalidateProfileImageCache()
+        
+        // Force a model update with a new instance to trigger recomposition
+        model = model.copy(
+            profilePicture = profilePicUrl,
+            // Adding a small change to any property forces recomposition
+            userName = model.userName
+        )
+        
+        // Call refreshUserData after a short delay to ensure UI updates
+        // This helps when we're on the home screen and need immediate refresh
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            refreshUserData()
+        }, 300) // Short delay to ensure the update propagates
     }
 } 

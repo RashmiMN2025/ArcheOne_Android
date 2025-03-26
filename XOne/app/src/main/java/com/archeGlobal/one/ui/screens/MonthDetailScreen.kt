@@ -25,6 +25,7 @@ import coil.request.ImageRequest
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
 import com.archeGlobal.one.model.Holiday
+import com.archeGlobal.one.model.Milestone
 import com.archeGlobal.one.utils.NetworkResult
 import java.time.LocalDate
 import java.time.YearMonth
@@ -34,6 +35,11 @@ import java.util.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.border
+import android.util.Log
 
 @Composable
 fun MonthDetailScreen(
@@ -43,10 +49,15 @@ fun MonthDetailScreen(
 ) {
     val holidaysState = controller.holidays.observeAsState()
     val hiddenHolidaysUpdated = controller.hiddenHolidaysUpdated.observeAsState()
+    val milestonesState = controller.milestones.observeAsState()
     
     var selectedMonth by remember { mutableStateOf(month) }
     var monthHolidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
     var selectedHoliday by remember { mutableStateOf<Holiday?>(null) }
+    var selectedDate by remember { mutableStateOf<String?>(null) }
+    var selectedMilestones by remember { mutableStateOf<List<Milestone>>(emptyList()) }
+    var milestoneDates by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    var selectedDay by remember { mutableStateOf<Int?>(null) }
     
     // Update holidays when LiveData changes, month changes, or hidden holidays are updated
     LaunchedEffect(holidaysState.value, selectedMonth, hiddenHolidaysUpdated.value) {
@@ -92,9 +103,131 @@ fun MonthDetailScreen(
         }
     }
 
-    // Reset selected holiday when changing months
+    // Update milestones when selected date changes
+    LaunchedEffect(selectedDate, milestonesState.value) {
+        if (selectedDate != null) {
+            Log.d("MonthDetailScreen", "Selected date: $selectedDate")
+            
+            val milestones = when (val result = holidaysState.value) {
+                is NetworkResult.Success -> {
+                    result.data?.let { calendarResponse ->
+                        // Get milestones that match the selected date
+                        val allMilestones = calendarResponse.milestones
+                        Log.d("MonthDetailScreen", "Total milestones to filter: ${allMilestones.size}")
+                        
+                        val filtered = allMilestones.filter { milestone ->
+                            try {
+                                // Parse milestone date from MM-dd-yyyy format
+                                val milestoneDateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
+                                val milestoneDate = LocalDate.parse(milestone.poDate, milestoneDateFormatter)
+                                
+                                // Parse selected date from dd-MM-yyyy format
+                                val selectedDateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                                val selectedLocalDate = LocalDate.parse(selectedDate, selectedDateFormatter)
+                                
+                                // Compare day and month
+                                val isMatch = milestoneDate.dayOfMonth == selectedLocalDate.dayOfMonth && 
+                                             milestoneDate.monthValue == selectedLocalDate.monthValue
+                                
+                                Log.d("MonthDetailScreen", "Comparing milestone ${milestone.poDate} " +
+                                    "(day=${milestoneDate.dayOfMonth}, month=${milestoneDate.monthValue}) with " +
+                                    "selected date $selectedDate (day=${selectedLocalDate.dayOfMonth}, month=${selectedLocalDate.monthValue}) " +
+                                    "= $isMatch")
+                                
+                                isMatch
+                            } catch (e: Exception) {
+                                Log.e("MonthDetailScreen", "Error comparing dates: ${milestone.poDate} vs $selectedDate", e)
+                                false
+                            }
+                        }
+                        
+                        Log.d("MonthDetailScreen", "Found ${filtered.size} milestones for date $selectedDate")
+                        filtered
+                    } ?: emptyList()
+                }
+                else -> {
+                    Log.d("MonthDetailScreen", "No calendar data available")
+                    emptyList()
+                }
+            }
+            
+            selectedMilestones = milestones
+            Log.d("MonthDetailScreen", "showMilestoneDetails set to: ${milestones.isNotEmpty()}")
+        } else {
+            selectedMilestones = emptyList()
+        }
+    }
+
+    // Update milestones dates when month changes or milestones data changes
+    LaunchedEffect(selectedMonth, milestonesState.value) {
+        when (val result = holidaysState.value) {
+            is NetworkResult.Success -> {
+                result.data?.let { calendarResponse ->
+                    // Get milestone dates for the selected month
+                    val milestones = calendarResponse.milestones
+                    Log.d("MonthDetailScreen", "Total milestones: ${milestones.size}")
+                    
+                    milestoneDates = milestones
+                        .filter { milestone ->
+                            try {
+                                // Use MM-dd-yyyy format to match the API format (e.g. "12-30-2009")
+                                val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
+                                val milestoneDate = LocalDate.parse(milestone.poDate, dateFormatter)
+                                val isMatch = milestoneDate.monthValue == selectedMonth
+                                Log.d("MonthDetailScreen", "Milestone: ${milestone.poDate}, Month: ${milestoneDate.monthValue}, Match: $isMatch")
+                                isMatch
+                            } catch (e: Exception) {
+                                Log.e("MonthDetailScreen", "Error parsing date: ${milestone.poDate}", e)
+                                false
+                            }
+                        }
+                        .map {
+                            try {
+                                val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
+                                val day = LocalDate.parse(it.poDate, dateFormatter).dayOfMonth
+                                Log.d("MonthDetailScreen", "Milestone day: $day from ${it.poDate}")
+                                day
+                            } catch (e: Exception) {
+                                Log.e("MonthDetailScreen", "Error getting day: ${it.poDate}", e)
+                                0
+                            }
+                        }
+                        .filter { it > 0 }
+                        .toSet()
+                    
+                    Log.d("MonthDetailScreen", "Milestone dates for month $selectedMonth: $milestoneDates")
+                }
+            }
+            else -> { 
+                Log.d("MonthDetailScreen", "No calendar data available for milestone dates")
+            }
+        }
+    }
+
+    // Initialize with today's date if we're in current month
     LaunchedEffect(selectedMonth) {
-        selectedHoliday = null
+        val currentDate = LocalDate.now()
+        if (currentDate.monthValue == selectedMonth && currentDate.year == 2025) {
+            val todayStr = String.format("%02d-%02d-%04d", currentDate.dayOfMonth, selectedMonth, 2025)
+            selectedDate = todayStr
+            selectedDay = currentDate.dayOfMonth
+            
+            // Find holiday for today
+            val todayHoliday = monthHolidays.find { holiday ->
+                try {
+                    val holidayDate = LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                    holidayDate.dayOfMonth == currentDate.dayOfMonth
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            selectedHoliday = todayHoliday
+        } else {
+            selectedHoliday = null
+            selectedDate = null
+            selectedMilestones = emptyList()
+            selectedDay = null
+        }
     }
 
     Box(
@@ -110,6 +243,8 @@ fun MonthDetailScreen(
                 indication = null
             ) {
                 selectedHoliday = null
+                selectedDate = null
+                selectedMilestones = emptyList()
             }
     ) {
         Column(
@@ -222,36 +357,59 @@ fun MonthDetailScreen(
                 }
             } else {
                 // Month Calendar (without white box) - always show calendar
-                MonthCalendarView(selectedMonth, monthHolidays) { holiday ->
-                    selectedHoliday = holiday
-                }
+                MonthCalendarView(
+                    selectedMonth = selectedMonth, 
+                    holidays = monthHolidays,
+                    milestoneDates = milestoneDates,
+                    selectedDay = selectedDay,
+                    onDateClick = { holiday, date, day ->
+                        selectedHoliday = holiday
+                        selectedDate = date
+                        selectedDay = day
+                    }
+                )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Show "No holidays" message only if there's no selected holiday and no holidays in the month
-                if (selectedHoliday == null && monthHolidays.isEmpty()) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "No holidays in this month",
-                            color = Color.Gray,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center
-                        )
+                // Show details based on selection
+                if (selectedHoliday == null && selectedMilestones.isEmpty()) {
+                    // No selection - show message only if there are no holidays
+                    if (monthHolidays.isEmpty()) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "No holidays in this month",
+                                color = Color.Gray,
+                                fontSize = 16.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 } else {
-                    // Holiday Details Box (shows when a holiday is selected)
-                    selectedHoliday?.let { holiday ->
+                    // Holiday Details Box
+                    if (selectedHoliday != null) {
                         HolidayDetailsBox(
-                            holiday = holiday,
+                            holiday = selectedHoliday!!,
                             onHideHoliday = {
-                                controller.hideHoliday(holiday)
+                                controller.hideHoliday(selectedHoliday!!)
                                 selectedHoliday = null
                             }
+                        )
+                    }
+                    
+                    // Show milestone details if available
+                    if (selectedMilestones.isNotEmpty() && selectedDate != null) {
+                        if (selectedHoliday != null) {
+                            // Add spacing between holiday and milestone boxes
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                        MilestoneDetailsBox(
+                            date = selectedDate!!,
+                            milestones = selectedMilestones
                         )
                     }
                 }
@@ -261,15 +419,26 @@ fun MonthDetailScreen(
 }
 
 @Composable
-fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday?) -> Unit) {
+fun MonthCalendarView(
+    selectedMonth: Int, 
+    holidays: List<Holiday>,
+    milestoneDates: Set<Int> = emptySet(),
+    selectedDay: Int? = null,
+    onDateClick: (Holiday?, String, Int) -> Unit
+) {
+    // Log milestone dates for debugging
+    LaunchedEffect(milestoneDates) {
+        Log.d("MonthCalendarView", "Milestone dates: $milestoneDates")
+    }
+    
     val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-    val yearMonth = YearMonth.of(2025, month)
+    val yearMonth = YearMonth.of(2025, selectedMonth)
     val daysInMonth = yearMonth.lengthOfMonth()
     val firstDayOfMonth = yearMonth.atDay(1).dayOfWeek.value % 7
     
     // Get current date to correctly mark today
     val currentDate = LocalDate.now()
-    val isCurrentMonth = currentDate.monthValue == month && currentDate.year == 2025
+    val isCurrentMonth = currentDate.monthValue == selectedMonth && currentDate.year == 2025
     
     Column {
         // Days of week header
@@ -314,6 +483,9 @@ fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday
                 repeat(7) { dayOfWeekIndex ->
                     val day = weekIndex * 7 + dayOfWeekIndex + 1 - firstDayOfMonth
                     if (day in 1..daysInMonth) {
+                        // Format the date to "dd-MM-yyyy" for consistency
+                        val dateStr = String.format("%02d-%02d-%04d", day, selectedMonth, 2025)
+                        
                         // Only mark as today if it's the current date
                         val isToday = isCurrentMonth && day == currentDate.dayOfMonth
                         
@@ -330,6 +502,9 @@ fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday
                         val isMandatoryHoliday = holiday?.holidayType == "Yes"
                         val isRegionalHoliday = holiday?.holidayType == "RH"
                         
+                        // Check if this day has milestones
+                        val hasMilestone = milestoneDates.contains(day)
+                        
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
@@ -337,26 +512,26 @@ fun MonthCalendarView(month: Int, holidays: List<Holiday>, onDateClick: (Holiday
                                 .clip(CircleShape)
                                 .background(
                                     when {
+                                        isToday -> Color(0xFF4CAF50) // Green for today (highest priority)
                                         isMandatoryHoliday -> Color(0xFFDD3825) // Red for holidays
                                         isRegionalHoliday -> Color(0xFF2196F3) // Blue for RH
-                                        isToday -> Color(0xFF4CAF50) // Green for today
+                                        day == selectedDay && hasMilestone -> Color(0xFFE0E0E0) // Light grey only for selected milestone dates
                                         else -> Color.Transparent
                                     }
                                 )
                                 .clickable {
-                                    // Pass the holiday if this date has one, otherwise pass null to clear selection
-                                    onDateClick(holiday)
+                                    onDateClick(holiday, dateStr, day)
                                 }
                         ) {
                             Text(
                                 text = day.toString(),
                                 fontSize = 16.sp,
                                 color = when {
-                                    isMandatoryHoliday || isRegionalHoliday || isToday -> Color.White
+                                    isToday || isMandatoryHoliday || isRegionalHoliday -> Color.White
                                     else -> Color.Black
                                 },
                                 fontWeight = when {
-                                    isMandatoryHoliday || isRegionalHoliday || isToday -> FontWeight.Bold
+                                    isToday || isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
                                     else -> FontWeight.Normal
                                 }
                             )
@@ -610,3 +785,121 @@ private fun LegendItem(color: Color, text: String) {
         )
     }
 }
+
+@Composable
+private fun LegendItemBordered(color: Color, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .border(1.dp, color, CircleShape)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = Color.Black
+        )
+    }
+}
+
+@Composable
+fun MilestoneDetailsBox(
+    date: String,
+    milestones: List<Milestone>
+) {
+    // Format date for display (e.g., "12 January" from "12-01-2025")
+    val formattedDate = try {
+        val localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+        "${localDate.dayOfMonth} ${localDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault())}"
+    } catch (e: Exception) {
+        date
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = { /* Prevent click from reaching background */ }
+            ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Title with formatted date
+            Text(
+                text = "Milestones of $formattedDate",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Display milestone information
+            milestones.forEach { milestone ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    // Milestone bullet point in orange color
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(Color(0xFFF5A623), CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = milestone.event,
+                            color = Color.Black,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Customer information with left padding to align with the event text
+                    Row(
+                        modifier = Modifier.padding(start = 16.dp)
+                    ) {
+                        Text(
+                            text = "Customer: ",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = milestone.customer,
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    if (milestone != milestones.last()) {
+                        Divider(
+                            color = Color.LightGray, 
+                            thickness = 0.5.dp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+

@@ -88,6 +88,9 @@ class MainActivity : ComponentActivity() {
         locationsController = LocationsController(this)
         businessCardController = BusinessCardControllerImpl(this, navigator)
 
+        // Connect ProfileController with HomeController to update profile picture
+        ProfileController.setHomeController(homeController)
+
         enableEdgeToEdge()
         
         setContent {

@@ -40,4 +40,13 @@ class PreviewNavigator : Navigator {
     override fun navigateToAddressDetails() {}
     override fun navigateToEmergencyContact() {}
     override fun navigateToPDFViewer(pdfUrl: String, title: String) {}
+    
+    // Implementation of new methods
+    override fun getCurrentRoute(): String? {
+        return null // For preview purposes, we don't track a real route
+    }
+    
+    override fun refreshCurrentScreen() {
+        // No-op for preview purposes
+    }
 } 

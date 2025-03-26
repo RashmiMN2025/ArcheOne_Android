@@ -4,14 +4,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,6 +26,13 @@ import com.archeGlobal.one.controller.AssetController
 import com.archeGlobal.one.model.AssetModel
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.components.UniversalLoader
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,24 +162,58 @@ fun AssetScreen(
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
-
-                            OutlinedTextField(
-                                value = model.issueDescription,
-                                onValueChange = { controller.onIssueDescriptionChange(it) },
+                            
+                            var localText by remember { mutableStateOf("") }
+                            val context = LocalContext.current
+                            
+                            // Use AndroidView with a standard EditText
+                            androidx.compose.ui.viewinterop.AndroidView(
+                                factory = { context ->
+                                    val editText = android.widget.EditText(context).apply {
+                                        // Set properties
+                                        hint = "Please describe your issue"
+                                        setTextColor(android.graphics.Color.BLACK)
+                                        setHintTextColor(android.graphics.Color.GRAY)
+                                        gravity = android.view.Gravity.TOP
+                                        minLines = 4
+                                        maxLines = 6
+                                        
+                                        // Set background and padding
+                                        background = android.graphics.drawable.GradientDrawable().apply {
+                                            setColor(android.graphics.Color.WHITE)
+                                            setStroke(2, android.graphics.Color.LTGRAY)
+                                            cornerRadius = 16f
+                                        }
+                                        setPadding(24, 16, 24, 16)
+                                        
+                                        // Set text change listener
+                                        addTextChangedListener(object : android.text.TextWatcher {
+                                            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                                            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                                            override fun afterTextChanged(s: android.text.Editable?) {
+                                                val newText = s.toString()
+                                                localText = newText
+                                                controller.onIssueDescriptionChange(newText)
+                                            }
+                                        })
+                                    }
+                                    editText
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(120.dp),
-                                placeholder = { Text("Please describe your issue", color = Color.Gray) },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.Gray,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black
-                                )
+                                    .height(120.dp)
+                                    .padding(bottom = 8.dp)
                             )
 
                             Button(
-                                onClick = { controller.onSubmitIssue() },
+                                onClick = { 
+                                    if (localText.isBlank()) {
+                                        Toast.makeText(context, "Please describe your issue", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        controller.onIssueDescriptionChange(localText)
+                                        controller.onSubmitIssue()
+                                    }
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 16.dp),

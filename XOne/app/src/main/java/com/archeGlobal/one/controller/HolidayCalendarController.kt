@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.model.Holiday
+import com.archeGlobal.one.model.Milestone
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.network.ApiService
 import com.archeGlobal.one.network.CalendarRequest
@@ -12,6 +13,10 @@ import com.archeGlobal.one.repository.UserRepository
 import com.archeGlobal.one.utils.NetworkResult
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class HolidayCalendarController(
     private val apiService: ApiService,
@@ -25,6 +30,10 @@ class HolidayCalendarController(
     // LiveData for holiday PDF file URL
     private val _holidayFileUrl = MutableLiveData<String>()
     val holidayFileUrl: LiveData<String> = _holidayFileUrl
+
+    // LiveData for milestones
+    private val _milestones = MutableLiveData<List<Milestone>>(emptyList())
+    val milestones: LiveData<List<Milestone>> = _milestones
     
     // Set to track hidden holidays by their date string
     private val _hiddenHolidays = mutableSetOf<String>()
@@ -53,6 +62,23 @@ class HolidayCalendarController(
         return holidays.filter { !_hiddenHolidays.contains(it.date) }
     }
     
+    // Method to get milestones for a specific date
+    fun getMilestonesForDate(date: String): List<Milestone> {
+        return _milestones.value?.filter {
+            try {
+                val milestoneDate = SimpleDateFormat("MM-dd-yyyy", Locale.US).parse(it.poDate)
+                val requestDate = SimpleDateFormat("dd-MM-yyyy", Locale.US).parse(date)
+                
+                val milestoneDateString = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(milestoneDate)
+                val requestDateString = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(requestDate)
+                
+                milestoneDateString == requestDateString
+            } catch (e: Exception) {
+                false
+            }
+        } ?: emptyList()
+    }
+    
     fun fetchHolidays() {
         _holidays.value = NetworkResult.Loading()
         
@@ -73,6 +99,7 @@ class HolidayCalendarController(
                     if (calendarResponse.status == 200) {
                         _holidays.value = NetworkResult.Success(calendarResponse)
                         _holidayFileUrl.value = calendarResponse.holidaysFile
+                        _milestones.value = calendarResponse.milestones
                     } else {
                         _holidays.value = NetworkResult.Error("Server returned error status: ${calendarResponse.status}")
                     }

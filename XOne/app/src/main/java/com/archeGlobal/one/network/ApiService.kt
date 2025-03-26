@@ -27,11 +27,11 @@ interface ApiService {
     @POST("login")
     fun login(@Header("Authorization") token: String, @Body request: LoginRequest): Call<VerifyOtpResponse>
 
-    @POST("assets")
-    fun getAssetDetails(@Body request: AssetRequest): Call<AssetResponse>
-
     @POST("/sos")
     suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
+
+    @POST("/sos")
+    fun createSOSRequest(@Body request: SOSRequest): Call<SOSResponse>
 
     @POST("/logout")
     fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
@@ -64,10 +64,11 @@ data class LogoutResponse(
 )
 
 data class DocumentUploadResponse(
-    val personalDoc: List<Document>,
-    val professionalDoc: List<Document>,
     val status: Int,
-    val message: String
+    val message: String,
+    @SerializedName("filePath") val filePath: String? = null,
+    val personalDoc: List<Document> = emptyList(),
+    val professionalDoc: List<Document> = emptyList()
 )
 
 data class Document(
@@ -119,7 +120,8 @@ data class VerifyOtpResponse(
     val sos: String? = null,
     val policiesList: List<PolicyModel.Policy> = emptyList(),
     val offices: List<Office> = emptyList(),
-    val sosBlogs: List<SosBlogModel>
+    val sosBlogs: List<SosBlogModel>,
+    val assetDetails: List<AssetDetail> = emptyList()
 )
 
 data class User(
@@ -203,10 +205,6 @@ data class AssetDetail(
     val model: String,
     val purchase_date: String?,
     val serial_number: String
-)
-
-data class AssetRequest(
-    val employeeId: String
 )
 
 data class CalendarRequest(

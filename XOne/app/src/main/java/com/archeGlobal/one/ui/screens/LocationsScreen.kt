@@ -119,6 +119,7 @@ fun LocationsScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(state.selectedState.locations) { location ->
+                            val context = LocalContext.current
                             LocationCard(
                                 location = location,
                                 onClick = { locationController.selectLocation(location) },
@@ -234,12 +235,14 @@ private fun LocationCard(
                     fontWeight = FontWeight.Bold,
                     color = TextSecondary,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable {
-                        val intent = Intent(Intent.ACTION_SENDTO).apply {
-                            data = Uri.parse("mailto:${location.email}")
+                    modifier = Modifier.clickable(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("mailto:${location.email}")
+                            }
+                            context.startActivity(Intent.createChooser(intent, "Send email"))
                         }
-                        context.startActivity(Intent.createChooser(intent, "Send email"))
-                    }
+                    )
                 )
             }
 
@@ -259,12 +262,14 @@ private fun LocationCard(
                         fontSize = 14.sp,
                         color = Color.Black,
                         textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${location.hrNumber}")
+                        modifier = Modifier.clickable(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${location.hrNumber}")
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
+                        )
                     )
                 }
             }
@@ -285,12 +290,14 @@ private fun LocationCard(
                         fontSize = 14.sp,
                         color = Color.Black,
                         textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${location.adminNumber}")
+                        modifier = Modifier.clickable(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${location.adminNumber}")
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
+                        )
                     )
                 }
             }
@@ -301,7 +308,23 @@ private fun LocationCard(
                 horizontalArrangement = Arrangement.End
             ) {
                 Button(
-                    onClick = onClick,
+                    onClick = {
+                        // For all locations except India, open in Google Maps
+                        if (!location.name.contains("India", ignoreCase = true)) {
+                            // Open Google Maps with the redirection link if available
+                            val uri = if (location.redirection?.isNotEmpty() == true) {
+                                Uri.parse(location.redirection)
+                            } else {
+                                // Fallback to searching for the address
+                                Uri.parse("geo:0,0?q=${Uri.encode(location.address)}")
+                            }
+                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                            context.startActivity(intent)
+                        } else {
+                            // For India, use the provided onClick which shows internal details
+                            onClick()
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
                     modifier = Modifier.width(160.dp)
                 ) {
@@ -351,6 +374,8 @@ private fun StateList(
     modifier: Modifier = Modifier,
     controller: LocationsController
 ) {
+    val context = LocalContext.current
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -371,14 +396,19 @@ private fun StateList(
                     color = TextPrimary,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-
+                
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Display ALL states from the API response without filtering
                     items(states) { state ->
+                        val location = state.locations.firstOrNull()
+                        
                         Button(
-                            onClick = { onStateClick(state) },
+                            onClick = { 
+                                // For India, use the original behavior - show internal view
+                                onStateClick(state)
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = PrimaryRed
@@ -456,17 +486,22 @@ private fun LocationDetails(
                             color = Color(0xFFDD3825),
                             shape = CircleShape
                         )
-                        .clickable {
-                            // Open Google Maps with the redirection link if available
-                            val uri = if (location.redirection?.isNotEmpty() == true) {
-                                Uri.parse(location.redirection)
-                            } else {
-                                // Fallback to searching for the address
-                                Uri.parse("geo:0,0?q=${Uri.encode(location.address)}")
+                        .clickable(
+                            onClick = {
+                                // Don't navigate to maps for Indian locations - we're already displaying details
+                                if (!location.name.contains("India", ignoreCase = true)) {
+                                    // Open Google Maps with the redirection link if available
+                                    val uri = if (location.redirection?.isNotEmpty() == true) {
+                                        Uri.parse(location.redirection)
+                                    } else {
+                                        // Fallback to searching for the address
+                                        Uri.parse("geo:0,0?q=${Uri.encode(location.address)}")
+                                    }
+                                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                                    context.startActivity(intent)
+                                }
                             }
-                            val intent = Intent(Intent.ACTION_VIEW, uri)
-                            context.startActivity(intent)
-                        },
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -498,12 +533,14 @@ private fun LocationDetails(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:${location.email}")
+                        modifier = Modifier.clickable(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("mailto:${location.email}")
+                                }
+                                context.startActivity(Intent.createChooser(intent, "Send email"))
                             }
-                            context.startActivity(Intent.createChooser(intent, "Send email"))
-                        }
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Email,
@@ -527,12 +564,14 @@ private fun LocationDetails(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${location.hrNumber}")
+                        modifier = Modifier.clickable(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${location.hrNumber}")
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Phone,
@@ -564,12 +603,14 @@ private fun LocationDetails(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.clickable {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${location.adminNumber}")
+                        modifier = Modifier.clickable(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${location.adminNumber}")
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Phone,

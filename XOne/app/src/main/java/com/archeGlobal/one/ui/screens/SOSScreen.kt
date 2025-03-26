@@ -78,24 +78,35 @@ fun SOSScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header with back button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 40.dp)
                 ) {
-                    IconButton(onClick = onBackPressed) {
+                    IconButton(
+                        onClick = onBackPressed,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
                             tint = Color.Black
                         )
                     }
+                    
                     Text(
                         text = "SOS",
                         color = Color.Black,
                         fontSize = 20.sp,
-                        modifier = Modifier.padding(start = 140.dp)
+                        modifier = Modifier.align(Alignment.Center),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    
+                    // Add an invisible spacer with same size as back button for balance
+                    Spacer(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterEnd)
                     )
                 }
 

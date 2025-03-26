@@ -6,6 +6,7 @@ import com.archeGlobal.one.model.HomeItem
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
+import com.archeGlobal.one.network.AssetDetail
 import com.archeGlobal.one.network.Office
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -138,6 +139,27 @@ class PreferencesManager(context: Context) {
         }
     }
     
+    // Save asset details
+    fun saveAssetDetails(assetDetails: List<AssetDetail>?) {
+        if (assetDetails == null) {
+            sharedPreferences.edit().remove(KEY_ASSET_DETAILS).apply()
+        } else {
+            val json = gson.toJson(assetDetails)
+            sharedPreferences.edit().putString(KEY_ASSET_DETAILS, json).apply()
+        }
+    }
+    
+    // Get asset details
+    fun getAssetDetails(): List<AssetDetail>? {
+        val json = sharedPreferences.getString(KEY_ASSET_DETAILS, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<AssetDetail>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+    
     // Clear all user-related data on logout
     fun clearAllUserData() {
         sharedPreferences.edit().apply {
@@ -146,6 +168,7 @@ class PreferencesManager(context: Context) {
             remove(KEY_OFFICES_DATA)
             remove(KEY_POLICIES_DATA)
             remove(KEY_SOS_BLOGS_DATA)
+            remove(KEY_ASSET_DETAILS)
         }.apply()
     }
 
@@ -156,7 +179,9 @@ class PreferencesManager(context: Context) {
         private const val KEY_OFFICES_DATA = "offices_data"
         private const val KEY_POLICIES_DATA = "policies_data"
         private const val KEY_SOS_BLOGS_DATA = "sos_blogs_data"
+        private const val KEY_ASSET_DETAILS = "asset_details"
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
+        private const val KEY_PROFILE_UPDATE_TIMESTAMP = "profile_update_timestamp"
     }
     
     // Check if this is the first launch of the app
@@ -167,5 +192,15 @@ class PreferencesManager(context: Context) {
     // Mark that the app has been launched before
     fun setFirstLaunchComplete() {
         sharedPreferences.edit().putBoolean(KEY_IS_FIRST_LAUNCH, false).apply()
+    }
+
+    // Store profile update timestamp
+    fun setProfileUpdateTimestamp(timestamp: Long) {
+        sharedPreferences.edit().putLong(KEY_PROFILE_UPDATE_TIMESTAMP, timestamp).apply()
+    }
+
+    // Get the profile update timestamp
+    fun getProfileUpdateTimestamp(): Long {
+        return sharedPreferences.getLong(KEY_PROFILE_UPDATE_TIMESTAMP, 0)
     }
 } 

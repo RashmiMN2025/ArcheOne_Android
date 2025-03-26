@@ -26,6 +26,12 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.ui.preview.PreviewNavigator
 import com.archeGlobal.one.ui.components.UniversalLoader
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import com.archeGlobal.one.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +42,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var employeeId by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var mobileVisible by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -105,7 +112,17 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 textStyle = TextStyle(color = Color.Black),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions.Default,
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                visualTransformation = if (mobileVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { mobileVisible = !mobileVisible }) {
+                        Icon(
+                            painter = painterResource(id = if (mobileVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
+                            contentDescription = if (mobileVisible) "Hide mobile number" else "Show mobile number",
+                            tint = Color.Gray
+                        )
+                    }
+                }
             )
 
             // Employee ID Field

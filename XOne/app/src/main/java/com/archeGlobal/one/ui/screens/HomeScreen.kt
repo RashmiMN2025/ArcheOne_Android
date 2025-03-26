@@ -47,8 +47,15 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.ui.components.EmptyFavorites
 import com.archeGlobal.one.ui.components.FooterScaffold
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.request.CachePolicy
+import android.util.Log
+import com.archeGlobal.one.utils.ImageCache
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ProfileHeader(
@@ -81,19 +88,47 @@ fun ProfileHeader(
             Row(
                 verticalAlignment = Alignment.Top
             ) {
+                // Profile picture
                 Surface(
                     modifier = Modifier
-                        .size(64.dp, 70.dp)  // Changed from square size to width: 64.dp, height: 70.dp
-                        .padding(top = 8.dp),
+                        .size(64.dp, 70.dp)
+                        .padding(top = 8.dp)
+                        .clickable(onClick = onShowProfileClick),
                     shape = CircleShape,
                     color = Color.White
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.padding(14.dp),
-                        tint = Color.Black
-                    )
+                    // If profile picture URL is available, display it using Coil
+                    if (model.profilePicture != null && model.profilePicture.isNotEmpty()) {
+                        Log.d("HomeScreen", "Loading profile picture: ${model.profilePicture}")
+                        
+                        // Use ImageCache version for recomposition
+                        val context = LocalContext.current
+                        val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
+                        key(model.profilePicture, cacheVersion) {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    ImageCache.createProfileImageRequest(
+                                        context = context, 
+                                        url = model.profilePicture
+                                    ),
+                                    onSuccess = { 
+                                        Log.d("HomeScreen", "Profile image loaded successfully: ${model.profilePicture}") 
+                                    }
+                                ),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    } else {
+                        // Default profile icon
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.padding(14.dp),
+                            tint = Color.Black
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.width(20.dp))

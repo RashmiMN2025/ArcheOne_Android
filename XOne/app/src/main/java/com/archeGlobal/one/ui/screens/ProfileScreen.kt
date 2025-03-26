@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,6 +40,14 @@ import com.archeGlobal.one.ui.preview.PreviewNavigator
 import androidx.compose.ui.layout.ContentScale
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.ui.components.FooterScaffold
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import android.net.Uri
+import android.util.Log
+import com.archeGlobal.one.utils.ImageCache
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ProfileScreen(
@@ -80,7 +89,11 @@ fun ProfileScreen(
                 // Profile Header
                 ProfileHeader(
                     name = controller.model.name,
-                    email = controller.model.email
+                    email = controller.model.email,
+                    profilePicture = controller.model.profilePicture,
+                    onProfilePictureClick = { uri ->
+                        controller.onProfilePictureClick(uri)
+                    }
                 )
 
                 // Rest of the content with padding
@@ -233,8 +246,18 @@ private fun LogoutConfirmationDialog(
 @Composable
 private fun ProfileHeader(
     name: String,
-    email: String
+    email: String,
+    profilePicture: String? = null,
+    onProfilePictureClick: ((Uri) -> Unit)? = null
 ) {
+    // Image picker launcher
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null && onProfilePictureClick != null) {
+            onProfilePictureClick(uri)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -256,22 +279,67 @@ private fun ProfileHeader(
                 .fillMaxSize()
                 .padding(top = 32.dp)
         ) {
-            // Profile Icon
-            Surface(
+            // Profile picture with camera icon overlay
+            Box(
                 modifier = Modifier
                     .padding(top = 24.dp)
                     .size(80.dp),
-                shape = CircleShape,
-                color = Color.Black
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .size(48.dp)
-                )
+                // Profile picture or default icon
+                Surface(
+                    modifier = Modifier.size(80.dp),
+                    shape = CircleShape,
+                    color = Color.Black
+                ) {
+                    if (profilePicture != null) {
+                        // Display the profile picture using Coil with proper caching
+                        val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
+                        key(profilePicture, cacheVersion) {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    ImageCache.createProfileImageRequest(
+                                        context = context, 
+                                        url = profilePicture
+                                    ),
+                                    onSuccess = { Log.d("ProfileHeader", "Profile image loaded successfully: $profilePicture") }
+                                ),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    } else {
+                        // Default profile icon
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .size(48.dp)
+                        )
+                    }
+                }
+                
+                // Camera icon overlay for changing profile picture
+                if (onProfilePictureClick != null) {
+                    Surface(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .align(Alignment.BottomEnd)
+                            .clickable { launcher.launch("image/*") },
+                        shape = CircleShape,
+                        color = Color.Black
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Change Profile Picture",
+                            tint = Color.White,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

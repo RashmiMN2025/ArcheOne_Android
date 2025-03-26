@@ -38,4 +38,8 @@ interface Navigator {
     fun navigateToAddressDetails()
     fun navigateToEmergencyContact()
     fun navigateToPDFViewer(pdfUrl: String, title: String)
+    
+    // New methods to support immediate UI updates
+    fun getCurrentRoute(): String?
+    fun refreshCurrentScreen()
 } 

@@ -5,6 +5,7 @@ data class HomeModel(
     val designation: String = "",
     val department: String = "",
     val employeeId: String = "",
+    val profilePicture: String? = null,
     val showAllApps: Boolean = true,
     val viewFavorites: Boolean = false,
     val showSearchAndFavorites: Boolean = true,

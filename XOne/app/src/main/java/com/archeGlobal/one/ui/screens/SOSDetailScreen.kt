@@ -55,26 +55,36 @@ fun SOSDetailScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 // 🔝 Fixed Header
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFFFEF9EC)) // Keeps the header color
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .padding(top = 40.dp)
+                        .padding(top = 40.dp, bottom = 12.dp)
                 ) {
-                    IconButton(onClick = onBackPressed) { // ⬅️ Navigates back to the previous screen
+                    IconButton(
+                        onClick = onBackPressed,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) { // ⬅️ Navigates back to the previous screen
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
                             tint = Color.Black
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    
                     Text(
                         text = blog.name, // 🏷️ Use blog name as title
                         fontSize = 20.sp,
                         color = Color.Black,
+                        modifier = Modifier.align(Alignment.Center),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    
+                    // Add an invisible spacer with same size as back button for balance
+                    Spacer(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterEnd)
                     )
                 }
 

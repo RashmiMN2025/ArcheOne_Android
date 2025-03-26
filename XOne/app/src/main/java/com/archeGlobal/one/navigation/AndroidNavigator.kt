@@ -145,4 +145,26 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to PDF viewer screen: $pdfUrl")
         navController?.navigate("pdf_viewer/$pdfUrl?title=$title")
     }
+
+    // New method to get the current route
+    override fun getCurrentRoute(): String? {
+        val currentDestination = navController?.currentDestination
+        return currentDestination?.route
+    }
+
+    // Method to refresh the current screen by navigating to it again
+    override fun refreshCurrentScreen() {
+        val currentRoute = getCurrentRoute() ?: return
+        Log.d("AndroidNavigator", "Refreshing current screen: $currentRoute")
+        
+        try {
+            // Navigate to the same route to force a refresh
+            navController?.navigate(currentRoute) {
+                // This will replace the current destination with the same one, forcing a recomposition
+                popUpTo(currentRoute) { inclusive = true }
+            }
+        } catch (e: Exception) {
+            Log.e("AndroidNavigator", "Error refreshing current screen: ${e.message}", e)
+        }
+    }
 }
