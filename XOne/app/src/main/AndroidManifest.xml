@@ -82,6 +82,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Add ChatActivity -->
+        <activity
+            android:name=".ChatActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Chat Support"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Add WebViewActivity -->
         <activity
             android:name=".WebViewActivity"

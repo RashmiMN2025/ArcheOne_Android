@@ -117,24 +117,33 @@ fun MonthDetailScreen(
                         
                         val filtered = allMilestones.filter { milestone ->
                             try {
-                                // Parse milestone date from MM-dd-yyyy format
-                                val milestoneDateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
-                                val milestoneDate = LocalDate.parse(milestone.poDate, milestoneDateFormatter)
+                                // Get the selected date parts (selectedDate will never be null here)
+                                val selectedDateStr = selectedDate ?: return@filter false
+                                val selectedDateParts = selectedDateStr.split("-")
+                                val selectedDay = selectedDateParts[0].toInt()
+                                val selectedMonth = selectedDateParts[1].toInt()
                                 
-                                // Parse selected date from dd-MM-yyyy format
-                                val selectedDateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                                val selectedLocalDate = LocalDate.parse(selectedDate, selectedDateFormatter)
+                                // Parse milestone date (always in dd-MM-yyyy format)
+                                val milestoneParts = milestone.poDate.split("-")
                                 
-                                // Compare day and month
-                                val isMatch = milestoneDate.dayOfMonth == selectedLocalDate.dayOfMonth && 
-                                             milestoneDate.monthValue == selectedLocalDate.monthValue
-                                
-                                Log.d("MonthDetailScreen", "Comparing milestone ${milestone.poDate} " +
-                                    "(day=${milestoneDate.dayOfMonth}, month=${milestoneDate.monthValue}) with " +
-                                    "selected date $selectedDate (day=${selectedLocalDate.dayOfMonth}, month=${selectedLocalDate.monthValue}) " +
-                                    "= $isMatch")
-                                
-                                isMatch
+                                if (milestoneParts.size == 3) {
+                                    // ALL milestone dates are in DD-MM-YYYY format
+                                    val milestoneDay = milestoneParts[0].toInt()
+                                    val milestoneMonth = milestoneParts[1].toInt()
+                                    
+                                    // Compare ONLY day and month, ignoring year completely
+                                    val isMatch = milestoneDay == selectedDay && milestoneMonth == selectedMonth
+                                    
+                                    Log.d("MonthDetailScreen", "Comparing milestone ${milestone.poDate} " +
+                                        "(day=$milestoneDay, month=$milestoneMonth) with " +
+                                        "selected date $selectedDate (day=$selectedDay, month=$selectedMonth) " +
+                                        "= $isMatch")
+                                    
+                                    isMatch
+                                } else {
+                                    Log.e("MonthDetailScreen", "Invalid milestone date format: ${milestone.poDate}")
+                                    false
+                                }
                             } catch (e: Exception) {
                                 Log.e("MonthDetailScreen", "Error comparing dates: ${milestone.poDate} vs $selectedDate", e)
                                 false
@@ -170,12 +179,22 @@ fun MonthDetailScreen(
                     milestoneDates = milestones
                         .filter { milestone ->
                             try {
-                                // Use MM-dd-yyyy format to match the API format (e.g. "12-30-2009")
-                                val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
-                                val milestoneDate = LocalDate.parse(milestone.poDate, dateFormatter)
-                                val isMatch = milestoneDate.monthValue == selectedMonth
-                                Log.d("MonthDetailScreen", "Milestone: ${milestone.poDate}, Month: ${milestoneDate.monthValue}, Match: $isMatch")
-                                isMatch
+                                // ALL milestone dates are in DD-MM-YYYY format
+                                val parts = milestone.poDate.split("-")
+                                
+                                if (parts.size == 3) {
+                                    // Parse as DD-MM-YYYY
+                                    val day = parts[0].toInt()
+                                    val month = parts[1].toInt()
+                                    
+                                    // Check if this milestone is for the current month
+                                    val isMatch = month == selectedMonth
+                                    Log.d("MonthDetailScreen", "Milestone ${milestone.poDate}: Month=$month, Day=$day, Current Month=$selectedMonth, Match=$isMatch")
+                                    isMatch
+                                } else {
+                                    Log.e("MonthDetailScreen", "Invalid date format: ${milestone.poDate}")
+                                    false
+                                }
                             } catch (e: Exception) {
                                 Log.e("MonthDetailScreen", "Error parsing date: ${milestone.poDate}", e)
                                 false
@@ -183,10 +202,19 @@ fun MonthDetailScreen(
                         }
                         .map {
                             try {
-                                val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
-                                val day = LocalDate.parse(it.poDate, dateFormatter).dayOfMonth
-                                Log.d("MonthDetailScreen", "Milestone day: $day from ${it.poDate}")
-                                day
+                                // Extract day from DD-MM-YYYY date format
+                                val parts = it.poDate.split("-")
+                                
+                                if (parts.size == 3) {
+                                    // Always use first part as day (DD-MM-YYYY format)
+                                    val day = parts[0].toInt()
+                                    
+                                    Log.d("MonthDetailScreen", "Milestone day: $day from ${it.poDate}")
+                                    day
+                                } else {
+                                    Log.e("MonthDetailScreen", "Invalid date format: ${it.poDate}")
+                                    0
+                                }
                             } catch (e: Exception) {
                                 Log.e("MonthDetailScreen", "Error getting day: ${it.poDate}", e)
                                 0
@@ -515,7 +543,7 @@ fun MonthCalendarView(
                                         isToday -> Color(0xFF4CAF50) // Green for today (highest priority)
                                         isMandatoryHoliday -> Color(0xFFDD3825) // Red for holidays
                                         isRegionalHoliday -> Color(0xFF2196F3) // Blue for RH
-                                        day == selectedDay && hasMilestone -> Color(0xFFE0E0E0) // Light grey only for selected milestone dates
+                                        day == selectedDay -> Color(0xFFE0E0E0) // Light grey for selected day
                                         else -> Color.Transparent
                                     }
                                 )
@@ -787,26 +815,6 @@ private fun LegendItem(color: Color, text: String) {
 }
 
 @Composable
-private fun LegendItemBordered(color: Color, text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .border(1.dp, color, CircleShape)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = text,
-            fontSize = 12.sp,
-            color = Color.Black
-        )
-    }
-}
-
-@Composable
 fun MilestoneDetailsBox(
     date: String,
     milestones: List<Milestone>
@@ -833,7 +841,9 @@ fun MilestoneDetailsBox(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp),
+            modifier = Modifier
+                .padding(vertical = 18.dp, horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Title with formatted date
@@ -869,7 +879,9 @@ fun MilestoneDetailsBox(
                             text = milestone.event,
                             color = Color.Black,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     
@@ -890,6 +902,40 @@ fun MilestoneDetailsBox(
                         )
                     }
                     
+                    // Project information
+                    Row(
+                        modifier = Modifier.padding(start = 16.dp)
+                    ) {
+                        Text(
+                            text = "Project: ",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = milestone.project,
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Show original date (includes year)
+                    Row(
+                        modifier = Modifier.padding(start = 16.dp)
+                    ) {
+                        Text(
+                            text = "Original Date: ",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = formatMilestoneDate(milestone.poDate),
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
                     if (milestone != milestones.last()) {
                         Divider(
                             color = Color.LightGray, 
@@ -900,6 +946,26 @@ fun MilestoneDetailsBox(
                 }
             }
         }
+    }
+}
+
+// Helper function to format milestone dates
+private fun formatMilestoneDate(dateStr: String): String {
+    return try {
+        val parts = dateStr.split("-")
+        if (parts.size != 3) return dateStr
+        
+        // ALL milestone dates are in DD-MM-YYYY format
+        val day = parts[0].toInt()
+        val month = parts[1].toInt()
+        val year = parts[2].toInt()
+        
+        // Create LocalDate and format it
+        val date = LocalDate.of(year, month, day)
+        date.format(DateTimeFormatter.ofPattern("dd MMMM yyyy"))
+    } catch (e: Exception) {
+        Log.e("MonthDetailScreen", "Error formatting date: $dateStr", e)
+        dateStr
     }
 }
 

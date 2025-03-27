@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -22,13 +22,15 @@ import com.archeGlobal.one.model.PolicyModel
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.ui.components.UniversalLoader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PolicyScreen(
     model: PolicyModel,
     onPolicyClick: (PolicyModel.Policy) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    isLoading: Boolean = false
 ) {
     Box(
         modifier = Modifier
@@ -73,31 +75,51 @@ fun PolicyScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally // Center policy title
-                ) {
-                    Text(
-                        text = model.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        textAlign = TextAlign.Center
-                    )
+                if (model.policies.isEmpty() && !isLoading) {
+                    // Empty state
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No policies found",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally // Center policy title
+                    ) {
+                        Text(
+                            text = model.title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 16.dp),
+                            textAlign = TextAlign.Center
+                        )
 
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(model.policies) { policy ->
-                            PolicyCard(
-                                policy = policy,
-                                onViewClick = { onPolicyClick(policy) }
-                            )
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(model.policies) { policy ->
+                                PolicyCard(
+                                    policy = policy,
+                                    onViewClick = { onPolicyClick(policy) }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+        
+        // Display universal loader
+        UniversalLoader(isLoading = isLoading)
     }
 }
 
@@ -113,7 +135,9 @@ private fun PolicyCard(
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 11.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 11.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

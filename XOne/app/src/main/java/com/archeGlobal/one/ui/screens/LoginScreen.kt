@@ -21,6 +21,7 @@ import com.archeGlobal.one.ui.components.CompanyLogo
 import androidx.compose.material3.Text
 import com.archeGlobal.one.navigation.Navigator
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.theme.XOneTheme
@@ -43,6 +44,13 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
+
+    // Show Toast message for errors
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -164,7 +172,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                             navigator.navigateToOtpVerification(email, mobile, employeeId)
                         } else {
                             Log.e("LoginScreen", "Error sending OTP: $message")
-                            errorMessage = message
+                            errorMessage = message // This will trigger the Toast via LaunchedEffect
                         }
                     }
                 },
@@ -182,16 +190,6 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     "Login",
                     color = Color.White,
                     fontSize = 18.sp
-                )
-            }
-
-            // Error message
-            errorMessage?.let { error ->
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    modifier = Modifier.padding(top = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }

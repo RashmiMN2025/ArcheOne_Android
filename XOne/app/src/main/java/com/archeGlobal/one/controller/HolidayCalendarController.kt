@@ -1,5 +1,6 @@
 package com.archeGlobal.one.controller
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -98,7 +99,20 @@ class HolidayCalendarController(
                     val calendarResponse = response.body()!!
                     if (calendarResponse.status == 200) {
                         _holidays.value = NetworkResult.Success(calendarResponse)
-                        _holidayFileUrl.value = calendarResponse.holidaysFile
+                        
+                        // Set and log the holidays file URL
+                        val holidayFileUrl = calendarResponse.holidaysFile
+                        
+                        if (!holidayFileUrl.isNullOrBlank()) {
+                            _holidayFileUrl.value = holidayFileUrl
+                            Log.d("HolidayCalendarController", "Holiday PDF URL: $holidayFileUrl")
+                        } else {
+                            // Set a default PDF URL if none is provided
+                            val defaultUrl = "https://archaeglobal.com/holidays_2025.pdf"
+                            _holidayFileUrl.value = defaultUrl
+                            Log.w("HolidayCalendarController", "Using default holiday PDF URL: $defaultUrl")
+                        }
+                        
                         _milestones.value = calendarResponse.milestones
                     } else {
                         _holidays.value = NetworkResult.Error("Server returned error status: ${calendarResponse.status}")

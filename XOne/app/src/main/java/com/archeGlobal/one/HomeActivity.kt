@@ -55,6 +55,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var aboutMeController: AboutMeController
     private lateinit var addressController: AddressController
     private lateinit var emergencyContactController: EmergencyContactController
+    private lateinit var chatController: ChatController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,6 +100,7 @@ class HomeActivity : ComponentActivity() {
                 aboutMeController = AboutMeController(navigator)
                 addressController = AddressController(navigator)
                 emergencyContactController = EmergencyContactController(navigator)
+                chatController = ChatController(this, navigator)
 
                 // If we have a destination or navigateTo, navigate to it
                 LaunchedEffect(destination, navigateTo, isEmergencyContact) {
@@ -141,10 +143,34 @@ class HomeActivity : ComponentActivity() {
                             onShowProfileClick = controller::onShowProfileClick,
                             onToggleFavorite = controller::onToggleFavorite,
                             onFooterHomeClick = controller::onFooterHomeClick,
-                            onFooterChatClick = controller::onFooterChatClick,
+                            onFooterChatClick = { navigator.navigateToChat() },
                             onFooterSOSClick = controller::onFooterSOSClick,
                             onFooterProfileClick = controller::onFooterProfileClick,
                             onXCardClick = controller::onXCardClick
+                        )
+                    }
+
+                    // Add chat screen composable
+                    composable(
+                        route = "chat",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        ChatScreen(
+                            viewModel = chatController.viewModel,
+                            navController = navController,
+                            onBackPressed = chatController::onBackPressed,
+                            showBottomBar = true
                         )
                     }
 
@@ -220,7 +246,8 @@ class HomeActivity : ComponentActivity() {
                         PolicyScreen(
                             model = policyController.model,
                             onPolicyClick = policyController::onPolicyClick,
-                            onBackClick = policyController::onBackClick
+                            onBackClick = policyController::onBackClick,
+                            isLoading = policyController.isLoading.value
                         )
                     }
 
@@ -267,12 +294,9 @@ class HomeActivity : ComponentActivity() {
                                 navController.navigate("monthDetail/$month")
                             },
                             onHolidayListClick = { pdfUrl ->
-                                val intent = Intent(this@HomeActivity, WebViewActivity::class.java).apply {
-                                    putExtra("fileUrl", pdfUrl)
-                                    putExtra("title", "Holiday List")
-                                }
-                                startActivity(intent)
-                                Log.d("HomeActivity", "Opening holiday list PDF in WebViewActivity: $pdfUrl")
+                                // Use our PDFViewerScreen with navigator
+                                navigator.navigateToPDFViewer(pdfUrl, "Holiday List 2025")
+                                Log.d("HomeActivity", "Opening holiday list PDF in PDFViewerScreen: $pdfUrl")
                             }
                         )
                     }
@@ -310,7 +334,7 @@ class HomeActivity : ComponentActivity() {
                                 showProfile = true
                             ),
                             onFooterHomeClick = { navController.navigate("home") },
-                            onFooterChatClick = { /* Implement chat navigation */ },
+                            onFooterChatClick = { navigator.navigateToChat() },
                             onFooterSOSClick = { navController.navigate("sos") },
                             onFooterProfileClick = { /* Already on Profile screen */ }
                         )
@@ -379,8 +403,14 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "pdf_viewer/{pdfUrl}?title={title}",
                         arguments = listOf(
-                            navArgument("pdfUrl") { type = NavType.StringType },
-                            navArgument("title") { type = NavType.StringType }
+                            navArgument("pdfUrl") { 
+                                type = NavType.StringType
+                                nullable = false
+                            },
+                            navArgument("title") { 
+                                type = NavType.StringType
+                                defaultValue = "PDF Viewer"
+                            }
                         ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
@@ -395,8 +425,19 @@ class HomeActivity : ComponentActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) { backStackEntry ->
-                        val pdfUrl = URLDecoder.decode(backStackEntry.arguments?.getString("pdfUrl") ?: "", "UTF-8")
+                        val encodedPdfUrl = backStackEntry.arguments?.getString("pdfUrl") ?: ""
                         val title = backStackEntry.arguments?.getString("title") ?: "PDF Viewer"
+                        
+                        // Safely decode the URL
+                        val pdfUrl = try {
+                            val decoded = URLDecoder.decode(encodedPdfUrl, "UTF-8")
+                            Log.d("HomeActivity", "Successfully decoded PDF URL: $decoded")
+                            decoded
+                        } catch (e: Exception) {
+                            Log.e("HomeActivity", "Error decoding PDF URL: ${e.message}", e)
+                            // If decoding fails, pass the encoded URL and let the PDFViewerScreen handle the error
+                            encodedPdfUrl
+                        }
                         
                         PDFViewerScreen(
                             pdfUrl = pdfUrl,
@@ -443,7 +484,7 @@ class HomeActivity : ComponentActivity() {
                                     }
                                 },
                                 onFooterChatClick = {
-                                    // TODO: Navigate to Chat screen when available
+                                    navigator.navigateToChat()
                                 },
                                 onFooterSOSClick = {
                                     // Already on SOS screen, do nothing
@@ -473,7 +514,7 @@ class HomeActivity : ComponentActivity() {
                                 }
                             },
                             onFooterChatClick = {
-                                // TODO: Navigate to Chat screen when available
+                                navigator.navigateToChat()
                             },
                             onFooterSOSClick = {
                                 // Go back to main SOS screen
@@ -501,6 +542,15 @@ class HomeActivity : ComponentActivity() {
             finish()
         } else {
             super.onBackPressed()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        
+        // Clean up controllers that need to clear resources
+        if (::policyController.isInitialized) {
+            policyController.onCleared()
         }
     }
 }
