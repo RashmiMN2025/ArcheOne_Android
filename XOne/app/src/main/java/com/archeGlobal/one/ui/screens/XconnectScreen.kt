@@ -74,8 +74,10 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                     .fillMaxWidth()
                     .padding(vertical = 25.dp),
             ) {
+                // Back button at the left edge
                 IconButton(
-                    onClick = onBackPressed
+                    onClick = onBackPressed,
+                    modifier = Modifier.align(Alignment.CenterVertically)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
@@ -84,7 +86,7 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                     )
                 }
 
-                // Centered Title
+                // Centered Title taking full width
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
@@ -96,6 +98,9 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                         fontWeight = FontWeight.Medium
                     )
                 }
+                
+                // Empty spacer for balance (same width as back button)
+                Spacer(modifier = Modifier.size(48.dp))
             }
 
             // Tabs Row (Scrollable)
@@ -210,20 +215,17 @@ fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
 
 @Composable
 fun AllPostsContent(socialController: SocialController, searchQuery: String) {
-    // Filter case studies, blogs and jobs based on search query
+    // Filter case studies, blogs and jobs based on search query - only titles/headers, not content
     val filteredCaseStudies = socialController.getCaseStudies().filter {
-        it.title.contains(searchQuery, ignoreCase = true) || 
-        it.description.contains(searchQuery, ignoreCase = true)
+        it.title.contains(searchQuery, ignoreCase = true)
     }
     
     val filteredBlogs = socialController.getBlogs().filter {
-        it.title.contains(searchQuery, ignoreCase = true) || 
-        it.description.contains(searchQuery, ignoreCase = true)
+        it.title.contains(searchQuery, ignoreCase = true)
     }
     
     val filteredJobs = socialController.getJobPostings().filter {
-        it.Title.contains(searchQuery, ignoreCase = true) || 
-        it.Description.contains(searchQuery, ignoreCase = true)
+        it.Title.contains(searchQuery, ignoreCase = true)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -262,8 +264,7 @@ fun AllPostsContent(socialController: SocialController, searchQuery: String) {
 @Composable
 fun CaseStudiesContent(socialController: SocialController, searchQuery: String) {
     val caseStudies = socialController.getCaseStudies().filter {
-        searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true) || 
-        it.description.contains(searchQuery, ignoreCase = true)
+        searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true)
     }
     
     if (caseStudies.isEmpty()) {
@@ -301,8 +302,7 @@ fun CaseStudiesContent(socialController: SocialController, searchQuery: String) 
 @Composable
 fun BlogsContent(socialController: SocialController, searchQuery: String) {
     val blogs = socialController.getBlogs().filter {
-        searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true) || 
-        it.description.contains(searchQuery, ignoreCase = true)
+        searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true)
     }
     
     if (blogs.isEmpty()) {
@@ -340,8 +340,7 @@ fun BlogsContent(socialController: SocialController, searchQuery: String) {
 @Composable
 fun JobsContent(socialController: SocialController, searchQuery: String) {
     val jobs = socialController.getJobPostings().filter {
-        searchQuery.isEmpty() || it.Title.contains(searchQuery, ignoreCase = true) || 
-        it.Description.contains(searchQuery, ignoreCase = true)
+        searchQuery.isEmpty() || it.Title.contains(searchQuery, ignoreCase = true)
     }
     
     Column(
@@ -517,16 +516,16 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(bottom = 8.dp)
         ) {
             jobs.forEach { job ->
-                CompactJobCard(
+                JobPostCard(
                     title = job.Title,
-                    experience = extractExperience(job.Description),
+                    description = "Experience: ${extractExperience(job.Description)}",
                     imageUrl = job.Image,
                     slug = job.Slug,
                     socialController = LocalContext.current.let { 
@@ -539,18 +538,18 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
 }
 
 @Composable
-fun CompactJobCard(
-    title: String,
-    experience: String,
+fun JobPostCard(
+    title: String, 
+    description: String, 
     imageUrl: String,
     slug: String,
     socialController: SocialController
 ) {
     Card(
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(10.dp),
         modifier = Modifier
-            .width(150.dp)
-            .height(175.dp) // Increased height to accommodate experience text
+            .width(200.dp)
+            .height(240.dp)
             .padding(4.dp)
             .clickable { 
                 socialController.openInBrowser("Jobs", slug)
@@ -558,52 +557,45 @@ fun CompactJobCard(
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Job Image with placeholder
-            Box(
+            // Taller image for job cards
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .build(),
+                contentDescription = title,
                 modifier = Modifier
-                    .weight(0.6f) // Reduced weight of the image slightly
-                    .fillMaxWidth()
-                    .background(Color(0xFF6D34C9)) // Purple background like in the image
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                        .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                        .build(),
-                    contentDescription = title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    error = painterResource(id = R.drawable.ic_image_placeholder),
-                    placeholder = painterResource(id = R.drawable.ic_image_placeholder)
-                )
-            }
+                    .height(160.dp) // Increased height from 120dp to 160dp
+                    .fillMaxWidth(),
+                contentScale = ContentScale.Crop,
+                error = painterResource(id = R.drawable.ic_image_placeholder),
+                placeholder = painterResource(id = R.drawable.ic_image_placeholder)
+            )
             
-            // Job info in a compact format
             Column(
-                modifier = Modifier
-                    .weight(0.4f) // Increased weight for the text content
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp) // More vertical padding
+                modifier = Modifier.padding(8.dp, 8.dp, 8.dp, 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = title,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                // Made experience text more visible with better spacing
-                Text(
-                    text = "Experience: $experience",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Gray,
-                    maxLines = 1,
+                    maxLines = 2,
+                    lineHeight = 16.sp,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp) // Increased spacing for visibility
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    fontSize = 11.sp,
+                    color = Color.Gray,
+                    maxLines = 1, // Reduced maxLines from 3 to 1 since we have larger image
+                    lineHeight = 13.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
                 )
             }
         }

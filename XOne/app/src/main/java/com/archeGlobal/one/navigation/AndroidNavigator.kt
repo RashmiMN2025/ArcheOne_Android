@@ -12,6 +12,7 @@ import com.archeGlobal.one.MyDocumentsActivity
 import com.archeGlobal.one.XConnectActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.SOSActivity
+import com.archeGlobal.one.ChatActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -120,7 +121,16 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
     override fun navigateToTravelExpenses() {}
     override fun navigateToSAP() {}
-    override fun navigateToChat() {}
+    override fun navigateToChat() {
+        Log.d("AndroidNavigator", "Navigating to chat screen")
+        if (activity is HomeActivity) {
+            navController?.navigate("chat")
+        } else {
+            val intent = Intent(activity, ChatActivity::class.java)
+            activity.startActivity(intent)
+            activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
+    }
     override fun navigateToProfile() {
         Log.d("AndroidNavigator", "Navigating to profile screen")
         navController?.navigate("profile")
@@ -143,7 +153,13 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     
     override fun navigateToPDFViewer(pdfUrl: String, title: String) {
         Log.d("AndroidNavigator", "Navigating to PDF viewer screen: $pdfUrl")
-        navController?.navigate("pdf_viewer/$pdfUrl?title=$title")
+        try {
+            // URL encode the PDF URL to handle special characters
+            val encodedUrl = java.net.URLEncoder.encode(pdfUrl, "UTF-8")
+            navController?.navigate("pdf_viewer/$encodedUrl?title=$title")
+        } catch (e: Exception) {
+            Log.e("AndroidNavigator", "Error navigating to PDF viewer: ${e.message}", e)
+        }
     }
 
     // New method to get the current route

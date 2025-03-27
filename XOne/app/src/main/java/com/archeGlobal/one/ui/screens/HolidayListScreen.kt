@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,15 +24,18 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
 import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.utils.NetworkResult
+import com.archeGlobal.one.navigation.Navigator
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun HolidayListScreen(
     controller: HolidayCalendarController,
+    navigator: Navigator,
     onBackPressed: () -> Unit
 ) {
     val holidaysState = controller.holidays.observeAsState()
+    val holidayFileUrl = controller.holidayFileUrl.observeAsState()
     
     var holidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
     
@@ -95,6 +99,33 @@ fun HolidayListScreen(
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.align(Alignment.Center)
                 )
+                
+                // View PDF button aligned to the right
+                holidayFileUrl.value?.let { url ->
+                    if (url.isNotEmpty()) {
+                        Button(
+                            onClick = {
+                                if (url.isNotBlank()) {
+                                    Log.d("HolidayListScreen", "Opening PDF with URL: $url")
+                                    navigator.navigateToPDFViewer(url, "Holiday List 2025")
+                                } else {
+                                    Log.e("HolidayListScreen", "Cannot open PDF: URL is empty")
+                                    // Could show a toast here if needed
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825)
+                            ),
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Text(
+                                text = "PDF",
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

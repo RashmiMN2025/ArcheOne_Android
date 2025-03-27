@@ -98,6 +98,7 @@ dependencies {
     
     // PDF Viewer - use web view based approach instead of PDF library
     implementation("androidx.webkit:webkit:1.7.0")
+    implementation(libs.generativeai)
 
     // Testing
     testImplementation(libs.junit)

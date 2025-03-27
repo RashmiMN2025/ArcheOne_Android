@@ -1,23 +1,47 @@
 package com.archeGlobal.one.ui.screens
 
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.archeGlobal.one.ui.components.UniversalLoader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,8 +50,69 @@ fun PDFViewerScreen(
     title: String,
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val lazyListState = rememberLazyListState()
+    
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("Failed to load PDF") }
+    var pdfPages by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
+    var pageCount by remember { mutableStateOf(0) }
+    var currentPage by remember { mutableStateOf(0) }
+    
+    // State for tooltip visibility
+    var showTooltip by remember { mutableStateOf(true) }
+    
+    // Load the PDF
+    LaunchedEffect(pdfUrl) {
+        try {
+            Log.d("PDFViewerScreen", "Attempting to load PDF from URL: $pdfUrl")
+            
+            if (pdfUrl.isBlank()) {
+                Log.e("PDFViewerScreen", "Empty PDF URL provided")
+                loadError = true
+                errorMessage = "Error: Empty PDF URL provided"
+                isLoading = false
+                return@LaunchedEffect
+            }
+            
+            scope.launch {
+                try {
+                    val file = downloadPdf(context, pdfUrl)
+                    pdfPages = renderPdfPages(context, file)
+                    pageCount = pdfPages.size
+                    isLoading = false
+                } catch (e: Exception) {
+                    Log.e("PDFViewerScreen", "Error loading PDF: ${e.message}", e)
+                    loadError = true
+                    errorMessage = "Error: ${e.message ?: "Unknown error"}"
+                    isLoading = false
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("PDFViewerScreen", "Error processing PDF URL: ${e.message}", e)
+            loadError = true
+            errorMessage = "Error: ${e.message ?: "Unknown error with PDF URL"}"
+            isLoading = false
+        }
+    }
+    
+    // Track current page based on scroll position
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.firstVisibleItemIndex }
+            .collect { index ->
+                if (index >= 0 && index < pageCount) {
+                    currentPage = index
+                }
+            }
+    }
+    
+    // Auto-hide tooltip after 5 seconds
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(5000)
+        showTooltip = false
+    }
     
     Box(
         modifier = Modifier
@@ -59,101 +144,307 @@ fun PDFViewerScreen(
                     }
                 },
                 actions = {
-                    // Add invisible spacer with same size as navigation icon for balance
+                    if (pageCount > 0) {
+                        Text(
+                            text = "${currentPage + 1}/$pageCount",
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                    } else {
                     Spacer(modifier = Modifier.width(48.dp))
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
             
+            // Main content container
             Card(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(4.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // PDF content using WebView
-                    AndroidView(
-                        factory = { context ->
-                            WebView(context).apply {
-                                settings.javaScriptEnabled = true
-                                settings.loadWithOverviewMode = true
-                                settings.useWideViewPort = true
-                                settings.builtInZoomControls = true
-                                settings.displayZoomControls = false
-                                
-                                webViewClient = object : WebViewClient() {
-                                    override fun onPageFinished(view: WebView?, url: String?) {
-                                        isLoading = false
-                                    }
-                                    
-                                    override fun onReceivedError(
-                                        view: WebView?,
-                                        request: WebResourceRequest?,
-                                        error: WebResourceError?
-                                    ) {
-                                        loadError = true
-                                        isLoading = false
-                                    }
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxSize(),
-                        update = { webView ->
-                            // Google Docs PDF viewer or direct PDF URL
-                            if (pdfUrl.endsWith(".pdf", ignoreCase = true)) {
-                                val googleDocsUrl = "https://docs.google.com/viewer?url=${pdfUrl}&embedded=true"
-                                webView.loadUrl(googleDocsUrl)
-                            } else {
-                                webView.loadUrl(pdfUrl)
-                            }
-                        }
+                if (!isLoading && !loadError && pdfPages.isNotEmpty()) {
+                    // Full-Width Column with PDF pages
+                    PdfPagesView(
+                        pdfPages = pdfPages,
+                        lazyListState = lazyListState
                     )
-                    
-                    // Loading indicator
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                }
+                
+                // Error message
+                if (loadError) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            UniversalLoader(
-                                isLoading = TODO()
+                            Text(
+                                text = errorMessage,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.Red,
+                                textAlign = TextAlign.Center
                             )
-                        }
-                    }
-                    
-                    // Error message
-                    if (loadError) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = "Failed to load PDF",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.Red
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { 
+                                    isLoading = true
+                                    loadError = false
+                                    
+                                    scope.launch {
+                                        try {
+                                            val file = downloadPdf(context, pdfUrl)
+                                            pdfPages = renderPdfPages(context, file)
+                                            pageCount = pdfPages.size
+                                            isLoading = false
+                                        } catch (e: Exception) {
+                                            Log.e("PDFViewerScreen", "Error loading PDF: ${e.message}", e)
+                                            loadError = true
+                                            errorMessage = "Error: ${e.message ?: "Unknown error"}"
+                                            isLoading = false
+                                        }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825)
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(
-                                    onClick = { 
-                                        isLoading = true
-                                        loadError = false
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFDD3825)
-                                    )
-                                ) {
-                                    Text("Retry")
-                                }
+                            ) {
+                                Text("Retry")
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = onBackClick,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = Color(0xFFDD3825)
+                                )
+                            ) {
+                                Text("Go Back")
                             }
                         }
                     }
                 }
             }
         }
+        
+        // Display the universal loader while loading
+        UniversalLoader(isLoading = isLoading)
+
+        // Tooltip for double-tap to zoom
+        if (showTooltip) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(Color(0xAA000000))
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Double-tap to zoom",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     }
+}
+
+@Composable
+private fun PdfPagesView(
+    pdfPages: List<Bitmap>,
+    lazyListState: LazyListState
+) {
+    // Box wrapping entire content for layering
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Background transparent overlay that catches all scroll events
+        // when pages are not zoomed, to ensure scrolling works from anywhere
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(0f)  // Lowest layer
+        )
+        
+        // Scrollable content
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(1f),  // Middle layer
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            items(pdfPages) { page ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    PdfPageWithZoom(page = page)
+                }
+                
+                // Add spacing between pages
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PdfPageWithZoom(page: Bitmap) {
+    // State for zoom and pan
+    var scale by remember { mutableStateOf(1f) }
+    var offsetX by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
+    var containerSize by remember { mutableStateOf(Size.Zero) }
+    
+    // Create a transformable state for handling zoom and pan
+    val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
+        // Handle zoom
+        if (zoomChange != 1f) {
+            scale = (scale * zoomChange).coerceIn(1f, 3f)
+        }
+        
+        // Handle pan when zoomed in
+        if (scale > 1f) {
+            offsetX += panChange.x
+            offsetY += panChange.y
+            
+            // Constrain pan within bounds
+            val maxX = (containerSize.width * (scale - 1f)) / 2f
+            val maxY = (containerSize.height * (scale - 1f)) / 2f
+            offsetX = offsetX.coerceIn(-maxX, maxX)
+            offsetY = offsetY.coerceIn(-maxY, maxY)
+        } else {
+            // Reset when not zoomed
+            offsetX = 0f
+            offsetY = 0f
+        }
+    }
+    
+    // Handle double-tap to zoom
+    val doubleTapModifier = Modifier.pointerInput(Unit) {
+        detectTapGestures(
+            onDoubleTap = {
+                scale = if (scale > 1f) 1f else 2f
+                if (scale <= 1f) {
+                    offsetX = 0f
+                    offsetY = 0f
+                }
+            }
+        )
+    }
+    
+    // Main container for the PDF page
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        // The page wrapper with shadow
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .onSizeChanged { containerSize = Size(it.width.toFloat(), it.height.toFloat()) },
+            shadowElevation = 2.dp,
+            color = Color.White
+        ) {
+            // The PDF page itself - zoomable but won't block scrolling
+            Image(
+                bitmap = page.asImageBitmap(),
+                contentDescription = "PDF Page",
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = offsetX
+                        translationY = offsetY
+                    }
+            )
+        }
+        
+        // Transparent overlay only for zoom gestures
+        // We place it over the Surface to capture pinch/zoom without blocking scrolling
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .transformable(
+                    state = transformableState,
+                    lockRotationOnZoomPan = true,
+                    enabled = scale > 1f
+                )
+                .then(doubleTapModifier)
+        )
+    }
+}
+
+private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withContext(Dispatchers.IO) {
+    val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
+    val outputFile = File(context.cacheDir, fileName)
+    
+    try {
+        val url = URL(pdfUrl)
+        val connection = url.openConnection()
+        connection.connect()
+        
+        val input = connection.getInputStream()
+        val output = FileOutputStream(outputFile)
+        
+        val buffer = ByteArray(4 * 1024) // 4K buffer
+        var read: Int
+        while (input.read(buffer).also { read = it } != -1) {
+            output.write(buffer, 0, read)
+        }
+        
+        output.flush()
+        output.close()
+        input.close()
+        
+        return@withContext outputFile
+    } catch (e: Exception) {
+        Log.e("PDFViewerScreen", "Error downloading PDF: ${e.message}", e)
+        throw e
+    }
+}
+
+private suspend fun renderPdfPages(context: Context, pdfFile: File): List<Bitmap> = withContext(Dispatchers.IO) {
+    val renderedPages = mutableListOf<Bitmap>()
+    
+    try {
+        val fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
+        val pdfRenderer = PdfRenderer(fileDescriptor)
+        
+        for (i in 0 until pdfRenderer.pageCount) {
+            val page = pdfRenderer.openPage(i)
+            
+            // Create bitmap with appropriate dimensions for screen width
+            val displayMetrics = context.resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            
+            // Calculate height to maintain aspect ratio
+            val pageRatio = page.height.toFloat() / page.width.toFloat()
+            val targetHeight = (screenWidth * pageRatio).toInt()
+            
+            val bitmap = Bitmap.createBitmap(screenWidth, targetHeight, Bitmap.Config.ARGB_8888)
+            
+            // Render the page onto the bitmap
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            renderedPages.add(bitmap)
+            
+            page.close()
+        }
+        
+        pdfRenderer.close()
+        fileDescriptor.close()
+    } catch (e: Exception) {
+        Log.e("PDFViewerScreen", "Error rendering PDF: ${e.message}", e)
+        throw e
+    }
+    
+    return@withContext renderedPages
 } 
