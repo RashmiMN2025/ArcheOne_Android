@@ -290,34 +290,46 @@ private fun ProfileHeader(
                 Surface(
                     modifier = Modifier.size(80.dp),
                     shape = CircleShape,
-                    color = Color.Black
+                    color = Color.LightGray
                 ) {
                     if (profilePicture != null) {
                         // Display the profile picture using Coil with proper caching
                         val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
                         key(profilePicture, cacheVersion) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    ImageCache.createProfileImageRequest(
-                                        context = context, 
-                                        url = profilePicture
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                // Always show the person icon first as a placeholder
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = Color.DarkGray,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp)
+                                        .align(Alignment.Center)
+                                )
+                                
+                                // Load the actual profile image on top
+                                Image(
+                                    painter = rememberAsyncImagePainter(
+                                        ImageCache.createProfileImageRequest(
+                                            context = context, 
+                                            url = profilePicture
+                                        ),
+                                        onSuccess = { Log.d("ProfileHeader", "Profile image loaded successfully: $profilePicture") }
                                     ),
-                                    onSuccess = { Log.d("ProfileHeader", "Profile image loaded successfully: $profilePicture") }
-                                ),
-                                contentDescription = "Profile Picture",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
                     } else {
                         // Default profile icon
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .size(48.dp)
+                            tint = Color.DarkGray,
+                            modifier = Modifier.fillMaxSize().padding(8.dp)
                         )
                     }
                 }

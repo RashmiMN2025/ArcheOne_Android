@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 fun RaiseConcernScreen(onBackPressed: () -> Unit) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    
+
     // Get user data
     val userDataManager = remember { UserDataManager.getInstance(context) }
     val userData = remember { userDataManager.getUserData() }
@@ -187,9 +187,9 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                         )
                     ) {
                         // The main container with padding to match the screen layout
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                         ) {
                             // Dropdown menu card
@@ -205,7 +205,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                 ) {
-                                    categories.forEach { category ->
+                    categories.forEach { category ->
                                         Column(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -215,8 +215,8 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .clickable { 
-                                                        selectedCategory = category
-                                                        expanded = false
+                                selectedCategory = category
+                                expanded = false
                                                     }
                                                     .padding(vertical = 16.dp, horizontal = 16.dp),
                                                 fontSize = 16.sp,
@@ -262,7 +262,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 keyboardActions = KeyboardActions.Default,
                 shape = RoundedCornerShape(8.dp)
             )
-            
+
             // Submit button
             Button(
                 onClick = { showAnonymousDialog = true },

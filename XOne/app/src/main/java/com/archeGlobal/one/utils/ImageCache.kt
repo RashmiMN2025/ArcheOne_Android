@@ -51,7 +51,7 @@ object ImageCache {
             return ImageRequest.Builder(context)
                 .data(url)
                 .crossfade(true)
-                .placeholder(com.archeGlobal.one.R.drawable.profile)
+                .placeholder(com.archeGlobal.one.R.drawable.ic_person)
                 .error(com.archeGlobal.one.R.drawable.ic_person)
                 .memoryCacheKey(cacheKey)
                 .diskCacheKey(cacheKey)
@@ -64,6 +64,8 @@ object ImageCache {
             // Fallback to basic request in case of error
             return ImageRequest.Builder(context)
                 .data(url)
+                .placeholder(com.archeGlobal.one.R.drawable.ic_person)
+                .error(com.archeGlobal.one.R.drawable.ic_person)
                 .build()
         }
     }

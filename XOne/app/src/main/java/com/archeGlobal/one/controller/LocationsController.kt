@@ -15,6 +15,7 @@ import com.archeGlobal.one.network.RegionalOffice as NetworkRegionalOffice
 
 class LocationsController(private val context: Context) {
     private var _locationState by mutableStateOf(LocationScreenState())
+    private var isEmergencyContact = false
     
     init {
         // Initialize locations from login response
@@ -37,6 +38,7 @@ class LocationsController(private val context: Context) {
                             hasMultipleLocations = true,
                             states = createIndianStates(office.regionaloffice)
                         ))
+                        Log.d("LocationsController", "Added India location to the list")
                     }
                     else -> {
                         Log.d("LocationsController", "Processing ${office.country} office")
@@ -52,6 +54,9 @@ class LocationsController(private val context: Context) {
             }
             
             Log.d("LocationsController", "Created locations list with ${locationsList.size} locations")
+            // Debug all location names
+            Log.d("LocationsController", "Location names: ${locationsList.map { it.name }}")
+            
             _locationState = LocationScreenState(locations = locationsList)
         } else {
             Log.e("LocationsController", "Offices data is null")
@@ -96,8 +101,11 @@ class LocationsController(private val context: Context) {
     fun getState() = _locationState
     
     fun selectLocation(location: LocationInfo) {
+        Log.d("LocationsController", "Selecting location: ${location.name}, hasStates=${location.states != null}")
+        
         if (location.states != null) {
             // This is for the main India location
+            Log.d("LocationsController", "Location has states, showing state list")
             _locationState = _locationState.copy(
                 selectedLocation = location,
                 showingStateList = true,
@@ -105,6 +113,7 @@ class LocationsController(private val context: Context) {
             )
         } else {
             // For individual locations (including non-Indian locations)
+            Log.d("LocationsController", "Location doesn't have states, showing details")
             _locationState = _locationState.copy(
                 selectedLocation = location,
                 showingDetails = true,
@@ -254,5 +263,33 @@ class LocationsController(private val context: Context) {
         } else {
             Log.e("LocationsController", "Offices data is null")
         }
+    }
+
+    fun setEmergencyContactMode(isEmergencyContact: Boolean) {
+        this.isEmergencyContact = isEmergencyContact
+        Log.d("LocationsController", "Emergency contact mode set to $isEmergencyContact")
+    }
+    
+    fun isInEmergencyContactMode(): Boolean {
+        return isEmergencyContact
+    }
+
+    /**
+     * Handles the back navigation when in emergency contact mode
+     * @return true if the state was modified, false if we should navigate to SOS
+     */
+    fun onEmergencyBackPressed(): Boolean {
+        // First handle any state changes like normal back button
+        val handled = onBackPressed()
+        
+        // In emergency contact mode, if we're back at the top level (showing locations list),
+        // we should navigate to SOS instead
+        val atTopLevel = !_locationState.showingStateList && !_locationState.showingDetails
+        
+        Log.d("LocationsController", "onEmergencyBackPressed: handled=$handled, atTopLevel=$atTopLevel")
+        
+        // If we're at the top level (main locations list) while in emergency mode,
+        // we should go to SOS screen instead of staying here
+        return !atTopLevel
     }
 } 

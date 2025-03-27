@@ -95,7 +95,7 @@ fun ProfileHeader(
                         .padding(top = 8.dp)
                         .clickable(onClick = onShowProfileClick),
                     shape = CircleShape,
-                    color = Color.White
+                    color = Color.LightGray
                 ) {
                     // If profile picture URL is available, display it using Coil
                     if (model.profilePicture != null && model.profilePicture.isNotEmpty()) {
@@ -105,28 +105,39 @@ fun ProfileHeader(
                         val context = LocalContext.current
                         val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
                         key(model.profilePicture, cacheVersion) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    ImageCache.createProfileImageRequest(
-                                        context = context, 
-                                        url = model.profilePicture
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                // Always show the person icon first as a placeholder
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    tint = Color.DarkGray
+                                )
+                                
+                                // Load the actual profile image on top
+                                Image(
+                                    painter = rememberAsyncImagePainter(
+                                        ImageCache.createProfileImageRequest(
+                                            context = context, 
+                                            url = model.profilePicture
+                                        ),
+                                        onSuccess = { 
+                                            Log.d("HomeScreen", "Profile image loaded successfully: ${model.profilePicture}") 
+                                        }
                                     ),
-                                    onSuccess = { 
-                                        Log.d("HomeScreen", "Profile image loaded successfully: ${model.profilePicture}") 
-                                    }
-                                ),
-                                contentDescription = "Profile Picture",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
                     } else {
                         // Default profile icon
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            modifier = Modifier.padding(14.dp),
-                            tint = Color.Black
+                            modifier = Modifier.fillMaxSize(),
+                            tint = Color.DarkGray
                         )
                     }
                 }
@@ -685,6 +696,7 @@ private fun AppIcon(
                                 "travel&expenses" -> R.drawable.travel
                                 "policy" -> R.drawable.policy
                                 "newonboarding" -> R.drawable.new_onboarding
+                                "profile" -> R.drawable.profile
                                 "profileconnect" -> R.drawable.profile
                                 else -> R.drawable.mydocuments
                             }
