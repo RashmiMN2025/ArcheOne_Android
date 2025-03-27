@@ -3,6 +3,7 @@ package com.archeGlobal.one.controller
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.model.SosBlogModel
@@ -39,6 +40,33 @@ class SOSController(application: Application) : AndroidViewModel(application) {
     }
 
     fun viewEmergencyContact() {
-        // Handle viewing emergency contacts
+        try {
+            // Log before creating the intent
+            Log.d("SOSController", "viewEmergencyContact called")
+            
+            // Get application context
+            val context = getApplication<Application>().applicationContext
+            
+            // Create intent for HomeActivity
+            val intent = Intent(context, com.archeGlobal.one.HomeActivity::class.java).apply {
+                // Set flags to clear other activities and start this one as a new task
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                
+                // IMPORTANT: Set these extras to trigger the emergency contact view
+                putExtra("navigateTo", "locations")
+                putExtra("isEmergencyContact", true)
+            }
+            
+            // Log the intent before starting activity
+            Log.d("SOSController", "Starting HomeActivity with emergency contact navigation")
+            
+            // Start the activity
+            context.startActivity(intent)
+            
+            Log.d("SOSController", "HomeActivity started successfully")
+        } catch (e: Exception) {
+            Log.e("SOSController", "Error navigating to emergency contact: ${e.message}", e)
+        }
     }
 }

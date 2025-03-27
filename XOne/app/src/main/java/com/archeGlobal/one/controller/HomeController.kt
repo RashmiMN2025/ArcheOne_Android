@@ -62,8 +62,14 @@ class HomeController(
                 navigator.navigateToBusinessCard()
             }
             "profile connect" -> {
-                Log.d("HomeController", "Navigating to Profile Connect")
-                navigator.navigateToProfile()
+                Log.d("HomeController", "Profile Connect service not available yet")
+                // Show a Toast message informing the user
+                android.widget.Toast.makeText(
+                    context,
+                    "Profile Connect service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+                // Do not navigate anywhere
             }
             "profile" -> {
                 Log.d("HomeController", "Navigating to Profile")

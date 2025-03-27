@@ -28,6 +28,7 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.navigation.AndroidNavigator
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContentTransitionScope
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -131,9 +132,21 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable("locations") {
+                                // Check if this is from emergency contact view
+                                val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
+                                
+                                // Reset the intent extra to avoid persisting it across navigations
+                                if (isEmergencyContact) {
+                                    Log.d("MainActivity", "Locations route accessed with isEmergencyContact=true")
+                                    intent.removeExtra("isEmergencyContact")
+                                } else {
+                                    Log.d("MainActivity", "Locations route accessed with isEmergencyContact=false (normal navigation)")
+                                }
+                                
                                 LocationsScreen(
                                     navController = navController,
-                                    controller = locationsController
+                                    controller = locationsController,
+                                    isEmergencyContact = isEmergencyContact
                                 )
                             }
                             composable(

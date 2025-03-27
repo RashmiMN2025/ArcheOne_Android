@@ -70,6 +70,11 @@ class HomeActivity : ComponentActivity() {
         // Check if we need to navigate to a specific destination
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
+        val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
+        
+        // Print the intent extras for debugging
+        Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, isEmergencyContact=$isEmergencyContact")
+        Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
 
         // Initialize controllers that need context
         holidayCalendarController = HolidayCalendarController(
@@ -96,13 +101,16 @@ class HomeActivity : ComponentActivity() {
                 emergencyContactController = EmergencyContactController(navigator)
 
                 // If we have a destination or navigateTo, navigate to it
-                LaunchedEffect(destination, navigateTo) {
+                LaunchedEffect(destination, navigateTo, isEmergencyContact) {
                     destination?.let {
                         navController.navigate(it)
                     }
                     
                     navigateTo?.let {
                         navController.navigate(it)
+                        
+                        // Log the navigation attempt for debugging
+                        Log.d("HomeActivity", "Navigating to $it with isEmergencyContact=$isEmergencyContact")
                     }
                 }
 
@@ -155,9 +163,21 @@ class HomeActivity : ComponentActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) {
+                        // Check if this is from emergency contact view
+                        val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
+                        
+                        // Reset the intent extra to avoid persisting it across navigations
+                        if (isEmergencyContact) {
+                            Log.d("HomeActivity", "Locations route accessed with isEmergencyContact=true")
+                            intent.removeExtra("isEmergencyContact")
+                        } else {
+                            Log.d("HomeActivity", "Locations route accessed with isEmergencyContact=false (normal navigation)")
+                        }
+                        
                         LocationsScreen(
                             navController = navController,
-                            controller = locationsController
+                            controller = locationsController,
+                            isEmergencyContact = isEmergencyContact
                         )
                     }
 
@@ -399,6 +419,22 @@ class HomeActivity : ComponentActivity() {
                                     // Convert blog object to JSON and pass it as a parameter
                                     val blogJson = Uri.encode(Gson().toJson(blogId))
                                     navController.navigate("sosDetail/$blogJson")
+                                },
+                                onNavigateToEmergencyContact = {
+                                    Log.d("HomeActivity", "onNavigateToEmergencyContact callback triggered")
+                                    
+                                    // Set the flag in the current activity BEFORE navigation
+                                    intent.putExtra("isEmergencyContact", true)
+                                    
+                                    // Navigate to locations screen with emergency contact flag
+                                    navController.navigate("locations") {
+                                        // Make sure we don't save the state of other screens
+                                        popUpTo("home") {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = false // Don't restore previous state
+                                    }
                                 },
                                 onFooterHomeClick = { 
                                     // Navigate to home screen

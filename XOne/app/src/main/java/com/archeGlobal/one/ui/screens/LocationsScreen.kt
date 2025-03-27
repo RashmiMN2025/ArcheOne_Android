@@ -33,18 +33,45 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.CircleShape
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationsScreen(
     navController: NavHostController,
     controller: LocationsController,
+    isEmergencyContact: Boolean = false
 ) {
     val context = LocalContext.current
     val locationController = controller ?: remember { LocationsController(context) }
     
+    // Check both the passed parameter and the saved state handle
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val savedEmergencyContact = savedStateHandle?.get<Boolean>("isEmergencyContact") ?: false
+    val isEmergencyContactActual = savedEmergencyContact || isEmergencyContact
+    
     LaunchedEffect(Unit) {
+        Log.d("LocationsScreen", "Screen initialized with isEmergencyContact=$isEmergencyContactActual")
         locationController.resetState()
+        
+        // Set the value in the controller
+        locationController.setEmergencyContactMode(isEmergencyContactActual)
+        
+        // Set the value in the saved state handle
+        navController.currentBackStackEntry?.savedStateHandle?.set("isEmergencyContact", isEmergencyContactActual)
+        
+        // Only auto-navigate to India location if in emergency contact mode
+        if (isEmergencyContactActual) {
+            Log.d("LocationsScreen", "Emergency contact mode enabled, looking for India location")
+            val indiaLocation = locationController.getLocations().find { it.name == "India" }
+            if (indiaLocation != null) {
+                Log.d("LocationsScreen", "Found India location, selecting it")
+                locationController.selectLocation(indiaLocation)
+            } else {
+                Log.e("LocationsScreen", "India location not found in locations list")
+            }
+        }
+        // Otherwise, show the normal locations list without auto-navigation
     }
     
     val state = locationController.getState()
@@ -74,6 +101,7 @@ fun LocationsScreen(
                         ) {
                             Text(
                                 when {
+                                    locationController.isInEmergencyContactMode() -> "Emergency Contact"
                                     state.showingStateList -> "${state.selectedLocation?.name} Locations"
                                     state.showingDetails -> {
                                         when {
@@ -93,8 +121,23 @@ fun LocationsScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = {
-                            if (!locationController.onBackPressed()) {
-                                navController.popBackStack()
+                            // Check if we're in emergency contact mode
+                            if (locationController.isInEmergencyContactMode()) {
+                                // Use the special emergency back handling
+                                val stayInCurrentScreen = locationController.onEmergencyBackPressed()
+                                
+                                // If we shouldn't stay in current screen, navigate to SOS
+                                if (!stayInCurrentScreen) {
+                                    Log.d("LocationsScreen", "Emergency contact mode, navigating back to SOS")
+                                    navController.navigate("sos") {
+                                        popUpTo("sos") { inclusive = true }
+                                    }
+                                }
+                            } else {
+                                // Normal back navigation for non-emergency contact mode
+                                if (!locationController.onBackPressed()) {
+                                    navController.popBackStack()
+                                }
                             }
                         }) {
                             Icon(

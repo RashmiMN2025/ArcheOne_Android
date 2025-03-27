@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
@@ -35,6 +36,7 @@ fun SOSScreen(
     onNavigateToRaiseConcern: () -> Unit,
     onBackPressed: () -> Unit,
     onSOSBlogClick: (SosBlogModel) -> Unit,
+    onNavigateToEmergencyContact: () -> Unit = {},
     onFooterHomeClick: () -> Unit = {},
     onFooterChatClick: () -> Unit = {},
     onFooterSOSClick: () -> Unit = {},
@@ -134,7 +136,22 @@ fun SOSScreen(
 
                         SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("1234567890") })
                         SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
-                        SOSButton(text = "View Emergency Contact", onClick = { controller.viewEmergencyContact() })
+                        SOSButton(
+                            text = "View Emergency Contact", 
+                            onClick = { 
+                                // Try both approaches
+                                Log.d("SOSScreen", "View Emergency Contact button clicked")
+                                // First try the navigation event
+                                if (onNavigateToEmergencyContact != {}) {
+                                    Log.d("SOSScreen", "Using onNavigateToEmergencyContact callback")
+                                    onNavigateToEmergencyContact()
+                                } else {
+                                    // Fall back to controller method
+                                    Log.d("SOSScreen", "Using controller.viewEmergencyContact()")
+                                    controller.viewEmergencyContact() 
+                                }
+                            }
+                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
