@@ -116,28 +116,21 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 }
             }
 
-            // Error message
-            errorMessage?.let { error ->
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
             // Verify OTP Button
             Button(
                 onClick = {
                     isLoading = true
                     errorMessage = null
                     if (otp.length != 6) {
-                        errorMessage = "Please enter a valid 6-digit OTP"
+                        Toast.makeText(context, "Please enter a valid 6-digit OTP", Toast.LENGTH_SHORT).show()
                         isLoading = false
                         return@Button
                     }
                     controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
                         isLoading = false
-                        errorMessage = if (isError) message else null
+                        if (isError) {
+                            errorMessage = message  // This will trigger the Toast via LaunchedEffect
+                        }
                     }
                 },
                 modifier = Modifier
@@ -167,9 +160,11 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                     .padding(top = 16.dp)
                     .clickable(enabled = timeLeft == 0) {
                         controller.resendOtp(email, mobile, employeeId) { message ->
-                            errorMessage = if (message.contains("success", ignoreCase = true)) null else message
                             if (message.contains("success", ignoreCase = true)) {
-                                timeLeft = 60  // ✅ Reset timer properly
+                                timeLeft = 60  // Reset timer properly
+                                Toast.makeText(context, "OTP sent successfully", Toast.LENGTH_SHORT).show()
+                            } else {
+                                errorMessage = message  // This will trigger the Toast via LaunchedEffect
                             }
                         }
                     },
