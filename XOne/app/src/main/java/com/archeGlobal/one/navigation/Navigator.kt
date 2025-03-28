@@ -10,6 +10,7 @@ interface Navigator {
     fun navigateToTimesheet()
     fun navigateToLeave()
     fun navigateToMyDocuments()
+    fun navigateToUserDocuments()
     fun navigateToMyCareer()
     fun navigateToELearning()
     fun navigateToGoalSetting()

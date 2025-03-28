@@ -23,6 +23,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.archeGlobal.one.utils.QRCodeGenerator
 
 interface BusinessCardController {
     val showEditLocationDialog: MutableState<Boolean> // Add this
@@ -32,6 +33,7 @@ interface BusinessCardController {
     fun onShareCard(bitmap: Bitmap)
     fun onEditLocation()
     fun onLocationUpdated(newLocation: String)
+    fun refreshQRCode(isPortraitMode: Boolean) // Add method to refresh QR code based on layout
 }
 
 class BusinessCardControllerImpl(
@@ -50,7 +52,10 @@ class BusinessCardControllerImpl(
 
     override fun onLocationUpdated(newLocation: String) {
         if (newLocation.isNotEmpty()) {
-            _businessCard.value = _businessCard.value.copy(location = newLocation)  // Update MutableState
+            // Create a new card with updated location and regenerated QR code
+            val updatedCard = _businessCard.value.copy(location = newLocation)
+            _businessCard.value = generateQRCodeForCard(updatedCard)
+            
             showEditLocationDialog.value = false  // Close the dialog
             Toast.makeText(context, "Location updated!", Toast.LENGTH_SHORT).show()
         } else {
@@ -107,7 +112,7 @@ class BusinessCardControllerImpl(
     // Change _businessCard to MutableState
     private val _businessCard = mutableStateOf(
         OtpVerificationController.getUserData()?.let { userData ->
-            BusinessCardModel(
+            val card = BusinessCardModel(
                 companyLogo = R.drawable.arche,
                 name = userData.name,
                 designation = userData.designation,
@@ -117,18 +122,37 @@ class BusinessCardControllerImpl(
                 location = userData.location, // Location from userData
                 website = "www.arche.global"
             )
-    } ?: BusinessCardModel(
-        // Fallback default values if userData is null
-        companyLogo = R.drawable.arche,
-        name = "",
-        designation = "",
-        department = "",
-        email = "",
-        phone = "",
-        location = "",
-        website = "",
+            
+            // Generate QR code for the card
+            generateQRCodeForCard(card)
+        } ?: BusinessCardModel(
+            // Fallback default values if userData is null
+            companyLogo = R.drawable.arche,
+            name = "",
+            designation = "",
+            department = "",
+            email = "",
+            phone = "",
+            location = "",
+            website = "",
+        )
     )
-    )
+    
+    // Generate QR code for a business card and return a new card with QR code
+    private fun generateQRCodeForCard(card: BusinessCardModel, isPortrait: Boolean = true): BusinessCardModel {
+        val qrCode = QRCodeGenerator.generateQRCode(
+            name = card.name,
+            title = card.designation,
+            email = card.email,
+            phone = card.phone,
+            location = card.location,
+            layoutType = if (isPortrait) QRCodeGenerator.QRLayoutType.VERTICAL 
+                         else QRCodeGenerator.QRLayoutType.HORIZONTAL,
+            size = if (isPortrait) 240 else 140 // Changed from 100 to 140 to match 70dp on screen size
+        )
+        
+        return card.copy(qrCode = qrCode)
+    }
 
     override fun onDownloadCard(bitmap: Bitmap) {
         try {
@@ -235,6 +259,10 @@ class BusinessCardControllerImpl(
 
     override fun onBackPressed() {
         navigator.navigateToHome()  // Navigate back to home screen
+    }
+
+    override fun refreshQRCode(isPortraitMode: Boolean) {
+        _businessCard.value = generateQRCodeForCard(_businessCard.value, isPortraitMode)
     }
 
     companion object {

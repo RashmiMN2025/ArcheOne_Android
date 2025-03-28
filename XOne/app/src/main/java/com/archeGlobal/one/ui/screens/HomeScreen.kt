@@ -552,6 +552,7 @@ private fun formatServiceTitle(title: String): String {
         "Goal Setting/KPI" -> "Goal\nSetting/KPI"
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
+        "To Do" -> "To Do"
         else -> {
             // General rule for other multi-word titles longer than 10 characters
             if (title.contains(" ") && title.length > 10) {
@@ -666,7 +667,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect"  -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do"  -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -698,6 +699,7 @@ private fun AppIcon(
                                 "newonboarding" -> R.drawable.new_onboarding
                                 "profile" -> R.drawable.profile
                                 "profileconnect" -> R.drawable.profile
+                                "todo" -> R.drawable.todo
                                 else -> R.drawable.mydocuments
                             }
                         ),

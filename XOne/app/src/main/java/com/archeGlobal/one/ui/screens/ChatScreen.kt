@@ -183,10 +183,10 @@ fun ChatScreen(
                                 }
                             ),
                             colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = Color(0xFFDD3825),
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
                                 focusedTextColor = Color.Black,
                                 cursorColor = Color(0xFFDD3825),
-                                unfocusedIndicatorColor = Color.Gray,
                                 unfocusedContainerColor = Color.White,
                                 focusedContainerColor = Color.White
                             ),
@@ -208,9 +208,10 @@ fun ChatScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Send,
+                                painter = painterResource(id = R.drawable.send),
                                 contentDescription = "Send",
-                                tint = Color.White
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
@@ -249,9 +250,6 @@ fun MessageBubble(
             if (!message.isUser && message.content.contains("Welcome to ArcheOne Assistant!")) {
                 // Welcome message
                 WelcomeMessage()
-            } else if (!message.isUser && message.content.contains("Here's what I can help you with:")) {
-                // Support categories message
-                SupportCategoriesMessage(viewModel)
             } else if (!message.isUser && message.content.contains("•")) {
                 // FAQ list message
                 Card(
@@ -262,6 +260,26 @@ fun MessageBubble(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
+                        // Title message at the top
+                        if (message.content.startsWith("Here are some answers that might help:") ||
+                            message.content.startsWith("I found multiple relevant questions")) {
+                            Text(
+                                text = "I found multiple relevant questions. Please select one to see its answer:",
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                        } else {
+                            val firstLine = message.content.split("\n").firstOrNull()
+                            if (firstLine != null && !firstLine.startsWith("•")) {
+                                Text(
+                                    text = firstLine,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                            }
+                        }
+                        
+                        // FAQ list items
                         message.content.split("\n").forEach { line ->
                             if (line.startsWith("•")) {
                                 val question = line.substring(2).trim()
@@ -269,20 +287,25 @@ fun MessageBubble(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { viewModel.selectFAQ(question) }
-                                        .padding(vertical = 8.dp)
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    // Display bullet point and question text
                                     Text(
-                                        text = line,
-                                        color = Color.Black
+                                        text = "• $question",
+                                        color = Color.Black,
+                                        modifier = Modifier.weight(1f)
                                     )
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Text(
-                                        text = "›",
-                                        color = Color(0xFFDD3825),
-                                        fontSize = 18.sp
+                                    
+                                    // Red arrow on the right (like in iOS)
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_arrow_forward),
+                                        contentDescription = "Arrow",
+                                        tint = Color(0xFFDD3825),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
-                            } else if (line.isNotEmpty()) {
+                            } else if (line.isNotEmpty() && !line.startsWith("Here are some answers")) {
                                 Text(
                                     text = line,
                                     color = Color.Black,
@@ -294,18 +317,64 @@ fun MessageBubble(
                 }
             } else {
                 // Regular message bubble
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            if (message.isUser) Color(0xFFDD3825) else Color(0xFFFFFAF5) // Creamy color for bot messages
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (message.isUser) Color(0xFFDD3825) else Color(0xFFFFFAF5) // Creamy color for bot messages
+                            )
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = message.content,
+                            color = if (message.isUser) Color.White else Color.Black
                         )
-                        .padding(12.dp)
-                ) {
-                    Text(
-                        text = message.content,
-                        color = if (message.isUser) Color.White else Color.Black
-                    )
+                    }
+                    
+                    // If this message should show FAQs (like in iOS), display them below the message
+                    if (!message.isUser && message.showFAQs) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Card(
+                            modifier = Modifier.padding(top = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFFFFAF5) // Creamy color background
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                // Display FAQ categories similar to iOS app
+                                // Show first 5 FAQs or all if showMoreCategories is true
+                                val chatData = ChatData.shared
+                                val faqsToShow = if (message.showMoreCategories) chatData.faqs else chatData.faqs.take(5)
+                                
+                                faqsToShow.forEach { faq ->
+                                    FAQQuestionRow(question = faq.title) {
+                                        viewModel.selectFAQ(faq.question)
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                
+                                // Only show "Show More" button if not all FAQs are displayed
+                                if (!message.showMoreCategories && chatData.faqs.size > 5) {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        Text(
+                                            text = "Show More",
+                                            color = Color(0xFFDD3825),
+                                            fontSize = 14.sp,
+                                            modifier = Modifier
+                                                .clickable { viewModel.loadMoreFAQs() }
+                                                .padding(8.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             
@@ -355,103 +424,10 @@ fun WelcomeMessage() {
 }
 
 @Composable
-fun SupportCategoriesMessage(viewModel: ChatViewModel) {
-    Card(
-        modifier = Modifier.padding(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFFFAF5) // Creamy color background
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Here's what I can help you with:",
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                color = Color.Black
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            Text(
-                text = "Feel free to ask any questions!",
-                color = Color.Black
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Support categories
-            SupportCategory(title = "Profile Update", onClick = { viewModel.selectFAQ("How do I update my profile?") })
-            SupportCategory(title = "Technical Issues", onClick = { viewModel.selectFAQ("I'm having technical issues") })
-            SupportCategory(title = "Company Policies", onClick = { viewModel.selectFAQ("Where can I find company policies?") })
-            SupportCategory(title = "Forgot Password", onClick = { viewModel.selectFAQ("How do I reset my password?") })
-            SupportCategory(title = "Benefits Enrollment", onClick = { viewModel.selectFAQ("How does benefits enrollment work?") })
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Text(
-                    text = "Show More",
-                    color = Color(0xFFDD3825),
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .clickable { /* Handle show more categories */ }
-                        .padding(8.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SupportCategory(title: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .padding(vertical = 4.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        ),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color(0xFFEEEEEE))
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                color = Color.Black,
-                modifier = Modifier.weight(1f)
-            )
-            
-            Spacer(modifier = Modifier.width(8.dp))
-            
-            Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_forward),
-                contentDescription = "Arrow",
-                tint = Color(0xFFDD3825),
-                modifier = Modifier.size(16.dp)
-            )
-        }
-    }
-}
-
-@Composable
 fun FAQQuestionRow(question: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .padding(vertical = 4.dp)
+            .padding(vertical = 2.dp)
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
@@ -478,10 +454,11 @@ fun FAQQuestionRow(question: String, onClick: () -> Unit) {
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            Text(
-                text = "›",
-                color = Color(0xFFDD3825),
-                fontSize = 18.sp
+            Icon(
+                painter = painterResource(id = R.drawable.ic_arrow_forward),
+                contentDescription = "Arrow",
+                tint = Color(0xFFDD3825),
+                modifier = Modifier.size(20.dp)
             )
         }
     }

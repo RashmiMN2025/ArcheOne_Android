@@ -62,7 +62,7 @@ class ProfileController(
     }
 
     fun onDocumentsClick() {
-        navigator.navigateToMyDocuments()
+        navigator.navigateToUserDocuments()
     }
 
     fun uploadProfilePicture(imageUri: Uri) {

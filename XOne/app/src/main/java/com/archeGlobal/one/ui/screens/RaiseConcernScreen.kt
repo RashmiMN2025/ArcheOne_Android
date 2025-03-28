@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
 import android.widget.Toast
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -71,22 +72,45 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
         isSubmitting = true
         
         try {
-            // Simulate network request with a delay
-            kotlinx.coroutines.delay(1000)
-            
-            // Show success message based on anonymous status
-            if (anonymous) {
-                Toast.makeText(context, "Concern submitted anonymously", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Concern submitted with your identity", Toast.LENGTH_SHORT).show()
+            val user = userData
+            if (user == null) {
+                Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
+                isSubmitting = false
+                return
             }
             
-            // Reset form on success
-            selectedCategory = null
-            issueDescription = ""
+            val request = SOSRequest(
+                name = user.name ?: "",
+                email = user.email ?: "",
+                mobile = user.mobile ?: "",
+                category = selectedCategory ?: "Other Issue",
+                query = issueDescription,
+                description = "",
+                anonymous = anonymous
+            )
             
-            // Go back after successful submission
-            onBackPressed()
+            // Add debug log to verify description content
+            Log.d("RaiseConcern", "Submitting concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous")
+            
+            val response = apiService.submitSOS(request)
+            
+            if (response.isSuccessful && response.body() != null) {
+                // Show success message based on anonymous status
+                if (anonymous) {
+                    Toast.makeText(context, "Concern submitted anonymously", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Concern submitted with your identity", Toast.LENGTH_SHORT).show()
+                }
+                
+                // Reset form on success
+                selectedCategory = null
+                issueDescription = ""
+                
+                // Go back after successful submission
+                onBackPressed()
+            } else {
+                Toast.makeText(context, "Error: ${response.message() ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
             Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         } finally {
@@ -247,7 +271,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 placeholder = { Text("Please describe your issue") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .heightIn(min = 140.dp)
                     .padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
@@ -258,8 +282,14 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 textStyle = TextStyle(color = Color.Black),
+                minLines = 5,
+                maxLines = 8,
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions.Default,
+                keyboardActions = KeyboardActions(onDone = {
+                    if (issueDescription.isNotBlank() && selectedCategory != null) {
+                        showAnonymousDialog = true
+                    }
+                }),
                 shape = RoundedCornerShape(8.dp)
             )
 

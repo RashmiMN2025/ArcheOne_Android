@@ -12,6 +12,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToTimesheet() {}
     override fun navigateToLeave() {}
     override fun navigateToMyDocuments() {}
+    override fun navigateToUserDocuments() {}
     override fun navigateToMyCareer() {}
     override fun navigateToELearning() {}
     override fun navigateToGoalSetting() {}

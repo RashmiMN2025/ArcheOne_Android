@@ -25,7 +25,7 @@ class ChatViewModel : ViewModel() {
         addBotMessage("👋 Welcome to ArcheOne Assistant!")
         
         // Add support categories message
-        addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!")
+        addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!", showFAQs = true)
     }
     
     fun sendMessage(text: String) {
@@ -50,7 +50,8 @@ class ChatViewModel : ViewModel() {
             
             // Process the message and get a response
             val response = processMessage(text)
-            addBotMessage(response)
+            val showFAQs = response.contains("I'm not sure about that")
+            addBotMessage(response, showFAQs = showFAQs)
             
             // Hide typing indicator
             isTyping.value = false
@@ -115,30 +116,42 @@ class ChatViewModel : ViewModel() {
         val relatedFAQs = chatData.searchFAQs(text)
         
         // If we found related FAQs, format them as a list
-        if (relatedFAQs.isNotEmpty() && relatedFAQs.size <= 5) {
-            val faqList = StringBuilder("Here are some answers that might help:\n\n")
-            relatedFAQs.forEachIndexed { index, faq ->
-                faqList.append("• ${faq.question}\n")
-            }
-            return faqList.toString()
-        } else if (relatedFAQs.size > 5) {
-            val faqList = StringBuilder("Here are some answers that might help:\n\n")
+        if (relatedFAQs.isNotEmpty()) {
+            val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n\n")
+            // Take at most 5 FAQs to avoid overcrowding
             relatedFAQs.take(5).forEachIndexed { index, faq ->
                 faqList.append("• ${faq.question}\n")
             }
             return faqList.toString()
         }
         
-        // Default response if no FAQs match
+        // Default response if no FAQs match - will show FAQs inline
         return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
     }
     
-    private fun addBotMessage(text: String) {
+    private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false) {
         val botMessage = Message(
             content = text,
             isUser = false,
-            timestamp = Date()
+            timestamp = Date(),
+            showMoreCategories = showMoreCategories,
+            showFAQs = showFAQs
         )
         messages.add(botMessage)
+    }
+    
+    fun loadMoreFAQs() {
+        // Find the message with FAQs and update it to show more
+        val messagesToUpdate = messages.filter { !it.isUser && it.showFAQs }
+        
+        if (messagesToUpdate.isNotEmpty()) {
+            val messageToUpdate = messagesToUpdate.first()
+            val index = messages.indexOf(messageToUpdate)
+            
+            if (index >= 0) {
+                messages.removeAt(index)
+                messages.add(index, messageToUpdate.copy(showMoreCategories = true))
+            }
+        }
     }
 } 
