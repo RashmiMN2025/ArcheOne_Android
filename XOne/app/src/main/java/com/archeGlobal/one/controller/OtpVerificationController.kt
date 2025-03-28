@@ -48,12 +48,24 @@ class OtpVerificationController(
                     }
                 } else {
                     val errorMessage = try {
-                        response.errorBody()?.string() ?: "Unknown error"
+                        val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                        // Parse JSON to extract just the message
+                        try {
+                            val jsonObject = org.json.JSONObject(errorBody)
+                            if (jsonObject.has("message")) {
+                                jsonObject.getString("message")
+                            } else {
+                                errorBody
+                            }
+                        } catch (e: Exception) {
+                            // If JSON parsing fails, return the original error message
+                            errorBody
+                        }
                     } catch (e: Exception) {
                         "Error parsing response"
                     }
                     Log.e("OtpVerification", "OTP verification failed: $errorMessage")
-                    callback("OTP verification failed: $errorMessage", true)
+                    callback(errorMessage, true)
                 }
             }
 
@@ -110,7 +122,23 @@ class OtpVerificationController(
                 if (response.isSuccessful && response.body()?.status == 200) {
                     callback("OTP sent successfully.")
                 } else {
-                    val errorMessage = response.errorBody()?.string() ?: "Failed to resend OTP"
+                    val errorMessage = try {
+                        val errorBody = response.errorBody()?.string() ?: "Failed to resend OTP"
+                        // Parse JSON to extract just the message
+                        try {
+                            val jsonObject = org.json.JSONObject(errorBody)
+                            if (jsonObject.has("message")) {
+                                jsonObject.getString("message")
+                            } else {
+                                errorBody
+                            }
+                        } catch (e: Exception) {
+                            // If JSON parsing fails, return the original error message
+                            errorBody
+                        }
+                    } catch (e: Exception) {
+                        "Failed to resend OTP"
+                    }
                     callback(errorMessage)
                 }
             }

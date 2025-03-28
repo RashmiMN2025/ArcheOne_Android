@@ -51,6 +51,9 @@ class WebViewActivity : ComponentActivity() {
         // Special handling flag for PAN and Medical Insurance documents
         val isSpecialDocument = title == "PAN Card" || title == "Medical Insurance Card"
         
+        // Special handling for Floor Map PDFs
+        val isFloorMap = title == "Floor Map" || title.contains("Floor Map", ignoreCase = true) || title.contains("Location", ignoreCase = true)
+        
         // Flag to track if we should use offline mode (no PDF.js)
         val useOfflineMode = intent.getBooleanExtra("useOfflineMode", false)
         
@@ -58,7 +61,7 @@ class WebViewActivity : ComponentActivity() {
         val showSosButton = title.contains("Anti Bribery", ignoreCase = true) || 
                             title.contains("POSH", ignoreCase = true)
         
-        Log.d("WebViewActivity", "Loading URL: $fileUrl, isPdf: $isPdf, isLocalFile: $isLocalFile, hasBase64: ${base64Data != null}, isSpecialDocument: $isSpecialDocument, useOfflineMode: $useOfflineMode")
+        Log.d("WebViewActivity", "Loading URL: $fileUrl, isPdf: $isPdf, isLocalFile: $isLocalFile, hasBase64: ${base64Data != null}, isSpecialDocument: $isSpecialDocument, isFloorMap: $isFloorMap, useOfflineMode: $useOfflineMode")
 
         setContent {
             MaterialTheme {
@@ -255,9 +258,11 @@ class WebViewActivity : ComponentActivity() {
                                                     // For local files
                                                     val uri = Uri.parse(fileUrl)
                                                     
-                                                    // Special direct handling for PAN Card and Medical Insurance Card documents
-                                                    if (isSpecialDocument && base64Data != null && base64Data.isNotEmpty()) {
-                                                        Log.d("WebViewActivity", "Using special direct base64 loading for: $title")
+                                                    // Special direct handling for PAN Card, Medical Insurance Card, and Floor Map documents
+                                                    if ((isSpecialDocument || isFloorMap) && isPdf) {
+                                                        Log.d("WebViewActivity", "Using special PDF handling for: $title")
+                                                        
+                                                        if (base64Data != null && base64Data.isNotEmpty()) {
                                                         val pureBase64 = if (base64Data.contains(",")) {
                                                             base64Data.substring(base64Data.indexOf(",") + 1)
                                                         } else {
@@ -266,35 +271,6 @@ class WebViewActivity : ComponentActivity() {
                                                         
                                                         Log.d("WebViewActivity", "Base64 data length: ${pureBase64.length}")
                                                         
-                                                        // Check if offline mode is requested or if we should use the full PDF.js approach
-                                                        if (useOfflineMode) {
-                                                            // Use a simple approach that doesn't rely on external resources
-                                                            val simpleHtmlWrapper = """
-                                                                <!DOCTYPE html>
-                                                                <html>
-                                                                <head>
-                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                                                    <style>
-                                                                        body, html, iframe { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
-                                                                    </style>
-                                                                </head>
-                                                                <body>
-                                                                    <iframe src="data:application/pdf;base64,$pureBase64" width="100%" height="100%" style="border: none;"></iframe>
-                                                                </body>
-                                                                </html>
-                                                            """.trimIndent()
-                                                            
-                                                            loadDataWithBaseURL(null, simpleHtmlWrapper, "text/html", "UTF-8", null)
-                                                            Log.d("WebViewActivity", "Loaded special document using simple iframe (offline mode)")
-                                                            
-                                                            // Add error handling for iframe loading
-                                                            webViewClient = object : WebViewClient() {
-                                                                override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String) {
-                                                                    Log.e("WebViewActivity", "Error loading iframe content: $description, URL: $failingUrl")
-                                                                    Toast.makeText(context, "Error loading PDF: $description", Toast.LENGTH_LONG).show()
-                                                                }
-                                                            }
-                                                        } else {
                                                             // Use PDF.js for robust rendering with fallback
                                                             val htmlWrapper = """
                                                                 <!DOCTYPE html>
@@ -307,6 +283,7 @@ class WebViewActivity : ComponentActivity() {
                                                                         #viewerContainer { width: 100%; height: 100%; overflow: auto; position: absolute; }
                                                                         #viewer { position: absolute; width: 100%; }
                                                                         #fallbackContainer { display: none; width: 100%; height: 100%; }
+                                                                        .page { box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-bottom: 15px !important; }
                                                                     </style>
                                                                 </head>
                                                                 <body>
@@ -339,6 +316,9 @@ class WebViewActivity : ComponentActivity() {
                                                                             // Configure PDF.js worker
                                                                             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
                                                                             
+                                                                            // Get container width for scaling calculation
+                                                                            const containerWidth = document.getElementById('viewerContainer').clientWidth;
+                                                                            
                                                                             // Load the PDF
                                                                             const loadingTask = pdfjsLib.getDocument({data: atob('$pureBase64')});
                                                                             loadingTask.promise.then(function(pdf) {
@@ -353,7 +333,10 @@ class WebViewActivity : ComponentActivity() {
                                                                                 // Function to render a page
                                                                                 function renderPage(pageNumber) {
                                                                                     pdf.getPage(pageNumber).then(function(page) {
-                                                                                        const viewport = page.getViewport({scale: 1.0});
+                                                                                        // Calculate scale to fit the page width to container
+                                                                                        const originalViewport = page.getViewport({scale: 1.0});
+                                                                                        const scale = (containerWidth - 20) / originalViewport.width; // -20 for margins
+                                                                                        const viewport = page.getViewport({scale: scale});
                                                                                         
                                                                                         // Create a container for this page
                                                                                         const pageContainer = document.createElement('div');
@@ -401,10 +384,141 @@ class WebViewActivity : ComponentActivity() {
                                                             """.trimIndent()
                                                             
                                                             loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
-                                                            Log.d("WebViewActivity", "Loaded special document using PDF.js with fallback")
+                                                            Log.d("WebViewActivity", "Loaded document using PDF.js with fit-to-width scaling")
+                                                            return@apply
+                                                        } else if (isFloorMap && isPdf) {
+                                                            // For Floor Map PDFs without base64 data, try to load and convert the file
+                                                            try {
+                                                                val actualPath = uri.path ?: ""
+                                                                val file = java.io.File(actualPath)
+                                                                
+                                                                if (file.exists()) {
+                                                                    Log.d("WebViewActivity", "Floor Map PDF file exists at: ${file.absolutePath}, size: ${file.length()} bytes")
+                                                                    
+                                                                    // Read the file bytes
+                                                                    val bytes = file.readBytes()
+                                                                    val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
+                                                                    
+                                                                    // Use PDF.js for rendering
+                                                                    val htmlWrapper = """
+                                                                        <!DOCTYPE html>
+                                                                        <html>
+                                                                        <head>
+                                                                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                            <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+                                                                            <style>
+                                                                                body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+                                                                                #viewerContainer { width: 100%; height: 100%; overflow: auto; position: absolute; }
+                                                                                #viewer { position: absolute; width: 100%; }
+                                                                                #fallbackContainer { display: none; width: 100%; height: 100%; }
+                                                                                .page { box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-bottom: 15px !important; }
+                                                                            </style>
+                                                                        </head>
+                                                                        <body>
+                                                                            <div id="viewerContainer">
+                                                                                <div id="viewer" class="pdfViewer"></div>
+                                                                            </div>
+                                                                            
+                                                                            <!-- Fallback container if PDF.js fails -->
+                                                                            <div id="fallbackContainer">
+                                                                                <iframe src="data:application/pdf;base64,$base64" width="100%" height="100%" style="border: none;"></iframe>
+                                                                            </div>
+                                                                            
+                                                                            <script>
+                                                                                // Track if PDF.js loaded successfully
+                                                                                let pdfJsLoaded = false;
+                                                                                
+                                                                                // Fallback function to use if PDF.js fails to load
+                                                                                function useFallback() {
+                                                                                    if (!pdfJsLoaded) {
+                                                                                        console.log('Using fallback viewer');
+                                                                                        document.getElementById('viewerContainer').style.display = 'none';
+                                                                                        document.getElementById('fallbackContainer').style.display = 'block';
+                                                                                    }
+                                                                                }
+                                                                                
+                                                                                // Set a timeout to check if PDF.js loaded
+                                                                                setTimeout(useFallback, 3000);
+                                                                                
+                                                                                try {
+                                                                                    // Configure PDF.js worker
+                                                                                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+                                                                                    
+                                                                                    // Get container width for scaling calculation
+                                                                                    const containerWidth = document.getElementById('viewerContainer').clientWidth;
+                                                                                    
+                                                                                    // Load the PDF
+                                                                                    const loadingTask = pdfjsLib.getDocument({data: atob('$base64')});
+                                                                                    loadingTask.promise.then(function(pdf) {
+                                                                                        console.log('PDF loaded');
+                                                                                        pdfJsLoaded = true;
+                                                                                        
+                                                                                        // Variable to track the current page
+                                                                                        let currentPageNum = 1;
+                                                                                        const numPages = pdf.numPages;
+                                                                                        const viewer = document.getElementById('viewer');
+                                                                                        
+                                                                                        // Function to render a page
+                                                                                        function renderPage(pageNumber) {
+                                                                                            pdf.getPage(pageNumber).then(function(page) {
+                                                                                                // Calculate scale to fit the page width to container
+                                                                                                const originalViewport = page.getViewport({scale: 1.0});
+                                                                                                const scale = (containerWidth - 20) / originalViewport.width; // -20 for margins
+                                                                                                const viewport = page.getViewport({scale: scale});
+                                                                                                
+                                                                                                // Create a container for this page
+                                                                                                const pageContainer = document.createElement('div');
+                                                                                                pageContainer.className = 'page';
+                                                                                                pageContainer.style.position = 'relative';
+                                                                                                pageContainer.style.width = viewport.width + 'px';
+                                                                                                pageContainer.style.height = viewport.height + 'px';
+                                                                                                pageContainer.style.margin = '10px auto';
+                                                                                                viewer.appendChild(pageContainer);
+                                                                                                
+                                                                                                // Create canvas for this page
+                                                                                                const canvas = document.createElement('canvas');
+                                                                                                pageContainer.appendChild(canvas);
+                                                                                                
+                                                                                                const context = canvas.getContext('2d');
+                                                                                                canvas.height = viewport.height;
+                                                                                                canvas.width = viewport.width;
+                                                                                                
+                                                                                                // Render PDF page
+                                                                                                const renderContext = {
+                                                                                                    canvasContext: context,
+                                                                                                    viewport: viewport
+                                                                                                };
+                                                                                                
+                                                                                                page.render(renderContext);
+                                                                                            });
+                                                                                        }
+                                                                                        
+                                                                                        // Render all pages
+                                                                                        for (let i = 1; i <= numPages; i++) {
+                                                                                            renderPage(i);
+                                                                                        }
+                                                                                    }, function (reason) {
+                                                                                        // Error handling
+                                                                                        console.error(reason);
+                                                                                        useFallback();
+                                                                                    });
+                                                                                } catch (e) {
+                                                                                    console.error('Error setting up PDF.js: ' + e);
+                                                                                    useFallback();
+                                                                                }
+                                                                            </script>
+                                                                        </body>
+                                                                        </html>
+                                                                    """.trimIndent()
+                                                                    
+                                                                    loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
+                                                                    Log.d("WebViewActivity", "Loaded Floor Map PDF using PDF.js with fit-to-width scaling")
+                                                                    return@apply
+                                                                }
+                                                            } catch (e: Exception) {
+                                                                Log.e("WebViewActivity", "Error loading Floor Map PDF: ${e.message}", e)
+                                                            }
                                                         }
-                                                        
-                                                        return@apply
                                                     }
                                                     
                                                     if (isPdf) {
@@ -613,9 +727,127 @@ class WebViewActivity : ComponentActivity() {
                                                         Log.d("WebViewActivity", "Loading local non-PDF file: $fileUrl")
                                                     }
                                                 } else if (isPdf) {
-                                                    // For remote PDF files, use Google Docs viewer
+                                                    // For remote PDF files
+                                                    if (isFloorMap) {
+                                                        // For Floor Map PDFs, use the same PDF.js implementation as policies
+                                                        val htmlWrapper = """
+                                                            <!DOCTYPE html>
+                                                            <html>
+                                                            <head>
+                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+                                                                <style>
+                                                                    body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+                                                                    #viewerContainer { width: 100%; height: 100%; overflow: auto; position: absolute; }
+                                                                    #viewer { position: absolute; width: 100%; }
+                                                                    #fallbackContainer { display: none; width: 100%; height: 100%; }
+                                                                    .page { box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-bottom: 15px !important; }
+                                                                </style>
+                                                            </head>
+                                                            <body>
+                                                                <div id="viewerContainer">
+                                                                    <div id="viewer" class="pdfViewer"></div>
+                                                                </div>
+                                                                
+                                                                <!-- Fallback container if PDF.js fails -->
+                                                                <div id="fallbackContainer">
+                                                                    <iframe src="https://docs.google.com/viewer?url=$fileUrl&embedded=true" width="100%" height="100%" style="border: none;"></iframe>
+                                                                </div>
+                                                                
+                                                                <script>
+                                                                    // Track if PDF.js loaded successfully
+                                                                    let pdfJsLoaded = false;
+                                                                    
+                                                                    // Fallback function to use if PDF.js fails to load
+                                                                    function useFallback() {
+                                                                        if (!pdfJsLoaded) {
+                                                                            console.log('Using fallback viewer');
+                                                                            document.getElementById('viewerContainer').style.display = 'none';
+                                                                            document.getElementById('fallbackContainer').style.display = 'block';
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    // Set a timeout to check if PDF.js loaded
+                                                                    setTimeout(useFallback, 3000);
+                                                                    
+                                                                    try {
+                                                                        // Configure PDF.js worker
+                                                                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+                                                                        
+                                                                        // Get container width for scaling calculation
+                                                                        const containerWidth = document.getElementById('viewerContainer').clientWidth;
+                                                                        
+                                                                        // Load the PDF
+                                                                        const loadingTask = pdfjsLib.getDocument('$fileUrl');
+                                                                        loadingTask.promise.then(function(pdf) {
+                                                                            console.log('PDF loaded');
+                                                                            pdfJsLoaded = true;
+                                                                            
+                                                                            // Variable to track the current page
+                                                                            let currentPageNum = 1;
+                                                                            const numPages = pdf.numPages;
+                                                                            const viewer = document.getElementById('viewer');
+                                                                            
+                                                                            // Function to render a page
+                                                                            function renderPage(pageNumber) {
+                                                                                pdf.getPage(pageNumber).then(function(page) {
+                                                                                    // Calculate scale to fit the page width to container
+                                                                                    const originalViewport = page.getViewport({scale: 1.0});
+                                                                                    const scale = (containerWidth - 20) / originalViewport.width; // -20 for margins
+                                                                                    const viewport = page.getViewport({scale: scale});
+                                                                                    
+                                                                                    // Create a container for this page
+                                                                                    const pageContainer = document.createElement('div');
+                                                                                    pageContainer.className = 'page';
+                                                                                    pageContainer.style.position = 'relative';
+                                                                                    pageContainer.style.width = viewport.width + 'px';
+                                                                                    pageContainer.style.height = viewport.height + 'px';
+                                                                                    pageContainer.style.margin = '10px auto';
+                                                                                    viewer.appendChild(pageContainer);
+                                                                                    
+                                                                                    // Create canvas for this page
+                                                                                    const canvas = document.createElement('canvas');
+                                                                                    pageContainer.appendChild(canvas);
+                                                                                    
+                                                                                    const context = canvas.getContext('2d');
+                                                                                    canvas.height = viewport.height;
+                                                                                    canvas.width = viewport.width;
+                                                                                    
+                                                                                    // Render PDF page
+                                                                                    const renderContext = {
+                                                                                        canvasContext: context,
+                                                                                        viewport: viewport
+                                                                                    };
+                                                                                    
+                                                                                    page.render(renderContext);
+                                                                                });
+                                                                            }
+                                                                            
+                                                                            // Render all pages
+                                                                            for (let i = 1; i <= numPages; i++) {
+                                                                                renderPage(i);
+                                                                            }
+                                                                        }, function (reason) {
+                                                                            // Error handling
+                                                                            console.error(reason);
+                                                                            useFallback();
+                                                                        });
+                                                                    } catch (e) {
+                                                                        console.error('Error setting up PDF.js: ' + e);
+                                                                        useFallback();
+                                                                    }
+                                                                </script>
+                                                            </body>
+                                                            </html>
+                                                        """.trimIndent()
+                                                        
+                                                        loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
+                                                        Log.d("WebViewActivity", "Loading Floor Map PDF using policy-style PDF.js viewer with fit-to-width: $fileUrl")
+                                                    } else {
+                                                        // Use Google Docs viewer for other PDF types
                                                     loadUrl("https://docs.google.com/viewer?url=$fileUrl&embedded=true")
                                                     Log.d("WebViewActivity", "Loading PDF using Google Docs viewer: $fileUrl")
+                                                    }
                                                 } else {
                                                     // For regular web content (case studies, blogs, job postings)
                                                     loadUrl(fileUrl)
