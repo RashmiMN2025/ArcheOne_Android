@@ -29,6 +29,10 @@ import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @Composable
 fun SOSScreen(
@@ -327,17 +331,26 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
             .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = rememberAsyncImagePainter(blog.imageUrl),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,  // Ensures the image fills properly
+        // Replace Image with AsyncImage to add placeholder
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(blog.imageUrl)
+                .crossfade(true)
+                .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                .build(),
+            contentDescription = blog.name,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .width(300.dp)
-                .height(200.dp)
+                .height(200.dp),
+            error = painterResource(id = R.drawable.ic_image_placeholder),
+            placeholder = painterResource(id = R.drawable.ic_image_placeholder)
         )
         Text(
             text = blog.name,
-            fontSize = 18.sp,
+            fontSize = 17.sp,
+            color = Color.Black, // Explicitly set to black for consistency
             modifier = Modifier.padding(top = 8.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
