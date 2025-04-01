@@ -432,13 +432,16 @@ private fun StateList(
             Column(
                 modifier = Modifier.padding(12.dp)
             ) {
-                Text(
-                    text = "India",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                // Only show the "India" text if NOT in emergency contact mode
+                if (!controller.isInEmergencyContactMode()) {
+                    Text(
+                        text = "India",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
                 
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)

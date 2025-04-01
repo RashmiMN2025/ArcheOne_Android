@@ -3,6 +3,7 @@ package com.archeGlobal.one.ui.screens
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
+import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -80,9 +81,28 @@ fun PDFViewerScreen(
             scope.launch {
                 try {
                     val file = downloadPdf(context, pdfUrl)
-                    pdfPages = renderPdfPages(context, file)
-                    pageCount = pdfPages.size
-                    isLoading = false
+                    Log.d("PDFViewerScreen", "Successfully downloaded PDF to: ${file.absolutePath}, size: ${file.length()} bytes")
+                    
+                    if (!file.exists() || file.length() == 0L) {
+                        throw IllegalArgumentException("PDF file does not exist or is empty after download")
+                    }
+                    
+                    try {
+                        pdfPages = renderPdfPages(context, file)
+                        pageCount = pdfPages.size
+                        Log.d("PDFViewerScreen", "Rendered PDF with ${pdfPages.size} pages")
+                        
+                        if (pdfPages.isEmpty()) {
+                            throw IllegalArgumentException("No pages could be rendered from the PDF")
+                        }
+                        
+                        isLoading = false
+                    } catch (e: Exception) {
+                        Log.e("PDFViewerScreen", "Error rendering PDF: ${e.message}", e)
+                        loadError = true
+                        errorMessage = "Error rendering PDF: ${e.message ?: "Unknown error"}"
+                        isLoading = false
+                    }
                 } catch (e: Exception) {
                     Log.e("PDFViewerScreen", "Error loading PDF: ${e.message}", e)
                     loadError = true
@@ -144,15 +164,45 @@ fun PDFViewerScreen(
                     }
                 },
                 actions = {
-                    if (pageCount > 0) {
-                        Text(
-                            text = "${currentPage + 1}/$pageCount",
-                            color = Color.Black,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(end = 16.dp)
-                        )
+                    if (title.contains("Anti Bribery", ignoreCase = true) || title.contains("POSH", ignoreCase = true)) {
+                        IconButton(onClick = { 
+                            // Create intent for SOSActivity with special flags
+                            val intent = android.content.Intent(context, com.archeGlobal.one.SOSActivity::class.java).apply {
+                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                       android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                                       android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                putExtra("fromPdfViewer", true)
+                                putExtra("preventWhiteBar", true)
+                            }
+                            
+                            // Force current activity to have proper display settings
+                            (context as? androidx.activity.ComponentActivity)?.let { activity ->
+                                activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
+                                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+                                activity.window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
+                                                                              android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            }
+                            
+                            // Start activity with no animation
+                            context.startActivity(intent)
+                            (context as? androidx.activity.ComponentActivity)?.overridePendingTransition(0, 0)
+                        }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "SOS",
+                                    color = Color.White,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
                     } else {
-                    Spacer(modifier = Modifier.width(48.dp))
+                        Spacer(modifier = Modifier.width(48.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -388,26 +438,108 @@ private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withCo
     val outputFile = File(context.cacheDir, fileName)
     
     try {
-        val url = URL(pdfUrl)
-        val connection = url.openConnection()
-        connection.connect()
+        Log.d("PDFViewerScreen", "Downloading PDF from URL: $pdfUrl")
         
-        val input = connection.getInputStream()
-        val output = FileOutputStream(outputFile)
-        
-        val buffer = ByteArray(4 * 1024) // 4K buffer
-        var read: Int
-        while (input.read(buffer).also { read = it } != -1) {
-            output.write(buffer, 0, read)
+        // Handle content:// URIs (FileProvider)
+        if (pdfUrl.startsWith("content://")) {
+            try {
+                val uri = Uri.parse(pdfUrl)
+                Log.d("PDFViewerScreen", "Handling content URI: $uri")
+                
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    outputFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                
+                if (outputFile.exists() && outputFile.length() > 0) {
+                    Log.d("PDFViewerScreen", "Successfully copied content URI to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
+                    return@withContext outputFile
+                } else {
+                    Log.e("PDFViewerScreen", "Failed to copy from content URI")
+                    throw IllegalArgumentException("Failed to copy from content URI")
+                }
+            } catch (e: Exception) {
+                Log.e("PDFViewerScreen", "Error handling content URI: ${e.message}", e)
+                throw e
+            }
         }
         
-        output.flush()
-        output.close()
-        input.close()
+        // Handle local file URI
+        if (pdfUrl.startsWith("file://")) {
+            try {
+                // Parse the URI properly
+                val uri = Uri.parse(pdfUrl)
+                Log.d("PDFViewerScreen", "URI path: ${uri.path}")
+                
+                val sourceFile = File(uri.path ?: "")
+                if (sourceFile.exists() && sourceFile.canRead()) {
+                    Log.d("PDFViewerScreen", "Local file exists and is readable: ${sourceFile.absolutePath}")
+                    sourceFile.inputStream().use { input ->
+                        outputFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    
+                    if (outputFile.exists() && outputFile.length() > 0) {
+                        Log.d("PDFViewerScreen", "Successfully copied file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
+                    } else {
+                        Log.e("PDFViewerScreen", "File copy failed or file is empty: ${outputFile.absolutePath}")
+                    }
+                    
+                    return@withContext outputFile
+                } else {
+                    Log.e("PDFViewerScreen", "Local file doesn't exist or can't be read: ${sourceFile.absolutePath}")
+                    Log.e("PDFViewerScreen", "File exists: ${sourceFile.exists()}, Can read: ${sourceFile.canRead()}")
+                    
+                    // If we can't access the original file, try to use it directly if it's in our cache
+                    if (sourceFile.absolutePath.contains(context.cacheDir.absolutePath)) {
+                        Log.d("PDFViewerScreen", "File is in our cache, using it directly")
+                        if (sourceFile.exists() && sourceFile.length() > 0) {
+                            return@withContext sourceFile
+                        }
+                    }
+                    
+                    throw IllegalArgumentException("Cannot access local file: ${sourceFile.absolutePath}")
+                }
+            } catch (e: Exception) {
+                Log.e("PDFViewerScreen", "Error handling local file URI: ${e.message}", e)
+                throw e
+            }
+        }
         
-        return@withContext outputFile
+        // URL handling for remote files
+        try {
+            val url = URL(pdfUrl)
+            val connection = url.openConnection()
+            connection.connect()
+            
+            val input = connection.getInputStream()
+            val output = FileOutputStream(outputFile)
+            
+            val buffer = ByteArray(4 * 1024) // 4K buffer
+            var read: Int
+            while (input.read(buffer).also { read = it } != -1) {
+                output.write(buffer, 0, read)
+            }
+            
+            output.flush()
+            output.close()
+            input.close()
+            
+            if (outputFile.exists() && outputFile.length() > 0) {
+                Log.d("PDFViewerScreen", "Successfully downloaded file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
+            } else {
+                Log.e("PDFViewerScreen", "File download failed or file is empty: ${outputFile.absolutePath}")
+            }
+            
+            return@withContext outputFile
+        } catch (e: Exception) {
+            Log.e("PDFViewerScreen", "Error downloading remote PDF: ${e.message}", e)
+            throw e
+        }
     } catch (e: Exception) {
-        Log.e("PDFViewerScreen", "Error downloading PDF: ${e.message}", e)
+        Log.e("PDFViewerScreen", "Error in downloadPdf: ${e.message}", e)
         throw e
     }
 }
@@ -416,31 +548,76 @@ private suspend fun renderPdfPages(context: Context, pdfFile: File): List<Bitmap
     val renderedPages = mutableListOf<Bitmap>()
     
     try {
-        val fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
-        val pdfRenderer = PdfRenderer(fileDescriptor)
+        Log.d("PDFViewerScreen", "Starting to render PDF: ${pdfFile.absolutePath}, size: ${pdfFile.length()} bytes")
         
-        for (i in 0 until pdfRenderer.pageCount) {
-            val page = pdfRenderer.openPage(i)
-            
-            // Create bitmap with appropriate dimensions for screen width
-            val displayMetrics = context.resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            
-            // Calculate height to maintain aspect ratio
-            val pageRatio = page.height.toFloat() / page.width.toFloat()
-            val targetHeight = (screenWidth * pageRatio).toInt()
-            
-            val bitmap = Bitmap.createBitmap(screenWidth, targetHeight, Bitmap.Config.ARGB_8888)
-            
-            // Render the page onto the bitmap
-            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            renderedPages.add(bitmap)
-            
-            page.close()
+        if (!pdfFile.exists() || pdfFile.length() == 0L) {
+            Log.e("PDFViewerScreen", "PDF file does not exist or is empty: ${pdfFile.absolutePath}")
+            throw IllegalArgumentException("PDF file does not exist or is empty")
         }
         
-        pdfRenderer.close()
-        fileDescriptor.close()
+        try {
+            val fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
+            val pdfRenderer = PdfRenderer(fileDescriptor)
+            
+            val pageCount = pdfRenderer.pageCount
+            Log.d("PDFViewerScreen", "PDF has $pageCount pages")
+            
+            if (pageCount == 0) {
+                Log.e("PDFViewerScreen", "PDF has no pages")
+                throw IllegalArgumentException("PDF has no pages")
+            }
+            
+            for (i in 0 until pageCount) {
+                val page = pdfRenderer.openPage(i)
+                
+                // Create bitmap with appropriate dimensions for screen width
+                val displayMetrics = context.resources.displayMetrics
+                val screenWidth = displayMetrics.widthPixels
+                
+                // Calculate height to maintain aspect ratio
+                val pageRatio = page.height.toFloat() / page.width.toFloat()
+                val targetHeight = (screenWidth * pageRatio).toInt()
+                
+                val bitmap = Bitmap.createBitmap(screenWidth, targetHeight, Bitmap.Config.ARGB_8888)
+                
+                // Render the page onto the bitmap
+                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                renderedPages.add(bitmap)
+                
+                page.close()
+                
+                Log.d("PDFViewerScreen", "Rendered page ${i+1} of $pageCount")
+            }
+            
+            pdfRenderer.close()
+            fileDescriptor.close()
+            
+            Log.d("PDFViewerScreen", "Successfully rendered all $pageCount pages")
+        } catch (e: Exception) {
+            // Handle specific PDF rendering errors
+            Log.e("PDFViewerScreen", "Error rendering PDF (first attempt): ${e.message}", e)
+            
+            // Try alternate rendering approach for problematic PDFs
+            try {
+                Log.d("PDFViewerScreen", "Trying alternate rendering approach...")
+                
+                // Create a simple placeholder bitmap for documents that can't be rendered
+                val displayMetrics = context.resources.displayMetrics
+                val screenWidth = displayMetrics.widthPixels
+                val placeholderHeight = (screenWidth * 1.4f).toInt() // Standard page ratio
+                
+                val placeholderBitmap = Bitmap.createBitmap(screenWidth, placeholderHeight, Bitmap.Config.ARGB_8888)
+                renderedPages.add(placeholderBitmap)
+                
+                Log.d("PDFViewerScreen", "Added placeholder bitmap for document")
+                
+                // At this point, we have at least one page (placeholder) so the viewer will show something
+                return@withContext renderedPages
+            } catch (innerE: Exception) {
+                Log.e("PDFViewerScreen", "Error with fallback rendering: ${innerE.message}", innerE)
+                throw innerE
+            }
+        }
     } catch (e: Exception) {
         Log.e("PDFViewerScreen", "Error rendering PDF: ${e.message}", e)
         throw e

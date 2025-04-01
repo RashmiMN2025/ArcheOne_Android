@@ -8,7 +8,8 @@ data class SOSRequest(
     @SerializedName("mobile") val mobile: String,
     @SerializedName("category") val category: String, // Ensure this matches backend
     @SerializedName("query") val query: String, // Ensure this matches backend
-    @SerializedName("description") val description: String
+    @SerializedName("description") val description: String,
+    @SerializedName("anonymous") val anonymous: Boolean = false
 )
 
 data class SOSResponse(

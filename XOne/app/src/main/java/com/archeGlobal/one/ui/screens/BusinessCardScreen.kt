@@ -40,6 +40,35 @@ import android.util.TypedValue
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import android.graphics.Paint
+import android.graphics.Rect
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.remember
+
+// Composable to display a QR code bitmap using Canvas
+@Composable
+private fun ComposeQRCodeImage(
+    bitmap: Bitmap,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null
+) {
+    val density = LocalDensity.current
+    
+    Canvas(
+        modifier = modifier
+    ) {
+        drawIntoCanvas { canvas ->
+            val paint = Paint()
+            val rect = Rect(0, 0, bitmap.width, bitmap.height)
+            canvas.nativeCanvas.drawBitmap(bitmap, rect, android.graphics.RectF(0f, 0f, size.width, size.height), paint)
+        }
+    }
+}
 
 @Composable
 fun BusinessCardScreen(
@@ -47,6 +76,11 @@ fun BusinessCardScreen(
     controller: BusinessCardController
 ) {
     var isPortraitView by remember { mutableStateOf(true) }
+    
+    // Effect to refresh QR code when layout changes
+    LaunchedEffect(isPortraitView) {
+        controller.refreshQRCode(isPortraitView)
+    }
 
     Box(
         modifier = Modifier
@@ -120,10 +154,11 @@ private fun PortraitBusinessCard(
                                     controller.onShareCard(bitmap)
                                 }
                             }
-                        }
+                        },
+                        modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_share),
+                            painter = painterResource(id = R.drawable.share),
                             contentDescription = "Share",
                             tint = TextPrimary
                         )
@@ -141,7 +176,7 @@ private fun PortraitBusinessCard(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(0.85f)
-                    .height(500.dp)
+                    .height(520.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
                         cardBounds.value = android.graphics.Rect(
@@ -157,40 +192,61 @@ private fun PortraitBusinessCard(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(top = 70.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
+                        .padding(top = 50.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Image(
                         painter = painterResource(id = businessCard.companyLogo),
                         contentDescription = "Company Logo",
-                        modifier = Modifier.height(30.dp)
+                        modifier = Modifier.height(26.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(30.dp))
 
                     Text(
                         text = businessCard.name,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp
+                            fontSize = 22.sp,
+                            lineHeight = 24.sp
                         ),
                         color = Color.Black
                     )
 
                     Text(
                         text = businessCard.designation,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 14.sp,
+                            lineHeight = 16.sp
+                        ),
                         color = Color.Black
                     )
+                    
+                    // Add QR code right after designation
+                    businessCard.qrCode?.let { qrBitmap ->
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Center the QR code
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            ComposeQRCodeImage(
+                                bitmap = qrBitmap,
+                                contentDescription = "Business Card QR Code",
+                                modifier = Modifier.size(100.dp)
+                            )
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
                         text = "Arche Global Pvt. Ltd.",
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 16.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         ),
                         color = Color.Black
@@ -198,25 +254,25 @@ private fun PortraitBusinessCard(
 
                     Text(
                         text = businessCard.email,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
                         color = Color.Black
                     )
 
                     Text(
                         text = businessCard.phone,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
                         color = Color.Black
                     )
 
                     Text(
                         text = controller.businessCard.location,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
                         color = Color.Black
                     )
 
                     Text(
                         text = businessCard.website,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp),
                         color = Color.Black
                     )
                 }
@@ -410,9 +466,9 @@ private fun LandscapeBusinessCard(
             // Main Card
             Card(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(0.95f)
-                    .height(300.dp)
+                    .padding(horizontal = 12.dp, vertical = 16.dp)
+                    .fillMaxWidth()
+                    .height(240.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
                         cardBounds.value = android.graphics.Rect(
@@ -429,71 +485,104 @@ private fun LandscapeBusinessCard(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Left section - Logo
-                    Image(
-                        painter = painterResource(id = businessCard.companyLogo),
-                        contentDescription = "Company Logo",
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
                         modifier = Modifier
-                            .weight(0.3f)
-                            .height(35.dp)
-                    )
+                            .weight(0.25f)
+                            .padding(end = 0.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = businessCard.companyLogo),
+                            contentDescription = "Company Logo",
+                            modifier = Modifier.height(35.dp)
+                        )
+                    }
 
-                    // Right section with text content
+                    // Middle section with text content
                     Column(
                         modifier = Modifier
-                            .weight(0.7f)
-                            .padding(start = 24.dp, top = 2.dp),
+                            .weight(0.50f)
+                            .padding(start = 8.dp, top = 0.dp),
                         verticalArrangement = Arrangement.Top
                     ) {
                         Text(
                             text = businessCard.name,
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
+                                fontSize = 14.sp,
+                                lineHeight = 15.sp
                             ),
-                            color = Color.Black
+                            color = Color.Black,
+                            modifier = Modifier.padding(start = 4.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(1.dp))
+                        Spacer(modifier = Modifier.height(0.dp))
 
                         Text(
                             text = businessCard.designation,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
-                            color = Color.Black
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 11.sp,
+                                lineHeight = 12.sp
+                            ),
+                            color = Color.Black,
+                            modifier = Modifier.padding(start = 4.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(29.dp))
 
                         Text(
                             text = businessCard.email,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
-                            color = Color.Black
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 11.sp),
+                            color = Color.Black,
+                            modifier = Modifier.padding(start = 4.dp)
                         )
 
                         Text(
                             text = businessCard.phone,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
-                            color = Color.Black
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 11.sp),
+                            color = Color.Black,
+                            modifier = Modifier.padding(start = 4.dp)
                         )
 
                         Text(
                             text = controller.businessCard.location,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 13.sp),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 11.sp),
                             color = Color.Black,
-                            modifier = Modifier.padding(bottom = 10.dp)
+                            modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
                         )
 
-                        Spacer(modifier = Modifier.weight(2f))
+                        Spacer(modifier = Modifier.weight(0.8f))
 
                         Text(
                             text = businessCard.website,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
-                            color = Color.Black
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 12.sp),
+                            color = Color.Black,
+                            modifier = Modifier.padding(start = 4.dp)
                         )
+                    }
+                    
+                    // Right section - QR Code
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .weight(0.25f)
+                            .padding(start = 0.dp)
+                    ) {
+                        // QR Code in landscape mode - placed on the right side
+                        businessCard.qrCode?.let { qrBitmap ->
+                            ComposeQRCodeImage(
+                                bitmap = qrBitmap,
+                                contentDescription = "Business Card QR Code",
+                                modifier = Modifier.size(70.dp)
+                            )
+                        }
                     }
                 }
             }

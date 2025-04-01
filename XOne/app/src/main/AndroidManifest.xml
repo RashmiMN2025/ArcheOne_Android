@@ -68,6 +68,15 @@
             android:theme="@style/Theme.XOne" >
         </activity>
 
+        <!-- User Documents Activity -->
+        <activity
+            android:name=".UserDocumentsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Documents"
+            android:theme="@style/Theme.XOne" >
+        </activity>
+
         <!-- Add HomeActivity -->
         <activity
             android:name=".HomeActivity"

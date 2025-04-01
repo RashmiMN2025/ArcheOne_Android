@@ -72,6 +72,9 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.foundation)
     
+    // Manual implementation of UI graphics to ensure it's included
+    implementation("androidx.compose.ui:ui-graphics:1.6.0")
+    
     // Material Design
     implementation(libs.material)
     
@@ -99,7 +102,10 @@ dependencies {
     // PDF Viewer - use web view based approach instead of PDF library
     implementation("androidx.webkit:webkit:1.7.0")
     implementation(libs.generativeai)
-
+    
+    // ZXing QR Code generator
+    implementation("com.google.zxing:core:3.5.2")
+    
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -9,6 +9,7 @@ import com.archeGlobal.one.LoginActivity
 import com.archeGlobal.one.OtpVerificationActivity
 import com.archeGlobal.one.HomeActivity
 import com.archeGlobal.one.MyDocumentsActivity
+import com.archeGlobal.one.UserDocumentsActivity
 import com.archeGlobal.one.XConnectActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.SOSActivity
@@ -80,6 +81,11 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToMyDocuments() {
         Log.d("AndroidNavigator", "Navigating to MyDocuments screen")
         val intent = Intent(activity, MyDocumentsActivity::class.java)
+        activity.startActivity(intent)
+    }
+    override fun navigateToUserDocuments() {
+        Log.d("AndroidNavigator", "Navigating to UserDocuments screen")
+        val intent = Intent(activity, UserDocumentsActivity::class.java)
         activity.startActivity(intent)
     }
     override fun navigateToMyCareer() {}
