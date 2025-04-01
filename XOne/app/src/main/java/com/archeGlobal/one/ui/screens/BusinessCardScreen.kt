@@ -535,7 +535,7 @@ private fun LandscapeBusinessCard(
                             modifier = Modifier.padding(start = 4.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(29.dp))
+                        Spacer(modifier = Modifier.height(45.dp))
 
                         Text(
                             text = businessCard.email,

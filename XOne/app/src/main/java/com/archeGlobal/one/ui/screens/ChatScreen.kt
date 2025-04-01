@@ -197,7 +197,7 @@ fun ChatScreen(
                         
                         Box(
                             modifier = Modifier
-                                .background(Color(0xFFDD3825), CircleShape)
+                               // .background(Color(0xFFDD3825), CircleShape)
                                 .size(40.dp)
                                 .clickable {
                                     if (inputText.isNotBlank()) {
@@ -210,8 +210,8 @@ fun ChatScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.send),
                                 contentDescription = "Send",
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp)
+                                tint = Color(0xFFDD3825),
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }
@@ -263,11 +263,11 @@ fun MessageBubble(
                         // Title message at the top
                         if (message.content.startsWith("Here are some answers that might help:") ||
                             message.content.startsWith("I found multiple relevant questions")) {
-                            Text(
-                                text = "I found multiple relevant questions. Please select one to see its answer:",
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
+//                            Text(
+//                                text = "I found multiple relevant questions. Please select one to see its answer:",
+//                                color = Color.Black,
+//                                modifier = Modifier.padding(bottom = 12.dp)
+//                            )
                         } else {
                             val firstLine = message.content.split("\n").firstOrNull()
                             if (firstLine != null && !firstLine.startsWith("•")) {

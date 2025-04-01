@@ -115,17 +115,8 @@ fun SOSScreen(
                             SOSButton(
                                 text = "View Emergency Contact",
                                 onClick = {
-                                    // Try both approaches
                                     Log.d("SOSScreen", "View Emergency Contact button clicked")
-                                    // First try the navigation event
-                                    if (onNavigateToEmergencyContact != {}) {
-                                        Log.d("SOSScreen", "Using onNavigateToEmergencyContact callback")
-                                        onNavigateToEmergencyContact()
-                                    } else {
-                                        // Fall back to controller method
-                                        Log.d("SOSScreen", "Using controller.viewEmergencyContact()")
-                                        controller.viewEmergencyContact()
-                                    }
+                                    onNavigateToEmergencyContact()
                                 }
                             )
 
@@ -259,13 +250,8 @@ fun SOSScreen(
                         SOSButton(
                             text = "View Emergency Contact",
                             onClick = {
-                                // Try both approaches
                                 Log.d("SOSScreen", "View Emergency Contact button clicked")
-                                // First try the navigation event
-
-                                    Log.d("SOSScreen", "Using onNavigateToEmergencyContact callback")
-                                    onNavigateToEmergencyContact()
-
+                                onNavigateToEmergencyContact()
                             }
                         )
 

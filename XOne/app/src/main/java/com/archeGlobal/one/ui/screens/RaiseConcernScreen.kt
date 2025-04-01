@@ -58,7 +58,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
         "Security Risk",
         "Workplace Safety",
         "Non-Compliance",
-        "POSH",
+        "PoSH",
         "Other Issue"
     )
     
@@ -303,10 +303,10 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 40.dp)
                     .height(50.dp),
 
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(30.dp)
             ) {
                 Text(
                     text = "Submit",

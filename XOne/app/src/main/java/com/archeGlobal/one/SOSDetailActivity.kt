@@ -6,8 +6,6 @@ import com.archeGlobal.one.model.SosBlogModel
 import androidx.activity.compose.setContent
 import com.archeGlobal.one.ui.screens.SOSDetailScreen
 import com.archeGlobal.one.navigation.AndroidNavigator
-import com.archeGlobal.one.HomeActivity
-import com.archeGlobal.one.SOSActivity
 import android.os.Build
 
 class SOSDetailActivity : ComponentActivity() {
@@ -30,24 +28,7 @@ class SOSDetailActivity : ComponentActivity() {
             blog?.let {
                 SOSDetailScreen(
                     blog = it, 
-                    onBackPressed = { finish() },
-                    onFooterHomeClick = { 
-                        val intent = Intent(this, HomeActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    },
-                    onFooterChatClick = {
-                        // Navigate to Chat screen when available
-                    },
-                    onFooterSOSClick = {
-                        // Already in SOS section, go back to main SOS screen
-                        val intent = Intent(this, SOSActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    },
-                    onFooterProfileClick = {
-                        navigator.navigateToXProfile()
-                    }
+                    onBackPressed = { finish() }
                 )
             }
         }

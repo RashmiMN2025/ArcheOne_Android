@@ -342,20 +342,20 @@ fun JobsContent(socialController: SocialController, searchQuery: String) {
     val jobs = socialController.getJobPostings().filter {
         searchQuery.isEmpty() || it.Title.contains(searchQuery, ignoreCase = true)
     }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp) // Ensure uniform left & right padding
     ) {
         Text(
             text = "Jobs",
-            fontSize = 18.sp,  // Reduced from 20sp to 18sp
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        
+
         if (jobs.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -364,8 +364,8 @@ fun JobsContent(socialController: SocialController, searchQuery: String) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (searchQuery.isEmpty()) "No jobs available" 
-                           else "No jobs found for '$searchQuery'",
+                    text = if (searchQuery.isEmpty()) "No jobs available"
+                    else "No jobs found for '$searchQuery'",
                     color = Color.Gray,
                     fontSize = 16.sp
                 )
@@ -383,9 +383,9 @@ fun JobCard(job: Job, socialController: SocialController) {
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .fillMaxWidth(0.95f)
-            .padding(vertical = 8.dp)
-            .clickable { 
+            .fillMaxWidth() // Ensures card takes full width of parent Column
+            .padding(horizontal = 16.dp, vertical = 8.dp) // Uniform padding
+            .clickable {
                 socialController.openInBrowser("Jobs", job.Slug)
             },
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -393,10 +393,9 @@ fun JobCard(job: Job, socialController: SocialController) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),  // Increased padding for better spacing
+                .padding(16.dp),  // Uniform padding inside the card
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Job Image with placeholder
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(job.Image)
@@ -413,32 +412,29 @@ fun JobCard(job: Job, socialController: SocialController) {
                 error = painterResource(id = R.drawable.ic_image_placeholder),
                 placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )
-            
-            // Job Title with improved spacing
+
             Text(
                 text = job.Title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),  // Better spacing
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
-            // Experience with improved visibility
+
             Text(
                 text = "Experience: ${extractExperience(job.Description)}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF505050),  // Darker gray for better readability
-                modifier = Modifier.padding(bottom = 8.dp),  // Added bottom padding
+                color = Color(0xFF505050),
+                modifier = Modifier.padding(bottom = 8.dp),
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
-            // Apply Button with better spacing
+
             Button(
                 onClick = { socialController.openInBrowser("Jobs", job.Slug) },
                 modifier = Modifier
@@ -452,12 +448,13 @@ fun JobCard(job: Job, socialController: SocialController) {
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.padding(vertical = 4.dp)  // Added some vertical padding
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
         }
     }
 }
+
 
 // Helper function to extract experience from description
 private fun extractExperience(description: String): String {
@@ -539,8 +536,8 @@ fun HorizontalJobsSection(title: String, jobs: List<Job>) {
 
 @Composable
 fun JobPostCard(
-    title: String, 
-    description: String, 
+    title: String,
+    description: String,
     imageUrl: String,
     slug: String,
     socialController: SocialController
@@ -551,7 +548,7 @@ fun JobPostCard(
             .width(200.dp)
             .height(240.dp)
             .padding(4.dp)
-            .clickable { 
+            .clickable {
                 socialController.openInBrowser("Jobs", slug)
             },
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -573,10 +570,12 @@ fun JobPostCard(
                 error = painterResource(id = R.drawable.ic_image_placeholder),
                 placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )
-            
+
             Column(
-                modifier = Modifier.padding(8.dp, 8.dp, 8.dp, 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp, 8.dp, 8.dp, 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally // Ensures central alignment
             ) {
                 Text(
                     text = title,
@@ -585,22 +584,25 @@ fun JobPostCard(
                     maxLines = 2,
                     lineHeight = 16.sp,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center, // Centers text
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = description,
                     fontSize = 11.sp,
                     color = Color.Gray,
-                    maxLines = 1, // Reduced maxLines from 3 to 1 since we have larger image
+                    maxLines = 1,
                     lineHeight = 13.sp,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center, // Centers text
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun ArticleCard(article: SocialArticle, type: String, socialController: SocialController) {
@@ -695,7 +697,7 @@ fun PostCard(
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier
             .width(200.dp)
-            .height(240.dp)
+            .height(250.dp)
             .padding(4.dp)
             .clickable { 
                 socialController.openInBrowser(type, slug)
@@ -713,7 +715,7 @@ fun PostCard(
                     .build(),
                 contentDescription = title,
                 modifier = Modifier
-                    .height(120.dp)
+                    .height(150.dp)
                     .fillMaxWidth(),
                 contentScale = ContentScale.Crop,
                 error = painterResource(id = R.drawable.ic_image_placeholder),

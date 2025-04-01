@@ -2,6 +2,7 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -13,10 +14,8 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
+import java.io.FileOutputStream
 
 class MyDocumentsController(private val context: Context) {
 
@@ -32,15 +31,38 @@ class MyDocumentsController(private val context: Context) {
         "Other" to false
     ))
 
+    // Add a loading state
+    val isLoading = MutableLiveData(false)
+
+    // Handle file upload
     fun onUploadClick(documentName: String, fileUri: Uri, employeeId: String) {
         val file = getFileFromUri(context, fileUri)
         if (file == null) {
             Toast.makeText(context, "File not found!", Toast.LENGTH_SHORT).show()
             return
         }
+        uploadDocument(documentName, file, employeeId)
+    }
+
+    // Handle camera image upload
+    fun onUploadCameraImage(documentName: String, bitmap: Bitmap, employeeId: String) {
+        val file = saveBitmapToFile(bitmap)
+        if (file == null) {
+            Toast.makeText(context, "Failed to process image!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        uploadDocument(documentName, file, employeeId)
+    }
+
+    // Upload document to the server
+    private fun uploadDocument(documentName: String, file: File, employeeId: String) {
+        isLoading.postValue(true) // Show loader
+
+        val mimeType = android.webkit.MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
 
         // Convert file to RequestBody
-        val requestFile = file.asRequestBody("application/pdf".toMediaTypeOrNull())
+        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
         val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
         // Convert other parameters to RequestBody
@@ -48,8 +70,10 @@ class MyDocumentsController(private val context: Context) {
         val documentTypePart = documentName.toRequestBody("text/plain".toMediaTypeOrNull())
 
         val call = RetrofitClient.apiService.uploadDocument(filePart, employeeIdPart, documentTypePart)
-        call.enqueue(object : Callback<DocumentUploadResponse> {
-            override fun onResponse(call: Call<DocumentUploadResponse>, response: Response<DocumentUploadResponse>) {
+        call.enqueue(object : retrofit2.Callback<DocumentUploadResponse> {
+            override fun onResponse(call: retrofit2.Call<DocumentUploadResponse>, response: retrofit2.Response<DocumentUploadResponse>) {
+                isLoading.postValue(false) // Hide loader
+
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     responseBody?.let {
@@ -85,13 +109,15 @@ class MyDocumentsController(private val context: Context) {
                 }
             }
 
-            override fun onFailure(call: Call<DocumentUploadResponse>, t: Throwable) {
+            override fun onFailure(call: retrofit2.Call<DocumentUploadResponse>, t: Throwable) {
+                isLoading.postValue(false) // Hide loader
                 Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
                 Log.e("Upload", "Network error: ${t.message}")
             }
         })
     }
 
+    // Handle viewing documents
     fun onViewClick(context: Context, documentName: String, isPersonal: Boolean) {
         val filePath = if (isPersonal) {
             personalDocs.value?.get(documentName)
@@ -110,10 +136,18 @@ class MyDocumentsController(private val context: Context) {
         context.startActivity(intent)
     }
 
+    // Convert Uri to File
     private fun getFileFromUri(context: Context, uri: Uri): File? {
         return try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val file = File(context.cacheDir, "temp_upload.pdf")
+            val contentResolver = context.contentResolver
+            val fileExtension = contentResolver.getType(uri)?.let { mimeType ->
+                android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+            } ?: "tmp" // Default to "tmp" if the extension cannot be determined
+
+            val fileName = "temp_upload.$fileExtension"
+            val file = File(context.cacheDir, fileName)
+
+            val inputStream = contentResolver.openInputStream(uri)
             inputStream?.use { input ->
                 file.outputStream().use { output ->
                     input.copyTo(output)
@@ -121,7 +155,30 @@ class MyDocumentsController(private val context: Context) {
             }
             file
         } catch (e: Exception) {
-            Log.e("Upload", "Error processing file: ${e.message}")
+            Log.e("Upload", "Error converting Uri to File: ${e.message}")
+            null
+        }
+    }
+
+    // Save Bitmap to File
+    private fun saveBitmapToFile(bitmap: Bitmap, format: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG): File? {
+        return try {
+            val extension = when (format) {
+                Bitmap.CompressFormat.JPEG -> "jpg"
+                Bitmap.CompressFormat.PNG -> "png"
+                Bitmap.CompressFormat.WEBP -> "webp"
+                else -> "jpg"
+            }
+
+            val fileName = "temp_image_upload.$extension"
+            val file = File(context.cacheDir, fileName)
+
+            FileOutputStream(file).use { outputStream ->
+                bitmap.compress(format, 100, outputStream)
+            }
+            file
+        } catch (e: Exception) {
+            Log.e("Upload", "Error saving bitmap to file: ${e.message}")
             null
         }
     }

@@ -179,7 +179,7 @@ class HomeActivity : ComponentActivity() {
                         arguments = listOf(
                             navArgument("showHeader") {
                                 type = NavType.BoolType
-                                defaultValue = true // Default to true if not provided
+                                defaultValue = true
                             }
                         ),
                         enterTransition = {
@@ -195,21 +195,14 @@ class HomeActivity : ComponentActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) { backStackEntry ->
-                        // Retrieve the showHeader parameter from the navigation arguments
-                        val showHeader = intent.getBooleanExtra("showHeader", false)
-
-                        // Check if this is from emergency contact view
+                      val showHeader = intent.getBooleanExtra("showHeader", false)
                         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
 
-                        // Reset the intent extra to avoid persisting it across navigations
                         if (isEmergencyContact) {
                             Log.d("HomeActivity", "Locations route accessed with isEmergencyContact=true")
                             intent.removeExtra("isEmergencyContact")
-                        } else {
-                            Log.d("HomeActivity", "Locations route accessed with isEmergencyContact=false (normal navigation)")
                         }
 
-                        // Pass the showHeader parameter dynamically to LocationsScreen
                         LocationsScreen(
                             navController = navController,
                             controller = locationsController,
@@ -529,26 +522,8 @@ class HomeActivity : ComponentActivity() {
 
                         SOSDetailScreen(
                             blog = blog,
-                            onBackPressed = { navController.popBackStack() },
-                            onFooterHomeClick = { 
-                                // Navigate to home screen
-                                navController.navigate("home") {
-                                    popUpTo("home") { inclusive = true }
-                                }
-                            },
-                            onFooterChatClick = {
-                                navigator.navigateToChat()
-                            },
-                            onFooterSOSClick = {
-                                // Go back to main SOS screen
-                                navController.navigate("sos") {
-                                    popUpTo("sos") { inclusive = true }
-                                }
-                            },
-                            onFooterProfileClick = {
-                                // Navigate to profile
-                                navController.navigate("profile")
-                            }
+                            onBackPressed = { navController.popBackStack() }
+
                         )
                     }
                 }

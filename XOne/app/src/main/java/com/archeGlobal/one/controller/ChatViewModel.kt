@@ -133,7 +133,7 @@ class ChatViewModel : ViewModel() {
             }
             
             // Format multiple matches as bullet points (• prefix)
-            val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n\n")
+            val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
             
             // Take at most 5 FAQs to avoid overcrowding, exactly like iOS
             relatedFAQs.take(5).forEach { faq ->

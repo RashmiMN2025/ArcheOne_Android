@@ -2,6 +2,7 @@ package com.archeGlobal.one
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -28,7 +29,7 @@ class SOSActivity : ComponentActivity() {
         }
 
         super.onCreate(savedInstanceState)
-        
+
         // Aggressive handling to prevent any white bars by making everything edge-to-edge
         window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
@@ -38,14 +39,14 @@ class SOSActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
             WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
         )
-        
+
         // Make status bar completely transparent
         window.statusBarColor = Color.TRANSPARENT
-        
+
         // Enable edge-to-edge and immersive mode
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+
         // Apply multiple system UI visibility flags for maximum compatibility
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
@@ -59,7 +60,7 @@ class SOSActivity : ComponentActivity() {
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
             )
         }
-        
+
         navigator = AndroidNavigator(this)
 
         // Retrieve the showHeader value from the intent
@@ -70,7 +71,7 @@ class SOSActivity : ComponentActivity() {
             setContent {
                 SOSScreen(
                     controller = controller,
-                    onNavigateToRaiseConcern = { 
+                    onNavigateToRaiseConcern = {
                         val intent = Intent(this, RaiseConcernActivity::class.java)
                         startActivity(intent)
                     },
@@ -80,26 +81,24 @@ class SOSActivity : ComponentActivity() {
                         intent.putExtra("blog", blog)
                         startActivity(intent)
                     },
-                    onFooterHomeClick = { 
-                        val intent = Intent(this, HomeActivity::class.java)
-                        startActivity(intent)
-                        finish()
+
+                    onNavigateToEmergencyContact = {
+                        Log.d("HomeActivity", "onNavigateToEmergencyContact callback triggered")
+
+                        // Set the flag in the current activity BEFORE navigation
+                        intent.putExtra("isEmergencyContact", true)
+                        intent.putExtra("showHeader", showHeader)
+
+                        // Navigate to locations screen with emergency contact flag
+                        navigator.navigateToLocations(showHeader)
                     },
-                    onFooterChatClick = {
-                        // Navigate to Chat screen when available
-                    },
-                    onFooterSOSClick = {
-                        // Already on SOS screen, do nothing
-                    },
-                    onFooterProfileClick = {
-                        navigator.navigateToXProfile()
-                    },
+
                     showHeader = showHeader // Pass the showHeader value dynamically
                 )
             }
         }
     }
-    
+
     // Apply edge-to-edge in onResume too for extra insurance
     override fun onResume() {
         super.onResume()

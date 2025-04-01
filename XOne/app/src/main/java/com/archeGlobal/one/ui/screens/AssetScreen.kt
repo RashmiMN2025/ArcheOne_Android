@@ -222,7 +222,7 @@ fun AssetScreen(
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = PrimaryRed
                                 ),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(25.dp)
                             ) {
                                 Text(
                                     "Submit",
