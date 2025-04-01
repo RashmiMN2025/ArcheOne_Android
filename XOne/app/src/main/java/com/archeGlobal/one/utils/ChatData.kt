@@ -93,20 +93,43 @@ class ChatData private constructor() {
     )
 
     fun searchFAQs(query: String): List<FAQItem> {
-        val keywords = query.lowercase().trim()
+        val queryLowercase = query.lowercase().trim()
+        // Split the query into individual words for better matching
+        val queryWords = queryLowercase.split(Regex("\\s+")).filter { it.length > 2 } // Filter out very short words
         val results = mutableSetOf<FAQItem>()
         
-        // Search in main FAQs
+        // Search in main FAQs with improved matching
         results.addAll(faqs.filter { faq ->
-            faq.question.lowercase().contains(keywords) ||
-            faq.answer.lowercase().contains(keywords)
+            val questionLower = faq.question.lowercase()
+            val answerLower = faq.answer.lowercase()
+            
+            // Check if full query is contained
+            questionLower.contains(queryLowercase) || 
+            answerLower.contains(queryLowercase) ||
+            // Check if any meaningful word from the query is contained
+            queryWords.any { word -> 
+                questionLower.contains(word) || 
+                answerLower.contains(word) 
+            }
         })
         
-        // Search in keyword mappings
+        // Search in keyword mappings with improved matching
         for ((keywordGroup, items) in keywordMappings) {
             val keywordArray = keywordGroup.split(",").map { it.trim().lowercase() }
             
-            if (keywordArray.any { it.contains(keywords) || keywords.contains(it) }) {
+            // Check full query against keywords
+            val fullQueryMatches = keywordArray.any { 
+                it.contains(queryLowercase) || queryLowercase.contains(it) 
+            }
+            
+            // Check individual words from query against keywords
+            val wordMatches = queryWords.any { word ->
+                keywordArray.any { keyword -> 
+                    keyword.contains(word) || word.contains(keyword) 
+                }
+            }
+            
+            if (fullQueryMatches || wordMatches) {
                 results.addAll(items)
             }
         }
