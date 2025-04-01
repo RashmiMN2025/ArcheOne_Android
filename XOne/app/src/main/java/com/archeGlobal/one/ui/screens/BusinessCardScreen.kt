@@ -447,10 +447,11 @@ private fun LandscapeBusinessCard(
                                     controller.onShareCard(bitmap)
                                 }
                             }
-                        }
-                    ) {
+                        },  modifier = Modifier.size(28.dp)
+                    )
+                    {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_share),
+                            painter = painterResource(id = R.drawable.share),
                             contentDescription = "Share",
                             tint = TextPrimary
                         )

@@ -10,7 +10,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.view.WindowCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.navigation.AndroidNavigator
@@ -63,6 +62,9 @@ class SOSActivity : ComponentActivity() {
         
         navigator = AndroidNavigator(this)
 
+        // Retrieve the showHeader value from the intent
+        val showHeader = intent.getBooleanExtra("showHeader", true) // Default to true if not provided
+
         // Apply one final delay before rendering content to ensure all UI changes are applied
         window.decorView.post {
             setContent {
@@ -91,7 +93,8 @@ class SOSActivity : ComponentActivity() {
                     },
                     onFooterProfileClick = {
                         navigator.navigateToXProfile()
-                    }
+                    },
+                    showHeader = showHeader // Pass the showHeader value dynamically
                 )
             }
         }

@@ -446,7 +446,17 @@ class HomeActivity : ComponentActivity() {
                         )
                     }
 
-                    composable("sos") {
+                    composable(
+                        route = "sos?showHeader={showHeader}",
+                        arguments = listOf(
+                            navArgument("showHeader") {
+                                type = NavType.BoolType
+                                defaultValue = true // Default to true if not provided
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val showHeader = backStackEntry.arguments?.getBoolean("showHeader") ?: true
+
                         var showRaiseConcern by remember { mutableStateOf(false) }
 
                         if (showRaiseConcern) {
@@ -463,10 +473,10 @@ class HomeActivity : ComponentActivity() {
                                 },
                                 onNavigateToEmergencyContact = {
                                     Log.d("HomeActivity", "onNavigateToEmergencyContact callback triggered")
-                                    
+
                                     // Set the flag in the current activity BEFORE navigation
                                     intent.putExtra("isEmergencyContact", true)
-                                    
+
                                     // Navigate to locations screen with emergency contact flag
                                     navController.navigate("locations") {
                                         // Make sure we don't save the state of other screens
@@ -477,7 +487,7 @@ class HomeActivity : ComponentActivity() {
                                         restoreState = false // Don't restore previous state
                                     }
                                 },
-                                onFooterHomeClick = { 
+                                onFooterHomeClick = {
                                     // Navigate to home screen
                                     navController.navigate("home") {
                                         popUpTo("home") { inclusive = true }
@@ -492,7 +502,8 @@ class HomeActivity : ComponentActivity() {
                                 onFooterProfileClick = {
                                     // Navigate to profile
                                     navController.navigate("profile")
-                                }
+                                },
+                                showHeader = showHeader // Pass the showHeader value dynamically
                             )
                         }
                     }

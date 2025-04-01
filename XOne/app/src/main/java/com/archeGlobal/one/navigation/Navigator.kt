@@ -29,7 +29,7 @@ interface Navigator {
     fun navigateToXProfile()
     fun navigateToPasswordReset()
     fun navigateToPolicy()
-    fun navigateToSOS()
+    fun navigateToSOS(showHeader: Boolean)
     fun navigateToTravelExpenses()
     fun navigateToSAP()
     fun navigateToChat()

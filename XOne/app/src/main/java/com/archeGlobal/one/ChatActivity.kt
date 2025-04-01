@@ -38,7 +38,7 @@ class ChatActivity : ComponentActivity() {
                         ChatBottomNavigationBar(
                             onHomeClick = { navigator.navigateToHome() },
                             onChatClick = { /* Already on Chat screen */ },
-                            onSOSClick = { navigator.navigateToSOS() },
+                            onSOSClick = { navigator.navigateToSOS(true) },
                             onProfileClick = { navigator.navigateToProfile() }
                         )
                     }

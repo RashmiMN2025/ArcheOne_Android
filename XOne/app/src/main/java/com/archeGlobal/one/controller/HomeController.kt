@@ -114,7 +114,7 @@ class HomeController(
             "policy" -> navigator.navigateToPolicy()
             "sos" -> {
                 Log.d("SOS", "Navigating to SOS")
-                navigator.navigateToSOS()
+                navigator.navigateToSOS(false)
             }
             "travel & expenses" -> navigator.navigateToTravelExpenses()
             "sap" -> navigator.navigateToSAP()
@@ -196,7 +196,7 @@ class HomeController(
 
     fun onFooterSOSClick() {
         // Use the navigator to navigate to SOS screen
-        navigator.navigateToSOS()
+        navigator.navigateToSOS(true)
     }
 
     fun onFooterProfileClick() {

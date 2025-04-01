@@ -173,6 +173,7 @@ fun PDFViewerScreen(
                                        android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
                                 putExtra("fromPdfViewer", true)
                                 putExtra("preventWhiteBar", true)
+                                putExtra("showHeader", false) // Pass showHeader as false
                             }
                             
                             // Force current activity to have proper display settings
@@ -189,7 +190,7 @@ fun PDFViewerScreen(
                         }) {
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(30.dp)
                                     .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -197,7 +198,7 @@ fun PDFViewerScreen(
                                     text = "SOS",
                                     color = Color.White,
                                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                    fontSize = 12.sp
+                                    fontSize = 8.sp
                                 )
                             }
                         }
@@ -624,4 +625,4 @@ private suspend fun renderPdfPages(context: Context, pdfFile: File): List<Bitmap
     }
     
     return@withContext renderedPages
-} 
+}

@@ -40,13 +40,14 @@ fun SOSScreen(
     onFooterHomeClick: () -> Unit = {},
     onFooterChatClick: () -> Unit = {},
     onFooterSOSClick: () -> Unit = {},
-    onFooterProfileClick: () -> Unit = {}
+    onFooterProfileClick: () -> Unit = {},
+    showHeader: Boolean = false // Default to true
 ) {
     val sosBlogs by controller.sosBlogs.collectAsState()
     val pagerState = rememberPagerState()
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    
+
     // Create FooterNavigationModel with SOS selected
     val footerNavigation = FooterNavigationModel(
         showHome = false,
@@ -56,13 +57,125 @@ fun SOSScreen(
     )
 
     // Wrap with FooterScaffold for bottom navigation
-    FooterScaffold(
-        footerNavigation = footerNavigation,
-        onFooterHomeClick = onFooterHomeClick,
-        onFooterChatClick = onFooterChatClick,
-        onFooterSOSClick = onFooterSOSClick,
-        onFooterProfileClick = onFooterProfileClick
-    ) {
+    if (showHeader) {
+        FooterScaffold(
+            footerNavigation = footerNavigation,
+            onFooterHomeClick = onFooterHomeClick,
+            onFooterChatClick = onFooterChatClick,
+            onFooterSOSClick = onFooterSOSClick,
+            onFooterProfileClick = onFooterProfileClick
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
+                        )
+                    )
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(bottom = 16.dp), // Add bottom padding to ensure content is visible above the navigation bar
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+
+                    // White Box for SOS Assistance & SOS Information
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White)
+                            .padding(16.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+                            Spacer(modifier = Modifier.height(5.dp))
+                            // SOS Assistance
+                            Text(
+                                text = "SOS Assistance",
+                                fontSize = 22.sp,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 20.dp)
+                            )
+
+                            SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("1234567890") })
+                            SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
+                            SOSButton(
+                                text = "View Emergency Contact",
+                                onClick = {
+                                    // Try both approaches
+                                    Log.d("SOSScreen", "View Emergency Contact button clicked")
+                                    // First try the navigation event
+                                    if (onNavigateToEmergencyContact != {}) {
+                                        Log.d("SOSScreen", "Using onNavigateToEmergencyContact callback")
+                                        onNavigateToEmergencyContact()
+                                    } else {
+                                        // Fall back to controller method
+                                        Log.d("SOSScreen", "Using controller.viewEmergencyContact()")
+                                        controller.viewEmergencyContact()
+                                    }
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // SOS Information Section
+                            Text(
+                                text = "SOS Information",
+                                fontSize = 22.sp,
+                                color = Color.Black,
+                                modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Pager for blogs (Only one blog visible at a time)
+                            HorizontalPager(
+                                count = sosBlogs.size,
+                                state = pagerState,
+                                modifier = Modifier.fillMaxWidth()
+                            ) { page ->
+                                SOSBlogItem(sosBlogs[page], onClick = { onSOSBlogClick(sosBlogs[page]) })
+                            }
+
+                            // Pagination Dots
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                sosBlogs.forEachIndexed { index, _ ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
+                                            .padding(4.dp)
+                                            .background(
+                                                color = if (index == pagerState.currentPage) Color(0xFFDD3825) else Color.LightGray,
+                                                shape = CircleShape
+                                            )
+                                            .clickable {
+                                                coroutineScope.launch {
+                                                    pagerState.animateScrollToPage(index)
+                                                }
+                                            }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }else {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,6 +185,7 @@ fun SOSScreen(
                     )
                 )
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -80,36 +194,38 @@ fun SOSScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header with back button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 40.dp)
-                ) {
-                    IconButton(
-                        onClick = onBackPressed,
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    }
-                    
-                    Text(
-                        text = "SOS",
-                        color = Color.Black,
-                        fontSize = 20.sp,
-                        modifier = Modifier.align(Alignment.Center),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                    
-                    // Add an invisible spacer with same size as back button for balance
-                    Spacer(
+//                if(showHeader) {
+                    Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .align(Alignment.CenterEnd)
-                    )
+                            .fillMaxWidth()
+                            .padding(top = 40.dp)
+                    ) {
+                        IconButton(
+                            onClick = onBackPressed,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_back),
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+
+                        Text(
+                            text = "SOS",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            modifier = Modifier.align(Alignment.Center),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+
+                        // Add an invisible spacer with same size as back button for balance
+                        Spacer(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .align(Alignment.CenterEnd)
+                        )
+//                    }
                 }
 
                 // White Box for SOS Assistance & SOS Information
@@ -137,8 +253,8 @@ fun SOSScreen(
                         SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("1234567890") })
                         SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
                         SOSButton(
-                            text = "View Emergency Contact", 
-                            onClick = { 
+                            text = "View Emergency Contact",
+                            onClick = {
                                 // Try both approaches
                                 Log.d("SOSScreen", "View Emergency Contact button clicked")
                                 // First try the navigation event
@@ -148,7 +264,7 @@ fun SOSScreen(
                                 } else {
                                     // Fall back to controller method
                                     Log.d("SOSScreen", "Using controller.viewEmergencyContact()")
-                                    controller.viewEmergencyContact() 
+                                    controller.viewEmergencyContact()
                                 }
                             }
                         )
@@ -203,6 +319,7 @@ fun SOSScreen(
             }
         }
     }
+
 }
 
 @Composable

@@ -43,6 +43,7 @@ fun AssetScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+
             .background(
                 Brush.linearGradient(
                     colors = listOf(
@@ -87,6 +88,7 @@ fun AssetScreen(
 
         Box(
             modifier = Modifier.fillMaxSize()
+                .padding(horizontal = 15.dp) // Added horizontal padding
         ) {
             when {
                 model.isLoading -> {
@@ -255,4 +257,4 @@ private fun InfoRow(label: String, value: String) {
             color = Color.Black
         )
     }
-} 
+}

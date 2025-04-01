@@ -5,6 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -38,34 +41,22 @@ fun HolidayCalendarScreen(
     onMonthClick: (Int) -> Unit,
     onHolidayListClick: (String) -> Unit
 ) {
-    // Observe holidays from the controller
     val holidaysState = controller.holidays.observeAsState()
-    
-    // Local state for holidays
     val holidays = remember { mutableStateOf<List<Holiday>>(emptyList()) }
     val pdfUrl = remember { mutableStateOf<String?>(null) }
-    
-    // Update holidays when LiveData changes
+
     LaunchedEffect(holidaysState.value) {
         when (val result = holidaysState.value) {
             is NetworkResult.Success -> {
                 result.data?.let { calendarResponse ->
                     holidays.value = calendarResponse.holidays
                     pdfUrl.value = calendarResponse.holidaysFile
-                    
-                    // Debug log to check the value
-                    println("DEBUG: Holidays PDF URL set to: ${calendarResponse.holidaysFile}")
                 }
             }
             is NetworkResult.Error -> {
-                // If API fails, use default holidays
                 holidays.value = controller.getDefaultHolidays()
-                println("DEBUG: Error loading holidays: ${(result as NetworkResult.Error).message}")
             }
-            is NetworkResult.Loading, null -> {
-                // Show loading or use empty list
-                println("DEBUG: Loading holidays...")
-            }
+            is NetworkResult.Loading, null -> { /* Show loading */ }
         }
     }
 
@@ -83,7 +74,7 @@ fun HolidayCalendarScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Top Bar with back button and title
+            // Top Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -101,7 +92,7 @@ fun HolidayCalendarScreen(
                         tint = Color.Black
                     )
                 }
-                
+
                 Text(
                     text = "Holiday Calendar",
                     color = Color.Black,
@@ -112,8 +103,8 @@ fun HolidayCalendarScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            
-            // Year heading and Holiday List Button in the same row
+
+            // Year heading and Holiday List Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -125,9 +116,9 @@ fun HolidayCalendarScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                
+
                 Button(
-                    onClick = { 
+                    onClick = {
                         pdfUrl.value?.let { url ->
                             onHolidayListClick(url)
                         }
@@ -154,60 +145,37 @@ fun HolidayCalendarScreen(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Loading indicator when fetching holidays
-            if (holidaysState.value is NetworkResult.Loading) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    CircularProgressIndicator(
-                        color = Color(0xFFDD3825)
+            // Legend for holiday types
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LegendItem(color = Color(0xFFDD3825), text = "Holidays")
+                Spacer(modifier = Modifier.width(16.dp))
+                LegendItem(color = Color(0xFF2196F3), text = "RH")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Responsive Calendar Grid
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 100.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(12) { monthIndex ->
+                    MonthCard(
+                        month = monthIndex + 1,
+                        holidays = holidays.value.filter { it.month == monthIndex + 1 && it.isApplicable },
+                        onMonthClick = onMonthClick
                     )
-                }
-            } else {
-                // Legend for holiday types
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    LegendItem(color = Color(0xFFDD3825), text = "Holidays")
-                    Spacer(modifier = Modifier.width(16.dp))
-                    LegendItem(color = Color(0xFF2196F3), text = "RH")
-                }
-                
-                // Calendar grid
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    for (row in 0 until 4) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        for (col in 0 until 3) {
-                            val monthIndex = row * 3 + col + 1
-                            if (monthIndex <= 12) {
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(horizontal = 4.dp)
-                                            .clickable { onMonthClick(monthIndex) }
-                                    ) {
-                                        MonthCard(
-                                            month = monthIndex,
-                                            holidays = holidays.value.filter { it.month == monthIndex && it.isApplicable }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -216,31 +184,32 @@ fun HolidayCalendarScreen(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MonthCard(month: Int, holidays: List<Holiday>) {
+fun MonthCard(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) {
     Card(
         modifier = Modifier
-            .width(100.dp)
-            .height(122.dp),
+            .fillMaxWidth()
+            .aspectRatio(1f) // Ensures the card is square
+            .clickable { onMonthClick(month) },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(10.dp)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+            modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
+        ) {
+            Text(
                 text = YearMonth.of(2025, month)
                     .month
                     .getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
-                fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
 
-            Spacer(modifier = Modifier.height(1.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        MonthDates(month, holidays)
+            MonthDates(month, holidays)
         }
     }
 }
@@ -446,7 +415,8 @@ fun PreviewHolidayCalendarScreen() {
                                     ) {
                                         MonthCard(
                                             month = monthIndex,
-                                            holidays = previewHolidays.filter { it.month == monthIndex }
+                                            holidays = previewHolidays.filter { it.month == monthIndex },
+                                            onMonthClick = { /* Handle month click */ }
                                         )
                                     }
                                 }

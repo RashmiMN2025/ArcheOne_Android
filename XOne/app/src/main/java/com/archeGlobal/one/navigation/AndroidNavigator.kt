@@ -115,12 +115,13 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to policy screen")
         navController?.navigate("policy")
     }
-    override fun navigateToSOS() {
-        Log.d("AndroidNavigator", "Navigating to SOS screen")
+    override fun navigateToSOS(showHeader: Boolean) {
+        Log.d("AndroidNavigator", "Navigating to SOS screen with showHeader=$showHeader")
         if (activity is HomeActivity) {
-            navController?.navigate("sos")
+            navController?.navigate("sos?showHeader=$showHeader") // Pass showHeader as a query parameter
         } else {
             val intent = Intent(activity, SOSActivity::class.java)
+            intent.putExtra("showHeader", showHeader) // Pass showHeader as an intent extra
             activity.startActivity(intent)
             activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }

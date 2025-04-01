@@ -94,47 +94,37 @@ fun LocationsScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { 
+                    title = {
                         Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.CenterStart
+                            modifier = Modifier.fillMaxWidth() // Make the Box take the full width of the TopAppBar
                         ) {
                             Text(
-                                when {
+                                text = when {
                                     locationController.isInEmergencyContactMode() -> "Emergency Contact"
-                                    state.showingStateList -> "${state.selectedLocation?.name} Locations"
+                                    state.showingStateList -> "Locations"
                                     state.showingDetails -> {
-                                        when {
-                                            state.selectedState?.name == "Tamil Nadu" -> state.selectedLocation?.name ?: ""
-                                            else -> state.selectedLocation?.name?.split(",")?.firstOrNull() ?: ""
-                                        }
+                                        state.selectedLocation?.name ?: "Locations"
                                     }
                                     else -> "Locations"
                                 },
                                 fontSize = 18.sp,
                                 color = PrimaryBlue,
                                 fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(start = 32.dp)
+                                modifier = Modifier.align(Alignment.Center) // Center-align the title
                             )
                         }
                     },
                     navigationIcon = {
                         IconButton(onClick = {
-                            // Check if we're in emergency contact mode
+                            // Handle back navigation
                             if (locationController.isInEmergencyContactMode()) {
-                                // Use the special emergency back handling
                                 val stayInCurrentScreen = locationController.onEmergencyBackPressed()
-                                
-                                // If we shouldn't stay in current screen, navigate to SOS
                                 if (!stayInCurrentScreen) {
-                                    Log.d("LocationsScreen", "Emergency contact mode, navigating back to SOS")
-                                    navController.navigate("sos") {
+                                    navController.navigate("sos?showHeader=false") { // Pass showHeader=false explicitly
                                         popUpTo("sos") { inclusive = true }
                                     }
                                 }
                             } else {
-                                // Normal back navigation for non-emergency contact mode
                                 if (!locationController.onBackPressed()) {
                                     navController.popBackStack()
                                 }
@@ -146,6 +136,10 @@ fun LocationsScreen(
                                 tint = PrimaryBlue
                             )
                         }
+                    },
+                    actions = {
+                        // Add an invisible spacer to balance the layout
+                        Spacer(modifier = Modifier.width(48.dp))
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent
@@ -242,21 +236,26 @@ private fun LocationCard(
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
-            
             Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Arche Global Private Limited",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black
+            )
             
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
                 text = location.address.substringBefore(","),
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = TextSecondary
             )
             Text(
                 text = location.address.substringAfter(",").trim(),
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = TextSecondary
             )
             
@@ -269,13 +268,13 @@ private fun LocationCard(
                 Text(
                     text = "Email:",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Medium,
                     color = TextSecondary
                 )
                 Text(
                     text = location.email,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Medium,
                     color = TextSecondary,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable(
@@ -435,7 +434,7 @@ private fun StateList(
                 // Only show the "India" text if NOT in emergency contact mode
                 if (!controller.isInEmergencyContactMode()) {
                     Text(
-                        text = "India",
+                        text = "Regional Offices",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary,
@@ -737,4 +736,4 @@ private fun LocationList(
             )
         }
     }
-} 
+}
