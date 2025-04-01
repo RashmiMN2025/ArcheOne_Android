@@ -23,7 +23,7 @@ interface Navigator {
     fun navigateToClientCalendar()
     fun navigateToGreetings()
     fun navigateToXConnect()
-    fun navigateToLocations()
+    fun navigateToLocations(showHeader: Boolean)
     fun navigateToHelpdesk()
     fun navigateToAnnouncements()
     fun navigateToXProfile()

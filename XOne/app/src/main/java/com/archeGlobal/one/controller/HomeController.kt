@@ -55,7 +55,7 @@ class HomeController(
         when (item.title.lowercase()) {
             "locations" -> {
                 Log.d("HomeController", "Navigating to Locations")
-                navigator.navigateToLocations()
+                navigator.navigateToLocations(showHeader = true)
             }
             "business card" -> {
                 Log.d("HomeController", "Navigating to Business Card")

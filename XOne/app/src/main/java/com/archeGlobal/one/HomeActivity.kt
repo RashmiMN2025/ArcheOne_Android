@@ -175,7 +175,13 @@ class HomeActivity : ComponentActivity() {
                     }
 
                     composable(
-                        route = "locations",
+                        route = "locations?showHeader={showHeader}",
+                        arguments = listOf(
+                            navArgument("showHeader") {
+                                type = NavType.BoolType
+                                defaultValue = true // Default to true if not provided
+                            }
+                        ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -188,10 +194,13 @@ class HomeActivity : ComponentActivity() {
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
                         }
-                    ) {
+                    ) { backStackEntry ->
+                        // Retrieve the showHeader parameter from the navigation arguments
+                        val showHeader = intent.getBooleanExtra("showHeader", false)
+
                         // Check if this is from emergency contact view
                         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
-                        
+
                         // Reset the intent extra to avoid persisting it across navigations
                         if (isEmergencyContact) {
                             Log.d("HomeActivity", "Locations route accessed with isEmergencyContact=true")
@@ -199,14 +208,15 @@ class HomeActivity : ComponentActivity() {
                         } else {
                             Log.d("HomeActivity", "Locations route accessed with isEmergencyContact=false (normal navigation)")
                         }
-                        
+
+                        // Pass the showHeader parameter dynamically to LocationsScreen
                         LocationsScreen(
                             navController = navController,
                             controller = locationsController,
-                            isEmergencyContact = isEmergencyContact
+                            isEmergencyContact = isEmergencyContact,
+                            showHeader = showHeader
                         )
                     }
-
                     composable(
                         route = "business_card",
                         enterTransition = {
@@ -465,7 +475,7 @@ class HomeActivity : ComponentActivity() {
                             SOSScreen(
                                 controller = sosController,
                                 onNavigateToRaiseConcern = { showRaiseConcern = true },
-                                onBackPressed = { navController.popBackStack() },
+                                onBackPressed = { navigator.navigateToHome() },
                                 onSOSBlogClick = { blogId ->
                                     // Convert blog object to JSON and pass it as a parameter
                                     val blogJson = Uri.encode(Gson().toJson(blogId))
@@ -476,6 +486,7 @@ class HomeActivity : ComponentActivity() {
 
                                     // Set the flag in the current activity BEFORE navigation
                                     intent.putExtra("isEmergencyContact", true)
+                                    intent.putExtra("showHeader", showHeader)
 
                                     // Navigate to locations screen with emergency contact flag
                                     navController.navigate("locations") {
@@ -483,6 +494,7 @@ class HomeActivity : ComponentActivity() {
                                         popUpTo("home") {
                                             saveState = true
                                         }
+
                                         launchSingleTop = true
                                         restoreState = false // Don't restore previous state
                                     }

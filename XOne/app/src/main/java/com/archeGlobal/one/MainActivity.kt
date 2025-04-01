@@ -146,7 +146,8 @@ class MainActivity : ComponentActivity() {
                                 LocationsScreen(
                                     navController = navController,
                                     controller = locationsController,
-                                    isEmergencyContact = isEmergencyContact
+                                    isEmergencyContact = isEmergencyContact,
+                                    showHeader = true
                                 )
                             }
                             composable(

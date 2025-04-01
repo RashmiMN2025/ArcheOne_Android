@@ -14,6 +14,7 @@ import com.archeGlobal.one.XConnectActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.SOSActivity
 import com.archeGlobal.one.ChatActivity
+import okhttp3.internal.http2.Header
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -60,7 +61,7 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         }
     }
 
-    override fun navigateToLocations() {
+    override fun navigateToLocations(showHeader: Boolean) {
         Log.d("AndroidNavigator", "Navigating to locations screen")
         navController?.navigate("locations")
     }

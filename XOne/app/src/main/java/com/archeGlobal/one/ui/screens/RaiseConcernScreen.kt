@@ -165,6 +165,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
+                    .padding(horizontal = 15.dp)
             ) {
                 OutlinedTextField(
                     value = selectedCategory ?: "",
@@ -195,6 +196,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .matchParentSize()
+                        .padding(horizontal = 15.dp)
                         .clickable { expanded = true }
                 )
                 
@@ -272,7 +274,8 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 140.dp)
-                    .padding(bottom = 16.dp),
+                    .padding(horizontal = 15.dp)
+                    .padding(bottom = 20.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
@@ -300,7 +303,9 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
                     .height(50.dp),
+
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(

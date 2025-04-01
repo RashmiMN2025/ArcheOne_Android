@@ -40,7 +40,8 @@ import android.util.Log
 fun LocationsScreen(
     navController: NavHostController,
     controller: LocationsController,
-    isEmergencyContact: Boolean = false
+    isEmergencyContact: Boolean = false,
+    showHeader:Boolean
 ) {
     val context = LocalContext.current
     val locationController = controller ?: remember { LocationsController(context) }
@@ -120,7 +121,7 @@ fun LocationsScreen(
                             if (locationController.isInEmergencyContactMode()) {
                                 val stayInCurrentScreen = locationController.onEmergencyBackPressed()
                                 if (!stayInCurrentScreen) {
-                                    navController.navigate("sos?showHeader=false") { // Pass showHeader=false explicitly
+                                    navController.navigate("sos?showHeader=$showHeader") { // Pass showHeader=false explicitly
                                         popUpTo("sos") { inclusive = true }
                                     }
                                 }
