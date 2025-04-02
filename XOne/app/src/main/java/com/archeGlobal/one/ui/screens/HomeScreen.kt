@@ -54,14 +54,22 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.request.CachePolicy
 import android.util.Log
+import android.widget.Toast
 import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
+import androidx.activity.compose.BackHandler
 
 @Composable
 fun ProfileHeader(
     model: HomeModel,
     onShowProfileClick: () -> Unit
 ) {
+    val context = LocalContext.current // Get the context using LocalContext
+
+    BackHandler(enabled = true) {
+        // Show a Toast message when the back button is pressed
+        Toast.makeText(context, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()

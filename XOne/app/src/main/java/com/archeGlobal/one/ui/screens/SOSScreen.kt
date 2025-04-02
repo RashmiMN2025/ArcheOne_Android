@@ -33,7 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-
+import androidx.activity.compose.BackHandler
 @Composable
 fun SOSScreen(
     controller: SOSController,
@@ -62,6 +62,10 @@ fun SOSScreen(
 
     // Wrap with FooterScaffold for bottom navigation
     if (showHeader) {
+        // Disable back swipe gesture and back button
+        BackHandler(enabled = true) {
+            // Do nothing to prevent navigation
+        }
         FooterScaffold(
             footerNavigation = footerNavigation,
             onFooterHomeClick = onFooterHomeClick,

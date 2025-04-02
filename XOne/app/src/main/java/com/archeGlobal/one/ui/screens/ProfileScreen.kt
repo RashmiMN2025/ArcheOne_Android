@@ -44,6 +44,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import androidx.activity.compose.BackHandler
 import android.net.Uri
 import android.util.Log
 import com.archeGlobal.one.utils.ImageCache
@@ -61,7 +62,13 @@ fun ProfileScreen(
 ) {
     // State to control the visibility of the logout confirmation dialog
     var showLogoutDialog by remember { mutableStateOf(false) }
-    
+
+    // Disable back swipe gesture
+    BackHandler(enabled = true) {
+        // Handle back press manually
+
+    }
+
     FooterScaffold(
         footerNavigation = footerNavigation,
         onFooterHomeClick = onFooterHomeClick,
@@ -131,7 +138,7 @@ fun ProfileScreen(
                     )
                 }
             }
-            
+
             // Logout confirmation dialog
             if (showLogoutDialog) {
                 LogoutConfirmationDialog(
@@ -455,4 +462,4 @@ fun ProfileScreenPreview() {
     )
     
     ProfileScreen(controller = previewController)
-} 
+}

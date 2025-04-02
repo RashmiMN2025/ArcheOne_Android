@@ -71,6 +71,7 @@ import com.archeGlobal.one.ui.components.BottomNavigationBar
 import com.archeGlobal.one.ui.components.TypingIndicator
 import com.archeGlobal.one.utils.ChatData
 import java.util.Date
+import androidx.activity.compose.BackHandler
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,6 +82,10 @@ fun ChatScreen(
     onBackPressed: () -> Unit,
     showBottomBar: Boolean = false
 ) {
+     // Disable back swipe gesture and back button
+    BackHandler(enabled = true) {
+        // Do nothing to prevent navigation
+    }
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val messages = viewModel.messages

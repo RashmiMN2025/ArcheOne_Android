@@ -3,6 +3,7 @@ package com.archeGlobal.one
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,6 +33,11 @@ class ChatActivity : ComponentActivity() {
                 navigator.setNavController(navController)
                 
                 chatController = ChatController(this, navigator)
+                
+                // Disable back swipe gesture
+                BackHandler(enabled = true) {
+                    // Handle back press manually if needed
+                }
                 
                 Scaffold(
                     bottomBar = {
@@ -65,4 +71,4 @@ class ChatActivity : ComponentActivity() {
             }
         }
     }
-} 
+}
