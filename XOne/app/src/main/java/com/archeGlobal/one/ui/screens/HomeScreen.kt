@@ -58,17 +58,20 @@ import android.widget.Toast
 import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.BackHandler
+import android.app.Activity
 
 @Composable
 fun ProfileHeader(
     model: HomeModel,
     onShowProfileClick: () -> Unit
 ) {
-    val context = LocalContext.current // Get the context using LocalContext
 
+    val context = LocalContext.current
+    val activity = remember { context as? Activity }
+
+    // Handle back swipe or back button press
     BackHandler(enabled = true) {
-        // Show a Toast message when the back button is pressed
-        Toast.makeText(context, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
+        activity?.finishAffinity() // Exit the app and go to the mobile home screen
     }
     Box(
         modifier = Modifier
@@ -635,7 +638,7 @@ private fun AppItem(
                 Spacer(modifier = Modifier.height(2.dp))
                 
                 // Icon at the top
-                AppIcon(title = title, modifier = Modifier.size(38.dp))
+                AppIcon(title = title, modifier = Modifier.size(45.dp))
                 
                 // Text at the bottom with more space
                 Box(
@@ -715,7 +718,7 @@ private fun AppIcon(
                         contentDescription = title,
                         modifier = Modifier
                             .padding(5.dp) // Increase padding if needed
-                            .size(64.dp) // Increase size to make the icon larger
+
                             .fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
