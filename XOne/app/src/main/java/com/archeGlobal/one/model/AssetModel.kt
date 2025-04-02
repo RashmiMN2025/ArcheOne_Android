@@ -8,7 +8,7 @@ data class AssetModel(
     val location: String = "",
     val department: String = "",
     val designation: String = "",
-    val assetDetails: AssetDetails = AssetDetails(),
+    val assetDetails: List<AssetDetails> = emptyList(), // Changed to a list of AssetDetails
     val reportingTo: String = "",
     val divisionHead: String = "",
     val division: String = "",

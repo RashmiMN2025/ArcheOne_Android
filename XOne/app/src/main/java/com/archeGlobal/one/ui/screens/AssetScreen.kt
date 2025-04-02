@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import com.archeGlobal.one.model.AssetDetails
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +44,6 @@ fun AssetScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-
             .background(
                 Brush.linearGradient(
                     colors = listOf(
@@ -78,7 +78,6 @@ fun AssetScreen(
                 }
             },
             actions = {
-                // Add invisible spacer with same size as navigation icon for balance
                 Spacer(modifier = Modifier.width(48.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -87,8 +86,9 @@ fun AssetScreen(
         )
 
         Box(
-            modifier = Modifier.fillMaxSize()
-                .padding(horizontal = 15.dp) // Added horizontal padding
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 15.dp)
         ) {
             when {
                 model.isLoading -> {
@@ -117,7 +117,7 @@ fun AssetScreen(
                         ) {
                             // User Information Section
                             Text(
-                                "User Informations",
+                                "User Information",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black,
@@ -144,11 +144,16 @@ fun AssetScreen(
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
                             
-                            with(model.assetDetails) {
-                                InfoRow("Serial No", serialNo)
-                                InfoRow("Device Model", deviceModel)
-                                InfoRow("Date Of Issue", dateOfIssue)
-                                InfoRow("Configuration", configuration)
+                            // Iterate over the asset details array
+                            model.assetDetails?.forEachIndexed { index, asset ->
+                                AssetDetailCard(asset)
+                                if (index < model.assetDetails.size - 1) { // Add a divider except after the last item
+                                    Divider(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        color = Color.LightGray,
+                                        thickness = 1.dp
+                                    )
+                                }
                             }
 
                             Divider(
@@ -168,27 +173,21 @@ fun AssetScreen(
                             var localText by remember { mutableStateOf("") }
                             val context = LocalContext.current
                             
-                            // Use AndroidView with a standard EditText
-                            androidx.compose.ui.viewinterop.AndroidView(
+                            AndroidView(
                                 factory = { context ->
                                     val editText = android.widget.EditText(context).apply {
-                                        // Set properties
                                         hint = "Please describe your issue"
                                         setTextColor(android.graphics.Color.BLACK)
                                         setHintTextColor(android.graphics.Color.GRAY)
                                         gravity = android.view.Gravity.TOP
                                         minLines = 4
                                         maxLines = 6
-                                        
-                                        // Set background and padding
                                         background = android.graphics.drawable.GradientDrawable().apply {
                                             setColor(android.graphics.Color.WHITE)
                                             setStroke(2, android.graphics.Color.LTGRAY)
                                             cornerRadius = 16f
                                         }
                                         setPadding(24, 16, 24, 16)
-                                        
-                                        // Set text change listener
                                         addTextChangedListener(object : android.text.TextWatcher {
                                             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                                             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -231,10 +230,30 @@ fun AssetScreen(
                                 )
                             }
                         }
+
                     }
                 }
+
             }
+
         }
+
+    }
+    Spacer(modifier = Modifier.height(20.dp))
+}
+
+@Composable
+fun AssetDetailCard(asset: AssetDetails) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp) // Add some spacing between assets
+    ) {
+        InfoRow("Asset Type", asset.assetType)
+        InfoRow("Serial No", asset.serialNo)
+        InfoRow("Device Model", asset.deviceModel)
+        InfoRow("Date Of Issue", asset.dateOfIssue)
+        InfoRow("Configuration", asset.configuration)
     }
 }
 

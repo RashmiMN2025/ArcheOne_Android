@@ -32,7 +32,7 @@ class AssetController(
     private fun loadAssetDetails() {
         val userData = OtpVerificationController.getUserData()
         val assetDetails = UserDataManager.getInstance(context).getAssetDetails()
-        
+
         if (userData != null) {
             // If we have user data but no asset details
             if (assetDetails.isNullOrEmpty()) {
@@ -48,40 +48,30 @@ class AssetController(
                     isLoading = false
                 )
             } else {
-                // We have both user data and asset details
-                val asset = assetDetails.firstOrNull()
-                if (asset != null) {
-                    model = model.copy(
-                        name = userData.name,
-                        employeeId = userData.employeeId,
-                        mobile = userData.mobile,
-                        email = userData.email,
-                        location = userData.location,
-                        department = userData.department,
-                        designation = userData.designation,
-                        assetDetails = AssetDetails(
-                            serialNo = asset.serial_number,
-                            deviceModel = asset.model,
-                            dateOfIssue = formatDate(asset.date_of_issue),
-                            configuration = asset.configuration,
-                            assetType = asset.asset_type,
-                            purchaseDate = formatDate(asset.purchase_date ?: "")
-                        ),
-                        isLoading = false
-                    )
-                } else {
-                    model = model.copy(
-                        name = userData.name,
-                        employeeId = userData.employeeId,
-                        mobile = userData.mobile,
-                        email = userData.email,
-                        location = userData.location,
-                        department = userData.department,
-                        designation = userData.designation,
-                        error = "No asset details found",
-                        isLoading = false
+                // Map the asset details to a list of AssetDetails objects
+                val assetDetailsList = assetDetails.map { asset ->
+                    AssetDetails(
+                        serialNo = asset.serial_number,
+                        deviceModel = asset.model,
+                        dateOfIssue = formatDate(asset.date_of_issue),
+                        configuration = asset.configuration,
+                        assetType = asset.asset_type,
+                        purchaseDate = formatDate(asset.purchase_date ?: ""),
                     )
                 }
+
+                // Update the model with the list of asset details
+                model = model.copy(
+                    name = userData.name,
+                    employeeId = userData.employeeId,
+                    mobile = userData.mobile,
+                    email = userData.email,
+                    location = userData.location,
+                    department = userData.department,
+                    designation = userData.designation,
+                    assetDetails = assetDetailsList, // Assign the list here
+                    isLoading = false
+                )
             }
         } else {
             model = model.copy(
@@ -207,4 +197,4 @@ class AssetController(
     fun onBackPressed() {
         navigator.navigateToHome()
     }
-} 
+}
