@@ -89,6 +89,56 @@ class ChatData private constructor() {
                 question = "How do I customize app tools?",
                 answer = "Access settings to personalize your app experience."
             )
+        ),
+        "company news, announcements" to listOf(
+            FAQItem(
+                title = "Company News",
+                question = "How do I stay updated with company news and announcements?",
+                answer = "To access company-related content through the application, please follow these steps:\n" +
+                        "1. Click 'Connect': Find this in the app's main menu.\n" +
+                        "2. Access Content: Navigate to case studies, blogs, and company posts.\n" +
+                        "3. Stay Updated: Explore and engage with the latest updates and insights."
+            )
+        ),
+        "anonymous feedback, sos" to listOf(
+            FAQItem(
+                title = "Anonymous Feedback",
+                question = "How can I provide anonymous feedback?",
+                answer = "To provide anonymous feedback through the application, please follow these steps:\n" +
+                        "1. Go to 'SOS': Click the 'SOS' option in the app menu.\n" +
+                        "2. Raise a Concern: Select 'Raise a Concern' under 'SOS.'\n" +
+                        "3. Pick a Category: Choose a category for your concern.\n" +
+                        "4. Describe: Provide a detailed issue description.\n" +
+                        "5. Submit Anonymously: Use the anonymous submission option if preferred."
+            )
+        ),
+        "workplace issues, concerns" to listOf(
+            FAQItem(
+                title = "Workplace Issues",
+                question = "What is the process for reporting workplace issues or concerns?",
+                answer = "To report an issue through the application, please follow these steps:\n" +
+                        "1. Go to 'SOS': Click on 'SOS' in the app menu.\n" +
+                        "2. Raise a Concern: Choose 'Raise a Concern.'\n" +
+                        "3. Pick a Category: Select a relevant category.\n" +
+                        "4. Describe: Provide details about your issue or feedback.\n" +
+                        "5. Submit:\n" +
+                        "   - With Name: Skip the anonymous option to include your details.\n" +
+                        "   - Anonymously: Choose 'Submit Anonymously' to stay anonymous."
+            )
+        ),
+        "work schedule, manage schedule" to listOf(
+            FAQItem(
+                title = "Work Schedule",
+                question = "How can I manage my work schedule?",
+                answer = "Thanks for letting us know. We're working on it and appreciate your patience."
+            )
+        ),
+        "project assignments, deadlines" to listOf(
+            FAQItem(
+                title = "Project Assignments",
+                question = "How do I access my project assignments and deadlines?",
+                answer = "Thanks for letting us know. We're working on it and appreciate your patience."
+            )
         )
     )
 
@@ -136,4 +186,4 @@ class ChatData private constructor() {
         
         return results.toList()
     }
-} 
+}
