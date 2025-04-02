@@ -96,10 +96,11 @@ fun ProfileHeader(
             Row(
                 verticalAlignment = Alignment.Top
             ) {
+                Spacer(modifier = Modifier.width(5.dp))
                 // Profile picture
                 Surface(
                     modifier = Modifier
-                        .size(64.dp, 70.dp)
+                        .size(80.dp,85.dp)
                         .padding(top = 8.dp)
                         .clickable(onClick = onShowProfileClick),
                     shape = CircleShape,
@@ -281,8 +282,8 @@ fun HomeScreen(
                             Text("All Apps")
                         }
                         
-                        Spacer(modifier = Modifier.width(12.dp))
-                        
+                        Spacer(modifier = Modifier.width(30.dp))
+
                         Button(
                             onClick = onFavoritesClick,
                             modifier = Modifier.width(120.dp),
@@ -513,8 +514,8 @@ fun HomeScreen(
                         else -> x - (dialogWidthPx / 2)
                     }
                     
-                    // Position dialog just a tiny bit above the enlarged app
-                    val yOffset = y - itemSizePx - 235
+                    // Reduce the yOffset to decrease the space between the service card and the dialog
+                    val yOffset = y - itemSizePx - 180 // Reduced from 235 to 200
                     
                     Card(
                         modifier = Modifier
@@ -713,7 +714,8 @@ private fun AppIcon(
                         ),
                         contentDescription = title,
                         modifier = Modifier
-                            .padding(5.dp)
+                            .padding(5.dp) // Increase padding if needed
+                            .size(64.dp) // Increase size to make the icon larger
                             .fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
@@ -770,4 +772,4 @@ private fun CategoryHeader(
             modifier = Modifier.padding(vertical = 8.dp)
         )
     }
-} 
+}
