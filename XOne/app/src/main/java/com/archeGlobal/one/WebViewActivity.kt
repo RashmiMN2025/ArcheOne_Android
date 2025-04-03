@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.archeGlobal.one.ui.components.UniversalLoader
 
 class WebViewActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +38,6 @@ class WebViewActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val fileUrl = intent.getStringExtra("fileUrl") ?: ""
-        val fileName = fileUrl.substringAfterLast("/").substringBeforeLast(".")
         val title = intent.getStringExtra("title") ?: "Floor Map"
         
         // Get base64 data if available (for PDF fallback)
@@ -158,9 +158,9 @@ class WebViewActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
-                                .padding(horizontal = 0.dp),
+                                .padding(horizontal = 16.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
                         ) {
                             Box(
                                 modifier = Modifier.fillMaxSize()
@@ -168,25 +168,9 @@ class WebViewActivity : ComponentActivity() {
                                 // Loading indicator
                                 var isLoading by remember { mutableStateOf(true) }
                                 
-                                // Show progress indicator while loading
+                                // Show UniversalLoader while loading
                                 if (isLoading) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(16.dp),
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = Color(0xFFDD3825)
-                                        )
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Text(
-                                            text = if (isPdf) "Loading PDF..." else "Loading content...",
-                                            color = Color.Gray,
-                                            modifier = Modifier.padding(horizontal = 16.dp)
-                                        )
-                                    }
+                                    UniversalLoader(isLoading = true)
                                 }
                                 
                                 // WebView for content display
@@ -722,9 +706,39 @@ class WebViewActivity : ComponentActivity() {
                                                             }
                                                         }, 500)
                                                     } else {
-                                                        // For images and other file types
-                                                        loadUrl(uri.toString())
-                                                        Log.d("WebViewActivity", "Loading local non-PDF file: $fileUrl")
+                                                        // For images, create an HTML wrapper with proper image display
+                                                        val htmlWrapper = """
+                                                            <!DOCTYPE html>
+                                                            <html>
+                                                            <head>
+                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                <style>
+                                                                    body, html {
+                                                                        margin: 0;
+                                                                        padding: 0;
+                                                                        height: 100%;
+                                                                        width: 100%;
+                                                                        display: flex;
+                                                                        justify-content: center;
+                                                                        align-items: center;
+                                                                        background-color: #f5f5f5;
+                                                                    }
+                                                                    img {
+                                                                        max-width: 100%;
+                                                                        max-height: 100%;
+                                                                        object-fit: contain;
+                                                                        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                                                                    }
+                                                                </style>
+                                                            </head>
+                                                            <body>
+                                                                <img src="$fileUrl" alt="Document Image">
+                                                            </body>
+                                                            </html>
+                                                        """.trimIndent()
+                                                        
+                                                        loadDataWithBaseURL(null, htmlWrapper, "text/html", "UTF-8", null)
+                                                        Log.d("WebViewActivity", "Loading image file: $fileUrl")
                                                     }
                                                 } else if (isPdf) {
                                                     // For remote PDF files
