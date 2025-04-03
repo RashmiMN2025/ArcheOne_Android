@@ -70,8 +70,8 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                         text = "My Documents",
                         color = Color.Black,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                        fontWeight = FontWeight.Bold
+                        )
                 }
             }
 

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
+import com.archeGlobal.one.ImageViewerActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.network.DocumentUploadResponse
 import com.archeGlobal.one.network.RetrofitClient
@@ -130,9 +131,21 @@ class MyDocumentsController(private val context: Context) {
             return
         }
 
-        // Open WebViewActivity to display PDF
-        val intent = Intent(context, WebViewActivity::class.java)
+        // Check if the file is an image based on extension
+        val isImage = filePath.endsWith(".jpg", ignoreCase = true) || 
+                     filePath.endsWith(".jpeg", ignoreCase = true) || 
+                     filePath.endsWith(".png", ignoreCase = true) ||
+                     filePath.endsWith(".webp", ignoreCase = true)
+
+        // Create appropriate intent based on file type
+        val intent = if (isImage) {
+            Intent(context, ImageViewerActivity::class.java)
+        } else {
+            Intent(context, WebViewActivity::class.java)
+        }
+
         intent.putExtra("fileUrl", filePath)
+        intent.putExtra("title", documentName)
         context.startActivity(intent)
     }
 

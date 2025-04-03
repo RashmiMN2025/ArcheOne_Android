@@ -131,6 +131,12 @@
             android:label="Raise a Concern"
             android:theme="@style/Theme.XOne" />
 
+        <!-- Add ImageViewerActivity -->
+        <activity
+            android:name=".ImageViewerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Keep only this FileProvider at the end -->
         <provider
             android:name="androidx.core.content.FileProvider"
