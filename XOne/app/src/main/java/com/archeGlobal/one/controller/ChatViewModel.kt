@@ -23,14 +23,14 @@ class ChatViewModel : ViewModel() {
     init {
         // Add welcome message with waving hand emoji
         addBotMessage("👋 Welcome to ArcheOne Assistant!")
-        
+
         // Add support categories message
         addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!", showFAQs = true)
     }
     
     fun sendMessage(text: String) {
         if (text.trim().isEmpty()) return
-        
+
         // Add user message
         val userMessage = Message(
             content = text,
@@ -38,26 +38,26 @@ class ChatViewModel : ViewModel() {
             timestamp = Date()
         )
         messages.add(userMessage)
-        
+
         // Clear input field
         inputText.value = ""
-        
+
         // Show typing indicator
         isTyping.value = true
-        
+
         // Simulate typing delay
         viewModelScope.launch {
             delay(1000) // Simulate typing delay
-            
+
             // Process the message and get a response
             val response = processMessage(text)
-            
+
             // Determine if we should show FAQs based on the response type
-            // Only show FAQs with default "I'm not sure" response
             val showFAQs = response == "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
-            
+
+            // Add only one bot message
             addBotMessage(response, showFAQs = showFAQs)
-            
+
             // Hide typing indicator
             isTyping.value = false
         }
@@ -119,32 +119,38 @@ class ChatViewModel : ViewModel() {
         if (chatModel.isGreeting(text)) {
             return chatModel.getGreetingResponse()
         }
-        
+
         // Search for FAQs related to the query
         val relatedFAQs = chatData.searchFAQs(text)
-        
+
         if (relatedFAQs.isNotEmpty()) {
             // Check if there's an exact match where the question equals the input text
             val exactMatch = relatedFAQs.find { it.question.equals(text, ignoreCase = true) }
-            
+
             if (exactMatch != null) {
                 // If there's an exact match, return the answer directly
                 return exactMatch.answer
             }
-            
-            // Format multiple matches as bullet points (• prefix)
-            val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
-            
-            // Take at most 5 FAQs to avoid overcrowding, exactly like iOS
-            relatedFAQs.take(5).forEach { faq ->
-                faqList.append("• ${faq.question}\n")
+
+            // If there are more than 2 related FAQs, show the "multiple relevant questions" message
+            if (relatedFAQs.size > 2) {
+                val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
+
+                // Take at most 5 FAQs to avoid overcrowding
+                relatedFAQs.take(5).forEach { faq ->
+                    faqList.append("• ${faq.question}\n")
+                }
+
+                return faqList.toString()
             }
-            
-            return faqList.toString()
+
+            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
+            return relatedFAQs.joinToString("\n\n") { faq ->
+                "${faq.question}\n${faq.answer}"
+            }
         }
-        
-        // Default response if no FAQs match - will show FAQs inline
-        // This matches the iOS version's fallback response exactly
+
+        // Default response if no FAQs match
         return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
     }
     
@@ -159,22 +165,14 @@ class ChatViewModel : ViewModel() {
         messages.add(botMessage)
     }
     
-    fun loadMoreFAQs() {
-        // Find the message with FAQs and update it to show more
-        val messagesToUpdate = messages.filter { !it.isUser && it.showFAQs }
-        
-        if (messagesToUpdate.isNotEmpty()) {
-            // Get the first FAQ message (usually the categories section)
-            val messageToUpdate = messagesToUpdate.first()
+    fun loadMoreFAQs(messageId: String) {
+        val messageToUpdate = messages.find { it.id == messageId }
+        if (messageToUpdate != null) {
             val index = messages.indexOf(messageToUpdate)
-            
             if (index >= 0) {
-                // Create a new message with showMoreCategories set to true
                 val updatedMessage = messageToUpdate.copy(showMoreCategories = true)
-                
-                // Important: Use set() to ensure state is properly updated for Compose
-                messages[index] = updatedMessage
+                messages[index] = updatedMessage // Update the message in the list
             }
         }
     }
-} 
+}

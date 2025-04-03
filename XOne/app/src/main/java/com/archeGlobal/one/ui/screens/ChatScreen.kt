@@ -147,7 +147,8 @@ fun ChatScreen(
                     items(messages) { message ->
                         MessageBubble(
                             message = message,
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            chatData = ChatData.shared // Pass ChatData here
                         )
                     }
                     
@@ -239,7 +240,8 @@ fun ChatScreen(
 @Composable
 fun MessageBubble(
     message: Message,
-    viewModel: ChatViewModel
+    viewModel: ChatViewModel,
+    chatData: ChatData
 ) {
     val context = LocalContext.current
     
@@ -301,7 +303,7 @@ fun MessageBubble(
                                         color = Color.Black,
                                         modifier = Modifier.weight(1f)
                                     )
-                                    
+
                                     // Red arrow on the right (like in iOS)
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_arrow_forward),
@@ -351,7 +353,6 @@ fun MessageBubble(
                             Column(modifier = Modifier.padding(12.dp)) {
                                 // Display FAQ categories similar to iOS app
                                 // Show first 5 FAQs or all if showMoreCategories is true
-                                val chatData = ChatData.shared
                                 val faqsToShow = if (message.showMoreCategories) chatData.faqs else chatData.faqs.take(5)
                                 
                                 faqsToShow.forEach { faq ->
@@ -372,7 +373,7 @@ fun MessageBubble(
                                             color = Color(0xFFDD3825),
                                             fontSize = 14.sp,
                                             modifier = Modifier
-                                                .clickable { viewModel.loadMoreFAQs() }
+                                                .clickable { viewModel.loadMoreFAQs(message.id) } // Pass the message ID here
                                                 .padding(8.dp)
                                         )
                                     }
@@ -471,4 +472,4 @@ fun FAQQuestionRow(question: String, onClick: () -> Unit) {
 
 private fun formatTime(date: Date): String {
     return DateFormat.format("hh:mm a", date).toString()
-} 
+}
