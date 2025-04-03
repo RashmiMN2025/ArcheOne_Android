@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
 import com.archeGlobal.one.model.Holiday
@@ -44,7 +45,7 @@ fun HolidayCalendarScreen(
     val holidaysState = controller.holidays.observeAsState()
     val holidays = remember { mutableStateOf<List<Holiday>>(emptyList()) }
     val pdfUrl = remember { mutableStateOf<String?>(null) }
-
+    val context = LocalContext.current
     LaunchedEffect(holidaysState.value) {
         when (val result = holidaysState.value) {
             is NetworkResult.Success -> {
@@ -120,7 +121,8 @@ fun HolidayCalendarScreen(
                 Button(
                     onClick = {
                         pdfUrl.value?.let { url ->
-                            onHolidayListClick(url)
+                            controller.onViewClick(context = context, documentName = "Holiday List 2025", filePath = url)
+                           // onHolidayListClick(url)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),

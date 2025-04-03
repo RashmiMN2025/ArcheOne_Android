@@ -161,7 +161,7 @@ class MyDocumentsController(private val context: Context) {
         }
 
         if (filePath.isNullOrEmpty()) {
-            Toast.makeText(context, "No file uploaded for $documentName", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No document found for $documentName. Please upload document for the same.", Toast.LENGTH_SHORT).show()
             return
         }
 
