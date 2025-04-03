@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.MyDocumentsController
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import com.archeGlobal.one.R
 import com.archeGlobal.one.ui.components.UniversalLoader
 
@@ -65,19 +66,19 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     )
                 }
 
-                // Centered Title
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "My Documents",
-                        color = Color.Black,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                        )
-                }
+                Spacer(modifier = Modifier.weight(1f)) // Pushes text to center
+
+                Text(
+                    text = "My Documents",
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.weight(1.5f)) // Balances right side
             }
+
 
             Spacer(modifier = Modifier.height(8.dp))
 
