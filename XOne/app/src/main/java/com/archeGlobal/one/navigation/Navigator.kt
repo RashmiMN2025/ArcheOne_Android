@@ -4,7 +4,7 @@ interface Navigator {
     fun openPulseLogin()
     fun navigateToLoginScreen()
     fun navigateToOtpVerification(email: String, mobile: String, employeeId: String)
-    fun navigateToHome()
+    fun navigateToHome(fromOtp: Boolean = false)
     fun navigateToID()
     fun navigateToAsset()
     fun navigateToTimesheet()

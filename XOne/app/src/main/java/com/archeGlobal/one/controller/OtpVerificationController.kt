@@ -41,7 +41,7 @@ class OtpVerificationController(
 
                     if (token.isNotEmpty()) {
                         // Save the token for future use
-                        loginWithToken(token, email, mobile, employeeId,false,callback,)
+                        loginWithToken(token, email, mobile, employeeId,false,true,callback,)
                     } else {
                         callback("OTP verified, but no token received!", true)
                     }
@@ -81,6 +81,7 @@ class OtpVerificationController(
         mobile: String,
         employeeId: String,
         fromHome:Boolean = false,
+        fromOtp: Boolean = false,
         callback: (String, Boolean) -> Unit
     ) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -99,7 +100,7 @@ class OtpVerificationController(
                         Log.d("LoginProcess", "Login successful")
                         callback("Login successful", false)
                        if(!fromHome){
-                           navigator.navigateToHome()
+                           navigator.navigateToHome(fromOtp)
                        }
 
                     } else {

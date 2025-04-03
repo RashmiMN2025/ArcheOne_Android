@@ -6,7 +6,7 @@ class PreviewNavigator : Navigator {
     override fun openPulseLogin() {}
     override fun navigateToLoginScreen() {}
     override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String) {}
-    override fun navigateToHome() {}
+    override fun navigateToHome(fromOtp: Boolean) {}
     override fun navigateToID() {}
     override fun navigateToAsset() {}
     override fun navigateToTimesheet() {}

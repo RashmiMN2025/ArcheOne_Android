@@ -86,7 +86,7 @@ class HomeActivity : ComponentActivity() {
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
-        
+        val fromOtp = intent.getBooleanExtra("FROM_OTP", false)
         // Print the intent extras for debugging
         Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, isEmergencyContact=$isEmergencyContact")
         Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
@@ -119,25 +119,28 @@ class HomeActivity : ComponentActivity() {
 
                 // If we have a destination or navigateTo, navigate to it
                 LaunchedEffect(destination, navigateTo, isEmergencyContact) {
-                    val token = userDataManager.getAuthToken() ?: "your_token_here"
-                      isLoading = true // Start loading
-                    otpVerificationController.loginWithToken(token, email, mobile, employeeId,true) { message, isError ->
-                         isLoading = false // Stop loading
-                        if (isError) {
-                            if (message.contains("Invalid Token")){
-                                Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
-                                // Clear all user data
-                                userDataManager.clearUserData()
-                                navigator.navigateToLoginScreen()
-                            }else {
-                                Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+                    if (!fromOtp) {
 
+                        val token = userDataManager.getAuthToken() ?: "your_token_here"
+                        isLoading = true // Start loading
+                        otpVerificationController.loginWithToken(token, email, mobile, employeeId,true) { message, isError ->
+                            isLoading = false // Stop loading
+                            if (isError) {
+                                if (message.contains("Invalid Token")){
+                                    Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                                    // Clear all user data
+                                    userDataManager.clearUserData()
+                                    navigator.navigateToLoginScreen()
+                                }else {
+                                    Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+
+                                }
+
+                            } else {
+                                //  Handle successful login, e.g., navigate to home
+                                //Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
                             }
-
-                        } else {
-                            // Handle successful login, e.g., navigate to home
-                            //Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
-                        }
+                    }
                     }
                     destination?.let {
                         navController.navigate(it)
