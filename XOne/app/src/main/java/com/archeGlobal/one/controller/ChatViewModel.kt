@@ -21,13 +21,9 @@ class ChatViewModel : ViewModel() {
     val isTyping = mutableStateOf(false)
     
     init {
-        // Add welcome message with waving hand emoji
-        addBotMessage("👋 Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.")
-
-        // Add support categories message
-        addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!", showFAQs = true)
+        loadMessages()
     }
-    
+
     fun sendMessage(text: String) {
         if (text.trim().isEmpty()) return
 
@@ -37,7 +33,7 @@ class ChatViewModel : ViewModel() {
             isUser = true,
             timestamp = Date()
         )
-        messages.add(userMessage)
+        messages.add(Message(content = text, isUser = true))
 
         // Clear input field
         inputText.value = ""
@@ -164,7 +160,16 @@ class ChatViewModel : ViewModel() {
         )
         messages.add(botMessage)
     }
-    
+    fun refreshChat() {
+        messages.clear() // Clear old messages
+        loadMessages() // Fetch fresh messages
+    }
+  fun loadMessages() {
+    addBotMessage("👋 Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.")
+
+    // Add support categories message
+    addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!", showFAQs = true)
+ }
     fun loadMoreFAQs(messageId: String) {
         val messageToUpdate = messages.find { it.id == messageId }
         if (messageToUpdate != null) {
