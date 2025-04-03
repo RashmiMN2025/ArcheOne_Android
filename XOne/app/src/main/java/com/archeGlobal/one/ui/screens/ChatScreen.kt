@@ -82,7 +82,7 @@ fun ChatScreen(
     onBackPressed: () -> Unit,
     showBottomBar: Boolean = false
 ) {
-     // Disable back swipe gesture and back button
+    // Disable back swipe gesture and back button
     BackHandler(enabled = true) {
         // Do nothing to prevent navigation
     }
@@ -91,14 +91,14 @@ fun ChatScreen(
     val messages = viewModel.messages
     val inputText = viewModel.inputText.value
     val isTyping = viewModel.isTyping.value
-    
+
     // Auto-scroll to the last message
     LaunchedEffect(messages.size, isTyping) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
         }
     }
-    
+
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -136,7 +136,7 @@ fun ChatScreen(
                         containerColor = Color.Transparent
                     )
                 )
-                
+
                 // Chat messages
                 LazyColumn(
                     modifier = Modifier
@@ -151,7 +151,7 @@ fun ChatScreen(
                             chatData = ChatData.shared // Pass ChatData here
                         )
                     }
-                    
+
                     if (isTyping) {
                         item {
                             Row(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -161,7 +161,7 @@ fun ChatScreen(
                         }
                     }
                 }
-                
+
                 // Input area
                 Column {
                     Divider()
@@ -200,10 +200,10 @@ fun ChatScreen(
                             maxLines = 1,
                             singleLine = true
                         )
-                        
+
                         Box(
                             modifier = Modifier
-                               // .background(Color(0xFFDD3825), CircleShape)
+                                // .background(Color(0xFFDD3825), CircleShape)
                                 .size(40.dp)
                                 .clickable {
                                     if (inputText.isNotBlank()) {
@@ -222,7 +222,7 @@ fun ChatScreen(
                         }
                     }
                 }
-                
+
                 // Bottom navigation
                 if (showBottomBar) {
                     ChatBottomNavigationBar(
@@ -244,7 +244,7 @@ fun MessageBubble(
     chatData: ChatData
 ) {
     val context = LocalContext.current
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -254,115 +254,76 @@ fun MessageBubble(
         Column(
             horizontalAlignment = if (message.isUser) Alignment.End else Alignment.Start
         ) {
-            if (!message.isUser && message.content.contains("Welcome to ArcheOne Assistant!")) {
-                // Welcome message
-                WelcomeMessage()
-            } else if (!message.isUser && message.content.contains("•")) {
-                // FAQ list message
-                Card(
-                    modifier = Modifier.padding(4.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFFFFAF5) // Creamy color background
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+            if (!message.isUser) {
+                // Display the main message content
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFFFFAF5)) // Creamy color for bot messages
+                        .padding(12.dp)
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        // Title message at the top
-                        if (message.content.startsWith("Here are some answers that might help:") ||
-                            message.content.startsWith("I found multiple relevant questions")) {
-//                            Text(
-//                                text = "I found multiple relevant questions. Please select one to see its answer:",
-//                                color = Color.Black,
-//                                modifier = Modifier.padding(bottom = 12.dp)
-//                            )
-                        } else {
-                            val firstLine = message.content.split("\n").firstOrNull()
-                            if (firstLine != null && !firstLine.startsWith("•")) {
-                                Text(
-                                    text = firstLine,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 12.dp)
-                                )
-                            }
-                        }
-                        
-                        // FAQ list items
-                        message.content.split("\n").forEach { line ->
-                            if (line.startsWith("•")) {
-                                val question = line.substring(2).trim()
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { viewModel.selectFAQ(question) }
-                                        .padding(vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Display bullet point and question text
-                                    Text(
-                                        text = "• $question",
-                                        color = Color.Black,
-                                        modifier = Modifier.weight(1f)
-                                    )
+                    Column {
+                        // Check if the message contains "I found multiple relevant questions"
+                        if (message.content.startsWith("I found multiple relevant questions")) {
 
-                                    // Red arrow on the right (like in iOS)
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_arrow_forward),
-                                        contentDescription = "Arrow",
-                                        tint = Color(0xFFDD3825),
-                                        modifier = Modifier.size(20.dp)
+                            // Display FAQ list items
+                            message.content.split("\n").forEach { line ->
+                                if (line.startsWith("•")) {
+                                    val question = line.substring(2).trim()
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { viewModel.selectFAQ(question) }
+                                            .padding(vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Display bullet point and question text
+                                        Text(
+                                            text = "• $question",
+                                            color = Color.Black,
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        // Red arrow on the right (like in iOS)
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_arrow_forward),
+                                            contentDescription = "Arrow",
+                                            tint = Color(0xFFDD3825),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                } else if (line.isNotEmpty() && !line.startsWith("Here are some answers")) {
+                                    Text(
+                                        text = line,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(vertical = 4.dp)
                                     )
                                 }
-                            } else if (line.isNotEmpty() && !line.startsWith("Here are some answers")) {
-                                Text(
-                                    text = line,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                )
                             }
-                        }
-                    }
-                }
-            } else {
-                // Regular message bubble
-                Column {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(
-                                if (message.isUser) Color(0xFFDD3825) else Color(0xFFFFFAF5) // Creamy color for bot messages
+                        } else {
+                            // Display the regular message content
+                            Text(
+                                text = message.content,
+                                color = Color.Black,
+                                fontSize = 16.sp,
+                                lineHeight = 20.sp
                             )
-                            .padding(12.dp)
-                    ) {
-                        Text(
-                            text = message.content,
-                            color = if (message.isUser) Color.White else Color.Black
-                        )
-                    }
-                    
-                    // If this message should show FAQs (like in iOS), display them below the message
-                    if (!message.isUser && message.showFAQs) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        Card(
-                            modifier = Modifier.padding(top = 4.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFFFFAF5) // Creamy color background
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                // Display FAQ categories similar to iOS app
-                                // Show first 5 FAQs or all if showMoreCategories is true
+
+                            // Append FAQ list if `showFAQs` is true
+                            if (message.showFAQs) {
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Display FAQ categories
                                 val faqsToShow = if (message.showMoreCategories) chatData.faqs else chatData.faqs.take(5)
-                                
+
                                 faqsToShow.forEach { faq ->
                                     FAQQuestionRow(question = faq.title) {
                                         viewModel.selectFAQ(faq.question)
                                     }
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                   // Spacer(modifier = Modifier.height(8.dp)
                                 }
-                                
-                                // Only show "Show More" button if not all FAQs are displayed
+
+                                // Show "Show More" button if not all FAQs are displayed
                                 if (!message.showMoreCategories && chatData.faqs.size > 5) {
                                     Box(
                                         modifier = Modifier.fillMaxWidth(),
@@ -373,7 +334,7 @@ fun MessageBubble(
                                             color = Color(0xFFDD3825),
                                             fontSize = 14.sp,
                                             modifier = Modifier
-                                                .clickable { viewModel.loadMoreFAQs(message.id) } // Pass the message ID here
+                                                .clickable { viewModel.loadMoreFAQs(message.id) }
                                                 .padding(8.dp)
                                         )
                                     }
@@ -382,16 +343,29 @@ fun MessageBubble(
                         }
                     }
                 }
+            } else {
+                // Regular user message bubble
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFDD3825)) // Red color for user messages
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = message.content,
+                        color = Color.White
+                    )
+                }
             }
-            
-            // Timestamp
-            Text(
-                text = formatTime(message.timestamp),
-                fontSize = 10.sp,
-                color = Color(0xFFFFFAF5),
-                modifier = Modifier.padding(top = 4.dp, start = if (message.isUser) 0.dp else 8.dp, end = if (!message.isUser) 0.dp else 8.dp)
-            )
         }
+
+        // Timestamp
+        Text(
+            text = formatTime(message.timestamp),
+            fontSize = 10.sp,
+            color = Color(0xFFFFFAF5),
+            modifier = Modifier.padding(top = 4.dp, start = if (message.isUser) 0.dp else 8.dp, end = if (!message.isUser) 0.dp else 8.dp)
+        )
     }
 }
 
@@ -412,15 +386,15 @@ fun WelcomeMessage() {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Welcome to ArcheOne Assistant!",
+                    text = "\uD83D\uDC4B Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color.Black
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Text(
                 text = "I'm your personal support guide, ready to help you navigate through ArcheOne's features and services.",
                 color = Color.Black
@@ -457,9 +431,9 @@ fun FAQQuestionRow(question: String, onClick: () -> Unit) {
                 color = Color.Black,
                 modifier = Modifier.weight(1f)
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_forward),
                 contentDescription = "Arrow",

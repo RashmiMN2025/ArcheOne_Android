@@ -22,7 +22,7 @@ class ChatViewModel : ViewModel() {
     
     init {
         // Add welcome message with waving hand emoji
-        addBotMessage("👋 Welcome to ArcheOne Assistant!")
+        addBotMessage("👋 Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.")
 
         // Add support categories message
         addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!", showFAQs = true)
