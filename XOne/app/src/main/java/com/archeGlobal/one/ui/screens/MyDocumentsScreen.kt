@@ -28,7 +28,11 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
     val personalDocs by controller.personalDocs.observeAsState(emptyMap())
     val professionalDocs by controller.professionalDocs.observeAsState(emptyMap())
     val isLoading by controller.isLoading.observeAsState(false) // Observe the loading state
-
+    LaunchedEffect(Unit) {
+        val sampleName = "" // Change this based on your document
+        val sampleUri = null // You need a valid URI to upload a document
+        controller.uploadDocument(sampleName, sampleUri, employeeId,true)
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -277,7 +281,7 @@ fun DocumentCard(
                     Button(
                         onClick = {
                             showUploadOptions = false
-                            fileLauncher.launch("*/*") // Allow all file types
+                            fileLauncher.launch("application/pdf,image/*") // Allow all file types
                         },
                         modifier = Modifier
                             .fillMaxWidth()

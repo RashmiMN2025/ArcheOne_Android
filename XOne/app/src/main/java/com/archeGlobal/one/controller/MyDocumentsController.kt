@@ -5,19 +5,25 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import com.archeGlobal.one.ImageViewerActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.network.DocumentUploadResponse
+import com.archeGlobal.one.network.MyDocRequest
 import com.archeGlobal.one.network.RetrofitClient
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
 
+@Suppress("IMPLICIT_CAST_TO_ANY")
 class MyDocumentsController(private val context: Context) {
 
     val personalDocs = MutableLiveData<MutableMap<String, String>>(mutableMapOf())
@@ -39,11 +45,19 @@ class MyDocumentsController(private val context: Context) {
     fun onUploadClick(documentName: String, fileUri: Uri, employeeId: String) {
         val file = getFileFromUri(context, fileUri)
         if (file == null) {
-            Toast.makeText(context, "File not found!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No document found for $documentName. Please upload document for the same.", Toast.LENGTH_SHORT).show()
             return
         }
+
+        // Check file size (5MB = 5 * 1024 * 1024 bytes)
+        if (file.length() > 5 * 1024 * 1024) {
+            Toast.makeText(context, "File size exceeds 5MB limit!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         uploadDocument(documentName, file, employeeId)
     }
+
 
     // Handle camera image upload
     fun onUploadCameraImage(documentName: String, bitmap: Bitmap, employeeId: String) {
@@ -52,27 +66,42 @@ class MyDocumentsController(private val context: Context) {
             Toast.makeText(context, "Failed to process image!", Toast.LENGTH_SHORT).show()
             return
         }
-        uploadDocument(documentName, file, employeeId)
+
+        // Check file size (5MB = 5 * 1024 * 1024 bytes)
+        if (file.length() > 5 * 1024 * 1024) {
+            Toast.makeText(context, "Image size exceeds 5MB limit!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        uploadDocument(documentName, file, employeeId, false)
     }
 
-    // Upload document to the server
-    private fun uploadDocument(documentName: String, file: File, employeeId: String) {
+
+    fun uploadDocument(documentName: String, file: File?, employeeId: String, isFetching: Boolean = false) {
         isLoading.postValue(true) // Show loader
 
-        val mimeType = android.webkit.MimeTypeMap.getSingleton()
-            .getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
+        val mimeType = MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(file?.extension ?: "") ?: "application/octet-stream"
 
-        // Convert file to RequestBody
-        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
-        val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
+        val requestFile = file?.asRequestBody(mimeType.toMediaTypeOrNull())
+        val filePart = file?.let { MultipartBody.Part.createFormData("file", it.name, requestFile!!) }
 
-        // Convert other parameters to RequestBody
         val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
         val documentTypePart = documentName.toRequestBody("text/plain".toMediaTypeOrNull())
 
-        val call = RetrofitClient.apiService.uploadDocument(filePart, employeeIdPart, documentTypePart)
-        call.enqueue(object : retrofit2.Callback<DocumentUploadResponse> {
-            override fun onResponse(call: retrofit2.Call<DocumentUploadResponse>, response: retrofit2.Response<DocumentUploadResponse>) {
+        // Create the call variable
+        val call: Call<DocumentUploadResponse> = if (isFetching) {
+            val requestBody = MyDocRequest(employeeId, documentName)
+            RetrofitClient.apiService.fetchDocuments(requestBody) // Ensure this returns Call<DocumentUploadResponse>
+        } else {
+            RetrofitClient.apiService.uploadDocument(filePart!!, employeeIdPart, documentTypePart) // Ensure this returns Call<DocumentUploadResponse>
+        }
+
+        call.enqueue(object : Callback<DocumentUploadResponse> {
+            override fun onResponse(
+                call: Call<DocumentUploadResponse>,
+                response: Response<DocumentUploadResponse>
+            ) {
                 isLoading.postValue(false) // Hide loader
 
                 if (response.isSuccessful) {
@@ -97,23 +126,28 @@ class MyDocumentsController(private val context: Context) {
                         personalDocs.postValue(newPersonalDocs)
                         professionalDocs.postValue(newProfessionalDocs)
 
-                        // Mark document as uploaded
-                        val newStatus = uploadStatus.value ?: mutableMapOf()
-                        newStatus[documentName] = true
-                        uploadStatus.postValue(newStatus)
+                        if (!isFetching) {
+                            // Mark document as uploaded
+                            val newStatus = uploadStatus.value ?: mutableMapOf()
+                            newStatus[documentName] = true
+                            uploadStatus.postValue(newStatus)
 
-                        Toast.makeText(context, "$documentName uploaded successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "$documentName uploaded successfully!", Toast.LENGTH_SHORT).show()
+
+                            // Fetch updated documents list after upload
+                            uploadDocument(documentName, null, employeeId, isFetching = true)
+                        }
                     }
                 } else {
-                    Toast.makeText(context, "Upload failed: ${response.message()}", Toast.LENGTH_SHORT).show()
-                    Log.e("Upload", "Error: ${response.errorBody()?.string()}")
+                    Toast.makeText(context, "Failed: ${response.message()}", Toast.LENGTH_SHORT).show()
+                    Log.e("API Call", "Error: ${response.errorBody()?.string()}")
                 }
             }
 
-            override fun onFailure(call: retrofit2.Call<DocumentUploadResponse>, t: Throwable) {
+            override fun onFailure(call: Call<DocumentUploadResponse>, t: Throwable) {
                 isLoading.postValue(false) // Hide loader
                 Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
-                Log.e("Upload", "Network error: ${t.message}")
+                Log.e("API Call", "Network error: ${t.message}")
             }
         })
     }

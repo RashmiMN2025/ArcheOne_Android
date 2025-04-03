@@ -36,6 +36,8 @@ interface ApiService {
     @POST("/logout")
     fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
 
+    @POST("/upload")
+    fun fetchDocuments(@Body request: MyDocRequest): Call<DocumentUploadResponse>
     @Multipart
     @POST("/upload")
     fun uploadDocument(
@@ -56,6 +58,11 @@ interface ApiService {
 
 data class LogoutRequest(
     val employeeId: String
+)
+
+data class MyDocRequest(
+    val employeeId: String,
+    val documentType:String
 )
 
 data class LogoutResponse(

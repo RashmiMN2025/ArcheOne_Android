@@ -124,8 +124,8 @@ class HomeActivity : ComponentActivity() {
                     otpVerificationController.loginWithToken(token, email, mobile, employeeId,true) { message, isError ->
                          isLoading = false // Stop loading
                         if (isError) {
-                            if (message == "Invalid Token" ){
-                                Toast.makeText(this@HomeActivity, "No user session found. Logging out...", Toast.LENGTH_SHORT).show()
+                            if (message.contains("Invalid Token")){
+                                Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
                                 // Clear all user data
                                 userDataManager.clearUserData()
                                 navigator.navigateToLoginScreen()
