@@ -17,7 +17,6 @@ import kotlinx.coroutines.withContext
 
 class OtpVerificationController(
     private val navigator: Navigator,
-    private val loginController: LoginController,
     private val context: Context
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
@@ -42,7 +41,7 @@ class OtpVerificationController(
 
                     if (token.isNotEmpty()) {
                         // Save the token for future use
-                        loginWithToken(token, email, mobile, employeeId, callback)
+                        loginWithToken(token, email, mobile, employeeId,false,callback,)
                     } else {
                         callback("OTP verified, but no token received!", true)
                     }
@@ -76,11 +75,12 @@ class OtpVerificationController(
         })
     }
 
-    private fun loginWithToken(
+     fun loginWithToken(
         token: String,
         email: String,
         mobile: String,
         employeeId: String,
+        fromHome:Boolean = false,
         callback: (String, Boolean) -> Unit
     ) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -98,7 +98,10 @@ class OtpVerificationController(
                         
                         Log.d("LoginProcess", "Login successful")
                         callback("Login successful", false)
-                        navigator.navigateToHome()
+                       if(!fromHome){
+                           navigator.navigateToHome()
+                       }
+
                     } else {
                         val errorBody = response.errorBody()?.string() ?: "Unknown error"
                         Log.e("LoginProcess", "Login failed: $errorBody")

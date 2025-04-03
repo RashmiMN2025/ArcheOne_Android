@@ -18,7 +18,7 @@ class OtpVerificationActivity : ComponentActivity() {
         
         val navigator = AndroidNavigator(this)
         val loginController = LoginController(this, navigator)
-        val controller = OtpVerificationController(navigator, loginController, this)
+        val controller = OtpVerificationController(navigator,  this)
 
         setContent {
             XOneTheme {

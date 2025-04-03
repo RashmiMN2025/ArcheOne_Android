@@ -37,14 +37,17 @@ import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.XOneTheme
+import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 
 class HomeActivity : ComponentActivity() {
     private lateinit var controller: HomeController
+    private lateinit var otpVerificationController: OtpVerificationController
     private lateinit var locationsController: LocationsController
     private lateinit var businessCardController: BusinessCardControllerImpl
     private lateinit var policyController: PolicyController
@@ -56,10 +59,16 @@ class HomeActivity : ComponentActivity() {
     private lateinit var addressController: AddressController
     private lateinit var emergencyContactController: EmergencyContactController
     private lateinit var chatController: ChatController
+    private lateinit var userDataManager: UserDataManager // Declare UserDataManager
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        userDataManager = UserDataManager.getInstance(this)
 
+            val email = userDataManager.getUserData()?.email ?: ""
+            val mobile = userDataManager.getUserData()?.mobile ?: ""
+            val employeeId = userDataManager.getUserData()?.employeeId ?: ""
         // Disable back navigation to login
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -67,6 +76,11 @@ class HomeActivity : ComponentActivity() {
                 Toast.makeText(this@HomeActivity, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
             }
         })
+        // Initialize controllers that need context
+                otpVerificationController = OtpVerificationController(
+                    navigator = AndroidNavigator(this),
+                   context = this
+           )
 
         // Check if we need to navigate to a specific destination
         val destination = intent.getStringExtra("destination")
@@ -101,21 +115,42 @@ class HomeActivity : ComponentActivity() {
                 addressController = AddressController(navigator)
                 emergencyContactController = EmergencyContactController(navigator)
                 chatController = ChatController(this, navigator)
+                var isLoading by remember { mutableStateOf(false) }
 
                 // If we have a destination or navigateTo, navigate to it
                 LaunchedEffect(destination, navigateTo, isEmergencyContact) {
+                    val token = userDataManager.getAuthToken() ?: "your_token_here"
+                      isLoading = true // Start loading
+                    otpVerificationController.loginWithToken(token, email, mobile, employeeId,true) { message, isError ->
+                         isLoading = false // Stop loading
+                        if (isError) {
+                            if (message == "Invalid Token" ){
+                                Toast.makeText(this@HomeActivity, "No user session found. Logging out...", Toast.LENGTH_SHORT).show()
+                                // Clear all user data
+                                userDataManager.clearUserData()
+                                navigator.navigateToLoginScreen()
+                            }else {
+                                Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+
+                            }
+
+                        } else {
+                            // Handle successful login, e.g., navigate to home
+                            //Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
                     destination?.let {
                         navController.navigate(it)
                     }
-                    
+
                     navigateTo?.let {
                         navController.navigate(it)
-                        
+
                         // Log the navigation attempt for debugging
                         Log.d("HomeActivity", "Navigating to $it with isEmergencyContact=$isEmergencyContact")
                     }
                 }
-
+               // UniversalLoader(isLoading = isLoading)
                 NavHost(
                     navController = navController,
                     startDestination = "home"
@@ -406,11 +441,11 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "pdf_viewer/{pdfUrl}?title={title}",
                         arguments = listOf(
-                            navArgument("pdfUrl") { 
+                            navArgument("pdfUrl") {
                                 type = NavType.StringType
                                 nullable = false
                             },
-                            navArgument("title") { 
+                            navArgument("title") {
                                 type = NavType.StringType
                                 defaultValue = "PDF Viewer"
                             }
@@ -430,7 +465,7 @@ class HomeActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val encodedPdfUrl = backStackEntry.arguments?.getString("pdfUrl") ?: ""
                         val title = backStackEntry.arguments?.getString("title") ?: "PDF Viewer"
-                        
+
                         // Safely decode the URL
                         val pdfUrl = try {
                             val decoded = URLDecoder.decode(encodedPdfUrl, "UTF-8")
@@ -441,7 +476,7 @@ class HomeActivity : ComponentActivity() {
                             // If decoding fails, pass the encoded URL and let the PDFViewerScreen handle the error
                             encodedPdfUrl
                         }
-                        
+
                         PDFViewerScreen(
                             pdfUrl = pdfUrl,
                             title = title,
@@ -527,7 +562,9 @@ class HomeActivity : ComponentActivity() {
                         )
                     }
                 }
-            }
+
+
+}
         }
     }
 
