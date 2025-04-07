@@ -17,6 +17,7 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.SOSScreen
 import android.graphics.Color
 import android.os.Build
+import com.archeGlobal.one.HomeActivity
 
 class SOSActivity : ComponentActivity() {
     private val controller: SOSController by viewModels()
@@ -83,13 +84,7 @@ class SOSActivity : ComponentActivity() {
                     },
 
                     onNavigateToEmergencyContact = {
-                        Log.d("HomeActivity", "onNavigateToEmergencyContact callback triggered")
-
-                        // Set the flag in the current activity BEFORE navigation
-                        intent.putExtra("isEmergencyContact", true)
-                        intent.putExtra("showHeader", showHeader)
-
-                        // Navigate to locations screen with emergency contact flag
+                        Log.d("SOSActivity", "onNavigateToEmergencyContact callback triggered")
                         navigator.navigateToLocations(showHeader)
                     },
 

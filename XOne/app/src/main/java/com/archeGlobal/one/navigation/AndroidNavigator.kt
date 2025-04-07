@@ -66,8 +66,17 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
 
 
     override fun navigateToLocations(showHeader: Boolean) {
-        Log.d("AndroidNavigator", "Navigating to locations screen")
-        navController?.navigate("locations")
+        Log.d("AndroidNavigator", "Navigating to locations screen with showHeader=$showHeader")
+        if (activity is HomeActivity) {
+            navController?.navigate("locations")
+        } else {
+            val intent = Intent(activity, HomeActivity::class.java)
+            intent.putExtra("isEmergencyContact", true)
+            intent.putExtra("showHeader", showHeader)
+            intent.putExtra("destination", "locations")
+            activity.startActivity(intent)
+            activity.finish()
+        }
     }
 
     override fun navigateToBusinessCard() {
