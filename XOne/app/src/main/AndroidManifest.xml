@@ -123,6 +123,14 @@
             android:label="SOS"
             android:theme="@style/Theme.XOne" />
 
+        <!-- Add SOSDetailActivity -->
+        <activity
+            android:name=".SOSDetailActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="SOS Details"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Add RaiseConcernActivity -->
         <activity
             android:name=".RaiseConcernActivity"
