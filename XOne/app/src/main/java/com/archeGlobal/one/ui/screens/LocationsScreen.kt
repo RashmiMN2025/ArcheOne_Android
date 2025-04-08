@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.CircleShape
 import android.util.Log
+import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +51,23 @@ fun LocationsScreen(
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val savedEmergencyContact = savedStateHandle?.get<Boolean>("isEmergencyContact") ?: false
     val isEmergencyContactActual = savedEmergencyContact || isEmergencyContact
+    
+    // Add BackHandler to handle back swipe gestures
+    BackHandler {
+        // Use the same logic as the back arrow button
+        if (locationController.isInEmergencyContactMode()) {
+            val stayInCurrentScreen = locationController.onEmergencyBackPressed()
+            if (!stayInCurrentScreen) {
+                navController.navigate("sos?showHeader=$showHeader") {
+                    popUpTo("sos") { inclusive = true }
+                }
+            }
+        } else {
+            if (!locationController.onBackPressed()) {
+                navController.popBackStack()
+            }
+        }
+    }
     
     LaunchedEffect(Unit) {
         Log.d("LocationsScreen", "Screen initialized with isEmergencyContact=$isEmergencyContactActual")
@@ -352,8 +370,11 @@ private fun LocationCard(
             ) {
                 Button(
                     onClick = {
+                        // Add debugging to see what's happening
+                        Log.d("LocationsScreen", "View Location clicked for: ${location.name}, hasStates=${location.states != null}")
+                        
                         // For all locations except India, open in Google Maps
-                        if (!location.name.contains("India", ignoreCase = true)) {
+                        if (!location.name.equals("India", ignoreCase = true)) {
                             // Open Google Maps with the redirection link if available
                             val uri = if (location.redirection?.isNotEmpty() == true) {
                                 Uri.parse(location.redirection)
@@ -365,6 +386,7 @@ private fun LocationCard(
                             context.startActivity(intent)
                         } else {
                             // For India, use the provided onClick which shows internal details
+                            Log.d("LocationsScreen", "Calling onClick() for India location")
                             onClick()
                         }
                     },
@@ -730,7 +752,7 @@ private fun LocationList(
         items(locations) { location ->
             LocationCard(
                 location = location,
-                onClick = { if (!isTamilNadu) onLocationClick(location) },
+                onClick = { onLocationClick(location) },
                 onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
                     { location.mapFileName?.let { mapFile -> onShowFloorMap(mapFile) } }
                 } else null
