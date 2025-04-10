@@ -23,6 +23,8 @@ import retrofit2.Response
 import android.util.Log
 import java.io.File
 import java.io.FileOutputStream
+import android.graphics.Bitmap
+import java.io.ByteArrayOutputStream
 
 class ProfileController(
     private val context: Context,
@@ -369,6 +371,52 @@ class ProfileController(
             }
         } catch (e: Exception) {
             Log.e("ProfileController", "Error forcing navigation refresh: ${e.message}", e)
+        }
+    }
+
+    fun uploadProfilePhoto(bitmap: Bitmap) {
+        Log.d("ProfileController", "Starting profile photo upload from bitmap")
+        
+        // Convert bitmap to file
+        val file = convertBitmapToFile(bitmap)
+        if (file == null) {
+            Toast.makeText(context, "Could not process image file", Toast.LENGTH_SHORT).show()
+            Log.e("ProfileController", "Upload failed - couldn't convert bitmap to file")
+            return
+        }
+        
+        // Use the existing upload method
+        uploadProfilePicture(Uri.fromFile(file))
+    }
+
+    fun uploadProfilePhotoFromUri(uri: Uri) {
+        Log.d("ProfileController", "Starting profile photo upload from URI")
+        // Simply delegate to the existing upload method
+        uploadProfilePicture(uri)
+    }
+
+    private fun convertBitmapToFile(bitmap: Bitmap): File? {
+        return try {
+            // Create a file to write the bitmap data
+            val file = File(context.cacheDir, "profile_photo.jpg")
+            file.createNewFile()
+
+            // Convert bitmap to byte array
+            val bos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bos)
+            val bitmapData = bos.toByteArray()
+
+            // Write the bytes to file
+            val fos = FileOutputStream(file)
+            fos.write(bitmapData)
+            fos.flush()
+            fos.close()
+
+            Log.d("ProfileController", "Successfully converted bitmap to file: ${file.absolutePath}")
+            file
+        } catch (e: Exception) {
+            Log.e("ProfileController", "Error converting bitmap to file: ${e.message}", e)
+            null
         }
     }
 

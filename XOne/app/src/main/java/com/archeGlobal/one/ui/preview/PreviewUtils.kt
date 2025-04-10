@@ -6,7 +6,13 @@ class PreviewNavigator : Navigator {
     override fun openPulseLogin() {}
     override fun navigateToLoginScreen() {}
     override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String) {}
-    override fun navigateToHome(fromOtp: Boolean) {}
+    override fun navigateToHome(
+        fromOtp: Boolean,
+        showBiometricSetup: Boolean,
+        email: String,
+        mobile: String,
+        employeeId: String
+    ) {}
     override fun navigateToID() {}
     override fun navigateToAsset() {}
     override fun navigateToTimesheet() {}
@@ -25,7 +31,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToClientCalendar() {}
     override fun navigateToGreetings() {}
     override fun navigateToXConnect() {}
-    override fun navigateToLocations(showHeader:Boolean) {}
+    override fun navigateToLocations(showHeader: Boolean) {}
     override fun navigateToHelpdesk() {}
     override fun navigateToAnnouncements() {}
     override fun navigateToXProfile() {}

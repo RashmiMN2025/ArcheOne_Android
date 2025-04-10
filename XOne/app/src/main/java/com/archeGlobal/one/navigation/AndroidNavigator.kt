@@ -47,12 +47,24 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         activity.startActivity(intent)
     }
 
-    override fun navigateToHome(fromOtp: Boolean) {
-        Log.d("AndroidNavigator", "Navigating to home screen. fromOtp: $fromOtp")
+    override fun navigateToHome(
+        fromOtp: Boolean,
+        showBiometricSetup: Boolean,
+        email: String,
+        mobile: String,
+        employeeId: String
+    ) {
+        Log.d("AndroidNavigator", "Navigating to home screen. fromOtp: $fromOtp, showBiometricSetup: $showBiometricSetup")
 
         if (activity !is HomeActivity) {
             val intent = Intent(activity, HomeActivity::class.java).apply {
-                putExtra("FROM_OTP", fromOtp) // Pass the flag to HomeActivity
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("FROM_OTP", fromOtp)
+                putExtra("showBiometricSetup", showBiometricSetup)
+                putExtra("email", email)
+                putExtra("mobile", mobile)
+                putExtra("employeeId", employeeId)
+                putExtra("fromLogin", true)
             }
             activity.startActivity(intent)
             activity.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
@@ -63,7 +75,6 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             }
         }
     }
-
 
     override fun navigateToLocations(showHeader: Boolean) {
         Log.d("AndroidNavigator", "Navigating to locations screen with showHeader=$showHeader")

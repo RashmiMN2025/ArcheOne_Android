@@ -49,6 +49,13 @@ import android.net.Uri
 import android.util.Log
 import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import coil.compose.AsyncImage
+import android.widget.Toast
+import android.graphics.Bitmap
 
 @Composable
 fun ProfileScreen(
@@ -62,11 +69,55 @@ fun ProfileScreen(
 ) {
     // State to control the visibility of the logout confirmation dialog
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showUploadDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // Disable back swipe gesture
     BackHandler(enabled = true) {
         // Handle back press manually
 
+    }
+
+    // Camera permission state
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Camera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        bitmap?.let {
+            controller.uploadProfilePhoto(bitmap)
+            showUploadDialog = false
+        }
+    }
+
+    // Permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            controller.uploadProfilePhotoFromUri(uri)
+            showUploadDialog = false
+        }
     }
 
     FooterScaffold(
@@ -100,6 +151,9 @@ fun ProfileScreen(
                     profilePicture = controller.model.profilePicture,
                     onProfilePictureClick = { uri ->
                         controller.onProfilePictureClick(uri)
+                    },
+                    onCameraCapture = { bitmap ->
+                        controller.uploadProfilePhoto(bitmap)
                     }
                 )
 
@@ -150,6 +204,91 @@ fun ProfileScreen(
                         showLogoutDialog = false 
                     }
                 )
+            }
+
+            // Upload Dialog
+            if (showUploadDialog) {
+                Dialog(onDismissRequest = { showUploadDialog = false }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(0.92f)
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Upload Profile Photo",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            Text(
+                                "Choose a method to upload your profile picture",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 24.dp),
+                                textAlign = TextAlign.Center
+                            )
+
+                            // Camera Button
+                            Button(
+                                onClick = {
+                                    if (hasCameraPermission) {
+                                        cameraLauncher.launch(null)
+                                    } else {
+                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_camera),
+                                    contentDescription = "Camera",
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    tint = Color.White
+                                )
+                                Text("Camera", fontSize = 16.sp, color = Color.White)
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Gallery Button
+                            Button(
+                                onClick = { galleryLauncher.launch("image/*") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_gallery),
+                                    contentDescription = "Gallery",
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    tint = Color.White
+                                )
+                                Text("Gallery", fontSize = 16.sp, color = Color.White)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -255,13 +394,51 @@ private fun ProfileHeader(
     name: String,
     email: String,
     profilePicture: String? = null,
-    onProfilePictureClick: ((Uri) -> Unit)? = null
+    onProfilePictureClick: ((Uri) -> Unit)? = null,
+    onCameraCapture: ((Bitmap) -> Unit)? = null
 ) {
-    // Image picker launcher
+    var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+
+    // Camera permission state
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Camera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        bitmap?.let {
+            onCameraCapture?.invoke(it)
+            showUploadDialog = false
+        }
+    }
+
+    // Permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
         if (uri != null && onProfilePictureClick != null) {
             onProfilePictureClick(uri)
+            showUploadDialog = false
         }
     }
 
@@ -347,7 +524,7 @@ private fun ProfileHeader(
                         modifier = Modifier
                             .size(28.dp)
                             .align(Alignment.BottomEnd)
-                            .clickable { launcher.launch("image/*") },
+                            .clickable { showUploadDialog = true },
                         shape = CircleShape,
                         color = Color.Black
                     ) {
@@ -375,6 +552,91 @@ private fun ProfileHeader(
                 fontSize = 16.sp,
                 color = Color.White.copy(alpha = 0.8f)
             )
+        }
+    }
+
+    // Upload Dialog
+    if (showUploadDialog) {
+        Dialog(onDismissRequest = { showUploadDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Upload Profile Photo",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Text(
+                        "Choose a method to upload your profile picture",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                        textAlign = TextAlign.Center
+                    )
+
+                    // Camera Button
+                    Button(
+                        onClick = {
+                            if (hasCameraPermission) {
+                                cameraLauncher.launch(null)
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_camera),
+                            contentDescription = "Camera",
+                            modifier = Modifier.padding(end = 8.dp),
+                            tint = Color.White
+                        )
+                        Text("Camera", fontSize = 16.sp, color = Color.White)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Gallery Button
+                    Button(
+                        onClick = { galleryLauncher.launch("image/*") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_gallery),
+                            contentDescription = "Gallery",
+                            modifier = Modifier.padding(end = 8.dp),
+                            tint = Color.White
+                        )
+                        Text("Gallery", fontSize = 16.sp, color = Color.White)
+                    }
+                }
+            }
         }
     }
 }

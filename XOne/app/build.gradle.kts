@@ -102,6 +102,9 @@ dependencies {
     // PDF Viewer - use web view based approach instead of PDF library
     implementation("androidx.webkit:webkit:1.7.0")
     implementation(libs.generativeai)
+
+    //biometric
+    implementation ("androidx.biometric:biometric:1.2.0-alpha05")
     
     // ZXing QR Code generator
     implementation("com.google.zxing:core:3.5.2")
