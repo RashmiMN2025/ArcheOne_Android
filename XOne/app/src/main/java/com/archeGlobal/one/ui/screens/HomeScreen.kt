@@ -216,7 +216,8 @@ fun HomeScreen(
     onFooterChatClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
-    onXCardClick: () -> Unit
+    onXCardClick: () -> Unit,
+    isAuthenticating: Boolean = false
 ) {
     val backgroundModel = remember { WelcomeBackgroundModel() }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
@@ -235,7 +236,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(radius = if (selectedApp != null) 10.dp else 0.dp)
+                    .blur(radius = if (isAuthenticating) 10.dp else 0.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -548,6 +549,22 @@ fun HomeScreen(
                             textAlign = TextAlign.Center
                         )
                     }
+                }
+            }
+
+            // Show authentication overlay if authenticating
+            if (isAuthenticating) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Optional: Add a fingerprint icon or loading indicator here
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
                 }
             }
         }

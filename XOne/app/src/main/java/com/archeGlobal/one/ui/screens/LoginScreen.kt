@@ -244,7 +244,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 },
                 modifier = Modifier
                     .size(48.dp)
-                    .background(Color(0xFFDD3825), CircleShape)  // Red background matching login button
+                    .background(Color(0xFF000000), CircleShape)  // Red background matching login button
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_fingerprint),

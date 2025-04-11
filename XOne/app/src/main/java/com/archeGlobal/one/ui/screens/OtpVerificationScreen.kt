@@ -152,28 +152,30 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Resend OTP Button (Removed Button Background Color, Added Underline)
-            Text(
-                text = "Resend OTP",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-                    .clickable(enabled = timeLeft == 0) {
-                        controller.resendOtp(email, mobile, employeeId) { message ->
-                            if (message.contains("success", ignoreCase = true)) {
-                                timeLeft = 60  // Reset timer properly
-                                Toast.makeText(context, "OTP sent successfully", Toast.LENGTH_SHORT).show()
-                            } else {
-                                errorMessage = message  // This will trigger the Toast via LaunchedEffect
+            // Only show Resend OTP when timer is expired
+            if (timeLeft == 0) {
+                Text(
+                    text = "Resend OTP",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .clickable {
+                            controller.resendOtp(email, mobile, employeeId) { message ->
+                                if (message.contains("success", ignoreCase = true)) {
+                                    timeLeft = 60  // Reset timer properly
+                                    Toast.makeText(context, "OTP sent successfully", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    errorMessage = message  // This will trigger the Toast via LaunchedEffect
+                                }
                             }
-                        }
-                    },
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = if (timeLeft == 0) Color.Black else Color.Gray,
-                    textDecoration = if (timeLeft == 0) TextDecoration.Underline else TextDecoration.None
-                ),
-                textAlign = TextAlign.Center
-            )
+                        },
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.Black,
+                        textDecoration = TextDecoration.Underline
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
         // Replace the existing loading indicator with UniversalLoader
         UniversalLoader(isLoading = isLoading)

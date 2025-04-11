@@ -37,8 +37,9 @@ fun BottomNavigationBar(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val selectedColor = Color(0xFFDD3825)
-    val unselectedColor = Color(0xFF808080)
+    val homeSelectedColor = Color(0xFF000000)  // Black for home
+    val selectedColor = Color(0xFFDD3825)      // Red for other items
+    val unselectedColor = Color(0xFF808080)    // Gray for unselected
     
     NavigationBar(
         modifier = modifier.height(56.dp),
@@ -51,34 +52,30 @@ fun BottomNavigationBar(
             selected = model.showHome,
             onClick = onHomeClick,
             icon = {
-                CompositionLocalProvider(LocalContentColor provides if (model.showHome) selectedColor else unselectedColor) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.arche_tri),
-                            contentDescription = "Home",
-                            modifier = Modifier.size(20.dp),
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                                if (model.showHome) selectedColor else unselectedColor
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Home",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
-                            color = if (model.showHome) selectedColor else unselectedColor
-                        )
-                    }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.arche_tri),
+                        contentDescription = "Home",
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor) // Always black
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Home",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 10.sp,
+                        color = if (model.showHome) selectedColor else unselectedColor // Red when selected, grey when not
+                    )
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
-                unselectedTextColor = unselectedColor,
+                selectedIconColor = homeSelectedColor,
+                unselectedIconColor = homeSelectedColor, // Always black
+                selectedTextColor = selectedColor, // Red when selected
+                unselectedTextColor = unselectedColor, // Grey when not selected
                 indicatorColor = Color.White
             ),
             alwaysShowLabel = false

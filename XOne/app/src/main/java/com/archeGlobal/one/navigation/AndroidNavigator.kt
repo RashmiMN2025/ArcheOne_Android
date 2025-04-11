@@ -14,7 +14,7 @@ import com.archeGlobal.one.XConnectActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.SOSActivity
 import com.archeGlobal.one.ChatActivity
-import okhttp3.internal.http2.Header
+import com.archeGlobal.one.WebViewActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -117,8 +117,20 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToELearning() {}
     override fun navigateToGoalSetting() {}
     override fun navigateToXCard() {}
-    override fun navigateToMedical() {}
-    override fun navigateToFinance() {}
+    override fun navigateToMedical() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://ilhc.icicilombard.com/Customer/iCard")
+            putExtra("title", "Medical")
+        }
+        activity.startActivity(intent)
+    }
+    override fun navigateToFinance() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://ess.azatecon.com/login")
+            putExtra("title", "Finance")
+        }
+        activity.startActivity(intent)
+    }
     override fun navigateToAdmin() {}
     override fun navigateToHR() {}
     override fun navigateToHolidayCalendar() {
@@ -151,8 +163,20 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
     }
-    override fun navigateToTravelExpenses() {}
-    override fun navigateToSAP() {}
+    override fun navigateToTravelExpenses() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml")
+            putExtra("title", "Travel & Expenses")
+        }
+        activity.startActivity(intent)
+    }
+    override fun navigateToSAP() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://my422539.businessbydesign.cloud.sap/sap/public/ap/ui/repository/SAP_UI/HTMLOBERON5/client.html?app.component=/SAP_UI_CT/Main/root.uiccwoc&rootWindow=X&redirectUrl=/sap/public/byd/runtime")
+            putExtra("title", "SAP")
+        }
+        activity.startActivity(intent)
+    }
     override fun navigateToChat() {
         Log.d("AndroidNavigator", "Navigating to chat screen")
         if (activity is HomeActivity) {

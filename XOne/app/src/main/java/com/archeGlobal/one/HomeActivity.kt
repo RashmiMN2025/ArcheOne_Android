@@ -64,7 +64,8 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var userDataManager: UserDataManager
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
-    private var isFromLogin = false // New flag to track if we're coming from login
+    private var isFromLogin = false // Flag to track if we're coming from login
+    private var isAuthenticating = mutableStateOf(false) // New state for biometric authentication
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -220,7 +221,8 @@ class HomeActivity : AppCompatActivity() {
                             onFooterChatClick = { navigator.navigateToChat() },
                             onFooterSOSClick = controller::onFooterSOSClick,
                             onFooterProfileClick = controller::onFooterProfileClick,
-                            onXCardClick = controller::onXCardClick
+                            onXCardClick = controller::onXCardClick,
+                            isAuthenticating = isAuthenticating.value
                         )
                     }
 
@@ -639,6 +641,7 @@ class HomeActivity : AppCompatActivity() {
         if (!isFromLogin && System.currentTimeMillis() - lastPauseTime > BACKGROUND_THRESHOLD) {
             val biometricHelper = BiometricHelper(this)
             if (biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()) {
+                isAuthenticating.value = true // Set authenticating state to true
                 biometricHelper.showBiometricPrompt(
                     activity = this,
                     title = "Verify Identity",
@@ -646,6 +649,7 @@ class HomeActivity : AppCompatActivity() {
                     onSuccess = {
                         // Continue with the app
                         Log.d("BiometricCheck", "Biometric verification successful")
+                        isAuthenticating.value = false // Reset authenticating state
                     },
                     onError = { error ->
                         // If biometric fails, go back to login

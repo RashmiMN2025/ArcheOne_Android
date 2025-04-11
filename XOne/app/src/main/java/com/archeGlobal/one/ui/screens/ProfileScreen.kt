@@ -303,26 +303,25 @@ private fun LogoutConfirmationDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
                 .padding(horizontal = 16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(28.dp)
+            shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Icon without background, increased size
+                // Icon
                 Icon(
-                    imageVector = Icons.Default.ExitToApp,
+                    painter = painterResource(id = R.drawable.ic_logout),
                     contentDescription = "Logout",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(32.dp)
                 )
                 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 // Title
                 Text(
@@ -332,9 +331,9 @@ private fun LogoutConfirmationDialog(
                     color = Color.Black
                 )
                 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
-                // Confirmation message
+                // Message
                 Text(
                     text = "Are you sure you want to log out of\nyour account?",
                     fontSize = 14.sp,
@@ -343,47 +342,51 @@ private fun LogoutConfirmationDialog(
                     lineHeight = 20.sp
                 )
                 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 
-                // Logout button
-                Button(
-                    onClick = onConfirm,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .padding(horizontal = 24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                    shape = RoundedCornerShape(100.dp)
+                // Buttons in a row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Log Out",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
+                    // Log Out button
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Log Out",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Cancel button
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFABABAB) // Lighter gray color
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(10.dp))
-                
-                // Cancel button
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .padding(horizontal = 24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF6F4EE)),
-                    shape = RoundedCornerShape(100.dp)
-                ) {
-                    Text(
-                        text = "Cancel",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
