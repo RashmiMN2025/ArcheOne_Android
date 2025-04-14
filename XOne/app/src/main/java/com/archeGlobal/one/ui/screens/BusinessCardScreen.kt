@@ -49,6 +49,9 @@ import android.graphics.Paint
 import android.graphics.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
 
 // Composable to display a QR code bitmap using Canvas
 @Composable
@@ -66,6 +69,69 @@ private fun ComposeQRCodeImage(
             val paint = Paint()
             val rect = Rect(0, 0, bitmap.width, bitmap.height)
             canvas.nativeCanvas.drawBitmap(bitmap, rect, android.graphics.RectF(0f, 0f, size.width, size.height), paint)
+        }
+    }
+}
+
+@Composable
+private fun CustomTopAppBar(
+    onBackPressed: () -> Unit,
+    onShareClick: () -> Unit
+) {
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
+    
+    Column {
+        Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(Color.Transparent),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Back button
+            Box(
+                modifier = Modifier.width(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(onClick = onBackPressed) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "Back",
+                        tint = TextPrimary
+                    )
+                }
+            }
+
+            // Title
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "My Business Card",
+                    color = TextPrimary,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // Share button
+            Box(
+                modifier = Modifier.width(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = onShareClick,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.share),
+                        contentDescription = "Share",
+                        tint = TextPrimary
+                    )
+                }
+            }
         }
     }
 }
@@ -111,7 +177,7 @@ fun BusinessCardScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 private fun PortraitBusinessCard(
     businessCard: BusinessCardModel,
@@ -127,46 +193,16 @@ private fun PortraitBusinessCard(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            TopAppBar(
-                title = {
-                    Text(
-                        "My Business Card",
-                        color = TextPrimary,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { controller.onBackPressed() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
+            CustomTopAppBar(
+                onBackPressed = { controller.onBackPressed() },
+                onShareClick = {
+                    scope.launch {
+                        cardBounds.value?.let { bounds ->
+                            val bitmap = captureCardArea(view, bounds)
+                            controller.onShareCard(bitmap)
+                        }
                     }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                cardBounds.value?.let { bounds ->
-                                    val bitmap = captureCardArea(view, bounds)
-                                    controller.onShareCard(bitmap)
-                                }
-                            }
-                        },
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.share),
-                            contentDescription = "Share",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
 
@@ -404,7 +440,7 @@ private fun PortraitBusinessCard(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 private fun LandscapeBusinessCard(
     businessCard: BusinessCardModel,
@@ -420,46 +456,16 @@ private fun LandscapeBusinessCard(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            TopAppBar(
-                title = {
-                    Text(
-                        "My Business Card",
-                        color = TextPrimary,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { controller.onBackPressed() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "Back",
-                            tint = TextPrimary
-                        )
+            CustomTopAppBar(
+                onBackPressed = { controller.onBackPressed() },
+                onShareClick = {
+                    scope.launch {
+                        cardBounds.value?.let { bounds ->
+                            val bitmap = captureCardArea(view, bounds)
+                            controller.onShareCard(bitmap)
+                        }
                     }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                cardBounds.value?.let { bounds ->
-                                    val bitmap = captureCardArea(view, bounds)
-                                    controller.onShareCard(bitmap)
-                                }
-                            }
-                        },  modifier = Modifier.size(28.dp)
-                    )
-                    {
-                        Icon(
-                            painter = painterResource(id = R.drawable.share),
-                            contentDescription = "Share",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
 

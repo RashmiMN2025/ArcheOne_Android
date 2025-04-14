@@ -38,7 +38,7 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.utils.BiometricHelper
 import androidx.fragment.app.FragmentActivity
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun LoginScreen(controller: LoginController, navigator: Navigator) {
     val context = LocalContext.current
