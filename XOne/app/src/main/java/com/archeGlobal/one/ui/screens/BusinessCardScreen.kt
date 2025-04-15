@@ -52,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.ui.graphics.Color.Companion.Black
 
 // Composable to display a QR code bitmap using Canvas
 @Composable
@@ -111,8 +112,10 @@ private fun CustomTopAppBar(
             ) {
                 Text(
                     text = "My Business Card",
-                    color = TextPrimary,
-                    textAlign = TextAlign.Center
+                    color = Black,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+
                 )
             }
 

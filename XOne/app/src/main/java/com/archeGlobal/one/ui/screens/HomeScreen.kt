@@ -715,7 +715,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do"  -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -748,6 +748,8 @@ private fun AppIcon(
                                 "profile" -> R.drawable.profile
                                 "profileconnect" -> R.drawable.profile
                                 "todo" -> R.drawable.todo
+                                "passwordreset" -> R.drawable.password_reset
+                                "knowyourog" -> R.drawable.know_your_org
                                 else -> R.drawable.mydocuments
                             }
                         ),
