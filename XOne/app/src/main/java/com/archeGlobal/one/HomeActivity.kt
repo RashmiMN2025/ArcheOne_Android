@@ -62,14 +62,46 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var emergencyContactController: EmergencyContactController
     private lateinit var chatController: ChatController
     private lateinit var userDataManager: UserDataManager
+    private lateinit var navigator: AndroidNavigator
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
     private var isAuthenticating = mutableStateOf(false) // New state for biometric authentication
 
+    private fun refreshHomeData() {
+        val userData = userDataManager.getUserData()
+        val token = userDataManager.getAuthToken() ?: return
+        val email = userData?.email ?: return
+        val mobile = userData?.mobile ?: return
+        val employeeId = userData?.employeeId ?: return
+
+        lifecycleScope.launch {
+            otpVerificationController.loginWithToken(
+                token = token,
+                email = email,
+                mobile = mobile,
+                employeeId = employeeId,
+                fromHome = true
+            ) { message, isError ->
+                if (isError) {
+                    if (message.contains("Invalid Token")) {
+                        Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                        userDataManager.clearUserData()
+                        navigator.navigateToLoginScreen()
+                    } else {
+                        Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                // Update the home controller's data
+                controller.refreshUserData()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         userDataManager = UserDataManager.getInstance(this)
+        navigator = AndroidNavigator(this)
         
         // Check if we're coming from login
         isFromLogin = intent.getBooleanExtra("fromLogin", false)
@@ -222,7 +254,8 @@ class HomeActivity : AppCompatActivity() {
                             onFooterSOSClick = controller::onFooterSOSClick,
                             onFooterProfileClick = controller::onFooterProfileClick,
                             onXCardClick = controller::onXCardClick,
-                            isAuthenticating = isAuthenticating.value
+                            isAuthenticating = isAuthenticating.value,
+                            onRefresh = { refreshHomeData() }
                         )
                     }
 

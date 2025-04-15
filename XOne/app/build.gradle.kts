@@ -97,6 +97,7 @@ dependencies {
     
     // Accompanist
     implementation(libs.accompanist.pager)
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
     implementation("com.airbnb.android:lottie-compose:6.0.0")
     
     // PDF Viewer - use web view based approach instead of PDF library

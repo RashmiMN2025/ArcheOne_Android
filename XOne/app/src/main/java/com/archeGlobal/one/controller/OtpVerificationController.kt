@@ -29,9 +29,10 @@ class OtpVerificationController(
         mobile: String,
         employeeId: String,
         otpFromUser: String,
+        isBiometric: Boolean = false,
         callback: (String, Boolean) -> Unit
     ) {
-        val request = VerifyOtpRequest(email, mobile, employeeId, otpFromUser)
+        val request = VerifyOtpRequest(email, mobile, employeeId, otpFromUser, isBiometric)
         Log.d("OtpVerification", "Sending OTP verification request: $request")
 
         RetrofitClient.apiService.verifyOtp(request).enqueue(object : retrofit2.Callback<OtpVerifyResponse> {
@@ -76,6 +77,17 @@ class OtpVerificationController(
                 callback("Network error: ${t.message}", true)
             }
         })
+    }
+
+    fun verifyWithBiometric(
+        email: String,
+        mobile: String,
+        employeeId: String,
+        callback: (String, Boolean) -> Unit
+    ) {
+        // Skip OTP and use biometric authentication
+        val dummyOtp = "000000" // This won't be validated server-side when isBiometric is true
+        verifyOtp(email, mobile, employeeId, dummyOtp, true, callback)
     }
 
      fun loginWithToken(

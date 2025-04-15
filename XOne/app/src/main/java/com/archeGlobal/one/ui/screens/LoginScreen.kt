@@ -18,6 +18,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import com.archeGlobal.one.controller.LoginController
+import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
 import androidx.compose.material3.Text
 import com.archeGlobal.one.navigation.Navigator
@@ -50,6 +51,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var mobileVisible by remember { mutableStateOf(false) }
     
     val biometricHelper = remember { BiometricHelper(context) }
+    val showBiometricButton = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
 
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {
@@ -128,6 +130,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions.Default,
                 shape = MaterialTheme.shapes.medium,
+                visualTransformation = if (mobileVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { mobileVisible = !mobileVisible }) {
                         Icon(
@@ -191,67 +194,67 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 )
             }
 
-            // OR Divider
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Divider(
+            // OR Divider and Fingerprint only shown if biometric is enabled
+            if (showBiometricButton) {
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 16.dp),
-                    color = Color.Gray
-                )
-                Text("OR", color = Color.Gray)
-                Divider(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp),
-                    color = Color.Gray
-                )
-            }
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 16.dp),
+                        color = Color.Gray
+                    )
+                    Text("OR", color = Color.Gray)
+                    Divider(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp),
+                        color = Color.Gray
+                    )
+                }
 
-            // Fingerprint Icon Button
-            IconButton(
-                onClick = {
-                    val activity = context as? FragmentActivity
-                    if (activity != null && biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()) {
-                        biometricHelper.showBiometricPrompt(
-                            activity = activity,
-                            onSuccess = {
-                                biometricHelper.getStoredCredentials()?.let { (savedEmail, savedMobile, savedEmployeeId) ->
-                                    isLoading = true
-                                    controller.sendOtp(savedEmail, savedMobile, savedEmployeeId) { message, isError ->
-                                        isLoading = false
-                                        if (!isError) {
-                                            navigator.navigateToOtpVerification(savedEmail, savedMobile, savedEmployeeId)
-                                        } else {
-                                            errorMessage = message
+                // Fingerprint Icon Button
+                IconButton(
+                    onClick = {
+                        val activity = context as? FragmentActivity
+                        if (activity != null) {
+                            biometricHelper.showBiometricPrompt(
+                                activity = activity,
+                                onSuccess = {
+                                    biometricHelper.getStoredCredentials()?.let { (savedEmail, savedMobile, savedEmployeeId) ->
+                                        isLoading = true
+                                        // Skip OTP verification completely for biometric login
+                                        val otpController = OtpVerificationController(navigator, context)
+                                        otpController.verifyWithBiometric(savedEmail, savedMobile, savedEmployeeId) { message: String, isError: Boolean ->
+                                            isLoading = false
+                                            if (isError) {
+                                                errorMessage = message
+                                            }
                                         }
                                     }
+                                },
+                                onError = { error ->
+                                    errorMessage = error
                                 }
-                            },
-                            onError = { error ->
-                                errorMessage = error
-                            }
-                        )
-                    } else {
-                        Toast.makeText(context, "Fingerprint authentication not available", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color(0xFF000000), CircleShape)  // Red background matching login button
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_fingerprint),
-                    contentDescription = "Login with fingerprint",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFF000000), CircleShape)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_fingerprint),
+                        contentDescription = "Login with fingerprint",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
 

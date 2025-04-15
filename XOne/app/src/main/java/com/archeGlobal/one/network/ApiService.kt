@@ -103,7 +103,8 @@ data class VerifyOtpRequest(
     val email: String,
     val mobile: String,
     val employeeId: String,
-    val otpFromUser: String
+    val otpFromUser: String,
+    val isBiometric: Boolean = false
 )
 
 data class OtpVerifyResponse(

@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.ui.components.EmptyFavorites
 import com.archeGlobal.one.ui.components.FooterScaffold
+import com.archeGlobal.one.ui.components.UniversalLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.request.CachePolicy
@@ -59,6 +60,9 @@ import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.BackHandler
 import android.app.Activity
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 
 @Composable
 fun ProfileHeader(
@@ -217,11 +221,24 @@ fun HomeScreen(
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
     onXCardClick: () -> Unit,
-    isAuthenticating: Boolean = false
+    isAuthenticating: Boolean = false,
+    onRefresh: () -> Unit = {}
 ) {
     val backgroundModel = remember { WelcomeBackgroundModel() }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
     var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Effect to handle refresh completion
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            onRefresh()
+            // Add a small delay to ensure the refresh operation has time to complete
+            kotlinx.coroutines.delay(1000)
+            isRefreshing = false
+        }
+    }
 
     // Wrap with FooterScaffold for bottom navigation
     FooterScaffold(
@@ -232,11 +249,28 @@ fun HomeScreen(
         onFooterProfileClick = onFooterProfileClick
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Main content with conditional blur
+            // Main content with conditional blur and pull-to-refresh
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .blur(radius = if (isAuthenticating) 10.dp else 0.dp)
+                    .pointerInput(Unit) {
+                        var dragStart = 0f
+                        detectVerticalDragGestures(
+                            onDragStart = { offset ->
+                                dragStart = offset.y
+                            },
+                            onDragEnd = {
+                                if (dragStart > 50f && !isRefreshing) { // Only trigger if not already refreshing
+                                    isRefreshing = true
+                                }
+                            },
+                            onDragCancel = {},
+                            onVerticalDrag = { change, dragAmount ->
+                                change.consume()
+                            }
+                        )
+                    }
             ) {
                 Column(
                     modifier = Modifier
@@ -415,6 +449,9 @@ fun HomeScreen(
                     }
                 }
             }
+
+            // Show universal loader while refreshing
+            UniversalLoader(isLoading = isRefreshing)
 
             // Semi-transparent overlay when an app is selected
             if (selectedApp != null) {
@@ -634,15 +671,15 @@ private fun AppItem(
     onLongPress: (Pair<Float, Float>) -> Unit
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    val context = LocalContext.current
     // Format the title for better display
     val formattedTitle = formatServiceTitle(title)
     
     Card(
         modifier = modifier
-            .aspectRatio(0.95f)  // Changed from 0.92f to 0.95f to make it less tall
+            .aspectRatio(0.95f)
             .padding(3.dp)
             .onGloballyPositioned { coordinates ->
-                // Store the position when the component is laid out
                 val position = coordinates.positionInRoot()
                 itemPosition = Pair(
                     position.x + (coordinates.size.width / 2),
@@ -651,7 +688,9 @@ private fun AppItem(
             }
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onTap = { onClick() },
+                    onTap = { 
+                        onClick()
+                    },
                     onLongPress = { 
                         itemPosition?.let { pos -> onLongPress(pos) }
                     }

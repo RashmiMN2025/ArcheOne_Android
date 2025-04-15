@@ -651,7 +651,7 @@ private fun MenuItems(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items.forEach { item ->
             MenuItem(
@@ -672,30 +672,34 @@ private fun MenuItem(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         color = Color.White
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(14.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color.Black
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = title,
-                    fontSize = 16.sp,
-                    color = Color.Black
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
                 )
             }
             Icon(
