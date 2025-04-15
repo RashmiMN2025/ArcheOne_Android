@@ -216,7 +216,8 @@ fun HomeScreen(
     onFooterChatClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
-    onXCardClick: () -> Unit
+    onXCardClick: () -> Unit,
+    isAuthenticating: Boolean = false
 ) {
     val backgroundModel = remember { WelcomeBackgroundModel() }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
@@ -235,7 +236,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(radius = if (selectedApp != null) 10.dp else 0.dp)
+                    .blur(radius = if (isAuthenticating) 10.dp else 0.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -332,7 +333,7 @@ fun HomeScreen(
                                     items(items.chunked(3)) { rowItems ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             rowItems.forEach { item ->
                                                 AppItem(
@@ -342,7 +343,7 @@ fun HomeScreen(
                                                     onFavoriteClick = { onToggleFavorite(item) },
                                                     modifier = Modifier.weight(1f),
                                                     showFavoriteButton = model.showAllApps || model.viewFavorites,
-                                                    isSelected = false, // Never set to true here
+                                                    isSelected = false,
                                                     onLongPress = { position -> 
                                                         selectedApp = item
                                                         selectedPosition = position
@@ -353,7 +354,7 @@ fun HomeScreen(
                                                 Spacer(modifier = Modifier.weight(1f))
                                             }
                                         }
-                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Spacer(modifier = Modifier.height(10.dp))
                                     }
                                 }
                             }
@@ -384,7 +385,7 @@ fun HomeScreen(
                                         items(items.chunked(3)) { rowItems ->
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                                             ) {
                                                 rowItems.forEach { item ->
                                                     AppItem(
@@ -394,7 +395,7 @@ fun HomeScreen(
                                                         onFavoriteClick = { onToggleFavorite(item) },
                                                         modifier = Modifier.weight(1f),
                                                         showFavoriteButton = true,
-                                                        isSelected = false, // Never set to true here
+                                                        isSelected = false,
                                                         onLongPress = { position -> 
                                                             selectedApp = item
                                                             selectedPosition = position
@@ -405,7 +406,7 @@ fun HomeScreen(
                                                     Spacer(modifier = Modifier.weight(1f))
                                                 }
                                             }
-                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Spacer(modifier = Modifier.height(10.dp))
                                         }
                                     }
                                 }
@@ -550,13 +551,29 @@ fun HomeScreen(
                     }
                 }
             }
+
+            // Show authentication overlay if authenticating
+            if (isAuthenticating) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Optional: Add a fingerprint icon or loading indicator here
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 // Add this helper function to format long titles
 private fun formatServiceTitle(title: String): String {
-    // Special cases for specific long titles
+    // Special cases for specific long titles - forcing proper line breaks
     return when (title) {
         "Holiday Calendar" -> "Holiday\nCalendar"
         "New Onboarding" -> "New\nOnboarding"
@@ -565,17 +582,39 @@ private fun formatServiceTitle(title: String): String {
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
         "To Do" -> "To Do"
+        "My Career" -> "My\nCareer"
+        "Admin" -> "Admin" 
+        "Medical" -> "Medical"
+        "ID" -> "ID"
+        "Finance" -> "Finance"
+        "SAP" -> "SAP"
+        "SOS" -> "SOS"
+        "Connect" -> "Connect"
+        "Locations" -> "Locations"
+        "Policy" -> "Policy"
+        "Profile" -> "Profile"
+        "TimeSheet", "Timesheet" -> "Time\nSheet"
+        "Leave" -> "Leave"
+        "eLearning" -> "e-\nLearning"
+        "Asset" -> "Asset"
+        "Greetings" -> "Greetings"
+        "Profile Connect" -> "Profile\nConnect"
         else -> {
-            // General rule for other multi-word titles longer than 10 characters
-            if (title.contains(" ") && title.length > 10) {
-                // Find the middle space to split approximately in half
-                val spaces = title.indices.filter { title[it] == ' ' }
-                if (spaces.isNotEmpty()) {
-                    val middleSpaceIndex = spaces[spaces.size / 2]
-                    title.substring(0, middleSpaceIndex) + "\n" + title.substring(middleSpaceIndex + 1)
+            // For any other multi-word titles, always split at a space
+            if (title.contains(" ")) {
+                val words = title.split(" ")
+                if (words.size >= 2) {
+                    // If there are multiple words, split at the middle
+                    val firstPart = words.take(words.size / 2).joinToString(" ")
+                    val secondPart = words.drop(words.size / 2).joinToString(" ")
+                    "$firstPart\n$secondPart"
                 } else {
                     title
                 }
+            } else if (title.length > 8) {
+                // For long single words, split in half
+                val mid = title.length / 2
+                title.substring(0, mid) + "\n" + title.substring(mid)
             } else {
                 title
             }
@@ -600,13 +639,14 @@ private fun AppItem(
     
     Card(
         modifier = modifier
-            .aspectRatio(1f)
+            .aspectRatio(0.95f)  // Changed from 0.92f to 0.95f to make it less tall
+            .padding(3.dp)
             .onGloballyPositioned { coordinates ->
                 // Store the position when the component is laid out
                 val position = coordinates.positionInRoot()
                 itemPosition = Pair(
                     position.x + (coordinates.size.width / 2),
-                    position.y + (coordinates.size.height / 2) // Store the center point
+                    position.y + (coordinates.size.height / 2)
                 )
             }
             .pointerInput(Unit) {
@@ -631,38 +671,34 @@ private fun AppItem(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(8.dp),
+                    .padding(8.dp),  // Reduced from 6.dp to 5.dp
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Top
             ) {
-                Spacer(modifier = Modifier.height(2.dp))
+                AppIcon(title = title, modifier = Modifier.size(47.dp))  // Reduced from 45.dp to 43.dp
                 
-                // Icon at the top
-                AppIcon(title = title, modifier = Modifier.size(45.dp))
-                
-                // Text at the bottom with more space
+                // Text area with more space
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 30.dp)
+                        .heightIn(min = 35.dp)  // Reduced from 38.dp to 35.dp
+                        .weight(1f)
                 ) {
                     Text(
                         text = formattedTitle,
                         color = TextPrimary,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         maxLines = 2,
-                        lineHeight = 13.sp,
+                        lineHeight = 12.sp,  // Reduced from 13.sp to 12.sp
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                            .padding(horizontal = 2.dp)
                             .align(Alignment.Center)
                     )
                 }
-                
-                Spacer(modifier = Modifier.height(2.dp))
             }
         }
     }
@@ -679,7 +715,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do"  -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -712,6 +748,8 @@ private fun AppIcon(
                                 "profile" -> R.drawable.profile
                                 "profileconnect" -> R.drawable.profile
                                 "todo" -> R.drawable.todo
+                                "passwordreset" -> R.drawable.password_reset
+                                "knowyourog" -> R.drawable.know_your_org
                                 else -> R.drawable.mydocuments
                             }
                         ),

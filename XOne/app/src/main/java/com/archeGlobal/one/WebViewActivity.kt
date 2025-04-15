@@ -110,24 +110,35 @@ class WebViewActivity : ComponentActivity() {
                                 // SOS button only for specified policies
                                 if (showSosButton) {
                                     IconButton(onClick = { 
-                                        // Create intent for SOSActivity with special flags
-                                        val intent = Intent(this@WebViewActivity, SOSActivity::class.java).apply {
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                                                   Intent.FLAG_ACTIVITY_CLEAR_TOP or 
-                                                   Intent.FLAG_ACTIVITY_NO_ANIMATION
-                                            putExtra("fromPdfViewer", true)
-                                            putExtra("preventWhiteBar", true)
+                                        try {
+                                            Log.d("WebViewActivity", "Navigating to SOS from policy")
+                                            // Create intent for SOSActivity with special flags
+                                            val intent = Intent(this@WebViewActivity, SOSActivity::class.java).apply {
+                                                // Don't use FLAG_ACTIVITY_NEW_TASK as it can cause issues with parcelable objects
+                                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                                                       Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                                       
+                                                // Set showHeader to false to ensure we don't get navigation conflicts
+                                                putExtra("showHeader", false)
+                                                putExtra("fromPdfViewer", true)
+                                                putExtra("preventWhiteBar", true)
+                                                // Add this to track when opened from policy
+                                                putExtra("fromPolicy", true)
+                                            }
+                                            
+                                            // Force current activity to have proper display settings
+                                            window.statusBarColor = android.graphics.Color.TRANSPARENT
+                                            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+                                            window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
+                                                                                 android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                            
+                                            // Start activity with no animation
+                                            startActivity(intent)
+                                            overridePendingTransition(0, 0)
+                                        } catch (e: Exception) {
+                                            Log.e("WebViewActivity", "Error navigating to SOS: ${e.message}", e)
+                                            e.printStackTrace() // Print full stack trace for better debugging
                                         }
-                                        
-                                        // Force current activity to have proper display settings
-                                        window.statusBarColor = android.graphics.Color.TRANSPARENT
-                                        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-                                        window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
-                                                                             android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                        
-                                        // Start activity with no animation
-                                        startActivity(intent)
-                                        overridePendingTransition(0, 0)
                                     }) {
                                         Box(
                                             modifier = Modifier

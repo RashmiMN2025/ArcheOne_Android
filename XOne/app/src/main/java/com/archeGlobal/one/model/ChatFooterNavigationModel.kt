@@ -37,8 +37,9 @@ fun ChatBottomNavigationBar(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val selectedColor = Color(0xFFDD3825)
-    val unselectedColor = Color(0xFF808080)
+    val homeSelectedColor = Color(0xFF000000)  // Black for home
+    val selectedColor = Color(0xFFDD3825)      // Red for other items
+    val unselectedColor = Color(0xFF808080)    // Gray for unselected
     
     NavigationBar(
         modifier = modifier.height(56.dp),
@@ -73,9 +74,9 @@ fun ChatBottomNavigationBar(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
+                selectedIconColor = homeSelectedColor,  // Black for home when selected
                 unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
+                selectedTextColor = homeSelectedColor,  // Black for home when selected
                 unselectedTextColor = unselectedColor,
                 indicatorColor = Color.White
             ),
@@ -145,9 +146,9 @@ fun ChatBottomNavigationBar(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
+                selectedIconColor = selectedColor,  // Red for SOS when selected
                 unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
+                selectedTextColor = selectedColor,  // Red for SOS when selected
                 unselectedTextColor = unselectedColor,
                 indicatorColor = Color.White
             ),
@@ -181,9 +182,9 @@ fun ChatBottomNavigationBar(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
+                selectedIconColor = selectedColor,  // Red for Profile when selected
                 unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
+                selectedTextColor = selectedColor,  // Red for Profile when selected
                 unselectedTextColor = unselectedColor,
                 indicatorColor = Color.White
             ),

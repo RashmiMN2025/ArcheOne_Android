@@ -43,8 +43,109 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomTopAppBar(
+    title: String,
+    onBackClick: () -> Unit,
+    showSosButton: Boolean,
+    context: Context
+) {
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
+    
+    Column {
+        Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(Color.Transparent),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Back button
+            Box(
+                modifier = Modifier.width(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.Black
+                    )
+                }
+            }
+
+            // Title
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // SOS button or spacer
+            Box(
+                modifier = Modifier.width(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showSosButton) {
+                    IconButton(
+                        onClick = { 
+                            // Create intent for SOSActivity with special flags
+                            val intent = android.content.Intent(context, com.archeGlobal.one.SOSActivity::class.java).apply {
+                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                       android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                                       android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                putExtra("fromPdfViewer", true)
+                                putExtra("preventWhiteBar", true)
+                                putExtra("showHeader", false)
+                            }
+                            
+                            // Force current activity to have proper display settings
+                            (context as? androidx.activity.ComponentActivity)?.let { activity ->
+                                activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
+                                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+                                activity.window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
+                                                                              android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            }
+                            
+                            // Start activity with no animation
+                            context.startActivity(intent)
+                            (context as? androidx.activity.ComponentActivity)?.overridePendingTransition(0, 0)
+                        }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "SOS",
+                                color = Color.White,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(48.dp))
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun PDFViewerScreen(
     pdfUrl: String,
@@ -144,69 +245,12 @@ fun PDFViewerScreen(
             )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            TopAppBar(
-                title = { 
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
-                    }
-                },
-                actions = {
-                    if (title.contains("Anti Bribery", ignoreCase = true) || title.contains("POSH", ignoreCase = true)) {
-                        IconButton(onClick = { 
-                            // Create intent for SOSActivity with special flags
-                            val intent = android.content.Intent(context, com.archeGlobal.one.SOSActivity::class.java).apply {
-                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                       android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or 
-                                       android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
-                                putExtra("fromPdfViewer", true)
-                                putExtra("preventWhiteBar", true)
-                                putExtra("showHeader", false) // Pass showHeader as false
-                            }
-                            
-                            // Force current activity to have proper display settings
-                            (context as? androidx.activity.ComponentActivity)?.let { activity ->
-                                activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
-                                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-                                activity.window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
-                                                                              android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            }
-                            
-                            // Start activity with no animation
-                            context.startActivity(intent)
-                            (context as? androidx.activity.ComponentActivity)?.overridePendingTransition(0, 0)
-                        }) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "SOS",
-                                    color = Color.White,
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                    fontSize = 8.sp
-                                )
-                            }
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.width(48.dp))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            CustomTopAppBar(
+                title = title,
+                onBackClick = onBackClick,
+                showSosButton = title.contains("Anti Bribery", ignoreCase = true) || 
+                              title.contains("POSH", ignoreCase = true),
+                context = context
             )
             
             // Main content container

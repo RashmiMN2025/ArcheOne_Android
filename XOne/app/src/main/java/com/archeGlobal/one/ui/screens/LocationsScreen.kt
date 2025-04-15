@@ -34,8 +34,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.shape.CircleShape
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.asPaddingValues
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun LocationsScreen(
     navController: NavHostController,
@@ -50,6 +54,23 @@ fun LocationsScreen(
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val savedEmergencyContact = savedStateHandle?.get<Boolean>("isEmergencyContact") ?: false
     val isEmergencyContactActual = savedEmergencyContact || isEmergencyContact
+    
+    // Add BackHandler to handle back swipe gestures
+    BackHandler {
+        // Use the same logic as the back arrow button
+        if (locationController.isInEmergencyContactMode()) {
+            val stayInCurrentScreen = locationController.onEmergencyBackPressed()
+            if (!stayInCurrentScreen) {
+                navController.navigate("sos?showHeader=$showHeader") {
+                    popUpTo("sos") { inclusive = true }
+                }
+            }
+        } else {
+            if (!locationController.onBackPressed()) {
+                navController.popBackStack()
+            }
+        }
+    }
     
     LaunchedEffect(Unit) {
         Log.d("LocationsScreen", "Screen initialized with isEmergencyContact=$isEmergencyContactActual")
@@ -90,14 +111,56 @@ fun LocationsScreen(
                 )
             )
     ) {
+        val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
+        
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
             topBar = {
-                TopAppBar(
-                    title = {
+                Column {
+                    Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .background(Color.Transparent),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Navigation icon
                         Box(
-                            modifier = Modifier.fillMaxWidth() // Make the Box take the full width of the TopAppBar
+                            modifier = Modifier.width(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    if (locationController.isInEmergencyContactMode()) {
+                                        val stayInCurrentScreen = locationController.onEmergencyBackPressed()
+                                        if (!stayInCurrentScreen) {
+                                            navController.navigate("sos?showHeader=$showHeader") {
+                                                popUpTo("sos") { inclusive = true }
+                                            }
+                                        }
+                                    } else {
+                                        if (!locationController.onBackPressed()) {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = PrimaryBlue
+                                )
+                            }
+                        }
+
+                        // Title
+                        Box(
+                            modifier = Modifier
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = when {
@@ -111,41 +174,18 @@ fun LocationsScreen(
                                 fontSize = 18.sp,
                                 color = PrimaryBlue,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.align(Alignment.Center) // Center-align the title
+                                textAlign = TextAlign.Center
                             )
                         }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            // Handle back navigation
-                            if (locationController.isInEmergencyContactMode()) {
-                                val stayInCurrentScreen = locationController.onEmergencyBackPressed()
-                                if (!stayInCurrentScreen) {
-                                    navController.navigate("sos?showHeader=$showHeader") { // Pass showHeader=false explicitly
-                                        popUpTo("sos") { inclusive = true }
-                                    }
-                                }
-                            } else {
-                                if (!locationController.onBackPressed()) {
-                                    navController.popBackStack()
-                                }
-                            }
-                        }) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = PrimaryBlue
-                            )
+
+                        // Right spacer
+                        Box(
+                            modifier = Modifier.width(48.dp)
+                        ) {
+                            Spacer(modifier = Modifier.fillMaxWidth())
                         }
-                    },
-                    actions = {
-                        // Add an invisible spacer to balance the layout
-                        Spacer(modifier = Modifier.width(48.dp))
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
-                )
+                    }
+                }
             }
         ) { padding ->
             when {
@@ -207,7 +247,7 @@ fun LocationsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 private fun LocationCard(
     location: LocationInfo,
@@ -352,8 +392,11 @@ private fun LocationCard(
             ) {
                 Button(
                     onClick = {
+                        // Add debugging to see what's happening
+                        Log.d("LocationsScreen", "View Location clicked for: ${location.name}, hasStates=${location.states != null}")
+                        
                         // For all locations except India, open in Google Maps
-                        if (!location.name.contains("India", ignoreCase = true)) {
+                        if (!location.name.equals("India", ignoreCase = true)) {
                             // Open Google Maps with the redirection link if available
                             val uri = if (location.redirection?.isNotEmpty() == true) {
                                 Uri.parse(location.redirection)
@@ -365,6 +408,7 @@ private fun LocationCard(
                             context.startActivity(intent)
                         } else {
                             // For India, use the provided onClick which shows internal details
+                            Log.d("LocationsScreen", "Calling onClick() for India location")
                             onClick()
                         }
                     },
@@ -478,7 +522,7 @@ private fun StateList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 private fun LocationDetails(
     location: LocationInfo,
@@ -730,7 +774,7 @@ private fun LocationList(
         items(locations) { location ->
             LocationCard(
                 location = location,
-                onClick = { if (!isTamilNadu) onLocationClick(location) },
+                onClick = { onLocationClick(location) },
                 onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
                     { location.mapFileName?.let { mapFile -> onShowFloorMap(mapFile) } }
                 } else null
