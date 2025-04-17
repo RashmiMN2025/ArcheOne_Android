@@ -116,7 +116,7 @@ fun ProfileHeader(
                     // If profile picture URL is available, display it using Coil
                     if (model.profilePicture != null && model.profilePicture.isNotEmpty()) {
                         Log.d("HomeScreen", "Loading profile picture: ${model.profilePicture}")
-                        
+
                         // Use ImageCache version for recomposition
                         val context = LocalContext.current
                         val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
@@ -129,7 +129,7 @@ fun ProfileHeader(
                                     modifier = Modifier.fillMaxSize(),
                                     tint = Color.DarkGray
                                 )
-                                
+
                                 // Load the actual profile image on top
                                 Image(
                                     painter = rememberAsyncImagePainter(
@@ -157,9 +157,9 @@ fun ProfileHeader(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(20.dp))
-                
+
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -167,37 +167,37 @@ fun ProfileHeader(
                         text = model.userName,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontSize = 18.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold
                         ),
                         color = Color.Black
                     )
-                    
+
                     Text(
                         text = model.designation,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
                         color = Color.Black
                     )
-                    
+
                     Text(
                         text = model.department,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
                         color = Color.Black
                     )
-                    
+
                     Text(
                         text = model.employeeId,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
                         color = Color.Black
@@ -319,7 +319,7 @@ fun HomeScreen(
                         ) {
                             Text("All Apps")
                         }
-                        
+
                         Spacer(modifier = Modifier.width(30.dp))
 
                         Button(
@@ -363,7 +363,7 @@ fun HomeScreen(
                                                 .padding(vertical = 8.dp)
                                         )
                                     }
-                                    
+
                                     items(items.chunked(3)) { rowItems ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -415,7 +415,7 @@ fun HomeScreen(
                                                     .padding(vertical = 8.dp)
                                             )
                                         }
-                                        
+
                                         items(items.chunked(3)) { rowItems ->
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
@@ -474,7 +474,7 @@ fun HomeScreen(
                     val itemSize = 80.dp
                     val scaleFactor = 1.2f  // Slightly bigger than original
                     val itemSizePx = with(density) { itemSize.toPx() }
-                    
+
                     Box(
                         modifier = Modifier
                             .offset {
@@ -485,7 +485,7 @@ fun HomeScreen(
                             }
                     ) {
                         val formattedTitle = formatServiceTitle(selectedApp!!.title)
-                        
+
                         Card(
                             modifier = Modifier
                                 .size(itemSize * scaleFactor),
@@ -502,10 +502,10 @@ fun HomeScreen(
                                     verticalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Spacer(modifier = Modifier.height(2.dp))
-                                    
+
                                     // Icon at the top - slightly larger
                                     AppIcon(title = selectedApp!!.title, modifier = Modifier.size(46.dp))
-                                    
+
                                     // Text at the bottom with more space
                                     Box(
                                         modifier = Modifier
@@ -527,7 +527,7 @@ fun HomeScreen(
                                                 .align(Alignment.Center)
                                         )
                                     }
-                                    
+
                                     Spacer(modifier = Modifier.height(2.dp))
                                 }
                             }
@@ -542,22 +542,22 @@ fun HomeScreen(
                     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
                     val dialogWidth = 160.dp  // Return to original width
                     val density = LocalDensity.current
-                    
+
                     val dialogWidthPx = with(density) { dialogWidth.toPx() }
                     val screenWidthPx = with(density) { screenWidth.toPx() }
                     val itemSizePx = with(density) { 80.dp.toPx() }
                     val scaleFactor = 1.1f // Same as app scale factor
-                    
+
                     // Calculate x position (centered with the app)
                     val xOffset = when {
                         x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
                         x - (dialogWidthPx / 2) < 0 -> 16f
                         else -> x - (dialogWidthPx / 2)
                     }
-                    
+
                     // Reduce the yOffset to decrease the space between the service card and the dialog
                     val yOffset = y - itemSizePx - 180 // Reduced from 235 to 200
-                    
+
                     Card(
                         modifier = Modifier
                             .width(dialogWidth)
@@ -674,7 +674,7 @@ private fun AppItem(
     val context = LocalContext.current
     // Format the title for better display
     val formattedTitle = formatServiceTitle(title)
-    
+
     Card(
         modifier = modifier
             .aspectRatio(0.95f)
@@ -715,7 +715,7 @@ private fun AppItem(
                 verticalArrangement = Arrangement.Top
             ) {
                 AppIcon(title = title, modifier = Modifier.size(47.dp))  // Reduced from 45.dp to 43.dp
-                
+
                 // Text area with more space
                 Box(
                     modifier = Modifier
@@ -754,7 +754,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -789,6 +789,8 @@ private fun AppIcon(
                                 "todo" -> R.drawable.todo
                                 "passwordreset" -> R.drawable.password_reset
                                 "knowyourog" -> R.drawable.know_your_org
+                                "archeodyssey" -> R.drawable.arche_odyssey
+                                "zinghr" -> R.drawable.zinghr
                                 else -> R.drawable.mydocuments
                             }
                         ),
@@ -822,7 +824,7 @@ private fun AppIcon(
                                 style = Stroke(width = 1f)
                             )
                         }
-                        
+
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,

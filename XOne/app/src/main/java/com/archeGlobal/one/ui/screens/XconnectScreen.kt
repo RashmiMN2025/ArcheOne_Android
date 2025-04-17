@@ -35,15 +35,36 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.window.Dialog
+import androidx.compose.material.icons.filled.Close
 
 
 @Composable
-fun XConnectScreen(onBackPressed: () -> Unit) {
+fun XConnectScreen(
+    onBackPressed: () -> Unit,
+    onArticleSelected: (SocialArticle, String) -> Unit = { _, _ -> }
+) {
     val context = LocalContext.current
     val socialController = remember { SocialController(context) }
     var selectedTab by remember { mutableStateOf("All Posts") }
     var searchQuery by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    // Variables for article detail dialog
+    var showDetailDialog by remember { mutableStateOf(false) }
+    var selectedArticle by remember { mutableStateOf<SocialArticle?>(null) }
+    var selectedArticleType by remember { mutableStateOf("") }
+
+    // Function to show article detail
+    val showArticleDetail: (SocialArticle, String) -> Unit = { article, type ->
+        // For non-job articles, use the new navigation flow
+        if (type != "Jobs") {
+            onArticleSelected(article, type)
+        } else {
+            // For jobs, keep the existing behavior (direct to WebView)
+            socialController.openInBrowser(type, article.id)
+        }
+    }
 
     // Updated tab options
     val tabs = listOf("All Posts", "Case Studies", "Blogs", "Jobs")
@@ -97,7 +118,7 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 // Empty spacer for balance (same width as back button)
                 Spacer(modifier = Modifier.size(48.dp))
             }
@@ -118,7 +139,7 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                     )
                 }
             }
-            
+
             // Search Bar
             Surface(
                 modifier = Modifier
@@ -146,7 +167,7 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
                             tint = Color.Gray,
                             modifier = Modifier.size(24.dp)
                         )
-                        
+
                         BasicTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
@@ -182,10 +203,133 @@ fun XConnectScreen(onBackPressed: () -> Unit) {
 
             // Content based on selected tab and search query
             when (selectedTab) {
-                "All Posts" -> AllPostsContent(socialController, searchQuery)
-                "Case Studies" -> CaseStudiesContent(socialController, searchQuery)
-                "Blogs" -> BlogsContent(socialController, searchQuery)
+                "All Posts" -> AllPostsContent(socialController, searchQuery, showArticleDetail)
+                "Case Studies" -> CaseStudiesContent(socialController, searchQuery, showArticleDetail)
+                "Blogs" -> BlogsContent(socialController, searchQuery, showArticleDetail)
                 "Jobs" -> JobsContent(socialController, searchQuery)
+            }
+        }
+    }
+
+    // Show article detail dialog if needed
+    if (showDetailDialog && selectedArticle != null) {
+        ArticleDetailDialog(
+            article = selectedArticle!!,
+            type = selectedArticleType,
+            onDismiss = { showDetailDialog = false },
+            onReadMore = { 
+                socialController.openInBrowser(selectedArticleType, selectedArticle!!.id)
+                showDetailDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ArticleDetailDialog(
+    article: SocialArticle,
+    type: String,
+    onDismiss: () -> Unit,
+    onReadMore: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header with close button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFDD3825))
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = type,
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                // Image
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(article.imageUrl)
+                        .crossfade(true)
+                        .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .build(),
+                    contentDescription = article.title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.ic_image_placeholder),
+                    placeholder = painterResource(id = R.drawable.ic_image_placeholder)
+                )
+
+                // Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = article.title,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Text(
+                        text = article.description,
+                        fontSize = 16.sp,
+                        color = Color.DarkGray,
+                        lineHeight = 24.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Read More button
+                    Button(
+                        onClick = onReadMore,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                        shape = RoundedCornerShape(24.dp)
+                    ) {
+                        Text(
+                            text = "Read More",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }
@@ -213,35 +357,35 @@ fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
 }
 
 @Composable
-fun AllPostsContent(socialController: SocialController, searchQuery: String) {
+fun AllPostsContent(socialController: SocialController, searchQuery: String, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
     // Filter case studies, blogs and jobs based on search query - only titles/headers, not content
     val filteredCaseStudies = socialController.getCaseStudies().filter {
         it.title.contains(searchQuery, ignoreCase = true)
     }
-    
+
     val filteredBlogs = socialController.getBlogs().filter {
         it.title.contains(searchQuery, ignoreCase = true)
     }
-    
+
     val filteredJobs = socialController.getJobPostings().filter {
         it.Title.contains(searchQuery, ignoreCase = true)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (filteredCaseStudies.isNotEmpty()) {
-            HorizontalSection(title = "Case Studies", articles = filteredCaseStudies)
+            HorizontalSection(title = "Case Studies", articles = filteredCaseStudies, showArticleDetail = showArticleDetail)
             Spacer(modifier = Modifier.height(16.dp))
         }
-        
+
         if (filteredBlogs.isNotEmpty()) {
-            HorizontalSection(title = "Blogs", articles = filteredBlogs)
+            HorizontalSection(title = "Blogs", articles = filteredBlogs, showArticleDetail = showArticleDetail)
             Spacer(modifier = Modifier.height(16.dp))
         }
-        
+
         if (filteredJobs.isNotEmpty()) {
             HorizontalJobsSection(title = "Jobs", jobs = filteredJobs)
         }
-        
+
         // If all sections are empty after filtering, show a message
         if (filteredCaseStudies.isEmpty() && filteredBlogs.isEmpty() && filteredJobs.isEmpty() && searchQuery.isNotEmpty()) {
             Box(
@@ -261,11 +405,11 @@ fun AllPostsContent(socialController: SocialController, searchQuery: String) {
 }
 
 @Composable
-fun CaseStudiesContent(socialController: SocialController, searchQuery: String) {
+fun CaseStudiesContent(socialController: SocialController, searchQuery: String, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
     val caseStudies = socialController.getCaseStudies().filter {
         searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true)
     }
-    
+
     if (caseStudies.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -290,7 +434,8 @@ fun CaseStudiesContent(socialController: SocialController, searchQuery: String) 
                 ArticleCard(
                     article = article,
                     type = "Case Studies",
-                    socialController = socialController
+                    socialController = socialController,
+                    showArticleDetail = showArticleDetail
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -299,11 +444,11 @@ fun CaseStudiesContent(socialController: SocialController, searchQuery: String) 
 }
 
 @Composable
-fun BlogsContent(socialController: SocialController, searchQuery: String) {
+fun BlogsContent(socialController: SocialController, searchQuery: String, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
     val blogs = socialController.getBlogs().filter {
         searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true)
     }
-    
+
     if (blogs.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -328,7 +473,8 @@ fun BlogsContent(socialController: SocialController, searchQuery: String) {
                 ArticleCard(
                     article = article,
                     type = "Blogs",
-                    socialController = socialController
+                    socialController = socialController,
+                    showArticleDetail = showArticleDetail
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -464,9 +610,9 @@ private fun extractExperience(description: String): String {
 }
 
 @Composable
-fun HorizontalSection(title: String, articles: List<SocialArticle>) {
+fun HorizontalSection(title: String, articles: List<SocialArticle>, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
     if (articles.isEmpty()) return
-    
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
@@ -491,7 +637,8 @@ fun HorizontalSection(title: String, articles: List<SocialArticle>) {
                     slug = article.id,
                     socialController = LocalContext.current.let { 
                         remember { SocialController(it) }
-                    }
+                    },
+                    showArticleDetail = showArticleDetail
                 )
             }
         }
@@ -501,7 +648,7 @@ fun HorizontalSection(title: String, articles: List<SocialArticle>) {
 @Composable
 fun HorizontalJobsSection(title: String, jobs: List<Job>) {
     if (jobs.isEmpty()) return
-    
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
@@ -604,14 +751,19 @@ fun JobPostCard(
 
 
 @Composable
-fun ArticleCard(article: SocialArticle, type: String, socialController: SocialController) {
+fun ArticleCard(
+    article: SocialArticle, 
+    type: String, 
+    socialController: SocialController,
+    showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }
+) {
     Card(
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable { 
-                socialController.openInBrowser(type, article.id)
+                showArticleDetail(article, type)
             },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -632,7 +784,7 @@ fun ArticleCard(article: SocialArticle, type: String, socialController: SocialCo
                 error = painterResource(id = R.drawable.ic_image_placeholder),
                 placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )
-            
+
             // Content section
             Column(
                 modifier = Modifier
@@ -648,31 +800,19 @@ fun ArticleCard(article: SocialArticle, type: String, socialController: SocialCo
                     lineHeight = 19.sp,
                     textAlign = TextAlign.Center // Center align the text
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                // Use AnnotatedString to style "Read More" differently
+
+                // Simple truncated description without "Read More" text
                 Text(
-                    text = buildAnnotatedString {
-                        // Truncate description if needed
-                        val truncatedDescription = if (article.description.length > 150) {
-                            article.description.substring(0, 150)
-                        } else {
-                            article.description
-                        }
-                        
-                        append(truncatedDescription)
-                        append("... ")
-                        withStyle(style = SpanStyle(
-                            color = Color(0xFFDD3825),  // Red color
-                            fontWeight = FontWeight.Bold  // Make it bold for better visibility
-                        )) {
-                            append("Read More")
-                        }
+                    text = if (article.description.length > 150) {
+                        article.description.substring(0, 150) + "..."
+                    } else {
+                        article.description
                     },
                     fontSize = 13.sp,
                     color = Color.Gray,
-                    maxLines = 4,  // Increased from 3 to 4 to ensure "Read More" is visible
+                    maxLines = 4,
                     lineHeight = 15.sp,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
@@ -690,8 +830,17 @@ fun PostCard(
     imageUrl: String,
     type: String,
     slug: String,
-    socialController: SocialController
+    socialController: SocialController,
+    showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }
 ) {
+    // Create a SocialArticle object from the parameters
+    val article = SocialArticle(
+        id = slug,
+        title = title,
+        description = description,
+        imageUrl = imageUrl
+    )
+
     Card(
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier
@@ -699,7 +848,7 @@ fun PostCard(
             .height(250.dp)
             .padding(4.dp)
             .clickable { 
-                socialController.openInBrowser(type, slug)
+                showArticleDetail(article, type)
             },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -720,7 +869,7 @@ fun PostCard(
                 error = painterResource(id = R.drawable.ic_image_placeholder),
                 placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )
-            
+
             Column(
                 modifier = Modifier.padding(8.dp, 8.dp, 8.dp, 4.dp), // Reduced bottom padding
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -748,5 +897,3 @@ fun PostCard(
         }
     }
 }
-
-

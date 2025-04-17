@@ -38,28 +38,28 @@ private val LightColorScheme = lightColorScheme(
 
 private val AppTypography = Typography(
     bodyLarge = TextStyle(
-        fontFamily = GeistFontFamily,
+        fontFamily = GraphikFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
     titleLarge = TextStyle(
-        fontFamily = GeistFontFamily,
+        fontFamily = GraphikFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     ),
     titleMedium = TextStyle(
-        fontFamily = GeistFontFamily,
+        fontFamily = GraphikFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.15.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = GeistFontFamily,
+        fontFamily = GraphikFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
         lineHeight = 16.sp,

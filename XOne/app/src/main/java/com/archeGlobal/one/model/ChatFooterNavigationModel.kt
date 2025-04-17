@@ -58,7 +58,7 @@ fun ChatBottomNavigationBar(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.arche_tri),
+                            painter = painterResource(id = R.drawable.arche_black2),
                             contentDescription = "Home",
                             modifier = Modifier.size(20.dp),
                             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(unselectedColor)

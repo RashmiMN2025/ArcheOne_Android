@@ -40,7 +40,7 @@ fun BottomNavigationBar(
     val homeSelectedColor = Color(0xFF000000)  // Black for home
     val selectedColor = Color(0xFFDD3825)      // Red for other items
     val unselectedColor = Color(0xFF808080)    // Gray for unselected
-    
+
     NavigationBar(
         modifier = modifier.height(56.dp),
         containerColor = Color.White,
@@ -57,7 +57,7 @@ fun BottomNavigationBar(
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.arche_tri),
+                        painter = painterResource(id = R.drawable.arche_black2),
                         contentDescription = "Home",
                         modifier = Modifier.size(20.dp),
                         colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor) // Always black
@@ -67,20 +67,20 @@ fun BottomNavigationBar(
                         text = "Home",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 10.sp,
-                        color = if (model.showHome) selectedColor else unselectedColor // Red when selected, grey when not
+                        color = homeSelectedColor // Always black
                     )
                 }
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = homeSelectedColor,
                 unselectedIconColor = homeSelectedColor, // Always black
-                selectedTextColor = selectedColor, // Red when selected
-                unselectedTextColor = unselectedColor, // Grey when not selected
+                selectedTextColor = homeSelectedColor, // Always black
+                unselectedTextColor = homeSelectedColor, // Always black
                 indicatorColor = Color.White
             ),
             alwaysShowLabel = false
         )
-        
+
         // Chat item
         NavigationBarItem(
             selected = model.showChat,
@@ -116,7 +116,7 @@ fun BottomNavigationBar(
             ),
             alwaysShowLabel = false
         )
-        
+
         // SOS item
         NavigationBarItem(
             selected = model.showSOS,
@@ -152,7 +152,7 @@ fun BottomNavigationBar(
             ),
             alwaysShowLabel = false
         )
-        
+
         // Profile item
         NavigationBarItem(
             selected = model.showProfile,
