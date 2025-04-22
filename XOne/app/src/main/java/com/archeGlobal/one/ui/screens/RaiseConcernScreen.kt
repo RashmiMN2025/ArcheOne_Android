@@ -34,7 +34,7 @@ import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun RaiseConcernScreen(onBackPressed: () -> Unit) {
     val context = LocalContext.current
@@ -387,7 +387,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                         }
                         
                         // Submit with identity button
-                        OutlinedButton(
+                        Button(
                             onClick = { 
                                 showAnonymousDialog = false
                                 coroutineScope.launch { submitConcern(anonymous = false) }
@@ -396,11 +396,14 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(28.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFABABAB)
+                            )
                         ) {
                             Text(
                                 text = "Submit with Identity",
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
+                                color = Color.White
                             )
                         }
                     }

@@ -93,24 +93,94 @@ class HomeController(
                 Log.d("MyDocuments", "Navigating to My Documents")
                 navigator.navigateToMyDocuments()
             }
-            "my career" -> navigator.navigateToMyCareer()
-            "elearning" -> navigator.navigateToELearning()
-            "goal setting/kpi", "goal" -> navigator.navigateToGoalSetting()
+            "my career" -> {
+                Log.d("HomeController", "My Career service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "My Career service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            "elearning" -> {
+                Log.d("HomeController", "eLearning service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "eLearning service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            "goal setting/kpi", "goal" -> {
+                Log.d("HomeController", "Goal Setting/KPI service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Goal Setting/KPI service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
             "medical" -> navigator.navigateToMedical()
             "finance" -> navigator.navigateToFinance()
-            "admin" -> navigator.navigateToAdmin()
-            "hr" -> navigator.navigateToHR()
+            "admin" -> {
+                Log.d("HomeController", "Admin service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Admin service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            "hr" -> {
+                Log.d("HomeController", "HR service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "HR service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
             "holiday calendar" -> navigator.navigateToHolidayCalendar()
-            "client calendar" -> navigator.navigateToClientCalendar()
-            "greetings" -> navigator.navigateToGreetings()
+            "client calendar" -> {
+                Log.d("HomeController", "Client Calendar service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Client Calendar service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            "greetings" -> {
+                Log.d("HomeController", "Greetings service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Greetings service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
             "connect" -> {
                 Log.d("XConnect", "Navigating to XConnect")
                 navigator.navigateToXConnect()
             }
-            "helpdesk" -> navigator.navigateToHelpdesk()
-            "announcements" -> navigator.navigateToAnnouncements()
+            "helpdesk" -> {
+                Log.d("HomeController", "Helpdesk service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Helpdesk service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            "announcements" -> {
+                Log.d("HomeController", "Announcements service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Announcements service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
             "xprofile" -> navigator.navigateToXProfile()
-            "password reset" -> navigator.navigateToPasswordReset()
+            "password reset" -> {
+                Log.d("HomeController", "Password Reset service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Password Reset service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
             "policy" -> navigator.navigateToPolicy()
             "sos" -> {
                 Log.d("SOS", "Navigating to SOS")
@@ -118,6 +188,15 @@ class HomeController(
             }
             "travel & expenses" -> navigator.navigateToTravelExpenses()
             "sap" -> navigator.navigateToSAP()
+            else -> {
+                // Default case for any non-handled services
+                Log.d("HomeController", "${item.title} service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "${item.title} service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -208,12 +287,29 @@ class HomeController(
     }
 
     fun refreshUserData() {
+        val userData = OtpVerificationController.getUserData()
         model = model.copy(
-            userName = OtpVerificationController.getUserData()?.name ?: "",
-            designation = OtpVerificationController.getUserData()?.designation ?: "",
-            department = OtpVerificationController.getUserData()?.department ?: "",
-            employeeId = OtpVerificationController.getUserData()?.employeeId ?: "",
-            profilePicture = OtpVerificationController.getUserData()?.profilePic
+            userName = userData?.name ?: "",
+            designation = userData?.designation ?: "",
+            department = userData?.department ?: "",
+            employeeId = userData?.employeeId ?: "",
+            profilePicture = userData?.profilePic,
+            categories = userData?.let { data ->
+                data.services
+                    .groupBy { it.category }
+                    .toSortedMap(String.CASE_INSENSITIVE_ORDER)
+                    .mapValues { (_, services) ->
+                        services.map { service ->
+                            HomeItem(
+                                title = service.service,
+                                icon = service.icon ?: service.service.lowercase().replace(" ", ""),
+                                isFavorite = service.favourite,
+                                category = service.category
+                            )
+                        }
+                    }
+            } ?: emptyMap(),
+            favorites = preferencesManager.getFavorites()
         )
     }
 

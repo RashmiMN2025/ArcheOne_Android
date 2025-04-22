@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,11 +18,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import com.archeGlobal.one.controller.LoginController
+import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
 import androidx.compose.material3.Text
 import com.archeGlobal.one.navigation.Navigator
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.theme.XOneTheme
@@ -33,8 +36,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.archeGlobal.one.R
+import com.archeGlobal.one.utils.BiometricHelper
+import androidx.fragment.app.FragmentActivity
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun LoginScreen(controller: LoginController, navigator: Navigator) {
     val context = LocalContext.current
@@ -44,11 +49,15 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
+    
+    val biometricHelper = remember { BiometricHelper(context) }
+    val showBiometricButton = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
 
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            errorMessage = null
         }
     }
 
@@ -88,11 +97,11 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,  // White background
+                    focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black,      // Black text
+                    focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
-                    focusedIndicatorColor = Color.Transparent,  // No underline
+                    focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 textStyle = TextStyle(color = Color.Black),
@@ -101,7 +110,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 shape = MaterialTheme.shapes.medium
             )
 
-            // Phone Number Field
+            // Mobile Number Field
             OutlinedTextField(
                 value = mobile,
                 onValueChange = { mobile = it },
@@ -110,11 +119,11 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,  // White background
+                    focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black,      // Black text
+                    focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
-                    focusedIndicatorColor = Color.Transparent,  // No underline
+                    focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 textStyle = TextStyle(color = Color.Black),
@@ -142,11 +151,11 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     .fillMaxWidth(0.95f)
                     .padding(bottom = 32.dp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,  // White background
+                    focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black,      // Black text
+                    focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
-                    focusedIndicatorColor = Color.Transparent,  // No underline
+                    focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 textStyle = TextStyle(color = Color.Black),
@@ -159,20 +168,12 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             Button(
                 onClick = {
                     isLoading = true
-                    errorMessage = null
-                    
-                    controller.sendOtp(
-                        email = email,
-                        mobile = mobile,
-                        employeeId = employeeId
-                    ) { message, isError ->
+                    controller.sendOtp(email, mobile, employeeId) { message, isError ->
                         isLoading = false
                         if (!isError) {
-                            Log.d("LoginScreen", "OTP sent successfully")
                             navigator.navigateToOtpVerification(email, mobile, employeeId)
                         } else {
-                            Log.e("LoginScreen", "Error sending OTP: $message")
-                            errorMessage = message // This will trigger the Toast via LaunchedEffect
+                            errorMessage = message
                         }
                     }
                 },
@@ -192,30 +193,85 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     fontSize = 18.sp
                 )
             }
+
+            // OR Divider and Fingerprint only shown if biometric is enabled
+            if (showBiometricButton) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 16.dp),
+                        color = Color.Gray
+                    )
+                    Text("OR", color = Color.Gray)
+                    Divider(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp),
+                        color = Color.Gray
+                    )
+                }
+
+                // Fingerprint Icon Button
+                IconButton(
+                    onClick = {
+                        val activity = context as? FragmentActivity
+                        if (activity != null) {
+                            biometricHelper.showBiometricPrompt(
+                                activity = activity,
+                                onSuccess = {
+                                    biometricHelper.getStoredCredentials()?.let { (savedEmail, savedMobile, savedEmployeeId) ->
+                                        isLoading = true
+                                        // Skip OTP verification completely for biometric login
+                                        val otpController = OtpVerificationController(navigator, context)
+                                        otpController.verifyWithBiometric(savedEmail, savedMobile, savedEmployeeId) { message: String, isError: Boolean ->
+                                            isLoading = false
+                                            if (isError) {
+                                                errorMessage = message
+                                            }
+                                        }
+                                    }
+                                },
+                                onError = { error ->
+                                    errorMessage = error
+                                }
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFF000000), CircleShape)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_fingerprint),
+                        contentDescription = "Login with fingerprint",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
         }
 
-        // Replace the existing loading indicator with UniversalLoader
-        UniversalLoader(isLoading = isLoading)
+        // Loading indicator
+        if (isLoading) {
+            UniversalLoader(isLoading = true)
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    val previewNavigator = PreviewNavigator()
-    
     XOneTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            LoginScreen(
-                controller = LoginController(
-                    context = LocalContext.current,
-                    navigator = previewNavigator
-                ),
-                navigator = previewNavigator
-            )
-        }
+        LoginScreen(
+            controller = LoginController(LocalContext.current, PreviewNavigator()),
+            navigator = PreviewNavigator()
+        )
     }
 }

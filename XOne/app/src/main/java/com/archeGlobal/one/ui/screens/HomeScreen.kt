@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.ui.components.EmptyFavorites
 import com.archeGlobal.one.ui.components.FooterScaffold
+import com.archeGlobal.one.ui.components.UniversalLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.request.CachePolicy
@@ -59,6 +60,9 @@ import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.BackHandler
 import android.app.Activity
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 
 @Composable
 fun ProfileHeader(
@@ -112,7 +116,7 @@ fun ProfileHeader(
                     // If profile picture URL is available, display it using Coil
                     if (model.profilePicture != null && model.profilePicture.isNotEmpty()) {
                         Log.d("HomeScreen", "Loading profile picture: ${model.profilePicture}")
-                        
+
                         // Use ImageCache version for recomposition
                         val context = LocalContext.current
                         val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
@@ -125,7 +129,7 @@ fun ProfileHeader(
                                     modifier = Modifier.fillMaxSize(),
                                     tint = Color.DarkGray
                                 )
-                                
+
                                 // Load the actual profile image on top
                                 Image(
                                     painter = rememberAsyncImagePainter(
@@ -153,9 +157,9 @@ fun ProfileHeader(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(20.dp))
-                
+
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -163,37 +167,37 @@ fun ProfileHeader(
                         text = model.userName,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontSize = 18.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold
                         ),
                         color = Color.Black
                     )
-                    
+
                     Text(
                         text = model.designation,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
                         color = Color.Black
                     )
-                    
+
                     Text(
                         text = model.department,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
                         color = Color.Black
                     )
-                    
+
                     Text(
                         text = model.employeeId,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            fontFamily = GeistFontFamily,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         ),
                         color = Color.Black
@@ -216,11 +220,25 @@ fun HomeScreen(
     onFooterChatClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
-    onXCardClick: () -> Unit
+    onXCardClick: () -> Unit,
+    isAuthenticating: Boolean = false,
+    onRefresh: () -> Unit = {}
 ) {
     val backgroundModel = remember { WelcomeBackgroundModel() }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
     var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Effect to handle refresh completion
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            onRefresh()
+            // Add a small delay to ensure the refresh operation has time to complete
+            kotlinx.coroutines.delay(1000)
+            isRefreshing = false
+        }
+    }
 
     // Wrap with FooterScaffold for bottom navigation
     FooterScaffold(
@@ -231,11 +249,28 @@ fun HomeScreen(
         onFooterProfileClick = onFooterProfileClick
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Main content with conditional blur
+            // Main content with conditional blur and pull-to-refresh
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(radius = if (selectedApp != null) 10.dp else 0.dp)
+                    .blur(radius = if (isAuthenticating) 10.dp else 0.dp)
+                    .pointerInput(Unit) {
+                        var dragStart = 0f
+                        detectVerticalDragGestures(
+                            onDragStart = { offset ->
+                                dragStart = offset.y
+                            },
+                            onDragEnd = {
+                                if (dragStart > 50f && !isRefreshing) { // Only trigger if not already refreshing
+                                    isRefreshing = true
+                                }
+                            },
+                            onDragCancel = {},
+                            onVerticalDrag = { change, dragAmount ->
+                                change.consume()
+                            }
+                        )
+                    }
             ) {
                 Column(
                     modifier = Modifier
@@ -284,7 +319,7 @@ fun HomeScreen(
                         ) {
                             Text("All Apps")
                         }
-                        
+
                         Spacer(modifier = Modifier.width(30.dp))
 
                         Button(
@@ -328,11 +363,11 @@ fun HomeScreen(
                                                 .padding(vertical = 8.dp)
                                         )
                                     }
-                                    
+
                                     items(items.chunked(3)) { rowItems ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             rowItems.forEach { item ->
                                                 AppItem(
@@ -342,7 +377,7 @@ fun HomeScreen(
                                                     onFavoriteClick = { onToggleFavorite(item) },
                                                     modifier = Modifier.weight(1f),
                                                     showFavoriteButton = model.showAllApps || model.viewFavorites,
-                                                    isSelected = false, // Never set to true here
+                                                    isSelected = false,
                                                     onLongPress = { position -> 
                                                         selectedApp = item
                                                         selectedPosition = position
@@ -353,7 +388,7 @@ fun HomeScreen(
                                                 Spacer(modifier = Modifier.weight(1f))
                                             }
                                         }
-                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Spacer(modifier = Modifier.height(10.dp))
                                     }
                                 }
                             }
@@ -380,11 +415,11 @@ fun HomeScreen(
                                                     .padding(vertical = 8.dp)
                                             )
                                         }
-                                        
+
                                         items(items.chunked(3)) { rowItems ->
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(25.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                                             ) {
                                                 rowItems.forEach { item ->
                                                     AppItem(
@@ -394,7 +429,7 @@ fun HomeScreen(
                                                         onFavoriteClick = { onToggleFavorite(item) },
                                                         modifier = Modifier.weight(1f),
                                                         showFavoriteButton = true,
-                                                        isSelected = false, // Never set to true here
+                                                        isSelected = false,
                                                         onLongPress = { position -> 
                                                             selectedApp = item
                                                             selectedPosition = position
@@ -405,7 +440,7 @@ fun HomeScreen(
                                                     Spacer(modifier = Modifier.weight(1f))
                                                 }
                                             }
-                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Spacer(modifier = Modifier.height(10.dp))
                                         }
                                     }
                                 }
@@ -414,6 +449,9 @@ fun HomeScreen(
                     }
                 }
             }
+
+            // Show universal loader while refreshing
+            UniversalLoader(isLoading = isRefreshing)
 
             // Semi-transparent overlay when an app is selected
             if (selectedApp != null) {
@@ -436,7 +474,7 @@ fun HomeScreen(
                     val itemSize = 80.dp
                     val scaleFactor = 1.2f  // Slightly bigger than original
                     val itemSizePx = with(density) { itemSize.toPx() }
-                    
+
                     Box(
                         modifier = Modifier
                             .offset {
@@ -447,7 +485,7 @@ fun HomeScreen(
                             }
                     ) {
                         val formattedTitle = formatServiceTitle(selectedApp!!.title)
-                        
+
                         Card(
                             modifier = Modifier
                                 .size(itemSize * scaleFactor),
@@ -464,10 +502,10 @@ fun HomeScreen(
                                     verticalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Spacer(modifier = Modifier.height(2.dp))
-                                    
+
                                     // Icon at the top - slightly larger
                                     AppIcon(title = selectedApp!!.title, modifier = Modifier.size(46.dp))
-                                    
+
                                     // Text at the bottom with more space
                                     Box(
                                         modifier = Modifier
@@ -489,7 +527,7 @@ fun HomeScreen(
                                                 .align(Alignment.Center)
                                         )
                                     }
-                                    
+
                                     Spacer(modifier = Modifier.height(2.dp))
                                 }
                             }
@@ -504,22 +542,22 @@ fun HomeScreen(
                     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
                     val dialogWidth = 160.dp  // Return to original width
                     val density = LocalDensity.current
-                    
+
                     val dialogWidthPx = with(density) { dialogWidth.toPx() }
                     val screenWidthPx = with(density) { screenWidth.toPx() }
                     val itemSizePx = with(density) { 80.dp.toPx() }
                     val scaleFactor = 1.1f // Same as app scale factor
-                    
+
                     // Calculate x position (centered with the app)
                     val xOffset = when {
                         x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
                         x - (dialogWidthPx / 2) < 0 -> 16f
                         else -> x - (dialogWidthPx / 2)
                     }
-                    
+
                     // Reduce the yOffset to decrease the space between the service card and the dialog
                     val yOffset = y - itemSizePx - 180 // Reduced from 235 to 200
-                    
+
                     Card(
                         modifier = Modifier
                             .width(dialogWidth)
@@ -550,13 +588,29 @@ fun HomeScreen(
                     }
                 }
             }
+
+            // Show authentication overlay if authenticating
+            if (isAuthenticating) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Optional: Add a fingerprint icon or loading indicator here
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 // Add this helper function to format long titles
 private fun formatServiceTitle(title: String): String {
-    // Special cases for specific long titles
+    // Special cases for specific long titles - forcing proper line breaks
     return when (title) {
         "Holiday Calendar" -> "Holiday\nCalendar"
         "New Onboarding" -> "New\nOnboarding"
@@ -565,17 +619,39 @@ private fun formatServiceTitle(title: String): String {
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
         "To Do" -> "To Do"
+        "My Career" -> "My\nCareer"
+        "Admin" -> "Admin" 
+        "Medical" -> "Medical"
+        "ID" -> "ID"
+        "Finance" -> "Finance"
+        "SAP" -> "SAP"
+        "SOS" -> "SOS"
+        "Connect" -> "Connect"
+        "Locations" -> "Locations"
+        "Policy" -> "Policy"
+        "Profile" -> "Profile"
+        "TimeSheet", "Timesheet" -> "Time\nSheet"
+        "Leave" -> "Leave"
+        "eLearning" -> "e-\nLearning"
+        "Asset" -> "Asset"
+        "Greetings" -> "Greetings"
+        "Profile Connect" -> "Profile\nConnect"
         else -> {
-            // General rule for other multi-word titles longer than 10 characters
-            if (title.contains(" ") && title.length > 10) {
-                // Find the middle space to split approximately in half
-                val spaces = title.indices.filter { title[it] == ' ' }
-                if (spaces.isNotEmpty()) {
-                    val middleSpaceIndex = spaces[spaces.size / 2]
-                    title.substring(0, middleSpaceIndex) + "\n" + title.substring(middleSpaceIndex + 1)
+            // For any other multi-word titles, always split at a space
+            if (title.contains(" ")) {
+                val words = title.split(" ")
+                if (words.size >= 2) {
+                    // If there are multiple words, split at the middle
+                    val firstPart = words.take(words.size / 2).joinToString(" ")
+                    val secondPart = words.drop(words.size / 2).joinToString(" ")
+                    "$firstPart\n$secondPart"
                 } else {
                     title
                 }
+            } else if (title.length > 8) {
+                // For long single words, split in half
+                val mid = title.length / 2
+                title.substring(0, mid) + "\n" + title.substring(mid)
             } else {
                 title
             }
@@ -595,23 +671,26 @@ private fun AppItem(
     onLongPress: (Pair<Float, Float>) -> Unit
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    val context = LocalContext.current
     // Format the title for better display
     val formattedTitle = formatServiceTitle(title)
-    
+
     Card(
         modifier = modifier
-            .aspectRatio(1f)
+            .aspectRatio(0.95f)
+            .padding(3.dp)
             .onGloballyPositioned { coordinates ->
-                // Store the position when the component is laid out
                 val position = coordinates.positionInRoot()
                 itemPosition = Pair(
                     position.x + (coordinates.size.width / 2),
-                    position.y + (coordinates.size.height / 2) // Store the center point
+                    position.y + (coordinates.size.height / 2)
                 )
             }
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onTap = { onClick() },
+                    onTap = { 
+                        onClick()
+                    },
                     onLongPress = { 
                         itemPosition?.let { pos -> onLongPress(pos) }
                     }
@@ -631,38 +710,34 @@ private fun AppItem(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(8.dp),
+                    .padding(8.dp),  // Reduced from 6.dp to 5.dp
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Top
             ) {
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Icon at the top
-                AppIcon(title = title, modifier = Modifier.size(45.dp))
-                
-                // Text at the bottom with more space
+                AppIcon(title = title, modifier = Modifier.size(47.dp))  // Reduced from 45.dp to 43.dp
+
+                // Text area with more space
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 30.dp)
+                        .heightIn(min = 35.dp)  // Reduced from 38.dp to 35.dp
+                        .weight(1f)
                 ) {
                     Text(
                         text = formattedTitle,
                         color = TextPrimary,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         maxLines = 2,
-                        lineHeight = 13.sp,
+                        lineHeight = 12.sp,  // Reduced from 13.sp to 12.sp
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                            .padding(horizontal = 2.dp)
                             .align(Alignment.Center)
                     )
                 }
-                
-                Spacer(modifier = Modifier.height(2.dp))
             }
         }
     }
@@ -679,7 +754,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do"  -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -712,6 +787,10 @@ private fun AppIcon(
                                 "profile" -> R.drawable.profile
                                 "profileconnect" -> R.drawable.profile
                                 "todo" -> R.drawable.todo
+                                "passwordreset" -> R.drawable.password_reset
+                                "knowyourog" -> R.drawable.know_your_org
+                                "archeodyssey" -> R.drawable.arche_odyssey
+                                "zinghr" -> R.drawable.zinghr
                                 else -> R.drawable.mydocuments
                             }
                         ),
@@ -745,7 +824,7 @@ private fun AppIcon(
                                 style = Stroke(width = 1f)
                             )
                         }
-                        
+
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,

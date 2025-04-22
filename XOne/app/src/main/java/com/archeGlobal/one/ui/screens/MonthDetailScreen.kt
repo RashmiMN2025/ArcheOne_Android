@@ -317,63 +317,6 @@ fun MonthDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Month Header with navigation arrows
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Previous Month Button - only show if not January
-                if (selectedMonth > 1) {
-                    IconButton(
-                        onClick = {
-                            selectedMonth--
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "Previous Month",
-                            tint = Color.Black
-                        )
-                    }
-                } else {
-                    // Empty spacer for alignment when button is hidden
-                    Spacer(modifier = Modifier.size(48.dp))
-                }
-                
-                // Month and Year
-                Text(
-                    text = YearMonth.of(2025, selectedMonth)
-                        .month
-                        .getDisplayName(TextStyle.FULL, Locale.getDefault()) + " 2025",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                // Next Month Button - only show if not December
-                if (selectedMonth < 12) {
-                    IconButton(
-                        onClick = {
-                            selectedMonth++
-                        }
-                    ) {
-                        // Using the same icon as back but rotated 180 degrees
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "Next Month",
-                            tint = Color.Black,
-                            modifier = Modifier.rotate(180f)
-                        )
-                    }
-                } else {
-                    // Empty spacer for alignment when button is hidden
-                    Spacer(modifier = Modifier.size(48.dp))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             if (holidaysState.value is NetworkResult.Loading) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -384,18 +327,89 @@ fun MonthDetailScreen(
                     )
                 }
             } else {
-                // Month Calendar (without white box) - always show calendar
-                MonthCalendarView(
-                    selectedMonth = selectedMonth, 
-                    holidays = monthHolidays,
-                    milestoneDates = milestoneDates,
-                    selectedDay = selectedDay,
-                    onDateClick = { holiday, date, day ->
-                        selectedHoliday = holiday
-                        selectedDate = date
-                        selectedDay = day
+                // Month Calendar with white background Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        // Month Header with navigation arrows
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Previous Month Button - only show if not January
+                            if (selectedMonth > 1) {
+                                IconButton(
+                                    onClick = {
+                                        selectedMonth--
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_back),
+                                        contentDescription = "Previous Month",
+                                        tint = Color.Black
+                                    )
+                                }
+                            } else {
+                                // Empty spacer for alignment when button is hidden
+                                Spacer(modifier = Modifier.size(48.dp))
+                            }
+                            
+                            // Month and Year
+                            Text(
+                                text = YearMonth.of(2025, selectedMonth)
+                                    .month
+                                    .getDisplayName(TextStyle.FULL, Locale.getDefault()) + " 2025",
+                                color = Color.Black,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            // Next Month Button - only show if not December
+                            if (selectedMonth < 12) {
+                                IconButton(
+                                    onClick = {
+                                        selectedMonth++
+                                    }
+                                ) {
+                                    // Using the same icon as back but rotated 180 degrees
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_back),
+                                        contentDescription = "Next Month",
+                                        tint = Color.Black,
+                                        modifier = Modifier.rotate(180f)
+                                    )
+                                }
+                            } else {
+                                // Empty spacer for alignment when button is hidden
+                                Spacer(modifier = Modifier.size(48.dp))
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Month Calendar
+                        MonthCalendarView(
+                            selectedMonth = selectedMonth, 
+                            holidays = monthHolidays,
+                            milestoneDates = milestoneDates,
+                            selectedDay = selectedDay,
+                            onDateClick = { holiday, date, day ->
+                                selectedHoliday = holiday
+                                selectedDate = date
+                                selectedDay = day
+                            }
+                        )
                     }
-                )
+                }
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -497,6 +511,8 @@ fun MonthCalendarView(
             LegendItem(color = Color(0xFF2196F3), text = "RH")
             Spacer(modifier = Modifier.width(16.dp))
             LegendItem(color = Color(0xFF4CAF50), text = "Today")
+            Spacer(modifier = Modifier.width(16.dp))
+            LegendItem(color = Color(0xFFF5A623), text = "Milestone")
         }
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -540,29 +556,47 @@ fun MonthCalendarView(
                                 .clip(CircleShape)
                                 .background(
                                     when {
-                                        isToday -> Color(0xFF4CAF50) // Green for today (highest priority)
-                                        isMandatoryHoliday -> Color(0xFFDD3825) // Red for holidays
-                                        isRegionalHoliday -> Color(0xFF2196F3) // Blue for RH
-                                        day == selectedDay -> Color(0xFFE0E0E0) // Light grey for selected day
+                                        isMandatoryHoliday -> Color(0xFFDD3825) // Solid red for holidays
+                                        isRegionalHoliday -> Color(0xFF2196F3)  // Solid blue for RH
+                                        isToday -> Color(0xFF4CAF50)           // Solid green for today
                                         else -> Color.Transparent
                                     }
+                                )
+                                .border(
+                                    width = if (day == selectedDay) 1.dp else 0.dp,
+                                    color = if (day == selectedDay) Color.White else Color.Transparent,
+                                    shape = CircleShape
                                 )
                                 .clickable {
                                     onDateClick(holiday, dateStr, day)
                                 }
                         ) {
-                            Text(
-                                text = day.toString(),
-                                fontSize = 16.sp,
-                                color = when {
-                                    isToday || isMandatoryHoliday || isRegionalHoliday -> Color.White
-                                    else -> Color.Black
-                                },
-                                fontWeight = when {
-                                    isToday || isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
-                                    else -> FontWeight.Normal
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = day.toString(),
+                                    fontSize = 14.sp,
+                                    color = when {
+                                        isMandatoryHoliday || isRegionalHoliday || isToday -> Color.White
+                                        else -> Color.Black
+                                    },
+                                    fontWeight = when {
+                                        isToday || isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
+                                        else -> FontWeight.Normal
+                                    }
+                                )
+                                
+                                // Add yellow dot for milestone dates
+                                if (hasMilestone) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(4.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFF5A623))
+                                    )
                                 }
-                            )
+                            }
                         }
                     } else {
                         // Empty space for days outside the month

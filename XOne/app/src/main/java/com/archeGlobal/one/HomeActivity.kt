@@ -5,7 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.OnBackPressedCallback
@@ -37,14 +37,19 @@ import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.XOneTheme
+import com.archeGlobal.one.utils.UserDataManager
+import com.archeGlobal.one.utils.BiometricHelper
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
+import android.content.DialogInterface
 
-class HomeActivity : ComponentActivity() {
+class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
+    private lateinit var otpVerificationController: OtpVerificationController
     private lateinit var locationsController: LocationsController
     private lateinit var businessCardController: BusinessCardControllerImpl
     private lateinit var policyController: PolicyController
@@ -56,9 +61,85 @@ class HomeActivity : ComponentActivity() {
     private lateinit var addressController: AddressController
     private lateinit var emergencyContactController: EmergencyContactController
     private lateinit var chatController: ChatController
+    private lateinit var userDataManager: UserDataManager
+    private lateinit var navigator: AndroidNavigator
+    private var lastPauseTime: Long = 0
+    private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
+    private var isFromLogin = false // Flag to track if we're coming from login
+    private var isAuthenticating = mutableStateOf(false) // New state for biometric authentication
+
+    private fun refreshHomeData() {
+        val userData = userDataManager.getUserData()
+        val token = userDataManager.getAuthToken() ?: return
+        val email = userData?.email ?: return
+        val mobile = userData?.mobile ?: return
+        val employeeId = userData?.employeeId ?: return
+
+        lifecycleScope.launch {
+            otpVerificationController.loginWithToken(
+                token = token,
+                email = email,
+                mobile = mobile,
+                employeeId = employeeId,
+                fromHome = true
+            ) { message, isError ->
+                if (isError) {
+                    if (message.contains("Invalid Token")) {
+                        Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                        userDataManager.clearUserData()
+                        navigator.navigateToLoginScreen()
+                    } else {
+                        Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                // Update the home controller's data
+                controller.refreshUserData()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        userDataManager = UserDataManager.getInstance(this)
+        navigator = AndroidNavigator(this)
+        
+        // Check if we're coming from login
+        isFromLogin = intent.getBooleanExtra("fromLogin", false)
+
+        val showBiometricSetup = intent.getBooleanExtra("showBiometricSetup", false)
+        val email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
+        val mobile = intent.getStringExtra("mobile") ?: userDataManager.getUserData()?.mobile ?: ""
+        val employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
+
+        // Handle biometric setup if needed
+        if (showBiometricSetup) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                val biometricHelper = BiometricHelper(this)
+                try {
+                    android.app.AlertDialog.Builder(this)
+                        .setTitle("Enable Fingerprint Login")
+                        .setMessage("Would you like to use fingerprint for faster login next time?")
+                        .setPositiveButton("Yes") { dialog: DialogInterface, _: Int ->
+                            biometricHelper.showBiometricPrompt(
+                                activity = this,
+                                title = "Setup Fingerprint",
+                                subtitle = "Verify your fingerprint to enable quick login",
+                                onSuccess = {
+                                    biometricHelper.saveCredentials(email, mobile, employeeId)
+                                    Toast.makeText(this, "Fingerprint login enabled successfully!", Toast.LENGTH_SHORT).show()
+                                },
+                                onError = { error ->
+                                    Toast.makeText(this, "Failed to setup fingerprint: $error", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                        .setNegativeButton("No", null)
+                        .show()
+                } catch (e: Exception) {
+                    Log.e("BiometricSetup", "Failed to show dialog", e)
+                }
+            }, 1000)
+        }
 
         // Disable back navigation to login
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -67,12 +148,17 @@ class HomeActivity : ComponentActivity() {
                 Toast.makeText(this@HomeActivity, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
             }
         })
+        // Initialize controllers that need context
+        otpVerificationController = OtpVerificationController(
+            navigator = AndroidNavigator(this),
+            context = this
+        )
 
         // Check if we need to navigate to a specific destination
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
-        
+        val fromOtp = intent.getBooleanExtra("FROM_OTP", false)
         // Print the intent extras for debugging
         Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, isEmergencyContact=$isEmergencyContact")
         Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
@@ -101,21 +187,42 @@ class HomeActivity : ComponentActivity() {
                 addressController = AddressController(navigator)
                 emergencyContactController = EmergencyContactController(navigator)
                 chatController = ChatController(this, navigator)
+                var isLoading by remember { mutableStateOf(false) }
 
                 // If we have a destination or navigateTo, navigate to it
                 LaunchedEffect(destination, navigateTo, isEmergencyContact) {
+                    if (!fromOtp) {
+                        val token = userDataManager.getAuthToken() ?: "your_token_here"
+                        isLoading = true // Start loading
+                        otpVerificationController.loginWithToken(token, email, mobile, employeeId, true) { message, isError ->
+                            isLoading = false // Stop loading
+                            if (isError) {
+                                if (message.contains("Invalid Token")) {
+                                    Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                                    // Clear all user data
+                                    userDataManager.clearUserData()
+                                    navigator.navigateToLoginScreen()
+                                } else {
+                                    Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                //  Handle successful login, e.g., navigate to home
+                                //Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                     destination?.let {
                         navController.navigate(it)
                     }
-                    
+
                     navigateTo?.let {
                         navController.navigate(it)
-                        
+
                         // Log the navigation attempt for debugging
                         Log.d("HomeActivity", "Navigating to $it with isEmergencyContact=$isEmergencyContact")
                     }
                 }
-
+                // UniversalLoader(isLoading = isLoading)
                 NavHost(
                     navController = navController,
                     startDestination = "home"
@@ -146,7 +253,9 @@ class HomeActivity : ComponentActivity() {
                             onFooterChatClick = { navigator.navigateToChat() },
                             onFooterSOSClick = controller::onFooterSOSClick,
                             onFooterProfileClick = controller::onFooterProfileClick,
-                            onXCardClick = controller::onXCardClick
+                            onXCardClick = controller::onXCardClick,
+                            isAuthenticating = isAuthenticating.value,
+                            onRefresh = { refreshHomeData() }
                         )
                     }
 
@@ -195,7 +304,7 @@ class HomeActivity : ComponentActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) { backStackEntry ->
-                      val showHeader = intent.getBooleanExtra("showHeader", false)
+                        val showHeader = intent.getBooleanExtra("showHeader", false)
                         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
 
                         if (isEmergencyContact) {
@@ -406,11 +515,11 @@ class HomeActivity : ComponentActivity() {
                     composable(
                         route = "pdf_viewer/{pdfUrl}?title={title}",
                         arguments = listOf(
-                            navArgument("pdfUrl") { 
+                            navArgument("pdfUrl") {
                                 type = NavType.StringType
                                 nullable = false
                             },
-                            navArgument("title") { 
+                            navArgument("title") {
                                 type = NavType.StringType
                                 defaultValue = "PDF Viewer"
                             }
@@ -430,7 +539,7 @@ class HomeActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val encodedPdfUrl = backStackEntry.arguments?.getString("pdfUrl") ?: ""
                         val title = backStackEntry.arguments?.getString("title") ?: "PDF Viewer"
-                        
+
                         // Safely decode the URL
                         val pdfUrl = try {
                             val decoded = URLDecoder.decode(encodedPdfUrl, "UTF-8")
@@ -441,7 +550,7 @@ class HomeActivity : ComponentActivity() {
                             // If decoding fails, pass the encoded URL and let the PDFViewerScreen handle the error
                             encodedPdfUrl
                         }
-                        
+
                         PDFViewerScreen(
                             pdfUrl = pdfUrl,
                             title = title,
@@ -523,7 +632,6 @@ class HomeActivity : ComponentActivity() {
                         SOSDetailScreen(
                             blog = blog,
                             onBackPressed = { navController.popBackStack() }
-
                         )
                     }
                 }
@@ -549,6 +657,50 @@ class HomeActivity : ComponentActivity() {
         // Clean up controllers that need to clear resources
         if (::policyController.isInitialized) {
             policyController.onCleared()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (!isFromLogin) {
+            lastPauseTime = System.currentTimeMillis()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        
+        // Skip biometric check if we're coming from login
+        if (!isFromLogin && System.currentTimeMillis() - lastPauseTime > BACKGROUND_THRESHOLD) {
+            val biometricHelper = BiometricHelper(this)
+            if (biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()) {
+                isAuthenticating.value = true // Set authenticating state to true
+                biometricHelper.showBiometricPrompt(
+                    activity = this,
+                    title = "Verify Identity",
+                    subtitle = "Use your fingerprint to continue",
+                    onSuccess = {
+                        // Continue with the app
+                        Log.d("BiometricCheck", "Biometric verification successful")
+                        isAuthenticating.value = false // Reset authenticating state
+                    },
+                    onError = { error ->
+                        // If biometric fails, go back to login
+                        Log.e("BiometricCheck", "Biometric verification failed: $error")
+                        Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
+                        userDataManager.clearUserData()
+                        val intent = Intent(this, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    }
+                )
+            }
+        }
+        
+        // Reset the flag after first resume
+        if (isFromLogin) {
+            isFromLogin = false
         }
     }
 }

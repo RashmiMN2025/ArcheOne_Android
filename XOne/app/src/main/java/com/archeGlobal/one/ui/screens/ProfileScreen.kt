@@ -49,6 +49,13 @@ import android.net.Uri
 import android.util.Log
 import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import coil.compose.AsyncImage
+import android.widget.Toast
+import android.graphics.Bitmap
 
 @Composable
 fun ProfileScreen(
@@ -62,11 +69,55 @@ fun ProfileScreen(
 ) {
     // State to control the visibility of the logout confirmation dialog
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showUploadDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // Disable back swipe gesture
     BackHandler(enabled = true) {
         // Handle back press manually
 
+    }
+
+    // Camera permission state
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Camera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        bitmap?.let {
+            controller.uploadProfilePhoto(bitmap)
+            showUploadDialog = false
+        }
+    }
+
+    // Permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            controller.uploadProfilePhotoFromUri(uri)
+            showUploadDialog = false
+        }
     }
 
     FooterScaffold(
@@ -100,6 +151,9 @@ fun ProfileScreen(
                     profilePicture = controller.model.profilePicture,
                     onProfilePictureClick = { uri ->
                         controller.onProfilePictureClick(uri)
+                    },
+                    onCameraCapture = { bitmap ->
+                        controller.uploadProfilePhoto(bitmap)
                     }
                 )
 
@@ -151,6 +205,91 @@ fun ProfileScreen(
                     }
                 )
             }
+
+            // Upload Dialog
+            if (showUploadDialog) {
+                Dialog(onDismissRequest = { showUploadDialog = false }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(0.92f)
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Upload Profile Photo",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            Text(
+                                "Choose a method to upload your profile picture",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 24.dp),
+                                textAlign = TextAlign.Center
+                            )
+
+                            // Camera Button
+                            Button(
+                                onClick = {
+                                    if (hasCameraPermission) {
+                                        cameraLauncher.launch(null)
+                                    } else {
+                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_camera),
+                                    contentDescription = "Camera",
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    tint = Color.White
+                                )
+                                Text("Camera", fontSize = 16.sp, color = Color.White)
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Gallery Button
+                            Button(
+                                onClick = { galleryLauncher.launch("image/*") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_gallery),
+                                    contentDescription = "Gallery",
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    tint = Color.White
+                                )
+                                Text("Gallery", fontSize = 16.sp, color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -164,26 +303,25 @@ private fun LogoutConfirmationDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
                 .padding(horizontal = 16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(28.dp)
+            shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Icon without background, increased size
+                // Icon
                 Icon(
-                    imageVector = Icons.Default.ExitToApp,
+                    painter = painterResource(id = R.drawable.ic_logout),
                     contentDescription = "Logout",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(32.dp)
                 )
                 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
                 // Title
                 Text(
@@ -193,9 +331,9 @@ private fun LogoutConfirmationDialog(
                     color = Color.Black
                 )
                 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
-                // Confirmation message
+                // Message
                 Text(
                     text = "Are you sure you want to log out of\nyour account?",
                     fontSize = 14.sp,
@@ -204,47 +342,51 @@ private fun LogoutConfirmationDialog(
                     lineHeight = 20.sp
                 )
                 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 
-                // Logout button
-                Button(
-                    onClick = onConfirm,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .padding(horizontal = 24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                    shape = RoundedCornerShape(100.dp)
+                // Buttons in a row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Log Out",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
+                    // Log Out button
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Log Out",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Cancel button
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFABABAB) // Lighter gray color
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(10.dp))
-                
-                // Cancel button
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .padding(horizontal = 24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF6F4EE)),
-                    shape = RoundedCornerShape(100.dp)
-                ) {
-                    Text(
-                        text = "Cancel",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
@@ -255,13 +397,51 @@ private fun ProfileHeader(
     name: String,
     email: String,
     profilePicture: String? = null,
-    onProfilePictureClick: ((Uri) -> Unit)? = null
+    onProfilePictureClick: ((Uri) -> Unit)? = null,
+    onCameraCapture: ((Bitmap) -> Unit)? = null
 ) {
-    // Image picker launcher
+    var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+
+    // Camera permission state
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Camera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        bitmap?.let {
+            onCameraCapture?.invoke(it)
+            showUploadDialog = false
+        }
+    }
+
+    // Permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
         if (uri != null && onProfilePictureClick != null) {
             onProfilePictureClick(uri)
+            showUploadDialog = false
         }
     }
 
@@ -347,7 +527,7 @@ private fun ProfileHeader(
                         modifier = Modifier
                             .size(28.dp)
                             .align(Alignment.BottomEnd)
-                            .clickable { launcher.launch("image/*") },
+                            .clickable { showUploadDialog = true },
                         shape = CircleShape,
                         color = Color.Black
                     ) {
@@ -377,6 +557,91 @@ private fun ProfileHeader(
             )
         }
     }
+
+    // Upload Dialog
+    if (showUploadDialog) {
+        Dialog(onDismissRequest = { showUploadDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Upload Profile Photo",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Text(
+                        "Choose a method to upload your profile picture",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                        textAlign = TextAlign.Center
+                    )
+
+                    // Camera Button
+                    Button(
+                        onClick = {
+                            if (hasCameraPermission) {
+                                cameraLauncher.launch(null)
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_camera),
+                            contentDescription = "Camera",
+                            modifier = Modifier.padding(end = 8.dp),
+                            tint = Color.White
+                        )
+                        Text("Camera", fontSize = 16.sp, color = Color.White)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Gallery Button
+                    Button(
+                        onClick = { galleryLauncher.launch("image/*") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_gallery),
+                            contentDescription = "Gallery",
+                            modifier = Modifier.padding(end = 8.dp),
+                            tint = Color.White
+                        )
+                        Text("Gallery", fontSize = 16.sp, color = Color.White)
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -386,7 +651,7 @@ private fun MenuItems(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items.forEach { item ->
             MenuItem(
@@ -407,30 +672,34 @@ private fun MenuItem(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         color = Color.White
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(14.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color.Black
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = title,
-                    fontSize = 16.sp,
-                    color = Color.Black
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
                 )
             }
             Icon(

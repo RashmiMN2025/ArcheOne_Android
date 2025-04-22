@@ -182,6 +182,10 @@ class PreferencesManager(context: Context) {
         private const val KEY_ASSET_DETAILS = "asset_details"
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
         private const val KEY_PROFILE_UPDATE_TIMESTAMP = "profile_update_timestamp"
+        private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
+        private const val KEY_BIOMETRIC_EMAIL = "biometric_email"
+        private const val KEY_BIOMETRIC_MOBILE = "biometric_mobile"
+        private const val KEY_BIOMETRIC_EMPLOYEE_ID = "biometric_employee_id"
     }
     
     // Check if this is the first launch of the app
@@ -202,5 +206,40 @@ class PreferencesManager(context: Context) {
     // Get the profile update timestamp
     fun getProfileUpdateTimestamp(): Long {
         return sharedPreferences.getLong(KEY_PROFILE_UPDATE_TIMESTAMP, 0)
+    }
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).apply()
+    }
+
+    fun isBiometricEnabled(): Boolean {
+        return sharedPreferences.getBoolean(KEY_BIOMETRIC_ENABLED, false)
+    }
+
+    fun saveBiometricCredentials(email: String, mobile: String, employeeId: String) {
+        sharedPreferences.edit().apply {
+            putString(KEY_BIOMETRIC_EMAIL, email)
+            putString(KEY_BIOMETRIC_MOBILE, mobile)
+            putString(KEY_BIOMETRIC_EMPLOYEE_ID, employeeId)
+        }.apply()
+    }
+
+    fun getBiometricCredentials(): Triple<String, String, String>? {
+        val email = sharedPreferences.getString(KEY_BIOMETRIC_EMAIL, null)
+        val mobile = sharedPreferences.getString(KEY_BIOMETRIC_MOBILE, null)
+        val employeeId = sharedPreferences.getString(KEY_BIOMETRIC_EMPLOYEE_ID, null)
+        
+        return if (email != null && mobile != null && employeeId != null) {
+            Triple(email, mobile, employeeId)
+        } else null
+    }
+
+    fun clearBiometricData() {
+        sharedPreferences.edit().apply {
+            remove(KEY_BIOMETRIC_ENABLED)
+            remove(KEY_BIOMETRIC_EMAIL)
+            remove(KEY_BIOMETRIC_MOBILE)
+            remove(KEY_BIOMETRIC_EMPLOYEE_ID)
+        }.apply()
     }
 } 

@@ -4,7 +4,13 @@ interface Navigator {
     fun openPulseLogin()
     fun navigateToLoginScreen()
     fun navigateToOtpVerification(email: String, mobile: String, employeeId: String)
-    fun navigateToHome()
+    fun navigateToHome(
+        fromOtp: Boolean = false,
+        showBiometricSetup: Boolean = false,
+        email: String = "",
+        mobile: String = "",
+        employeeId: String = ""
+    )
     fun navigateToID()
     fun navigateToAsset()
     fun navigateToTimesheet()
@@ -23,13 +29,13 @@ interface Navigator {
     fun navigateToClientCalendar()
     fun navigateToGreetings()
     fun navigateToXConnect()
-    fun navigateToLocations(showHeader: Boolean)
+    fun navigateToLocations(showHeader: Boolean = true)
     fun navigateToHelpdesk()
     fun navigateToAnnouncements()
     fun navigateToXProfile()
     fun navigateToPasswordReset()
     fun navigateToPolicy()
-    fun navigateToSOS(showHeader: Boolean)
+    fun navigateToSOS(showHeader: Boolean = true)
     fun navigateToTravelExpenses()
     fun navigateToSAP()
     fun navigateToChat()

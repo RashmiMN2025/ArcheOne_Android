@@ -14,7 +14,7 @@ import com.archeGlobal.one.XConnectActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.SOSActivity
 import com.archeGlobal.one.ChatActivity
-import okhttp3.internal.http2.Header
+import com.archeGlobal.one.WebViewActivity
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
@@ -47,10 +47,25 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         activity.startActivity(intent)
     }
 
-    override fun navigateToHome() {
-        Log.d("AndroidNavigator", "Navigating to home screen")
+    override fun navigateToHome(
+        fromOtp: Boolean,
+        showBiometricSetup: Boolean,
+        email: String,
+        mobile: String,
+        employeeId: String
+    ) {
+        Log.d("AndroidNavigator", "Navigating to home screen. fromOtp: $fromOtp, showBiometricSetup: $showBiometricSetup")
+
         if (activity !is HomeActivity) {
-            val intent = Intent(activity, HomeActivity::class.java)
+            val intent = Intent(activity, HomeActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("FROM_OTP", fromOtp)
+                putExtra("showBiometricSetup", showBiometricSetup)
+                putExtra("email", email)
+                putExtra("mobile", mobile)
+                putExtra("employeeId", employeeId)
+                putExtra("fromLogin", true)
+            }
             activity.startActivity(intent)
             activity.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
             activity.finish()
@@ -62,8 +77,17 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
 
     override fun navigateToLocations(showHeader: Boolean) {
-        Log.d("AndroidNavigator", "Navigating to locations screen")
-        navController?.navigate("locations")
+        Log.d("AndroidNavigator", "Navigating to locations screen with showHeader=$showHeader")
+        if (activity is HomeActivity) {
+            navController?.navigate("locations")
+        } else {
+            val intent = Intent(activity, HomeActivity::class.java)
+            intent.putExtra("isEmergencyContact", true)
+            intent.putExtra("showHeader", showHeader)
+            intent.putExtra("destination", "locations")
+            activity.startActivity(intent)
+            activity.finish()
+        }
     }
 
     override fun navigateToBusinessCard() {
@@ -93,8 +117,20 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToELearning() {}
     override fun navigateToGoalSetting() {}
     override fun navigateToXCard() {}
-    override fun navigateToMedical() {}
-    override fun navigateToFinance() {}
+    override fun navigateToMedical() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://ilhc.icicilombard.com/Customer/iCard")
+            putExtra("title", "Medical")
+        }
+        activity.startActivity(intent)
+    }
+    override fun navigateToFinance() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://ess.azatecon.com/login")
+            putExtra("title", "Finance")
+        }
+        activity.startActivity(intent)
+    }
     override fun navigateToAdmin() {}
     override fun navigateToHR() {}
     override fun navigateToHolidayCalendar() {
@@ -127,8 +163,20 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
     }
-    override fun navigateToTravelExpenses() {}
-    override fun navigateToSAP() {}
+    override fun navigateToTravelExpenses() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml")
+            putExtra("title", "Travel & Expenses")
+        }
+        activity.startActivity(intent)
+    }
+    override fun navigateToSAP() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://my422539.businessbydesign.cloud.sap/sap/public/ap/ui/repository/SAP_UI/HTMLOBERON5/client.html?app.component=/SAP_UI_CT/Main/root.uiccwoc&rootWindow=X&redirectUrl=/sap/public/byd/runtime")
+            putExtra("title", "SAP")
+        }
+        activity.startActivity(intent)
+    }
     override fun navigateToChat() {
         Log.d("AndroidNavigator", "Navigating to chat screen")
         if (activity is HomeActivity) {

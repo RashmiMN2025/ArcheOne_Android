@@ -1,10 +1,15 @@
 package com.archeGlobal.one.controller
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.archeGlobal.one.ImageViewerActivity
+import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.model.Milestone
 import com.archeGlobal.one.model.CalendarResponse
@@ -23,11 +28,11 @@ class HolidayCalendarController(
     private val apiService: ApiService,
     private val userRepository: UserRepository
 ) : ViewModel() {
-    
+
     // LiveData for holidays
     private val _holidays = MutableLiveData<NetworkResult<CalendarResponse>>()
     val holidays: LiveData<NetworkResult<CalendarResponse>> = _holidays
-    
+
     // LiveData for holiday PDF file URL
     private val _holidayFileUrl = MutableLiveData<String>()
     val holidayFileUrl: LiveData<String> = _holidayFileUrl
@@ -35,51 +40,77 @@ class HolidayCalendarController(
     // LiveData for milestones
     private val _milestones = MutableLiveData<List<Milestone>>(emptyList())
     val milestones: LiveData<List<Milestone>> = _milestones
-    
+
     // Set to track hidden holidays by their date string
     private val _hiddenHolidays = mutableSetOf<String>()
-    
+
     // LiveData to notify when hidden holidays change
     private val _hiddenHolidaysUpdated = MutableLiveData<Boolean>(false)
     val hiddenHolidaysUpdated: LiveData<Boolean> = _hiddenHolidaysUpdated
-    
+
     init {
         fetchHolidays()
     }
-    
+
     // Method to hide a holiday by its date
     fun hideHoliday(holiday: Holiday) {
         _hiddenHolidays.add(holiday.date)
         _hiddenHolidaysUpdated.value = !(_hiddenHolidaysUpdated.value ?: false)
     }
-    
+
     // Method to check if a holiday is hidden
     fun isHolidayHidden(holiday: Holiday): Boolean {
         return _hiddenHolidays.contains(holiday.date)
     }
-    
+
     // Method to get filtered holidays that are not hidden
     fun getVisibleHolidays(holidays: List<Holiday>): List<Holiday> {
         return holidays.filter { !_hiddenHolidays.contains(it.date) }
     }
-    
+
     // Method to get milestones for a specific date
     fun getMilestonesForDate(date: String): List<Milestone> {
         return _milestones.value?.filter {
             try {
                 val milestoneDate = SimpleDateFormat("MM-dd-yyyy", Locale.US).parse(it.poDate)
                 val requestDate = SimpleDateFormat("dd-MM-yyyy", Locale.US).parse(date)
-                
+
                 val milestoneDateString = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(milestoneDate)
                 val requestDateString = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(requestDate)
-                
+
                 milestoneDateString == requestDateString
             } catch (e: Exception) {
                 false
             }
         } ?: emptyList()
     }
-    
+    fun onViewClick(context: Context, documentName: String,filePath:String) {
+
+
+
+        if (filePath.isNullOrEmpty()) {
+            Toast.makeText(context, "No document found for $documentName. Please upload document for the same.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Check if the file is an image based on extension
+        val isImage = filePath.endsWith(".jpg", ignoreCase = true) ||
+                filePath.endsWith(".jpeg", ignoreCase = true) ||
+                filePath.endsWith(".png", ignoreCase = true) ||
+                filePath.endsWith(".webp", ignoreCase = true)
+
+        // Create appropriate intent based on file type
+        val intent = if (isImage) {
+            Intent(context, ImageViewerActivity::class.java)
+        } else {
+            Intent(context, WebViewActivity::class.java)
+        }
+
+        intent.putExtra("fileUrl", filePath)
+        intent.putExtra("title", documentName)
+        context.startActivity(intent)
+    }
+
     fun fetchHolidays() {
         _holidays.value = NetworkResult.Loading()
         
