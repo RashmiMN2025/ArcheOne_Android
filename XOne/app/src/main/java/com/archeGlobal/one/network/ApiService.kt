@@ -54,7 +54,19 @@ interface ApiService {
 
     @GET("calendar")
     fun getHolidays(): Call<CalendarResponse>
+
+    @GET("policies")
+    suspend fun getPolicies(): Response<List<PolicyResponse>>
 }
+
+data class PolicyResponse(
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("pdfUrl")
+    val pdfUrl: String,
+    @SerializedName("previewUrl")
+    val previewUrl: String
+)
 
 data class LogoutRequest(
     val employeeId: String

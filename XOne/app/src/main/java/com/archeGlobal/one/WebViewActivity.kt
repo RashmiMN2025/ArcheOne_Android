@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.ui.components.UniversalLoader
+import android.annotation.SuppressLint
 
 class WebViewActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -194,60 +195,151 @@ class WebViewActivity : ComponentActivity() {
                                                 allowFileAccess = true
                                                 domStorageEnabled = true
                                                 loadsImagesAutomatically = true
-                                                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                                                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+                                                mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                                                cacheMode = WebSettings.LOAD_DEFAULT
+                                                
+                                                // Viewport and scaling settings
                                                 useWideViewPort = true
                                                 loadWithOverviewMode = true
+                                                setSupportZoom(true)
                                                 builtInZoomControls = true
                                                 displayZoomControls = false
-                                                setSupportZoom(true)
+                                                
+                                                // Use NORMAL layout algorithm
+                                                layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
+                                                
+                                                // Additional settings for better rendering
+                                                @SuppressLint("SetJavaScriptEnabled")
+                                                javaScriptEnabled = true
+                                                setNeedInitialFocus(true)
+                                                
+                                                // Enable DOM storage and databases
+                                                domStorageEnabled = true
+                                                databaseEnabled = true
+                                                
+                                                // Additional settings for SAP portal
+                                                javaScriptCanOpenWindowsAutomatically = true
+                                                setSupportMultipleWindows(true)
+                                                allowContentAccess = true
                                                 
                                                 // Additional performance optimizations
                                                 @Suppress("DEPRECATION")
                                                 setRenderPriority(WebSettings.RenderPriority.HIGH)
-                                                databaseEnabled = true
                                                 blockNetworkImage = false
-                                                layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                                                 mediaPlaybackRequiresUserGesture = false
                                             }
 
                                             webViewClient = object : WebViewClient() {
+                                                private var pageLoaded = false
+                                                
                                                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                                                    // Handle all URLs within the WebView
                                                     return false
+                                                }
+
+                                                override fun onReceivedSslError(view: WebView, handler: android.webkit.SslErrorHandler, error: android.net.http.SslError) {
+                                                    Log.d("WebViewActivity", "SSL Error: ${error.primaryError}")
+                                                    handler.proceed()
+                                                }
+                                                
+                                                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                                    super.onPageStarted(view, url, favicon)
+                                                    isLoading = true
+                                                    pageLoaded = false
+                                                    Log.d("WebViewActivity", "Page started loading: $url")
                                                 }
 
                                                 override fun onPageFinished(view: WebView?, url: String?) {
                                                     super.onPageFinished(view, url)
-                                                    isLoading = false
+                                                    pageLoaded = true
+                                                    
+                                                    // Delay hiding the loader to ensure content is actually rendered
+                                                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                                        if (pageLoaded) {
+                                                            isLoading = false
+                                                        }
+                                                    }, 1000) // 1 second delay
+                                                    
                                                     Log.d("WebViewActivity", "Page finished loading: $url")
-
-                                                    // ──────────────────────────────────────────────────────────
-                                                    // ADD THIS FALLBACK CHECK:
-                                                    // If we detect that the page is still blank after loading,
-                                                    // we attempt to open with an external PDF viewer.
-                                                    // You can fine-tune the "blank detection" logic as needed.
-                                                    // ──────────────────────────────────────────────────────────
-                                                    val webViewContentHeight = view?.contentHeight ?: 0
-                                                    if (webViewContentHeight == 0 && isPdf && isSpecialDocument) {
-                                                        Log.w("WebViewActivity", "WebView content is empty. Attempting to open externally.")
-                                                        openPdfInExternalViewer(context)
+                                                    
+                                                    // Special handling for SAP portal
+                                                    if (url?.contains("businessbydesign.cloud.sap") == true) {
+                                                        view?.evaluateJavascript("""
+                                                            (function() {
+                                                                var meta = document.querySelector('meta[name="viewport"]');
+                                                                if (!meta) {
+                                                                    meta = document.createElement('meta');
+                                                                    meta.name = 'viewport';
+                                                                    document.head.appendChild(meta);
+                                                                }
+                                                                meta.content = 'width=1024, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes';
+                                                                
+                                                                // Add styles for SAP portal
+                                                                var style = document.createElement('style');
+                                                                style.textContent = `
+                                                                    body {
+                                                                        margin: 0 !important;
+                                                                        padding: 0 !important;
+                                                                        min-width: 1024px !important;
+                                                                        min-height: 100vh !important;
+                                                                        width: 100% !important;
+                                                                        height: 100% !important;
+                                                                        overflow: auto !important;
+                                                                    }
+                                                                    #shell {
+                                                                        width: 100% !important;
+                                                                        height: 100% !important;
+                                                                        position: absolute !important;
+                                                                        top: 0 !important;
+                                                                        left: 0 !important;
+                                                                    }
+                                                                    iframe {
+                                                                        width: 100% !important;
+                                                                        height: 100% !important;
+                                                                        position: absolute !important;
+                                                                        top: 0 !important;
+                                                                        left: 0 !important;
+                                                                        border: none !important;
+                                                                    }
+                                                                `;
+                                                                document.head.appendChild(style);
+                                                                
+                                                                // Force visibility of main container
+                                                                var mainContainer = document.querySelector('#shell') || document.body;
+                                                                if (mainContainer) {
+                                                                    mainContainer.style.display = 'block';
+                                                                    mainContainer.style.visibility = 'visible';
+                                                                    mainContainer.style.opacity = '1';
+                                                                }
+                                                            })();
+                                                        """.trimIndent(), null)
                                                     }
                                                 }
 
                                                 override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String) {
                                                     Toast.makeText(context, "Error loading content: $description", Toast.LENGTH_LONG).show()
                                                     Log.e("WebViewActivity", "Error loading content: $description, URL: $failingUrl")
-
-                                                    // If the page fails to load, try opening externally if it's a PDF
-                                                    if (isPdf && isSpecialDocument) {
-                                                        openPdfInExternalViewer(context)
-                                                    }
                                                 }
                                             }
 
-                                            webChromeClient = WebChromeClient()
+                                            webChromeClient = object : WebChromeClient() {
+                                                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                                                    super.onProgressChanged(view, newProgress)
+                                                    Log.d("WebViewActivity", "Loading progress: $newProgress%")
+                                                }
+                                            }
+
+                                            // Set initial scale
+                                            setInitialScale(100)
                                             
+                                            // Enable hardware acceleration
+                                            setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
+                                            
+                                            // Prevent WebView from losing focus
+                                            setOnTouchListener { _, _ -> 
+                                                requestFocus()
+                                                false
+                                            }
+
                                             try {
                                                 if (isLocalFile) {
                                                     // For local files

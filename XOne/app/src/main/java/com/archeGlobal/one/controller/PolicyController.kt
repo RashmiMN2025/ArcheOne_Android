@@ -16,6 +16,9 @@ import okhttp3.*
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import com.archeGlobal.one.network.ApiService
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.controller.OtpVerificationController
 
 class PolicyController(
     private val context: Context,
@@ -40,17 +43,44 @@ class PolicyController(
         
         coroutineScope.launch {
             try {
-                // Simulate network delay (remove in production)
-                delay(1000)
-                
-                // Get policies data
-                val policiesData = OtpVerificationController.getPoliciesData() ?: emptyList()
-                _policies.value = policiesData
-                
-                Log.d("PolicyController", "Loaded ${policiesData.size} policies")
+                // First try to get from API
+                val response = RetrofitClient.apiService.getPolicies()
+                if (response.isSuccessful && response.body() != null) {
+                    val policyResponses = response.body()!!
+                    val transformedPolicies = policyResponses.map { policyResponse ->
+                        PolicyModel.Policy(
+                            policyName = policyResponse.name,
+                            filePath = policyResponse.pdfUrl,
+                            previewUrl = policyResponse.previewUrl
+                        )
+                    }
+                    _policies.value = transformedPolicies
+                    Log.d("PolicyController", "Loaded ${transformedPolicies.size} policies from API")
+                } else {
+                    // Fallback to cached data if API fails
+                    val policiesData = OtpVerificationController.getPoliciesData()
+                    if (policiesData != null) {
+                        _policies.value = policiesData
+                        Log.d("PolicyController", "Loaded ${policiesData.size} policies from cache")
+                    } else {
+                        Log.e("PolicyController", "No policies data available")
+                        Toast.makeText(context, "Failed to load policies", Toast.LENGTH_SHORT).show()
+                    }
+                }
             } catch (e: Exception) {
-                Log.e("PolicyController", "Error loading policies: ${e.message}", e)
-                // Handle error if needed
+                // Try to load from cache if API call fails
+                try {
+                    val policiesData = OtpVerificationController.getPoliciesData()
+                    if (policiesData != null) {
+                        _policies.value = policiesData
+                        Log.d("PolicyController", "Loaded ${policiesData.size} policies from cache after API error")
+                    } else {
+                        throw e // Re-throw if no cache available
+                    }
+                } catch (e2: Exception) {
+                    Log.e("PolicyController", "Error loading policies: ${e2.message}", e2)
+                    Toast.makeText(context, "Failed to load policies", Toast.LENGTH_SHORT).show()
+                }
             } finally {
                 _isLoading.value = false
             }
@@ -58,9 +88,17 @@ class PolicyController(
     }
 
     fun onPolicyClick(policy: PolicyModel.Policy) {
-        // Use PDFViewerScreen to open PDF via our navigator
-        Log.d("PolicyController", "Opening policy PDF with PDFViewerScreen: ${policy.filePath}")
-        navigator.navigateToPDFViewer(policy.filePath, policy.policyName)
+        // Use WebViewActivity for viewing PDFs with PDF.js
+        val intent = Intent(context, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", policy.filePath)
+            putExtra("title", policy.policyName)
+            putExtra("isPdf", true)
+            putExtra("showSosButton", policy.showSosButton)
+            // Add flag to use PDF.js viewer
+            putExtra("usePdfJs", true)
+            putExtra("isFloorMap", true) // This will use the PDF.js viewer implementation
+        }
+        context.startActivity(intent)
     }
 
     fun onBackClick() {

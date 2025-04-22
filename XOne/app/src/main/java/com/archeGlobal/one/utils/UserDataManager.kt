@@ -84,7 +84,9 @@ class UserDataManager private constructor(context: Context) {
         val newPoliciesData = response.policiesList.map { policy ->
             PolicyModel.Policy(
                 policyName = policy.policyName,
-                filePath = policy.filePath
+                filePath = policy.filePath,
+                showSosButton = policy.showSosButton,
+                previewUrl = policy.previewUrl
             )
         }
         

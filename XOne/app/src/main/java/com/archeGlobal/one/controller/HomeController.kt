@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import android.util.Log
 import android.content.Context
+import android.content.Intent
+import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.utils.ImageCache
@@ -87,8 +89,22 @@ class HomeController(
             }
             "id" -> navigator.navigateToID()
             "asset" -> navigator.navigateToAsset()
-            "timesheet" -> navigator.navigateToTimesheet()
-            "leave" -> navigator.navigateToLeave()
+            "timesheet" -> {
+                Log.d("HomeController", "Timesheet service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Timesheet service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+            "leave" -> {
+                Log.d("HomeController", "Leave service not available yet")
+                android.widget.Toast.makeText(
+                    context,
+                    "Leave service is not available yet",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
             "my documents", "mydocuments" -> {
                 Log.d("MyDocuments", "Navigating to My Documents")
                 navigator.navigateToMyDocuments()
@@ -186,7 +202,14 @@ class HomeController(
                 Log.d("SOS", "Navigating to SOS")
                 navigator.navigateToSOS(false)
             }
-            "travel & expenses" -> navigator.navigateToTravelExpenses()
+            "travel & expenses" -> {
+                Log.d("HomeController", "Navigating to Travel & Expenses")
+                val intent = Intent(context, WebViewActivity::class.java).apply {
+                    putExtra("fileUrl", "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml")
+                    putExtra("title", "Travel & Expenses")
+                }
+                context.startActivity(intent)
+            }
             "sap" -> navigator.navigateToSAP()
             else -> {
                 // Default case for any non-handled services
