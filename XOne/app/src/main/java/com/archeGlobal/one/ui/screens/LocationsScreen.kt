@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import com.archeGlobal.one.R
 
 
 @Composable
@@ -165,7 +169,7 @@ fun LocationsScreen(
                             Text(
                                 text = when {
                                     locationController.isInEmergencyContactMode() -> "Emergency Contact"
-                                    state.showingStateList -> "Locations"
+                                    state.showingStateList -> "Regional Offices"
                                     state.showingDetails -> {
                                         state.selectedLocation?.name ?: "Locations"
                                     }
@@ -468,51 +472,77 @@ private fun StateList(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(8.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
+
+            
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Only show the "India" text if NOT in emergency contact mode
-                if (!controller.isInEmergencyContactMode()) {
-                    Text(
-                        text = "Regional Offices",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                }
-                
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Display ALL states from the API response without filtering
-                    items(states) { state ->
-                        val location = state.locations.firstOrNull()
-                        
-                        Button(
-                            onClick = { 
-                                // For India, use the original behavior - show internal view
-                                onStateClick(state)
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimaryRed
-                            ),
-                            shape = RoundedCornerShape(24.dp),
-                            contentPadding = PaddingValues(16.dp)
+                // Display ALL states from the API response without filtering
+                items(states) { state ->
+                    val location = state.locations.firstOrNull() ?: return@items
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onStateClick(state) }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = state.name,
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                            // Office building icon in red circle
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(
+                                        color = PrimaryRed,
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_building_office),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            
+                            // Office details
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 16.dp)
+                            ) {
+                                Text(
+                                    text = state.name,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                
+                                Spacer(modifier = Modifier.height(4.dp))
+                                
+                                Text(
+                                    text = location.address,
+                                    fontSize = 14.sp,
+                                    color = TextSecondary,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                            
+                            // Right arrow
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
@@ -521,7 +551,6 @@ private fun StateList(
         }
     }
 }
-
 
 @Composable
 private fun LocationDetails(

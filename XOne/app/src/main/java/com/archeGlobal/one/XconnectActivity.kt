@@ -26,6 +26,13 @@ class XConnectActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Get the initial tab selection from intent, defaulting to "All Posts" if not specified
+        val initialTab = if (intent.hasExtra("initialTab")) {
+            intent.getStringExtra("initialTab")
+        } else {
+            "All Posts"
+        } ?: "All Posts"
+
         // Start preloading data immediately when activity is created
         SocialDataProvider.getInstance(applicationContext).preloadData()
 
@@ -83,7 +90,8 @@ class XConnectActivity : ComponentActivity() {
                                     selectedArticle = article
                                     selectedArticleType = type
                                     currentScreen = Screen.ArticleDetail
-                                }
+                                },
+                                initialTab = initialTab
                             )
                         }
                         is Screen.ArticleDetail -> {

@@ -42,7 +42,8 @@ import androidx.compose.material.icons.filled.Close
 @Composable
 fun XConnectScreen(
     onBackPressed: () -> Unit,
-    onArticleSelected: (SocialArticle, String) -> Unit = { _, _ -> }
+    onArticleSelected: (SocialArticle, String) -> Unit = { _, _ -> },
+    initialTab: String = "All Posts"
 ) {
     val context = LocalContext.current
     val socialController = remember { SocialController(context) }

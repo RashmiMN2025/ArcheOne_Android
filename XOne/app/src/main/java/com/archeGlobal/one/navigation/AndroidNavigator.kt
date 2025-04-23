@@ -144,6 +144,15 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         val intent = Intent(activity, XConnectActivity::class.java)
         activity.startActivity(intent)
     }
+
+    override fun navigateToXConnect(initialTab: String) {
+        Log.d("AndroidNavigator", "Navigating to XConnect screen with initial tab: $initialTab")
+        val intent = Intent(activity, XConnectActivity::class.java).apply {
+            putExtra("initialTab", initialTab)
+        }
+        activity.startActivity(intent)
+    }
+
     override fun navigateToHelpdesk() {}
     override fun navigateToAnnouncements() {}
     override fun navigateToXProfile() {}

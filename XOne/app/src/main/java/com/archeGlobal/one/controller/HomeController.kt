@@ -13,6 +13,7 @@ import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.utils.ImageCache
+import java.util.Comparator
 
 class HomeController(
     private val navigator: Navigator,
@@ -30,7 +31,14 @@ class HomeController(
         categories = OtpVerificationController.getUserData()?.let { userData ->
             userData.services
                 .groupBy { it.category }
-                .toSortedMap(String.CASE_INSENSITIVE_ORDER)
+                .toSortedMap(Comparator { a, b ->
+                    // If either is MyApps, handle special case
+                    when {
+                        a.equals("MyApps", ignoreCase = true) && !b.equals("MyApps", ignoreCase = true) -> 1
+                        !a.equals("MyApps", ignoreCase = true) && b.equals("MyApps", ignoreCase = true) -> -1
+                        else -> a.compareTo(b, ignoreCase = true)
+                    }
+                })
                 .mapValues { (_, services) ->
                     services.map { service ->
                         HomeItem(
@@ -175,6 +183,10 @@ class HomeController(
             "connect" -> {
                 Log.d("XConnect", "Navigating to XConnect")
                 navigator.navigateToXConnect()
+            }
+            "blogs" -> {
+                Log.d("XConnect", "Navigating to XConnect for blogs")
+                navigator.navigateToXConnect("Blogs")
             }
             "helpdesk" -> {
                 Log.d("HomeController", "Helpdesk service not available yet")
@@ -324,7 +336,14 @@ class HomeController(
             categories = userData?.let { data ->
                 data.services
                     .groupBy { it.category }
-                    .toSortedMap(String.CASE_INSENSITIVE_ORDER)
+                    .toSortedMap(Comparator { a, b ->
+                        // If either is MyApps, handle special case
+                        when {
+                            a.equals("MyApps", ignoreCase = true) && !b.equals("MyApps", ignoreCase = true) -> 1
+                            !a.equals("MyApps", ignoreCase = true) && b.equals("MyApps", ignoreCase = true) -> -1
+                            else -> a.compareTo(b, ignoreCase = true)
+                        }
+                    })
                     .mapValues { (_, services) ->
                         services.map { service ->
                             HomeItem(
