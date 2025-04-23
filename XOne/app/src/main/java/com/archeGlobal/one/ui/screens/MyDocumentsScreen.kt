@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.archeGlobal.one.R
 import com.archeGlobal.one.ui.components.UniversalLoader
 import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.core.content.ContextCompat
 
@@ -401,8 +402,13 @@ fun DocumentCard(
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFDD3825))
+            .height(48.dp)
+            .border(
+                width = 1.dp,
+                color = Color.Black,
+                shape = RoundedCornerShape(8.dp)
+            ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
     ) {
         Row(
             modifier = Modifier
@@ -413,7 +419,7 @@ fun DocumentCard(
         ) {
             Text(
                 text = name,
-                color = Color.White,
+                color = Color.Black,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f)
@@ -426,12 +432,22 @@ fun DocumentCard(
                     onClick = { showUploadOptions = true },
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_upload_circle),
-                        contentDescription = "Upload",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .background(
+                                color = Color(0xFFDD3825),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_upload_circle),
+                            contentDescription = "Upload",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
 
                 IconButton(
@@ -441,7 +457,7 @@ fun DocumentCard(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_view_eye),
                         contentDescription = "View",
-                        tint = Color.White,
+                        tint = Color(0xFFDD3825),
                         modifier = Modifier.size(24.dp)
                     )
                 }
