@@ -135,6 +135,10 @@ class HomeController(
             }
             "medical" -> navigator.navigateToMedical()
             "finance" -> navigator.navigateToFinance()
+            "zinghr" -> {
+                Log.d("HomeController", "Navigating to ZingHR")
+                navigator.navigateToZingHR()
+            }
             "admin" -> {
                 Log.d("HomeController", "Admin service not available yet")
                 android.widget.Toast.makeText(

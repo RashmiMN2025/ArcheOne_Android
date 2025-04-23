@@ -172,8 +172,15 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
     override fun navigateToSAP() {
         val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://my422539.businessbydesign.cloud.sap/sap/public/ap/ui/repository/SAP_UI/HTMLOBERON5/client.html?app.component=/SAP_UI_CT/Main/root.uiccwoc&rootWindow=X&redirectUrl=/sap/public/byd/runtime")
+            putExtra("fileUrl", "https://my422539.businessbydesign.cloud.sap")
             putExtra("title", "SAP")
+        }
+        activity.startActivity(intent)
+    }
+    override fun navigateToZingHR() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://portal.zinghr.com/2015/pages/authentication/zing.aspx?ccode=netcongrp")
+            putExtra("title", "ZingHR")
         }
         activity.startActivity(intent)
     }

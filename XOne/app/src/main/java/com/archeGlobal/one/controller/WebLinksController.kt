@@ -14,6 +14,7 @@ class WebLinksController(private val context: Context) {
         private const val MEDICAL_URL = "https://ilhc.icicilombard.com/Customer/iCard"
         private const val TRAVEL_URL = "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml"
         private const val SAP_URL = "https://my422539.businessbydesign.cloud.sap/sap/public/ap/ui/repository/SAP_UI/HTMLOBERON5/client.html?app.component=/SAP_UI_CT/Main/root.uiccwoc&rootWindow=X&redirectUrl=/sap/public/byd/runtime"
+        private const val ZINGHR_URL = "https://portal.zinghr.com/2015/pages/authentication/zing.aspx?ccode=netcongrp"
     }
 
     fun openFinancePortal() {
@@ -30,6 +31,10 @@ class WebLinksController(private val context: Context) {
 
     fun openSAPPortal() {
         openWebView(SAP_URL, "SAP")
+    }
+
+    fun openZingHRPortal() {
+        openWebView(ZINGHR_URL, "ZingHR")
     }
 
     private fun openWebView(url: String, title: String) {

@@ -170,12 +170,14 @@ class WebViewActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
-                                .padding(horizontal = 16.dp),
+                                .padding(0.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
                         ) {
                             Box(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .fillMaxWidth()
                             ) {
                                 // Loading indicator
                                 var isLoading by remember { mutableStateOf(true) }
@@ -187,9 +189,16 @@ class WebViewActivity : ComponentActivity() {
                                 
                                 // WebView for content display
                                 AndroidView(
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .fillMaxWidth()
+                                        .padding(0.dp),
                                     factory = { context ->
                                         WebView(context).apply {
+                                            layoutParams = android.view.ViewGroup.LayoutParams(
+                                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                                            )
                                             settings.apply {
                                                 javaScriptEnabled = true
                                                 allowFileAccess = true
@@ -198,14 +207,14 @@ class WebViewActivity : ComponentActivity() {
                                                 mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                                                 cacheMode = WebSettings.LOAD_DEFAULT
                                                 
-                                                // Viewport and scaling settings
+                                                // Enhanced viewport and scaling settings for better width fitting
                                                 useWideViewPort = true
                                                 loadWithOverviewMode = true
                                                 setSupportZoom(true)
                                                 builtInZoomControls = true
                                                 displayZoomControls = false
                                                 
-                                                // Use NORMAL layout algorithm
+                                                // Force width to match screen
                                                 layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                                                 
                                                 // Additional settings for better rendering
@@ -363,14 +372,54 @@ class WebViewActivity : ComponentActivity() {
                                                                 <!DOCTYPE html>
                                                                 <html>
                                                                 <head>
-                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                                                     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
                                                                     <style>
-                                                                        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
-                                                                        #viewerContainer { width: 100%; height: 100%; overflow: auto; position: absolute; }
-                                                                        #viewer { position: absolute; width: 100%; }
-                                                                        #fallbackContainer { display: none; width: 100%; height: 100%; }
-                                                                        .page { box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-bottom: 15px !important; }
+                                                                        body, html { 
+                                                                            margin: 0 !important; 
+                                                                            padding: 0 !important; 
+                                                                            height: 100% !important; 
+                                                                            width: 100% !important; 
+                                                                            overflow: hidden !important;
+                                                                        }
+                                                                        #viewerContainer { 
+                                                                            width: 100% !important; 
+                                                                            height: 100% !important; 
+                                                                            overflow: auto !important; 
+                                                                            position: absolute !important;
+                                                                            left: 0 !important;
+                                                                            top: 0 !important;
+                                                                            right: 0 !important;
+                                                                            bottom: 0 !important;
+                                                                        }
+                                                                        #viewer { 
+                                                                            position: absolute !important; 
+                                                                            width: 100% !important; 
+                                                                            left: 0 !important;
+                                                                            right: 0 !important;
+                                                                            margin: 0 !important;
+                                                                            padding: 0 !important;
+                                                                        }
+                                                                        #fallbackContainer { 
+                                                                            display: none; 
+                                                                            width: 100% !important; 
+                                                                            height: 100% !important;
+                                                                            margin: 0 !important;
+                                                                            padding: 0 !important;
+                                                                        }
+                                                                        .page { 
+                                                                            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+                                                                            margin: 0 !important;
+                                                                            padding: 0 !important;
+                                                                            width: 100% !important;
+                                                                        }
+                                                                        iframe {
+                                                                            width: 100% !important;
+                                                                            height: 100% !important;
+                                                                            border: none !important;
+                                                                            margin: 0 !important;
+                                                                            padding: 0 !important;
+                                                                        }
                                                                     </style>
                                                                 </head>
                                                                 <body>
@@ -491,14 +540,54 @@ class WebViewActivity : ComponentActivity() {
                                                                         <!DOCTYPE html>
                                                                         <html>
                                                                         <head>
-                                                                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                                                             <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
                                                                             <style>
-                                                                                body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
-                                                                                #viewerContainer { width: 100%; height: 100%; overflow: auto; position: absolute; }
-                                                                                #viewer { position: absolute; width: 100%; }
-                                                                                #fallbackContainer { display: none; width: 100%; height: 100%; }
-                                                                                .page { box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-bottom: 15px !important; }
+                                                                                body, html { 
+                                                                                    margin: 0 !important; 
+                                                                                    padding: 0 !important; 
+                                                                                    height: 100% !important; 
+                                                                                    width: 100% !important; 
+                                                                                    overflow: hidden !important;
+                                                                                }
+                                                                                #viewerContainer { 
+                                                                                    width: 100% !important; 
+                                                                                    height: 100% !important; 
+                                                                                    overflow: auto !important; 
+                                                                                    position: absolute !important;
+                                                                                    left: 0 !important;
+                                                                                    top: 0 !important;
+                                                                                    right: 0 !important;
+                                                                                    bottom: 0 !important;
+                                                                                }
+                                                                                #viewer { 
+                                                                                    position: absolute !important; 
+                                                                                    width: 100% !important; 
+                                                                                    left: 0 !important;
+                                                                                    right: 0 !important;
+                                                                                    margin: 0 !important;
+                                                                                    padding: 0 !important;
+                                                                                }
+                                                                                #fallbackContainer { 
+                                                                                    display: none; 
+                                                                                    width: 100% !important; 
+                                                                                    height: 100% !important;
+                                                                                    margin: 0 !important;
+                                                                                    padding: 0 !important;
+                                                                                }
+                                                                                .page { 
+                                                                                    box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+                                                                                    margin: 0 !important;
+                                                                                    padding: 0 !important;
+                                                                                    width: 100% !important;
+                                                                                }
+                                                                                iframe {
+                                                                                    width: 100% !important;
+                                                                                    height: 100% !important;
+                                                                                    border: none !important;
+                                                                                    margin: 0 !important;
+                                                                                    padding: 0 !important;
+                                                                                }
                                                                             </style>
                                                                         </head>
                                                                         <body>
@@ -632,7 +721,7 @@ class WebViewActivity : ComponentActivity() {
                                                                 <!DOCTYPE html>
                                                                 <html>
                                                                 <head>
-                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                                                     <style>
                                                                         body, html, iframe { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
                                                                     </style>
@@ -683,7 +772,7 @@ class WebViewActivity : ComponentActivity() {
                                                                             <!DOCTYPE html>
                                                                             <html>
                                                                             <head>
-                                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                                                                 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
                                                                                 <style>
                                                                                     body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
@@ -785,7 +874,7 @@ class WebViewActivity : ComponentActivity() {
                                                                                 <!DOCTYPE html>
                                                                                 <html>
                                                                                 <head>
-                                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                                                                     <style>
                                                                                         body, html, iframe { margin: 0; padding: 0; height: 100%; width: 100%; }
                                                                                     </style>
@@ -814,7 +903,7 @@ class WebViewActivity : ComponentActivity() {
                                                             <!DOCTYPE html>
                                                             <html>
                                                             <head>
-                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                                                 <style>
                                                                     body, html {
                                                                         margin: 0;
@@ -827,8 +916,10 @@ class WebViewActivity : ComponentActivity() {
                                                                         background-color: #f5f5f5;
                                                                     }
                                                                     img {
-                                                                        max-width: 100%;
-                                                                        max-height: 100%;
+                                                                        max-width: 100vw;
+                                                                        width: 100%;
+                                                                        height: auto;
+                                                                        max-height: 100vh;
                                                                         object-fit: contain;
                                                                         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                                                                     }
@@ -851,14 +942,24 @@ class WebViewActivity : ComponentActivity() {
                                                             <!DOCTYPE html>
                                                             <html>
                                                             <head>
-                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                                                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                                                 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
                                                                 <style>
                                                                     body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
                                                                     #viewerContainer { width: 100%; height: 100%; overflow: auto; position: absolute; }
-                                                                    #viewer { position: absolute; width: 100%; }
+                                                                    #viewer { 
+                                                                        position: absolute; 
+                                                                        width: 100%; 
+                                                                        max-width: 100vw;
+                                                                        margin: 0 auto;
+                                                                    }
                                                                     #fallbackContainer { display: none; width: 100%; height: 100%; }
-                                                                    .page { box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-bottom: 15px !important; }
+                                                                    .page { 
+                                                                        box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+                                                                        margin-bottom: 15px !important;
+                                                                        width: 100% !important;
+                                                                        max-width: 100vw !important;
+                                                                    }
                                                                 </style>
                                                             </head>
                                                             <body>
