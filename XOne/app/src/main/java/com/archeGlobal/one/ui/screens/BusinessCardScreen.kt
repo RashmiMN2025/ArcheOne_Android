@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -37,7 +38,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
@@ -219,8 +219,10 @@ fun BusinessCardScreen(
                 onShareClick = {
                     scope.launch {
                         cardBounds.value?.let { bounds ->
-                            val bitmap = captureCardArea(view, bounds)
-                            controller.onShareCard(bitmap)
+                            val combinedBitmap = captureBothSides(view, bounds, showFrontSide) { newShowFrontSide ->
+                                showFrontSide = newShowFrontSide
+                            }
+                            controller.onShareCard(combinedBitmap)
                         }
                     }
                 }
@@ -233,7 +235,7 @@ fun BusinessCardScreen(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(0.82f)
-                    .height(390.dp)
+                    .height(420.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
                         cardBounds.value = android.graphics.Rect(
@@ -260,7 +262,7 @@ fun BusinessCardScreen(
                 Column(
                     modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp),
+                                .padding(20.dp),
                             horizontalAlignment = Alignment.Start
                         ) {
                             // Logo
@@ -271,7 +273,7 @@ fun BusinessCardScreen(
                                     .size(39.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(85.dp))
+                            Spacer(modifier = Modifier.height(135.dp))
 
                             // Name and Designation
                     Text(
@@ -287,7 +289,7 @@ fun BusinessCardScreen(
                         lineHeight = 15.sp
                     )
 
-                            Spacer(modifier = Modifier.height(48.dp))
+                            Spacer(modifier = Modifier.height(28.dp))
 
                             // Company Details and QR Code side by side
                             Row(
@@ -385,7 +387,7 @@ fun BusinessCardScreen(
                                 painter = painterResource(id = R.drawable.arche_black),
                                 contentDescription = "Arche Logo",
                                 modifier = Modifier
-                                    .size(44.dp)
+                                    .size(84.dp)
                             )
 
                             Spacer(modifier = Modifier.height(100.dp))
@@ -631,55 +633,105 @@ private suspend fun captureBothSides(
 
     // Capture front side
     updateShowFrontSide(true)
-    // Small delay to ensure UI updates
     kotlinx.coroutines.delay(300)
     val frontBitmap = captureCardArea(view, cardBounds)
 
     // Capture back side
     updateShowFrontSide(false)
-    // Small delay to ensure UI updates
     kotlinx.coroutines.delay(300)
     val backBitmap = captureCardArea(view, cardBounds)
 
     // Restore original state
     updateShowFrontSide(originalShowFrontSide)
 
-    // Define spacing between cards
-    val spacingHeight = 100
-
-    // Create a combined bitmap with front on top and back below, plus a separator
-    val combinedHeight = frontBitmap.height + backBitmap.height + spacingHeight
-    val combinedWidth = frontBitmap.width
-
+    // Define much larger spacing between cards for complete separation
+    val spacingHeight = 180 // Much larger gap between cards
+    val shadowSize = 15f // Shadow size for cards
+    
+    // Calculate dimensions for the combined bitmap with extra space for shadows
+    val cardWidth = frontBitmap.width
+    val cardHeight = frontBitmap.height
+    val combinedHeight = (cardHeight * 2) + spacingHeight + (shadowSize * 4).toInt()
+    val combinedWidth = cardWidth + (shadowSize * 4).toInt()
+    
+    // Create the combined bitmap with white background
     val combinedBitmap = Bitmap.createBitmap(
         combinedWidth,
         combinedHeight,
         Bitmap.Config.ARGB_8888
     )
-
     val canvas = android.graphics.Canvas(combinedBitmap)
-    canvas.drawColor(android.graphics.Color.WHITE) // White background
-
-    // Draw front card at the top
-    canvas.drawBitmap(frontBitmap, 0f, 0f, null)
-
-    // Draw a separator line between the cards
-    val separatorPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.LTGRAY
-        style = android.graphics.Paint.Style.FILL
-    }
-
-    // Draw a gray rectangle as separator
-    val separatorRect = android.graphics.RectF(
-        0f, 
-        frontBitmap.height.toFloat(), 
-        combinedWidth.toFloat(), 
-        (frontBitmap.height + spacingHeight).toFloat()
+    canvas.drawColor(android.graphics.Color.WHITE)
+    
+    // Calculate corner radius in pixels
+    val cornerRadius = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        16f,
+        view.resources.displayMetrics
     )
-    canvas.drawRect(separatorRect, separatorPaint)
-
-    // Draw back card below the separator
-    canvas.drawBitmap(backBitmap, 0f, (frontBitmap.height + spacingHeight).toFloat(), null)
-
+    
+    // Create a function to draw a card with shadow
+    fun drawCardWithShadow(bitmap: Bitmap, x: Float, y: Float) {
+        // Draw shadow first
+        val shadowPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = android.graphics.Color.argb(40, 0, 0, 0)
+            style = android.graphics.Paint.Style.FILL
+            setShadowLayer(shadowSize, 0f, 6f, android.graphics.Color.argb(80, 0, 0, 0))
+        }
+        
+        // Create rectangle for card with shadow
+        val cardRect = android.graphics.RectF(
+            x + shadowSize,
+            y + shadowSize,
+            x + cardWidth - shadowSize,
+            y + cardHeight - shadowSize
+        )
+        
+        // Draw shadow with rounded corners
+        canvas.drawRoundRect(cardRect, cornerRadius, cornerRadius, shadowPaint)
+        
+        // Create rectangle for the actual card
+        val cardRealRect = android.graphics.RectF(
+            x + shadowSize,
+            y + shadowSize,
+            x + cardWidth - shadowSize,
+            y + cardHeight - shadowSize
+        )
+        
+        // Draw card background
+        val cardPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = android.graphics.Color.rgb(242, 242, 237) // Cream white like in image
+            style = android.graphics.Paint.Style.FILL
+        }
+        canvas.drawRoundRect(cardRealRect, cornerRadius, cornerRadius, cardPaint)
+        
+        // Create a clip path for the card content
+        val clipPath = android.graphics.Path()
+        clipPath.addRoundRect(cardRealRect, cornerRadius, cornerRadius, android.graphics.Path.Direction.CW)
+        
+        // Save canvas state and apply clip
+        canvas.save()
+        canvas.clipPath(clipPath)
+        
+        // Draw the actual card bitmap
+        canvas.drawBitmap(
+            bitmap,
+            x + shadowSize,
+            y + shadowSize,
+            null
+        )
+        
+        // Restore canvas state
+        canvas.restore()
+    }
+    
+    // Draw front card at the top with shadow
+    drawCardWithShadow(frontBitmap, shadowSize * 2, shadowSize * 2)
+    
+    // Draw back card below with shadow
+    drawCardWithShadow(backBitmap, shadowSize * 2, (cardHeight + spacingHeight).toFloat())
+    
     return combinedBitmap
 }
