@@ -328,7 +328,7 @@ fun BusinessCardScreen(
                                     Box(
                                         modifier = Modifier
                                             .width(72.dp)
-                                            .offset(y = (-6).dp),
+                                            .offset(y = (-7).dp),
                                         contentAlignment = Alignment.TopCenter
                                     ) {
                                         businessCard.qrCode?.let { qrBitmap ->
