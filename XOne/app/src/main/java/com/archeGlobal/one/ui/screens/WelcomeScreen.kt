@@ -46,10 +46,10 @@ fun WelcomeScreen(
         ) {
             // Middle Logo
             Image(
-                painter = painterResource(id = R.drawable.arche_one), // Replace with your logo
+                painter = painterResource(id = R.drawable.archeone_logo_white), // Replace with your logo
                 contentDescription = "One Logo",
                 modifier = Modifier
-                    .size(400.dp) // Adjusted size
+                    .size(200.dp) // Adjusted size
                     .fillMaxWidth()
                     .offset(y = (-50).dp) // Moves image **further up**
             )
