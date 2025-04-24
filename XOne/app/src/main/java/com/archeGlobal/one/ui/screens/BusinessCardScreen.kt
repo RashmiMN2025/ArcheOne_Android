@@ -17,6 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +47,10 @@ import com.archeGlobal.one.model.LocationInfo
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.network.Office
 import com.archeGlobal.one.network.RegionalOffice
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.Font
 
 // Composable to display a QR code bitmap using Canvas
 @Composable
@@ -135,6 +142,7 @@ fun BusinessCardScreen(
     val scope = rememberCoroutineScope()
     val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
     var newLocation by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     // Create a LocationInfo object using the location string from businessCard
     // Use remember with businessCard.location as key to update when location changes
@@ -224,8 +232,8 @@ fun BusinessCardScreen(
             Card(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(0.85f)
-                    .height(470.dp)
+                    .fillMaxWidth(0.82f)
+                    .height(390.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
                         cardBounds.value = android.graphics.Rect(
@@ -260,32 +268,32 @@ fun BusinessCardScreen(
                                 painter = painterResource(id = R.drawable.arche_black),
                                 contentDescription = "Arche Logo",
                                 modifier = Modifier
-                                    .size(44.dp)
+                                    .size(39.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(78.dp))
+                            Spacer(modifier = Modifier.height(85.dp))
 
                             // Name and Designation
                     Text(
-                        text = businessCard.name,
-                                fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color.Black)) {
+                                append(businessCard.name)
+                                append("\n")
+                            }
+                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 9.sp, color = Color.Black)) {
+                                append(businessCard.designation)
+                            }
+                        },
+                        lineHeight = 15.sp
                     )
-                    Text(
-                        text = businessCard.designation,
-                                fontSize = 12.sp,
-                                color = Color.Black,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(48.dp))
 
                             // Company Details and QR Code side by side
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 60.dp),
+                                    .padding(top = 45.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.Top
                             ) {
@@ -293,61 +301,56 @@ fun BusinessCardScreen(
                                 Column(
                                     modifier = Modifier.weight(1f)
                                 ) {
-                    Text(
-                                        text = "Arche Global Pvt Ltd",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-
-                    Text(
-                        text = businessCard.email,
-                                        fontSize = 11.sp,
-                                        color = Color.Black,
-                                        modifier = Modifier.padding(top = 1.dp)
-                    )
-                    Text(
-                        text = businessCard.phone,
-                                        fontSize = 11.sp,
-                                        color = Color.Black,
-                                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                    Text(
-                        text = controller.businessCard.location,
-                                        fontSize = 11.sp,
-                                        color = Color.Black,
-                                        modifier = Modifier.padding(top = 2.dp)
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(SpanStyle(fontWeight = FontWeight.Medium, fontSize = 10.sp, color = Color.Black)) {
+                                                append("Arche Global Pvt Ltd\n")
+                                            }
+                                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 10.sp, color = Color.Black)) {
+                                                append(businessCard.email)
+                                                append("\n")
+                                                append(businessCard.phone)
+                                                append("\n")
+                                                append(controller.businessCard.location)
+                                            }
+                                        },
+                                        lineHeight = 15.sp
                                     )
                                 }
 
                                 // QR Code and arche text
                                 Column(
                                     horizontalAlignment = Alignment.End,
-                                    modifier = Modifier.padding(start = 16.dp)
+                                    modifier = Modifier
+                                        .padding(start = 12.dp)
+                                        .offset(x = 8.dp)
                                 ) {
                                     Box(
-                                        modifier = Modifier.width(70.dp),
-                                        contentAlignment = Alignment.Center
+                                        modifier = Modifier
+                                            .width(72.dp)
+                                            .offset(y = (-8).dp),
+                                        contentAlignment = Alignment.TopCenter
                                     ) {
                                         businessCard.qrCode?.let { qrBitmap ->
                                             ComposeQRCodeImage(
                                                 bitmap = qrBitmap,
                                                 contentDescription = "QR Code",
-                                                modifier = Modifier.size(70.dp)
+                                                modifier = Modifier.size(76.dp),
+
                                             )
                                         }
                                     }
 
                                     Box(
-                                        modifier = Modifier.width(70.dp),
+                                        modifier = Modifier.width(54.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
                                             text = "arche",
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium,
                                             color = Color.Black,
-                                            modifier = Modifier.padding(top = 4.dp)
+                                            modifier = Modifier.offset(x = (-7).dp, y = (-6).dp)
                                         )
                                     }
                                 }
@@ -358,7 +361,7 @@ fun BusinessCardScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(32.dp),
+                                .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Top
                         ) {
@@ -366,46 +369,47 @@ fun BusinessCardScreen(
 
                             // Text first (moved up)
                             Text(
-                                text = "This could be the start of\nsomething great.",
-                                fontSize = 15.sp,  // Smaller text size
+                                text = "This could be the start of something great.",
+                                fontSize = 9.sp,
+                                fontFamily = FontFamily(Font(R.font.canela_regular)),
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
-                                lineHeight = 28.sp
+                                lineHeight = 17.sp
                             )
 
-                            Spacer(modifier = Modifier.height(80.dp))  // Reduced spacing
+                            Spacer(modifier = Modifier.height(100.dp))  // Reduced spacing
 
                             // Logo moved below text
                             Image(
                                 painter = painterResource(id = R.drawable.arche_black),
                                 contentDescription = "Arche Logo",
                                 modifier = Modifier
-                                    .size(82.dp)
+                                    .size(44.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(80.dp))
+                            Spacer(modifier = Modifier.height(100.dp))
 
                     Text(
                         text = businessCard.website,
-                                fontSize = 12.sp,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
+                        fontSize = 9.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 7.dp)
+                    )
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(7.dp))
 
-                            Text(
-                                text = location.address,
-                                fontSize = 12.sp,
-                                color = Color.Black,
-                                textAlign = TextAlign.Center,
-                                lineHeight = 18.sp
-                            )
-                        }
+                    Text(
+                        text = location.address,
+                        fontSize = 8.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 13.sp
+                    )
                 }
             }
+        }
         }
 
         item {
@@ -495,14 +499,22 @@ fun BusinessCardScreen(
             text = {
                 var isFocused by remember { mutableStateOf(false) }
 
-                TextField(
+                OutlinedTextField(
                     value = newLocation,
                     onValueChange = { newLocation = it },
                     placeholder = { Text("Enter new location") },
                     singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        cursorColor = Color.Black,
                         focusedIndicatorColor = Color.Black,
-                        unfocusedIndicatorColor = Color.Black
+                        unfocusedIndicatorColor = Color.Black,
+                        focusedPlaceholderColor = Color.Gray,
+                        unfocusedPlaceholderColor = Color.Gray
                     )
                 )
             },
@@ -510,7 +522,29 @@ fun BusinessCardScreen(
                 TextButton(
                     onClick = {
                         if (newLocation.isNotEmpty()) {
-                            controller.onLocationUpdated(newLocation)
+                            val offices = OtpVerificationController.getOfficesData()
+                            val trimmedLocation = newLocation.trim()
+                            
+                            // Validate against office locations
+                            val isValid = offices?.any { office ->
+                                office.country.equals(trimmedLocation, true) || 
+                                office.regionaloffice?.any { regional ->
+                                    regional.region.contains(trimmedLocation, true)
+                                } == true
+                            } ?: false
+
+                            if (!isValid) {
+                                // Set default to Bangalore and show toast
+                                val defaultLocation = "Bangalore"
+                                Toast.makeText(
+                                    context, 
+                                    "Invalid location, defaulting to $defaultLocation",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                controller.onLocationUpdated(defaultLocation)
+                            } else {
+                                controller.onLocationUpdated(trimmedLocation)
+                            }
                             newLocation = ""
                         }
                         controller.showEditLocationDialog.value = false
