@@ -74,17 +74,10 @@ fun XOneSplashScreen() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                painter = painterResource(id = R.drawable.arche_one),
+                painter = painterResource(id = R.drawable.archeone_logo_white),
                 contentDescription = "Company Logo",
-                modifier = Modifier.size(200.dp)
-            )
-            // Tagline Below Logo
-            Text(
-                text = "Workplace, Simplified",
-                fontSize = 14.sp,
-                color = Color(0xFFDD3825), // Red Color
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.offset(y = (-60).dp) // Moves **text up** for better positioning
+                modifier = Modifier.size(150.dp)
+                    .offset(y = (-40).dp)
             )
         }
     }
