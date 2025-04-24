@@ -49,9 +49,9 @@ fun WelcomeScreen(
                 painter = painterResource(id = R.drawable.archeone_logo_white), // Replace with your logo
                 contentDescription = "One Logo",
                 modifier = Modifier
-                    .size(150.dp) // Adjusted size
+                    .size(130.dp) // Adjusted size
                     .fillMaxWidth()
-                    .offset(y = (-10).dp) // Moves image **further up**
+                    .offset(y = (-1).dp) // Moves image **further up**
             )
 
             // Tagline Below Logo
@@ -60,7 +60,7 @@ fun WelcomeScreen(
                 fontSize = 14.sp,
                 color = Color(0xFFDD3825), // Red Color
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.offset(y = (-10).dp) // Moves **text up** for better positioning
+                modifier = Modifier.offset(y = (-1).dp) // Moves **text up** for better positioning
             )
 
             Spacer(modifier = Modifier.weight(1f)) // Push button down
