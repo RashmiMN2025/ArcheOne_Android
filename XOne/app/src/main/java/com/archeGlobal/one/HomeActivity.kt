@@ -60,6 +60,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var aboutMeController: AboutMeController
     private lateinit var addressController: AddressController
     private lateinit var emergencyContactController: EmergencyContactController
+    private lateinit var archeOdysseyController: ArcheOdysseyController
     private lateinit var chatController: ChatController
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
@@ -186,6 +187,7 @@ class HomeActivity : AppCompatActivity() {
                 aboutMeController = AboutMeController(navigator)
                 addressController = AddressController(navigator)
                 emergencyContactController = EmergencyContactController(navigator)
+                archeOdysseyController = ArcheOdysseyController(navigator)
                 chatController = ChatController(this, navigator)
                 var isLoading by remember { mutableStateOf(false) }
 
@@ -489,6 +491,27 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         AddressDetailsScreen(
                             controller = addressController
+                        )
+                    }
+
+                    composable(
+                        route = "archeodyssey",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        ArcheOdysseyScreen(
+                            controller = archeOdysseyController,
+                            onBackPressed = { navController.popBackStack() }
                         )
                     }
 

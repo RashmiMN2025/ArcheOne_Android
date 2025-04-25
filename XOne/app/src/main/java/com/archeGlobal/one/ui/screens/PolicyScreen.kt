@@ -59,7 +59,11 @@ fun PolicyScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)) // Light gray background
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
+                )
+            )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(

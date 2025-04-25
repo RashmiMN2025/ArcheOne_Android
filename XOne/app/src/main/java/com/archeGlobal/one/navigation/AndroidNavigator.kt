@@ -217,7 +217,11 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to address details screen")
         navController?.navigate("addressdetails")
     }
-    
+
+    override fun navigateToArcheOdyssey() {
+        navController?.navigate("archeodyssey")
+    }
+
     override fun navigateToEmergencyContact() {
         Log.d("AndroidNavigator", "Navigating to emergency contact screen")
         navController?.navigate("emergencycontact")
@@ -233,6 +237,7 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             Log.e("AndroidNavigator", "Error navigating to PDF viewer: ${e.message}", e)
         }
     }
+
 
     // New method to get the current route
     override fun getCurrentRoute(): String? {

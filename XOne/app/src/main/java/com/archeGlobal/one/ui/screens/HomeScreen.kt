@@ -636,6 +636,7 @@ private fun formatServiceTitle(title: String): String {
         "Asset" -> "Asset"
         "Greetings" -> "Greetings"
         "Profile Connect" -> "Profile\nConnect"
+        "Arche Odyssey" -> "Arche\nOdyssey"
         else -> {
             // For any other multi-word titles, always split at a space
             if (title.contains(" ")) {

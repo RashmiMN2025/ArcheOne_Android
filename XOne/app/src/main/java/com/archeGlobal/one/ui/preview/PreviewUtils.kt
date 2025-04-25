@@ -48,6 +48,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToAboutMe() {}
     override fun navigateToAddressDetails() {}
     override fun navigateToEmergencyContact() {}
+    override fun navigateToArcheOdyssey() {}
     override fun navigateToPDFViewer(pdfUrl: String, title: String) {}
     
     // Implementation of new methods

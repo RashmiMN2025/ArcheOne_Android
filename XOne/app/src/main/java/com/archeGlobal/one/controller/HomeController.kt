@@ -227,6 +227,14 @@ class HomeController(
                 context.startActivity(intent)
             }
             "sap" -> navigator.navigateToSAP()
+            "archeodyssey" -> {
+                Log.d("HomeController", "Navigating to Arche Odyssey")
+                navigator.navigateToArcheOdyssey()
+            }
+            "arche odyssey" -> {
+                Log.d("HomeController", "Navigating to Arche Odyssey")
+                navigator.navigateToArcheOdyssey()
+            }
             else -> {
                 // Default case for any non-handled services
                 Log.d("HomeController", "${item.title} service not available yet")
@@ -385,4 +393,4 @@ class HomeController(
             refreshUserData()
         }, 300) // Short delay to ensure the update propagates
     }
-} 
+}
