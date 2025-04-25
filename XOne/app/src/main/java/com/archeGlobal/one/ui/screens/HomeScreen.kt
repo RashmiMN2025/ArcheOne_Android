@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -376,7 +378,7 @@ fun HomeScreen(
                                                     onClick = { onItemClick(item) },
                                                     onFavoriteClick = { onToggleFavorite(item) },
                                                     modifier = Modifier.weight(1f),
-                                                    showFavoriteButton = model.showAllApps || model.viewFavorites,
+                                                    showFavoriteButton = false,
                                                     isSelected = false,
                                                     onLongPress = { position -> 
                                                         selectedApp = item
@@ -428,7 +430,7 @@ fun HomeScreen(
                                                         onClick = { onItemClick(item) },
                                                         onFavoriteClick = { onToggleFavorite(item) },
                                                         modifier = Modifier.weight(1f),
-                                                        showFavoriteButton = true,
+                                                        showFavoriteButton = false,
                                                         isSelected = false,
                                                         onLongPress = { position -> 
                                                             selectedApp = item
@@ -608,7 +610,7 @@ fun HomeScreen(
     }
 }
 
-// Add this helper function to format long titles
+// Update this helper function to better format long titles
 private fun formatServiceTitle(title: String): String {
     // Special cases for specific long titles - forcing proper line breaks
     return when (title) {
@@ -618,6 +620,7 @@ private fun formatServiceTitle(title: String): String {
         "Goal Setting/KPI" -> "Goal\nSetting/KPI"
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
+        "MyDocuments" -> "My\nDocuments"
         "To Do" -> "To Do"
         "My Career" -> "My\nCareer"
         "Admin" -> "Admin" 
@@ -642,14 +645,21 @@ private fun formatServiceTitle(title: String): String {
             if (title.contains(" ")) {
                 val words = title.split(" ")
                 if (words.size >= 2) {
-                    // If there are multiple words, split at the middle
-                    val firstPart = words.take(words.size / 2).joinToString(" ")
-                    val secondPart = words.drop(words.size / 2).joinToString(" ")
-                    "$firstPart\n$secondPart"
+                    // If there are multiple words, split appropriately
+                    if (words.size == 2) {
+                        // Just two words, simple split
+                        "${words[0]}\n${words[1]}"
+                    } else {
+                        // More than two words, balance the lines
+                        val midpoint = words.size / 2
+                        val firstPart = words.take(midpoint).joinToString(" ")
+                        val secondPart = words.drop(midpoint).joinToString(" ")
+                        "$firstPart\n$secondPart"
+                    }
                 } else {
                     title
                 }
-            } else if (title.length > 8) {
+            } else if (title.length > 7) {
                 // For long single words, split in half
                 val mid = title.length / 2
                 title.substring(0, mid) + "\n" + title.substring(mid)
@@ -667,7 +677,7 @@ private fun AppItem(
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier,
-    showFavoriteButton: Boolean = true,
+    showFavoriteButton: Boolean = false,
     isSelected: Boolean = false,
     onLongPress: (Pair<Float, Float>) -> Unit
 ) {
@@ -711,32 +721,35 @@ private fun AppItem(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(8.dp),  // Reduced from 6.dp to 5.dp
+                    .padding(6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                AppIcon(title = title, modifier = Modifier.size(47.dp))  // Reduced from 45.dp to 43.dp
-
+                // Icon at the top
+                AppIcon(title = title, modifier = Modifier.size(48.dp))
+                
+                Spacer(modifier = Modifier.height(1.dp))
+                
                 // Text area with more space
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 35.dp)  // Reduced from 38.dp to 35.dp
-                        .weight(1f)
+                        .heightIn(min = 35.dp)
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = formattedTitle,
+                        fontSize = 12.sp,
                         color = TextPrimary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                         maxLines = 2,
-                        lineHeight = 12.sp,  // Reduced from 13.sp to 12.sp
-                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 14.sp,
+                        overflow = TextOverflow.Visible, // Changed from Ellipsis to make sure text is visible
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 2.dp)
-                            .align(Alignment.Center)
                     )
                 }
             }

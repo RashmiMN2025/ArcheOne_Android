@@ -3,6 +3,7 @@ package com.archeGlobal.one.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
@@ -42,7 +44,9 @@ fun BottomNavigationBar(
     val unselectedColor = Color(0xFF808080)    // Gray for unselected
 
     NavigationBar(
-        modifier = modifier.height(56.dp),
+        modifier = modifier
+            .height(56.dp)
+            .fillMaxWidth(),
         containerColor = Color.White,
         contentColor = selectedColor,
         tonalElevation = 4.dp
@@ -54,7 +58,9 @@ fun BottomNavigationBar(
             icon = {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .fillMaxWidth()
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.arche_black2),
@@ -67,7 +73,9 @@ fun BottomNavigationBar(
                         text = "Home",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 10.sp,
-                        color = homeSelectedColor // Always black
+                        color = homeSelectedColor, // Always black
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             },

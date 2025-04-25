@@ -227,12 +227,16 @@ class HomeController(
                 context.startActivity(intent)
             }
             "sap" -> navigator.navigateToSAP()
-            "archeodyssey" -> {
+            "communique" -> {
+                Log.d("HomeController", "Navigating to Communique directly")
+                navigator.navigateToCommunique()
+            }
+            "archeodyssey", "arche odyssey" -> {
                 Log.d("HomeController", "Navigating to Arche Odyssey")
                 navigator.navigateToArcheOdyssey()
             }
-            "arche odyssey" -> {
-                Log.d("HomeController", "Navigating to Arche Odyssey")
+            "know your org" -> {
+                Log.d("HomeController", "Navigating to Arche Odyssey via Know Your Org")
                 navigator.navigateToArcheOdyssey()
             }
             else -> {

@@ -2,6 +2,18 @@ package com.archeGlobal.one.ui.preview
 
 import com.archeGlobal.one.navigation.Navigator
 
+object ServiceNameMapper {
+    fun mapServiceNameToId(serviceName: String): String {
+        return when (serviceName.lowercase()) {
+            "policy" -> "Policy"
+            "asset" -> "Asset"
+            "holiday calendar" -> "Holiday Calendar"
+            "communique" -> "Communique"
+            else -> serviceName
+        }
+    }
+}
+
 class PreviewNavigator : Navigator {
     override fun openPulseLogin() {}
     override fun navigateToLoginScreen() {}
@@ -59,4 +71,6 @@ class PreviewNavigator : Navigator {
     override fun refreshCurrentScreen() {
         // No-op for preview purposes
     }
+
+    override fun navigateToCommunique() {}
 } 

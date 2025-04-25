@@ -48,6 +48,7 @@ interface Navigator {
     fun navigateToEmergencyContact()
     fun navigateToPDFViewer(pdfUrl: String, title: String)
     fun navigateToArcheOdyssey()
+    fun navigateToCommunique()
     
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

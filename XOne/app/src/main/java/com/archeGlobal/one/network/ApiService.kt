@@ -5,6 +5,7 @@ import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.model.CommuniqueModel
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -141,7 +142,8 @@ data class VerifyOtpResponse(
     val policiesList: List<PolicyModel.Policy> = emptyList(),
     val offices: List<Office> = emptyList(),
     val sosBlogs: List<SosBlogModel>,
-    val assetDetails: List<AssetDetail> = emptyList()
+    val assetDetails: List<AssetDetail> = emptyList(),
+    val communique: List<CommuniqueModel.Communique> = emptyList()
 )
 
 data class User(

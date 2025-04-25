@@ -2,6 +2,7 @@ package com.archeGlobal.one.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.HomeItem
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
@@ -160,6 +161,27 @@ class PreferencesManager(context: Context) {
         }
     }
     
+    // Save communique data
+    fun saveCommuniqueData(communique: List<CommuniqueModel.Communique>?) {
+        if (communique == null) {
+            sharedPreferences.edit().remove(KEY_COMMUNIQUE_DATA).apply()
+        } else {
+            val json = gson.toJson(communique)
+            sharedPreferences.edit().putString(KEY_COMMUNIQUE_DATA, json).apply()
+        }
+    }
+    
+    // Get communique data
+    fun getCommuniqueData(): List<CommuniqueModel.Communique>? {
+        val json = sharedPreferences.getString(KEY_COMMUNIQUE_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<CommuniqueModel.Communique>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+    
     // Clear all user-related data on logout
     fun clearAllUserData() {
         sharedPreferences.edit().apply {
@@ -169,6 +191,7 @@ class PreferencesManager(context: Context) {
             remove(KEY_POLICIES_DATA)
             remove(KEY_SOS_BLOGS_DATA)
             remove(KEY_ASSET_DETAILS)
+            remove(KEY_COMMUNIQUE_DATA)
         }.apply()
     }
 
@@ -180,6 +203,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_POLICIES_DATA = "policies_data"
         private const val KEY_SOS_BLOGS_DATA = "sos_blogs_data"
         private const val KEY_ASSET_DETAILS = "asset_details"
+        private const val KEY_COMMUNIQUE_DATA = "communique_data"
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
         private const val KEY_PROFILE_UPDATE_TIMESTAMP = "profile_update_timestamp"
         private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"

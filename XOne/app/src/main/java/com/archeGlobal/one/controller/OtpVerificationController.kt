@@ -8,6 +8,7 @@ import com.archeGlobal.one.XOneApplication
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
+import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
 import com.archeGlobal.one.utils.PreferencesManager
@@ -228,6 +229,7 @@ class OtpVerificationController(
         fun getPoliciesData(): List<PolicyModel.Policy>? = UserDataManager.getInstance(XOneApplication.getInstance()).getPoliciesData()
         fun getSosBlogsData(): List<SosBlogModel>? = UserDataManager.getInstance(XOneApplication.getInstance()).getSosBlogsData()
         fun getAssetDetails(): List<AssetDetail>? = UserDataManager.getInstance(XOneApplication.getInstance()).getAssetDetails()
+        fun getCommuniquesData(): List<CommuniqueModel.Communique>? = UserDataManager.getInstance(XOneApplication.getInstance()).getCommuniqueData()
         
         fun clearUserData() {
             UserDataManager.getInstance(XOneApplication.getInstance()).clearUserData()

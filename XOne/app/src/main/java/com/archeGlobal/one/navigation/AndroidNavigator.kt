@@ -219,7 +219,8 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
 
     override fun navigateToArcheOdyssey() {
-        navController?.navigate("archeodyssey")
+        Log.d("AndroidNavigator", "Navigating to Arche Odyssey screen")
+        navController?.navigate("arche_odyssey")
     }
 
     override fun navigateToEmergencyContact() {
@@ -259,5 +260,10 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         } catch (e: Exception) {
             Log.e("AndroidNavigator", "Error refreshing current screen: ${e.message}", e)
         }
+    }
+
+    override fun navigateToCommunique() {
+        Log.d("AndroidNavigator", "Navigating to Communique screen")
+        navController?.navigate("communique")
     }
 }

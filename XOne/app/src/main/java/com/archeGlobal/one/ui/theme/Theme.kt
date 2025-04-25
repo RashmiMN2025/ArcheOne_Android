@@ -13,6 +13,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.utils.AppFontScaleAdjustment
+import com.archeGlobal.one.utils.FontScaleAdjusted
+import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -75,6 +78,7 @@ fun XOneTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
@@ -84,10 +88,16 @@ fun XOneTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = AppTypography,
-        content = content
-    )
+    
+    // Get device-specific font adjustment
+    val fontAdjustment = getDeviceSpecificFontAdjustment(context)
+    
+    // Wrap content with our font scale adjustment
+    FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = AppTypography,
+            content = content
+        )
+    }
 }

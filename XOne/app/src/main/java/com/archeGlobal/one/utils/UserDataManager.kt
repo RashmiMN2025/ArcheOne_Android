@@ -3,6 +3,7 @@ package com.archeGlobal.one.utils
 import android.content.Context
 import android.util.Log
 import com.archeGlobal.one.model.AssetDetails
+import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
@@ -24,6 +25,7 @@ class UserDataManager private constructor(context: Context) {
     private var policiesData: List<PolicyModel.Policy>? = null 
     private var sosBlogsData: List<SosBlogModel>? = null
     private var assetDetails: List<AssetDetail>? = null
+    private var communiqueData: List<CommuniqueModel.Communique>? = null
     
     init {
         // Load data from SharedPreferences on initialization
@@ -37,12 +39,14 @@ class UserDataManager private constructor(context: Context) {
         policiesData = preferencesManager.getPoliciesData()
         sosBlogsData = preferencesManager.getSosBlogsData()
         assetDetails = preferencesManager.getAssetDetails()
+        communiqueData = preferencesManager.getCommuniqueData()
         
         Log.d(TAG, "Loaded data from preferences - User: ${userData != null}, " +
                 "Offices: ${officesData?.size ?: 0}, " +
                 "Policies: ${policiesData?.size ?: 0}, " +
                 "SosBlogs: ${sosBlogsData?.size ?: 0}, " +
-                "AssetDetails: ${assetDetails?.size ?: 0}")
+                "AssetDetails: ${assetDetails?.size ?: 0}, " +
+                "Communique: ${communiqueData?.size ?: 0}")
     }
     
     fun getUserData(): UserData? = userData
@@ -54,6 +58,8 @@ class UserDataManager private constructor(context: Context) {
     fun getSosBlogsData(): List<SosBlogModel>? = sosBlogsData
     
     fun getAssetDetails(): List<AssetDetail>? = assetDetails
+    
+    fun getCommuniqueData(): List<CommuniqueModel.Communique>? = communiqueData
     
     fun isLoggedIn(): Boolean = preferencesManager.isLoggedIn()
     
@@ -100,12 +106,21 @@ class UserDataManager private constructor(context: Context) {
             )
         } ?: emptyList()
         
+        // Process communique data
+        val newCommuniqueData = response.communique?.map { communique ->
+            CommuniqueModel.Communique(
+                communiqueName = communique.communiqueName,
+                filePath = communique.filePath
+            )
+        } ?: emptyList()
+        
         // Update in-memory cache
         userData = newUserData
         officesData = response.offices
         policiesData = newPoliciesData
         sosBlogsData = newSosBlogsData
         assetDetails = response.assetDetails
+        communiqueData = newCommuniqueData
         
         // Save to persistent storage
         preferencesManager.saveUserData(newUserData)
@@ -113,6 +128,7 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.savePoliciesData(newPoliciesData)
         preferencesManager.saveSosBlogsData(newSosBlogsData)
         preferencesManager.saveAssetDetails(response.assetDetails)
+        preferencesManager.saveCommuniqueData(newCommuniqueData)
         
         Log.d(TAG, "Saved user data to preferences: ${newUserData?.name}")
     }
@@ -124,6 +140,7 @@ class UserDataManager private constructor(context: Context) {
         policiesData = null
         sosBlogsData = null
         assetDetails = null
+        communiqueData = null
         
         // Clear persistent storage
         preferencesManager.clearAllUserData()

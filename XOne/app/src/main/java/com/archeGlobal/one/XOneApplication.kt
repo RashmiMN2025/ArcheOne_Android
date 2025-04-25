@@ -1,10 +1,12 @@
 package com.archeGlobal.one
 
 import android.app.Application
+import android.content.res.Configuration
 import android.util.Log
 import com.archeGlobal.one.controller.SocialDataProvider
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
+import com.archeGlobal.one.utils.forceAppFontScale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,6 +18,9 @@ class XOneApplication : Application() {
     
     override fun onCreate() {
         super.onCreate()
+        
+        // Force a consistent font scale across all devices
+        resources.forceAppFontScale(1.0f)
         
         // Initialize RetrofitClient with application context
         try {
@@ -35,6 +40,19 @@ class XOneApplication : Application() {
         
         // Begin preloading social content data
         preloadSocialData()
+    }
+    
+    // Override configuration changes to maintain our font scale
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        // Create a new configuration with our forced font scale
+        val forcedConfig = Configuration(newConfig)
+        forcedConfig.fontScale = 1.0f
+        
+        // Apply the configuration
+        val displayMetrics = resources.displayMetrics
+        resources.updateConfiguration(forcedConfig, displayMetrics)
+        
+        super.onConfigurationChanged(forcedConfig)
     }
     
     private fun preloadSocialData() {

@@ -2,6 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
@@ -100,7 +101,8 @@ fun ArcheOdysseyScreen(
                         heading = "Communique",
                         text = "Latest updates",
                         icon = painterResource(id = R.drawable.communique),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        onClick = { controller.onCommuniqueClick() }
                     )
                     Tile(
                         heading = "About Us",
@@ -115,12 +117,19 @@ fun ArcheOdysseyScreen(
 }
 
 @Composable
-fun Tile(heading: String, text: String, icon: Painter, modifier: Modifier = Modifier) {
+fun Tile(
+    heading: String, 
+    text: String, 
+    icon: Painter, 
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
     Box(
         modifier = modifier
-            .aspectRatio(0.6f) // Further decreased tile height by adjusting aspect ratio
+            .aspectRatio(0.6f)
             .background(Color.White, shape = MaterialTheme.shapes.medium)
-            .border(1.dp, Color.Gray, shape = MaterialTheme.shapes.medium),
+            .border(1.dp, Color.Gray, shape = MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Column(

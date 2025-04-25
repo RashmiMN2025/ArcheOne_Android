@@ -60,8 +60,9 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var aboutMeController: AboutMeController
     private lateinit var addressController: AddressController
     private lateinit var emergencyContactController: EmergencyContactController
-    private lateinit var archeOdysseyController: ArcheOdysseyController
     private lateinit var chatController: ChatController
+    private lateinit var communiqueController: CommuniqueController
+    private lateinit var archeOdysseyController: ArcheOdysseyController
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
     private var lastPauseTime: Long = 0
@@ -187,8 +188,9 @@ class HomeActivity : AppCompatActivity() {
                 aboutMeController = AboutMeController(navigator)
                 addressController = AddressController(navigator)
                 emergencyContactController = EmergencyContactController(navigator)
-                archeOdysseyController = ArcheOdysseyController(navigator)
                 chatController = ChatController(this, navigator)
+                communiqueController = CommuniqueController(this, navigator)
+                archeOdysseyController = ArcheOdysseyController(navigator)
                 var isLoading by remember { mutableStateOf(false) }
 
                 // If we have a destination or navigateTo, navigate to it
@@ -366,6 +368,50 @@ class HomeActivity : AppCompatActivity() {
                     }
 
                     composable(
+                        route = "arche_odyssey",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        ArcheOdysseyScreen(
+                            controller = archeOdysseyController,
+                            onBackPressed = archeOdysseyController::onBackPressed
+                        )
+                    }
+
+                    composable(
+                        route = "communique",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        CommuniqueScreen(
+                            model = communiqueController.model,
+                            onCommuniqueClick = communiqueController::onCommuniqueClick,
+                            onBackClick = communiqueController::onBackClick,
+                            isLoading = communiqueController.isLoading.value
+                        )
+                    }
+
+                    composable(
                         route = "asset",
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
@@ -491,27 +537,6 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         AddressDetailsScreen(
                             controller = addressController
-                        )
-                    }
-
-                    composable(
-                        route = "archeodyssey",
-                        enterTransition = {
-                            fadeIn(animationSpec = tween(300))
-                        },
-                        exitTransition = {
-                            fadeOut(animationSpec = tween(300))
-                        },
-                        popEnterTransition = {
-                            fadeIn(animationSpec = tween(300))
-                        },
-                        popExitTransition = {
-                            fadeOut(animationSpec = tween(300))
-                        }
-                    ) {
-                        ArcheOdysseyScreen(
-                            controller = archeOdysseyController,
-                            onBackPressed = { navController.popBackStack() }
                         )
                     }
 
