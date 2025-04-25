@@ -754,7 +754,7 @@ private fun AppIcon(
         when (title) {
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
-            "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Connect",
+            "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Blogs",
             "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
@@ -780,7 +780,7 @@ private fun AppIcon(
                                 "holidaycalendar" -> R.drawable.holiday
                                 "greetings" -> R.drawable.greetings
                                 "medical" -> R.drawable.medical
-                                "connect" -> R.drawable.xconnect
+                                "blogs" -> R.drawable.xconnect
                                 "locations" -> R.drawable.locations
                                 "travel&expenses" -> R.drawable.travel
                                 "policy" -> R.drawable.policy
