@@ -98,6 +98,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             
             navigator.setNavController(navController)
+            navigator.printNavigationGraph()
             
             XOneTheme {
                 Scaffold { padding ->
@@ -126,8 +127,8 @@ class MainActivity : ComponentActivity() {
                                     onToggleFavorite = homeController::onToggleFavorite,
                                     onFooterHomeClick = homeController::onFooterHomeClick,
                                     onFooterChatClick = homeController::onFooterChatClick,
-                                    onFooterSOSClick = homeController::onFooterSOSClick,
                                     onFooterProfileClick = homeController::onFooterProfileClick,
+                                    onFooterSOSClick = homeController::onFooterSOSClick,
                                     onXCardClick = homeController::onXCardClick
                                 )
                             }
@@ -180,6 +181,14 @@ class MainActivity : ComponentActivity() {
                                 BusinessCardScreen(
                                     businessCard = businessCardController.businessCard,
                                     controller = businessCardController
+                                )
+                            }
+
+                            composable(
+                                route = "core_values"
+                            ) {
+                                CoreValuesScreen(
+                                    onBackPressed = { navController.popBackStack() }
                                 )
                             }
                         }

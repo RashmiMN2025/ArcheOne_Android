@@ -8,4 +8,8 @@ class ArcheOdysseyController(
     fun onBackPressed() {
         navigator.navigateToHome()
     }
+
+    fun onCoreValuesClicked() {
+        navigator.navigateToCoreValues()
+    }
 }

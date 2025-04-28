@@ -2,6 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
@@ -9,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.ArcheOdysseyController
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,7 +86,8 @@ fun ArcheOdysseyScreen(
                         heading = "Core Values",
                         text = "Our guiding principles",
                         icon = painterResource(id = R.drawable.core_values),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        onClick = { controller.onCoreValuesClicked() } // Added click handler
                     )
                     Tile(
                         heading = "Vision",
@@ -115,16 +119,21 @@ fun ArcheOdysseyScreen(
 }
 
 @Composable
-fun Tile(heading: String, text: String, icon: Painter, modifier: Modifier = Modifier) {
+fun Tile(heading: String, text: String, icon: Painter, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     Box(
         modifier = modifier
-            .aspectRatio(0.6f) // Further decreased tile height by adjusting aspect ratio
+            .size(width = 120.dp, height = 200.dp) // Explicit width and height for tiles
+            .shadow(4.dp, shape = MaterialTheme.shapes.medium, clip = false) // Adjusted shadow to appear outside
             .background(Color.White, shape = MaterialTheme.shapes.medium)
-            .border(1.dp, Color.Gray, shape = MaterialTheme.shapes.medium),
+            .clickable(enabled = onClick != null) {
+                Log.d("Tile", "Tile clicked: $heading") // Added logging for click event
+                onClick?.invoke()
+            }, // Added clickable behavior
         contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = modifier.padding(4.dp)
         ) {
             Icon(
                 painter = icon,
@@ -135,16 +144,17 @@ fun Tile(heading: String, text: String, icon: Painter, modifier: Modifier = Modi
             Text(
                 text = heading,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = text,
-                fontSize = 14.sp,
+                fontSize = 12.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 0.dp).fillMaxWidth() // Removed space for multi-line text
+                modifier = Modifier.padding(top = 0.dp).fillMaxWidth(), // Removed space between text lines
+                lineHeight = 16.sp // Ensures compact line spacing
             )
         }
     }
