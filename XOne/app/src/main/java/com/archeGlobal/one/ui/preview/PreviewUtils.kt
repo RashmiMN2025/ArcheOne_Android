@@ -58,6 +58,17 @@ class PreviewNavigator : Navigator {
     override fun navigateToArcheOdyssey() {}
     override fun navigateToCommunique() {}
     override fun navigateToVision() {}
-    override fun getCurrentRoute(): String? = null
-    override fun refreshCurrentScreen() {}
+
 }
+    override fun navigateToCoreValues() {}
+    override fun navigateToAboutUs() {}
+    
+    // Implementation of new methods
+    override fun getCurrentRoute(): String? {
+        return null // For preview purposes, we don't track a real route
+    }
+    
+    override fun refreshCurrentScreen() {
+        // No-op for preview purposes
+    }
+} 

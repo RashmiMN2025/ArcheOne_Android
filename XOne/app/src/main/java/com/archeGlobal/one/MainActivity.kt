@@ -29,6 +29,7 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContentTransitionScope
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -97,7 +98,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             
-            navigator.setNavController(navController)
+            LaunchedEffect(navController) {
+    navigator.setNavController(navController)
+}
             
             XOneTheme {
                 Scaffold { padding ->
@@ -126,8 +129,8 @@ class MainActivity : ComponentActivity() {
                                     onToggleFavorite = homeController::onToggleFavorite,
                                     onFooterHomeClick = homeController::onFooterHomeClick,
                                     onFooterChatClick = homeController::onFooterChatClick,
-                                    onFooterSOSClick = homeController::onFooterSOSClick,
                                     onFooterProfileClick = homeController::onFooterProfileClick,
+                                    onFooterSOSClick = homeController::onFooterSOSClick,
                                     onXCardClick = homeController::onXCardClick
                                 )
                             }
@@ -182,6 +185,16 @@ class MainActivity : ComponentActivity() {
                                     controller = businessCardController
                                 )
                             }
+                            composable("core_values") {
+                                CoreValuesScreen(
+                                    onBackPressed = { navController.popBackStack() }
+                                )
+                            }
+                        }
+
+                       // Delay printNavigationGraph until NavHost is fully initialized
+                       LaunchedEffect(Unit) {
+                        navigator.printNavigationGraph()
                         }
                     }
                 }

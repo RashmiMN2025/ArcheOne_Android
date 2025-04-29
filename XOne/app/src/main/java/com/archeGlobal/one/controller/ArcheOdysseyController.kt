@@ -16,4 +16,12 @@ class ArcheOdysseyController(
     fun onVisionClick() {
         navigator.navigateToVision()
     }
+
+    fun onCoreValuesClick() {
+        navigator.navigateToCoreValues()
+    }
+
+    fun onAboutUs() {
+        navigator.navigateToAboutUs()
+    }
 }

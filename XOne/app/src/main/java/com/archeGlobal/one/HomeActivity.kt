@@ -541,6 +541,33 @@ class HomeActivity : AppCompatActivity() {
                     }
 
                     composable(
+                        route = "archeodyssey",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        ArcheOdysseyScreen(
+                            controller = archeOdysseyController,
+                            onBackPressed = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable("core_values") {
+                        CoreValuesScreen(
+                            onBackPressed = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
                         route = "emergencycontact",
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))

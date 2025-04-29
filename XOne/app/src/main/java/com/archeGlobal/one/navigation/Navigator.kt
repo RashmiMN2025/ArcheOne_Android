@@ -50,6 +50,8 @@ interface Navigator {
     fun navigateToArcheOdyssey()
     fun navigateToCommunique()
     fun navigateToVision()
+    fun navigateToCoreValues()
+    fun navigateToAboutUs()
     
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

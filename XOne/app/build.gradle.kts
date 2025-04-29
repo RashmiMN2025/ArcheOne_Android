@@ -67,13 +67,13 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation("androidx.compose.material3:material3:1.3.2")
+    implementation(libs.androidx.material3.v132)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.foundation)
     
     // Manual implementation of UI graphics to ensure it's included
-    implementation("androidx.compose.ui:ui-graphics:1.6.0")
+    implementation(libs.ui.graphics)
     
     // Material Design
     implementation(libs.material)
@@ -86,29 +86,29 @@ dependencies {
     implementation(libs.coil.compose)
     
     // Network
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.okhttp.v4110)
+    implementation(libs.logging.interceptor.v4110)
     
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
     
     // Accompanist
     implementation(libs.accompanist.pager)
-    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
-    implementation("com.airbnb.android:lottie-compose:6.0.0")
+    implementation(libs.accompanist.swiperefresh)
+    implementation(libs.lottie.compose)
     
     // PDF Viewer - use web view based approach instead of PDF library
-    implementation("androidx.webkit:webkit:1.7.0")
+    implementation(libs.androidx.webkit)
     implementation(libs.generativeai)
 
     //biometric
-    implementation ("androidx.biometric:biometric:1.2.0-alpha05")
+    implementation (libs.androidx.biometric)
     
     // ZXing QR Code generator
-    implementation("com.google.zxing:core:3.5.2")
+    implementation(libs.core)
     
     // Testing
     testImplementation(libs.junit)

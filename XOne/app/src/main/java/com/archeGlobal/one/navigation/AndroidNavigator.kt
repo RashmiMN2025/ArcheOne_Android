@@ -223,6 +223,18 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         navController?.navigate("arche_odyssey")
     }
 
+    override fun navigateToCoreValues() {
+        navController?.navigate("core_values")
+    }
+
+    override fun navigateToAboutUs() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://arche.global/arche-one-aboutus")
+            putExtra("title", "About Us")
+        }
+        activity.startActivity(intent)
+    }
+
     override fun navigateToEmergencyContact() {
         Log.d("AndroidNavigator", "Navigating to emergency contact screen")
         navController?.navigate("emergencycontact")
@@ -238,7 +250,6 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             Log.e("AndroidNavigator", "Error navigating to PDF viewer: ${e.message}", e)
         }
     }
-
 
     // New method to get the current route
     override fun getCurrentRoute(): String? {
@@ -271,4 +282,24 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to Vision screen")
         navController?.navigate("vision")
     }
+    // Method to print all routes in the navigation graph for debugging purposes
+    fun printNavigationGraph() {
+    if (navController == null) {
+        Log.e("AndroidNavigator", "NavController is not initialized")
+        return
+    }
+
+    val graph = navController?.graph
+    if (graph == null) {
+        Log.e("AndroidNavigator", "Navigation graph is not set. Please call setGraph() first.")
+        return
+    }
+
+    Log.d("AndroidNavigator", "Navigation graph routes:")
+    val iterator = graph.iterator()
+    while (iterator.hasNext()) {
+        val node = iterator.next()
+        Log.d("AndroidNavigator", "Route: ${node.route}")
+    }
+}
 }
