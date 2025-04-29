@@ -266,4 +266,9 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         Log.d("AndroidNavigator", "Navigating to Communique screen")
         navController?.navigate("communique")
     }
+
+    override fun navigateToVision() {
+        Log.d("AndroidNavigator", "Navigating to Vision screen")
+        navController?.navigate("vision")
+    }
 }

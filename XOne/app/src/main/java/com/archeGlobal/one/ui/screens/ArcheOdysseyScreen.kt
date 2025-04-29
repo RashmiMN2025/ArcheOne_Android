@@ -18,8 +18,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.ArcheOdysseyController
+import com.archeGlobal.one.VisionActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +30,7 @@ fun ArcheOdysseyScreen(
     controller: ArcheOdysseyController,
     onBackPressed: () -> Unit
 ) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -90,7 +94,8 @@ fun ArcheOdysseyScreen(
                         heading = "Vision",
                         text = "Future aspirations",
                         icon = painterResource(id = R.drawable.vision),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        onClick = { controller.onVisionClick() }
                     )
                 }
                 Row(
@@ -158,4 +163,3 @@ fun Tile(
         }
     }
 }
-

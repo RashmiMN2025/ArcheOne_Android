@@ -12,4 +12,8 @@ class ArcheOdysseyController(
     fun onCommuniqueClick() {
         navigator.navigateToCommunique()
     }
+
+    fun onVisionClick() {
+        navigator.navigateToVision()
+    }
 }
