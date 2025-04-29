@@ -9,7 +9,11 @@ class ArcheOdysseyController(
         navigator.navigateToHome()
     }
 
-    fun onCoreValuesClicked() {
+    fun onCoreValuesClick() {
         navigator.navigateToCoreValues()
+    }
+
+    fun onAboutUs() {
+        navigator.navigateToAboutUs()
     }
 }

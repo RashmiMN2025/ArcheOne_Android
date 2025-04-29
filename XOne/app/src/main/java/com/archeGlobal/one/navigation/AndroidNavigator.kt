@@ -222,6 +222,18 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         navController?.navigate("archeodyssey")
     }
 
+    override fun navigateToCoreValues() {
+        navController?.navigate("core_values")
+    }
+
+    override fun navigateToAboutUs() {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://arche.global/arche-one-aboutus")
+            putExtra("title", "About Us")
+        }
+        activity.startActivity(intent)
+    }
+
     override fun navigateToEmergencyContact() {
         Log.d("AndroidNavigator", "Navigating to emergency contact screen")
         navController?.navigate("emergencycontact")
@@ -236,22 +248,6 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         } catch (e: Exception) {
             Log.e("AndroidNavigator", "Error navigating to PDF viewer: ${e.message}", e)
         }
-    }
-
-    override fun navigateToCoreValues() {
-        if (navController == null) {
-            Log.e("AndroidNavigator", "NavController is not initialized")
-            return
-        }
-
-        val currentGraph = navController?.graph
-        if (currentGraph == null || currentGraph.findNode("core_values") == null) {
-            Log.e("AndroidNavigator", "core_values route is not found in the navigation graph")
-            return
-        }
-
-        Log.d("AndroidNavigator", "Navigating to core_values")
-        navController?.navigate("core_values")
     }
 
     // New method to get the current route
@@ -278,22 +274,22 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
 
     // Method to print all routes in the navigation graph for debugging purposes
     fun printNavigationGraph() {
-        if (navController == null) {
-            Log.e("AndroidNavigator", "NavController is not initialized")
-            return
-        }
-
-        val graph = navController?.graph
-        if (graph == null) {
-            Log.e("AndroidNavigator", "Navigation graph is not initialized")
-            return
-        }
-
-        Log.d("AndroidNavigator", "Navigation graph routes:")
-        val iterator = graph.iterator()
-        while (iterator.hasNext()) {
-            val node = iterator.next()
-            Log.d("AndroidNavigator", "Route: ${node.route}")
-        }
+    if (navController == null) {
+        Log.e("AndroidNavigator", "NavController is not initialized")
+        return
     }
+
+    val graph = navController?.graph
+    if (graph == null) {
+        Log.e("AndroidNavigator", "Navigation graph is not set. Please call setGraph() first.")
+        return
+    }
+
+    Log.d("AndroidNavigator", "Navigation graph routes:")
+    val iterator = graph.iterator()
+    while (iterator.hasNext()) {
+        val node = iterator.next()
+        Log.d("AndroidNavigator", "Route: ${node.route}")
+    }
+}
 }

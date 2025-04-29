@@ -515,6 +515,12 @@ class HomeActivity : AppCompatActivity() {
                         )
                     }
 
+                    composable("core_values") {
+                        CoreValuesScreen(
+                            onBackPressed = { navController.popBackStack() }
+                        )
+                    }
+
                     composable(
                         route = "emergencycontact",
                         enterTransition = {

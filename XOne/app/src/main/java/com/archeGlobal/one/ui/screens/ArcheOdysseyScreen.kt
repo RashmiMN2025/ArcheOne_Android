@@ -1,11 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -83,12 +80,12 @@ fun ArcheOdysseyScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Tile(
-                        heading = "Core Values",
-                        text = "Our guiding principles",
-                        icon = painterResource(id = R.drawable.core_values),
-                        modifier = Modifier.weight(1f),
-                        onClick = { controller.onCoreValuesClicked() } // Added click handler
-                    )
+    heading = "Core Values",
+    text = "Our guiding principles",
+    icon = painterResource(id = R.drawable.core_values),
+    modifier = Modifier.weight(1f),
+    onClick = { controller.onCoreValuesClick() } // Trigger navigation
+)
                     Tile(
                         heading = "Vision",
                         text = "Future aspirations",
@@ -110,7 +107,8 @@ fun ArcheOdysseyScreen(
                         heading = "About Us",
                         text = "Who we are & what we stand for",
                         icon = painterResource(id = R.drawable.about_us),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        onClick = { controller.onAboutUs() }
                     )
                 }
             }

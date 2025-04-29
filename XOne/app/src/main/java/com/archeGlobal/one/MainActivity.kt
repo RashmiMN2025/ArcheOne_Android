@@ -29,6 +29,7 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContentTransitionScope
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -97,8 +98,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             
-            navigator.setNavController(navController)
-            navigator.printNavigationGraph()
+            LaunchedEffect(navController) {
+    navigator.setNavController(navController)
+}
             
             XOneTheme {
                 Scaffold { padding ->
@@ -183,14 +185,16 @@ class MainActivity : ComponentActivity() {
                                     controller = businessCardController
                                 )
                             }
-
-                            composable(
-                                route = "core_values"
-                            ) {
+                            composable("core_values") {
                                 CoreValuesScreen(
                                     onBackPressed = { navController.popBackStack() }
                                 )
                             }
+                        }
+
+                       // Delay printNavigationGraph until NavHost is fully initialized
+                       LaunchedEffect(Unit) {
+                        navigator.printNavigationGraph()
                         }
                     }
                 }

@@ -49,6 +49,7 @@ interface Navigator {
     fun navigateToPDFViewer(pdfUrl: String, title: String)
     fun navigateToArcheOdyssey()
     fun navigateToCoreValues()
+    fun navigateToAboutUs()
     
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?
