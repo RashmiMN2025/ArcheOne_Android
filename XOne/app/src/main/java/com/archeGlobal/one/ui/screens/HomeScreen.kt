@@ -1,5 +1,4 @@
 package com.archeGlobal.one.ui.screens
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
@@ -319,7 +318,10 @@ fun HomeScreen(
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("All Apps")
+                            Text(
+                                "All Apps",
+                                fontWeight = FontWeight.Medium
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(30.dp))
@@ -342,7 +344,10 @@ fun HomeScreen(
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Favorites")
+                            Text(
+                                "Favorites",
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
 
@@ -742,7 +747,7 @@ private fun AppItem(
                         text = formattedTitle,
                         fontSize = 12.sp,
                         color = TextPrimary,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,  // Changed from Medium to SemiBold
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         lineHeight = 14.sp,

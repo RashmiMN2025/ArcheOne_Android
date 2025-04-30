@@ -40,7 +40,8 @@ fun ScopeSection(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(400.dp)
+            .height(280.dp)  // Adjusted to match iOS card width
+            .padding(horizontal = 8.dp)
     ) {
         // Background image
         Image(
@@ -52,7 +53,7 @@ fun ScopeSection(
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(16.dp)),
+                .clip(RoundedCornerShape(20.dp)),  // Matching iOS corner radius
             contentScale = ContentScale.Crop
         )
 
@@ -60,7 +61,7 @@ fun ScopeSection(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(20.dp),  // Matching iOS padding
             contentAlignment = Alignment.Center
         ) {
             // Glass effect card
@@ -68,22 +69,24 @@ fun ScopeSection(
                 modifier = Modifier
                     .fillMaxWidth(0.99f),
                 color = Color.Black.copy(alpha = 0.6f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(20.dp)  // Matching iOS corner radius
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(20.dp)  // Matching iOS padding
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
                         text = title,
                         color = Color.White,
-                        fontSize = 17.sp,
+                        fontSize = 20.sp,  // Increased for better readability
                         fontWeight = FontWeight.Bold,
-                        lineHeight = 21.sp
+                        lineHeight = 24.sp
                     )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     items.forEach { item ->
                         Row(
@@ -94,14 +97,14 @@ fun ScopeSection(
                             Text(
                                 text = "•",
                                 color = Color.White,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(end = 4.dp)
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
                                 text = item,
                                 color = Color.White,
-                                fontSize = 11.sp,
-                                lineHeight = 12.sp
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
                             )
                         }
                     }
@@ -118,21 +121,21 @@ fun InitiativeCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+        modifier = modifier.height(280.dp),  // Matching the iOS card height
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),  // Matching iOS card background color
+        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),  // Matching iOS shadow
+        shape = RoundedCornerShape(20.dp)  // Matching iOS corner radius
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),  // Reduced padding from 24.dp to 16.dp
+                .padding(20.dp),  // Matching iOS padding
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)  // Reduced spacing from 16.dp to 12.dp
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)  // Reduced from 64.dp to 48.dp
+                    .size(40.dp)  // Matching iOS icon size
                     .background(Color(0xFF00A651).copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -140,18 +143,19 @@ fun InitiativeCard(
                     painter = painterResource(id = icon),
                     contentDescription = text,
                     tint = Color(0xFF00A651),
-                    modifier = Modifier.size(24.dp)  // Reduced from 32.dp to 24.dp
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
             Text(
                 text = text,
-                fontSize = 14.sp,  // Reduced from 18.sp to 14.sp
-                color = Color.DarkGray,
+                fontSize = 13.sp,  // Matching iOS font size
+                color = Color.Black,
                 textAlign = TextAlign.Center,
-                lineHeight = 20.sp,  // Reduced from 24.sp to 20.sp
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.Medium,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 4  // Reduced from 6 to 4 for more compact appearance
+                maxLines = 4
             )
         }
     }

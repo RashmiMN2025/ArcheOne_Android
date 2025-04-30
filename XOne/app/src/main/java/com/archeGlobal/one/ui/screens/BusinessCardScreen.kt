@@ -141,7 +141,7 @@ fun BusinessCardScreen(
     val view = LocalView.current
     val scope = rememberCoroutineScope()
     val cardBounds = remember { mutableStateOf<android.graphics.Rect?>(null) }
-    var newLocation by remember { mutableStateOf("") }
+    var newLocation by remember(businessCard.location) { mutableStateOf(businessCard.location) }
     val context = LocalContext.current
 
     // Create a LocationInfo object using the location string from businessCard

@@ -120,8 +120,8 @@ fun MonthDetailScreen(
                                 // Get the selected date parts (selectedDate will never be null here)
                                 val selectedDateStr = selectedDate ?: return@filter false
                                 val selectedDateParts = selectedDateStr.split("-")
-                                val selectedDay = selectedDateParts[0].toInt()
-                                val selectedMonth = selectedDateParts[1].toInt()
+                                val dayFromSelection = selectedDateParts[0].toInt()
+                                val monthFromSelection = selectedDateParts[1].toInt()
                                 
                                 // Parse milestone date (always in dd-MM-yyyy format)
                                 val milestoneParts = milestone.poDate.split("-")
@@ -132,11 +132,11 @@ fun MonthDetailScreen(
                                     val milestoneMonth = milestoneParts[1].toInt()
                                     
                                     // Compare ONLY day and month, ignoring year completely
-                                    val isMatch = milestoneDay == selectedDay && milestoneMonth == selectedMonth
+                                    val isMatch = milestoneDay == dayFromSelection && milestoneMonth == monthFromSelection
                                     
                                     Log.d("MonthDetailScreen", "Comparing milestone ${milestone.poDate} " +
                                         "(day=$milestoneDay, month=$milestoneMonth) with " +
-                                        "selected date $selectedDate (day=$selectedDay, month=$selectedMonth) " +
+                                        "selected date $selectedDate (day=$dayFromSelection, month=$monthFromSelection) " +
                                         "= $isMatch")
                                     
                                     isMatch
@@ -150,18 +150,12 @@ fun MonthDetailScreen(
                             }
                         }
                         
-                        Log.d("MonthDetailScreen", "Found ${filtered.size} milestones for date $selectedDate")
                         filtered
                     } ?: emptyList()
                 }
-                else -> {
-                    Log.d("MonthDetailScreen", "No calendar data available")
-                    emptyList()
-                }
+                else -> emptyList()
             }
-            
             selectedMilestones = milestones
-            Log.d("MonthDetailScreen", "showMilestoneDetails set to: ${milestones.isNotEmpty()}")
         } else {
             selectedMilestones = emptyList()
         }
@@ -185,11 +179,11 @@ fun MonthDetailScreen(
                                 if (parts.size == 3) {
                                     // Parse as DD-MM-YYYY
                                     val day = parts[0].toInt()
-                                    val month = parts[1].toInt()
+                                    val monthValue = parts[1].toInt()  // Renamed to avoid shadowing
                                     
                                     // Check if this milestone is for the current month
-                                    val isMatch = month == selectedMonth
-                                    Log.d("MonthDetailScreen", "Milestone ${milestone.poDate}: Month=$month, Day=$day, Current Month=$selectedMonth, Match=$isMatch")
+                                    val isMatch = monthValue == selectedMonth
+                                    Log.d("MonthDetailScreen", "Milestone ${milestone.poDate}: Month=$monthValue, Day=$day, Current Month=$selectedMonth, Match=$isMatch")
                                     isMatch
                                 } else {
                                     Log.e("MonthDetailScreen", "Invalid date format: ${milestone.poDate}")
@@ -232,10 +226,11 @@ fun MonthDetailScreen(
         }
     }
 
-    // Initialize with today's date if we're in current month
+    // Initialize with today's date if we're in current month, otherwise first day of month
     LaunchedEffect(selectedMonth) {
         val currentDate = LocalDate.now()
         if (currentDate.monthValue == selectedMonth && currentDate.year == 2025) {
+            // If it's current month, select today's date
             val todayStr = String.format("%02d-%02d-%04d", currentDate.dayOfMonth, selectedMonth, 2025)
             selectedDate = todayStr
             selectedDay = currentDate.dayOfMonth
@@ -251,10 +246,21 @@ fun MonthDetailScreen(
             }
             selectedHoliday = todayHoliday
         } else {
-            selectedHoliday = null
-            selectedDate = null
-            selectedMilestones = emptyList()
-            selectedDay = null
+            // For other months, select the first day
+            val firstDayStr = String.format("%02d-%02d-%04d", 1, selectedMonth, 2025)
+            selectedDate = firstDayStr
+            selectedDay = 1
+            
+            // Find holiday for first day if any
+            val firstDayHoliday = monthHolidays.find { holiday ->
+                try {
+                    val holidayDate = LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                    holidayDate.dayOfMonth == 1
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            selectedHoliday = firstDayHoliday
         }
     }
 
@@ -262,7 +268,7 @@ fun MonthDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.linearGradient(
+                brush = Brush.linearGradient(
                     colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
                 )
             )
@@ -270,9 +276,11 @@ fun MonthDetailScreen(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
+                // Clear selections when background is clicked
                 selectedHoliday = null
                 selectedDate = null
                 selectedMilestones = emptyList()
+                selectedDay = null
             }
     ) {
         Column(
@@ -282,9 +290,8 @@ fun MonthDetailScreen(
                 .clickable(
                     enabled = true,
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = { /* Consume click to prevent it from reaching the background */ }
-                )
+                    indication = null
+                ) { /* Consume click to prevent it from reaching the background */ }
         ) {
             // Top Bar with back button
             Box(
@@ -350,6 +357,13 @@ fun MonthDetailScreen(
                                 IconButton(
                                     onClick = {
                                         selectedMonth--
+                                        // Clear current selections
+                                        selectedHoliday = null
+                                        selectedMilestones = emptyList()
+                                        // Set first day of new month
+                                        val firstDayStr = String.format("%02d-%02d-%04d", 1, selectedMonth - 1, 2025)
+                                        selectedDate = firstDayStr
+                                        selectedDay = 1
                                     }
                                 ) {
                                     Icon(
@@ -378,6 +392,13 @@ fun MonthDetailScreen(
                                 IconButton(
                                     onClick = {
                                         selectedMonth++
+                                        // Clear current selections
+                                        selectedHoliday = null
+                                        selectedMilestones = emptyList()
+                                        // Set first day of new month
+                                        val firstDayStr = String.format("%02d-%02d-%04d", 1, selectedMonth + 1, 2025)
+                                        selectedDate = firstDayStr
+                                        selectedDay = 1
                                     }
                                 ) {
                                     // Using the same icon as back but rotated 180 degrees
@@ -435,11 +456,7 @@ fun MonthDetailScreen(
                     // Holiday Details Box
                     if (selectedHoliday != null) {
                         HolidayDetailsBox(
-                            holiday = selectedHoliday!!,
-                            onHideHoliday = {
-                                controller.hideHoliday(selectedHoliday!!)
-                                selectedHoliday = null
-                            }
+                            holiday = selectedHoliday!!
                         )
                     }
                     
@@ -614,8 +631,7 @@ fun MonthCalendarView(
 
 @Composable
 fun HolidayDetailsBox(
-    holiday: Holiday,
-    onHideHoliday: () -> Unit
+    holiday: Holiday
 ) {
     Card(
         modifier = Modifier
@@ -971,7 +987,7 @@ fun MilestoneDetailsBox(
                     }
                     
                     if (milestone != milestones.last()) {
-                        Divider(
+                        HorizontalDivider(
                             color = Color.LightGray, 
                             thickness = 0.5.dp,
                             modifier = Modifier.padding(top = 8.dp)
@@ -991,11 +1007,11 @@ private fun formatMilestoneDate(dateStr: String): String {
         
         // ALL milestone dates are in DD-MM-YYYY format
         val day = parts[0].toInt()
-        val month = parts[1].toInt()
+        val monthNum = parts[1].toInt()  // Renamed to avoid shadowing
         val year = parts[2].toInt()
         
         // Create LocalDate and format it
-        val date = LocalDate.of(year, month, day)
+        val date = LocalDate.of(year, monthNum, day)
         date.format(DateTimeFormatter.ofPattern("dd MMMM yyyy"))
     } catch (e: Exception) {
         Log.e("MonthDetailScreen", "Error formatting date: $dateStr", e)

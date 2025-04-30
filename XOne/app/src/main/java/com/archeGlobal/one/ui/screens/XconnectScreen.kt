@@ -113,7 +113,7 @@ fun XConnectScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Connect",
+                        text = "Blogs & Case Studies",
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium
