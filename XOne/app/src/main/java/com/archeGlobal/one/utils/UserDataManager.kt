@@ -26,6 +26,9 @@ class UserDataManager private constructor(context: Context) {
     private var sosBlogsData: List<SosBlogModel>? = null
     private var assetDetails: List<AssetDetail>? = null
     private var communiqueData: List<CommuniqueModel.Communique>? = null
+    private var greetingsData: Map<String, List<String>>? = null
+    
+    private val PREF_LAST_LOGIN_TIME = "last_login_time"
     
     init {
         // Load data from SharedPreferences on initialization
@@ -40,13 +43,15 @@ class UserDataManager private constructor(context: Context) {
         sosBlogsData = preferencesManager.getSosBlogsData()
         assetDetails = preferencesManager.getAssetDetails()
         communiqueData = preferencesManager.getCommuniqueData()
+        greetingsData = preferencesManager.getGreetings()
         
         Log.d(TAG, "Loaded data from preferences - User: ${userData != null}, " +
                 "Offices: ${officesData?.size ?: 0}, " +
                 "Policies: ${policiesData?.size ?: 0}, " +
                 "SosBlogs: ${sosBlogsData?.size ?: 0}, " +
                 "AssetDetails: ${assetDetails?.size ?: 0}, " +
-                "Communique: ${communiqueData?.size ?: 0}")
+                "Communique: ${communiqueData?.size ?: 0}, " +
+                "Greetings: ${greetingsData?.size ?: 0}")
     }
     
     fun getUserData(): UserData? = userData
@@ -61,15 +66,21 @@ class UserDataManager private constructor(context: Context) {
     
     fun getCommuniqueData(): List<CommuniqueModel.Communique>? = communiqueData
     
+    fun getGreetingsData(): Map<String, List<String>>? = greetingsData
+    
     fun isLoggedIn(): Boolean = preferencesManager.isLoggedIn()
     
     fun getAuthToken(): String? = preferencesManager.getAuthToken()
     
+    fun getLastLoginTime(): Long? = preferencesManager.getLong(PREF_LAST_LOGIN_TIME)
+    
     fun saveUserDataFromResponse(response: VerifyOtpResponse, token: String) {
-        // Save token
         preferencesManager.saveAuthToken(token)
+        preferencesManager.saveLong(PREF_LAST_LOGIN_TIME, System.currentTimeMillis())
         
-        // Create UserData object
+        // Correctly assign the full list of greetings from the response
+        val fullGreetingsData = response.greetings ?: emptyMap()
+        
         val newUserData = response.user?.let {
             UserData(
                 name = it.name,
@@ -79,58 +90,52 @@ class UserDataManager private constructor(context: Context) {
                 email = it.email,
                 mobile = it.mobile,
                 location = it.location,
-                services = response.services ?: emptyList(),
+                services = response.services,
                 profilePic = response.profile_pic,
                 sosContact = response.sos,
-                userDetails = it.userDetails
+                userDetails = it.userDetails,
+                // Use the full greetings map here
+                greetings = fullGreetingsData 
             )
         }
-        
-        // Process policies
-        val newPoliciesData = response.policiesList.map { policy ->
-            PolicyModel.Policy(
-                policyName = policy.policyName,
-                filePath = policy.filePath,
-                showSosButton = policy.showSosButton,
-                previewUrl = policy.previewUrl
-            )
-        }
-        
-        // Process SOS blogs
-        val newSosBlogsData = response.sosBlogs?.map { sosBlog ->
+
+        // Update in-memory cache
+        userData = newUserData
+        officesData = response.offices
+        policiesData = response.policiesList
+        sosBlogsData = response.sosBlogs.map { sosBlog ->
             SosBlogModel(
                 name = sosBlog.name,
                 description = sosBlog.description,
                 imageUrl = sosBlog.imageUrl,
                 details = sosBlog.details
             )
-        } ?: emptyList()
-        
-        // Process communique data
-        val newCommuniqueData = response.communique?.map { communique ->
+        }
+        assetDetails = response.assetDetails
+        communiqueData = response.communique.map { communique ->
             CommuniqueModel.Communique(
                 communiqueName = communique.communiqueName,
                 filePath = communique.filePath
             )
-        } ?: emptyList()
-        
-        // Update in-memory cache
-        userData = newUserData
-        officesData = response.offices
-        policiesData = newPoliciesData
-        sosBlogsData = newSosBlogsData
-        assetDetails = response.assetDetails
-        communiqueData = newCommuniqueData
+        }
+        // Update in-memory greetings cache with the full map
+        greetingsData = fullGreetingsData
         
         // Save to persistent storage
         preferencesManager.saveUserData(newUserData)
         preferencesManager.saveOfficesData(response.offices)
-        preferencesManager.savePoliciesData(newPoliciesData)
-        preferencesManager.saveSosBlogsData(newSosBlogsData)
+        preferencesManager.savePoliciesData(response.policiesList)
+        preferencesManager.saveSosBlogsData(sosBlogsData)
         preferencesManager.saveAssetDetails(response.assetDetails)
-        preferencesManager.saveCommuniqueData(newCommuniqueData)
+        preferencesManager.saveCommuniqueData(communiqueData)
+        // Call the correct save function with the full greetings map
+        preferencesManager.saveGreetingsList(greetingsData)
         
         Log.d(TAG, "Saved user data to preferences: ${newUserData?.name}")
+        Log.d(TAG, "Saved greetings data with ${greetingsData?.size} categories.")
+        greetingsData?.forEach { (category, urls) ->
+            Log.d(TAG, "Category '$category' has ${urls.size} greetings.")
+        }
     }
     
     fun clearUserData() {
@@ -176,6 +181,21 @@ class UserDataManager private constructor(context: Context) {
         }
     }
     
+    fun getGreetings(): Map<String, List<String>>? = greetingsData
+    
+    fun logout() {
+        userData = null
+        officesData = null
+        policiesData = null
+        sosBlogsData = null
+        assetDetails = null
+        communiqueData = null
+        greetingsData = null
+        preferencesManager.clearAllUserData()
+        preferencesManager.clearAuthToken()
+        Log.d(TAG, "Cleared all user data on logout")
+    }
+    
     companion object {
         private const val TAG = "UserDataManager"
         
@@ -190,4 +210,4 @@ class UserDataManager private constructor(context: Context) {
             }
         }
     }
-} 
+}

@@ -173,12 +173,8 @@ class HomeController(
                 ).show()
             }
             "greetings" -> {
-                Log.d("HomeController", "Greetings service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Greetings service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                Log.d("HomeController", "Navigating to Greetings")
+                navigator.navigateToGreetings()
             }
             "connect" -> {
                 Log.d("XConnect", "Navigating to XConnect")

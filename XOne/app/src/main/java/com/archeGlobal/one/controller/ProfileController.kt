@@ -43,10 +43,21 @@ class ProfileController(
         ProfileModel(
             name = userData?.name ?: "",
             email = userData?.email ?: "",
-            profilePicture = userData?.profilePic
+            profilePicture = userData?.profilePic,
+            lastLoginTime = userDataManager.getLastLoginTime()?.let { formatLastLoginTime(it) } ?: ""
         )
     )
         internal set
+
+    private fun formatLastLoginTime(timestamp: Long): String {
+        return try {
+            val date = java.util.Date(timestamp)
+            android.text.format.DateFormat.format("MMM dd, yyyy hh:mm a", date).toString()
+        } catch (e: Exception) {
+            Log.e("ProfileController", "Error formatting last login time", e)
+            ""
+        }
+    }
 
     fun onAboutMeClick() {
         // Navigate to About Me screen
@@ -427,4 +438,4 @@ class ProfileController(
             homeController = controller
         }
     }
-} 
+}

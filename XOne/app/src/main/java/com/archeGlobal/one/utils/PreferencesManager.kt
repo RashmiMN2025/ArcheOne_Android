@@ -210,6 +210,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_BIOMETRIC_EMAIL = "biometric_email"
         private const val KEY_BIOMETRIC_MOBILE = "biometric_mobile"
         private const val KEY_BIOMETRIC_EMPLOYEE_ID = "biometric_employee_id"
+        private const val KEY_GREETINGS_DATA = "greetings_data"
     }
     
     // Check if this is the first launch of the app
@@ -266,4 +267,50 @@ class PreferencesManager(context: Context) {
             remove(KEY_BIOMETRIC_EMPLOYEE_ID)
         }.apply()
     }
-} 
+
+    fun saveLong(key: String, value: Long) {
+        sharedPreferences.edit().putLong(key, value).apply()
+    }
+    
+    fun getLong(key: String): Long? {
+        return if (sharedPreferences.contains(key)) {
+            sharedPreferences.getLong(key, 0)
+        } else {
+            null
+        }
+    }
+
+    fun saveGreetingsList(greetings: Map<String, List<String>>?) {
+        if (greetings == null) {
+            sharedPreferences.edit().remove(KEY_GREETINGS_DATA).apply()
+        } else {
+            val json = gson.toJson(greetings)
+            sharedPreferences.edit().putString(KEY_GREETINGS_DATA, json).apply()
+        }
+    }
+
+    // Keep getGreetings as it correctly parses Map<String, List<String>>
+    fun getGreetings(): Map<String, List<String>>? {
+        val json = sharedPreferences.getString(KEY_GREETINGS_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<Map<String, List<String>>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+
+    // Remove or comment out the old saveGreetings function if it's no longer needed
+    /*
+    fun saveGreetings(greetings: Map<String, String>?) {
+        if (greetings == null) {
+            sharedPreferences.edit().remove(KEY_GREETINGS_DATA).apply()
+        } else {
+            // Convert Map<String, String> to Map<String, List<String>>
+            val convertedGreetings = greetings.mapValues { (_, value) -> listOf(value) }
+            val json = gson.toJson(convertedGreetings)
+            sharedPreferences.edit().putString(KEY_GREETINGS_DATA, json).apply()
+        }
+    }
+    */
+}
