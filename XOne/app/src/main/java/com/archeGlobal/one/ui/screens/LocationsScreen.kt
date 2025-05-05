@@ -28,6 +28,7 @@ import com.archeGlobal.one.ui.theme.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
 import android.content.Intent
+import android.location.Address
 import android.net.Uri
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
@@ -155,7 +156,7 @@ fun LocationsScreen(
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = PrimaryBlue
+                                    tint = Color.Black
                                 )
                             }
                         }
@@ -176,7 +177,8 @@ fun LocationsScreen(
                                     else -> "Locations"
                                 },
                                 fontSize = 18.sp,
-                                color = PrimaryBlue,
+                                color = Color.Black,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center
                             )
@@ -278,6 +280,7 @@ private fun LocationCard(
             Text(
                 text = location.name,
                 fontSize = 18.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
@@ -285,6 +288,7 @@ private fun LocationCard(
             Text(
                 text = "Arche Global Private Limited",
                 fontSize = 17.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
@@ -294,12 +298,14 @@ private fun LocationCard(
             Text(
                 text = location.address.substringBefore(","),
                 fontSize = 14.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 color = TextSecondary
             )
             Text(
                 text = location.address.substringAfter(",").trim(),
                 fontSize = 14.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 color = TextSecondary
             )
@@ -313,12 +319,14 @@ private fun LocationCard(
                 Text(
                     text = "Email:",
                     fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     color = TextSecondary
                 )
                 Text(
                     text = location.email,
                     fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     color = TextSecondary,
                     textDecoration = TextDecoration.Underline,
@@ -423,7 +431,8 @@ private fun LocationCard(
                         text = "View Location",
                         color = Color.White,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -448,7 +457,8 @@ private fun LocationCard(
                         Text(
                             text = "View Floor Map",
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
                             color = Color.White
                         )
                     }
@@ -498,19 +508,13 @@ private fun StateList(
                         ) {
                             // Office building icon in red circle
                             Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(
-                                        color = PrimaryRed,
-                                        shape = CircleShape
-                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.ic_building_office),
+                                    painter = painterResource(id = R.drawable.building),
                                     contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
+                                    tint = PrimaryRed,
+                                    modifier = Modifier.size(50.dp)
                                 )
                             }
                             
@@ -523,6 +527,7 @@ private fun StateList(
                                 Text(
                                     text = state.name,
                                     fontSize = 18.sp,
+                                    fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimary
                                 )
@@ -572,12 +577,21 @@ private fun LocationDetails(
         ) {
             Text(
                 text = location.name,
-                fontSize = 16.sp,
+                fontSize = 18.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
             
             Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Address",
+                fontSize = 15.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Medium,
+                color = Color.Gray
+            )
             
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -588,23 +602,22 @@ private fun LocationDetails(
             ) {
                 Column(
                     modifier = Modifier.weight(1f)
+                        .padding(4.dp)
                 ) {
                     Text(
                         text = location.address,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
                         color = TextSecondary
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
                 
                 // Add location icon in a circular red background
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = Color(0xFFDD3825),
-                            shape = CircleShape
-                        )
                         .clickable(
                             onClick = {
                                 // Don't navigate to maps for Indian locations - we're already displaying details
@@ -624,13 +637,18 @@ private fun LocationDetails(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.LocationOn,
+                        painter = painterResource(id = R.drawable.ic_location), // Replace with your SVG resource
                         contentDescription = "Navigate to location",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                        tint = PrimaryRed,
+                        modifier = Modifier.size(50.dp)
                     )
                 }
             }
+
+            Divider(
+                modifier = Modifier.padding(vertical = 16.dp),
+                color = Color.LightGray
+            )
 
             // Only show Contact Information section if any contact info is available
             val hasContactInfo = location.email.isNotEmpty() || 
@@ -638,13 +656,16 @@ private fun LocationDetails(
                                 (location.adminName != null && location.adminNumber != null)
                                 
             if (hasContactInfo) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = "Contact Information",
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
+
+                Spacer(modifier = Modifier.height(3.dp))
                 
                 // Email
                 if (location.email.isNotEmpty()) {
@@ -670,12 +691,76 @@ private fun LocationDetails(
                         Text(
                             text = location.email,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             color = TextSecondary,
                             textDecoration = TextDecoration.Underline
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(3.dp))
+                
+                // ADMIN Contact - only show if both name and number are available
+                if (location.adminName != null && location.adminNumber != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.clickable(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${location.adminNumber}")
+                                }
+                                context.startActivity(intent)
+                            }
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = "Phone",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Column {
+                            Text(
+                                text = "Admin Contact",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                            Row {
+                                Text(
+                                    text = location.adminName,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    "-",
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = location.adminNumber,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(3.dp))
                 
                 // HR Contact - only show if both name and number are available
                 if (location.hrName != null && location.hrNumber != null) {
@@ -700,61 +785,44 @@ private fun LocationDetails(
                         )
                         Column {
                             Text(
-                                text = "HR",
-                                fontSize = 12.sp,
+                                text = "HR Contact",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Gray
                             )
-                            Text(
-                                text = "${location.hrName} : ${location.hrNumber}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black,
-                                textDecoration = TextDecoration.Underline
-                            )
-                        }
-                    }
-                }
-                
-                // Admin Contact - only show if both name and number are available
-                if (location.adminName != null && location.adminNumber != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.clickable(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_DIAL).apply {
-                                    data = Uri.parse("tel:${location.adminNumber}")
-                                }
-                                context.startActivity(intent)
+                            Row {
+                                Text(
+                                    text = location.hrName,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    "-",
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = location.hrNumber,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    textDecoration = TextDecoration.Underline
+                                )
                             }
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = "Phone",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Column {
-                            Text(
-                                text = "IT Admin",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Gray
-                            )
-                            Text(
-                                text = "${location.adminName} : ${location.adminNumber}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black,
-                                textDecoration = TextDecoration.Underline
-                            )
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(3.dp))
             
             // Floor Map Button
             if (location.hasFloorMap && location.mapFileName != null) {
@@ -769,14 +837,16 @@ private fun LocationDetails(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Color.White
+                            painter = painterResource(id = R.drawable.ic_map), // Replace with your SVG resource
+                            contentDescription = "Floor Map",
+                            tint = Color.White,
+                            modifier = Modifier.size(35.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "View Floor Map",
+                            text = "Floor Map",
                             fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )

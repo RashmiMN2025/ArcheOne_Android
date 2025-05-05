@@ -9,8 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -54,16 +52,12 @@ import com.archeGlobal.one.ui.components.EmptyFavorites
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.UniversalLoader
 import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import coil.request.CachePolicy
 import android.util.Log
 import android.widget.Toast
 import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.BackHandler
 import android.app.Activity
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 
 @Composable
@@ -82,7 +76,7 @@ fun ProfileHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp)
+            .height(270.dp)
             .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
     ) {
         // Background image with clip
@@ -98,7 +92,7 @@ fun ProfileHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 27.dp, end = 16.dp, top = 50.dp, bottom = 16.dp),  // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
+                .padding(start = 27.dp, end = 16.dp, top = 70.dp, bottom = 16.dp),  // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -109,7 +103,7 @@ fun ProfileHeader(
                 // Profile picture
                 Surface(
                     modifier = Modifier
-                        .size(80.dp,85.dp)
+                        .size(90.dp,95.dp)
                         .padding(top = 8.dp)
                         .clickable(onClick = onShowProfileClick),
                     shape = CircleShape,
@@ -168,7 +162,7 @@ fun ProfileHeader(
                     Text(
                         text = model.userName,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 18.sp,
+                            fontSize = 22.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -178,9 +172,9 @@ fun ProfileHeader(
                     Text(
                         text = model.designation,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.sp,
+                            fontSize = 17.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Normal
                         ),
                         color = Color.Black
                     )
@@ -188,9 +182,9 @@ fun ProfileHeader(
                     Text(
                         text = model.department,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Normal
                         ),
                         color = Color.Black
                     )
@@ -198,9 +192,9 @@ fun ProfileHeader(
                     Text(
                         text = model.employeeId,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Normal
                         ),
                         color = Color.Black
                     )
@@ -249,7 +243,7 @@ fun HomeScreen(
         onFooterChatClick = onFooterChatClick,
         onFooterSOSClick = onFooterSOSClick,
         onFooterProfileClick = onFooterProfileClick
-    ) {
+    )  {
         Box(modifier = Modifier.fillMaxSize()) {
             // Main content with conditional blur and pull-to-refresh
             Box(
@@ -303,11 +297,12 @@ fun HomeScreen(
                     ) {
                         Button(
                             onClick = onAllAppsClick,
-                            modifier = Modifier.width(120.dp),
+                            modifier = Modifier
+                                .width(150.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (model.showAllApps) 
+                                containerColor = if (model.showAllApps)
                                     Color(0xFFDD3825) else CardBackground,
-                                contentColor = if (model.showAllApps) 
+                                contentColor = if (model.showAllApps)
                                     Color.White else TextSecondary
                             ),
                             elevation = ButtonDefaults.buttonElevation(
@@ -319,18 +314,23 @@ fun HomeScreen(
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("All Apps")
+                            Text(
+            text = "All Apps",
+            fontSize = 16.sp, // Added font size
+            fontFamily = GraphikFontFamily, // Added font family
+            fontWeight = FontWeight.Medium // Added font weight
+        )
                         }
 
                         Spacer(modifier = Modifier.width(30.dp))
 
                         Button(
                             onClick = onFavoritesClick,
-                            modifier = Modifier.width(120.dp),
+                            modifier = Modifier.width(150.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (model.viewFavorites) 
+                                containerColor = if (model.viewFavorites)
                                     Color(0xFFDD3825) else CardBackground,
-                                contentColor = if (model.viewFavorites) 
+                                contentColor = if (model.viewFavorites)
                                     Color.White else TextSecondary
                             ),
                             elevation = ButtonDefaults.buttonElevation(
@@ -342,7 +342,12 @@ fun HomeScreen(
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Favorites")
+                            Text(
+            text = "Favorites",
+            fontSize = 16.sp, // Added font size
+            fontFamily = GraphikFontFamily, // Added font family
+            fontWeight = FontWeight.Medium // Added font weight
+        )
                         }
                     }
 
@@ -380,7 +385,7 @@ fun HomeScreen(
                                                     modifier = Modifier.weight(1f),
                                                     showFavoriteButton = false,
                                                     isSelected = false,
-                                                    onLongPress = { position -> 
+                                                    onLongPress = { position ->
                                                         selectedApp = item
                                                         selectedPosition = position
                                                     }
@@ -432,7 +437,7 @@ fun HomeScreen(
                                                         modifier = Modifier.weight(1f),
                                                         showFavoriteButton = false,
                                                         isSelected = false,
-                                                        onLongPress = { position -> 
+                                                        onLongPress = { position ->
                                                             selectedApp = item
                                                             selectedPosition = position
                                                         }
@@ -518,6 +523,7 @@ fun HomeScreen(
                                             text = formattedTitle,
                                             color = TextPrimary,
                                             fontSize = 10.sp, // Keep same as original
+                                            fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Bold,
                                             textAlign = TextAlign.Center,
                                             maxLines = 2,
@@ -579,7 +585,7 @@ fun HomeScreen(
                             color = Color.Black,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { 
+                                .clickable {
                                     onToggleFavorite(selectedApp!!)
                                     selectedApp = null
                                     selectedPosition = null
@@ -633,13 +639,14 @@ private fun formatServiceTitle(title: String): String {
         "Locations" -> "Locations"
         "Policy" -> "Policy"
         "Profile" -> "Profile"
-        "TimeSheet", "Timesheet" -> "Time\nSheet"
+        "TimeSheet", "Timesheet" -> "Timesheet"
         "Leave" -> "Leave"
-        "eLearning" -> "e-\nLearning"
+        "eLearning" -> "eLearning"
         "Asset" -> "Asset"
         "Greetings" -> "Greetings"
         "Profile Connect" -> "Profile\nConnect"
         "Arche Odyssey" -> "Arche\nOdyssey"
+        "Idea Vault", "IdeaVault" -> "IdeaVault"
         else -> {
             // For any other multi-word titles, always split at a space
             if (title.contains(" ")) {
@@ -716,42 +723,33 @@ private fun AppItem(
         shape = RoundedCornerShape(12.dp)
     ) {
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                    .padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                Spacer(modifier = Modifier.height(12.dp))
                 // Icon at the top
-                AppIcon(title = title, modifier = Modifier.size(48.dp))
-                
-                Spacer(modifier = Modifier.height(1.dp))
-                
-                // Text area with more space
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 35.dp)
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
+                AppIcon(title = title, modifier = Modifier.size(50.dp))
+
+                Spacer(modifier = Modifier.height(3.dp))
+
+                Text(
                         text = formattedTitle,
                         fontSize = 12.sp,
                         color = TextPrimary,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         lineHeight = 14.sp,
                         overflow = TextOverflow.Visible, // Changed from Ellipsis to make sure text is visible
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 2.dp)
-                    )
-                }
+                )
             }
         }
     }
@@ -768,7 +766,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Blogs",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR" -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -805,13 +803,13 @@ private fun AppIcon(
                                 "knowyourog" -> R.drawable.know_your_org
                                 "archeodyssey" -> R.drawable.arche_odyssey
                                 "zinghr" -> R.drawable.zinghr
+                                "ideavault" -> R.drawable.idea_vault
                                 else -> R.drawable.mydocuments
                             }
                         ),
                         contentDescription = title,
                         modifier = Modifier
                             .padding(5.dp) // Increase padding if needed
-
                             .fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
@@ -862,8 +860,9 @@ private fun CategoryHeader(
             text = title,
             color = TextPrimary,
             style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 17.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Medium
             ),
             modifier = Modifier.padding(vertical = 8.dp)
         )

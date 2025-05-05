@@ -34,6 +34,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.PolicyModel
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 import com.archeGlobal.one.ui.components.UniversalLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -44,6 +45,7 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 // Cache for PDF bitmaps to avoid re-rendering
 private val pdfThumbnailCache = ConcurrentHashMap<String, Bitmap?>()
@@ -74,8 +76,10 @@ fun PolicyScreen(
                     ) {
                         Text(
                             text = "Policies",
-                            style = MaterialTheme.typography.titleLarge,
                             color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -135,13 +139,14 @@ private fun PolicyCard(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .width(160.dp)
     ) {
         Card(
             onClick = onClick,
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.85f), // Increased height for larger preview
+                .width(160.dp)
+                .aspectRatio(0.75f), // Increased height for larger preview
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             shape = RoundedCornerShape(16.dp)
@@ -173,15 +178,18 @@ private fun PolicyCard(
             }
         }
 
-            Text(
+        Text(
             text = policy.policyName,
-            style = MaterialTheme.typography.bodyMedium,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
             color = Color.Black,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
+            maxLines = 2,
+            lineHeight = 14.sp,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 4.dp)
+                .padding(top = 10.dp, bottom = 8.dp)
         )
     }
 }

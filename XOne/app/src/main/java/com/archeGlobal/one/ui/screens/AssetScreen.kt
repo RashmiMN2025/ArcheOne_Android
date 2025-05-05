@@ -36,6 +36,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.model.AssetDetails
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,8 +67,10 @@ fun AssetScreen(
                 ) {
                     Text(
                         text = "Asset Information",
-                        style = MaterialTheme.typography.titleLarge,
                         color = Color.Black,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
@@ -82,7 +85,7 @@ fun AssetScreen(
                 }
             },
             actions = {
-                Spacer(modifier = Modifier.width(48.dp))
+                Spacer(modifier = Modifier.width(50.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent
@@ -123,7 +126,8 @@ fun AssetScreen(
                             Text(
                                 "User Information",
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -143,7 +147,8 @@ fun AssetScreen(
                             Text(
                                 "Asset Details",
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -160,13 +165,18 @@ fun AssetScreen(
                                 }
                             }
 
+                            Divider(
+                                modifier = Modifier.padding(vertical = 16.dp),
+                                color = Color.LightGray
+                            )
+
                             // Information Notice
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 16.dp, start = 0.dp, end = 0.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFF5F5F5)
+                                    containerColor = Color(0xFFC8C8CA).copy(alpha = 0.5f)
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
@@ -184,9 +194,11 @@ fun AssetScreen(
                                     )
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Text(
-                                        text = "If you have any issue regarding the asset, you can raise your issue.",
+                                        text = "Report any issues you may have with your assigned asset using \"Raise an issue\" bar below.",
                                         color = Color.Black,
-                                        fontSize = 13.sp
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal
                                     )
                                 }
                             }
@@ -206,7 +218,9 @@ fun AssetScreen(
                                     "Raise an Issue",
                                     modifier = Modifier.padding(vertical = 8.dp),
                                     color = Color.White,
-                                    fontSize = 16.sp
+                                    fontSize = 18.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -255,9 +269,10 @@ fun IssueDialog(
             ) {
                 Text(
                     text = "Report an Issue",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
                     color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
                 
@@ -271,10 +286,16 @@ fun IssueDialog(
                     placeholder = { Text("Please describe your issue") },
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color.LightGray,
-                        focusedBorderColor = Color.LightGray,
+                        focusedBorderColor = Color.Black,
                         cursorColor = Color.Gray,
                         unfocusedContainerColor = Color.White,
                         focusedContainerColor = Color.White
+                    ),
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -293,14 +314,15 @@ fun IssueDialog(
                         .padding(top = 24.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PrimaryRed
-                    ),
-                    shape = RoundedCornerShape(24.dp)
+                    )
                 ) {
                     Text(
-                        "Submit", 
-                        color = Color.White,
+                        "Submit",
                         modifier = Modifier.padding(vertical = 8.dp),
-                        fontSize = 16.sp
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium
                     )
                 }
                 
@@ -308,6 +330,8 @@ fun IssueDialog(
                 Text(
                     text = "Close",
                     color = PrimaryRed,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 16.sp,
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -343,13 +367,16 @@ private fun InfoRow(label: String, value: String) {
         Text(
             label,
             fontSize = 16.sp,
+            fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             color = Color.Gray,
             modifier = Modifier.width(120.dp)
         )
         Text(
             text = value.ifEmpty { "N/A" },
-            fontSize = 16.sp,
+            fontSize = 15.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
             color = Color.Black
         )
     }

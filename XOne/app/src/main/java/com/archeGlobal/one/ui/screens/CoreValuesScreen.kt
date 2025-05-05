@@ -24,7 +24,7 @@ fun CoreValuesScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF6F4EE))
+            .background(Color(0xFFF5F5F5))
     ) {
         // Scrollable Content
         Column(
@@ -89,7 +89,8 @@ fun CoreValuesScreen(
                         Icon(
                             painter = painterResource(id = icon), // Display icon in original color
                             contentDescription = "Icon",
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(28.dp),
+                            tint = Color.Unspecified // Ensure the icon retains its original color
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -115,7 +116,7 @@ fun CoreValuesScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF6F4EE))
+                .background(Color(0xFFF5F5F5))
                 .padding(vertical = 16.dp)
                 .padding(top = 14.dp) // Move the top bar slightly down
                 .align(Alignment.TopCenter) // Align the top bar at the top center
