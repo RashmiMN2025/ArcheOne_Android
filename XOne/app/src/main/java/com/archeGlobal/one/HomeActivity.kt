@@ -410,7 +410,7 @@ class HomeActivity : AppCompatActivity() {
                         CommuniqueScreen(
                             model = communiqueController.model,
                             onCommuniqueClick = communiqueController::onCommuniqueClick,
-                            onBackClick = communiqueController::onBackClick,
+                            onBackPressed = archeOdysseyController::onBackPressed,
                             isLoading = communiqueController.isLoading.value
                         )
                     }

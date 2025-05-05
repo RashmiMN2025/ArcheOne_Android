@@ -76,7 +76,7 @@ fun XOneSplashScreen() {
             Image(
                 painter = painterResource(id = R.drawable.arche2),
                 contentDescription = "Company Logo",
-                modifier = Modifier.size(150.dp)
+                modifier = Modifier.size(110.dp)
                     .offset(y = (-40).dp)
             )
         }

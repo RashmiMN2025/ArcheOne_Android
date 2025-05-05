@@ -118,7 +118,7 @@ fun CoreValuesScreen(
                 .fillMaxWidth()
                 .background(Color(0xFFF5F5F5))
                 .padding(vertical = 16.dp)
-                .padding(top = 14.dp) // Move the top bar slightly down
+                .padding(top = 40.dp) // Move the top bar slightly down
                 .align(Alignment.TopCenter) // Align the top bar at the top center
         ) {
             IconButton(

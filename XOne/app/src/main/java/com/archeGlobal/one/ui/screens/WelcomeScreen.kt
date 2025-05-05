@@ -52,12 +52,12 @@ fun WelcomeScreen(
                 painter = painterResource(id = R.drawable.arche2), // Replace with your logo
                 contentDescription = "One Logo",
                 modifier = Modifier
-                    .size(130.dp) // Adjusted size
+                    .size(110.dp) // Adjusted size
                     .fillMaxWidth()
                     .offset(y = (-1).dp) // Moves image **further up**
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             // Tagline Below Logo
             Text(
@@ -65,7 +65,7 @@ fun WelcomeScreen(
                 fontSize = 18.sp,
                 color = Color(0xFFDD3825),
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Normal,
                 modifier = Modifier.offset(y = (-2).dp) // Moves **text up** for better positioning
             )
 

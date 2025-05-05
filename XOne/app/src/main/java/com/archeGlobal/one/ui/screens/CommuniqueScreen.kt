@@ -53,7 +53,7 @@ private val communiqueThumbnailCache = ConcurrentHashMap<String, Bitmap?>()
 fun CommuniqueScreen(
     model: CommuniqueModel,
     onCommuniqueClick: (CommuniqueModel.Communique) -> Unit,
-    onBackClick: () -> Unit,
+    onBackPressed: () -> Unit,
     isLoading: Boolean = false
 ) {
     val context = LocalContext.current
@@ -98,7 +98,7 @@ fun CommuniqueScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = onBackPressed) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
                     }
                 },

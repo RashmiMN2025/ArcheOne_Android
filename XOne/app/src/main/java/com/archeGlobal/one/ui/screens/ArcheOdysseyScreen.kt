@@ -49,7 +49,7 @@ fun ArcheOdysseyScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp) // Moved heading and back arrow slightly down
+                    .padding(vertical = 35.dp) // Moved heading and back arrow slightly down
             ) {
                 IconButton(
                     onClick = onBackPressed,
