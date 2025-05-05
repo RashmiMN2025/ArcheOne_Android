@@ -7,15 +7,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -182,109 +182,122 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Version
-                    Text(
-                        text = controller.model.version,
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        textDecoration = TextDecoration.Underline,
+                    // Version and Last Login
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Text(
+                            text = controller.model.version,
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            textDecoration = TextDecoration.Underline
+                        )
+
+                        if (controller.model.lastLoginTime.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Last Login: ${controller.model.lastLoginTime}",
+                                color = Color.White.copy(alpha = 0.8f),
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+
+                // Logout confirmation dialog
+                if (showLogoutDialog) {
+                    LogoutConfirmationDialog(
+                        onConfirm = { 
+                            showLogoutDialog = false 
+                            controller.onLogoutClick()
+                        },
+                        onDismiss = { 
+                            showLogoutDialog = false 
+                        }
                     )
                 }
-            }
 
-            // Logout confirmation dialog
-            if (showLogoutDialog) {
-                LogoutConfirmationDialog(
-                    onConfirm = { 
-                        showLogoutDialog = false
-                        controller.onLogoutClick()
-                    },
-                    onDismiss = { 
-                        showLogoutDialog = false 
-                    }
-                )
-            }
-
-            // Upload Dialog
-            if (showUploadDialog) {
-                Dialog(onDismissRequest = { showUploadDialog = false }) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth(0.92f)
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Column(
+                // Upload Dialog
+                if (showUploadDialog) {
+                    Dialog(onDismissRequest = { showUploadDialog = false }) {
+                        Card(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(0.92f)
                                 .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
-                            Text(
-                                "Upload Profile Photo",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black,
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 4.dp),
-                                textAlign = TextAlign.Center
-                            )
-                            
-                            Text(
-                                "Choose a method to upload your profile picture",
-                                fontSize = 14.sp,
-                                color = Color.Gray,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 24.dp),
-                                textAlign = TextAlign.Center
-                            )
-
-                            // Camera Button
-                            Button(
-                                onClick = {
-                                    if (hasCameraPermission) {
-                                        cameraLauncher.launch(null)
-                                    } else {
-                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_camera),
-                                    contentDescription = "Camera",
-                                    modifier = Modifier.padding(end = 8.dp),
-                                    tint = Color.White
+                                Text(
+                                    "Upload Profile Photo",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 4.dp),
+                                    textAlign = TextAlign.Center
                                 )
-                                Text("Camera", fontSize = 16.sp, color = Color.White)
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            // Gallery Button
-                            Button(
-                                onClick = { galleryLauncher.launch("image/*") },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_gallery),
-                                    contentDescription = "Gallery",
-                                    modifier = Modifier.padding(end = 8.dp),
-                                    tint = Color.White
+                                
+                                Text(
+                                    "Choose a method to upload your profile picture",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 24.dp),
+                                    textAlign = TextAlign.Center
                                 )
-                                Text("Gallery", fontSize = 16.sp, color = Color.White)
+
+                                // Camera Button
+                                Button(
+                                    onClick = {
+                                        if (hasCameraPermission) {
+                                            cameraLauncher.launch(null)
+                                        } else {
+                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_camera),
+                                        contentDescription = "Camera",
+                                        modifier = Modifier.padding(end = 8.dp),
+                                        tint = Color.White
+                                    )
+                                    Text("Camera", fontSize = 16.sp, color = Color.White)
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Gallery Button
+                                Button(
+                                    onClick = { galleryLauncher.launch("image/*") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_gallery),
+                                        contentDescription = "Gallery",
+                                        modifier = Modifier.padding(end = 8.dp),
+                                        tint = Color.White
+                                    )
+                                    Text("Gallery", fontSize = 16.sp, color = Color.White)
+                                }
                             }
                         }
                     }
@@ -499,7 +512,7 @@ private fun ProfileHeader(
                                 Image(
                                     painter = rememberAsyncImagePainter(
                                         ImageCache.createProfileImageRequest(
-                                            context = context, 
+                                            context = LocalContext.current, 
                                             url = profilePicture
                                         ),
                                         onSuccess = { Log.d("ProfileHeader", "Profile image loaded successfully: $profilePicture") }
@@ -690,7 +703,7 @@ private fun MenuItem(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = title,
                     tint = Color.Black,
                     modifier = Modifier.size(20.dp)
                 )
@@ -703,22 +716,22 @@ private fun MenuItem(
                 )
             }
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = null,
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight.apply { Icons.AutoMirrored },
+                contentDescription = "Navigate",
                 tint = Color.Gray
             )
         }
     }
 }
 
-private fun getIconForMenuItem(icon: String): ImageVector {
+fun getIconForMenuItem(icon: String): ImageVector {
     return when (icon) {
         "person" -> Icons.Default.Person
         "home" -> Icons.Default.Home
-        "phone" -> Icons.Default.Phone
+        "phone" -> Icons.Default.Call
         "document" -> Icons.Default.Menu
-        "logout" -> Icons.Default.ExitToApp
-        else -> Icons.Default.KeyboardArrowRight
+        "logout" -> Icons.AutoMirrored.Filled.ExitToApp.apply { Icons.AutoMirrored }
+        else -> Icons.AutoMirrored.Filled.KeyboardArrowRight.apply { Icons.AutoMirrored }
     }
 }
 

@@ -56,5 +56,4 @@ interface Navigator {
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?
     fun refreshCurrentScreen()
-
 }

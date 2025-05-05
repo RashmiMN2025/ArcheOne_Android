@@ -3,48 +3,74 @@ package com.archeGlobal.one.navigation
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.app.ActivityOptions
+import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.navigation.NavController
-import com.archeGlobal.one.LoginActivity
-import com.archeGlobal.one.OtpVerificationActivity
-import com.archeGlobal.one.HomeActivity
-import com.archeGlobal.one.MyDocumentsActivity
-import com.archeGlobal.one.UserDocumentsActivity
-import com.archeGlobal.one.XConnectActivity
-import com.archeGlobal.one.R
-import com.archeGlobal.one.SOSActivity
-import com.archeGlobal.one.ChatActivity
-import com.archeGlobal.one.WebViewActivity
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.navOptions
+import com.archeGlobal.one.*
+import java.net.URLEncoder
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     private var navController: NavController? = null
 
     fun setNavController(controller: NavController) {
-        navController = controller
+        this.navController = controller
+    }
+
+    private fun navigate(route: String, builder: NavOptionsBuilder.() -> Unit = {}) {
+        navController?.navigate(route, navOptions(builder))
+    }
+
+    private fun startActivity(intent: Intent, withAnimation: Boolean = true, slideLeft: Boolean = false) {
+        if (withAnimation) {
+            val bundle: Bundle = ActivityOptions.makeCustomAnimation(
+                activity,
+                if (slideLeft) R.anim.slide_in_left else R.anim.slide_in_right,
+                if (slideLeft) R.anim.slide_out_right else R.anim.slide_out_left
+            ).toBundle()
+            activity.startActivity(intent, bundle)
+        } else {
+            activity.startActivity(intent)
+        }
+    }
+
+    private fun openWebView(url: String, title: String) {
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", url)
+            putExtra("title", title)
+        }
+        startActivity(intent)
     }
 
     override fun openPulseLogin() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://pulse.netcon.in/login"))
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        activity.startActivity(intent)
+        startActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://pulse.netcon.in/login")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            },
+            false
+        )
     }
 
     override fun navigateToLoginScreen() {
-        val intent = Intent(activity, LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
-                       Intent.FLAG_ACTIVITY_CLEAR_TASK or
-                       Intent.FLAG_ACTIVITY_CLEAR_TOP
-        activity.startActivity(intent)
+        startActivity(
+            Intent(activity, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+            },
+            false
+        )
         activity.finish()
     }
 
     override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String) {
-        val intent = Intent(activity, OtpVerificationActivity::class.java).apply {
+        startActivity(Intent(activity, OtpVerificationActivity::class.java).apply {
             putExtra("email", email)
             putExtra("mobile", mobile)
             putExtra("employeeId", employeeId)
-        }
-        activity.startActivity(intent)
+        })
     }
 
     override fun navigateToHome(
@@ -54,252 +80,162 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         mobile: String,
         employeeId: String
     ) {
-        Log.d("AndroidNavigator", "Navigating to home screen. fromOtp: $fromOtp, showBiometricSetup: $showBiometricSetup")
-
         if (activity !is HomeActivity) {
-            val intent = Intent(activity, HomeActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra("FROM_OTP", fromOtp)
-                putExtra("showBiometricSetup", showBiometricSetup)
-                putExtra("email", email)
-                putExtra("mobile", mobile)
-                putExtra("employeeId", employeeId)
-                putExtra("fromLogin", true)
-            }
-            activity.startActivity(intent)
-            activity.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra("FROM_OTP", fromOtp)
+                    putExtra("showBiometricSetup", showBiometricSetup)
+                    putExtra("email", email)
+                    putExtra("mobile", mobile)
+                    putExtra("employeeId", employeeId)
+                    putExtra("fromLogin", true)
+                },
+                true,
+                true
+            )
             activity.finish()
         } else {
-            navController?.navigate("home") {
+            navigate("home") {
                 popUpTo("home") { inclusive = true }
             }
         }
     }
 
     override fun navigateToLocations(showHeader: Boolean) {
-        Log.d("AndroidNavigator", "Navigating to locations screen with showHeader=$showHeader")
         if (activity is HomeActivity) {
-            navController?.navigate("locations")
+            navigate("locations")
         } else {
-            val intent = Intent(activity, HomeActivity::class.java)
-            intent.putExtra("isEmergencyContact", true)
-            intent.putExtra("showHeader", showHeader)
-            intent.putExtra("destination", "locations")
-            activity.startActivity(intent)
+            startActivity(Intent(activity, HomeActivity::class.java).apply {
+                putExtra("isEmergencyContact", true)
+                putExtra("showHeader", showHeader)
+                putExtra("destination", "locations")
+            })
             activity.finish()
         }
     }
 
-    override fun navigateToBusinessCard() {
-        Log.d("AndroidNavigator", "Navigating to business card screen")
-        navController?.navigate("business_card")
-    }
-
-    override fun navigateToAsset() {
-        navController?.navigate("asset")
-    }
-
-    // Other navigation methods with default empty implementations
-    override fun navigateToID() {}
-    override fun navigateToTimesheet() {}
-    override fun navigateToLeave() {}
+    override fun navigateToBusinessCard() = navigate("business_card")
+    override fun navigateToAsset() = navigate("asset")
+    override fun navigateToID() = Unit
+    override fun navigateToTimesheet() = Unit
+    override fun navigateToLeave() = Unit
+    
     override fun navigateToMyDocuments() {
-        Log.d("AndroidNavigator", "Navigating to MyDocuments screen")
-        val intent = Intent(activity, MyDocumentsActivity::class.java)
-        activity.startActivity(intent)
+        startActivity(Intent(activity, MyDocumentsActivity::class.java))
     }
+
     override fun navigateToUserDocuments() {
-        Log.d("AndroidNavigator", "Navigating to UserDocuments screen")
-        val intent = Intent(activity, UserDocumentsActivity::class.java)
-        activity.startActivity(intent)
+        startActivity(Intent(activity, UserDocumentsActivity::class.java))
     }
-    override fun navigateToMyCareer() {}
-    override fun navigateToELearning() {}
-    override fun navigateToGoalSetting() {}
-    override fun navigateToXCard() {}
-    override fun navigateToMedical() {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://ilhc.icicilombard.com/Customer/iCard")
-            putExtra("title", "Medical")
+
+    override fun navigateToMyCareer() = Unit
+    override fun navigateToELearning() = Unit
+    override fun navigateToGoalSetting() = Unit
+    override fun navigateToXCard() = Unit
+    
+    override fun navigateToMedical() = openWebView("https://ilhc.icicilombard.com/Customer/iCard", "Medical")
+    override fun navigateToFinance() = openWebView("https://ess.azatecon.com/login", "Finance")
+    override fun navigateToAdmin() = Unit
+    override fun navigateToHR() = Unit
+    override fun navigateToHolidayCalendar() = navigate("holiday_calendar")
+    override fun navigateToClientCalendar() = Unit
+
+    override fun navigateToGreetings() {
+        if (activity is HomeActivity) {
+            navigate("greetings")
+        } else {
+            startActivity(Intent(activity, HomeActivity::class.java).apply {
+                putExtra("navigateTo", "greetings")
+            })
         }
-        activity.startActivity(intent)
     }
-    override fun navigateToFinance() {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://ess.azatecon.com/login")
-            putExtra("title", "Finance")
-        }
-        activity.startActivity(intent)
-    }
-    override fun navigateToAdmin() {}
-    override fun navigateToHR() {}
-    override fun navigateToHolidayCalendar() {
-        Log.d("AndroidNavigator", "Navigating to policy screen")
-        navController?.navigate("holiday_calendar")
-    }
-    override fun navigateToClientCalendar() {}
-    override fun navigateToGreetings() {}
+
     override fun navigateToXConnect() {
-        Log.d("AndroidNavigator", "Navigating to XConnect screen")
-        val intent = Intent(activity, XConnectActivity::class.java)
-        activity.startActivity(intent)
+        startActivity(Intent(activity, XConnectActivity::class.java))
     }
 
     override fun navigateToXConnect(initialTab: String) {
-        Log.d("AndroidNavigator", "Navigating to XConnect screen with initial tab: $initialTab")
-        val intent = Intent(activity, XConnectActivity::class.java).apply {
+        startActivity(Intent(activity, XConnectActivity::class.java).apply {
             putExtra("initialTab", initialTab)
-        }
-        activity.startActivity(intent)
+        })
     }
 
-    override fun navigateToHelpdesk() {}
-    override fun navigateToAnnouncements() {}
-    override fun navigateToXProfile() {}
-    override fun navigateToPasswordReset() {}
-    override fun navigateToPolicy() {
-        Log.d("AndroidNavigator", "Navigating to policy screen")
-        navController?.navigate("policy")
-    }
+    override fun navigateToHelpdesk() = Unit
+    override fun navigateToAnnouncements() = Unit
+    override fun navigateToXProfile() = Unit
+    override fun navigateToPasswordReset() = Unit
+    override fun navigateToPolicy() = navigate("policy")
+
     override fun navigateToSOS(showHeader: Boolean) {
-        Log.d("AndroidNavigator", "Navigating to SOS screen with showHeader=$showHeader")
         if (activity is HomeActivity) {
-            navController?.navigate("sos?showHeader=$showHeader") // Pass showHeader as a query parameter
+            navigate("sos?showHeader=$showHeader")
         } else {
-            val intent = Intent(activity, SOSActivity::class.java)
-            intent.putExtra("showHeader", showHeader) // Pass showHeader as an intent extra
-            activity.startActivity(intent)
-            activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            startActivity(Intent(activity, SOSActivity::class.java).apply {
+                putExtra("showHeader", showHeader)
+            })
         }
     }
+
     override fun navigateToTravelExpenses() {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml")
-            putExtra("title", "Travel & Expenses")
-        }
-        activity.startActivity(intent)
+        openWebView("https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml", "Travel & Expenses")
     }
+    
     override fun navigateToSAP() {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://my422539.businessbydesign.cloud.sap")
-            putExtra("title", "SAP")
-        }
-        activity.startActivity(intent)
+        openWebView("https://my422539.businessbydesign.cloud.sap", "SAP")
     }
+    
     override fun navigateToZingHR() {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://portal.zinghr.com/2015/pages/authentication/zing.aspx?ccode=netcongrp")
-            putExtra("title", "ZingHR")
-        }
-        activity.startActivity(intent)
+        openWebView("https://portal.zinghr.com/2015/pages/authentication/zing.aspx?ccode=netcongrp", "ZingHR")
     }
+
     override fun navigateToChat() {
-        Log.d("AndroidNavigator", "Navigating to chat screen")
         if (activity is HomeActivity) {
-            navController?.navigate("chat")
+            navigate("chat")
         } else {
-            val intent = Intent(activity, ChatActivity::class.java)
-            activity.startActivity(intent)
-            activity.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            startActivity(Intent(activity, ChatActivity::class.java))
         }
     }
-    override fun navigateToProfile() {
-        Log.d("AndroidNavigator", "Navigating to profile screen")
-        navController?.navigate("profile")
-    }
-    
-    override fun navigateToAboutMe() {
-        Log.d("AndroidNavigator", "Navigating to about me screen")
-        navController?.navigate("aboutme")
-    }
-    
-    override fun navigateToAddressDetails() {
-        Log.d("AndroidNavigator", "Navigating to address details screen")
-        navController?.navigate("addressdetails")
-    }
 
-    override fun navigateToArcheOdyssey() {
-        Log.d("AndroidNavigator", "Navigating to Arche Odyssey screen")
-        navController?.navigate("arche_odyssey")
-    }
-
-    override fun navigateToCoreValues() {
-        navController?.navigate("core_values")
-    }
-
-    override fun navigateToAboutUs() {
-        val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://arche.global/arche-one-aboutus")
-            putExtra("title", "About Us")
-        }
-        activity.startActivity(intent)
-    }
-
-    override fun navigateToEmergencyContact() {
-        Log.d("AndroidNavigator", "Navigating to emergency contact screen")
-        navController?.navigate("emergencycontact")
-    }
+    override fun navigateToProfile() = navigate("profile")
+    override fun navigateToAboutMe() = navigate("aboutme")
+    override fun navigateToAddressDetails() = navigate("addressdetails")
+    override fun navigateToEmergencyContact() = navigate("emergencycontact")
     
     override fun navigateToPDFViewer(pdfUrl: String, title: String) {
-        Log.d("AndroidNavigator", "Navigating to PDF viewer screen: $pdfUrl")
         try {
-            // URL encode the PDF URL to handle special characters
-            val encodedUrl = java.net.URLEncoder.encode(pdfUrl, "UTF-8")
-            navController?.navigate("pdf_viewer/$encodedUrl?title=$title")
+            navigate("pdf_viewer/${URLEncoder.encode(pdfUrl, "UTF-8")}?title=$title")
         } catch (e: Exception) {
-            Log.e("AndroidNavigator", "Error navigating to PDF viewer: ${e.message}", e)
+            Log.e("AndroidNavigator", "Error navigating to PDF viewer", e)
         }
     }
 
-    // New method to get the current route
-    override fun getCurrentRoute(): String? {
-        val currentDestination = navController?.currentDestination
-        return currentDestination?.route
-    }
+    override fun navigateToArcheOdyssey() = navigate("arche_odyssey")
+    override fun navigateToCommunique() = navigate("communique")
+    override fun navigateToVision() = navigate("vision")
+    override fun navigateToCoreValues() = navigate("core_values")
+    override fun navigateToAboutUs() = openWebView("https://arche.global/arche-one-aboutus", "About Us")
 
-    // Method to refresh the current screen by navigating to it again
+    override fun getCurrentRoute(): String? = navController?.currentDestination?.route
+
     override fun refreshCurrentScreen() {
-        val currentRoute = getCurrentRoute() ?: return
-        Log.d("AndroidNavigator", "Refreshing current screen: $currentRoute")
-        
-        try {
-            // Navigate to the same route to force a refresh
-            navController?.navigate(currentRoute) {
-                // This will replace the current destination with the same one, forcing a recomposition
-                popUpTo(currentRoute) { inclusive = true }
+        getCurrentRoute()?.let { currentRoute ->
+            try {
+                navigate(currentRoute) {
+                    popUpTo(currentRoute) { inclusive = true }
+                }
+            } catch (e: Exception) {
+                Log.e("AndroidNavigator", "Error refreshing screen", e)
             }
-        } catch (e: Exception) {
-            Log.e("AndroidNavigator", "Error refreshing current screen: ${e.message}", e)
         }
     }
 
-    override fun navigateToCommunique() {
-        Log.d("AndroidNavigator", "Navigating to Communique screen")
-        navController?.navigate("communique")
-    }
-
-    override fun navigateToVision() {
-        Log.d("AndroidNavigator", "Navigating to Vision screen")
-        navController?.navigate("vision")
-    }
-    // Method to print all routes in the navigation graph for debugging purposes
     fun printNavigationGraph() {
-    if (navController == null) {
-        Log.e("AndroidNavigator", "NavController is not initialized")
-        return
+        navController?.graph?.let { graph ->
+            Log.d("AndroidNavigator", "Navigation graph routes:")
+            graph.forEach { node ->
+                Log.d("AndroidNavigator", "Route: ${node.route}")
+            }
+        } ?: Log.e("AndroidNavigator", "Navigation graph not available")
     }
-
-    val graph = navController?.graph
-    if (graph == null) {
-        Log.e("AndroidNavigator", "Navigation graph is not set. Please call setGraph() first.")
-        return
-    }
-
-    Log.d("AndroidNavigator", "Navigation graph routes:")
-    val iterator = graph.iterator()
-    while (iterator.hasNext()) {
-        val node = iterator.next()
-        Log.d("AndroidNavigator", "Route: ${node.route}")
-    }
-}
 }

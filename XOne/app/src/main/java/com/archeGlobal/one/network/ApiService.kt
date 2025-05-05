@@ -58,6 +58,9 @@ interface ApiService {
 
     @GET("policies")
     suspend fun getPolicies(): Response<List<PolicyResponse>>
+
+    @GET("greetings")
+    suspend fun getGreetingCards(): Response<Map<String, List<String>>>
 }
 
 data class PolicyResponse(
@@ -143,7 +146,8 @@ data class VerifyOtpResponse(
     val offices: List<Office> = emptyList(),
     val sosBlogs: List<SosBlogModel>,
     val assetDetails: List<AssetDetail> = emptyList(),
-    val communique: List<CommuniqueModel.Communique> = emptyList()
+    val communique: List<CommuniqueModel.Communique> = emptyList(),
+    val greetings: Map<String, List<String>>? = null
 )
 
 data class User(

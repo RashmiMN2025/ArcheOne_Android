@@ -65,6 +65,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var archeOdysseyController: ArcheOdysseyController
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
+    private lateinit var greetingsController: GreetingsController
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -170,6 +171,9 @@ class HomeActivity : AppCompatActivity() {
             RetrofitClient.apiService,
             UserRepository(this)
         )
+
+        // Initialize greetings controller
+        greetingsController = GreetingsController(this, navigator)
 
         setContent {
             XOneTheme {
@@ -727,6 +731,26 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         VisionScreen(
                             onBackPressed = { navigator.navigateToArcheOdyssey() }
+                        )
+                    }
+
+                    composable(
+                        route = "greetings",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        GreetingsScreen(
+                            controller = greetingsController
                         )
                     }
                 }
