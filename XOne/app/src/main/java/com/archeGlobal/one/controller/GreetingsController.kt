@@ -14,6 +14,10 @@ import com.archeGlobal.one.utils.UserDataManager
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class GreetingsController(
     private val context: Context,
@@ -51,16 +55,31 @@ class GreetingsController(
 
     fun onCategorySelected(category: String) {
         // When a category is selected, also select the first greeting in that category
-        val firstGreetingInCategory = model.categories[category]?.firstOrNull()
+        val greetingsInCategory = model.categories[category]
+        val firstGreetingInCategory = greetingsInCategory?.firstOrNull()
+        
+        // Log what's happening 
+        Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory?.size ?: 0} greetings")
+        Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
+        
+        // Clear any existing card screenshot when changing category
+        cardScreenshot = null
+        
+        // Update the model
         model = model.copy(
             selectedCategory = category,
             selectedGreeting = firstGreetingInCategory
         )
-        Log.d("GreetingsController", "Selected category: $category with ${model.categories[category]?.size ?: 0} greetings")
-        Log.d("GreetingsController", "Auto-selected first greeting: $firstGreetingInCategory")
     }
 
     fun onGreetingSelected(url: String) {
+        // Log selection
+        Log.d("GreetingsController", "Selected greeting: $url")
+        
+        // Clear any existing card screenshot when changing greeting
+        cardScreenshot = null
+        
+        // Update model with selected greeting
         model = model.copy(selectedGreeting = url)
     }
 
@@ -81,6 +100,7 @@ class GreetingsController(
 
     // Method to set the screenshot of the card
     fun setCardScreenshot(bitmap: Bitmap) {
+        Log.d("GreetingsController", "Card screenshot captured: ${bitmap.width}x${bitmap.height}")
         cardScreenshot = bitmap
     }
 
@@ -182,6 +202,68 @@ class GreetingsController(
                 }
             }
             context.startActivity(intent)
+        }
+    }
+
+    // Method to download an image from URL and share it directly
+    fun downloadAndShareImage(imageUrl: String) {
+        if (imageUrl.isEmpty()) {
+            Log.e("GreetingsController", "Empty image URL")
+            return
+        }
+        
+        Log.d("GreetingsController", "Downloading image directly from: $imageUrl")
+        
+        // Use Coil to download the image in the background
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Create a target bitmap to receive the downloaded image
+                val imageBitmap = coil.ImageLoader(context).execute(
+                    coil.request.ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .allowHardware(false) // Needed to access pixels
+                        .build()
+                ).drawable?.let { drawable ->
+                    // Convert drawable to bitmap
+                    when (drawable) {
+                        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                        else -> {
+                            // Create a bitmap from any drawable
+                            val bitmap = Bitmap.createBitmap(
+                                drawable.intrinsicWidth,
+                                drawable.intrinsicHeight,
+                                Bitmap.Config.ARGB_8888
+                            )
+                            val canvas = android.graphics.Canvas(bitmap)
+                            drawable.setBounds(0, 0, canvas.width, canvas.height)
+                            drawable.draw(canvas)
+                            bitmap
+                        }
+                    }
+                }
+                
+                // If image was successfully downloaded and converted to bitmap
+                if (imageBitmap != null) {
+                    // Set as card screenshot
+                    cardScreenshot = imageBitmap
+                    
+                    // Switch to main thread to start share intent
+                    withContext(Dispatchers.Main) {
+                        sendGreeting()
+                    }
+                } else {
+                    // Log error and use fallback
+                    Log.e("GreetingsController", "Failed to download image, using fallback")
+                    withContext(Dispatchers.Main) {
+                        sendGreeting() // This will use text-only fallback
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("GreetingsController", "Error downloading image: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    sendGreeting() // This will use text-only fallback
+                }
+            }
         }
     }
 }
