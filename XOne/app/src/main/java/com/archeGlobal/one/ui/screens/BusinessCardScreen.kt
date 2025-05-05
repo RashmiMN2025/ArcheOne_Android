@@ -51,6 +51,7 @@ import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.Font
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 // Composable to display a QR code bitmap using Canvas
 @Composable
@@ -104,11 +105,12 @@ private fun CustomTopAppBar(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "My Business Card",
+                    text = "Business Card",
                     color = Color.Black,
+                    fontSize = 20.sp,
                     textAlign = TextAlign.Center,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold
-
                 )
             }
 

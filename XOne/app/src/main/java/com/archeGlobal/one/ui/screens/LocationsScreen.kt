@@ -176,7 +176,7 @@ fun LocationsScreen(
                                     }
                                     else -> "Locations"
                                 },
-                                fontSize = 18.sp,
+                                fontSize = 20.sp,
                                 color = Color.Black,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
@@ -577,7 +577,7 @@ private fun LocationDetails(
         ) {
             Text(
                 text = location.name,
-                fontSize = 18.sp,
+                fontSize = 19.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -587,7 +587,7 @@ private fun LocationDetails(
 
             Text(
                 text = "Address",
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 color = Color.Gray
@@ -606,10 +606,10 @@ private fun LocationDetails(
                 ) {
                     Text(
                         text = location.address,
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = TextSecondary
+                        color = Color.Black
                     )
                 }
 
@@ -659,9 +659,9 @@ private fun LocationDetails(
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = "Contact Information",
-                    fontSize = 15.sp,
+                    fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Medium,
                     color = Color.Gray,
                 )
 
@@ -690,10 +690,10 @@ private fun LocationDetails(
                         )
                         Text(
                             text = location.email,
-                            fontSize = 14.sp,
+                            fontSize = 15.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            color = TextSecondary,
+                            color = Color.Black,
                             textDecoration = TextDecoration.Underline
                         )
                     }
@@ -725,33 +725,33 @@ private fun LocationDetails(
                         Column {
                             Text(
                                 text = "Admin Contact",
-                                fontSize = 14.sp,
+                                fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Medium,
                                 color = Color.Gray
                             )
                             Row {
                                 Text(
                                     text = location.adminName,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     "-",
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = location.adminNumber,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black,
                                     textDecoration = TextDecoration.Underline
                                 )
@@ -786,33 +786,33 @@ private fun LocationDetails(
                         Column {
                             Text(
                                 text = "HR Contact",
-                                fontSize = 14.sp,
+                                fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Medium,
                                 color = Color.Gray
                             )
                             Row {
                                 Text(
                                     text = location.hrName,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     "-",
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black,
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = location.hrNumber,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black,
                                     textDecoration = TextDecoration.Underline
                                 )

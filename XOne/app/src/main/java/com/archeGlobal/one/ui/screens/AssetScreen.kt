@@ -254,8 +254,7 @@ fun IssueDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFFF5F5F5) // Cream color background
@@ -263,7 +262,6 @@ fun IssueDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

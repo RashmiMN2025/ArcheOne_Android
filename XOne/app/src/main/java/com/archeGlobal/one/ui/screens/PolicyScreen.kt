@@ -11,10 +11,12 @@ import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -34,6 +36,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.PolicyModel
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.archeGlobal.one.ui.components.UniversalLoader
 import coil.compose.AsyncImage
@@ -58,6 +64,15 @@ fun PolicyScreen(
     onBackClick: () -> Unit,
     isLoading: Boolean = false
 ) {
+    var searchQuery by remember { mutableStateOf("") } // State for search query
+
+    // Filter policies based on the search query
+    val filteredPolicies = remember(searchQuery) {
+        model.policies.filter { policy ->
+            policy.policyName.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -68,8 +83,9 @@ fun PolicyScreen(
             )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Top App Bar
             TopAppBar(
-                title = { 
+                title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -94,29 +110,106 @@ fun PolicyScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
-            
+
+            // Search Bar
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                color = Color.Transparent
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp),
+                            singleLine = true,
+                            textStyle = TextStyle( // Added textStyle for innerTextField
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            ),
+                            decorationBox = { innerTextField ->
+                                Box {
+                                    if (searchQuery.isEmpty()) {
+                                        Text(
+                                            text = "Search policies...",
+                                            color = Color.Gray.copy(alpha = 0.6f),
+                                            fontSize = 16.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Policy List
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                if (filteredPolicies.isEmpty()) {
+                    // Show a message if no policies match the search query
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                    CircularProgressIndicator()
+                        Text(
+                            text = "No policies found",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Gray
+                        )
                     }
                 } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                            items(model.policies) { policy ->
-                        PolicyCard(policy = policy, onClick = { onPolicyClick(policy) })
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(filteredPolicies) { policy ->
+                            PolicyCard(policy = policy, onClick = { onPolicyClick(policy) })
+                        }
                     }
                 }
             }
         }
-        
+
         UniversalLoader(isLoading = isLoading)
     }
 }
@@ -141,58 +234,83 @@ private fun PolicyCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .width(160.dp)
+            .padding(8.dp) // Add padding around the card
     ) {
-        Card(
-            onClick = onClick,
+        Box(
             modifier = Modifier
                 .width(160.dp)
-                .aspectRatio(0.75f), // Increased height for larger preview
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            shape = RoundedCornerShape(16.dp)
+                .aspectRatio(0.7f) // Adjust aspect ratio for the card
         ) {
-            Box(
+            Card(
+                onClick = onClick,
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(32.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    thumbnail?.let { bitmap ->
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = policy.policyName,
-                            contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp),
+                            color = MaterialTheme.colorScheme.primary
                         )
-                    } ?: Icon(
-                        painter = painterResource(id = R.drawable.ic_policy_default),
-                        contentDescription = null,
-                        tint = Color.DarkGray,
-                        modifier = Modifier.size(48.dp)
+                    } else {
+                        thumbnail?.let { bitmap ->
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = policy.policyName,
+                                contentScale = ContentScale.FillBounds,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } ?: Icon(
+                            painter = painterResource(id = R.drawable.ic_policy_default),
+                            contentDescription = null,
+                            tint = Color.DarkGray,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
+            }
+
+            // SOS Circle Tag for Specific Policies
+            if (policy.policyName == "Anti Bribery and Anti Corruption Policy" || policy.policyName == "PoSH Policy") {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd) // Align the SOS tag to the top-right corner
+                        .offset(x = (-8).dp, y = 8.dp) // Adjust position slightly
+                        .size(24.dp) // Size of the SOS circle
+                        .background(color = Color(0xFFE94235), shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SOS",
+                        fontSize = 10.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
                     )
                 }
             }
         }
 
-        Text(
-            text = policy.policyName,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            color = Color.Black,
-            fontSize = 12.sp,
-            maxLines = 2,
-            lineHeight = 14.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 8.dp)
-        )
+            Text(
+                text = policy.policyName,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                color = Color.Black,
+                fontSize = 12.sp,
+                maxLines = 2,
+                lineHeight = 16.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            )
+        }
     }
-}
 
 /**
  * Downloads a PDF from a URL and generates a thumbnail from its first page
