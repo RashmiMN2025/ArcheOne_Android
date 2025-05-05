@@ -12,7 +12,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -53,6 +53,9 @@ fun GreetingsScreen(
     // Get the status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     
+    // Define cardBoxRef at this scope so it's accessible throughout the function
+    val cardBoxRef = remember { mutableStateOf<View?>(null) }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -90,7 +93,7 @@ fun GreetingsScreen(
                         onClick = { controller.onBackPressed() }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = Color.Black
                         )
@@ -174,18 +177,33 @@ fun GreetingsScreen(
                 ) {
                     // Horizontal row of smaller greeting thumbnails
                     val greetings = controller.model.categories[controller.model.selectedCategory] ?: emptyList()
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(greetings) { greetingUrl ->
-                            GreetingThumbnailCard(
-                                imageUrl = greetingUrl,
-                                isSelected = greetingUrl == controller.model.selectedGreeting,
-                                onClick = {
-                                    controller.onGreetingSelected(greetingUrl)
-                                }
-                            )
+                    val selectedGreeting = controller.model.selectedGreeting
+                    
+                    // Debug logging to verify selections are working
+                    android.util.Log.d("GreetingsScreen", "Current category: ${controller.model.selectedCategory}")
+                    android.util.Log.d("GreetingsScreen", "Selected greeting: $selectedGreeting")
+                    android.util.Log.d("GreetingsScreen", "Available greetings: ${greetings.size}")
+                    
+                    // Force recomposition when selection changes by using a key
+                    key(selectedGreeting) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(greetings) { greetingUrl ->
+                                val isSelected = greetingUrl == selectedGreeting
+                                // Debug each item
+                                android.util.Log.d("GreetingsScreen", "Item URL: $greetingUrl, isSelected: $isSelected")
+                                
+                                GreetingThumbnailCard(
+                                    imageUrl = greetingUrl,
+                                    isSelected = isSelected,
+                                    onClick = {
+                                        android.util.Log.d("GreetingsScreen", "Thumbnail clicked: $greetingUrl")
+                                        controller.onGreetingSelected(greetingUrl)
+                                    }
+                                )
+                            }
                         }
                     }
                     
@@ -196,23 +214,94 @@ fun GreetingsScreen(
                     controller.model.selectedGreeting?.let { selectedGreeting ->
                         // Additional space above the card
                         Spacer(modifier = Modifier.height(24.dp))
-                        
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            GreetingDetailCard(
-                                imageUrl = selectedGreeting
-                            )
+
+                        // Force recomposition of the main card when the selected greeting changes
+                        key(selectedGreeting) {
+                            // --- BEGIN: Add key and ref for screenshot capture ---
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                // Create a state to track if the image is loaded
+                                var isImageLoaded by remember { mutableStateOf(false) }
+                                
+                                AndroidView(
+                                    factory = { ctx ->
+                                        val imageView = android.widget.ImageView(ctx).apply {
+                                            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                                            setBackgroundColor(android.graphics.Color.WHITE) // Set white background
+                                        }
+                                        
+                                        // Log the image loading attempt
+                                        android.util.Log.d("GreetingsScreen", "Loading image: $selectedGreeting")
+                                        
+                                        coil.ImageLoader(ctx).enqueue(
+                                            coil.request.ImageRequest.Builder(ctx)
+                                                .data(selectedGreeting)
+                                                .listener(
+                                                    onStart = { 
+                                                        isImageLoaded = false
+                                                        android.util.Log.d("GreetingsScreen", "Started loading: $selectedGreeting")
+                                                    },
+                                                    onSuccess = { _, _ ->
+                                                        isImageLoaded = true
+                                                        android.util.Log.d("GreetingsScreen", "Successfully loaded: $selectedGreeting")
+                                                    },
+                                                    onError = { _, error ->
+                                                        android.util.Log.e("GreetingsScreen", "Error loading: ${error.throwable.message}")
+                                                    }
+                                                )
+                                                .target { drawable ->
+                                                    imageView.setImageDrawable(drawable)
+                                                    // Update reference after drawable is set
+                                                    cardBoxRef.value = imageView
+                                                    android.util.Log.d("GreetingsScreen", "Image set and reference updated")
+                                                }
+                                                .build()
+                                        )
+                                        imageView
+                                    },
+                                    // Use update callback to handle recompositions without recreating the view
+                                    update = { view ->
+                                        android.util.Log.d("GreetingsScreen", "AndroidView update callback with: $selectedGreeting")
+                                        coil.ImageLoader(view.context).enqueue(
+                                            coil.request.ImageRequest.Builder(view.context)
+                                                .data(selectedGreeting)
+                                                .target { drawable ->
+                                                    view.setImageDrawable(drawable)
+                                                    // Update reference after drawable is set
+                                                    cardBoxRef.value = view
+                                                    android.util.Log.d("GreetingsScreen", "Image updated in existing view")
+                                                }
+                                                .build()
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.55f)
+                                        .aspectRatio(0.75f)
+                                        .background(Color.White) // Add white background to Compose element too
+                                )
+                                
+                                // Show loading indicator if the image is not loaded yet
+                                if (!isImageLoaded) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.align(Alignment.Center),
+                                        color = Color(0xFFDD3825)
+                                    )
+                                }
+                            }
                         }
-                        
+                        // --- END: Add key and ref for screenshot capture ---
+
                         // Increased space below the card
                         Spacer(modifier = Modifier.height(24.dp))
                     }
                     
-                    // Further increased spacing between card and message box
+                    // Additional spacing before the "Add Message" section
+                    Spacer(modifier = Modifier.height(34.dp))
+                    
                     // Message input field
                     Column(
                         modifier = Modifier
@@ -254,8 +343,72 @@ fun GreetingsScreen(
                         ) {
                             Button(
                                 onClick = { 
-                                    // When the Send Greeting button is clicked, we share the card as an image
-                                    controller.sendGreeting()
+                                    // When the Send Greeting button is clicked, capture the card as a bitmap and send
+                                    val cardView = cardBoxRef.value
+                                    if (cardView != null) {
+                                        try {
+                                            // Check if the view is an ImageView (which it should be)
+                                            if (cardView is android.widget.ImageView && cardView.drawable != null) {
+                                                // Get the drawable from the ImageView
+                                                val drawable = cardView.drawable
+                                                
+                                                // Create a properly sized bitmap matching the drawable's intrinsic size
+                                                // or the view size if intrinsic size is not available
+                                                val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: cardView.width
+                                                val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: cardView.height
+                                                
+                                                android.util.Log.d("GreetingsScreen", "Capturing image with size: $width x $height")
+                                                
+                                                if (width > 0 && height > 0) {
+                                                    // Create bitmap with proper size
+                                                    val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+                                                    
+                                                    // Get canvas and set bounds
+                                                    val canvas = android.graphics.Canvas(bitmap)
+                                                    drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                                    
+                                                    // Draw the actual drawable content (not just the view)
+                                                    drawable.draw(canvas)
+                                                    
+                                                    // Check if the bitmap contains actual content
+                                                    var hasContent = false
+                                                    for (x in 0 until width) {
+                                                        for (y in 0 until height) {
+                                                            if (bitmap.getPixel(x, y) != android.graphics.Color.TRANSPARENT && 
+                                                                bitmap.getPixel(x, y) != android.graphics.Color.WHITE) {
+                                                                hasContent = true
+                                                                break
+                                                            }
+                                                        }
+                                                        if (hasContent) break
+                                                    }
+                                                    
+                                                    if (hasContent) {
+                                                        android.util.Log.d("GreetingsScreen", "Bitmap has content, sending greeting")
+                                                        controller.setCardScreenshot(bitmap)
+                                                        controller.sendGreeting()
+                                                    } else {
+                                                        // Fallback: try to download the image directly
+                                                        android.util.Log.d("GreetingsScreen", "Bitmap is empty, using direct download approach")
+                                                        controller.downloadAndShareImage(controller.model.selectedGreeting ?: "")
+                                                    }
+                                                } else {
+                                                    // Fallback for no dimensions
+                                                    controller.downloadAndShareImage(controller.model.selectedGreeting ?: "")
+                                                }
+                                            } else {
+                                                // Fallback for non-imageview or no drawable
+                                                controller.downloadAndShareImage(controller.model.selectedGreeting ?: "")
+                                            }
+                                        } catch (e: Exception) {
+                                            // Log exception and fall back to direct download approach
+                                            android.util.Log.e("GreetingsScreen", "Error capturing card: ${e.message}")
+                                            controller.downloadAndShareImage(controller.model.selectedGreeting ?: "")
+                                        }
+                                    } else {
+                                        // No card view, fallback to direct URL
+                                        controller.downloadAndShareImage(controller.model.selectedGreeting ?: "")
+                                    }
                                 },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
@@ -397,7 +550,6 @@ fun GreetingThumbnailCard(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
             )
-            // No text overlays - images already include all needed text
         }
     }
 }
