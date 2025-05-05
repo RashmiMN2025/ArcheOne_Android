@@ -74,7 +74,7 @@ fun XOneSplashScreen() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                painter = painterResource(id = R.drawable.archeone_logo_white),
+                painter = painterResource(id = R.drawable.arche2),
                 contentDescription = "Company Logo",
                 modifier = Modifier.size(150.dp)
                     .offset(y = (-40).dp)
