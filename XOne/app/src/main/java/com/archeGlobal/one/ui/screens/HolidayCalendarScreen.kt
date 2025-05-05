@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
 import com.archeGlobal.one.model.Holiday
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.NetworkResult
 import java.time.LocalDate
 import java.time.YearMonth
@@ -79,7 +80,7 @@ fun HolidayCalendarScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(top = 40.dp, bottom = 10.dp)
             ) {
                 IconButton(
                     onClick = onBackPressed,
@@ -98,7 +99,8 @@ fun HolidayCalendarScreen(
                     text = "Holiday Calendar",
                     color = Color.Black,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -114,6 +116,7 @@ fun HolidayCalendarScreen(
                 Text(
                     text = "Year 2025",
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -142,7 +145,9 @@ fun HolidayCalendarScreen(
                         Text(
                             "Holiday List",
                             color = Color.White,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal
                         )
                     }
                 }
@@ -154,7 +159,7 @@ fun HolidayCalendarScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, bottom = 8.dp),
+                    .padding(start = 16.dp, bottom = 4.dp),
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -163,13 +168,13 @@ fun HolidayCalendarScreen(
                 LegendItem(color = Color(0xFF2196F3), text = "RH")
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             // Responsive Calendar Grid
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                columns = GridCells.Adaptive(minSize = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp), // Further reduced vertical spacing
+                horizontalArrangement = Arrangement.spacedBy(8.dp), // Adjust horizontal spacing if needed
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(12) { monthIndex ->
@@ -190,26 +195,30 @@ fun MonthCard(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(140.dp)
             .aspectRatio(1f) // Ensures the card is square
             .clickable { onMonthClick(month) },
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(10.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp), // Added equal padding inside the card
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = YearMonth.of(2025, month)
                     .month
                     .getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
-                fontSize = 14.sp,
+                fontSize = 16.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             MonthDates(month, holidays)
         }
@@ -231,7 +240,8 @@ fun MonthDates(month: Int, holidays: List<Holiday>) {
             
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
                 for (day in 0 until 7) {
                     val date = if (week == 0 && day < firstDayOfMonth) 0 
@@ -278,6 +288,7 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean)
                 fontSize = 8.sp,
                 lineHeight = 8.sp,
                 color = if (isMandatoryHoliday || isRegionalHoliday) Color.White else Color.Black,
+                fontFamily = GraphikFontFamily,
                 fontWeight = if (isMandatoryHoliday || isRegionalHoliday) FontWeight.Bold else FontWeight.Normal
             )
         }
@@ -338,6 +349,7 @@ fun PreviewHolidayCalendarScreen() {
                     text = "Holiday Calendar",
                     color = Color.Black,
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.align(Alignment.Center)
                 )
@@ -353,6 +365,7 @@ fun PreviewHolidayCalendarScreen() {
                 Text(
                     text = "Year 2025",
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -445,7 +458,7 @@ private fun LegendItem(color: Color, text: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(10.dp)
+                .size(11.dp)
                 .clip(CircleShape)
                 .background(color)
         )

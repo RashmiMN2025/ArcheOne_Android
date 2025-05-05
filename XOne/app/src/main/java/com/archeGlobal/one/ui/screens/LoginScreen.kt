@@ -33,11 +33,13 @@ import com.archeGlobal.one.ui.components.UniversalLoader
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.archeGlobal.one.R
 import com.archeGlobal.one.utils.BiometricHelper
 import androidx.fragment.app.FragmentActivity
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 
 @Composable
@@ -92,7 +94,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("Enter Email ID") },
+                placeholder = { Text("Email ID") },
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
@@ -104,7 +106,12 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal
+                ),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions.Default,
                 shape = MaterialTheme.shapes.medium
@@ -114,7 +121,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             OutlinedTextField(
                 value = mobile,
                 onValueChange = { mobile = it },
-                placeholder = { Text("Enter Mobile Number") },
+                placeholder = { Text("Mobile No") },
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
@@ -126,7 +133,12 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal
+                ),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions.Default,
                 shape = MaterialTheme.shapes.medium,
@@ -146,7 +158,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             OutlinedTextField(
                 value = employeeId,
                 onValueChange = { employeeId = it },
-                placeholder = { Text("Enter Employee ID") },
+                placeholder = { Text("Employee ID") },
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .padding(bottom = 32.dp),
@@ -158,7 +170,12 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal
+                ),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions.Default,
                 shape = MaterialTheme.shapes.medium
@@ -190,7 +207,9 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 Text(
                     "Login",
                     color = Color.White,
-                    fontSize = 18.sp
+                    fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
@@ -262,16 +281,5 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
         if (isLoading) {
             UniversalLoader(isLoading = true)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    XOneTheme {
-        LoginScreen(
-            controller = LoginController(LocalContext.current, PreviewNavigator()),
-            navigator = PreviewNavigator()
-        )
     }
 }

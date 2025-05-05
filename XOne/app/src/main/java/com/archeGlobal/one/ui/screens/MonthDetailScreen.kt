@@ -40,6 +40,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
 import android.util.Log
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun MonthDetailScreen(
@@ -297,7 +298,7 @@ fun MonthDetailScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(top = 40.dp, bottom = 10.dp)
             ) {
                 IconButton(
                     onClick = onBackPressed,
@@ -317,7 +318,8 @@ fun MonthDetailScreen(
                     text = "Holiday Calendar",
                     color = Color.Black,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -338,6 +340,7 @@ fun MonthDetailScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(450.dp)
                         .padding(horizontal = 12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -384,6 +387,7 @@ fun MonthDetailScreen(
                                     .getDisplayName(TextStyle.FULL, Locale.getDefault()) + " 2025",
                                 color = Color.Black,
                                 fontSize = 24.sp,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold
                             )
                             
@@ -509,6 +513,7 @@ fun MonthCalendarView(
                 Text(
                     text = day,
                     fontSize = 16.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
                 )
@@ -527,12 +532,12 @@ fun MonthCalendarView(
             Spacer(modifier = Modifier.width(16.dp))
             LegendItem(color = Color(0xFF2196F3), text = "RH")
             Spacer(modifier = Modifier.width(16.dp))
-            LegendItem(color = Color(0xFF4CAF50), text = "Today")
+            LegendItem(color = Color(0xFF7EBD81).copy(alpha = 0.5f), text = "Today")
             Spacer(modifier = Modifier.width(16.dp))
             LegendItem(color = Color(0xFFF5A623), text = "Milestone")
         }
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(11.dp))
         
         // Dates
         val weeks = (daysInMonth + firstDayOfMonth + 6) / 7
@@ -575,7 +580,7 @@ fun MonthCalendarView(
                                     when {
                                         isMandatoryHoliday -> Color(0xFFDD3825) // Solid red for holidays
                                         isRegionalHoliday -> Color(0xFF2196F3)  // Solid blue for RH
-                                        isToday -> Color(0xFF4CAF50)           // Solid green for today
+                                        isToday -> Color(0xFF7EBD81).copy(alpha = 0.5f)           // Solid green for today
                                         else -> Color.Transparent
                                     }
                                 )
@@ -598,6 +603,7 @@ fun MonthCalendarView(
                                         isMandatoryHoliday || isRegionalHoliday || isToday -> Color.White
                                         else -> Color.Black
                                     },
+                                    fontFamily = GraphikFontFamily,
                                     fontWeight = when {
                                         isToday || isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
                                         else -> FontWeight.Normal
@@ -655,6 +661,7 @@ fun HolidayDetailsBox(
             Text(
                 text = "Holiday Details",
                 fontSize = 18.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 textAlign = TextAlign.Center
@@ -716,9 +723,10 @@ fun HolidayDetailsBox(
                     Text(
                         text = holiday.name,
                         fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         color = Color.Black,
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Center
                     )
                     
                     Spacer(modifier = Modifier.height(4.dp))
@@ -727,7 +735,7 @@ fun HolidayDetailsBox(
                         text = formatDetailDate(holiday.date),
                         fontSize = 14.sp,
                         color = Color.Gray,
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -900,6 +908,7 @@ fun MilestoneDetailsBox(
             Text(
                 text = "Milestones of $formattedDate",
                 fontSize = 18.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 textAlign = TextAlign.Center
@@ -929,6 +938,7 @@ fun MilestoneDetailsBox(
                             text = milestone.event,
                             color = Color.Black,
                             fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis
@@ -948,6 +958,7 @@ fun MilestoneDetailsBox(
                             text = milestone.customer,
                             color = Color.Black,
                             fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -965,6 +976,7 @@ fun MilestoneDetailsBox(
                             text = milestone.project,
                             color = Color.Black,
                             fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -982,6 +994,7 @@ fun MilestoneDetailsBox(
                             text = formatMilestoneDate(milestone.poDate),
                             color = Color.Black,
                             fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
                     }

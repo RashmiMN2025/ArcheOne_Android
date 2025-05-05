@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.theme.XOneTheme
 import androidx.compose.ui.tooling.preview.Preview
 import com.archeGlobal.one.R
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun WelcomeScreen(
@@ -44,6 +45,8 @@ fun WelcomeScreen(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            Spacer(modifier = Modifier.height(4.dp))
             // Middle Logo
             Image(
                 painter = painterResource(id = R.drawable.archeone_logo_white), // Replace with your logo
@@ -54,13 +57,16 @@ fun WelcomeScreen(
                     .offset(y = (-1).dp) // Moves image **further up**
             )
 
+            Spacer(modifier = Modifier.height(3.dp))
+
             // Tagline Below Logo
             Text(
-                text = "Workplace, Simplified",
-                fontSize = 14.sp,
-                color = Color(0xFFDD3825), // Red Color
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.offset(y = (-1).dp) // Moves **text up** for better positioning
+                text = "workplace, simplified",
+                fontSize = 18.sp,
+                color = Color(0xFFDD3825),
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.offset(y = (-2).dp) // Moves **text up** for better positioning
             )
 
             Spacer(modifier = Modifier.weight(1f)) // Push button down
@@ -77,21 +83,12 @@ fun WelcomeScreen(
             ) {
                 Text(
                     text = "Get Started",
-                    fontSize = 18.sp,
                     color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun WelcomeScreenPreview() {
-    XOneTheme {
-        WelcomeScreen(
-            onXOneClick = {},
-        )
     }
 }

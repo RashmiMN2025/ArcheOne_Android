@@ -25,6 +25,7 @@ import com.archeGlobal.one.controller.HolidayCalendarController
 import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.utils.NetworkResult
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -96,6 +97,7 @@ fun HolidayListScreen(
                     text = "Holiday List 2025",
                     color = Color.Black,
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.align(Alignment.Center)
                 )
@@ -165,6 +167,7 @@ fun HolidayListScreen(
                     Text(
                         text = "Holiday",
                         color = Color.White,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         modifier = Modifier.weight(2f)
@@ -172,6 +175,7 @@ fun HolidayListScreen(
                     Text(
                         text = "Date",
                         color = Color.White,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         modifier = Modifier.weight(1f),
@@ -235,6 +239,7 @@ fun HolidayItem(holiday: Holiday) {
                     Text(
                         text = holiday.name,
                         fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
@@ -259,6 +264,7 @@ fun HolidayItem(holiday: Holiday) {
                     "RH" -> Color(0xFF2196F3)
                     else -> Color.Gray
                 },
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.End

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,6 +24,7 @@ import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.components.UniversalLoader
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -86,7 +88,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
             OutlinedTextField(
                 value = otp,
                 onValueChange = { if (it.length <= 6) otp = it },
-                placeholder = { Text("Enter OTP") },
+                placeholder = { Text("Enter Your OTP") },
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .padding(bottom = 16.dp),
@@ -98,20 +100,33 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
-                textStyle = TextStyle(color = Color.Black),
+                textStyle = TextStyle(
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal
+                ),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions.Default,
                 shape = MaterialTheme.shapes.medium
             )
 
             // Timer Display (Aligned Right)
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Spacer(modifier = Modifier.weight(1f)) // Push text to the right
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp) // Added padding to move it slightly left
+            ) {
+                Spacer(modifier = Modifier.weight(0.9f)) // Push text to the right
                 if (timeLeft > 0) {
                     Text(
                         text = formattedTime,
                         textAlign = TextAlign.Left,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 18.sp, // Added font size
+                            fontFamily = GraphikFontFamily, // Added font family
+                            fontWeight = FontWeight.Medium // Added font weight
+                        )
                     )
                 }
             }
@@ -146,7 +161,9 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 Text(
                     "Verify OTP",
                     color = Color.White,
-                    fontSize = 18.sp
+                    fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
@@ -156,6 +173,10 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
             if (timeLeft == 0) {
                 Text(
                     text = "Resend OTP",
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp)

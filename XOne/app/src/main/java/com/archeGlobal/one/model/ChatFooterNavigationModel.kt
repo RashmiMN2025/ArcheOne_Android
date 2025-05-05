@@ -35,7 +35,7 @@ fun ChatBottomNavigationBar(
     onChatClick: () -> Unit,
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val homeSelectedColor = Color(0xFF000000)  // Black for home
     val selectedColor = Color(0xFFDD3825)      // Red for other items
@@ -52,7 +52,7 @@ fun ChatBottomNavigationBar(
             selected = false,
             onClick = onHomeClick,
             icon = {
-                CompositionLocalProvider(LocalContentColor provides unselectedColor) {
+                CompositionLocalProvider(LocalContentColor provides homeSelectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(top = 4.dp)
@@ -61,7 +61,7 @@ fun ChatBottomNavigationBar(
                             painter = painterResource(id = R.drawable.arche_black2),
                             contentDescription = "Home",
                             modifier = Modifier.size(20.dp),
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(unselectedColor)
+                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(

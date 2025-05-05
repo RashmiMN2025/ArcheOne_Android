@@ -30,7 +30,9 @@ import com.archeGlobal.one.ui.components.UniversalLoader
 import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.text.font.FontFamily
 import androidx.core.content.ContextCompat
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,7 +114,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 15.dp, bottom = 10.dp)
+                    .padding(top = 40.dp, bottom = 10.dp)
             ) {
                 IconButton(onClick = onBackPressed) {
                     Icon(
@@ -128,6 +130,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     text = "My Documents",
                     color = Color.Black,
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -153,6 +156,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     Text(
                         text = "Upload or view your personal and professional documents here",
                         fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         modifier = Modifier
@@ -164,6 +168,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     Text(
                         text = "Personal Documents",
                         fontSize = 17.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 12.dp)
@@ -184,6 +189,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     Text(
                         text = "Professional Documents",
                         fontSize = 17.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 12.dp)
@@ -209,7 +215,8 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     ) {
                         Text(
                             text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             color = Color.DarkGray,
                             modifier = Modifier.fillMaxWidth(),
@@ -266,6 +273,7 @@ private fun UploadDialog(
                 Text(
                     "Upload Document",
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier
@@ -276,7 +284,9 @@ private fun UploadDialog(
                 
                 Text(
                     "Choose an option to upload your document",
-                    fontSize = 17.sp,
+                    fontSize = 16.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
                     color = Color.Gray,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -298,7 +308,12 @@ private fun UploadDialog(
                         contentDescription = "Camera",
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text("Camera", fontSize = 14.sp)
+                    Text(
+                        "Camera",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -317,7 +332,11 @@ private fun UploadDialog(
                         contentDescription = "Gallery",
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text("Gallery", fontSize = 14.sp)
+                    Text("Gallery",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -336,7 +355,11 @@ private fun UploadDialog(
                         contentDescription = "Files",
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text("Files", fontSize = 14.sp)
+                    Text("Files",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
@@ -421,6 +444,7 @@ fun DocumentCard(
                 text = name,
                 color = Color.Black,
                 fontSize = 16.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f)
             )
@@ -472,6 +496,7 @@ fun DocumentCard(
                 Text(
                     text = "Upload Document",
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier.fillMaxWidth(),
