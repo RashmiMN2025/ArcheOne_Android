@@ -11,6 +11,7 @@ interface Navigator {
         mobile: String = "",
         employeeId: String = ""
     )
+    fun getHomeIntent(): android.content.Intent
     fun navigateToID()
     fun navigateToAsset()
     fun navigateToTimesheet()
@@ -52,6 +53,7 @@ interface Navigator {
     fun navigateToVision()
     fun navigateToCoreValues()
     fun navigateToAboutUs()
+    fun navigateToTodo()
     
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

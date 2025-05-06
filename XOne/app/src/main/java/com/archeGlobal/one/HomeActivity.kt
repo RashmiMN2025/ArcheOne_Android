@@ -147,8 +147,13 @@ class HomeActivity : AppCompatActivity() {
         // Disable back navigation to login
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Either exit the app or show a toast
-                Toast.makeText(this@HomeActivity, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
+                val navController = navigator.navController ?: return
+                if (navController.currentDestination?.route == "greetings") {
+                    navigator.navigateToHome()
+                } else {
+                    // Either exit the app or show a toast
+                    Toast.makeText(this@HomeActivity, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
+                }
             }
         })
         // Initialize controllers that need context
@@ -750,7 +755,8 @@ class HomeActivity : AppCompatActivity() {
                         }
                     ) {
                         GreetingsScreen(
-                            controller = greetingsController
+                            controller = greetingsController,
+                            onBackPressed = { navigator.navigateToHome() } // Add this line
                         )
                     }
                 }

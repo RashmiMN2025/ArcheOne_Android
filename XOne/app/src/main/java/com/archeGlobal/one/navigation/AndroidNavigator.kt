@@ -13,7 +13,7 @@ import com.archeGlobal.one.*
 import java.net.URLEncoder
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
-    private var navController: NavController? = null
+    internal var navController: NavController? = null
 
     fun setNavController(controller: NavController) {
         this.navController = controller
@@ -80,25 +80,59 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         mobile: String,
         employeeId: String
     ) {
-        if (activity !is HomeActivity) {
-            startActivity(
-                Intent(activity, HomeActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra("FROM_OTP", fromOtp)
-                    putExtra("showBiometricSetup", showBiometricSetup)
-                    putExtra("email", email)
-                    putExtra("mobile", mobile)
-                    putExtra("employeeId", employeeId)
-                    putExtra("fromLogin", true)
-                },
-                true,
-                true
-            )
-            activity.finish()
-        } else {
-            navigate("home") {
-                popUpTo("home") { inclusive = true }
+        Log.d("AndroidNavigator", "navigateToHome called with fromOtp=$fromOtp")
+        
+        if (activity is HomeActivity) {
+            // If we're already in HomeActivity, just navigate to the home route
+            try {
+                // Use more specific navigation options to ensure we clear the back stack
+                navController?.navigate("home") {
+                    // Pop up to home and make sure to include it in the pop operation
+                    popUpTo("home") {
+                        inclusive = true
+                    }
+                    // Ensure we create a single instance at the top of the stack
+                    launchSingleTop = true 
+                    // Don't restore any saved state
+                    restoreState = false
+                }
+                Log.d("AndroidNavigator", "Successfully navigated to home route within HomeActivity with popUpTo")
+            } catch (e: Exception) {
+                Log.e("AndroidNavigator", "Error navigating to home within HomeActivity: ${e.message}")
+                // If navigation fails, try to recreate the activity
+                navigateToHomeActivity(fromOtp, showBiometricSetup, email, mobile, employeeId)
             }
+        } else {
+            // If we're in a different activity, start HomeActivity
+            navigateToHomeActivity(fromOtp, showBiometricSetup, email, mobile, employeeId)
+        }
+    }
+    
+    private fun navigateToHomeActivity(
+        fromOtp: Boolean,
+        showBiometricSetup: Boolean,
+        email: String,
+        mobile: String,
+        employeeId: String
+    ) {
+        startActivity(
+            Intent(activity, HomeActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("FROM_OTP", fromOtp)
+                putExtra("showBiometricSetup", showBiometricSetup)
+                putExtra("email", email)
+                putExtra("mobile", mobile)
+                putExtra("employeeId", employeeId)
+                putExtra("fromLogin", true)
+                putExtra("navigateTo", "home")
+            },
+            true,
+            true
+        )
+        
+        // Finish the current activity to prevent going back to it
+        if (!(activity is HomeActivity)) {
+            activity.finish()
         }
     }
 
@@ -215,6 +249,10 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToVision() = navigate("vision")
     override fun navigateToCoreValues() = navigate("core_values")
     override fun navigateToAboutUs() = openWebView("https://arche.global/arche-one-aboutus", "About Us")
+    
+    override fun navigateToTodo() {
+        startActivity(Intent(activity, TodoActivity::class.java))
+    }
 
     override fun getCurrentRoute(): String? = navController?.currentDestination?.route
 
@@ -237,5 +275,13 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
                 Log.d("AndroidNavigator", "Route: ${node.route}")
             }
         } ?: Log.e("AndroidNavigator", "Navigation graph not available")
+    }
+
+    override fun getHomeIntent(): Intent {
+        // Create an intent that will navigate to the HomeActivity
+        return Intent(activity, HomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigateTo", "home")
+        }
     }
 }

@@ -60,6 +60,8 @@ class PreviewNavigator : Navigator {
     override fun navigateToVision() {}
     override fun navigateToCoreValues() {}
     override fun navigateToAboutUs() {}
+    
+    override fun navigateToTodo() {}
 
     // Implementation of new methods
     override fun getCurrentRoute(): String? {
@@ -68,6 +70,11 @@ class PreviewNavigator : Navigator {
 
     override fun refreshCurrentScreen() {
         // No-op for preview purposes
+    }
+    
+    override fun getHomeIntent(): android.content.Intent {
+        // Return an empty intent for preview purposes
+        return android.content.Intent()
     }
 
 }

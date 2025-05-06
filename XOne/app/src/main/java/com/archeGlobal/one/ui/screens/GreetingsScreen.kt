@@ -48,7 +48,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun GreetingsScreen(
-    controller: GreetingsController
+    controller: GreetingsController,
+    onBackPressed: () -> Unit // Add this parameter
 ) {
     // Get the status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
@@ -90,7 +91,11 @@ fun GreetingsScreen(
                 ) {
                     // Back button
                     IconButton(
-                        onClick = { controller.onBackPressed() }
+                        onClick = { 
+                            android.util.Log.d("GreetingsScreen", "Back button pressed")
+                            onBackPressed() // Call the passed lambda
+                        },
+                        modifier = Modifier.clickable { onBackPressed() } // Also call it here
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,

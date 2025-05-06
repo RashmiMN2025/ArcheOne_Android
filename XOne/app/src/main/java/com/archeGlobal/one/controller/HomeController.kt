@@ -85,15 +85,9 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Profile")
                 navigator.navigateToProfile()
             }
-            "to do" -> {
-                Log.d("HomeController", "To Do page not available yet")
-                // Show a Toast message informing the user
-                android.widget.Toast.makeText(
-                    context,
-                    "To Do functionality is coming soon",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-                // No navigation yet as page is not created
+            "to do", "todo" -> {
+                Log.d("HomeController", "Navigating to Todo")
+                navigator.navigateToTodo()
             }
             "id" -> navigator.navigateToID()
             "asset" -> navigator.navigateToAsset()

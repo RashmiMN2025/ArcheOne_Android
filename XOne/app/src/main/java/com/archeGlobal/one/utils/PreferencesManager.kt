@@ -211,6 +211,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_BIOMETRIC_MOBILE = "biometric_mobile"
         private const val KEY_BIOMETRIC_EMPLOYEE_ID = "biometric_employee_id"
         private const val KEY_GREETINGS_DATA = "greetings_data"
+        private const val KEY_TASKS_DATA = "tasks_data"
     }
     
     // Check if this is the first launch of the app
@@ -313,4 +314,14 @@ class PreferencesManager(context: Context) {
         }
     }
     */
+
+    // Save tasks data
+    fun saveTasks(tasksJson: String) {
+        sharedPreferences.edit().putString(KEY_TASKS_DATA, tasksJson).apply()
+    }
+    
+    // Get tasks data
+    fun getTasks(): String {
+        return sharedPreferences.getString(KEY_TASKS_DATA, "") ?: ""
+    }
 }
