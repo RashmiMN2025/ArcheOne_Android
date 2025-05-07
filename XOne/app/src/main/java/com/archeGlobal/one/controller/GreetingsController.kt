@@ -47,9 +47,24 @@ class GreetingsController(
 
     fun onBackPressed() {
         if (model.selectedCategory != null) {
+            // If we're in a category view, go back to category list
+            Log.d("GreetingsController", "Back pressed while in a category, going to category list")
             model = model.copy(selectedCategory = null, selectedGreeting = null)
         } else {
-            navigator.navigateToHome()
+            // If we're already at the main greetings page, navigate to home
+            Log.d("GreetingsController", "Back pressed on main greetings page, navigating to home")
+            try {
+                navigator.navigateToHome()
+            } catch (e: Exception) {
+                Log.e("GreetingsController", "Failed to navigate to home: ${e.message}")
+                // Fallback approach in case the navigation fails
+                try {
+                    val intent = navigator.getHomeIntent()
+                    context.startActivity(intent)
+                } catch (e2: Exception) {
+                    Log.e("GreetingsController", "Both navigation approaches failed: ${e2.message}")
+                }
+            }
         }
     }
 
@@ -65,10 +80,11 @@ class GreetingsController(
         // Clear any existing card screenshot when changing category
         cardScreenshot = null
         
-        // Update the model
+        // Update the model - clear the message when changing category
         model = model.copy(
             selectedCategory = category,
-            selectedGreeting = firstGreetingInCategory
+            selectedGreeting = firstGreetingInCategory,
+            message = "" // Reset the message when changing category
         )
     }
 
@@ -79,8 +95,11 @@ class GreetingsController(
         // Clear any existing card screenshot when changing greeting
         cardScreenshot = null
         
-        // Update model with selected greeting
-        model = model.copy(selectedGreeting = url)
+        // Update model with selected greeting and reset message
+        model = model.copy(
+            selectedGreeting = url,
+            message = "" // Reset the message when changing greeting
+        )
     }
 
     fun updateMessage(message: String) {
@@ -159,49 +178,164 @@ class GreetingsController(
     }
 
     fun sendInOutlook() {
-        val imageUri = saveBitmapForSharing(cardScreenshot)
         val greetingTitle = model.selectedCategory ?: "Greeting"
+        val imageUrl = model.selectedGreeting
+        
+        // Define Outlook package names - Microsoft Outlook has different package names on different devices
+        val outlookPackages = arrayOf(
+            "com.microsoft.office.outlook",
+            "com.microsoft.outlook"
+        )
+        
+        // Find the installed Outlook package if available
+        var outlookPackage: String? = null
+        for (pkg in outlookPackages) {
+            try {
+                if (context.packageManager.getLaunchIntentForPackage(pkg) != null) {
+                    outlookPackage = pkg
+                    break
+                }
+            } catch (e: Exception) {
+                // Log the error but continue checking other packages
+                Log.e("GreetingsController", "Error checking package $pkg: ${e.message}")
+            }
+        }
+        
+        // If Outlook is not installed, show a message to the user
+        if (outlookPackage == null) {
+            android.widget.Toast.makeText(
+                context, 
+                "Microsoft Outlook is not installed. Please install it from the Play Store.", 
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            Log.e("GreetingsController", "No Outlook package found among: ${outlookPackages.joinToString()}")
+            return
+        }
+        
+        // First try with the screenshot if available
+        val imageUri = saveBitmapForSharing(cardScreenshot)
         
         if (imageUri != null) {
-            // Send both card screenshot and text to Outlook
+            // Send both card screenshot and text directly to Outlook (no chooser)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/jpeg"
                 putExtra(Intent.EXTRA_STREAM, imageUri)
                 putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
                 putExtra(Intent.EXTRA_TEXT, model.message)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                // Add Outlook package name if available
-                val outlookPackages = arrayOf(
-                    "com.microsoft.office.outlook",
-                    "com.microsoft.outlook"
-                )
-                for (pkg in outlookPackages) {
-                    if (context.packageManager.getLaunchIntentForPackage(pkg) != null) {
-                        setPackage(pkg)
-                        break
-                    }
-                }
+                // Set Outlook as the only target
+                setPackage(outlookPackage)
             }
-            context.startActivity(intent)
+            
+            try {
+                context.startActivity(intent)
+                return // Exit early as we've handled the sharing successfully
+            } catch (e: Exception) {
+                Log.e("GreetingsController", "Error opening Outlook with image: ${e.message}", e)
+                // Continue to fallback options below
+            }
         } else {
-            // Fallback to text-only sharing if screenshot fails
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "message/rfc822"
-                putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
-                putExtra(Intent.EXTRA_TEXT, model.message)
-                // Add Outlook package name if available
-                val outlookPackages = arrayOf(
-                    "com.microsoft.office.outlook",
-                    "com.microsoft.outlook"
-                )
-                for (pkg in outlookPackages) {
-                    if (context.packageManager.getLaunchIntentForPackage(pkg) != null) {
-                        setPackage(pkg)
-                        break
+            // No screenshot available, log the issue
+            Log.d("GreetingsController", "No screenshot available, falling back to alternative methods")
+        }
+        
+        // If we got here, either the screenshot was null or sending with the screenshot failed
+        // If we have a URL for the greeting, try to download it first
+        if (!imageUrl.isNullOrEmpty()) {
+            android.widget.Toast.makeText(
+                context, 
+                "Preparing greeting for Outlook...", 
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Try to download the image
+                    val imageBitmap = coil.ImageLoader(context).execute(
+                        coil.request.ImageRequest.Builder(context)
+                            .data(imageUrl)
+                            .allowHardware(false) // Needed to access pixels
+                            .build()
+                    ).drawable?.let { drawable ->
+                        // Convert drawable to bitmap
+                        when (drawable) {
+                            is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                            else -> {
+                                // Create a bitmap from any drawable
+                                val bitmap = Bitmap.createBitmap(
+                                    drawable.intrinsicWidth,
+                                    drawable.intrinsicHeight,
+                                    Bitmap.Config.ARGB_8888
+                                )
+                                val canvas = android.graphics.Canvas(bitmap)
+                                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                drawable.draw(canvas)
+                                bitmap
+                            }
+                        }
+                    }
+                    
+                    withContext(Dispatchers.Main) {
+                        if (imageBitmap != null) {
+                            // Save the downloaded bitmap and get its URI
+                            val downloadedImageUri = saveBitmapForSharing(imageBitmap)
+                            
+                            if (downloadedImageUri != null) {
+                                // Now try sending via Outlook with the downloaded image
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "image/jpeg"
+                                    putExtra(Intent.EXTRA_STREAM, downloadedImageUri)
+                                    putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
+                                    putExtra(Intent.EXTRA_TEXT, model.message)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    setPackage(outlookPackage)
+                                }
+                                
+                                try {
+                                    context.startActivity(intent)
+                                    return@withContext
+                                } catch (e: Exception) {
+                                    Log.e("GreetingsController", "Error opening Outlook with downloaded image: ${e.message}", e)
+                                    // Fall back to text-only below
+                                }
+                            }
+                        }
+                        
+                        // If we get here, use text-only fallback
+                        sendTextOnlyToOutlook(outlookPackage, greetingTitle)
+                    }
+                } catch (e: Exception) {
+                    Log.e("GreetingsController", "Error downloading image: ${e.message}", e)
+                    withContext(Dispatchers.Main) {
+                        // Fall back to text-only
+                        sendTextOnlyToOutlook(outlookPackage, greetingTitle)
                     }
                 }
             }
+        } else {
+            // No image URL, just send text-only
+            sendTextOnlyToOutlook(outlookPackage, greetingTitle)
+        }
+    }
+    
+    // Helper method to send text-only email to Outlook
+    private fun sendTextOnlyToOutlook(outlookPackage: String, greetingTitle: String) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
+            putExtra(Intent.EXTRA_TEXT, model.message)
+            setPackage(outlookPackage)
+        }
+        
+        try {
             context.startActivity(intent)
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(
+                context, 
+                "Could not open Outlook. Please make sure it's properly installed.", 
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            Log.e("GreetingsController", "Error opening Outlook for text-only email: ${e.message}", e)
         }
     }
 
