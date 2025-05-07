@@ -267,28 +267,33 @@ fun BusinessCardScreen(
                                 .padding(20.dp),
                             horizontalAlignment = Alignment.Start
                         ) {
-                            // Logo
-                    Image(
-                                painter = painterResource(id = R.drawable.arche_black),
-                                contentDescription = "Arche Logo",
+                            // Logo - Added top padding to move it down slightly
+                            Box(
                                 modifier = Modifier
-                                    .size(39.dp)
-                            )
+                                    .padding(top = 15.dp)  // Added top padding to move logo down
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.arche_black),
+                                    contentDescription = "Arche Logo",
+                                    modifier = Modifier
+                                        .size(39.dp)
+                                )
+                            }
 
-                            Spacer(modifier = Modifier.height(135.dp))
+                            Spacer(modifier = Modifier.height(120.dp))  // Reduced to compensate for added padding
 
                             // Name and Designation
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color.Black)) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color.Black)) {
                                 append(businessCard.name)
                                 append("\n")
                             }
-                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 9.sp, color = Color.Black)) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 10.sp, color = Color.Black)) {
                                 append(businessCard.designation)
                             }
                         },
-                        lineHeight = 15.sp
+                        lineHeight = 16.sp  // Increased from 15.sp
                     )
 
                             Spacer(modifier = Modifier.height(28.dp))
@@ -307,10 +312,10 @@ fun BusinessCardScreen(
                                 ) {
                                     Text(
                                         text = buildAnnotatedString {
-                                            withStyle(SpanStyle(fontWeight = FontWeight.Medium, fontSize = 10.sp, color = Color.Black)) {
+                                            withStyle(SpanStyle(fontWeight = FontWeight.Medium, fontSize = 11.sp, color = Color.Black)) {
                                                 append("Arche Global Pvt Ltd\n")
                                             }
-                                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 10.sp, color = Color.Black)) {
+                                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 11.sp, color = Color.Black)) {
                                                 append(businessCard.email)
                                                 append("\n")
                                                 append(businessCard.phone)
@@ -318,7 +323,7 @@ fun BusinessCardScreen(
                                                 append(controller.businessCard.location)
                                             }
                                         },
-                                        lineHeight = 15.sp
+                                        lineHeight = 16.sp  // Increased from 15.sp
                                     )
                                 }
 
@@ -351,8 +356,8 @@ fun BusinessCardScreen(
                                     ) {
                                         Text(
                                             text = "arche",
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 16.sp,  // Increased from 15.sp
+                                            fontWeight = FontWeight.Bold,
                                             color = Color.Black,
                                             modifier = Modifier.offset(x = (-7).dp, y = (-8).dp)
                                         )
@@ -374,12 +379,12 @@ fun BusinessCardScreen(
                             // Text first (moved up)
                             Text(
                                 text = "This could be the start of something great.",
-                                fontSize = 9.sp,
+                                fontSize = 10.sp,  // Increased from 9.sp
                                 fontFamily = FontFamily(Font(R.font.canela_regular)),
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
-                                lineHeight = 17.sp
+                                lineHeight = 18.sp  // Increased from 17.sp
                             )
 
                             Spacer(modifier = Modifier.height(100.dp))  // Reduced spacing
@@ -396,7 +401,7 @@ fun BusinessCardScreen(
 
                     Text(
                         text = businessCard.website,
-                        fontSize = 9.sp,
+                        fontSize = 10.sp,  // Increased from 9.sp
                         color = Color.Black,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 7.dp)
@@ -406,10 +411,10 @@ fun BusinessCardScreen(
 
                     Text(
                         text = location.address,
-                        fontSize = 8.sp,
+                        fontSize = 9.sp,  // Increased from 8.sp
                         color = Color.Black,
                         textAlign = TextAlign.Center,
-                        lineHeight = 13.sp
+                        lineHeight = 14.sp  // Increased from 13.sp
                     )
                 }
             }

@@ -1,40 +1,50 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.onSizeChanged
 import com.archeGlobal.one.controller.TodoController
 import com.archeGlobal.one.model.TaskPriority
 import com.archeGlobal.one.model.TodoTask
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +75,7 @@ fun TodoScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackPressed) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -96,7 +106,9 @@ fun TodoScreen(
                 } else {
                     TaskList(
                         tasks = controller.getTasksForSelectedDay(),
-                        onTaskClick = controller::selectTask,
+                        onTaskClick = { /* Do nothing when task is clicked */ },
+                        onEditClick = controller::startEditTask, // Directly go to edit mode
+                        onDeleteClick = controller::deleteTask, // Directly delete the task
                         formatTimeRange = controller::formatTimeRange,
                         formatCreationDate = controller::formatCreationDate
                     )
@@ -208,80 +220,221 @@ fun DaySelector(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskList(
     tasks: List<TodoTask>,
     onTaskClick: (TodoTask) -> Unit,
+    onEditClick: (TodoTask) -> Unit,
+    onDeleteClick: (TodoTask) -> Unit,
     formatTimeRange: (TodoTask) -> String,
     formatCreationDate: (TodoTask) -> String
 ) {
     LazyColumn {
         items(tasks) { task ->
-            TaskItem(
+            SwipeableTaskItem(
                 task = task,
-                onClick = { onTaskClick(task) },
-                formatTimeRange = formatTimeRange,
-                formatCreationDate = formatCreationDate
+                onTaskClick = { /* No action when clicking on the task */ },
+                onEditClick = { onEditClick(task) },
+                onDeleteClick = { onDeleteClick(task) },
+                formatTimeRange = { formatTimeRange(task) },
+                formatCreationDate = { formatCreationDate(task) }
             )
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun TaskItem(
+fun SwipeableTaskItem(
     task: TodoTask,
-    onClick: () -> Unit,
-    formatTimeRange: (TodoTask) -> String,
-    formatCreationDate: (TodoTask) -> String
+    onTaskClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    formatTimeRange: () -> String,
+    formatCreationDate: () -> String
 ) {
-    Card(
+    // State for swipe offset
+    var offsetX by remember { mutableStateOf(0f) }
+    val swipeThreshold = 200f // Threshold to consider revealing buttons
+    val density = LocalDensity.current
+    
+    // Reset swipe when tapping outside
+    var isSwipeRevealed by remember { mutableStateOf(false) }
+    
+    // Track the card height for matching action button heights
+    var cardHeight by remember { mutableStateOf(0.dp) }
+    
+    // Buttons width in dp
+    val actionsWidth = 160.dp
+    // Animated offset to smooth transitions
+    val animatedOffsetDp by animateDpAsState(
+        targetValue = with(density) { minOf(offsetX, 0f).coerceAtLeast(-actionsWidth.toPx()).toDp() },
+        animationSpec = tween(durationMillis = 300),
+        label = "Offset Animation"
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+            .padding(horizontal = 16.dp)
     ) {
-        Column(
+        // Actions container - positioned behind the card
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .height(cardHeight), // Match card height
+            horizontalArrangement = Arrangement.End
+        ) {
+            // Delete button (first on the left)
+            Box(
+                modifier = Modifier
+                    .width(80.dp)
+                    .fillMaxHeight()
+                    .background(Color(0xFFFF3B30), RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
+                    .clickable {
+                        onDeleteClick()
+                        offsetX = 0f // Reset swipe state
+                        isSwipeRevealed = false
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Delete",
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+            
+            // Edit button (on the right side)
+            Box(
+                modifier = Modifier
+                    .width(80.dp)
+                    .fillMaxHeight()
+                    .background(Color(0xFF007AFF), RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp))
+                    .clickable {
+                        onEditClick()
+                        offsetX = 0f // Reset swipe state
+                        isSwipeRevealed = false
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Edit",
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+        
+        // Main task card - can be swiped
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .offset { IntOffset(animatedOffsetDp.roundToPx(), 0) }
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { delta ->
+                        // Only allow swiping left
+                        if (delta <= 0f) {
+                            offsetX += delta
+                        }
+                        if (offsetX < -swipeThreshold) {
+                            isSwipeRevealed = true
+                        }
+                        if (offsetX > -20f) {
+                            isSwipeRevealed = false
+                        }
+                    },
+                    onDragStopped = { _ ->
+                        // Snap to position based on current offset
+                        offsetX = if (isSwipeRevealed || offsetX < -swipeThreshold / 2) {
+                            -actionsWidth.value * density.density
+                        } else {
+                            0f
+                        }
+                    }
+                )
+                .onSizeChanged { size ->
+                    // Convert the size in pixels to dp
+                    cardHeight = with(density) { size.height.toDp() }
+                },
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            // Title
-            Text(
-                text = task.title,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Priority
-            Text(
-                text = "Priority: ${task.priority.name}",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            // Time
-            Text(
-                text = "Time: ${formatTimeRange(task)}",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            // Added on date
-            Text(
-                text = formatCreationDate(task),
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clickable {
+                        if (isSwipeRevealed) {
+                            // Reset swipe if actions are revealed
+                            offsetX = 0f
+                            isSwipeRevealed = false
+                        } else {
+                            // Only call onTaskClick if we're not resetting the swipe
+                            onTaskClick()
+                        }
+                    }
+            ) {
+                // Title
+                Text(
+                    text = task.title,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Priority
+                Text(
+                    text = "Priority: ${task.priority.name}",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Time
+                Text(
+                    text = "Time: ${formatTimeRange()}",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Added on date
+                Text(
+                    text = formatCreationDate(),
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
         }
     }
 }
@@ -424,7 +577,7 @@ fun TaskFormDialog(
         onDismissRequest = onCancel,
         title = {
             Text(
-                text = "Add Task",
+                text = if (isEditing) "Edit Task" else "Add Task",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -598,7 +751,7 @@ fun TaskFormDialog(
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     Text(
-                        text = "Add Task",
+                        text = if (isEditing) "Save Task" else "Add Task",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 4.dp)
@@ -620,7 +773,7 @@ fun TaskFormDialog(
                 }
             }
         },
-        confirmButton = { },
+        confirmButton = {},
         dismissButton = null,
         containerColor = Color.White,
         shape = RoundedCornerShape(16.dp)
@@ -812,11 +965,8 @@ fun TimePickerDialog(
         confirmButton = {
             Button(
                 onClick = { onTimeSelected(selectedHour, selectedMinute) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFDD3825) // Red button
-                )
             ) {
-                Text("Set Time")
+                Text("OK")
             }
         },
         dismissButton = {
