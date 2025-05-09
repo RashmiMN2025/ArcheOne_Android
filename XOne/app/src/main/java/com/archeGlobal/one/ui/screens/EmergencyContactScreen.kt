@@ -17,26 +17,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.EmergencyContactController
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import androidx.compose.foundation.Image
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmergencyContactScreen(
     controller: EmergencyContactController,
     modifier: Modifier = Modifier,
-    footerNavigation: FooterNavigationModel = FooterNavigationModel(showProfile = true),
-    onFooterHomeClick: () -> Unit = { controller.onBackPressed() },
-    onFooterChatClick: () -> Unit = {},
-    onFooterSOSClick: () -> Unit = {},
-    onFooterProfileClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     
@@ -58,7 +57,7 @@ fun EmergencyContactScreen(
         ) {
             // Top AppBar
             CenterAlignedTopAppBar(
-                title = { Text("Emergency Contact", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
+                title = { Text("Emergency Contact", fontSize = 20.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { controller.onBackPressed() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -82,39 +81,38 @@ fun EmergencyContactScreen(
             ) {
                 // Card containing emergency contact details
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     color = Color.White,
                     shadowElevation = 2.dp
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier
+                            .padding(18.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Emergency Contact Header with Icon
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 6.dp)
                         ) {
                             // Person icon in a red circle
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFEF5350).copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Person,
+                                    painter = painterResource(id = R.drawable.profile), // Use painterResource to load the drawable
                                     contentDescription = "Emergency Contact",
-                                    tint = Color(0xFFE53935),
-                                    modifier = Modifier.size(20.dp)
+                                    tint = Color(0xFFE53935), // Apply tint color
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Emergency Contact",
                                 fontSize = 18.sp,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
@@ -122,7 +120,9 @@ fun EmergencyContactScreen(
                         
                         // Contact Details
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = modifier
+                                .padding(start = 24.dp)
                         ) {
                             // Name
                             LabeledValue(
@@ -141,52 +141,62 @@ fun EmergencyContactScreen(
                                 Text(
                                     text = "Phone Number",
                                     fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Gray
                                 )
                                 Text(
                                     text = controller.model.phoneNumber.ifEmpty { "-" },
                                     fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
                                     textDecoration = if (controller.model.phoneNumber.isNotEmpty()) 
                                         TextDecoration.Underline else TextDecoration.None,
-                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
                         }
                         
                         Divider(
                             color = Color(0xFFEEEEEE),
-                            thickness = 1.dp,
+                            thickness = 1.5.dp,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
                         
                         // Important Note Section
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 4.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = "Important Note",
-                                tint = Color(0xFFE53935),
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Important Note",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically, // Align icon and text in one line
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = "Important Note",
+                                    tint = Color(0xFFE53935),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Important Note",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
                             Text(
                                 text = "These contacts will be used in case of any emergency. Please ensure the information is up to date.",
                                 fontSize = 14.sp,
                                 color = Color.Gray,
-                                lineHeight = 20.sp,
+                                lineHeight = 17.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -208,14 +218,16 @@ fun LabeledValue(
         Text(
             text = label,
             fontSize = 14.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
             color = Color.Gray
         )
         Text(
             text = value,
             fontSize = 16.sp,
+            fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(top = 4.dp)
+            color = Color.Black
         )
     }
 } 

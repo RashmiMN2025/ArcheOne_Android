@@ -236,8 +236,8 @@ fun BusinessCardScreen(
             Card(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(0.82f)
-                    .height(420.dp)
+                    .fillMaxWidth(0.75f)
+                    .height(450.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
                         cardBounds.value = android.graphics.Rect(
@@ -280,15 +280,29 @@ fun BusinessCardScreen(
                             // Name and Designation
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color.Black)) {
+                            withStyle(
+                                SpanStyle(
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color.Black
+                                )
+                            ) {
                                 append(businessCard.name)
                                 append("\n")
                             }
-                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 9.sp, color = Color.Black)) {
+                            withStyle(
+                                SpanStyle(
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            ) {
                                 append(businessCard.designation)
                             }
                         },
-                        lineHeight = 15.sp
+                        lineHeight = 16.sp
                     )
 
                             Spacer(modifier = Modifier.height(28.dp))
@@ -307,10 +321,23 @@ fun BusinessCardScreen(
                                 ) {
                                     Text(
                                         text = buildAnnotatedString {
-                                            withStyle(SpanStyle(fontWeight = FontWeight.Medium, fontSize = 10.sp, color = Color.Black)) {
+                                            withStyle(
+                                                SpanStyle(
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 10.sp,
+                                                    color = Color.Black
+                                                )
+                                            ) {
                                                 append("Arche Global Pvt Ltd\n")
                                             }
-                                            withStyle(SpanStyle(fontWeight = FontWeight.Normal, fontSize = 10.sp, color = Color.Black)) {
+                                            withStyle(
+                                                SpanStyle(
+                                                    fontWeight = FontWeight.Normal,
+                                                    fontSize = 10.sp,
+                                                    color = Color.Black
+                                                )
+                                            ) {
                                                 append(businessCard.email)
                                                 append("\n")
                                                 append(businessCard.phone)

@@ -321,7 +321,7 @@ private fun LogoutConfirmationDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 14.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -333,7 +333,7 @@ private fun LogoutConfirmationDialog(
             ) {
                 // Icon
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_logout),
+                    painter = painterResource(id = R.drawable.ic_logout1),
                     contentDescription = "Logout",
                     tint = Color(0xFFDD3825),
                     modifier = Modifier.size(32.dp)
@@ -345,6 +345,7 @@ private fun LogoutConfirmationDialog(
                 Text(
                     text = "Log Out",
                     fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -356,8 +357,10 @@ private fun LogoutConfirmationDialog(
                     text = "Are you sure you want to log out of\nyour account?",
                     fontSize = 14.sp,
                     color = Color.Gray,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
+                    lineHeight = 16.sp
                 )
                 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -381,8 +384,9 @@ private fun LogoutConfirmationDialog(
                         Text(
                             text = "Log Out",
                             color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp
                         )
                     }
                     
@@ -400,7 +404,8 @@ private fun LogoutConfirmationDialog(
                         Text(
                             text = "Cancel",
                             color = Color.White,
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -693,7 +698,7 @@ private fun MenuItem(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(50.dp)
             .clip(RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         color = Color.White
@@ -714,11 +719,11 @@ private fun MenuItem(
                     painter = painterResource(id = icon), // Use painterResource to load drawable
                     contentDescription = title,
                     tint = Color.Black,
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.size(25.dp)
                 )
                 Text(
                     text = title,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
@@ -730,7 +735,7 @@ private fun MenuItem(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Navigate",
                 tint = Color.Gray,
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size(25.dp)
             )
         }
     }

@@ -23,17 +23,13 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddressDetailsScreen(
     controller: AddressController,
     modifier: Modifier = Modifier,
-    footerNavigation: FooterNavigationModel = FooterNavigationModel(showProfile = true),
-    onFooterHomeClick: () -> Unit = { controller.onBackPressed() },
-    onFooterChatClick: () -> Unit = {},
-    onFooterSOSClick: () -> Unit = {},
-    onFooterProfileClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     
@@ -55,7 +51,7 @@ fun AddressDetailsScreen(
         ) {
             // Top AppBar
             CenterAlignedTopAppBar(
-                title = { Text("Address Details", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
+                title = { Text("Address Details", fontSize = 20.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { controller.onBackPressed() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -90,16 +86,16 @@ fun AddressDetailsScreen(
                     ) {
                         // Present Address Section
                         AddressSection(
-                            icon = R.drawable.ic_home,
+                            icon = R.drawable.home2,
                             title = "Present Address",
                             addressText = controller.model.presentAddress.ifEmpty { "-" }
                         )
                         
-                        Divider(color = Color(0xFFEEEEEE), thickness = 1.dp)
+                        Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
                         
                         // Permanent Address Section
                         AddressSection(
-                            icon = R.drawable.ic_home,
+                            icon = R.drawable.ic_home1,
                             title = "Permanent Address",
                             addressText = controller.model.permanentAddress.ifEmpty { "-" }
                         )
@@ -117,7 +113,10 @@ fun AddressSection(
     addressText: String,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier
+            .padding(20.dp)
+    ) {
         // Section Title with Icon
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -129,10 +128,13 @@ fun AddressSection(
                 tint = Color(0xFFE53935),
                 modifier = Modifier.size(24.dp)
             )
+
             Spacer(modifier = Modifier.width(8.dp))
+
             Text(
                 text = title,
                 fontSize = 16.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
@@ -142,9 +144,10 @@ fun AddressSection(
         Text(
             text = addressText,
             fontSize = 16.sp,
+            fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
-            color = Color.Black,
-            lineHeight = 24.sp
+            color = Color.Gray,
+            lineHeight = 20.sp
         )
     }
 } 
