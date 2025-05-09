@@ -10,6 +10,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.navOptions
 import com.archeGlobal.one.*
+import com.archeGlobal.one.ui.screens.CoreValuesActivity
 import java.net.URLEncoder
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
@@ -172,7 +173,7 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToFinance() = openWebView("https://ess.azatecon.com/login", "Finance")
     override fun navigateToAdmin() = Unit
     override fun navigateToHR() = Unit
-    override fun navigateToHolidayCalendar() = navigate("holiday_calendar")
+    override fun navigateToHolidayCalendar() = navigate("calendar")
     override fun navigateToClientCalendar() = Unit
 
     override fun navigateToGreetings() {
@@ -218,6 +219,11 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     override fun navigateToSAP() {
         openWebView("https://my422539.businessbydesign.cloud.sap", "SAP")
     }
+
+
+    override fun navigateToAboutUs() {
+        openWebView("https://arche.global/arche-one-aboutus", "AboutUs")
+    }
     
     override fun navigateToZingHR() {
         openWebView("https://portal.zinghr.com/2015/pages/authentication/zing.aspx?ccode=netcongrp", "ZingHR")
@@ -246,9 +252,15 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
 
     override fun navigateToArcheOdyssey() = navigate("arche_odyssey")
     override fun navigateToCommunique() = navigate("communique")
-    override fun navigateToVision() = navigate("vision")
-    override fun navigateToCoreValues() = navigate("core_values")
-    override fun navigateToAboutUs() = openWebView("https://arche.global/arche-one-aboutus", "About Us")
+    override fun navigateToCoreValues() {
+        val intent = Intent(activity, CoreValuesActivity::class.java)
+        activity.startActivity(intent)
+    }
+
+    override fun navigateToVision() {
+        val intent = Intent(activity, VisionActivity::class.java)
+        activity.startActivity(intent)
+    }
     
     override fun navigateToTodo() {
         startActivity(Intent(activity, TodoActivity::class.java))

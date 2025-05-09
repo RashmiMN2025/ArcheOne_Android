@@ -2,7 +2,15 @@ package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,32 +19,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.SocialController
-import com.archeGlobal.one.model.Job
 import com.archeGlobal.one.model.SocialArticle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.window.Dialog
-import androidx.compose.material.icons.filled.Close
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 
 @Composable
@@ -93,7 +93,7 @@ fun XConnectScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 25.dp),
+                    .padding(top = 40.dp, bottom = 10.dp) // Moved heading and back arrow slightly down
             ) {
                 // Back button at the left edge
                 IconButton(
@@ -116,7 +116,8 @@ fun XConnectScreen(
                         text = "Blogs & Case Studies",
                         color = Color.Black,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -130,7 +131,7 @@ fun XConnectScreen(
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
                     .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.Center // Center align the tabs
             ) {
                 tabs.forEach { tab ->
                     TabItem(
@@ -154,7 +155,11 @@ fun XConnectScreen(
                         .height(48.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.White)
-                        .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
+                        .border(
+                            width = 1.dp,
+                            color = Color.LightGray.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
                 ) {
                     Row(
                         modifier = Modifier
@@ -176,6 +181,12 @@ fun XConnectScreen(
                                 .fillMaxWidth()
                                 .padding(start = 8.dp),
                             singleLine = true,
+                            textStyle = TextStyle( // Added textStyle for innerTextField
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            ),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Search
@@ -191,7 +202,9 @@ fun XConnectScreen(
                                         Text(
                                             text = "Search...",
                                             color = Color.Gray.copy(alpha = 0.6f),
-                                            fontSize = 16.sp
+                                            fontSize = 16.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal
                                         )
                                     }
                                     innerTextField()
@@ -255,7 +268,8 @@ fun ArticleDetailDialog(
                     Text(
                         text = type,
                         color = Color.White,
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -299,7 +313,8 @@ fun ArticleDetailDialog(
                 ) {
                     Text(
                         text = article.title,
-                        fontSize = 20.sp,
+                        fontSize = 28.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -307,8 +322,10 @@ fun ArticleDetailDialog(
 
                     Text(
                         text = article.description,
-                        fontSize = 16.sp,
-                        color = Color.DarkGray,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray,
                         lineHeight = 24.sp
                     )
 
@@ -336,7 +353,11 @@ fun ArticleDetailDialog(
 }
 
 @Composable
-fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
+fun TabItem(
+    text: String,
+    isSelected: Boolean,
+    onTabSelected: () -> Unit
+) {
     Box(
         modifier = Modifier
             .padding(end = 8.dp)
@@ -350,14 +371,19 @@ fun TabItem(text: String, isSelected: Boolean, onTabSelected: () -> Unit) {
         Text(
             text = text,
             color = if (isSelected) Color.White else Color.Black,
-            fontSize = 14.sp,  // Slightly smaller font size
-            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+            fontSize = 16.sp,  // Slightly smaller font size
+            fontFamily = GraphikFontFamily,
+            fontWeight = if (isSelected) FontWeight.Normal else FontWeight.Medium
         )
     }
 }
 
 @Composable
-fun AllPostsContent(socialController: SocialController, searchQuery: String, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
+fun AllPostsContent(
+    socialController: SocialController,
+    searchQuery: String,
+    showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }
+) {
     // Filter case studies, blogs and jobs based on search query - only titles/headers, not content
     val filteredCaseStudies = socialController.getCaseStudies().filter {
         it.title.contains(searchQuery, ignoreCase = true)
@@ -367,14 +393,55 @@ fun AllPostsContent(socialController: SocialController, searchQuery: String, sho
         it.title.contains(searchQuery, ignoreCase = true)
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Spacer(modifier = Modifier.height(16.dp)) // Added space after the search bar
+
         if (filteredCaseStudies.isNotEmpty()) {
-            HorizontalSection(title = "Case Studies", articles = filteredCaseStudies, showArticleDetail = showArticleDetail)
+            Text(
+                text = "Case Studies",
+                fontSize = 20.sp, // Increased font size
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(filteredCaseStudies) { caseStudy ->
+                    PostTile(
+                        post = caseStudy,
+                        onClick = { showArticleDetail(caseStudy, "Case Studies") }
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (filteredBlogs.isNotEmpty()) {
-            HorizontalSection(title = "Blogs", articles = filteredBlogs, showArticleDetail = showArticleDetail)
+            Text(
+                text = "Blogs",
+                fontSize = 20.sp, // Increased font size
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(filteredBlogs) { blog ->
+                    PostTile(
+                        post = blog,
+                        onClick = { showArticleDetail(blog, "Blogs") }
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
@@ -397,7 +464,69 @@ fun AllPostsContent(socialController: SocialController, searchQuery: String, sho
 }
 
 @Composable
-fun CaseStudiesContent(socialController: SocialController, searchQuery: String, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
+fun PostTile(
+    post: SocialArticle,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(200.dp) // Increased tile width
+            .height(250.dp) // Increased tile height
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(post.imageUrl)
+                    .crossfade(true)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .build(),
+                contentDescription = post.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp) // Adjusted image height
+                    .clip(RoundedCornerShape(12.dp)), // Added rounded corners for the image
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.ic_image_placeholder),
+                error = painterResource(id = R.drawable.ic_image_placeholder)
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp,12.dp,12.dp,4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = post.title,
+                    fontSize = 14.sp, // Increased font size for titles
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                    maxLines = 3,
+                    overflow = TextOverflow.Visible,
+                    lineHeight = 16.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CaseStudiesContent(
+    socialController: SocialController,
+    searchQuery: String,
+    showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }
+) {
     val caseStudies = socialController.getCaseStudies().filter {
         searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true)
     }
@@ -414,17 +543,23 @@ fun CaseStudiesContent(socialController: SocialController, searchQuery: String, 
             )
         }
     } else {
+        Spacer(modifier = Modifier.height(16.dp))
+
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "Case Studies",
-                fontSize = 18.sp,
+                fontSize = 20.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             for (i in caseStudies.indices step 2) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between cards
+                ) {
+                    Box(modifier = Modifier.weight(1f)) { // Apply weight here
                         ArticleCard(
                             article = caseStudies[i],
                             type = "Case Studies",
@@ -432,19 +567,19 @@ fun CaseStudiesContent(socialController: SocialController, searchQuery: String, 
                             showArticleDetail = showArticleDetail
                         )
                     }
-                    if (i + 1 < caseStudies.size) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ArticleCard(
-                                article = caseStudies[i + 1],
-                                type = "Case Studies",
-                                socialController = socialController,
-                                showArticleDetail = showArticleDetail
-                            )
+                        if (i + 1 < caseStudies.size) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ArticleCard(
+                                    article = caseStudies[i + 1],
+                                    type = "Case Studies",
+                                    socialController = socialController,
+                                    showArticleDetail = showArticleDetail
+                                )
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
                         }
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
                     }
-                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -452,7 +587,11 @@ fun CaseStudiesContent(socialController: SocialController, searchQuery: String, 
 }
 
 @Composable
-fun BlogsContent(socialController: SocialController, searchQuery: String, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
+fun BlogsContent(
+    socialController: SocialController,
+    searchQuery: String,
+    showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }
+) {
     val blogs = socialController.getBlogs().filter {
         searchQuery.isEmpty() || it.title.contains(searchQuery, ignoreCase = true)
     }
@@ -469,17 +608,24 @@ fun BlogsContent(socialController: SocialController, searchQuery: String, showAr
             )
         }
     } else {
+        Spacer(modifier = Modifier.height(16.dp))
+
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "Blogs",
-                fontSize = 18.sp,
+                fontSize = 20.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             for (i in blogs.indices step 2) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between cards
+                ) {
+                    Box(modifier = Modifier.weight(1f)) { // Apply weight here
                         ArticleCard(
                             article = blogs[i],
                             type = "Blogs",
@@ -488,7 +634,7 @@ fun BlogsContent(socialController: SocialController, searchQuery: String, showAr
                         )
                     }
                     if (i + 1 < blogs.size) {
-                        Box(modifier = Modifier.weight(1f)) {
+                        Box(modifier = Modifier.weight(1f)) { // Apply weight here
                             ArticleCard(
                                 article = blogs[i + 1],
                                 type = "Blogs",
@@ -497,150 +643,13 @@ fun BlogsContent(socialController: SocialController, searchQuery: String, showAr
                             )
                         }
                     } else {
-                        Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f)) // Add a spacer for alignment
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
-}
-
-@Composable
-fun HorizontalSection(title: String, articles: List<SocialArticle>, showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }) {
-    if (articles.isEmpty()) return
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            fontSize = 18.sp,  // Reduced from 20sp to 18sp
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-        ) {
-            articles.forEach { article ->
-                PostCard(
-                    title = article.title,
-                    description = article.description,
-                    imageUrl = article.imageUrl,
-                    type = title,
-                    slug = article.id,
-                    socialController = LocalContext.current.let { 
-                        remember { SocialController(it) }
-                    },
-                    showArticleDetail = showArticleDetail
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun HorizontalJobsSection(title: String, jobs: List<Job>) {
-    if (jobs.isEmpty()) return
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            fontSize = 18.sp,  // Reduced from 20sp to 18sp
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(bottom = 8.dp)
-        ) {
-            jobs.forEach { job ->
-                JobPostCard(
-                    title = job.Title,
-                    description = "Experience: ${extractExperience(job.Description)}",
-                    imageUrl = job.Image,
-                    slug = job.Slug,
-                    socialController = LocalContext.current.let { 
-                        remember { SocialController(it) }
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun JobPostCard(
-    title: String,
-    description: String,
-    imageUrl: String,
-    slug: String,
-    socialController: SocialController
-) {
-    Card(
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier
-            .width(170.dp)
-            .height(170.dp)
-            .padding(4.dp)
-            .clickable {
-                socialController.openInBrowser("Jobs", slug)
-            },
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Taller image for job cards
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .crossfade(true)
-                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .build(),
-                contentDescription = title,
-                modifier = Modifier
-                    .height(110.dp)
-                    .fillMaxWidth(),
-                contentScale = ContentScale.Crop,
-                error = painterResource(id = R.drawable.ic_image_placeholder),
-                placeholder = painterResource(id = R.drawable.ic_image_placeholder)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp, 12.dp, 12.dp, 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = title,
-                    fontSize = 9.sp, // slightly smaller
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 3,
-                    lineHeight = 14.sp,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
-
-// Helper function to extract experience from description
-private fun extractExperience(description: String): String {
-    // Try to find experience mention in the description
-    val experiencePattern = "(\\d+[-]\\d+\\s*(?:years|yrs))".toRegex(RegexOption.IGNORE_CASE)
-    val match = experiencePattern.find(description)
-    return match?.value ?: "Not specified"
 }
 
 @Composable
@@ -653,13 +662,15 @@ fun ArticleCard(
     Card(
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .height(185.dp)
-            .padding(4.dp)
+            .height(210.dp)
+            .padding(8.dp)
             .clickable { showArticleDetail(article, type) },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+        ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(article.imageUrl)
@@ -669,8 +680,9 @@ fun ArticleCard(
                     .build(),
                 contentDescription = article.title,
                 modifier = Modifier
-                    .height(110.dp)
-                    .fillMaxWidth(),
+                    .height(125.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp)), // Added rounded corners for the image
                 contentScale = ContentScale.Crop,
                 error = painterResource(id = R.drawable.ic_image_placeholder),
                 placeholder = painterResource(id = R.drawable.ic_image_placeholder)
@@ -678,85 +690,20 @@ fun ArticleCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp, 12.dp, 12.dp, 8.dp),
+                    .padding(12.dp, 12.dp, 12.dp, 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = article.title,
-                    fontSize = 10.sp, // slightly smaller
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp, // slightly smaller
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
                     maxLines = 3,
-                    lineHeight = 14.sp,
-                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 16.sp,
+                    overflow = TextOverflow.Visible,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PostCard(
-    title: String, 
-    description: String, 
-    imageUrl: String,
-    type: String,
-    slug: String,
-    socialController: SocialController,
-    showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }
-) {
-    // Create a SocialArticle object from the parameters
-    val article = SocialArticle(
-        id = slug,
-        title = title,
-        description = description,
-        imageUrl = imageUrl
-    )
-
-    Card(
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier
-            .width(170.dp)
-            .height(200.dp)
-            .padding(4.dp)
-            .clickable { 
-                showArticleDetail(article, type)
-            },
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Use AsyncImage with improved placeholder
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .crossfade(true)
-                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .build(),
-                contentDescription = title,
-                modifier = Modifier
-                    .height(110.dp)
-                    .fillMaxWidth(),
-                contentScale = ContentScale.Crop,
-                error = painterResource(id = R.drawable.ic_image_placeholder),
-                placeholder = painterResource(id = R.drawable.ic_image_placeholder)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp, 12.dp, 12.dp, 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = title,
-                    fontSize = 10.sp, // slightly smaller
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 3,
-                    lineHeight = 14.sp,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center
                 )
             }
         }

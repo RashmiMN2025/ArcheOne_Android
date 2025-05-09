@@ -75,8 +75,8 @@ fun ProfileHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(270.dp)
-            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+            .height(240.dp)
+            .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp))
     ) {
         // Background image with clip
         Image(
@@ -160,41 +160,33 @@ fun ProfileHeader(
                 ) {
                     Text(
                         text = model.userName,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 22.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold
-                        ),
+                        fontSize = 23.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
 
                     Text(
                         text = model.designation,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 17.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        ),
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
                         color = Color.Black
                     )
 
                     Text(
                         text = model.department,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        ),
+                        fontSize = 15.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
                         color = Color.Black
                     )
 
                     Text(
                         text = model.employeeId,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        ),
+                        fontSize = 15.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
                         color = Color.Black
                     )
                 }
@@ -619,6 +611,11 @@ fun HomeScreen(
 private fun formatServiceTitle(title: String): String {
     // Special cases for specific long titles - forcing proper line breaks
     return when (title) {
+        "Vision" -> "Vision"
+        "Core Values" -> "CoreValues"
+        "Communique" -> "Communique"
+        "About Us" -> "AboutUs"
+        "Calendar" -> "Calendar"
         "Holiday Calendar" -> "Holiday\nCalendar"
         "New Onboarding" -> "New\nOnboarding"
         "Travel & Expenses" -> "Travel &\nExpenses"
@@ -638,7 +635,7 @@ private fun formatServiceTitle(title: String): String {
         "Locations" -> "Locations"
         "Policy" -> "Policy"
         "Profile" -> "Profile"
-        "TimeSheet", "Timesheet" -> "Timesheet"
+        "TimeSheet", "Timesheet" -> "TimeSheet"
         "Leave" -> "Leave"
         "eLearning" -> "eLearning"
         "Asset" -> "Asset"
@@ -763,8 +760,8 @@ private fun AppIcon(
         // Check if it's a default app
         when (title) {
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
-            "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin",
-            "Finance", "SAP", "SOS", "Holiday Calendar", "Greetings", "Medical", "Blogs",
+            "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
+            "Finance", "SAP", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
             "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
@@ -774,6 +771,10 @@ private fun AppIcon(
                     Image(
                         painter = painterResource(
                             id = when (title.lowercase().replace(" ", "")) {
+                                "vision" -> R.drawable.vision
+                                "corevalues" -> R.drawable.core_values
+                                "communique" -> R.drawable.communique
+                                "aboutus" -> R.drawable.about_us
                                 "mydocuments" -> R.drawable.mydocuments
                                 "id" -> R.drawable.id
                                 "asset" -> R.drawable.asset
@@ -787,6 +788,7 @@ private fun AppIcon(
                                 "finance" -> R.drawable.finance
                                 "sap" -> R.drawable.sap
                                 "sos" -> R.drawable.sos
+                                "calendar" -> R.drawable.holiday
                                 "holidaycalendar" -> R.drawable.holiday
                                 "greetings" -> R.drawable.greetings
                                 "medical" -> R.drawable.medical

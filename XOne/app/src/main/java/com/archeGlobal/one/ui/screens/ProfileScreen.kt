@@ -56,6 +56,7 @@ import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import android.widget.Toast
 import android.graphics.Bitmap
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun ProfileScreen(
@@ -190,7 +191,9 @@ fun ProfileScreen(
                         Text(
                             text = controller.model.version,
                             color = Color.White,
-                            fontSize = 16.sp,
+                            fontSize = 18.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
                             textDecoration = TextDecoration.Underline
                         )
 
@@ -199,7 +202,9 @@ fun ProfileScreen(
                             Text(
                                 text = "Last Login: ${controller.model.lastLoginTime}",
                                 color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 14.sp
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
                             )
                         }
                     }
@@ -461,8 +466,8 @@ private fun ProfileHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp)
-            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+            .height(240.dp)
+            .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp))
     ) {
         // Background image
         Image(
@@ -483,12 +488,12 @@ private fun ProfileHeader(
             Box(
                 modifier = Modifier
                     .padding(top = 24.dp)
-                    .size(80.dp),
+                    .size(90.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // Profile picture or default icon
                 Surface(
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier.size(90.dp),
                     shape = CircleShape,
                     color = Color.LightGray
                 ) {
@@ -558,15 +563,18 @@ private fun ProfileHeader(
 
             Text(
                 text = name,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.White
             )
 
             Text(
                 text = email,
                 fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.8f)
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                color = Color.White
             )
         }
     }
@@ -679,12 +687,13 @@ private fun MenuItems(
 @Composable
 private fun MenuItem(
     title: String,
-    icon: ImageVector,
+    icon: Int,
     onClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .height(60.dp)
             .clip(RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         color = Color.White
@@ -697,41 +706,44 @@ private fun MenuItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(15.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(id = icon), // Use painterResource to load drawable
                     contentDescription = title,
                     tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(30.dp)
                 )
                 Text(
                     text = title,
-                    fontSize = 14.sp,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
                     maxLines = 1,
                     modifier = Modifier.weight(1f)
                 )
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight.apply { Icons.AutoMirrored },
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Navigate",
-                tint = Color.Gray
+                tint = Color.Gray,
+                modifier = Modifier.size(30.dp)
             )
         }
     }
 }
 
-fun getIconForMenuItem(icon: String): ImageVector {
+fun getIconForMenuItem(icon: String): Int {
     return when (icon) {
-        "person" -> Icons.Default.Person
-        "home" -> Icons.Default.Home
-        "phone" -> Icons.Default.Call
-        "document" -> Icons.Default.Menu
-        "logout" -> Icons.AutoMirrored.Filled.ExitToApp.apply { Icons.AutoMirrored }
-        else -> Icons.AutoMirrored.Filled.KeyboardArrowRight.apply { Icons.AutoMirrored }
+        "person" -> R.drawable.ic_user
+        "home" -> R.drawable.ic_home1
+        "phone" -> R.drawable.ic_call
+        "document" -> R.drawable.ic_doc
+        "logout" -> R.drawable.ic_logout1
+        else -> R.drawable.arche_black2
     }
 }
 

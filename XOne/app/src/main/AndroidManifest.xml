@@ -155,6 +155,18 @@
             android:label="Todo"
             android:theme="@style/Theme.XOne" />
 
+        <activity
+            android:name=".ui.screens.CoreValuesActivity"
+            android:exported="true"
+            android:label="Core value"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".VisionActivity"
+            android:exported="true"
+            android:label="Vision"
+            android:theme="@style/Theme.XOne"  />
+
         <!-- Keep only this FileProvider at the end -->
         <provider
             android:name="androidx.core.content.FileProvider"

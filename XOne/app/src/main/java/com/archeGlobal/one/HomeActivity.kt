@@ -415,7 +415,7 @@ class HomeActivity : AppCompatActivity() {
                         CommuniqueScreen(
                             model = communiqueController.model,
                             onCommuniqueClick = communiqueController::onCommuniqueClick,
-                            onBackPressed = archeOdysseyController::onBackPressed,
+                            onBackPressed = { navController.popBackStack() },
                             isLoading = communiqueController.isLoading.value
                         )
                     }
@@ -442,7 +442,7 @@ class HomeActivity : AppCompatActivity() {
                     }
 
                     composable(
-                        route = "holiday_calendar",
+                        route = "calendar",
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -735,7 +735,7 @@ class HomeActivity : AppCompatActivity() {
                         }
                     ) {
                         VisionScreen(
-                            onBackPressed = { navigator.navigateToArcheOdyssey() }
+                            onBackPressed = { navigator.navigateToHome() }
                         )
                     }
 

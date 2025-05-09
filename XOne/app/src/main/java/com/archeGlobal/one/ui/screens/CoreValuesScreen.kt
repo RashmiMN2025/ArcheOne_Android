@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.ArcheOdysseyController
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun CoreValuesScreen(
@@ -31,18 +32,27 @@ fun CoreValuesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(top = 80.dp) // Add padding to avoid overlapping with the fixed header
+                .padding(top = 100.dp) // Add padding to avoid overlapping with the fixed header
         ) {
             // New Heading
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Our values to keep you at the centre.",
-                color = Color.Black,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 36.sp, // Added line spacing
-                modifier = Modifier.padding(horizontal = 10.dp)
-            )
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Column (
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp)
+            ) {
+                Text(
+                    text = "Our values to keep you at the centre.",
+                    color = Color.Black,
+                    fontSize = 32.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 36.sp, // Added line spacing
+                    modifier = Modifier.padding(horizontal = 10.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // Blocks
@@ -79,8 +89,8 @@ fun CoreValuesScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .padding(16.dp)
+                        .padding(horizontal = 10.dp)
+                        .padding(18.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -89,14 +99,15 @@ fun CoreValuesScreen(
                         Icon(
                             painter = painterResource(id = icon), // Display icon in original color
                             contentDescription = "Icon",
-                            modifier = Modifier.size(28.dp),
+                            modifier = Modifier.size(30.dp),
                             tint = Color.Unspecified // Ensure the icon retains its original color
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = title,
                             color = Color.Black,
-                            fontSize = 20.sp,
+                            fontSize = 22.sp,
+                            fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -104,7 +115,8 @@ fun CoreValuesScreen(
                     Text(
                         text = description,
                         color = Color.Gray,
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         lineHeight = 20.sp // Reduced line spacing for description
                     )
@@ -126,7 +138,7 @@ fun CoreValuesScreen(
                 modifier = Modifier
                     .size(48.dp)
                     .align(Alignment.CenterStart)
-                    .padding(start = 16.dp) // Move the arrow slightly to the right
+                    .padding(start = 14.dp) // Move the arrow slightly to the right
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
@@ -138,7 +150,8 @@ fun CoreValuesScreen(
                 text = "Core Values",
                 color = Color.Black,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.Center)
             )
         }

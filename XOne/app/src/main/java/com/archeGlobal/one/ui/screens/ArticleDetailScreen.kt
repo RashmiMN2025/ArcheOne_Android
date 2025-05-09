@@ -24,6 +24,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.SocialArticle
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -39,19 +40,18 @@ fun ArticleDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
-                    )
-                )
-            )
+            .background(Color(0xFFEEEEEE))
     ) {
         // Top app bar with back button
         CenterAlignedTopAppBar(
-            title = { Text(text = type, fontSize = 20.sp, fontWeight = FontWeight.Medium) },
+            title = {
+                Text(
+                    text = type,
+                    fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold
+                )
+                    },
             navigationIcon = {
                 IconButton(onClick = onBackPressed) {
                     Icon(
@@ -99,7 +99,8 @@ fun ArticleDetailScreen(
             ) {
                 Text(
                     text = article.title,
-                    fontSize = 20.sp,
+                    fontSize = 26.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -107,8 +108,8 @@ fun ArticleDetailScreen(
 
                 Text(
                     text = article.description,
-                    fontSize = 16.sp,
-                    color = Color.DarkGray,
+                    fontSize = 18.sp,
+                    color = Color.Gray,
                     lineHeight = 24.sp
                 )
 
@@ -117,9 +118,10 @@ fun ArticleDetailScreen(
                 // Read More button
                 // Replace the Button with a simple Text component
                 Text(
-                    text = "Read More",
+                    text = "Read More....",
                     color = Color(0xFFDD3825),
-                    fontWeight = FontWeight.Bold,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
                         .clickable(onClick = onReadMore)
                         .padding(vertical = 12.dp)

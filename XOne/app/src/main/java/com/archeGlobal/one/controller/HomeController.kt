@@ -157,7 +157,7 @@ class HomeController(
                     android.widget.Toast.LENGTH_SHORT
                 ).show()
             }
-            "holiday calendar" -> navigator.navigateToHolidayCalendar()
+            "calendar" -> navigator.navigateToHolidayCalendar()
             "client calendar" -> {
                 Log.d("HomeController", "Client Calendar service not available yet")
                 android.widget.Toast.makeText(
@@ -217,6 +217,18 @@ class HomeController(
                 context.startActivity(intent)
             }
             "sap" -> navigator.navigateToSAP()
+            "about us", "aboutus" -> {
+                Log.d("HomeController", "Navigating to About Us")
+                navigator.navigateToAboutUs()
+            }
+            "corevalues", "core values" -> {
+                Log.d("HomeController", "Navigating to Core Values")
+                navigator.navigateToCoreValues()
+            }
+            "vision" -> {
+                Log.d("HomeController", "Navigating to Vision")
+                navigator.navigateToVision()
+            }
             "communique" -> {
                 Log.d("HomeController", "Navigating to Communique directly")
                 navigator.navigateToCommunique()

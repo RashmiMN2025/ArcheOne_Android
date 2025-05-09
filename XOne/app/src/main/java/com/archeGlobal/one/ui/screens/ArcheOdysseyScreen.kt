@@ -23,6 +23,7 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.ArcheOdysseyController
 import com.archeGlobal.one.VisionActivity
 import android.util.Log
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,19 +44,20 @@ fun ArcheOdysseyScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(10.dp)
         ) {
             // Top Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 35.dp) // Moved heading and back arrow slightly down
+                    .padding(top = 40.dp, bottom = 10.dp) // Moved heading and back arrow slightly down
             ) {
                 IconButton(
                     onClick = onBackPressed,
                     modifier = Modifier
                         .size(48.dp)
                         .align(Alignment.CenterStart)
+                        .padding(start = 10.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
@@ -68,55 +70,62 @@ fun ArcheOdysseyScreen(
                     text = "Arche Odyssey",
                     color = Color.Black,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-
-            // Add tiles in a 2x2 matrix
-            Column(
+            // Centered Tiles
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopCenter // Center the tiles in the available space
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                // Add tiles in a 2x2 matrix
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalAlignment = Alignment . CenterHorizontally
                 ) {
-                    Tile(
-    heading = "Core Values",
-    text = "Our guiding principles",
-    icon = painterResource(id = R.drawable.core_values),
-    modifier = Modifier.weight(1f),
-    onClick = { controller.onCoreValuesClick() } // Trigger navigation
-)
-                    Tile(
-                        heading = "Vision",
-                        text = "Future aspirations",
-                        icon = painterResource(id = R.drawable.vision),
-                        modifier = Modifier.weight(1f),
-                        onClick = { controller.onVisionClick() }
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Tile(
-                        heading = "Communique",
-                        text = "Latest updates",
-                        icon = painterResource(id = R.drawable.communique),
-                        modifier = Modifier.weight(1f),
-                        onClick = { controller.onCommuniqueClick() }
-                    )
-                    Tile(
-                        heading = "About Us",
-                        text = "Who we are & what we stand for",
-                        icon = painterResource(id = R.drawable.about_us),
-                        modifier = Modifier.weight(1f),
-                        onClick = { controller.onAboutUs() }
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Tile(
+                            heading = "Core Values",
+                            text = "Our guiding principles",
+                            icon = painterResource(id = R.drawable.core_values),
+                            modifier = Modifier.weight(1f),
+                            onClick = { controller.onCoreValuesClick() } // Trigger navigation
+                        )
+                        Tile(
+                            heading = "Vision",
+                            text = "Future aspirations",
+                            icon = painterResource(id = R.drawable.vision),
+                            modifier = Modifier.weight(1f),
+                            onClick = { controller.onVisionClick() }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Tile(
+                            heading = "Communique",
+                            text = "Latest updates",
+                            icon = painterResource(id = R.drawable.communique),
+                            modifier = Modifier.weight(1f),
+                            onClick = { controller.onCommuniqueClick() }
+                        )
+                        Tile(
+                            heading = "About Us",
+                            text = "Who we are & what we stand for",
+                            icon = painterResource(id = R.drawable.about_us),
+                            modifier = Modifier.weight(1f),
+                            onClick = { controller.onAboutUs() }
+                        )
+                    }
                 }
             }
         }
@@ -127,7 +136,7 @@ fun ArcheOdysseyScreen(
 fun Tile(heading: String, text: String, icon: Painter, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     Box(
         modifier = modifier
-            .size(width = 120.dp, height = 200.dp) // Explicit width and height for tiles
+            .size(width = 80.dp, height = 180.dp) // Explicit width and height for tiles
             .shadow(4.dp, shape = MaterialTheme.shapes.medium, clip = false) // Adjusted shadow to appear outside
             .background(Color.White, shape = MaterialTheme.shapes.medium)
             .clickable(enabled = onClick != null) {
@@ -138,27 +147,32 @@ fun Tile(heading: String, text: String, icon: Painter, modifier: Modifier = Modi
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier.padding(4.dp)
+            modifier = modifier.padding(6.dp)
         ) {
             Icon(
                 painter = icon,
                 contentDescription = "$heading Icon",
                 tint = Color.Black,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(42.dp)
             )
+            Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = heading,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center
             )
+            Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = text,
-                fontSize = 12.sp,
+                fontSize = 14.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 0.dp).fillMaxWidth(), // Removed space between text lines
+                modifier = Modifier.padding(top = 0.dp).fillMaxWidth(0.9f), // Removed space between text lines
                 lineHeight = 16.sp // Ensures compact line spacing
             )
         }

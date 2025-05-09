@@ -7,6 +7,7 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -28,7 +29,12 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.CommuniqueModel
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import com.archeGlobal.one.ui.components.UniversalLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -42,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 private const val THUMBNAIL_WIDTH = 300 // unified thumbnail width for both remote and PDF
 
@@ -77,6 +84,15 @@ fun CommuniqueScreen(
         }
     }
 
+    var searchQuery by remember { mutableStateOf("") } // State for search query
+
+    // Filter communiques based on the search query
+    val filteredCommuniques = remember(searchQuery) {
+        model.communiques.filter { communique ->
+            communique.communiqueName.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -91,8 +107,10 @@ fun CommuniqueScreen(
                     ) {
                         Text(
                             text = "Communique",
-                            style = MaterialTheme.typography.titleLarge,
                             color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -107,21 +125,105 @@ fun CommuniqueScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
-            
-            if (!isLoading) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize()
+
+             // Search Bar
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                color = Color.Transparent
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
                 ) {
-                    items(model.communiques) { communique ->
-                        CommuniqueCard(
-                            communique = communique,
-                            preloadedThumbnail = preloadedThumbnails[communique.filePath],
-                            onClick = { onCommuniqueClick(communique) }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(24.dp)
                         )
+
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp),
+                            singleLine = true,
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            ),
+                            decorationBox = { innerTextField ->
+                                Box {
+                                    if (searchQuery.isEmpty()) {
+                                        Text(
+                                            text = "Search communiques...",
+                                            color = Color.Gray.copy(alpha = 0.6f),
+                                            fontSize = 16.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+            
+            // Communique List
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                if (filteredCommuniques.isEmpty()) {
+                    // Show a message if no communiques match the search query
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No communiques found",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Gray
+                        )
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(filteredCommuniques) { communique ->
+                            CommuniqueCard(
+                                communique = communique,
+                                preloadedThumbnail = communiqueThumbnailCache[communique.filePath],
+                                onClick = { onCommuniqueClick(communique) }
+                            )
+                        }
                     }
                 }
             }
@@ -156,55 +258,62 @@ private fun CommuniqueCard(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .width(160.dp)
+            .padding(8.dp) // Add padding around the card
     ) {
-        Card(
-            onClick = onClick,
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.85f), // Increased height for larger preview
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            shape = RoundedCornerShape(16.dp)
+                .width(160.dp)
+                .aspectRatio(0.7f) // Adjust aspect ratio for the card
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Card(
+                onClick = onClick,
+                modifier = Modifier
+                    .fillMaxSize(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                if (hasPreview) {
-                    // Remote preview using Coil's AsyncImage
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(communique.previewUrl)
-                            .crossfade(true)
-                            .size(THUMBNAIL_WIDTH)
-                            .build(),
-                        placeholder = painterResource(id = R.drawable.ic_policy_default),
-                        error = painterResource(id = R.drawable.ic_policy_default),
-                        contentDescription = communique.communiqueName,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(32.dp),
-                            color = MaterialTheme.colorScheme.primary
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (hasPreview) {
+                        // Remote preview using Coil's AsyncImage
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(communique.previewUrl)
+                                .crossfade(true)
+                                .size(THUMBNAIL_WIDTH)
+                                .build(),
+                            placeholder = painterResource(id = R.drawable.ic_policy_default),
+                            error = painterResource(id = R.drawable.ic_policy_default),
+                            contentDescription = communique.communiqueName,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        thumbnail?.let { bmp ->
-                            Image(
-                                bitmap = bmp.asImageBitmap(),
-                                contentDescription = communique.communiqueName,
-                                contentScale = ContentScale.FillBounds,
-                                modifier = Modifier.fillMaxSize()
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(32.dp),
+                                color = MaterialTheme.colorScheme.primary
                             )
-                        } ?: Icon(
-                            painter = painterResource(id = R.drawable.ic_policy_default),
-                            contentDescription = null,
-                            tint = Color.DarkGray,
-                            modifier = Modifier.size(48.dp)
-                        )
+                        } else {
+                            thumbnail?.let { bmp ->
+                                Image(
+                                    bitmap = bmp.asImageBitmap(),
+                                    contentDescription = communique.communiqueName,
+                                    contentScale = ContentScale.FillBounds,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } ?: Icon(
+                                painter = painterResource(id = R.drawable.ic_policy_default),
+                                contentDescription = null,
+                                tint = Color.DarkGray,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -212,13 +321,16 @@ private fun CommuniqueCard(
 
         Text(
             text = communique.communiqueName,
-            style = MaterialTheme.typography.bodyMedium,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
             color = Color.Black,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
+            maxLines = 2,
+            lineHeight = 16.sp,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 4.dp)
+                .padding(top = 8.dp)
         )
     }
 }

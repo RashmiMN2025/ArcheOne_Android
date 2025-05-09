@@ -294,23 +294,16 @@ private fun LocationCard(
             )
             
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = location.address.substringBefore(","),
-                fontSize = 14.sp,
+                text = location.address,
+                fontSize = 15.sp,
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
-                color = TextSecondary
-            )
-            Text(
-                text = location.address.substringAfter(",").trim(),
-                fontSize = 14.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Normal,
                 color = TextSecondary
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             
             Row(
                 verticalAlignment = Alignment.Top,
@@ -320,14 +313,14 @@ private fun LocationCard(
                     text = "Email:",
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Normal,
                     color = TextSecondary
                 )
                 Text(
                     text = location.email,
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Normal,
                     color = TextSecondary,
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier.clickable(
@@ -425,12 +418,12 @@ private fun LocationCard(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed),
-                    modifier = Modifier.width(160.dp)
+                    modifier = Modifier.width(180.dp)
                 ) {
                     Text(
                         text = "View Location",
                         color = Color.White,
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium
                     )
@@ -514,7 +507,7 @@ private fun StateList(
                                     painter = painterResource(id = R.drawable.building),
                                     contentDescription = null,
                                     tint = PrimaryRed,
-                                    modifier = Modifier.size(50.dp)
+                                    modifier = Modifier.size(45.dp)
                                 )
                             }
                             
@@ -536,9 +529,11 @@ private fun StateList(
                                 
                                 Text(
                                     text = location.address,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
                                     color = TextSecondary,
-                                    lineHeight = 18.sp
+                                    lineHeight = 20.sp
                                 )
                             }
                             
@@ -547,7 +542,7 @@ private fun StateList(
                                 imageVector = Icons.Default.KeyboardArrowRight,
                                 contentDescription = null,
                                 tint = Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(30.dp)
                             )
                         }
                     }

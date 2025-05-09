@@ -66,7 +66,7 @@ class CommuniqueController(
         context.startActivity(intent)
     }
 
-    fun onBackClick() {
+    fun onBackPressed() {
         navigator.navigateToHome()
     }
     

@@ -114,7 +114,7 @@ fun SOSScreen(
                                 modifier = Modifier.padding(bottom = 20.dp)
                             )
 
-                            SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("1234567890") })
+                            SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("7397768656")})
                             SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
                             SOSButton(
                                 text = "View Emergency Contact",

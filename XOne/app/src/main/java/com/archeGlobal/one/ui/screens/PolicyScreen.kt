@@ -5,10 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.webkit.ConsoleMessage
-import android.webkit.WebChromeClient
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
