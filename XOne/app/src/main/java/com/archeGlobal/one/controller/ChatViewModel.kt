@@ -19,6 +19,7 @@ class ChatViewModel : ViewModel() {
     val messages = mutableStateListOf<Message>()
     val inputText = mutableStateOf("")
     val isTyping = mutableStateOf(false)
+    private var lastUserQuestion: String = ""
     
     init {
         loadMessages()
@@ -27,13 +28,16 @@ class ChatViewModel : ViewModel() {
     fun sendMessage(text: String) {
         if (text.trim().isEmpty()) return
 
+        // Store the user's question for inclusion in the response
+        lastUserQuestion = text
+
         // Add user message
         val userMessage = Message(
             content = text,
             isUser = true,
             timestamp = Date()
         )
-        messages.add(Message(content = text, isUser = true))
+        messages.add(userMessage)
 
         // Clear input field
         inputText.value = ""
@@ -52,7 +56,7 @@ class ChatViewModel : ViewModel() {
             val showFAQs = response == "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
 
             // Add only one bot message
-            addBotMessage(response, showFAQs = showFAQs)
+            addBotMessage(response, showFAQs = showFAQs, includeUserQuestion = true)
 
             // Hide typing indicator
             isTyping.value = false
@@ -61,6 +65,8 @@ class ChatViewModel : ViewModel() {
     
     fun selectFAQ(question: String) {
         // First add the selected question as a user message
+        lastUserQuestion = question
+        
         val userMessage = Message(
             content = question,
             isUser = true,
@@ -80,9 +86,9 @@ class ChatViewModel : ViewModel() {
             
             // Add the answer as a bot message
             if (faqItem != null) {
-                addBotMessage(faqItem.answer)
+                addBotMessage(faqItem.answer, includeUserQuestion = true)
             } else {
-                addBotMessage("I couldn't find information about that. Please try asking something else.")
+                addBotMessage("I couldn't find information about that. Please try asking something else.", includeUserQuestion = true)
             }
             
             // Hide typing indicator
@@ -150,9 +156,17 @@ class ChatViewModel : ViewModel() {
         return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
     }
     
-    private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false) {
+    private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
+        val botMessageContent = if (includeUserQuestion && lastUserQuestion.isNotEmpty()) {
+            // Format: "user question text" \n\n answer text
+            // This allows the MessageBubble component to identify and style it
+            "You asked: \"$lastUserQuestion\"\n\n$text"
+        } else {
+            text
+        }
+        
         val botMessage = Message(
-            content = text,
+            content = botMessageContent,
             isUser = false,
             timestamp = Date(),
             showMoreCategories = showMoreCategories,

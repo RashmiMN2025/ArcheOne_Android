@@ -762,7 +762,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "Finance", "SAP", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -805,6 +805,7 @@ private fun AppIcon(
                                 "archeodyssey" -> R.drawable.arche_odyssey
                                 "zinghr" -> R.drawable.zinghr
                                 "ideavault" -> R.drawable.idea_vault
+                                "pulse" -> R.drawable.pulse
                                 else -> R.drawable.mydocuments
                             }
                         ),

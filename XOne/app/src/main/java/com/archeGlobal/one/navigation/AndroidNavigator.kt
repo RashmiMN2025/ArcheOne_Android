@@ -35,23 +35,20 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         } else {
             activity.startActivity(intent)
         }
-    }
-
-    private fun openWebView(url: String, title: String) {
+    }    private fun openWebView(url: String, title: String) {
         val intent = Intent(activity, WebViewActivity::class.java).apply {
             putExtra("fileUrl", url)
             putExtra("title", title)
         }
         startActivity(intent)
     }
-
+    
     override fun openPulseLogin() {
-        startActivity(
-            Intent(Intent.ACTION_VIEW, Uri.parse("https://pulse.netcon.in/login")).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            },
-            false
-        )
+        val intent = Intent(activity, WebViewActivity::class.java).apply {
+            putExtra("fileUrl", "https://pulse.netcon.in/onboarding")
+            putExtra("title", "Pulse")
+        }
+        startActivity(intent)
     }
 
     override fun navigateToLoginScreen() {
