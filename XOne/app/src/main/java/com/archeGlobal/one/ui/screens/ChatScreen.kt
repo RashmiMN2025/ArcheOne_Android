@@ -265,7 +265,6 @@ fun MessageBubble(
                     Column {
                         // Check if the message contains "I found multiple relevant questions"
                         if (message.content.startsWith("I found multiple relevant questions")) {
-
                             // Display FAQ list items
                             message.content.split("\n").forEach { line ->
                                 if (line.startsWith("•")) {
@@ -284,7 +283,7 @@ fun MessageBubble(
                                             modifier = Modifier.weight(1f)
                                         )
 
-                                        // Red arrow on the right (like in iOS)
+                                        // Red arrow on the right
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_arrow_forward),
                                             contentDescription = "Arrow",
@@ -298,6 +297,64 @@ fun MessageBubble(
                                         color = Color.Black,
                                         modifier = Modifier.padding(vertical = 4.dp)
                                     )
+                                }
+                            }
+                        } else if (message.content.startsWith("You asked:")) {
+                            // Handle messages with the user question included
+                            val parts = message.content.split("\n\n", limit = 2)
+                            
+                            // Get the question part and remove the "You asked:" prefix and quotes
+                            val questionText = parts[0].removePrefix("You asked: ")
+                                .trim()
+                                .removeSurrounding("\"")
+                            
+                            // Display question with the same style as the answer text
+                            Text(
+                                text = questionText,
+                                color = Color.Black,
+                                fontSize = 16.sp,
+                                lineHeight = 20.sp,
+                                modifier = Modifier.padding(bottom = 16.dp) // Increased spacing here from 8.dp to 16.dp
+                            )
+                            
+                            // Display the answer (no divider)
+                            if (parts.size > 1) {
+                                Text(
+                                    text = parts[1],
+                                    color = Color.Black,
+                                    fontSize = 16.sp,
+                                    lineHeight = 20.sp
+                                )
+                            }
+                            
+                            // Append FAQ list if `showFAQs` is true
+                            if (message.showFAQs) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                // Display FAQ categories
+                                val faqsToShow = if (message.showMoreCategories) chatData.faqs else chatData.faqs.take(5)
+                                
+                                faqsToShow.forEach { faq ->
+                                    FAQQuestionRow(question = faq.title) {
+                                        viewModel.selectFAQ(faq.question)
+                                    }
+                                }
+                                
+                                // Show "Show More" button if not all FAQs are displayed
+                                if (!message.showMoreCategories && chatData.faqs.size > 5) {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        Text(
+                                            text = "Show More",
+                                            color = Color(0xFFDD3825),
+                                            fontSize = 14.sp,
+                                            modifier = Modifier
+                                                .clickable { viewModel.loadMoreFAQs(message.id) }
+                                                .padding(8.dp)
+                                        )
+                                    }
                                 }
                             }
                         } else {
@@ -320,7 +377,6 @@ fun MessageBubble(
                                     FAQQuestionRow(question = faq.title) {
                                         viewModel.selectFAQ(faq.question)
                                     }
-                                   // Spacer(modifier = Modifier.height(8.dp)
                                 }
 
                                 // Show "Show More" button if not all FAQs are displayed
@@ -358,14 +414,14 @@ fun MessageBubble(
                 }
             }
         }
-
+        
         // Timestamp
         Text(
             text = formatTime(message.timestamp),
             fontSize = 10.sp,
             color = Color(0xFFFFFAF5),
             modifier = Modifier.padding(top = 4.dp, start = if (message.isUser) 0.dp else 8.dp, end = if (!message.isUser) 0.dp else 8.dp)
-        )
+    )
     }
 }
 

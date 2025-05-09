@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
 import android.view.View
+import androidx.activity.compose.BackHandler
 import androidx.core.graphics.applyCanvas
 import androidx.core.view.drawToBitmap
 import kotlinx.coroutines.launch
@@ -56,6 +57,16 @@ fun GreetingsScreen(
     
     // Define cardBoxRef at this scope so it's accessible throughout the function
     val cardBoxRef = remember { mutableStateOf<View?>(null) }
+    
+    // Add BackHandler to handle back swipe gesture
+    BackHandler {
+        // Use the same back navigation logic as the back button
+        if (controller.model.selectedCategory != null) {
+            controller.onBackPressed()
+        } else {
+            onBackPressed()
+        }
+    }
     
     Box(
         modifier = Modifier
@@ -93,9 +104,14 @@ fun GreetingsScreen(
                     IconButton(
                         onClick = { 
                             android.util.Log.d("GreetingsScreen", "Back button pressed")
-                            onBackPressed() // Call the passed lambda
-                        },
-                        modifier = Modifier.clickable { onBackPressed() } // Also call it here
+                            // Check if we're in a category view. If yes, go back to main categories,
+                            // otherwise navigate to home screen
+                            if (controller.model.selectedCategory != null) {
+                                controller.onBackPressed()
+                            } else {
+                                onBackPressed()
+                            }
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,

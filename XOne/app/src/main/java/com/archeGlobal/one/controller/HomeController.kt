@@ -228,8 +228,7 @@ class HomeController(
             "vision" -> {
                 Log.d("HomeController", "Navigating to Vision")
                 navigator.navigateToVision()
-            }
-            "communique" -> {
+            }            "communique" -> {
                 Log.d("HomeController", "Navigating to Communique directly")
                 navigator.navigateToCommunique()
             }
@@ -240,6 +239,10 @@ class HomeController(
             "know your org" -> {
                 Log.d("HomeController", "Navigating to Arche Odyssey via Know Your Org")
                 navigator.navigateToArcheOdyssey()
+            }
+            "pulse" -> {
+                Log.d("HomeController", "Navigating to Pulse")
+                navigator.openPulseLogin()
             }
             else -> {
                 // Default case for any non-handled services
