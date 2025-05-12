@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.UserDocumentsController
 import com.archeGlobal.one.network.UserDocument
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun UserDocumentsScreen(
@@ -60,7 +63,7 @@ fun UserDocumentsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 15.dp, bottom = 10.dp)
+                    .padding(top = 35.dp, bottom = 10.dp)
             ) {
                 IconButton(onClick = onBackPressed) {
                     Icon(
@@ -79,10 +82,10 @@ fun UserDocumentsScreen(
                         text = "Documents",
                         color = Color.Black,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold
                     )
                 }
-                
                 // Empty box for symmetry
                 Box(modifier = Modifier.width(48.dp))
             }
@@ -139,7 +142,42 @@ fun UserDocumentsScreen(
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp),
                                 color = Color.LightGray,
-                                thickness = 0.5.dp
+                                thickness = 1.5.dp
+                            )
+                        }
+
+                    }
+
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        color = Color.LightGray,
+                        thickness = 1.5.dp
+                    )
+
+                    // Important Note Section
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically, // Align icon and text in one line
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 2.dp)
+                        ) {
+                            Text(
+                                text = "Note: You can only upload PDF files. The file size limit is 5MB.",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                lineHeight = 17.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                     }
@@ -159,7 +197,7 @@ fun DocumentItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(20.dp)
     ) {
         // Document row with icon and name
         Row(
@@ -213,6 +251,8 @@ fun DocumentItem(
                         text = "View",
                         modifier = Modifier.padding(start = 8.dp),
                         fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
                 }
@@ -238,10 +278,13 @@ fun DocumentItem(
                         text = "Download",
                         modifier = Modifier.padding(start = 8.dp),
                         fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
                 }
             }
         }
+
     }
 } 
