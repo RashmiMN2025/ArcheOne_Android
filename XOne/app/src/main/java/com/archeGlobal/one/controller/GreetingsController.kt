@@ -31,6 +31,34 @@ class GreetingsController(
     // Captured card screenshot bitmap
     private var cardScreenshot: Bitmap? = null
 
+    // Map of category to default message
+    private val defaultMessages = mapOf(
+        "Anniversary" to "Dear friend, \nWishing you many more years of happiness together! \nMay your love continue to grow stronger with each passing year. Cheers to the memories you've made and the ones yet to come!",
+        "Birthday" to "Dear one, \nHope your birthday is as special as you are! \nMay this day bring you joy, laughter, and all the wonderful moments that make life truly meaningful. Enjoy every minute of your celebration!",
+        "Career Milestone" to "Dear colleague, \nCongratulations on your incredible journey! \nYour hard work, dedication, and achievements are an inspiration to all. May you continue to reach new heights in your career!",
+        "Congratulations" to "Dear friend, \nGreat job! Wishing you continued success and all the best in the exciting journey ahead. \nMay your accomplishments inspire even greater achievements in the future.",
+        "Diwali" to "Dear all, \nMay your Diwali be full of lights and laughter. \nMay this festival of joy bring peace, prosperity, and happiness into your home and life. Enjoy the festivities with your loved ones!",
+        "Get Well Soon" to "Dear one, \nSending warm wishes for a speedy recovery. \nMay each day bring you closer to feeling stronger and healthier. Take care, and we hope to see you back to your best soon!",
+        "Baby" to "Dear parents, \nCongratulations on your new bundle of joy! \nWishing your family endless love, joy, and happiness as you welcome this little one into your lives. Cherish every special moment!",
+        "Christmas" to "Dear all, \nMay this Christmas bring you peace, love, and joy. \nMay your heart be filled with happiness as you celebrate with those who mean the most to you. Here's to a season full of blessings!",
+        "Condolences" to "Dear friend, \nOur deepest sympathies are with you during this time. \nMay you find comfort in the loving memories you shared and strength in the support of those around you. Our thoughts are with you.",
+        "Easter" to "Dear all, \nWishing you a joyful and blessed Easter. \nMay this special day bring renewal to your spirit, hope to your heart, and peace to your soul. Enjoy the time with loved ones!",
+        "Farewell" to "Dear friend, \nWishing you all the best on your new journey. \nMay this new chapter bring you fulfillment, happiness, and countless wonderful experiences. You will be missed, but always remembered!",
+        "Friendship" to "Dear friend, \nHere's to a friendship that lasts a lifetime! \nMay our bond continue to grow stronger, filled with laughter, support, and unforgettable memories. Cheers to many more years of friendship!",
+        "Halloween" to "Dear all, \nWishing you a spook-tacular Halloween! \nMay your night be filled with fun, laughter, and a few thrilling surprises. Enjoy the festive spirit and stay spooky!",
+        "Housewarming" to "Dear ones, \nWarmest wishes for your new home! \nMay your new space be filled with laughter, love, and warmth. Here's to many happy moments as you settle into your beautiful new home!",
+        "Marriage" to "Dear couple, \nWishing you a lifetime of love and happiness. \nMay your marriage be filled with joy, understanding, and endless support. Here's to building a beautiful future together!",
+        "NewYear" to "Dear all, \nHappy New Year! \nMay this year bring new joys, success, and opportunities. May every day be filled with happiness, growth, and the fulfillment of your dreams.",
+        "Retirement" to "Dear colleague, \nWishing you a happy and fulfilling retirement! \nEnjoy the well-deserved rest and the freedom to pursue your passions. Here's to a new adventure in this exciting next chapter of life!",
+        "ThankYou" to "Dear friend, \nThank you for everything! \nYour kindness and generosity have made a lasting impact. We are truly grateful for your support and wish you all the best in everything you do.",
+        "Valentines" to "Dear all, \nWishing you a Valentine's Day filled with love and happiness. \nMay you be surrounded by those who make your heart smile, and may this day remind you of how truly loved you are."
+    )
+    
+    // Get default message for category
+    private fun getDefaultMessageForCategory(category: String): String {
+        return defaultMessages[category] ?: "Wishing you all the best!"
+    }
+
     init {
         loadGreetings()
     }
@@ -66,9 +94,7 @@ class GreetingsController(
                 }
             }
         }
-    }
-
-    fun onCategorySelected(category: String) {
+    }    fun onCategorySelected(category: String) {
         // When a category is selected, also select the first greeting in that category
         val greetingsInCategory = model.categories[category]
         val firstGreetingInCategory = greetingsInCategory?.firstOrNull()
@@ -80,25 +106,31 @@ class GreetingsController(
         // Clear any existing card screenshot when changing category
         cardScreenshot = null
         
-        // Update the model - clear the message when changing category
+        // Get default message for this category
+        val defaultMessage = getDefaultMessageForCategory(category)
+        
+        // Update the model with category-specific default message
         model = model.copy(
             selectedCategory = category,
             selectedGreeting = firstGreetingInCategory,
-            message = "" // Reset the message when changing category
+            message = defaultMessage
         )
-    }
-
-    fun onGreetingSelected(url: String) {
+    }    fun onGreetingSelected(url: String) {
         // Log selection
         Log.d("GreetingsController", "Selected greeting: $url")
         
         // Clear any existing card screenshot when changing greeting
         cardScreenshot = null
         
-        // Update model with selected greeting and reset message
+        // Get current category and preserve the message when changing greeting within same category
+        val currentCategory = model.selectedCategory
+        val currentMessage = model.message
+        
+        // Update model with selected greeting while preserving the message
         model = model.copy(
             selectedGreeting = url,
-            message = "" // Reset the message when changing greeting
+            // Keep the existing message to preserve user's work when switching between cards
+            message = currentMessage
         )
     }
 

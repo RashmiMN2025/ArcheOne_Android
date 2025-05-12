@@ -43,6 +43,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
 import android.view.View
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.core.graphics.applyCanvas
 import androidx.core.view.drawToBitmap
 import kotlinx.coroutines.launch
@@ -51,12 +53,12 @@ import kotlinx.coroutines.launch
 fun GreetingsScreen(
     controller: GreetingsController,
     onBackPressed: () -> Unit // Add this parameter
-) {
-    // Get the status bar padding to avoid overlapping with front camera
+) {    // Get the status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     
     // Define cardBoxRef at this scope so it's accessible throughout the function
     val cardBoxRef = remember { mutableStateOf<View?>(null) }
+      // Default messages are now handled by the controller based on category selection
     
     // Add BackHandler to handle back swipe gesture
     BackHandler {
@@ -67,8 +69,7 @@ fun GreetingsScreen(
             onBackPressed()
         }
     }
-    
-    Box(
+      Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -227,14 +228,11 @@ fun GreetingsScreen(
                             }
                         }
                     }
-                    
-                    // Significantly increased spacing above the card
-                    Spacer(modifier = Modifier.height(40.dp))
+                      // Significantly increased spacing between selector and card
+                    Spacer(modifier = Modifier.height(140.dp))
                     
                     // Selected greeting card (larger view)
                     controller.model.selectedGreeting?.let { selectedGreeting ->
-                        // Additional space above the card
-                        Spacer(modifier = Modifier.height(24.dp))
 
                         // Force recomposition of the main card when the selected greeting changes
                         key(selectedGreeting) {
@@ -314,26 +312,26 @@ fun GreetingsScreen(
                                 }
                             }
                         }
-                        // --- END: Add key and ref for screenshot capture ---
-
-                        // Increased space below the card
-                        Spacer(modifier = Modifier.height(24.dp))
+                        // --- END: Add key and ref for screenshot capture ---                        // Increased space below the card
+                        Spacer(modifier = Modifier.height(40.dp))
                     }
                     
                     // Additional spacing before the "Add Message" section
-                    Spacer(modifier = Modifier.height(34.dp))
+                    Spacer(modifier = Modifier.height(110.dp))
                     
                     // Message input field
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                    ) {
+                    ) {                        // Simple header for message section - Templates dropdown removed
                         Text(
                             text = "Add Message",
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
                         )
                         
                         // Text field with rounded corners and proper styling like in the image
