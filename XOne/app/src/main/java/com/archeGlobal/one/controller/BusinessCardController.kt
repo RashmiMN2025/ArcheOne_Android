@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import androidx.core.content.FileProvider
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.BusinessCardModel
-import com.archeGlobal.one.navigation.AndroidNavigator
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException

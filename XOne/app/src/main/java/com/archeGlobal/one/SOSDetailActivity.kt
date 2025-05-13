@@ -5,7 +5,6 @@ import android.content.Intent
 import com.archeGlobal.one.model.SosBlogModel
 import androidx.activity.compose.setContent
 import com.archeGlobal.one.ui.screens.SOSDetailScreen
-import com.archeGlobal.one.navigation.AndroidNavigator
 import android.os.Build
 
 class SOSDetailActivity : ComponentActivity() {
