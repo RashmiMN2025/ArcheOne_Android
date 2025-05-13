@@ -11,6 +11,7 @@ import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.navOptions
 import com.archeGlobal.one.*
 import com.archeGlobal.one.ui.screens.CoreValuesActivity
+import com.archeGlobal.one.ui.screens.IdeaVaultActivity
 import java.net.URLEncoder
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
@@ -289,7 +290,9 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         } else {
             startActivity(Intent(activity, ChatActivity::class.java))
         }
-    }    override fun navigateToProfile() {
+    }
+
+    override fun navigateToProfile() {
         navigate("profile")
     }
     
@@ -303,6 +306,11 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     
     override fun navigateToEmergencyContact() {
         navigate("emergencycontact")
+    }
+
+    override fun navigateToIdeaVault() {
+        val intent = Intent(activity, IdeaVaultActivity::class.java)
+        activity.startActivity(intent)
     }
     
     override fun navigateToPDFViewer(pdfUrl: String, title: String) {
