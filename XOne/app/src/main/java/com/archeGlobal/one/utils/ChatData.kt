@@ -18,7 +18,7 @@ class ChatData private constructor() {
         FAQItem(
             title = "Technical Issues",
             question = "What should I do if I encounter technical issues?",
-            answer = "Restart the app, clear cache, or update to the latest version. If the issue persists, contact support@example.com."
+            answer = "Restart the app, clear cache, or update to the latest version. If the issue persists, contact androidadmin@netcon.co.in."
         ),
         
         FAQItem(

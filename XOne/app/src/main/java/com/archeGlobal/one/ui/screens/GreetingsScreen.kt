@@ -182,41 +182,45 @@ fun GreetingsScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     val filteredCategories = controller.getFilteredCategories()
-                    items(filteredCategories) { category ->
-                        GreetingCategoryCard(
+                    items(filteredCategories) { category ->                        GreetingCategoryCard(
                             category = category,
                             imageUrl = controller.model.categories[category]?.firstOrNull() ?: "",
-                            onClick = { controller.onCategorySelected(category) }
+                            onClick = { 
+                                android.util.Log.d("GreetingsScreen", "Category card clicked: $category")
+                                controller.onCategorySelected(category)
+                            }
                         )
                     }
-                }
-            } else {
+                }            } else {
                 // Detailed greeting view layout that matches the reference image
+                // Added verticalScroll to make the content scrollable
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(scrollState)
                         .padding(16.dp)
                 ) {
                     // Horizontal row of smaller greeting thumbnails
                     val greetings = controller.model.categories[controller.model.selectedCategory] ?: emptyList()
-                    val selectedGreeting = controller.model.selectedGreeting
-                    
+                    val currentSelectedGreeting = controller.model.selectedGreeting // Renamed from selectedGreeting to avoid shadowing
+
                     // Debug logging to verify selections are working
                     android.util.Log.d("GreetingsScreen", "Current category: ${controller.model.selectedCategory}")
-                    android.util.Log.d("GreetingsScreen", "Selected greeting: $selectedGreeting")
+                    android.util.Log.d("GreetingsScreen", "Selected greeting: $currentSelectedGreeting")
                     android.util.Log.d("GreetingsScreen", "Available greetings: ${greetings.size}")
-                    
+
                     // Force recomposition when selection changes by using a key
-                    key(selectedGreeting) {
+                    key(currentSelectedGreeting) { // Use the renamed variable
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             items(greetings) { greetingUrl ->
-                                val isSelected = greetingUrl == selectedGreeting
+                                val isSelected = greetingUrl == currentSelectedGreeting // Use the renamed variable
                                 // Debug each item
                                 android.util.Log.d("GreetingsScreen", "Item URL: $greetingUrl, isSelected: $isSelected")
-                                
+
                                 GreetingThumbnailCard(
                                     imageUrl = greetingUrl,
                                     isSelected = isSelected,
@@ -228,14 +232,14 @@ fun GreetingsScreen(
                             }
                         }
                     }
-                      // Significantly increased spacing between selector and card
+                    // Reduced spacing between selector and card since we have scrolling now
                     Spacer(modifier = Modifier.height(140.dp))
-                    
+
                     // Selected greeting card (larger view)
-                    controller.model.selectedGreeting?.let { selectedGreeting ->
+                    controller.model.selectedGreeting?.let { greeting -> // Renamed inner selectedGreeting to greeting
 
                         // Force recomposition of the main card when the selected greeting changes
-                        key(selectedGreeting) {
+                        key(greeting) { // Use the new inner variable name
                             // --- BEGIN: Add key and ref for screenshot capture ---
                             Box(
                                 modifier = Modifier
@@ -245,28 +249,28 @@ fun GreetingsScreen(
                             ) {
                                 // Create a state to track if the image is loaded
                                 var isImageLoaded by remember { mutableStateOf(false) }
-                                
+
                                 AndroidView(
                                     factory = { ctx ->
                                         val imageView = android.widget.ImageView(ctx).apply {
                                             scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
                                             setBackgroundColor(android.graphics.Color.WHITE) // Set white background
                                         }
-                                        
+
                                         // Log the image loading attempt
-                                        android.util.Log.d("GreetingsScreen", "Loading image: $selectedGreeting")
-                                        
+                                        android.util.Log.d("GreetingsScreen", "Loading image: $greeting") // Use the new inner variable name
+
                                         coil.ImageLoader(ctx).enqueue(
                                             coil.request.ImageRequest.Builder(ctx)
-                                                .data(selectedGreeting)
+                                                .data(greeting) // Use the new inner variable name
                                                 .listener(
-                                                    onStart = { 
+                                                    onStart = {
                                                         isImageLoaded = false
-                                                        android.util.Log.d("GreetingsScreen", "Started loading: $selectedGreeting")
+                                                        android.util.Log.d("GreetingsScreen", "Started loading: $greeting") // Use the new inner variable name
                                                     },
                                                     onSuccess = { _, _ ->
                                                         isImageLoaded = true
-                                                        android.util.Log.d("GreetingsScreen", "Successfully loaded: $selectedGreeting")
+                                                        android.util.Log.d("GreetingsScreen", "Successfully loaded: $greeting") // Use the new inner variable name
                                                     },
                                                     onError = { _, error ->
                                                         android.util.Log.e("GreetingsScreen", "Error loading: ${error.throwable.message}")
@@ -284,10 +288,10 @@ fun GreetingsScreen(
                                     },
                                     // Use update callback to handle recompositions without recreating the view
                                     update = { view ->
-                                        android.util.Log.d("GreetingsScreen", "AndroidView update callback with: $selectedGreeting")
+                                        android.util.Log.d("GreetingsScreen", "AndroidView update callback with: $greeting") // Use the new inner variable name
                                         coil.ImageLoader(view.context).enqueue(
                                             coil.request.ImageRequest.Builder(view.context)
-                                                .data(selectedGreeting)
+                                                .data(greeting) // Use the new inner variable name
                                                 .target { drawable ->
                                                     view.setImageDrawable(drawable)
                                                     // Update reference after drawable is set
@@ -313,11 +317,10 @@ fun GreetingsScreen(
                             }
                         }
                         // --- END: Add key and ref for screenshot capture ---                        // Increased space below the card
-                        Spacer(modifier = Modifier.height(40.dp))
-                    }
+                        Spacer(modifier = Modifier.height(40.dp))                    }
                     
-                    // Additional spacing before the "Add Message" section
-                    Spacer(modifier = Modifier.height(110.dp))
+                    // Reduced spacing before the "Add Message" section since we have scrolling now
+                    Spacer(modifier = Modifier.height(100.dp))
                     
                     // Message input field
                     Column(
@@ -484,13 +487,14 @@ fun GreetingCategoryCard(
             .padding(horizontal = 4.dp), // Added padding to increase effective width slightly
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Image card with adjusted height
+    // Image card with adjusted height
         Card(
+            // onClick = onClick, // Removed this line
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)  // Reduced height from 250dp to 200dp
-                .clickable(onClick = onClick),
-            shape = RoundedCornerShape(12.dp),
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick), // Added .clickable modifier here
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
@@ -521,9 +525,10 @@ fun GreetingCard(
     onClick: () -> Unit
 ) {
     Card(
+        // onClick = onClick, // Removed this line
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick), // Added .clickable modifier here
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -549,15 +554,18 @@ fun GreetingThumbnailCard(
     onClick: () -> Unit
 ) {
     Card(
+        // onClick = onClick, // Removed this line
         modifier = Modifier
             .size(80.dp, 107.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(8.dp),
+            .border(
+                width = if (isSelected) 2.dp else 0.dp,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick), // Added .clickable modifier here
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp),
-        border = if (isSelected) 
-                    BorderStroke(2.dp, Color(0xFFDD3825)) 
-                else null
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(

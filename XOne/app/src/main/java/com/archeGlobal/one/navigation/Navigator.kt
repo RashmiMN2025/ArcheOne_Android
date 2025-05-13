@@ -26,6 +26,7 @@ interface Navigator {
     fun navigateToFinance()
     fun navigateToAdmin()
     fun navigateToHR()
+    fun navigateToHolidayOptions()
     fun navigateToHolidayCalendar()
     fun navigateToClientCalendar()
     fun navigateToGreetings()

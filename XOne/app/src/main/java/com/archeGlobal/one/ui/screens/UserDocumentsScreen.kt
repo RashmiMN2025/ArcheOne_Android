@@ -128,11 +128,10 @@ fun UserDocumentsScreen(
                     }
                     
                     // Display each document
-                    docsToShow.forEach { document ->
-                        DocumentItem(
+                    docsToShow.forEach { document ->                        DocumentItem(
                             document = document,
                             onViewClick = { controller.viewDocument(document) },
-                            onDownloadClick = { controller.downloadDocument(document) }
+                            onDownloadClick = { controller.uploadDocument(document) }
                         )
                         
                         // Add divider except after the last item
@@ -192,8 +191,8 @@ fun UserDocumentsScreen(
 fun DocumentItem(
     document: UserDocument,
     onViewClick: () -> Unit,
-    onDownloadClick: () -> Unit
-) {
+    onDownloadClick: () -> Unit  // Function name still uses downloadClick but now triggers upload
+){
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -257,8 +256,7 @@ fun DocumentItem(
                     )
                 }
             }
-            
-            // Download button with text
+              // Upload button with text
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 onClick = onDownloadClick
@@ -268,14 +266,14 @@ fun DocumentItem(
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_download),
-                        contentDescription = "Download",
+                        painter = painterResource(id = R.drawable.ic_upload),
+                        contentDescription = "Upload",
                         tint = Color(0xFFDD3825),
                         modifier = Modifier.size(20.dp)
                     )
                     
                     Text(
-                        text = "Download",
+                        text = "Upload",
                         modifier = Modifier.padding(start = 8.dp),
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,

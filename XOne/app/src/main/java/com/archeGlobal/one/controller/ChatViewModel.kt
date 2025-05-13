@@ -144,24 +144,26 @@ class ChatViewModel : ViewModel() {
                 }
 
                 return faqList.toString()
-            }
-
-            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
+            }            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
+            // Add proper spacing (two blank lines) between question and answer
             return relatedFAQs.joinToString("\n\n") { faq ->
-                "${faq.question}\n${faq.answer}"
+                "${faq.question}\n\n\n${faq.answer}"
             }
         }
 
         // Default response if no FAQs match
-        return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
-    }
-    
-    private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
-        val botMessageContent = if (includeUserQuestion && lastUserQuestion.isNotEmpty()) {
-            // Format: "user question text" \n\n answer text
-            // This allows the MessageBubble component to identify and style it
-            "You asked: \"$lastUserQuestion\"\n\n$text"
+        return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."    }      private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
+        // Check if user input is a single word (like "report")
+        val isSingleWord = lastUserQuestion.trim().split("\\s+".toRegex()).size == 1
+        
+        // Determine if the text already contains a formatted FAQ question and answer
+        val containsFormattedFAQ = text.contains("\n\n\n") // Check if it already has triple newline format
+          
+        val botMessageContent = if (includeUserQuestion && !isSingleWord && lastUserQuestion.isNotEmpty() && !containsFormattedFAQ) {
+            // Only include the user question for multi-word queries when the response isn't already a formatted FAQ
+            "$lastUserQuestion\n\n\n$text"
         } else {
+            // For single-word queries or already formatted FAQ responses, just use the text as is
             text
         }
         

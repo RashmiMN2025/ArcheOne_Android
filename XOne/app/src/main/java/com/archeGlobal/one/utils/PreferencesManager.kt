@@ -2,6 +2,7 @@ package com.archeGlobal.one.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.archeGlobal.one.model.ApiGreetingCategory
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.HomeItem
 import com.archeGlobal.one.model.PolicyModel
@@ -314,6 +315,28 @@ class PreferencesManager(context: Context) {
         }
     }
     */
+
+    // New methods for greeting categories with messages
+    private val KEY_GREETING_CATEGORIES = "greeting_categories_data"
+
+    fun saveGreetingCategories(categories: List<ApiGreetingCategory>?) {
+        if (categories == null) {
+            sharedPreferences.edit().remove(KEY_GREETING_CATEGORIES).apply()
+        } else {
+            val json = gson.toJson(categories)
+            sharedPreferences.edit().putString(KEY_GREETING_CATEGORIES, json).apply()
+        }
+    }
+
+    fun getGreetingCategories(): List<ApiGreetingCategory>? {
+        val json = sharedPreferences.getString(KEY_GREETING_CATEGORIES, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<ApiGreetingCategory>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
 
     // Save tasks data
     fun saveTasks(tasksJson: String) {

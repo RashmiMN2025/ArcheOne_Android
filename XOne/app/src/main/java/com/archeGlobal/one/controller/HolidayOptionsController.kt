@@ -27,6 +27,7 @@ class HolidayOptionsController(
     }
     
     fun onBackPressed() {
+        // Go back to the home screen
         navigator.navigateToHome()
     }
 }

@@ -153,9 +153,7 @@ fun HolidayCalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Legend for holiday types
+            Spacer(modifier = Modifier.height(24.dp))            // Legend for holiday types
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -166,15 +164,11 @@ fun HolidayCalendarScreen(
                 LegendItem(color = Color(0xFFDD3825), text = "Holidays")
                 Spacer(modifier = Modifier.width(16.dp))
                 LegendItem(color = Color(0xFF2196F3), text = "RH")
-            }
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            // Responsive Calendar Grid
+            }            Spacer(modifier = Modifier.height(2.dp))            // Responsive Calendar Grid
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(0.dp), // Further reduced vertical spacing
-                horizontalArrangement = Arrangement.spacedBy(8.dp), // Adjust horizontal spacing if needed
+                verticalArrangement = Arrangement.spacedBy(30.dp), // Increased vertical spacing to 30dp
+                horizontalArrangement = Arrangement.spacedBy(8.dp), // Kept same horizontal spacing
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(12) { monthIndex ->

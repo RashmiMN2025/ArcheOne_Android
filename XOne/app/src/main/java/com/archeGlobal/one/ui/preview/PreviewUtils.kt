@@ -33,6 +33,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToFinance() {}
     override fun navigateToAdmin() {}
     override fun navigateToHR() {}
+    override fun navigateToHolidayOptions() {} // Added missing method
     override fun navigateToHolidayCalendar() {}
     override fun navigateToClientCalendar() {}
     override fun navigateToGreetings() {}

@@ -1,5 +1,6 @@
 package com.archeGlobal.one.network
 
+import com.archeGlobal.one.model.ApiGreetingCategory
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SocialContent
@@ -147,7 +148,8 @@ data class VerifyOtpResponse(
     val sosBlogs: List<SosBlogModel>,
     val assetDetails: List<AssetDetail> = emptyList(),
     val communique: List<CommuniqueModel.Communique> = emptyList(),
-    val greetings: Map<String, List<String>>? = null
+    val greetings: Map<String, List<String>>? = null,
+    val greetingCategories: List<ApiGreetingCategory>? = null
 )
 
 data class User(

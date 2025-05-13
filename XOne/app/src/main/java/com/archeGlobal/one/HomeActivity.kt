@@ -66,6 +66,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
     private lateinit var greetingsController: GreetingsController
+    private lateinit var holidayOptionsController: HolidayOptionsController
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -166,39 +167,42 @@ class HomeActivity : AppCompatActivity() {
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
-        val fromOtp = intent.getBooleanExtra("FROM_OTP", false)
-        // Print the intent extras for debugging
+        val fromOtp = intent.getBooleanExtra("FROM_OTP", false)        // Print the intent extras for debugging
         Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, isEmergencyContact=$isEmergencyContact")
         Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
-
-        // Initialize controllers that need context
-        holidayCalendarController = HolidayCalendarController(
-            RetrofitClient.apiService,
-            UserRepository(this)
-        )
-
-        // Initialize greetings controller
-        greetingsController = GreetingsController(this, navigator)
-
+        
         setContent {
             XOneTheme {
                 val navController = rememberNavController()
-                val navigator = AndroidNavigator(this)
+                
+                // Use the class-level navigator instead of creating a new one
                 navigator.setNavController(navController)
-
+                
                 // Initialize controllers with correct parameter order
-                controller = HomeController(navigator, this)
-                locationsController = LocationsController(this)
-                businessCardController = BusinessCardControllerImpl(this, navigator)
-                policyController = PolicyController(this, navigator)
-                assetController = AssetController(this, navigator)
-                profileController = ProfileController(this, navigator)
+                controller = HomeController(navigator, this@HomeActivity)
+                
+                // Initialize controllers that need context
+                holidayCalendarController = HolidayCalendarController(
+                    RetrofitClient.apiService,
+                    UserRepository(this@HomeActivity)
+                )
+                
+                // Initialize holiday options controller
+                holidayOptionsController = HolidayOptionsController(this@HomeActivity, navigator)
+                
+                // Initialize greetings controller
+                greetingsController = GreetingsController(this@HomeActivity, navigator)
+                locationsController = LocationsController(this@HomeActivity)
+                businessCardController = BusinessCardControllerImpl(this@HomeActivity, navigator)
+                policyController = PolicyController(this@HomeActivity, navigator)
+                assetController = AssetController(this@HomeActivity, navigator)
+                profileController = ProfileController(this@HomeActivity, navigator)
                 sosController = SOSController(application)
                 aboutMeController = AboutMeController(navigator)
                 addressController = AddressController(navigator)
                 emergencyContactController = EmergencyContactController(navigator)
-                chatController = ChatController(this, navigator)
-                communiqueController = CommuniqueController(this, navigator)
+                chatController = ChatController(this@HomeActivity, navigator)
+                communiqueController = CommuniqueController(this@HomeActivity, navigator)
                 archeOdysseyController = ArcheOdysseyController(navigator)
                 var isLoading by remember { mutableStateOf(false) }
 
@@ -434,10 +438,29 @@ class HomeActivity : AppCompatActivity() {
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
                         }
-                    ) {
-                        AssetScreen(
+                    ) {                        AssetScreen(
                             model = assetController.model,
                             controller = assetController
+                        )
+                    }
+
+                    composable(
+                        route = "holiday_options",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        HolidayOptionsScreen(
+                            controller = holidayOptionsController
                         )
                     }
 
@@ -458,7 +481,7 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         HolidayCalendarScreen(
                             controller = holidayCalendarController,
-                            onBackPressed = { navigator.navigateToHome() },
+                            onBackPressed = { navigator.navigateToHolidayOptions() },
                             onMonthClick = { month ->
                                 navController.navigate("monthDetail/$month")
                             },

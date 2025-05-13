@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
@@ -48,7 +49,9 @@ fun HolidayOptionsScreen(
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
-        ) {
+        ) {            // Add top padding to push everything down
+            Spacer(modifier = Modifier.height(30.dp))
+            
             // Top App Bar
             Box(
                 modifier = Modifier
@@ -72,47 +75,47 @@ fun HolidayOptionsScreen(
                             tint = Color.Black
                         )
                     }
-                    
-                    // Title
+                              // Title
                     Box(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Holiday Options",
+                            text = "Calendar",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black
                         )
                     }
-                    
-                    // Empty space to balance the layout
+                      // Empty space to balance the layout
                     Spacer(modifier = Modifier.width(48.dp))
                 }
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(60.dp))
             
-            // Two option cards
-            Column(
+            // Two option cards side by side
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Calendar Option
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {                // Holiday Calendar Option
                 OptionCard(
-                    title = "Calendar",
+                    title = "Holiday\nCalendar", // Added line break to display on two lines
+                    subtitle = "Company Holidays",
                     iconResId = R.drawable.holiday2,
-                    onClick = { controller.navigateToHolidayCalendar() }
+                    onClick = { controller.navigateToHolidayCalendar() },
+                    modifier = Modifier.weight(1f)
                 )
                 
                 // Kudos Option
                 OptionCard(
                     title = "Kudos",
+                    subtitle = "Celebrate Peers",
                     iconResId = R.drawable.kudos,
-                    onClick = { controller.navigateToKudos() }
+                    onClick = { controller.navigateToKudos() },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -122,13 +125,14 @@ fun HolidayOptionsScreen(
 @Composable
 fun OptionCard(
     title: String,
+    subtitle: String,
     iconResId: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
+        modifier = modifier
+            .height(160.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -137,29 +141,42 @@ fun OptionCard(
             defaultElevation = 4.dp
         ),
         shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
+    ) {        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(12.dp), // Reduced padding from 16dp to 12dp
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icon
+            // Icon on top
             Image(
                 painter = painterResource(id = iconResId),
                 contentDescription = title,
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(50.dp) // Reduced from 60dp to 50dp
                     .clip(RoundedCornerShape(8.dp))
             )
-            
-            // Title
+              Spacer(modifier = Modifier.height(8.dp)) // Reduced from 12dp to 8dp            // Title below icon
             Text(
                 text = title,
-                fontSize = 20.sp,
+                fontSize = 14.sp, // Further reduced from 15.sp to 14.sp
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black
+                color = Color.Black,
+                maxLines = 2, // Changed from 1 to allow wrapping
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp // Add line height to compress text vertically
+            )
+            
+            Spacer(modifier = Modifier.height(1.dp)) // Further reduced from 2dp to 1dp
+            
+            // Subtitle below title
+            Text(
+                text = subtitle,
+                fontSize = 11.sp, // Further reduced from 12.sp to 11.sp
+                fontWeight = FontWeight.Normal,
+                color = Color.Gray,
+                maxLines = 1,
+                textAlign = TextAlign.Center
             )
         }
     }

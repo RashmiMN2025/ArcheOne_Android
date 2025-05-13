@@ -19,9 +19,13 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     fun setNavController(controller: NavController) {
         this.navController = controller
     }
-
-    private fun navigate(route: String, builder: NavOptionsBuilder.() -> Unit = {}) {
-        navController?.navigate(route, navOptions(builder))
+    
+    private fun navigate(route: String) {
+        navController?.navigate(route)
+    }
+    
+    private fun navigate(route: String, optionsBuilder: (NavOptionsBuilder) -> Unit) {
+        navController?.navigate(route, navOptions(optionsBuilder))
     }
 
     private fun startActivity(intent: Intent, withAnimation: Boolean = true, slideLeft: Boolean = false) {
@@ -31,11 +35,12 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
                 if (slideLeft) R.anim.slide_in_left else R.anim.slide_in_right,
                 if (slideLeft) R.anim.slide_out_right else R.anim.slide_out_left
             ).toBundle()
-            activity.startActivity(intent, bundle)
-        } else {
+            activity.startActivity(intent, bundle)        } else {
             activity.startActivity(intent)
         }
-    }    private fun openWebView(url: String, title: String) {
+    }
+    
+    private fun openWebView(url: String, title: String) {
         val intent = Intent(activity, WebViewActivity::class.java).apply {
             putExtra("fileUrl", url)
             putExtra("title", title)
@@ -145,13 +150,25 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             })
             activity.finish()
         }
+    }    override fun navigateToBusinessCard() {
+        navigate("business_card")
     }
-
-    override fun navigateToBusinessCard() = navigate("business_card")
-    override fun navigateToAsset() = navigate("asset")
-    override fun navigateToID() = Unit
-    override fun navigateToTimesheet() = Unit
-    override fun navigateToLeave() = Unit
+    
+    override fun navigateToAsset() {
+        navigate("asset")
+    }
+    
+    override fun navigateToID() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToTimesheet() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToLeave() {
+        // Implementation not provided
+    }
     
     override fun navigateToMyDocuments() {
         startActivity(Intent(activity, MyDocumentsActivity::class.java))
@@ -159,21 +176,49 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
 
     override fun navigateToUserDocuments() {
         startActivity(Intent(activity, UserDocumentsActivity::class.java))
+    }    override fun navigateToMyCareer() {
+        // Implementation not provided
     }
-
-    override fun navigateToMyCareer() = Unit
-    override fun navigateToELearning() = Unit
-    override fun navigateToGoalSetting() = Unit
-    override fun navigateToXCard() = Unit
     
-    override fun navigateToMedical() = openWebView("https://ilhc.icicilombard.com/Customer/iCard", "Medical")
-    override fun navigateToFinance() = openWebView("https://ess.azatecon.com/login", "Finance")
-    override fun navigateToAdmin() = Unit
-    override fun navigateToHR() = Unit
-    override fun navigateToHolidayCalendar() = navigate("calendar")
-    override fun navigateToClientCalendar() = Unit
-
-    override fun navigateToGreetings() {
+    override fun navigateToELearning() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToGoalSetting() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToXCard() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToMedical() {
+        openWebView("https://ilhc.icicilombard.com/Customer/iCard", "Medical")
+    }
+    
+    override fun navigateToFinance() {
+        openWebView("https://ess.azatecon.com/login", "Finance")
+    }
+    
+    override fun navigateToAdmin() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToHR() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToHolidayOptions() {
+        navigate("holiday_options")
+    }
+    
+    override fun navigateToHolidayCalendar() {
+        navigate("calendar")
+    }
+    
+    override fun navigateToClientCalendar() {
+        // Implementation not provided
+    }    override fun navigateToGreetings() {
         if (activity is HomeActivity) {
             navigate("greetings")
         } else {
@@ -191,13 +236,25 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         startActivity(Intent(activity, XConnectActivity::class.java).apply {
             putExtra("initialTab", initialTab)
         })
+    }    override fun navigateToHelpdesk() {
+        // Implementation not provided
     }
-
-    override fun navigateToHelpdesk() = Unit
-    override fun navigateToAnnouncements() = Unit
-    override fun navigateToXProfile() = Unit
-    override fun navigateToPasswordReset() = Unit
-    override fun navigateToPolicy() = navigate("policy")
+    
+    override fun navigateToAnnouncements() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToXProfile() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToPasswordReset() {
+        // Implementation not provided
+    }
+    
+    override fun navigateToPolicy() {
+        navigate("policy")
+    }
 
     override fun navigateToSOS(showHeader: Boolean) {
         if (activity is HomeActivity) {
@@ -232,12 +289,21 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         } else {
             startActivity(Intent(activity, ChatActivity::class.java))
         }
+    }    override fun navigateToProfile() {
+        navigate("profile")
     }
-
-    override fun navigateToProfile() = navigate("profile")
-    override fun navigateToAboutMe() = navigate("aboutme")
-    override fun navigateToAddressDetails() = navigate("addressdetails")
-    override fun navigateToEmergencyContact() = navigate("emergencycontact")
+    
+    override fun navigateToAboutMe() {
+        navigate("aboutme")
+    }
+    
+    override fun navigateToAddressDetails() {
+        navigate("addressdetails")
+    }
+    
+    override fun navigateToEmergencyContact() {
+        navigate("emergencycontact")
+    }
     
     override fun navigateToPDFViewer(pdfUrl: String, title: String) {
         try {
@@ -245,10 +311,13 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
         } catch (e: Exception) {
             Log.e("AndroidNavigator", "Error navigating to PDF viewer", e)
         }
+    }    override fun navigateToArcheOdyssey() {
+        navigate("arche_odyssey")
     }
-
-    override fun navigateToArcheOdyssey() = navigate("arche_odyssey")
-    override fun navigateToCommunique() = navigate("communique")
+    
+    override fun navigateToCommunique() {
+        navigate("communique")
+    }
     override fun navigateToCoreValues() {
         val intent = Intent(activity, CoreValuesActivity::class.java)
         activity.startActivity(intent)
@@ -261,15 +330,15 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     
     override fun navigateToTodo() {
         startActivity(Intent(activity, TodoActivity::class.java))
+    }    override fun getCurrentRoute(): String? {
+        return navController?.currentDestination?.route
     }
-
-    override fun getCurrentRoute(): String? = navController?.currentDestination?.route
-
+    
     override fun refreshCurrentScreen() {
         getCurrentRoute()?.let { currentRoute ->
             try {
-                navigate(currentRoute) {
-                    popUpTo(currentRoute) { inclusive = true }
+                navigate(currentRoute) { builder ->
+                    builder.popUpTo(currentRoute) { inclusive = true }
                 }
             } catch (e: Exception) {
                 Log.e("AndroidNavigator", "Error refreshing screen", e)

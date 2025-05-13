@@ -110,9 +110,7 @@ class UserDocumentsController(private val context: Context) {
             Log.e(TAG, "Error viewing document: ${e.message}")
             Toast.makeText(context, "Error viewing document: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-    }
-    
-    fun downloadDocument(document: UserDocument) {
+    }    fun uploadDocument(document: UserDocument) {
         if (document.doc_data.isBlank()) {
             Toast.makeText(context, "No data available for ${document.document_name}", Toast.LENGTH_SHORT).show()
             return
@@ -121,13 +119,11 @@ class UserDocumentsController(private val context: Context) {
         try {
             // Force treat PAN Card and Medical Insurance Card as PDFs
             val forcePdf = document.document_name == "PAN Card" || document.document_name == "Medical Insurance Card"
+              // Create a file in the uploads folder
+            val uploadFile = saveBase64ToUploads(document.doc_data, document.document_name, forcePdf)
             
-            // Create a file in the downloads folder
-            val downloadFile = saveBase64ToDownloads(document.doc_data, document.document_name, forcePdf)
-            
-            Toast.makeText(context, "${document.document_name} downloaded successfully", Toast.LENGTH_SHORT).show()
-            
-        } catch (e: Exception) {
+            Toast.makeText(context, "${document.document_name} uploaded successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
             Log.e(TAG, "Error downloading document: ${e.message}")
             Toast.makeText(context, "Error downloading document: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -247,7 +243,7 @@ class UserDocumentsController(private val context: Context) {
         return FileExtensionInfo("pdf", true)
     }
     
-    private fun saveBase64ToDownloads(base64Data: String, documentName: String, forcePdf: Boolean = false): File {
+    private fun saveBase64ToUploads(base64Data: String, documentName: String, forcePdf: Boolean = false): File {
         // Remove Base64 prefix if any
         val pureBase64 = if (base64Data.contains(",")) {
             base64Data.substring(base64Data.indexOf(",") + 1)
@@ -267,15 +263,14 @@ class UserDocumentsController(private val context: Context) {
         } else {
             fileExtensionInfo
         }
-        
-        // Create file in downloads directory
-        val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-        val downloadFile = File(downloadsDir, "${documentName.replace(" ", "_")}.${adjustedFileExtensionInfo.extension}")
+          // Create file in uploads directory
+        val uploadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOCUMENTS)
+        val uploadFile = File(uploadsDir, "${documentName.replace(" ", "_")}.${adjustedFileExtensionInfo.extension}")
         
         // Write decoded data to file
-        FileOutputStream(downloadFile).use { it.write(decodedBytes) }
+        FileOutputStream(uploadFile).use { it.write(decodedBytes) }
         
-        return downloadFile
+        return uploadFile
     }
     
     companion object {

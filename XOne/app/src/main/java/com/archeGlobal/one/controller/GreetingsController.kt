@@ -29,35 +29,8 @@ class GreetingsController(
         private set
     
     // Captured card screenshot bitmap
-    private var cardScreenshot: Bitmap? = null
-
-    // Map of category to default message
-    private val defaultMessages = mapOf(
-        "Anniversary" to "Dear friend, \nWishing you many more years of happiness together! \nMay your love continue to grow stronger with each passing year. Cheers to the memories you've made and the ones yet to come!",
-        "Birthday" to "Dear one, \nHope your birthday is as special as you are! \nMay this day bring you joy, laughter, and all the wonderful moments that make life truly meaningful. Enjoy every minute of your celebration!",
-        "Career Milestone" to "Dear colleague, \nCongratulations on your incredible journey! \nYour hard work, dedication, and achievements are an inspiration to all. May you continue to reach new heights in your career!",
-        "Congratulations" to "Dear friend, \nGreat job! Wishing you continued success and all the best in the exciting journey ahead. \nMay your accomplishments inspire even greater achievements in the future.",
-        "Diwali" to "Dear all, \nMay your Diwali be full of lights and laughter. \nMay this festival of joy bring peace, prosperity, and happiness into your home and life. Enjoy the festivities with your loved ones!",
-        "Get Well Soon" to "Dear one, \nSending warm wishes for a speedy recovery. \nMay each day bring you closer to feeling stronger and healthier. Take care, and we hope to see you back to your best soon!",
-        "Baby" to "Dear parents, \nCongratulations on your new bundle of joy! \nWishing your family endless love, joy, and happiness as you welcome this little one into your lives. Cherish every special moment!",
-        "Christmas" to "Dear all, \nMay this Christmas bring you peace, love, and joy. \nMay your heart be filled with happiness as you celebrate with those who mean the most to you. Here's to a season full of blessings!",
-        "Condolences" to "Dear friend, \nOur deepest sympathies are with you during this time. \nMay you find comfort in the loving memories you shared and strength in the support of those around you. Our thoughts are with you.",
-        "Easter" to "Dear all, \nWishing you a joyful and blessed Easter. \nMay this special day bring renewal to your spirit, hope to your heart, and peace to your soul. Enjoy the time with loved ones!",
-        "Farewell" to "Dear friend, \nWishing you all the best on your new journey. \nMay this new chapter bring you fulfillment, happiness, and countless wonderful experiences. You will be missed, but always remembered!",
-        "Friendship" to "Dear friend, \nHere's to a friendship that lasts a lifetime! \nMay our bond continue to grow stronger, filled with laughter, support, and unforgettable memories. Cheers to many more years of friendship!",
-        "Halloween" to "Dear all, \nWishing you a spook-tacular Halloween! \nMay your night be filled with fun, laughter, and a few thrilling surprises. Enjoy the festive spirit and stay spooky!",
-        "Housewarming" to "Dear ones, \nWarmest wishes for your new home! \nMay your new space be filled with laughter, love, and warmth. Here's to many happy moments as you settle into your beautiful new home!",
-        "Marriage" to "Dear couple, \nWishing you a lifetime of love and happiness. \nMay your marriage be filled with joy, understanding, and endless support. Here's to building a beautiful future together!",
-        "NewYear" to "Dear all, \nHappy New Year! \nMay this year bring new joys, success, and opportunities. May every day be filled with happiness, growth, and the fulfillment of your dreams.",
-        "Retirement" to "Dear colleague, \nWishing you a happy and fulfilling retirement! \nEnjoy the well-deserved rest and the freedom to pursue your passions. Here's to a new adventure in this exciting next chapter of life!",
-        "ThankYou" to "Dear friend, \nThank you for everything! \nYour kindness and generosity have made a lasting impact. We are truly grateful for your support and wish you all the best in everything you do.",
-        "Valentines" to "Dear all, \nWishing you a Valentine's Day filled with love and happiness. \nMay you be surrounded by those who make your heart smile, and may this day remind you of how truly loved you are."
-    )
-    
-    // Get default message for category
-    private fun getDefaultMessageForCategory(category: String): String {
-        return defaultMessages[category] ?: "Wishing you all the best!"
-    }
+    private var cardScreenshot: Bitmap? = null    // This will be populated from API data
+    private val categoryMessages = mutableMapOf<String, String>()
 
     init {
         loadGreetings()
@@ -65,12 +38,30 @@ class GreetingsController(
 
     private fun loadGreetings() {
         val greetings = userDataManager.getGreetingsData()
-        if (greetings != null) {
+        val greetingCategories = userDataManager.getGreetingCategoriesData()
+          if (greetings != null) {
             model = model.copy(categories = greetings)
             Log.d("GreetingsController", "Loaded ${greetings.size} greeting categories")
+            
+            // Load category messages from the API data
+            if (greetingCategories != null) {
+                val messages = mutableMapOf<String, String>()
+                greetingCategories.forEach { category ->
+                    messages[category.name] = category.message
+                }
+                model = model.copy(categoryMessages = messages)
+                Log.d("GreetingsController", "Loaded ${messages.size} greeting category messages")
+            } else {
+                Log.e("GreetingsController", "No greeting category messages available")
+            }
         } else {
             Log.e("GreetingsController", "No greetings data available")
         }
+    }
+    
+    // Get message for category from API data or fallback to empty
+    private fun getMessageForCategory(category: String): String {
+        return model.categoryMessages[category] ?: ""
     }
 
     fun onBackPressed() {
@@ -99,39 +90,28 @@ class GreetingsController(
         val greetingsInCategory = model.categories[category]
         val firstGreetingInCategory = greetingsInCategory?.firstOrNull()
         
-        // Log what's happening 
+        // Log what's happening with more verbose details
+        Log.d("GreetingsController", "onCategorySelected called with category: $category")
         Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory?.size ?: 0} greetings")
         Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
         
         // Clear any existing card screenshot when changing category
         cardScreenshot = null
         
-        // Get default message for this category
-        val defaultMessage = getDefaultMessageForCategory(category)
+        // Get message for this category from API data
+        val categoryMessage = getMessageForCategory(category)
+        Log.d("GreetingsController", "Using message from API data: $categoryMessage")
         
-        // Update the model with category-specific default message
+        // Update the model with category-specific message from API
         model = model.copy(
             selectedCategory = category,
             selectedGreeting = firstGreetingInCategory,
-            message = defaultMessage
+            message = categoryMessage
         )
-    }    fun onGreetingSelected(url: String) {
-        // Log selection
-        Log.d("GreetingsController", "Selected greeting: $url")
-        
-        // Clear any existing card screenshot when changing greeting
-        cardScreenshot = null
-        
-        // Get current category and preserve the message when changing greeting within same category
-        val currentCategory = model.selectedCategory
-        val currentMessage = model.message
-        
-        // Update model with selected greeting while preserving the message
-        model = model.copy(
-            selectedGreeting = url,
-            // Keep the existing message to preserve user's work when switching between cards
-            message = currentMessage
-        )
+    }    fun onGreetingSelected(greetingUrl: String) {
+        Log.d("GreetingsController", "onGreetingSelected method called with URL: $greetingUrl")
+        model = model.copy(selectedGreeting = greetingUrl)
+        Log.d("GreetingsController", "Model updated. New selectedGreeting: ${model.selectedGreeting}")
     }
 
     fun updateMessage(message: String) {
@@ -211,94 +191,81 @@ class GreetingsController(
 
     fun sendInOutlook() {
         val greetingTitle = model.selectedCategory ?: "Greeting"
-        val imageUrl = model.selectedGreeting
-        
-        // Define Outlook package names - Microsoft Outlook has different package names on different devices
+        val currentMessage = model.message // Capture current message
+        val currentSelectedGreetingUrl = model.selectedGreeting // Capture current greeting URL
+
         val outlookPackages = arrayOf(
             "com.microsoft.office.outlook",
             "com.microsoft.outlook"
         )
         
-        // Find the installed Outlook package if available
-        var outlookPackage: String? = null
-        for (pkg in outlookPackages) {
+        var resolvedOutlookPackage: String? = null
+        for (pkgName in outlookPackages) { // Renamed loop variable
             try {
-                if (context.packageManager.getLaunchIntentForPackage(pkg) != null) {
-                    outlookPackage = pkg
-                    break
+                // Check if the package is installed and has a launch intent
+                if (context.packageManager.getLaunchIntentForPackage(pkgName) != null) {
+                    resolvedOutlookPackage = pkgName
+                    break 
                 }
             } catch (e: Exception) {
-                // Log the error but continue checking other packages
-                Log.e("GreetingsController", "Error checking package $pkg: ${e.message}")
+                // Log error if checking a package fails, but continue to check others
+                Log.e("GreetingsController", "Error checking package $pkgName: ${e.message}")
             }
         }
         
-        // If Outlook is not installed, show a message to the user
-        if (outlookPackage == null) {
+        // If no Outlook package was found after checking all candidates
+        if (resolvedOutlookPackage == null) {
             android.widget.Toast.makeText(
                 context, 
-                "Microsoft Outlook is not installed. Please install it from the Play Store.", 
+                "Microsoft Outlook is not installed. Please install it to use this feature.", 
                 android.widget.Toast.LENGTH_LONG
             ).show()
-            Log.e("GreetingsController", "No Outlook package found among: ${outlookPackages.joinToString()}")
-            return
+            Log.e("GreetingsController", "No installed Outlook package found from candidates: ${outlookPackages.joinToString()}")
+            return // Exit if Outlook is not available
         }
         
-        // First try with the screenshot if available
+        // Attempt to use card screenshot if available
         val imageUri = saveBitmapForSharing(cardScreenshot)
         
         if (imageUri != null) {
-            // Send both card screenshot and text directly to Outlook (no chooser)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/jpeg"
                 putExtra(Intent.EXTRA_STREAM, imageUri)
                 putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
-                putExtra(Intent.EXTRA_TEXT, model.message)
+                putExtra(Intent.EXTRA_TEXT, currentMessage)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                // Set Outlook as the only target
-                setPackage(outlookPackage)
+                setPackage(resolvedOutlookPackage) // Target the resolved Outlook package
             }
-            
             try {
                 context.startActivity(intent)
-                return // Exit early as we've handled the sharing successfully
+                return // Successfully launched Outlook with image, so exit
             } catch (e: Exception) {
                 Log.e("GreetingsController", "Error opening Outlook with image: ${e.message}", e)
-                // Continue to fallback options below
+                // If sending with image fails, fall through to try other methods
             }
         } else {
-            // No screenshot available, log the issue
-            Log.d("GreetingsController", "No screenshot available, falling back to alternative methods")
+            Log.d("GreetingsController", "No card screenshot available for Outlook, attempting alternative methods.")
         }
         
-        // If we got here, either the screenshot was null or sending with the screenshot failed
-        // If we have a URL for the greeting, try to download it first
-        if (!imageUrl.isNullOrEmpty()) {
-            android.widget.Toast.makeText(
-                context, 
-                "Preparing greeting for Outlook...", 
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
+        // If screenshot is not available or sending it failed, try downloading the image URL
+        if (!currentSelectedGreetingUrl.isNullOrEmpty()) {
+            android.widget.Toast.makeText(context, "Preparing greeting for Outlook...", android.widget.Toast.LENGTH_SHORT).show()
             
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // Try to download the image
                     val imageBitmap = coil.ImageLoader(context).execute(
                         coil.request.ImageRequest.Builder(context)
-                            .data(imageUrl)
-                            .allowHardware(false) // Needed to access pixels
+                            .data(currentSelectedGreetingUrl)
+                            .allowHardware(false) // Important for accessing pixels from the drawable
                             .build()
                     ).drawable?.let { drawable ->
                         // Convert drawable to bitmap
                         when (drawable) {
                             is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
-                            else -> {
-                                // Create a bitmap from any drawable
-                                val bitmap = Bitmap.createBitmap(
-                                    drawable.intrinsicWidth,
-                                    drawable.intrinsicHeight,
-                                    Bitmap.Config.ARGB_8888
-                                )
+                            else -> { // Handle other drawable types
+                                val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512 // Default if 0
+                                val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512 // Default if 0
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                                 val canvas = android.graphics.Canvas(bitmap)
                                 drawable.setBounds(0, 0, canvas.width, canvas.height)
                                 drawable.draw(canvas)
@@ -309,62 +276,57 @@ class GreetingsController(
                     
                     withContext(Dispatchers.Main) {
                         if (imageBitmap != null) {
-                            // Save the downloaded bitmap and get its URI
                             val downloadedImageUri = saveBitmapForSharing(imageBitmap)
-                            
                             if (downloadedImageUri != null) {
-                                // Now try sending via Outlook with the downloaded image
                                 val intent = Intent(Intent.ACTION_SEND).apply {
                                     type = "image/jpeg"
                                     putExtra(Intent.EXTRA_STREAM, downloadedImageUri)
                                     putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
-                                    putExtra(Intent.EXTRA_TEXT, model.message)
+                                    putExtra(Intent.EXTRA_TEXT, currentMessage)
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    setPackage(outlookPackage)
+                                    setPackage(resolvedOutlookPackage) // Target Outlook
                                 }
-                                
                                 try {
                                     context.startActivity(intent)
-                                    return@withContext
+                                    return@withContext // Successfully launched with downloaded image
                                 } catch (e: Exception) {
                                     Log.e("GreetingsController", "Error opening Outlook with downloaded image: ${e.message}", e)
-                                    // Fall back to text-only below
+                                    // Fall through to text-only if this fails
                                 }
                             }
                         }
-                        
-                        // If we get here, use text-only fallback
-                        sendTextOnlyToOutlook(outlookPackage, greetingTitle)
+                        // Fallback to text-only if image download or sending failed
+                        sendTextOnlyToOutlook(resolvedOutlookPackage, greetingTitle, currentMessage)
                     }
                 } catch (e: Exception) {
-                    Log.e("GreetingsController", "Error downloading image: ${e.message}", e)
+                    Log.e("GreetingsController", "Error downloading image for Outlook: ${e.message}", e)
                     withContext(Dispatchers.Main) {
-                        // Fall back to text-only
-                        sendTextOnlyToOutlook(outlookPackage, greetingTitle)
+                        // Fallback to text-only on download error
+                        sendTextOnlyToOutlook(resolvedOutlookPackage, greetingTitle, currentMessage)
                     }
                 }
             }
         } else {
-            // No image URL, just send text-only
-            sendTextOnlyToOutlook(outlookPackage, greetingTitle)
+            // No image URL available, send text-only
+            Log.d("GreetingsController", "No image URL for Outlook, sending text-only.")
+            sendTextOnlyToOutlook(resolvedOutlookPackage, greetingTitle, currentMessage)
         }
     }
     
-    // Helper method to send text-only email to Outlook
-    private fun sendTextOnlyToOutlook(outlookPackage: String, greetingTitle: String) {
+    // Helper method to send a text-only email via Outlook
+    private fun sendTextOnlyToOutlook(packageName: String, subject: String, body: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "message/rfc822"
-            putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
-            putExtra(Intent.EXTRA_TEXT, model.message)
-            setPackage(outlookPackage)
+            type = "message/rfc822" // Standard MIME type for email
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
+            setPackage(packageName) // Target the specific Outlook package
         }
-        
         try {
             context.startActivity(intent)
         } catch (e: Exception) {
             android.widget.Toast.makeText(
                 context, 
-                "Could not open Outlook. Please make sure it's properly installed.", 
+                "Could not open Outlook. Please ensure it is installed and properly configured.", 
                 android.widget.Toast.LENGTH_LONG
             ).show()
             Log.e("GreetingsController", "Error opening Outlook for text-only email: ${e.message}", e)

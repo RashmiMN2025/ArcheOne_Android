@@ -298,29 +298,65 @@ fun MessageBubble(
                                         modifier = Modifier.padding(vertical = 4.dp)
                                     )
                                 }
+                            }                        } else if (message.content.contains("\n\n\n")) {
+                            // Handle the new format with triple newline separator
+                            val parts = message.content.split("\n\n\n", limit = 2)
+                              if (parts.size == 2) {                                // Display user question
+                                Text(
+                                    text = parts[0], // This is the question
+                                    color = Color.Black,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Normal, // Changed from Medium to Normal to match answer
+                                    lineHeight = 20.sp,
+                                    modifier = Modifier.padding(bottom = 24.dp) // Increased padding for more space
+                                )
+                                
+                                // Display the answer with double spacing
+                                Text(
+                                    text = parts[1], // This is the answer
+                                    color = Color.Black,
+                                    fontSize = 16.sp,
+                                    lineHeight = 20.sp
+                                )
+                            } else {
+                                // Fallback if format is unexpected
+                                Text(
+                                    text = message.content,
+                                    color = Color.Black,
+                                    fontSize = 16.sp,
+                                    lineHeight = 20.sp
+                                )
                             }
                         } else if (message.content.startsWith("You asked:")) {
-                            // Handle messages with the user question included
+                            // This block is kept for backward compatibility with older messages
                             val parts = message.content.split("\n\n", limit = 2)
                             
-                            // Get the question part and remove the "You asked:" prefix and quotes
-                            val questionText = parts[0].removePrefix("You asked: ")
-                                .trim()
-                                .removeSurrounding("\"")
-                            
-                            // Display question with the same style as the answer text
-                            Text(
-                                text = questionText,
-                                color = Color.Black,
-                                fontSize = 16.sp,
-                                lineHeight = 20.sp,
-                                modifier = Modifier.padding(bottom = 16.dp) // Increased spacing here from 8.dp to 16.dp
-                            )
-                            
-                            // Display the answer (no divider)
                             if (parts.size > 1) {
+                                // Get the question part and remove the "You asked:" prefix and quotes
+                                val questionText = parts[0].removePrefix("You asked: ")
+                                    .trim()
+                                    .removeSurrounding("\"")
+                                  // Display question with the same style as the answer text
+                                Text(
+                                    text = questionText,
+                                    color = Color.Black,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Normal, // Changed from Medium to Normal to match answer
+                                    lineHeight = 20.sp,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                
+                                // Display the answer with proper spacing
                                 Text(
                                     text = parts[1],
+                                    color = Color.Black,
+                                    fontSize = 16.sp,
+                                    lineHeight = 20.sp
+                                )
+                            } else {
+                                // Fallback if format is unexpected
+                                Text(
+                                    text = message.content,
                                     color = Color.Black,
                                     fontSize = 16.sp,
                                     lineHeight = 20.sp

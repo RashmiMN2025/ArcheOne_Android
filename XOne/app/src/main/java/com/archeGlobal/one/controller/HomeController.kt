@@ -155,9 +155,8 @@ class HomeController(
                     context,
                     "HR service is not available yet",
                     android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-            "calendar" -> navigator.navigateToHolidayCalendar()
+                ).show()            }
+            "calendar" -> navigator.navigateToHolidayOptions()
             "client calendar" -> {
                 Log.d("HomeController", "Client Calendar service not available yet")
                 android.widget.Toast.makeText(
