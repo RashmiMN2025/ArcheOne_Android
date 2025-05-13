@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.TodoController
-import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.TodoScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 

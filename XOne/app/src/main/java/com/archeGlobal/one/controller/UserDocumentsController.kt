@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.archeGlobal.one.WebViewActivity
-import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.UserDocument
 import com.archeGlobal.one.utils.UserDataManager

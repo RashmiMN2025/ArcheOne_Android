@@ -25,7 +25,6 @@ import com.archeGlobal.one.controller.*
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.XOneTheme
-import com.archeGlobal.one.navigation.AndroidNavigator
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContentTransitionScope
 import android.util.Log

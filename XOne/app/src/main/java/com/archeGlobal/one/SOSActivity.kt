@@ -13,7 +13,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.archeGlobal.one.controller.SOSController
-import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.SOSScreen
 import android.graphics.Color
 import android.os.Build

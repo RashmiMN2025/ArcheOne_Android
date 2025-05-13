@@ -34,7 +34,6 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.*
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.SosBlogModel
-import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
 import com.archeGlobal.one.ui.components.UniversalLoader
