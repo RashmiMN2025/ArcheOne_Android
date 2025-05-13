@@ -1,6 +1,5 @@
 package com.archeGlobal.one.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -15,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -24,11 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,15 +31,15 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TodoController
 import com.archeGlobal.one.model.TaskPriority
 import com.archeGlobal.one.model.TodoTask
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +51,13 @@ fun TodoScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Color(0xFFF2EFEA) // Beige/Light Gray background
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFE0DCD1), // Light Beige
+                        Color(0xFFC8C8CA), // Light Gray
+                        Color(0xFF474749)  // Dark Gray
+                    )
+                )
             )
     ) {
         Column(
@@ -64,26 +65,37 @@ fun TodoScreen(
         ) {
             // Top AppBar
             TopAppBar(
-                title = { 
-                    Text(
-                        text = "To Do",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = GraphikFontFamily
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackPressed) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "To Do",
+                            color = Color.Black,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBackPressed,
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+                },
+                actions = {
+                    Spacer(modifier = Modifier.width(50.dp))
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black
+                    containerColor = Color.Transparent
                 )
             )
             
@@ -130,6 +142,7 @@ fun TodoScreen(
                     text = "Add Task",
                     color = Color.White,
                     fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -212,7 +225,8 @@ fun DaySelector(
                         text = dayName,
                         color = Color.Black,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily
                     )
                 }
             }
@@ -312,7 +326,9 @@ fun SwipeableTaskItem(
                     Text(
                         text = "Delete",
                         color = Color.White,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal
                     )
                 }
             }
@@ -343,7 +359,9 @@ fun SwipeableTaskItem(
                     Text(
                         text = "Edit",
                         color = Color.White,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal
                     )
                 }
             }
@@ -404,6 +422,7 @@ fun SwipeableTaskItem(
                 Text(
                     text = task.title,
                     fontSize = 22.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
@@ -414,7 +433,9 @@ fun SwipeableTaskItem(
                 Text(
                     text = "Priority: ${task.priority.name}",
                     fontSize = 16.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -423,7 +444,9 @@ fun SwipeableTaskItem(
                 Text(
                     text = "Time: ${formatTimeRange()}",
                     fontSize = 16.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -432,7 +455,9 @@ fun SwipeableTaskItem(
                 Text(
                     text = formatCreationDate(),
                     fontSize = 16.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -452,6 +477,7 @@ fun EmptyTasksMessage() {
                 text = "No tasks for this day",
                 fontSize = 18.sp,
                 color = Color.Gray,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
@@ -462,7 +488,9 @@ fun EmptyTasksMessage() {
                 text = "Tap Add Task to create a new task",
                 fontSize = 14.sp,
                 color = Color.Gray,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal
             )
         }
     }
@@ -486,6 +514,7 @@ fun TaskDetailDialog(
                 Text(
                     text = task.title,
                     fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium
                 )
                 
@@ -508,7 +537,9 @@ fun TaskDetailDialog(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = task.priority.name,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium
                     )
                 }
                 
@@ -516,7 +547,9 @@ fun TaskDetailDialog(
                 
                 Text(
                     text = "Time: ${formatTimeRange(task)}",
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium
                 )
             }
         },
@@ -579,6 +612,8 @@ fun TaskFormDialog(
             Text(
                 text = if (isEditing) "Edit Task" else "Add Task",
                 fontSize = 24.sp,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -586,12 +621,14 @@ fun TaskFormDialog(
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
                 // Task Note section
                 Text(
                     text = "Task Note",
                     fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray
                 )
@@ -606,9 +643,16 @@ fun TaskFormDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 120.dp), // Make text field taller
+                    textStyle = TextStyle(
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium
+                    ),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color.LightGray,
-                        focusedBorderColor = Color(0xFFDD3825)
+                        focusedBorderColor = Color.Black,
+                        unfocusedTextColor = Color.LightGray,
+                        focusedTextColor = Color.Black,
                     )
                 )
                 
@@ -646,6 +690,7 @@ fun TaskFormDialog(
                                 Text(
                                     text = option.name.capitalize(),
                                     color = Color.Black,
+                                    fontFamily = GraphikFontFamily,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
@@ -659,6 +704,7 @@ fun TaskFormDialog(
                 Text(
                     text = "Time Range",
                     fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray
                 )
@@ -690,6 +736,8 @@ fun TaskFormDialog(
                             Text(
                                 text = "From:",
                                 fontSize = 16.sp,
+                                color = Color.Black,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium
                             )
                             
@@ -698,6 +746,7 @@ fun TaskFormDialog(
                             Text(
                                 text = startTimeFormatted,
                                 fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black
                             )
@@ -720,6 +769,8 @@ fun TaskFormDialog(
                             Text(
                                 text = "To:",
                                 fontSize = 16.sp,
+                                color = Color.Black,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium
                             )
                             
@@ -728,6 +779,7 @@ fun TaskFormDialog(
                             Text(
                                 text = endTimeFormatted,
                                 fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black
                             )
@@ -753,6 +805,8 @@ fun TaskFormDialog(
                     Text(
                         text = if (isEditing) "Save Task" else "Add Task",
                         fontSize = 18.sp,
+                        color = Color.White,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
@@ -768,7 +822,9 @@ fun TaskFormDialog(
                     Text(
                         text = "Close",
                         color = Color(0xFFDD3825), // Red text
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -823,6 +879,7 @@ fun TimePickerDialog(
             Text(
                 text = "Select Time",
                 fontSize = 20.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -885,6 +942,7 @@ fun TimePickerDialog(
                                     Text(
                                         text = selectedHour.toString().padStart(2, '0'),
                                         fontSize = 24.sp,
+                                        fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Bold
                                     )
                                     
@@ -907,6 +965,7 @@ fun TimePickerDialog(
                             Text(
                                 text = ":",
                                 fontSize = 24.sp,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             )
@@ -940,6 +999,7 @@ fun TimePickerDialog(
                                     Text(
                                         text = selectedMinute.toString().padStart(2, '0'),
                                         fontSize = 24.sp,
+                                        fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Bold
                                     )
                                     

@@ -64,6 +64,8 @@ class PreviewNavigator : Navigator {
     
     override fun navigateToTodo() {}
 
+    override fun navigateToIdeaVault() {}
+
     // Implementation of new methods
     override fun getCurrentRoute(): String? {
         return null // For preview purposes, we don't track a real route

@@ -243,6 +243,10 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Pulse")
                 navigator.openPulseLogin()
             }
+            "ideavault", "idea vault" -> {
+                Log.d("HomeController", "Navigating to Idea Vault")
+                navigator.navigateToIdeaVault()
+            }
             else -> {
                 // Default case for any non-handled services
                 Log.d("HomeController", "${item.title} service not available yet")

@@ -782,6 +782,25 @@ class HomeActivity : AppCompatActivity() {
                             onBackPressed = { navigator.navigateToHome() } // Add this line
                         )
                     }
+
+                    composable(
+    route = "idea_vault",
+    enterTransition = {
+        fadeIn(animationSpec = tween(300))
+    },
+    exitTransition = {
+        fadeOut(animationSpec = tween(300))
+    },
+    popEnterTransition = {
+        fadeIn(animationSpec = tween(300))
+    },
+    popExitTransition = {
+        fadeOut(animationSpec = tween(300))
+    }
+) {
+    IdeaVaultScreen(onBackPressed = { navController.popBackStack() })
+}
+
                 }
             }
         }

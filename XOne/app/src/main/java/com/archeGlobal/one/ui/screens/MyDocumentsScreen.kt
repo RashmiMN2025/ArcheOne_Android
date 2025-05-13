@@ -1,3 +1,4 @@
+
 package com.archeGlobal.one.ui.screens
 
 import android.Manifest
@@ -157,7 +158,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                         text = "Upload or view your personal and professional documents here",
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -169,7 +170,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                         text = "Personal Documents",
                         fontSize = 17.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -190,7 +191,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                         text = "Professional Documents",
                         fontSize = 17.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
@@ -215,10 +216,10 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                     ) {
                         Text(
                             text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
-                            fontSize = 14.sp,
+                            fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.DarkGray,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )

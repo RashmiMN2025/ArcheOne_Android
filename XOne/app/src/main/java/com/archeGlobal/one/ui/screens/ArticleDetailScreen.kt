@@ -115,17 +115,21 @@ fun ArticleDetailScreen(
 
                 Spacer(modifier = Modifier.height(5.dp))
 
-                // Read More button
-                // Replace the Button with a simple Text component
-                Text(
-                    text = "Read More....",
-                    color = Color(0xFFDD3825),
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold,
+                // Read More button aligned to the right
+                Row(
                     modifier = Modifier
-                        .clickable(onClick = onReadMore)
-                        .padding(vertical = 12.dp)
-                )
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "Read More....",
+                        color = Color(0xFFDD3825),
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable(onClick = onReadMore)
+                    )
+                }
 
                 // Add some space at the bottom for better scrolling experience
                 Spacer(modifier = Modifier.height(24.dp))

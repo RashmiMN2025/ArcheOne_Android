@@ -55,6 +55,7 @@ interface Navigator {
     fun navigateToCoreValues()
     fun navigateToAboutUs()
     fun navigateToTodo()
+    fun navigateToIdeaVault()
     
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

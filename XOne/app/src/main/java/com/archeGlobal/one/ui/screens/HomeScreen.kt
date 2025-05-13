@@ -294,7 +294,7 @@ fun HomeScreen(
                                 containerColor = if (model.showAllApps)
                                     Color(0xFFDD3825) else CardBackground,
                                 contentColor = if (model.showAllApps)
-                                    Color.White else TextSecondary
+                                    Color.White else Color.Black
                             ),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 0.dp
@@ -306,11 +306,11 @@ fun HomeScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-            text = "All Apps",
-            fontSize = 16.sp, // Added font size
-            fontFamily = GraphikFontFamily, // Added font family
-            fontWeight = FontWeight.Medium // Added font weight
-        )
+                                text = "All Apps",
+                                fontSize = 16.sp, // Added font size
+                                fontFamily = GraphikFontFamily, // Added font family
+                                fontWeight = FontWeight.Medium, // Added font weight
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(30.dp))
@@ -322,7 +322,7 @@ fun HomeScreen(
                                 containerColor = if (model.viewFavorites)
                                     Color(0xFFDD3825) else CardBackground,
                                 contentColor = if (model.viewFavorites)
-                                    Color.White else TextSecondary
+                                    Color.White else Color.Black
                             ),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 0.dp
@@ -334,11 +334,11 @@ fun HomeScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-            text = "Favorites",
-            fontSize = 16.sp, // Added font size
-            fontFamily = GraphikFontFamily, // Added font family
-            fontWeight = FontWeight.Medium // Added font weight
-        )
+                                text = "Favorites",
+                                fontSize = 16.sp, // Added font size
+                                fontFamily = GraphikFontFamily, // Added font family
+                                fontWeight = FontWeight.Medium, // Added font weight
+                            )
                         }
                     }
 
@@ -512,7 +512,7 @@ fun HomeScreen(
                                     ) {
                                         Text(
                                             text = formattedTitle,
-                                            color = TextPrimary,
+                                            color = Color.Black,
                                             fontSize = 10.sp, // Keep same as original
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Bold,
@@ -738,7 +738,7 @@ private fun AppItem(
                 Text(
                         text = formattedTitle,
                         fontSize = 12.sp,
-                        color = TextPrimary,
+                        color = Color.Black,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
@@ -860,7 +860,7 @@ private fun CategoryHeader(
     Column(modifier = modifier) {
         Text(
             text = title,
-            color = TextPrimary,
+            color = Color.Black,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontSize = 17.sp,
                 fontFamily = GraphikFontFamily,

@@ -16,10 +16,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun SOSDetailScreen(
@@ -56,6 +58,8 @@ fun SOSDetailScreen(
                     text = blog.name, // 🏷️ Use blog name as title
                     fontSize = 20.sp,
                     color = Color.Black,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -77,7 +81,7 @@ fun SOSDetailScreen(
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 16.dp) // Add extra padding at the bottom to prevent content from being hidden
             ) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(5.dp))
 
                 // 🖼️ Enlarged Blog Image with placeholder
                 AsyncImage(
@@ -101,7 +105,9 @@ fun SOSDetailScreen(
                 // 📝 Blog Name
                 Text(
                     text = blog.name,
-                    fontSize = 25.sp,
+                    fontSize = 24.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color.Black
                 )
 
@@ -111,6 +117,8 @@ fun SOSDetailScreen(
                 Text(
                     text = blog.description,
                     fontSize = 15.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
                     color = Color.Black, // Changed from Gray to Black
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
@@ -122,13 +130,17 @@ fun SOSDetailScreen(
                     Text(
                         text = detail.title, // 🏷️ Title in Black
                         fontSize = 20.sp,
-                        color = Color.Black
+                        color = Color.Black,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = detail.description, // 📜 Description as a paragraph - Changed to Black
                         fontSize = 14.sp,
-                        color = Color.Black, // Changed from Gray to Black
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray, // Changed from Gray to Black
                         modifier = Modifier.padding(bottom = 16.dp) // Proper spacing for readability
                     )
                 }

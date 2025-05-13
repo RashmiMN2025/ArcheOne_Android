@@ -34,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.activity.compose.BackHandler
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+
 @Composable
 fun SOSScreen(
     controller: SOSController,
@@ -90,8 +92,6 @@ fun SOSScreen(
                         .padding(bottom = 16.dp), // Add bottom padding to ensure content is visible above the navigation bar
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
-
                     // White Box for SOS Assistance & SOS Information
                     Box(
                         modifier = Modifier
@@ -109,7 +109,9 @@ fun SOSScreen(
                             // SOS Assistance
                             Text(
                                 text = "SOS Assistance",
-                                fontSize = 22.sp,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 20.dp)
                             )
@@ -129,7 +131,9 @@ fun SOSScreen(
                             // SOS Information Section
                             Text(
                                 text = "SOS Information",
-                                fontSize = 22.sp,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
                                 color = Color.Black,
                                 modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
                             )
@@ -197,7 +201,7 @@ fun SOSScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 40.dp)
+                            .padding(top = 50.dp)
                     ) {
                         IconButton(
                             onClick = onBackPressed,
@@ -214,6 +218,8 @@ fun SOSScreen(
                             text = "SOS",
                             color = Color.Black,
                             fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.align(Alignment.Center),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
@@ -244,7 +250,9 @@ fun SOSScreen(
                         // SOS Assistance
                         Text(
                             text = "SOS Assistance",
-                            fontSize = 22.sp,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
                             color = Color.Black,
                             modifier = Modifier.padding(bottom = 20.dp)
                         )
@@ -264,7 +272,9 @@ fun SOSScreen(
                         // SOS Information Section
                         Text(
                             text = "SOS Information",
-                            fontSize = 22.sp,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
                             color = Color.Black,
                             modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
                         )
@@ -337,20 +347,29 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
             error = painterResource(id = R.drawable.ic_image_placeholder),
             placeholder = painterResource(id = R.drawable.ic_image_placeholder)
         )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = blog.name,
-            fontSize = 17.sp,
+            fontSize = 16.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             color = Color.Black, // Explicitly set to black for consistency
             modifier = Modifier.padding(top = 8.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = blog.description,
             fontSize = 12.sp,  // Increased readability
             color = Color.Gray,
-            maxLines = 2,  // Restrict to 2 lines
-            overflow = TextOverflow.Ellipsis,  // Show "..." if text is too long
-            modifier = Modifier.padding(bottom = 8.dp),
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 18.sp,
+            maxLines = 3,  // Restrict to 2 lines
+            overflow = TextOverflow.Visible,  // Show "..." if text is too long
+            modifier = Modifier
+                .padding(horizontal = 12.dp) // Add horizontal padding for alignment
+                .height(60.dp), // Fixed height for consistent alignment across pages
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
@@ -367,6 +386,12 @@ fun SOSButton(text: String, onClick: () -> Unit) {
             .padding(vertical = 8.dp)
             .height(50.dp)
     ) {
-        Text(text = text, color = Color.White)
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
