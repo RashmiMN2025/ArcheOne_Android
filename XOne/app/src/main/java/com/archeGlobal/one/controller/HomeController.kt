@@ -216,6 +216,7 @@ class HomeController(
                 context.startActivity(intent)
             }
             "sap" -> navigator.navigateToSAP()
+            "ample" -> navigator.navigateToAmple()
             "about us", "aboutus" -> {
                 Log.d("HomeController", "Navigating to About Us")
                 navigator.navigateToAboutUs()

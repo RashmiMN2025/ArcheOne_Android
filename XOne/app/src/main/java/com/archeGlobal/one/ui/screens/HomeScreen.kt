@@ -57,6 +57,7 @@ import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.BackHandler
 import android.app.Activity
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 
 @Composable
@@ -217,6 +218,9 @@ fun HomeScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    // State to track the current view (All Apps or Favorites)
+    var currentView by remember { mutableStateOf("All Apps") }
+
     // Effect to handle refresh completion
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
@@ -242,19 +246,16 @@ fun HomeScreen(
                     .fillMaxSize()
                     .blur(radius = if (isAuthenticating) 10.dp else 0.dp)
                     .pointerInput(Unit) {
-                        var dragStart = 0f
-                        detectVerticalDragGestures(
-                            onDragStart = { offset ->
-                                dragStart = offset.y
-                            },
-                            onDragEnd = {
-                                if (dragStart > 50f && !isRefreshing) { // Only trigger if not already refreshing
-                                    isRefreshing = true
+                        detectHorizontalDragGestures(
+                            onDragEnd = { /* Handle drag end */ },
+                            onHorizontalDrag = { _, dragAmount ->
+                                if (dragAmount > 50) {
+                                    // Swiped from left to right
+                                    currentView = "All Apps"
+                                } else if (dragAmount < -50) {
+                                    // Swiped from right to left
+                                    currentView = "Favorites"
                                 }
-                            },
-                            onDragCancel = {},
-                            onVerticalDrag = { change, dragAmount ->
-                                change.consume()
                             }
                         )
                     }
@@ -287,23 +288,25 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Button(
-                            onClick = onAllAppsClick,
-                            modifier = Modifier
-                                .width(150.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (model.showAllApps)
-                                    Color(0xFFDD3825) else CardBackground,
-                                contentColor = if (model.showAllApps)
-                                    Color.White else Color.Black
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 0.dp
-                            ),
-                            border = BorderStroke(
-                                1.dp,
-                                if (model.showAllApps) Color(0xFFDD3825) else DividerColor
-                            ),
-                            shape = RoundedCornerShape(8.dp)
+                        onClick = {
+                            currentView = "All Apps"
+                            onAllAppsClick()
+                        },
+                        modifier = Modifier.width(150.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (currentView == "All Apps")
+                                Color(0xFFDD3825) else CardBackground,
+                            contentColor = if (currentView == "All Apps")
+                                Color.White else Color.Black
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 0.dp
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (currentView == "All Apps") Color(0xFFDD3825) else DividerColor
+                        ),
+                        shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = "All Apps",
@@ -316,22 +319,25 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(30.dp))
 
                         Button(
-                            onClick = onFavoritesClick,
-                            modifier = Modifier.width(150.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (model.viewFavorites)
-                                    Color(0xFFDD3825) else CardBackground,
-                                contentColor = if (model.viewFavorites)
-                                    Color.White else Color.Black
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 0.dp
-                            ),
-                            border = BorderStroke(
-                                1.dp,
-                                if (model.viewFavorites) Color(0xFFDD3825) else DividerColor
-                            ),
-                            shape = RoundedCornerShape(8.dp)
+                        onClick = {
+                            currentView = "Favorites"
+                            onFavoritesClick()
+                        },
+                        modifier = Modifier.width(150.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (currentView == "Favorites")
+                                Color(0xFFDD3825) else CardBackground,
+                            contentColor = if (currentView == "Favorites")
+                                Color.White else Color.Black
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 0.dp
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (currentView == "Favorites") Color(0xFFDD3825) else DividerColor
+                        ),
+                        shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = "Favorites",
@@ -346,7 +352,7 @@ fun HomeScreen(
 
                     // Content
                     Box(modifier = Modifier.weight(1f)) {
-                        if (model.showAllApps) {
+                        if (currentView == "All Apps") {
                             // All Apps View
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
@@ -390,7 +396,7 @@ fun HomeScreen(
                                     }
                                 }
                             }
-                        } else if (model.viewFavorites) {
+                        } else if (currentView == "Favorites") {
                             // Favorites View
                             if (model.favorites.isEmpty()) {
                                 Box(
@@ -630,6 +636,7 @@ private fun formatServiceTitle(title: String): String {
         "ID" -> "ID"
         "Finance" -> "Finance"
         "SAP" -> "SAP"
+        "Ample" -> "Ample"
         "SOS" -> "SOS"
         "Connect" -> "Connect"
         "Locations" -> "Locations"
@@ -761,7 +768,7 @@ private fun AppIcon(
         when (title) {
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
-            "Finance", "SAP", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
+            "Finance", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
             "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
@@ -787,6 +794,7 @@ private fun AppIcon(
                                 "admin" -> R.drawable.admin
                                 "finance" -> R.drawable.finance
                                 "sap" -> R.drawable.sap
+                                "ample" -> R.drawable.ample
                                 "sos" -> R.drawable.sos
                                 "calendar" -> R.drawable.holiday
                                 "holidaycalendar" -> R.drawable.holiday

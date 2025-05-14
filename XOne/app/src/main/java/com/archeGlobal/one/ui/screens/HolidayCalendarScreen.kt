@@ -164,7 +164,8 @@ fun HolidayCalendarScreen(
                 LegendItem(color = Color(0xFFDD3825), text = "Holidays")
                 Spacer(modifier = Modifier.width(16.dp))
                 LegendItem(color = Color(0xFF2196F3), text = "RH")
-            }            Spacer(modifier = Modifier.height(2.dp))            // Responsive Calendar Grid
+            }
+            Spacer(modifier = Modifier.height(2.dp))            // Responsive Calendar Grid
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 120.dp),
                 verticalArrangement = Arrangement.spacedBy(30.dp), // Increased vertical spacing to 30dp

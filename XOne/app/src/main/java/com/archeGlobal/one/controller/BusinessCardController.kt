@@ -22,6 +22,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.utils.QRCodeGenerator
 
 interface BusinessCardController {

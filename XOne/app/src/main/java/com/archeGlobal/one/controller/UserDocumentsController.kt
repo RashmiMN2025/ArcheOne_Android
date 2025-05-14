@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.archeGlobal.one.WebViewActivity
@@ -15,11 +16,12 @@ import com.archeGlobal.one.utils.UserDataManager
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.content.FileProvider
+import com.archeGlobal.one.navigation.AndroidNavigator
 
 class UserDocumentsController(private val context: Context) {
     
     private val userDataManager = UserDataManager.getInstance(context)
-    private val navigator: Navigator = AndroidNavigator(context as androidx.activity.ComponentActivity)
+    private val navigator: Navigator = AndroidNavigator(context as ComponentActivity)
     
     // LiveData for documents
     private val _userDocuments = MutableLiveData<List<UserDocument>>(emptyList())

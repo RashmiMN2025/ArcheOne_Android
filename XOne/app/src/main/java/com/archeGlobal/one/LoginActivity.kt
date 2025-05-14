@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.LoginController
+import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.LoginScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 

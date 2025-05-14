@@ -6,6 +6,7 @@ import com.archeGlobal.one.model.SosBlogModel
 import androidx.activity.compose.setContent
 import com.archeGlobal.one.ui.screens.SOSDetailScreen
 import android.os.Build
+import com.archeGlobal.one.navigation.AndroidNavigator
 
 class SOSDetailActivity : ComponentActivity() {
     private lateinit var navigator: AndroidNavigator

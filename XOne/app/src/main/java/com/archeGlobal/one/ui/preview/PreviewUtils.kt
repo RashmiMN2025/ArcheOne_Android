@@ -48,6 +48,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToSOS(showHeader: Boolean) {}
     override fun navigateToTravelExpenses() {}
     override fun navigateToSAP() {}
+    override fun navigateToAmple() {}
     override fun navigateToZingHR() {}
     override fun navigateToChat() {}
     override fun navigateToBusinessCard() {}

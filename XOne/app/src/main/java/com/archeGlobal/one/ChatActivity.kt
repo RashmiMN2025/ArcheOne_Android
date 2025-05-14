@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.archeGlobal.one.controller.ChatController
 import com.archeGlobal.one.model.ChatBottomNavigationBar
+import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ChatScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 

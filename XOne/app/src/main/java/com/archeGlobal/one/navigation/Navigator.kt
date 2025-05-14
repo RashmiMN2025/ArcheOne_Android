@@ -41,6 +41,7 @@ interface Navigator {
     fun navigateToSOS(showHeader: Boolean = true)
     fun navigateToTravelExpenses()
     fun navigateToSAP()
+    fun navigateToAmple()
     fun navigateToZingHR()
     fun navigateToChat()
     fun navigateToBusinessCard()

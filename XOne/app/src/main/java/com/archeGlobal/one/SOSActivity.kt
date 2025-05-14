@@ -17,6 +17,7 @@ import com.archeGlobal.one.ui.screens.SOSScreen
 import android.graphics.Color
 import android.os.Build
 import com.archeGlobal.one.HomeActivity
+import com.archeGlobal.one.navigation.AndroidNavigator
 
 class SOSActivity : ComponentActivity() {
     private val controller: SOSController by viewModels()

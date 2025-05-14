@@ -45,6 +45,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import android.content.DialogInterface
+import com.archeGlobal.one.navigation.AndroidNavigator
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -65,6 +66,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
     private lateinit var greetingsController: GreetingsController
+    private lateinit var ideaVaultController: IdeaVaultController
     private lateinit var holidayOptionsController: HolidayOptionsController
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
@@ -191,6 +193,7 @@ class HomeActivity : AppCompatActivity() {
                 
                 // Initialize greetings controller
                 greetingsController = GreetingsController(this@HomeActivity, navigator)
+                ideaVaultController = IdeaVaultController(navigator)
                 locationsController = LocationsController(this@HomeActivity)
                 businessCardController = BusinessCardControllerImpl(this@HomeActivity, navigator)
                 policyController = PolicyController(this@HomeActivity, navigator)
@@ -783,23 +786,26 @@ class HomeActivity : AppCompatActivity() {
                     }
 
                     composable(
-    route = "idea_vault",
-    enterTransition = {
-        fadeIn(animationSpec = tween(300))
-    },
-    exitTransition = {
-        fadeOut(animationSpec = tween(300))
-    },
-    popEnterTransition = {
-        fadeIn(animationSpec = tween(300))
-    },
-    popExitTransition = {
-        fadeOut(animationSpec = tween(300))
-    }
-) {
-    IdeaVaultScreen(onBackPressed = { navController.popBackStack() })
-}
-
+                            route = "idea_vault",
+                            enterTransition = {
+                                fadeIn(animationSpec = tween(300))
+                            },
+                            exitTransition = {
+                                fadeOut(animationSpec = tween(300))
+                            },
+                            popEnterTransition = {
+                                fadeIn(animationSpec = tween(300))
+                            },
+                            popExitTransition = {
+                                fadeOut(animationSpec = tween(300))
+                            }
+                        ) {
+                            IdeaVaultScreen(
+                            onBackPressed = { navController.popBackStack() },
+                            controller = ideaVaultController, // Pass the initialized controller
+                            apiService = RetrofitClient.apiService
+                        )
+                    }
                 }
             }
         }

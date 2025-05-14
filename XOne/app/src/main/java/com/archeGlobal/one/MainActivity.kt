@@ -29,6 +29,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContentTransitionScope
 import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
+import com.archeGlobal.one.navigation.AndroidNavigator
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController

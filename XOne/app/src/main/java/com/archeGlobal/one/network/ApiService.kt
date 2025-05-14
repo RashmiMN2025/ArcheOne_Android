@@ -62,7 +62,26 @@ interface ApiService {
 
     @GET("greetings")
     suspend fun getGreetingCards(): Response<Map<String, List<String>>>
+
+    @POST("feedback")
+    suspend fun submitFeedback(@Body request: FeedbackRequest): Response<FeedbackResponse>
 }
+
+data class FeedbackRequest(
+    val name: String? = null,
+    val email: String,
+    val category: String? = null,
+    val feedback: String,
+    val rating: Int,
+    val platform: String,
+    val deviceName: String,
+    val version: String
+)
+
+data class FeedbackResponse(
+    val status: Int,
+    val message: String
+)
 
 data class PolicyResponse(
     @SerializedName("name")
