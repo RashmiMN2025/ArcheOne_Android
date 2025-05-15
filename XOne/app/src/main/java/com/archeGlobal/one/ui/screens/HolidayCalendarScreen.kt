@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
@@ -74,7 +75,7 @@ fun HolidayCalendarScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(12.dp, 12.dp, 12.dp, 0.dp)
         ) {
             // Top Bar
             Box(
@@ -167,8 +168,8 @@ fun HolidayCalendarScreen(
             }
             Spacer(modifier = Modifier.height(2.dp))            // Responsive Calendar Grid
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(30.dp), // Increased vertical spacing to 30dp
+                columns = GridCells.Adaptive(minSize = 115.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp), // Increased vertical spacing to 30dp
                 horizontalArrangement = Arrangement.spacedBy(8.dp), // Kept same horizontal spacing
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -187,6 +188,12 @@ fun HolidayCalendarScreen(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MonthCard(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) {
+    // Get screen width
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+
+    // Adjust height based on screen width
+    val cardHeight = if (screenWidth <= 360) 160.dp else 150.dp // Increase height for small screens
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,7 +206,7 @@ fun MonthCard(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp), // Added equal padding inside the card
+                .padding(6.dp), // Added equal padding inside the card
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

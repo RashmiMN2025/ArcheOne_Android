@@ -62,12 +62,13 @@ fun SOSScreen(
         showProfile = false
     )
 
+    // Intercept back navigation (both swipe and back arrow)
+    BackHandler(enabled = true) {
+        onBackPressed() // Ensure both swipe and back arrow trigger the same behavior
+    }
+
     // Wrap with FooterScaffold for bottom navigation
     if (showHeader) {
-        // Disable back swipe gesture and back button
-        BackHandler(enabled = true) {
-            // Do nothing to prevent navigation
-        }
         FooterScaffold(
             footerNavigation = footerNavigation,
             onFooterHomeClick = onFooterHomeClick,
@@ -197,7 +198,6 @@ fun SOSScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header with back button
-//                if(showHeader) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -230,8 +230,7 @@ fun SOSScreen(
                                 .size(48.dp)
                                 .align(Alignment.CenterEnd)
                         )
-//                    }
-                }
+                    }
 
                 // White Box for SOS Assistance & SOS Information
                 Box(

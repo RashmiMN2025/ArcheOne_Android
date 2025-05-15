@@ -109,7 +109,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -139,90 +138,97 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                 Spacer(modifier = Modifier.weight(1.5f)) // Balances right side
             }
 
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
+            // Scrollable Content
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
-                ) {
-                    Text(
-                        text = "Upload or view your personal and professional documents here",
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 32.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-
-                    Text(
-                        text = "Personal Documents",
-                        fontSize = 17.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        listOf("Aadhar Card", "Passport", "PAN Card").forEach { item ->
-                            DocumentCard(item, personalDocs[item], controller, context, employeeId, true)
-                        }
-                    }
-
-                    Text(
-                        text = "Professional Documents",
-                        fontSize = 17.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    Column(
+                item {
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
                     ) {
-                        listOf("Offer Letter", "Certificate", "Experience Letter").forEach { item ->
-                            DocumentCard(item, professionalDocs[item], controller, context, employeeId, false)
-                        }
-                    }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
+                        ) {
+                            Text(
+                                text = "Upload or view your personal and professional documents here",
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 32.dp),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
 
-                    // Note about file size limit
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 20.dp)
-                    ) {
-                        Text(
-                            text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
-                            fontSize = 12.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.Gray,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
+                            Text(
+                                text = "Personal Documents",
+                                fontSize = 17.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 24.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                listOf("Aadhar Card", "Passport", "PAN Card").forEach { item ->
+                                    DocumentCard(item, personalDocs[item], controller, context, employeeId, true)
+                                }
+                            }
+
+                            Text(
+                                text = "Professional Documents",
+                                fontSize = 17.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                listOf("Offer Letter", "Certificate", "Experience Letter").forEach { item ->
+                                    DocumentCard(item, professionalDocs[item], controller, context, employeeId, false)
+                                }
+                            }
+
+                            // Note about file size limit
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 20.dp)
+                            ) {
+                                Text(
+                                    text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
+                                    fontSize = 12.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.Gray,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
                     }
                 }
             }

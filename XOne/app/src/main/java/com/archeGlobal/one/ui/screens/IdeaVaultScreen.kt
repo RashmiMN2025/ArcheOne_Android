@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -70,57 +72,62 @@ fun IdeaVaultScreen(
     var selectedStars by remember { mutableStateOf(0) }
     var isSubmitting by remember { mutableStateOf(false) }
 
-        val context = LocalContext.current
+    val context = LocalContext.current
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFE0DCD1),
+                        Color(0xFFC8C8CA),
+                        Color(0xFF474749)
+                    )
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFFE0DCD1),
-                                Color(0xFFC8C8CA),
-                                Color(0xFF474749)
-                            )
-                        )
-                    )
+                    .fillMaxWidth()
+                    .padding(top = 40.dp, bottom = 15.dp)
             ) {
-                Column(
+                IconButton(
+                    onClick = onBackPressed,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                        .size(48.dp)
+                        .align(Alignment.CenterStart)
+                        .padding(start = 10.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 40.dp, bottom = 15.dp)
-                    ) {
-                        IconButton(
-                            onClick = onBackPressed,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .align(Alignment.CenterStart)
-                                .padding(start = 10.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_back),
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
-                        }
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_back),
+                        contentDescription = "Back",
+                        tint = Color.Black
+                    )
+                }
 
-                        Text(
-                            text = "IdeaVault",
-                            color = Color.Black,
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                Text(
+                    text = "IdeaVault",
+                    color = Color.Black,
+                    fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
 
-                        Spacer(modifier = Modifier.height(10.dp))
-                    }
-
+            // Scrollable Content
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                item {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -184,9 +191,9 @@ fun IdeaVaultScreen(
                             )
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
+                item {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -381,70 +388,70 @@ fun IdeaVaultScreen(
                             Button(
                                 onClick = {
                                     // Validate feedback and rating
-        if (feedbackText.isBlank()) {
-            Toast.makeText(
-                context,
-                "Please provide feedback before submitting.",
-                Toast.LENGTH_SHORT
-            ).show()
-            return@Button
-        }
+                                    if (feedbackText.isBlank()) {
+                                        Toast.makeText(
+                                            context,
+                                            "Please provide feedback before submitting.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        return@Button
+                                    }
 
-        if (selectedStars == 0) {
-            Toast.makeText(
-                context,
-                "Please provide a rating before submitting.",
-                Toast.LENGTH_SHORT
-            ).show()
-            return@Button
-        }
+                                    if (selectedStars == 0) {
+                                        Toast.makeText(
+                                            context,
+                                            "Please provide a rating before submitting.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        return@Button
+                                    }
 
-        isSubmitting = true
+                                    isSubmitting = true
 
-                                        // Prepare the request body
-                                        val feedbackRequest = FeedbackRequest(
-                                            name = employeeData.name,
-                                            email = employeeData.email,
-                                            category = if (selectedCategory != "Select Category") selectedCategory else null,
-                                            feedback = feedbackText,
-                                            rating = selectedStars,
-                                            platform = "Android",
-                                            deviceName = Build.MODEL,
-                                            version = Build.VERSION.RELEASE
-                                        )
+                                    // Prepare the request body
+                                    val feedbackRequest = FeedbackRequest(
+                                        name = employeeData.name,
+                                        email = employeeData.email,
+                                        category = if (selectedCategory != "Select Category") selectedCategory else null,
+                                        feedback = feedbackText,
+                                        rating = selectedStars,
+                                        platform = "Android",
+                                        deviceName = Build.MODEL,
+                                        version = Build.VERSION.RELEASE
+                                    )
 
-                                        // Make the API call
-                                        CoroutineScope(Dispatchers.IO).launch {
-                                            try {
-                                                val response =
-                                                    apiService.submitFeedback(feedbackRequest)
-                                                withContext(Dispatchers.Main) {
-                                                    isSubmitting = false
-                                                    if (response.isSuccessful) {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Feedback submitted successfully!",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    } else {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Failed to submit feedback: ${response.message()}",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                }
-                                            } catch (e: Exception) {
-                                                withContext(Dispatchers.Main) {
-                                                    isSubmitting = false
+                                    // Make the API call
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            val response =
+                                                apiService.submitFeedback(feedbackRequest)
+                                            withContext(Dispatchers.Main) {
+                                                isSubmitting = false
+                                                if (response.isSuccessful) {
                                                     Toast.makeText(
                                                         context,
-                                                        "An error occurred: ${e.message}",
+                                                        "Feedback submitted successfully!",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                } else {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Failed to submit feedback: ${response.message()}",
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
                                             }
+                                        } catch (e: Exception) {
+                                            withContext(Dispatchers.Main) {
+                                                isSubmitting = false
+                                                Toast.makeText(
+                                                    context,
+                                                    "An error occurred: ${e.message}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
                                         }
+                                    }
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -470,5 +477,6 @@ fun IdeaVaultScreen(
                     }
                 }
             }
-
+        }
     }
+}

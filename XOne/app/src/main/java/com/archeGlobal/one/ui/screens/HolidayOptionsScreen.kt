@@ -24,6 +24,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import androidx.activity.compose.BackHandler
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun HolidayOptionsScreen(
@@ -50,7 +51,7 @@ fun HolidayOptionsScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {            // Add top padding to push everything down
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(50.dp))
             
             // Top App Bar
             Box(
@@ -83,7 +84,8 @@ fun HolidayOptionsScreen(
                         Text(
                             text = "Calendar",
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
                     }
@@ -92,17 +94,15 @@ fun HolidayOptionsScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(60.dp))
-            
             // Two option cards side by side
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(30.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {                // Holiday Calendar Option
                 OptionCard(
-                    title = "Holiday\nCalendar", // Added line break to display on two lines
+                    title = "Holiday Calendar", // Added line break to display on two lines
                     subtitle = "Company Holidays",
                     iconResId = R.drawable.holiday2,
                     onClick = { controller.navigateToHolidayCalendar() },
@@ -132,7 +132,7 @@ fun OptionCard(
 ) {
     Card(
         modifier = modifier
-            .height(160.dp)
+            .height(170.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -161,6 +161,7 @@ fun OptionCard(
                 text = title,
                 fontSize = 14.sp, // Further reduced from 15.sp to 14.sp
                 fontWeight = FontWeight.SemiBold,
+                fontFamily = GraphikFontFamily,
                 color = Color.Black,
                 maxLines = 2, // Changed from 1 to allow wrapping
                 textAlign = TextAlign.Center,
@@ -174,6 +175,7 @@ fun OptionCard(
                 text = subtitle,
                 fontSize = 11.sp, // Further reduced from 12.sp to 11.sp
                 fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
                 color = Color.Gray,
                 maxLines = 1,
                 textAlign = TextAlign.Center
