@@ -15,4 +15,8 @@
     <external-files-path
         name="downloads"
         path="Download" />
-</paths> 
+    <!-- Add cache path for greeting cards -->
+    <cache-path
+        name="greeting_cards"
+        path="." />
+</paths>

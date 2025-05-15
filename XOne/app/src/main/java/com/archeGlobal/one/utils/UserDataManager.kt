@@ -82,10 +82,7 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.saveAuthToken(token)
         preferencesManager.saveLong(PREF_LAST_LOGIN_TIME, System.currentTimeMillis())
         
-        // Handle both old and new greeting formats
-        val fullGreetingsData = response.greetings ?: emptyMap()
-        
-        // Process the greeting categories with messages if available
+        // Process the greeting categories with messages from the new API format
         val apiGreetingCategories = response.greetingCategories?.map { category ->
             ApiGreetingCategory(
                 id = category.id,
@@ -94,6 +91,11 @@ class UserDataManager private constructor(context: Context) {
                 message = category.message
             )
         } ?: emptyList()
+        
+        // Create a map of greeting categories from the greetingCategories API response
+        val fullGreetingsData = apiGreetingCategories.associate { category ->
+            category.name to category.files
+        }
         
         val newUserData = response.user?.let {
             UserData(

@@ -85,48 +85,104 @@ class GreetingsController(
                 }
             }
         }
-    }    fun onCategorySelected(category: String) {
-        // When a category is selected, also select the first greeting in that category
-        val greetingsInCategory = model.categories[category]
-        val firstGreetingInCategory = greetingsInCategory?.firstOrNull()
+    }    fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
+        try {
+            // When a category is selected, also select the first greeting in that category
+            val greetingsInCategory = model.categories[category]
+            Log.d("GreetingsController", "Complete categories map: ${model.categories}")
+            
+            // Validate if we have greetings for this category
+            if (greetingsInCategory.isNullOrEmpty()) {
+                Log.e("GreetingsController", "Error: No greetings found for category: $category")
+                return
+            }
+            
+            val firstGreetingInCategory = greetingsInCategory.firstOrNull()
+            
+            // Log what's happening with more verbose details
+            Log.d("GreetingsController", "onCategorySelected called with category: $category")
+            Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory.size} greetings")
+            Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
+            
+            // Clear any existing card screenshot when changing category
+            cardScreenshot = null
+            
+            // Get message for this category from API data
+            val categoryMessage = getMessageForCategory(category)
+            Log.d("GreetingsController", "Using message from API data: $categoryMessage")
+            
+            // Create a completely new model instance to ensure state change is detected
+            val updatedModel = model.copy(
+                selectedCategory = category,
+                selectedGreeting = firstGreetingInCategory,
+                message = categoryMessage
+            )
+            
+            // Update the model with the new state
+            model = updatedModel
+            
+            // Force UI update by dispatching a delayed verification
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (model.selectedCategory == category) {
+                    Log.d("GreetingsController", "Category selection confirmed: ${model.selectedCategory}")
+                    Log.d("GreetingsController", "Selected greeting confirmed: ${model.selectedGreeting}")
+                    
+                    // If requested, navigate directly to detail screen with the first greeting
+                    if (navigateToDetail && firstGreetingInCategory != null) {
+                        navigateToGreetingDetail(firstGreetingInCategory)
+                    }
+                } else {
+                    Log.e("GreetingsController", "Category selection verification failed - retrying")
+                    // If verification fails, try updating the model again
+                    model = updatedModel
+                }
+            }, 50)
+        } catch (e: Exception) {
+            Log.e("GreetingsController", "Error in onCategorySelected: ${e.message}", e)
+        }
+    }fun onGreetingSelected(greetingUrl: String) {
+        Log.d("GreetingsController", "onGreetingSelected method called with URL: $greetingUrl")
         
-        // Log what's happening with more verbose details
-        Log.d("GreetingsController", "onCategorySelected called with category: $category")
-        Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory?.size ?: 0} greetings")
-        Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
-        
-        // Clear any existing card screenshot when changing category
+        // Clear any existing screenshot when changing greeting
         cardScreenshot = null
         
-        // Get message for this category from API data
-        val categoryMessage = getMessageForCategory(category)
-        Log.d("GreetingsController", "Using message from API data: $categoryMessage")
+        // Create and assign a new model to ensure recomposition
+        val updatedModel = model.copy(selectedGreeting = greetingUrl)
+        model = updatedModel
         
-        // Update the model with category-specific message from API
-        model = model.copy(
-            selectedCategory = category,
-            selectedGreeting = firstGreetingInCategory,
-            message = categoryMessage
-        )
-    }    fun onGreetingSelected(greetingUrl: String) {
-        Log.d("GreetingsController", "onGreetingSelected method called with URL: $greetingUrl")
-        model = model.copy(selectedGreeting = greetingUrl)
+        // Verify the update took effect
         Log.d("GreetingsController", "Model updated. New selectedGreeting: ${model.selectedGreeting}")
+        
+        // Navigate to greeting detail screen
+        navigateToGreetingDetail(greetingUrl)
+    }
+    
+    // Function to navigate to greeting detail screen
+    private fun navigateToGreetingDetail(greetingUrl: String) {
+        try {
+            val currentCategory = model.selectedCategory ?: "Greeting"
+            val currentMessage = model.message
+            
+            Log.d("GreetingsController", "Navigating to greeting detail: $currentCategory, URL: $greetingUrl")
+            navigator.navigateToGreetingDetail(greetingUrl, currentMessage, currentCategory)
+        } catch (e: Exception) {
+            Log.e("GreetingsController", "Error navigating to greeting detail: ${e.message}", e)
+        }
     }
 
     fun updateMessage(message: String) {
         model = model.copy(message = message)
-    }
-
-    fun updateSearchQuery(query: String) {
+    }    fun updateSearchQuery(query: String) {
         model = model.copy(searchQuery = query)
     }
 
     fun getFilteredCategories(): List<String> {
         val query = model.searchQuery.lowercase()
-        return model.categories.keys.filter { category ->
+        val categories = model.categories.keys.filter { category ->
             category.lowercase().contains(query)
         }
+        Log.d("GreetingsController", "Filtered categories: $categories from ${model.categories.keys}")
+        return categories
     }
 
     // Method to set the screenshot of the card

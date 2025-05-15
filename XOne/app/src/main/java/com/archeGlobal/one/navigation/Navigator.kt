@@ -57,8 +57,10 @@ interface Navigator {
     fun navigateToAboutUs()
     fun navigateToTodo()
     fun navigateToIdeaVault()
-    
-    // New methods to support immediate UI updates
+      // New methods to support immediate UI updates
     fun getCurrentRoute(): String?
     fun refreshCurrentScreen()
+    
+    // Navigation method for greeting detail screen
+    fun navigateToGreetingDetail(imageUrl: String, message: String, category: String)
 }

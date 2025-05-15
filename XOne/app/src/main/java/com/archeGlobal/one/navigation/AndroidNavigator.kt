@@ -138,6 +138,17 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             activity.finish()
         }
     }
+      // Implementation of navigateToGreetingDetail method
+    override fun navigateToGreetingDetail(imageUrl: String, message: String, category: String) {
+        Log.d("AndroidNavigator", "Navigating to greeting detail: $category")
+        val intent = Intent(activity, GreetingDetailActivity::class.java).apply {
+            putExtra("imageUrl", imageUrl)
+            putExtra("message", message)
+            putExtra("category", category)
+        }
+        // Use custom slide animation for a smoother transition
+        startActivity(intent, true)
+    }
 
     override fun navigateToLocations(showHeader: Boolean) {
         if (activity is HomeActivity) {
