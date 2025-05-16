@@ -762,8 +762,7 @@ class HomeActivity : AppCompatActivity() {
                         VisionScreen(
                             onBackPressed = { navigator.navigateToHome() }
                         )
-                    }
-
+                    }; // <-- Add comma to separate composables
                     composable(
                         route = "greetings",
                         enterTransition = {
@@ -781,7 +780,32 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         GreetingsScreen(
                             controller = greetingsController,
-                            onBackPressed = { navigator.navigateToHome() } // Add this line
+                            onBackPressed = { navigator.navigateToHome() }
+                        )
+                    }; // <-- Add comma to separate composables
+                    composable(
+                        route = "global_celebration",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        val globalCelebrationController = GlobalCelebrationController(
+                            this@HomeActivity, 
+                            navigator,
+                            greetingsController
+                        )
+                        GlobalCelebrationScreen(
+                            controller = globalCelebrationController,
+                            onBackPressed = { navigator.navigateToGreetings() }
                         )
                     }
 

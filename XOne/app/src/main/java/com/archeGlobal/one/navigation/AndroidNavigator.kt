@@ -12,6 +12,9 @@ import com.archeGlobal.one.*
 import com.archeGlobal.one.ui.screens.CoreValuesActivity
 import com.archeGlobal.one.ui.screens.IdeaVaultActivity
 import java.net.URLEncoder
+import com.archeGlobal.one.GlobalCelebrationDetailActivity
+import com.google.gson.Gson
+
 
 class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     internal var navController: NavController? = null
@@ -231,9 +234,7 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
 
     override fun navigateToClientCalendar() {
         // Implementation not provided
-    }
-
-    override fun navigateToGreetings() {
+    }    override fun navigateToGreetings() {
         if (activity is HomeActivity) {
             navigate("greetings")
         } else {
@@ -242,15 +243,29 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             })
         }
     }
+    
+    override fun navigateToGlobalCelebration() {
+        if (activity is HomeActivity) {
+            navigate("global_celebration")
+        } else {
+            startActivity(Intent(activity, HomeActivity::class.java).apply {
+                putExtra("navigateTo", "global_celebration")
+            })
+        }
+    }
+
+    override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {
+        val gson = com.google.gson.Gson()
+        val subcategoryJson = gson.toJson(subcategory)
+        val intent = android.content.Intent(activity, GlobalCelebrationDetailActivity::class.java).apply {
+            putExtra("subcategory_json", subcategoryJson)
+        }
+        startActivity(intent, true)
+    }
 
     override fun navigateToIdeaVault() {
         val intent = Intent(activity, IdeaVaultActivity::class.java)
         activity.startActivity(intent)
-    }
-
-
-    override fun navigateToXConnect() {
-        startActivity(Intent(activity, XConnectActivity::class.java))
     }
 
     override fun navigateToXConnect(initialTab: String) {

@@ -83,12 +83,13 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.saveLong(PREF_LAST_LOGIN_TIME, System.currentTimeMillis())
         
         // Process the greeting categories with messages from the new API format
-        val apiGreetingCategories = response.greetingCategories?.map { category ->
+        val apiGreetingCategories = response.greetingCategories1?.map { category ->
             ApiGreetingCategory(
                 id = category.id,
                 name = category.name,
                 files = category.files,
-                message = category.message
+                message = category.message,
+                subfolder = category.subfolder // <-- fix: include subfolder
             )
         } ?: emptyList()
         
