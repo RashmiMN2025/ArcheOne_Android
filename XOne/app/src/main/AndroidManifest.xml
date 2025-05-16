@@ -179,6 +179,13 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne"/>
 
+        <activity
+            android:name=".GlobalCelebrationDetailActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Global Celebration Detail"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Keep only this FileProvider at the end -->
         <provider
             android:name="androidx.core.content.FileProvider"

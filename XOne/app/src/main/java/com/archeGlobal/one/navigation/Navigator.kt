@@ -30,7 +30,7 @@ interface Navigator {
     fun navigateToHolidayCalendar()
     fun navigateToClientCalendar()
     fun navigateToGreetings()
-    fun navigateToXConnect()
+    fun navigateToGlobalCelebration()
     fun navigateToXConnect(initialTab: String = "All Posts")
     fun navigateToLocations(showHeader: Boolean = true)
     fun navigateToHelpdesk()
@@ -57,10 +57,11 @@ interface Navigator {
     fun navigateToAboutUs()
     fun navigateToTodo()
     fun navigateToIdeaVault()
-      // New methods to support immediate UI updates
+    // New methods to support immediate UI updates
     fun getCurrentRoute(): String?
     fun refreshCurrentScreen()
     
     // Navigation method for greeting detail screen
     fun navigateToGreetingDetail(imageUrl: String, message: String, category: String)
+    fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory)
 }

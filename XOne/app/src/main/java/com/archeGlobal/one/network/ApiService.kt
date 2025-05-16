@@ -168,7 +168,7 @@ data class VerifyOtpResponse(
     val assetDetails: List<AssetDetail> = emptyList(),
     val communique: List<CommuniqueModel.Communique> = emptyList(),
     val greetings: Map<String, List<String>>? = null,
-    val greetingCategories: List<ApiGreetingCategory>? = null
+    val greetingCategories1: List<ApiGreetingCategory>? = null // changed from greetingCategories
 )
 
 data class User(

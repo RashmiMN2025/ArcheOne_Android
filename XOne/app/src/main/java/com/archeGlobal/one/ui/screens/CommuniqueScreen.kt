@@ -84,11 +84,12 @@ fun CommuniqueScreen(
         }
     }
 
-    var searchQuery by remember { mutableStateOf("") } // State for search query
+    var searchQuery by remember { mutableStateOf("") }
 
-    // Filter communiques based on the search query
-    val filteredCommuniques = remember(searchQuery) {
-        model.communiques.filter { communique ->
+    // Filter communiques by partial match in the name (case-insensitive)
+    val filteredCommuniques = remember(searchQuery, model.communiques) {
+        if (searchQuery.isBlank()) model.communiques
+        else model.communiques.filter { communique ->
             communique.communiqueName.contains(searchQuery, ignoreCase = true)
         }
     }
@@ -126,66 +127,40 @@ fun CommuniqueScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
 
-             // Search Bar
-            Surface(
+            // New search bar implementation
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                color = Color.Transparent
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White)
+                    .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp),
-                            singleLine = true,
-                            textStyle = TextStyle(
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            ),
-                            decorationBox = { innerTextField ->
-                                Box {
-                                    if (searchQuery.isEmpty()) {
-                                        Text(
-                                            text = "Search communiques...",
-                                            color = Color.Gray.copy(alpha = 0.6f),
-                                            fontSize = 16.sp,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal
-                                        )
-                                    }
-                                    innerTextField()
-                                }
-                            }
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.Gray,
+                    modifier = Modifier.padding(start = 12.dp).size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search communiques...", color = Color.Gray.copy(alpha = 0.6f)) },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
             }
-            
+
             // Communique List
             if (isLoading) {
                 Box(
@@ -280,12 +255,14 @@ private fun CommuniqueCard(
                     contentAlignment = Alignment.Center
                 ) {
                     if (hasPreview) {
-                        // Remote preview using Coil's AsyncImage
+                        // Remote preview using Coil's AsyncImage with explicit cache policies
                         AsyncImage(
                             model = ImageRequest.Builder(context)
                                 .data(communique.previewUrl)
                                 .crossfade(true)
                                 .size(THUMBNAIL_WIDTH)
+                                .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                                .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
                                 .build(),
                             placeholder = painterResource(id = R.drawable.ic_policy_default),
                             error = painterResource(id = R.drawable.ic_policy_default),
@@ -424,8 +401,8 @@ private fun renderPdfThumbnail(context: Context, pdfFile: File): Bitmap? {
         // Get the first page
         page = pdfRenderer.openPage(0)
         // Safely obtain page dimensions
-        var pageWidth = page?.width ?: 0
-        var pageHeight = page?.height ?: 0
+        var pageWidth = page.width
+        var pageHeight = page.height
         if (pageWidth <= 0 || pageHeight <= 0) {
             Log.w("CommuniqueThumbnail", "Page reported zero width/height. Using fallback dimensions.")
             pageWidth = 595  // A4 width in points at 72 dpi
@@ -452,4 +429,4 @@ private fun renderPdfThumbnail(context: Context, pdfFile: File): Bitmap? {
             Log.e("CommuniqueThumbnail", "Error closing resources: ${e.message}", e)
         }
     }
-} 
+}

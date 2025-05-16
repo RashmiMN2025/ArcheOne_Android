@@ -37,7 +37,6 @@ class PreviewNavigator : Navigator {
     override fun navigateToHolidayCalendar() {}
     override fun navigateToClientCalendar() {}
     override fun navigateToGreetings() {}
-    override fun navigateToXConnect() {}
     override fun navigateToXConnect(initialTab: String) {}
     override fun navigateToLocations(showHeader: Boolean) {}
     override fun navigateToHelpdesk() {}
@@ -67,10 +66,17 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToIdeaVault() {}
 
+    override fun navigateToGlobalCelebration() {}
+
+    override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {
+        // No-op for preview purposes
+    }
+
     // Implementation of new methods
     override fun getCurrentRoute(): String? {
         return null // For preview purposes, we don't track a real route
-    }    override fun refreshCurrentScreen() {
+    }    
+    override fun refreshCurrentScreen() {
         // No-op for preview purposes
     }
     
