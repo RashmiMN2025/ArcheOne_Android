@@ -822,12 +822,35 @@ class HomeActivity : AppCompatActivity() {
                             },
                             popExitTransition = {
                                 fadeOut(animationSpec = tween(300))
-                            }
-                        ) {
+                            }                        ) {
                             IdeaVaultScreen(
                             onBackPressed = { navController.popBackStack() },
                             controller = ideaVaultController, // Pass the initialized controller
                             apiService = RetrofitClient.apiService
+                        )
+                    }
+
+                    // Add the service_not_available route
+                    composable(
+                        route = "service_not_available?serviceName={serviceName}",
+                        arguments = listOf(
+                            navArgument("serviceName") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            }
+                        ),
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) { backStackEntry ->
+                        val serviceName = backStackEntry.arguments?.getString("serviceName")
+                        ServiceNotAvailableScreen(
+                            navController = navController,
+                            serviceName = serviceName
                         )
                     }
                 }

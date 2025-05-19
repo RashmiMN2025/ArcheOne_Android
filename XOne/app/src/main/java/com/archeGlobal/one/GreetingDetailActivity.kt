@@ -63,12 +63,10 @@ class GreetingDetailActivity : ComponentActivity() {
                     categoryGreetings = allGreetings,
                     selectedGreetingUrl = selectedGreetingUrl,
                     message = editableMessage,
-                    category = category,
-                    onMessageChanged = { newMessage -> editableMessage = newMessage },
-                    onGreetingSelected = { newGreetingUrl -> selectedGreetingUrl = newGreetingUrl },
-                    onBackPressed = { finish() },
+                    category = category,                    onMessageChanged = { newMessage -> editableMessage = newMessage },
+                    onGreetingSelected = { newGreetingUrl -> selectedGreetingUrl = newGreetingUrl },                    onBackPressed = { finish() },
                     onSendGreeting = { sendGreeting(selectedGreetingUrl, editableMessage, category) },
-                    onSendInOutlook = { sendGreetingInOutlook(selectedGreetingUrl, editableMessage, category) }
+                    onSendInOutlook = { greetingUrl, msg -> sendGreetingInOutlook(greetingUrl, msg, category) }
                 )
             }
         }
@@ -183,39 +181,11 @@ class GreetingDetailActivity : ComponentActivity() {
             return null
         }
     }    private fun sendGreetingInOutlook(imageUrl: String, message: String, category: String) {
-        // Show loading toast
-        android.widget.Toast.makeText(this, "Preparing greeting for Outlook...", android.widget.Toast.LENGTH_SHORT).show()
-        
-        // Implementation for sending via Outlook
-        val outlookPackages = arrayOf(
-            "com.microsoft.office.outlook",
-            "com.microsoft.outlook"
-        )
-        
-        var resolvedOutlookPackage: String? = null
-        for (pkgName in outlookPackages) {
-            try {
-                if (packageManager.getLaunchIntentForPackage(pkgName) != null) {
-                    resolvedOutlookPackage = pkgName
-                    break
-                }
-            } catch (e: Exception) {
-                // Log error but continue checking other packages
-                android.util.Log.e("GreetingDetailActivity", "Error checking package $pkgName: ${e.message}")
-            }
-        }
-        
-        if (resolvedOutlookPackage == null) {
-            // Outlook not found - show error message
-            android.widget.Toast.makeText(
-                this,
-                "Microsoft Outlook is not installed. Please install it to use this feature.",
-                android.widget.Toast.LENGTH_LONG
-            ).show()
-            return
-        }
-        
-        // Download and share the image via Outlook
+        // This will open the Outlook app with the greeting and message
+        downloadImageAndShareOutlook(imageUrl, message, category)
+    }
+    
+    private fun downloadImageAndShareOutlook(imageUrl: String, message: String, category: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Use Coil to download the image
@@ -244,8 +214,7 @@ class GreetingDetailActivity : ComponentActivity() {
                 
                 // Save bitmap to a temporary file
                 val imageUri = saveBitmapToCache(imageBitmap)
-                
-                // Share via Outlook with actual image file
+                  // Share via Outlook with actual image file
                 withContext(Dispatchers.Main) {
                     if (imageUri != null) {
                         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -256,24 +225,17 @@ class GreetingDetailActivity : ComponentActivity() {
                                 putExtra(Intent.EXTRA_TEXT, message)
                             }
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            setPackage(resolvedOutlookPackage)
+                            setPackage("com.microsoft.office.outlook")
                         }
                         
                         try {
-                            startActivity(intent)
+                            startActivity(Intent.createChooser(intent, "Send Greeting in Outlook"))
                         } catch (e: Exception) {
-                            android.widget.Toast.makeText(
-                                this@GreetingDetailActivity,
-                                "Could not open Outlook. Please ensure it is installed and properly configured.",
-                                android.widget.Toast.LENGTH_LONG
-                            ).show()
-                            android.util.Log.e("GreetingDetailActivity", "Error opening Outlook with image: ${e.message}")
-                            // Try fallback with text-only
-                            sendTextOnlyToOutlook(resolvedOutlookPackage, category, message)
-                        }
-                    } else {
+                            // Fallback to normal share if Outlook is not installed
+                            sendGreeting(imageUrl, message, category)
+                        }                    } else {
                         // Fallback to text-only if image failed
-                        sendTextOnlyToOutlook(resolvedOutlookPackage, category, message)
+                        shareLinkOnly(imageUrl, message, category)
                     }
                 }
             } catch (e: Exception) {
@@ -281,30 +243,9 @@ class GreetingDetailActivity : ComponentActivity() {
                 
                 // Fallback to text sharing on error
                 withContext(Dispatchers.Main) {
-                    sendTextOnlyToOutlook(resolvedOutlookPackage, category, message)
+                    shareLinkOnly(imageUrl, message, category)
                 }
             }
-        }
-    }
-    
-    private fun sendTextOnlyToOutlook(packageName: String, subject: String, body: String) {
-        // Create intent specifically for Outlook text-only
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "message/rfc822" // email MIME type
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-            putExtra(Intent.EXTRA_TEXT, body)
-            setPackage(packageName)
-        }
-        
-        try {
-            startActivity(intent)
-        } catch (e: Exception) {
-            android.widget.Toast.makeText(
-                this,
-                "Could not open Outlook. Please ensure it is installed and properly configured.",
-                android.widget.Toast.LENGTH_LONG
-            ).show()
-            android.util.Log.e("GreetingDetailActivity", "Error opening Outlook: ${e.message}")
         }
     }
 }

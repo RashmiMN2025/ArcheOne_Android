@@ -48,12 +48,17 @@ class BusinessCardControllerImpl(
 
     override fun onEditLocation() {
         showEditLocationDialog.value = true  // Open the dialog
-    }
-
-    override fun onLocationUpdated(newLocation: String) {
+    }    override fun onLocationUpdated(newLocation: String) {
         if (newLocation.isNotEmpty()) {
+            // If user enters "N/A", replace with "Bangalore"
+            val locationValue = if (newLocation.trim().equals("N/A", ignoreCase = true)) {
+                "Bangalore"
+            } else {
+                newLocation
+            }
+            
             // Create a new card with updated location and regenerated QR code
-            val updatedCard = _businessCard.value.copy(location = newLocation)
+            val updatedCard = _businessCard.value.copy(location = locationValue)
             _businessCard.value = generateQRCodeForCard(updatedCard)
             
             showEditLocationDialog.value = false  // Close the dialog
@@ -107,11 +112,16 @@ class BusinessCardControllerImpl(
         } else {
             true
         }
-    }
-
-    // Change _businessCard to MutableState
+    }    // Change _businessCard to MutableState
     private val _businessCard = mutableStateOf(
         OtpVerificationController.getUserData()?.let { userData ->
+            // Process the location - if it's N/A, replace with Bangalore
+            val locationValue = if (userData.location == "N/A" || userData.location.isEmpty()) {
+                "Bangalore"
+            } else {
+                userData.location
+            }
+            
             val card = BusinessCardModel(
                 companyLogo = R.drawable.arche,
                 name = userData.name,
@@ -119,7 +129,7 @@ class BusinessCardControllerImpl(
                 department = userData.department,
                 email = userData.email,
                 phone = userData.mobile,
-                location = userData.location, // Location from userData
+                location = locationValue, // Updated location with Bangalore fallback
                 website = "www.arche.global"
             )
             

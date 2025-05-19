@@ -40,9 +40,8 @@ fun GreetingDetailScreen(
     category: String,
     onMessageChanged: (String) -> Unit,
     onGreetingSelected: (String) -> Unit,
-    onBackPressed: () -> Unit,
-    onSendGreeting: () -> Unit,
-    onSendInOutlook: () -> Unit
+    onBackPressed: () -> Unit,    onSendGreeting: () -> Unit,
+    onSendInOutlook: (String, String) -> Unit
 ) {
     // Track the currently selected greeting
     var currentSelectedGreeting by remember { mutableStateOf(selectedGreetingUrl) }
@@ -207,11 +206,9 @@ fun GreetingDetailScreen(
                             fontSize = 14.sp,
                             color = Color.White
                         )
-                    }
-                    
-                    // Send in Outlook button
+                    }                    // Send in Outlook button
                     Button(
-                        onClick = onSendInOutlook,
+                        onClick = { onSendInOutlook(currentSelectedGreeting, message) },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF2196F3)

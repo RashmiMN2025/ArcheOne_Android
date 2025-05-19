@@ -551,30 +551,41 @@ fun BusinessCardScreen(
             },
             confirmButton = {
                 TextButton(
-                    onClick = {
-                        if (newLocation.isNotEmpty()) {
-                            val offices = OtpVerificationController.getOfficesData()
+                    onClick = {                        if (newLocation.isNotEmpty()) {
                             val trimmedLocation = newLocation.trim()
                             
-                            // Validate against office locations
-                            val isValid = offices?.any { office ->
-                                office.country.equals(trimmedLocation, true) || 
-                                office.regionaloffice?.any { regional ->
-                                    regional.region.contains(trimmedLocation, true)
-                                } == true
-                            } ?: false
-
-                            if (!isValid) {
-                                // Set default to Bangalore and show toast
+                            // Handle N/A case first
+                            if (trimmedLocation.equals("N/A", ignoreCase = true)) {
                                 val defaultLocation = "Bangalore"
                                 Toast.makeText(
                                     context, 
-                                    "Invalid location, defaulting to $defaultLocation",
+                                    "Using $defaultLocation instead of N/A",
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 controller.onLocationUpdated(defaultLocation)
                             } else {
-                                controller.onLocationUpdated(trimmedLocation)
+                                val offices = OtpVerificationController.getOfficesData()
+                                
+                                // Validate against office locations
+                                val isValid = offices?.any { office ->
+                                    office.country.equals(trimmedLocation, true) || 
+                                    office.regionaloffice?.any { regional ->
+                                        regional.region.contains(trimmedLocation, true)
+                                    } == true
+                                } ?: false
+
+                                if (!isValid) {
+                                    // Set default to Bangalore and show toast
+                                    val defaultLocation = "Bangalore"
+                                    Toast.makeText(
+                                        context, 
+                                        "Invalid location, defaulting to $defaultLocation",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    controller.onLocationUpdated(defaultLocation)
+                                } else {
+                                    controller.onLocationUpdated(trimmedLocation)
+                                }
                             }
                             newLocation = ""
                         }

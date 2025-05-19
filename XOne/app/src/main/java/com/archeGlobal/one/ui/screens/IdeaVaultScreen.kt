@@ -114,7 +114,7 @@ fun IdeaVaultScreen(
                             color = Color.Black,
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.align(Alignment.Center)
                         )
 

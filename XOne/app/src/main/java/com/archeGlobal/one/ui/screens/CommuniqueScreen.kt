@@ -147,7 +147,7 @@ fun CommuniqueScreen(
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search communiques...", color = Color.Gray.copy(alpha = 0.6f)) },
+                    placeholder = { Text("Search communique...", color = Color.Gray.copy(alpha = 0.6f)) },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Color.Transparent,
