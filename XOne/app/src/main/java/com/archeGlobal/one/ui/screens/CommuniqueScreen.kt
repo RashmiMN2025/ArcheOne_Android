@@ -192,7 +192,10 @@ fun CommuniqueScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(filteredCommuniques) { communique ->
+                        items(
+                            items = filteredCommuniques,
+                            key = { it.filePath } // Add key for stable identification
+                        ) { communique ->
                             CommuniqueCard(
                                 communique = communique,
                                 preloadedThumbnail = communiqueThumbnailCache[communique.filePath],
@@ -217,16 +220,17 @@ private fun CommuniqueCard(
 ) {
     val context = LocalContext.current
 
-    // State for loading when not preloaded
-    var thumbnail by remember { mutableStateOf<Bitmap?>(preloadedThumbnail) }
-    var isLoading by remember { mutableStateOf(preloadedThumbnail == null && communique.previewUrl.isNullOrEmpty()) }
+    // State for loading when not preloaded - add communique filePath as key to force recomposition
+    var thumbnail by remember(communique.filePath) { mutableStateOf<Bitmap?>(preloadedThumbnail) }
+    var isLoading by remember(communique.filePath) { mutableStateOf(preloadedThumbnail == null && communique.previewUrl.isNullOrEmpty()) }
 
     val hasPreview = !communique.previewUrl.isNullOrEmpty()
 
-    // If no preview and not preloaded yet, launch load
-    if (!hasPreview && thumbnail == null) {
-        LaunchedEffect(communique.filePath) {
-            thumbnail = getPdfThumbnail(context, communique.filePath)
+    // Reset and reload thumbnail when communique changes
+    LaunchedEffect(communique.filePath) {
+        if (!hasPreview) {
+            isLoading = true
+            thumbnail = communiqueThumbnailCache[communique.filePath] ?: getPdfThumbnail(context, communique.filePath)
             isLoading = false
         }
     }
