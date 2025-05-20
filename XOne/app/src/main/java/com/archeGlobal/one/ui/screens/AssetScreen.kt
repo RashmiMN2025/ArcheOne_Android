@@ -177,7 +177,7 @@ fun AssetScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        painter = painterResource(id = R.drawable.ic_info),
+                                        painter = painterResource(id = R.drawable.info),
                                         contentDescription = "Information",
                                         tint = Color(0xFFE94235),
                                         modifier = Modifier.size(24.dp)

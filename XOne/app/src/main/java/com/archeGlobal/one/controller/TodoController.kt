@@ -185,6 +185,13 @@ class TodoController(
         
         saveTasks()
     }
+
+    fun toggleTaskCompleted(task: TodoTask) {
+        val updatedTask = task.copy(completed = !task.completed)
+        val updatedTasks = model.tasks.map { if (it.id == task.id) updatedTask else it }
+        model = model.copy(tasks = updatedTasks)
+        saveTasks()
+    }
     
     fun onBackPressed() {
         navigator.navigateToHome()

@@ -3,6 +3,7 @@ package com.archeGlobal.one.ui.screens
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -14,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TodoController
 import com.archeGlobal.one.model.TaskPriority
@@ -71,7 +74,7 @@ fun TodoScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "To Do",
+                            text = "Checkmate",
                             color = Color.Black,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Bold,
@@ -121,6 +124,7 @@ fun TodoScreen(
                         onTaskClick = { /* Do nothing when task is clicked */ },
                         onEditClick = controller::startEditTask, // Directly go to edit mode
                         onDeleteClick = controller::deleteTask, // Directly delete the task
+                        onToggleCompleted = controller::toggleTaskCompleted, // <-- Pass controller function here
                         formatTimeRange = controller::formatTimeRange,
                         formatCreationDate = controller::formatCreationDate
                     )
@@ -241,6 +245,7 @@ fun TaskList(
     onTaskClick: (TodoTask) -> Unit,
     onEditClick: (TodoTask) -> Unit,
     onDeleteClick: (TodoTask) -> Unit,
+    onToggleCompleted: (TodoTask) -> Unit, // <-- Add this parameter
     formatTimeRange: (TodoTask) -> String,
     formatCreationDate: (TodoTask) -> String
 ) {
@@ -251,6 +256,7 @@ fun TaskList(
                 onTaskClick = { /* No action when clicking on the task */ },
                 onEditClick = { onEditClick(task) },
                 onDeleteClick = { onDeleteClick(task) },
+                onToggleCompleted = { onToggleCompleted(task) }, // <-- Use the parameter
                 formatTimeRange = { formatTimeRange(task) },
                 formatCreationDate = { formatCreationDate(task) }
             )
@@ -265,6 +271,7 @@ fun SwipeableTaskItem(
     onTaskClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onToggleCompleted: (TodoTask) -> Unit, // <-- Add this line
     formatTimeRange: () -> String,
     formatCreationDate: () -> String
 ) {
@@ -378,6 +385,9 @@ fun SwipeableTaskItem(
                         // Only allow swiping left
                         if (delta <= 0f) {
                             offsetX += delta
+                        } else if (isSwipeRevealed) {
+                            // Swiping right to close
+                            offsetX += delta
                         }
                         if (offsetX < -swipeThreshold) {
                             isSwipeRevealed = true
@@ -403,28 +413,58 @@ fun SwipeableTaskItem(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Column(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
                     .clickable {
                         if (isSwipeRevealed) {
-                            // Reset swipe if actions are revealed
                             offsetX = 0f
                             isSwipeRevealed = false
                         } else {
-                            // Only call onTaskClick if we're not resetting the swipe
+                            onToggleCompleted(task) // <-- Call controller's toggle function
                             onTaskClick()
                         }
                     }
+                    .padding(16.dp)
             ) {
+                // Circle with check mark if checked
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(if (task.completed) Color(0xFFDD3825) else Color.Transparent)
+                        .border(
+                            width = 2.dp,
+                            color = if (task.completed) Color(0xFFDD3825) else Color.Gray,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (task.completed) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Checked",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Task details
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                 // Title
                 Text(
                     text = task.title,
                     fontSize = 22.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = Color.Black,
+                    textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None // <-- Add this line
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -435,7 +475,7 @@ fun SwipeableTaskItem(
                     fontSize = 16.sp,
                     color = Color.Gray,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -446,7 +486,7 @@ fun SwipeableTaskItem(
                     fontSize = 16.sp,
                     color = Color.Gray,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -457,11 +497,12 @@ fun SwipeableTaskItem(
                     fontSize = 16.sp,
                     color = Color.Gray,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal
                 )
             }
         }
     }
+}
 }
 
 @Composable

@@ -85,8 +85,8 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Profile")
                 navigator.navigateToProfile()
             }
-            "to do", "todo" -> {
-                Log.d("HomeController", "Navigating to Todo")
+            "checkmate" -> {
+                Log.d("HomeController", "Navigating to checkmate")
                 navigator.navigateToTodo()
             }
             "id" -> navigator.navigateToID()
