@@ -175,7 +175,7 @@ fun EmergencyContactScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Warning,
+                                    painter = painterResource(id = R.drawable.warning),
                                     contentDescription = "Important Note",
                                     tint = Color(0xFFE53935),
                                     modifier = Modifier.size(22.dp)

@@ -629,7 +629,7 @@ private fun formatServiceTitle(title: String): String {
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
         "MyDocuments" -> "My\nDocuments"
-        "To Do" -> "To Do"
+        "Checkmate" -> "Checkmate"
         "My Career" -> "My\nCareer"
         "Admin" -> "Admin" 
         "Medical" -> "Medical"
@@ -769,7 +769,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "Finance", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "To Do" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
+            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "Checkmate" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -807,7 +807,7 @@ private fun AppIcon(
                                 "newonboarding" -> R.drawable.new_onboarding
                                 "profile" -> R.drawable.profile
                                 "profileconnect" -> R.drawable.profile
-                                "todo" -> R.drawable.todo
+                                "checkmate" -> R.drawable.todo
                                 "passwordreset" -> R.drawable.password_reset
                                 "knowyourog" -> R.drawable.know_your_org
                                 "archeodyssey" -> R.drawable.arche_odyssey

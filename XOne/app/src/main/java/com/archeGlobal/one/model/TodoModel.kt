@@ -21,7 +21,8 @@ data class TodoTask(
     val endTime: LocalTime = LocalTime.now().plusHours(1),
     val dayOfWeek: Int = LocalDate.now().dayOfWeek.value, // 1 = Monday, 7 = Sunday
     val dateAdded: LocalDate = LocalDate.now(),
-    val creationDate: LocalDate = LocalDate.now()
+    val creationDate: LocalDate = LocalDate.now(),
+    val completed: Boolean = false // <-- Add this line
 )
 
 enum class TaskPriority {

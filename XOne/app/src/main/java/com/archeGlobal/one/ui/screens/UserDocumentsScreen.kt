@@ -266,7 +266,7 @@ fun DocumentItem(
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_upload),
+                        painter = painterResource(id = R.drawable.share),
                         contentDescription = "Upload",
                         tint = Color(0xFFDD3825),
                         modifier = Modifier.size(20.dp)

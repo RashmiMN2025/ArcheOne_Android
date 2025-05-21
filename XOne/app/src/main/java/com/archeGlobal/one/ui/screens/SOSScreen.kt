@@ -342,9 +342,10 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .width(300.dp)
-                .height(200.dp),
+                .height(200.dp)
+                .clip(RoundedCornerShape(16.dp)), // <-- Rounded corners added here,
             error = painterResource(id = R.drawable.ic_image_placeholder),
-            placeholder = painterResource(id = R.drawable.ic_image_placeholder)
+            placeholder = painterResource(id = R.drawable.ic_image_placeholder),
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
