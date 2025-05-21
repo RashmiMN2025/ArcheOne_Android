@@ -184,8 +184,7 @@ class GreetingDetailActivity : ComponentActivity() {
         // This will open the Outlook app with the greeting and message
         downloadImageAndShareOutlook(imageUrl, message, category)
     }
-    
-    private fun downloadImageAndShareOutlook(imageUrl: String, message: String, category: String) {
+      private fun downloadImageAndShareOutlook(imageUrl: String, message: String, category: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Use Coil to download the image
@@ -211,34 +210,50 @@ class GreetingDetailActivity : ComponentActivity() {
                         }
                     }
                 }
-                
-                // Save bitmap to a temporary file
-                val imageUri = saveBitmapToCache(imageBitmap)
-                  // Share via Outlook with actual image file
-                withContext(Dispatchers.Main) {
-                    if (imageUri != null) {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "image/jpeg"
-                            putExtra(Intent.EXTRA_STREAM, imageUri)
-                            putExtra(Intent.EXTRA_SUBJECT, category)
-                            if (message.isNotEmpty()) {
-                                putExtra(Intent.EXTRA_TEXT, message)
+                  if (imageBitmap != null) {
+                    // Save bitmap to a temporary file
+                    val imageUri = saveBitmapToCache(imageBitmap)
+
+                    withContext(Dispatchers.Main) {
+                        if (imageUri != null) {
+                            // Create intent for Outlook with image in body
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "message/rfc822"  // Use email MIME type
+                                putExtra(Intent.EXTRA_SUBJECT, category)
+                                
+                                // Add message as text
+                                if (message.isNotEmpty()) {
+                                    putExtra(Intent.EXTRA_TEXT, message)
+                                }
+                                
+                                // Add image to be embedded in body, not as attachment
+                                putExtra(Intent.EXTRA_STREAM, imageUri)
+                                
+                                // Set flags to grant URI permissions
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                
+                                // Target Outlook app specifically
+                                setPackage("com.microsoft.office.outlook")
                             }
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            setPackage("com.microsoft.office.outlook")
+                            
+                            try {
+                                startActivity(intent)
+                            } catch (e: Exception) {
+                                android.util.Log.e("GreetingDetailActivity", "Error opening Outlook: ${e.message}", e)
+                                // Fallback to normal share if Outlook is not installed or has issues
+                                sendGreeting(imageUrl, message, category)
+                            }
+                        } else {
+                            // Fallback to text-only if image processing failed
+                            shareLinkOnly(imageUrl, message, category)
                         }
-                        
-                        try {
-                            startActivity(Intent.createChooser(intent, "Send Greeting in Outlook"))
-                        } catch (e: Exception) {
-                            // Fallback to normal share if Outlook is not installed
-                            sendGreeting(imageUrl, message, category)
-                        }                    } else {
-                        // Fallback to text-only if image failed
+                    }
+                } else {
+                    // Fallback to text-only if image processing failed
+                    withContext(Dispatchers.Main) {
                         shareLinkOnly(imageUrl, message, category)
                     }
-                }
-            } catch (e: Exception) {
+                }            } catch (e: Exception) {
                 android.util.Log.e("GreetingDetailActivity", "Error downloading image for Outlook: ${e.message}")
                 
                 // Fallback to text sharing on error
@@ -249,3 +264,4 @@ class GreetingDetailActivity : ComponentActivity() {
         }
     }
 }
+

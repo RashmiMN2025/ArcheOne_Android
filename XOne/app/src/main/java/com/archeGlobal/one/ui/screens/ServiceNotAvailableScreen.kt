@@ -3,6 +3,7 @@ package com.archeGlobal.one.ui.screens
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,19 +15,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.archeGlobal.one.R
@@ -35,83 +42,108 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 @Composable
 fun ServiceNotAvailableScreen(
     navController: NavController,
-    serviceName: String? = null // Parameter kept for future use if needed
+    serviceName: String? = null
 ) {
-    // We could use the serviceName parameter to customize the message in the future
+    // Create a gradient background from light gray to darker gray
+    val gradientBackground = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFFE6E6E2), // Light gray at top
+            Color(0xFF9E9E9E)  // Darker gray at bottom
+        )
+    )
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            .background(brush = gradientBackground)
+    ) {        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center)
-        ) {            // Warning icon
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {            // Add less weight at the top to move content up
+            Spacer(modifier = Modifier.weight(0.3f))
+            
+            // Red warning triangle icon
             Image(
-                painter = painterResource(id = R.drawable.ic_service_unavailable),
+                painter = painterResource(id = R.drawable.warning),
                 contentDescription = "Service Unavailable",
-                modifier = Modifier.size(96.dp)
+                modifier = Modifier.size(70.dp).align(Alignment.CenterHorizontally),
+                contentScale = ContentScale.Fit,
+                colorFilter = ColorFilter.tint(Color(0xFFE84C3D)) // Red tint
             )
             
             Spacer(modifier = Modifier.height(32.dp))
-              // Title
+            
+            // Title - large bold text
             Text(
-                stringResource(id = R.string.service_not_available_title),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                text = "Service Not Available",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                color = Color.Black,
+                modifier = Modifier.fillMaxWidth()
             )
             
             Spacer(modifier = Modifier.height(16.dp))
-              // Description
+            
+            // Description text
             Text(
-                stringResource(id = R.string.service_not_available_message),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
+                text = "This service is currently under development or\nnot available.",
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Black,
+                modifier = Modifier.fillMaxWidth()
             )
             
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Website link text
+            Spacer(modifier = Modifier.height(24.dp))            // Website link text - single row with colored link
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
-            ) {                Text(
+            ) {                
+                Text(
                     "Meanwhile, you can ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    fontSize = 16.sp,
+                    color = Color.DarkGray
                 )
                 
                 Text(
                     "explore our website",
-                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFFE84C3D),
                     modifier = Modifier.clickable { 
                         // Open the website in browser
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.archeglobal.com"))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/"))
                         navController.context.startActivity(intent)
                     }
                 )
             }
-        }
-          // Button at the bottom
-        Button(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp),
-            shape = MaterialTheme.shapes.medium
-        ) {            Text(
-                stringResource(id = R.string.go_back),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+            
+            // More weight at the bottom to push content up and button down
+            Spacer(modifier = Modifier.weight(1.4f))
+            
+            // Red rounded Go Back button
+            Button(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(bottom = 48.dp)
+                    .align(Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE84C3D) // Red button color
+                )
+            ) {
+                Text(
+                    text = "Go Back",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = Color.White
+                )
+            }
         }
     }
 }

@@ -52,13 +52,14 @@ fun MonthDetailScreen(
     val hiddenHolidaysUpdated = controller.hiddenHolidaysUpdated.observeAsState()
     val milestonesState = controller.milestones.observeAsState()
     
-    var selectedMonth by remember { mutableStateOf(month) }
-    var monthHolidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
+    var selectedMonth by remember { mutableStateOf(month) };    var monthHolidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
     var selectedHoliday by remember { mutableStateOf<Holiday?>(null) }
     var selectedDate by remember { mutableStateOf<String?>(null) }
     var selectedMilestones by remember { mutableStateOf<List<Milestone>>(emptyList()) }
     var milestoneDates by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var selectedDay by remember { mutableStateOf<Int?>(null) }
+    // Track whether a date was explicitly selected by user (vs. automatically selected on init)
+    var isUserSelectedDate by remember { mutableStateOf(false) }
     
     // Update holidays when LiveData changes, month changes, or hidden holidays are updated
     LaunchedEffect(holidaysState.value, selectedMonth, hiddenHolidaysUpdated.value) {
@@ -225,9 +226,7 @@ fun MonthDetailScreen(
                 Log.d("MonthDetailScreen", "No calendar data available for milestone dates")
             }
         }
-    }
-
-    // Initialize with today's date if we're in current month, otherwise first day of month
+    }    // Initialize with today's date if we're in current month, otherwise first day of month
     LaunchedEffect(selectedMonth) {
         val currentDate = LocalDate.now()
         if (currentDate.monthValue == selectedMonth && currentDate.year == 2025) {
@@ -246,6 +245,8 @@ fun MonthDetailScreen(
                 }
             }
             selectedHoliday = todayHoliday
+            // Reset user selection flag since this is automatic selection
+            isUserSelectedDate = false
         } else {
             // For other months, select the first day
             val firstDayStr = String.format("%02d-%02d-%04d", 1, selectedMonth, 2025)
@@ -262,6 +263,16 @@ fun MonthDetailScreen(
                 }
             }
             selectedHoliday = firstDayHoliday
+            // Reset user selection flag since this is automatic selection
+            isUserSelectedDate = false
+        }
+    }
+    
+    // Reset to current date when leaving the screen
+    DisposableEffect(Unit) {
+        onDispose {
+            // This code runs when leaving the screen
+            isUserSelectedDate = false
         }
     }
 
@@ -419,18 +430,19 @@ fun MonthDetailScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Month Calendar
+                        Spacer(modifier = Modifier.height(24.dp))                        // Month Calendar
                         MonthCalendarView(
                             selectedMonth = selectedMonth, 
                             holidays = monthHolidays,
                             milestoneDates = milestoneDates,
                             selectedDay = selectedDay,
+                            isUserSelectedDate = isUserSelectedDate,
                             onDateClick = { holiday, date, day ->
                                 selectedHoliday = holiday
                                 selectedDate = date
                                 selectedDay = day
+                                // Mark this as a user selection when user clicks a date
+                                isUserSelectedDate = true
                             }
                         )
                     }
@@ -487,8 +499,9 @@ fun MonthCalendarView(
     holidays: List<Holiday>,
     milestoneDates: Set<Int> = emptySet(),
     selectedDay: Int? = null,
+    isUserSelectedDate: Boolean = false,
     onDateClick: (Holiday?, String, Int) -> Unit
-) {
+){
     // Log milestone dates for debugging
     LaunchedEffect(milestoneDates) {
         Log.d("MonthCalendarView", "Milestone dates: $milestoneDates")
@@ -532,7 +545,7 @@ fun MonthCalendarView(
             Spacer(modifier = Modifier.width(16.dp))
             LegendItem(color = Color(0xFF2196F3), text = "RH")
             Spacer(modifier = Modifier.width(16.dp))
-            LegendItem(color = Color(0xFF7EBD81).copy(alpha = 0.5f), text = "Today")
+            LegendItem(color = Color(0xFF7EBD81).copy(alpha = 0.5f), text = "Today/Selected")
             Spacer(modifier = Modifier.width(16.dp))
             LegendItem(color = Color(0xFFF5A623), text = "Milestone")
         }
@@ -575,12 +588,13 @@ fun MonthCalendarView(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .size(36.dp)
-                                .clip(CircleShape)
-                                .background(
+                                .clip(CircleShape)                                .background(
                                     when {
                                         isMandatoryHoliday -> Color(0xFFDD3825) // Solid red for holidays
                                         isRegionalHoliday -> Color(0xFF2196F3)  // Solid blue for RH
-                                        isToday -> Color(0xFF7EBD81).copy(alpha = 0.5f)           // Solid green for today
+                                        // Show green for today if no user selection, or for selected day if user made a selection
+                                        (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) -> 
+                                            Color(0xFF7EBD81).copy(alpha = 0.5f)
                                         else -> Color.Transparent
                                     }
                                 )
@@ -595,17 +609,17 @@ fun MonthCalendarView(
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
+                            ) {                                Text(
                                     text = day.toString(),
                                     fontSize = 14.sp,
                                     color = when {
-                                        isMandatoryHoliday || isRegionalHoliday || isToday -> Color.White
+                                        isMandatoryHoliday || isRegionalHoliday -> Color.White
+                                        (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) -> Color.White
                                         else -> Color.Black
-                                    },
-                                    fontFamily = GraphikFontFamily,
+                                    },                                    fontFamily = GraphikFontFamily,
                                     fontWeight = when {
-                                        isToday || isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
+                                        isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
+                                        (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) -> FontWeight.Bold
                                         else -> FontWeight.Normal
                                     }
                                 )
