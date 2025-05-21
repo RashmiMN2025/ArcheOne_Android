@@ -14,12 +14,21 @@ import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.utils.ImageCache
 import java.util.Comparator
+import android.net.Uri
+import com.archeGlobal.one.navigation.AndroidNavigator
 
 class HomeController(
     private val navigator: Navigator,
     private val context: Context
 ) {
     private val preferencesManager = PreferencesManager(context)
+    
+    // Helper method to navigate within the same activity
+    private fun navigate(route: String) {
+        if (navigator is AndroidNavigator) {
+            navigator.navController?.navigate(route)
+        }
+    }
     
     var model by mutableStateOf(HomeModel(
         userName = OtpVerificationController.getUserData()?.name ?: "",
@@ -70,16 +79,9 @@ class HomeController(
             "business card" -> {
                 Log.d("HomeController", "Navigating to Business Card")
                 navigator.navigateToBusinessCard()
-            }
-            "profile connect" -> {
-                Log.d("HomeController", "Profile Connect service not available yet")
-                // Show a Toast message informing the user
-                android.widget.Toast.makeText(
-                    context,
-                    "Profile Connect service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-                // Do not navigate anywhere
+            }            "profile connect" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Profile Connect")
+                navigate("service_not_available?serviceName=Profile Connect")
             }
             "profile" -> {
                 Log.d("HomeController", "Navigating to Profile")
@@ -90,80 +92,41 @@ class HomeController(
                 navigator.navigateToTodo()
             }
             "id" -> navigator.navigateToID()
-            "asset" -> navigator.navigateToAsset()
-            "timesheet" -> {
-                Log.d("HomeController", "Timesheet service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Timesheet service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-            "leave" -> {
-                Log.d("HomeController", "Leave service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Leave service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+            "asset" -> navigator.navigateToAsset()            "timesheet" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Timesheet")
+                navigate("service_not_available?serviceName=Timesheet")
+            }            "leave" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Leave")
+                navigate("service_not_available?serviceName=Leave")
             }
             "my documents", "mydocuments" -> {
                 Log.d("MyDocuments", "Navigating to My Documents")
                 navigator.navigateToMyDocuments()
-            }
-            "my career" -> {
-                Log.d("HomeController", "My Career service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "My Career service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-            "elearning" -> {
-                Log.d("HomeController", "eLearning service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "eLearning service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-            "goal setting/kpi", "goal" -> {
-                Log.d("HomeController", "Goal Setting/KPI service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Goal Setting/KPI service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+            }            "my career" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for My Career")
+                navigate("service_not_available?serviceName=My Career")
+            }            "elearning" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for eLearning")
+                navigate("service_not_available?serviceName=eLearning")
+            }            "goal setting/kpi", "goal" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Goal Setting/KPI")
+                navigate("service_not_available?serviceName=Goal Setting/KPI")
             }
             "medical" -> navigator.navigateToMedical()
             "finance" -> navigator.navigateToFinance()
             "zinghr" -> {
                 Log.d("HomeController", "Navigating to ZingHR")
                 navigator.navigateToZingHR()
+            }            "admin" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Admin")
+                navigate("service_not_available?serviceName=Admin")
+            }            "hr" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for HR")
+                navigate("service_not_available?serviceName=HR")
             }
-            "admin" -> {
-                Log.d("HomeController", "Admin service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Admin service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-            "hr" -> {
-                Log.d("HomeController", "HR service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "HR service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()            }
-            "calendar" -> navigator.navigateToHolidayOptions()
-            "client calendar" -> {
-                Log.d("HomeController", "Client Calendar service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Client Calendar service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+            "calendar" -> navigator.navigateToHolidayOptions()            "client calendar" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Client Calendar")
+                navigate("service_not_available?serviceName=Client Calendar")
             }
             "greetings" -> {
                 Log.d("HomeController", "Navigating to Greetings")
@@ -176,31 +139,16 @@ class HomeController(
             "blogs" -> {
                 Log.d("XConnect", "Navigating to XConnect for blogs")
                 navigator.navigateToXConnect("Blogs")
+            }            "helpdesk" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Helpdesk")
+                navigate("service_not_available?serviceName=Helpdesk")
+            }            "announcements" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Announcements")
+                navigate("service_not_available?serviceName=Announcements")
             }
-            "helpdesk" -> {
-                Log.d("HomeController", "Helpdesk service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Helpdesk service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-            "announcements" -> {
-                Log.d("HomeController", "Announcements service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Announcements service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-            "xprofile" -> navigator.navigateToXProfile()
-            "password reset" -> {
-                Log.d("HomeController", "Password Reset service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "Password Reset service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+            "xprofile" -> navigator.navigateToXProfile()            "password reset" -> {
+                Log.d("HomeController", "Navigating to Service Not Available screen for Password Reset")
+                navigate("service_not_available?serviceName=Password Reset")
             }
             "policy" -> navigator.navigateToPolicy()
             "sos" -> {
@@ -247,15 +195,10 @@ class HomeController(
             "ideavault", "idea vault" -> {
                 Log.d("HomeController", "Navigating to Idea Vault")
                 navigator.navigateToIdeaVault()
-            }
-            else -> {
+            }            else -> {
                 // Default case for any non-handled services
-                Log.d("HomeController", "${item.title} service not available yet")
-                android.widget.Toast.makeText(
-                    context,
-                    "${item.title} service is not available yet",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                Log.d("HomeController", "Navigating to Service Not Available screen for ${item.title}")
+                navigate("service_not_available?serviceName=${Uri.encode(item.title)}")
             }
         }
     }

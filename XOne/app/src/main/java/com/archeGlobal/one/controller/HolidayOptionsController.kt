@@ -15,15 +15,12 @@ class HolidayOptionsController(
         Log.d("HolidayOptionsController", "Navigating to Holiday Calendar")
         navigator.navigateToHolidayCalendar()
     }
-    
-    fun navigateToKudos() {
-        // This would navigate to Kudos screen when implemented
-        Log.d("HolidayOptionsController", "Kudos feature is not available yet")
-        android.widget.Toast.makeText(
-            context,
-            "Kudos feature is coming soon",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
+      fun navigateToKudos() {
+        // Navigate to service not available screen for Kudos
+        Log.d("HolidayOptionsController", "Navigating to Service Not Available screen for Kudos")
+        if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+            navigator.navController?.navigate("service_not_available?serviceName=Kudos")
+        }
     }
     
     fun onBackPressed() {

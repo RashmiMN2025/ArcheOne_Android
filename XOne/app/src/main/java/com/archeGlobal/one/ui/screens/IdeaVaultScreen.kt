@@ -110,15 +110,17 @@ fun IdeaVaultScreen(
                     )
                 }
 
-                Text(
-                    text = "IdeaVault",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+                        Text(
+                            text = "IdeaVault",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
 
             // Scrollable Content
             LazyColumn(

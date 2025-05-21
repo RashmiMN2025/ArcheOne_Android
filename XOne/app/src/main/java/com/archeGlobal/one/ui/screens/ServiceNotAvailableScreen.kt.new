@@ -1,0 +1,121 @@
+package com.archeGlobal.one.ui.screens
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.archeGlobal.one.R
+import com.archeGlobal.one.ui.theme.XOneTheme
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ServiceNotAvailableScreen(
+    navController: NavController,
+    serviceName: String? = null
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            serviceName ?: stringResource(id = R.string.service_not_available_title),
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_service_unavailable),
+                contentDescription = "Service Unavailable",
+                modifier = Modifier.size(120.dp),
+                contentScale = ContentScale.Fit
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Text(
+                serviceName ?: stringResource(id = R.string.service_not_available_title),
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                stringResource(id = R.string.service_not_available_message),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.fillMaxWidth(0.6f)
+            ) {
+                Text(stringResource(id = R.string.go_back))
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ServiceNotAvailableScreenPreview() {
+    // Mock NavController for preview
+    val navController = rememberNavController()
+    XOneTheme { // Using the app's theme for the preview
+        ServiceNotAvailableScreen(
+            navController = navController,
+            serviceName = "My Career"
+        )
+    }
+}
