@@ -1,6 +1,7 @@
 package com.archeGlobal.one
 
 import android.content.Intent
+import android.graphics.Bitmap // Ensure Bitmap is imported
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import coil.ImageLoader
 import coil.request.ImageRequest
+import android.util.Base64
+import android.util.Log
+import androidx.core.text.HtmlCompat
+import java.io.ByteArrayOutputStream
 
 class GreetingDetailActivity : ComponentActivity() {
     private lateinit var navigator: AndroidNavigator
@@ -155,7 +160,7 @@ class GreetingDetailActivity : ComponentActivity() {
         startActivity(Intent.createChooser(intent, "Send Greeting"))
     }
     
-    private fun saveBitmapToCache(bitmap: android.graphics.Bitmap?): android.net.Uri? {
+    private fun saveBitmapToCache(bitmap: android.graphics.Bitmap?, quality: Int = 90): android.net.Uri? { // Added quality parameter
         if (bitmap == null) {
             return null
         }
@@ -167,7 +172,7 @@ class GreetingDetailActivity : ComponentActivity() {
             
             // Save bitmap to file
             java.io.FileOutputStream(file).use { outputStream ->
-                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, outputStream)
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, quality, outputStream) // Use provided quality
             }
             
             // Get content URI using FileProvider
@@ -184,84 +189,223 @@ class GreetingDetailActivity : ComponentActivity() {
         // This will open the Outlook app with the greeting and message
         downloadImageAndShareOutlook(imageUrl, message, category)
     }
-      private fun downloadImageAndShareOutlook(imageUrl: String, message: String, category: String) {
+
+    private fun downloadImageAndShareOutlook(imageUrl: String, message: String, category: String) {
+        android.widget.Toast.makeText(this, "Preparing email for Outlook...", android.widget.Toast.LENGTH_SHORT).show()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Use Coil to download the image
                 val imageLoader = ImageLoader(this@GreetingDetailActivity)
                 val request = ImageRequest.Builder(this@GreetingDetailActivity)
                     .data(imageUrl)
-                    .allowHardware(false) // Important for accessing pixels
+                    .allowHardware(false)
                     .build()
                 
                 val result = imageLoader.execute(request)
-                val imageBitmap = result.drawable?.let { drawable ->
-                    // Convert drawable to bitmap
+                val originalBitmap = result.drawable?.let { drawable ->
                     when (drawable) {
                         is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
                         else -> {
                             val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
                             val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
-                            val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
-                            val canvas = android.graphics.Canvas(bitmap)
+                            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                            val canvas = android.graphics.Canvas(bmp)
                             drawable.setBounds(0, 0, canvas.width, canvas.height)
                             drawable.draw(canvas)
-                            bitmap
+                            bmp
                         }
                     }
                 }
-                  if (imageBitmap != null) {
-                    // Save bitmap to a temporary file
-                    val imageUri = saveBitmapToCache(imageBitmap)
 
+                if (originalBitmap == null) {
                     withContext(Dispatchers.Main) {
-                        if (imageUri != null) {
-                            // Create intent for Outlook with image in body
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "message/rfc822"  // Use email MIME type
-                                putExtra(Intent.EXTRA_SUBJECT, category)
-                                
-                                // Add message as text
-                                if (message.isNotEmpty()) {
-                                    putExtra(Intent.EXTRA_TEXT, message)
-                                }
-                                
-                                // Add image to be embedded in body, not as attachment
-                                putExtra(Intent.EXTRA_STREAM, imageUri)
-                                
-                                // Set flags to grant URI permissions
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                
-                                // Target Outlook app specifically
+                        android.widget.Toast.makeText(this@GreetingDetailActivity, "Could not load image.", android.widget.Toast.LENGTH_SHORT).show()
+                        shareLinkOnly(imageUrl, message, category)
+                    }
+                    return@launch
+                }
+
+                // 1. Prepare image for HTML embedding (very optimized)
+                // val bitmapForHtmlBase64 = createOutlookOptimizedBitmap(originalBitmap, forBase64 = true) // No longer needed for direct URL embedding
+                // val byteArrayOutputStreamHtml = ByteArrayOutputStream()
+                // bitmapForHtmlBase64.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStreamHtml) 
+                // val imageBytesHtml = byteArrayOutputStreamHtml.toByteArray()
+                // val base64ImageHtml = Base64.encodeToString(imageBytesHtml, Base64.NO_WRAP)
+                
+                // Get user data for footer
+                val userDataManager = UserDataManager.getInstance(this@GreetingDetailActivity)
+                val userData = userDataManager.getUserData()
+                val userName = userData?.name ?: "Your Name"
+                val userDesignation = userData?.designation ?: "Your Designation"
+                
+                // Use the direct imageUrl for the HTML email content
+                val htmlEmailContent = createRichHtmlEmail(message, imageUrl, category, userName, userDesignation)
+
+                // 2. Prepare image for attachment (better quality, for fallback)
+                val bitmapForAttachment = createOutlookOptimizedBitmap(originalBitmap, forBase64 = false)
+                val imageUriForAttachment = saveBitmapToCache(bitmapForAttachment, 80)
+
+
+                withContext(Dispatchers.Main) {
+                    // Primary Attempt: Pure HTML with embedded base64
+                    val pureHtmlIntent = Intent(Intent.ACTION_SEND).apply {
+                        setPackage("com.microsoft.office.outlook")
+                        type = "text/html"
+                        putExtra(Intent.EXTRA_SUBJECT, category)
+                        // For text/html, EXTRA_HTML_TEXT is the primary content.
+                        // EXTRA_TEXT can serve as a fallback if HTML isn't rendered.
+                        putExtra(Intent.EXTRA_TEXT, message) // Plain text version of the message
+                        putExtra(Intent.EXTRA_HTML_TEXT, htmlEmailContent)
+                    }
+
+                    try {
+                        startActivity(pureHtmlIntent)
+                        Log.d("GreetingDetailActivity", "Attempted Outlook with pure HTML/Base64 intent.")
+                        // No immediate toast here, as we don't know if it rendered inline yet.
+                    } catch (e: Exception) {
+                        Log.e("GreetingDetailActivity", "Outlook pure HTML intent failed: ${e.message}. Falling back to attachment method.", e)
+                        
+                        // Fallback Strategy: Send as image attachment with clear instructions.
+                        if (imageUriForAttachment != null) {
+                            val attachmentIntent = Intent(Intent.ACTION_SEND).apply {
                                 setPackage("com.microsoft.office.outlook")
+                                type = "image/jpeg" 
+                                putExtra(Intent.EXTRA_SUBJECT, category)
+                                val instructionMessage = """
+                                    $message
+                                    
+                                    ---
+                                    The image is attached. To add it to your email body:
+                                    1. Tap and hold the image attachment.
+                                    2. Select "Add to Body" or a similar option.
+                                """.trimIndent()
+                                putExtra(Intent.EXTRA_TEXT, instructionMessage)
+                                putExtra(Intent.EXTRA_STREAM, imageUriForAttachment)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                // Optionally, still include HTML as secondary info
+                                // putExtra(Intent.EXTRA_HTML_TEXT, htmlEmailContent) 
                             }
-                            
                             try {
-                                startActivity(intent)
-                            } catch (e: Exception) {
-                                android.util.Log.e("GreetingDetailActivity", "Error opening Outlook: ${e.message}", e)
-                                // Fallback to normal share if Outlook is not installed or has issues
-                                sendGreeting(imageUrl, message, category)
+                                startActivity(attachmentIntent)
+                                android.widget.Toast.makeText(this@GreetingDetailActivity, "Image attached. Tap & hold to add to body.", android.widget.Toast.LENGTH_LONG).show()
+                            } catch (e2: Exception) {
+                                Log.e("GreetingDetailActivity", "Outlook attachment fallback intent failed: ${e2.message}", e2)
+                                shareLinkOnly(imageUrl, message, category) // Ultimate fallback
                             }
                         } else {
-                            // Fallback to text-only if image processing failed
+                            Log.e("GreetingDetailActivity", "Image URI for attachment was null, falling back to link only.")
                             shareLinkOnly(imageUrl, message, category)
                         }
                     }
-                } else {
-                    // Fallback to text-only if image processing failed
-                    withContext(Dispatchers.Main) {
-                        shareLinkOnly(imageUrl, message, category)
-                    }
-                }            } catch (e: Exception) {
-                android.util.Log.e("GreetingDetailActivity", "Error downloading image for Outlook: ${e.message}")
-                
-                // Fallback to text sharing on error
+                }
+            } catch (e: Exception) {
+                Log.e("GreetingDetailActivity", "Error in downloadImageAndShareOutlook: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     shareLinkOnly(imageUrl, message, category)
                 }
             }
         }
+    }
+
+    /**
+     * Creates a bitmap specifically optimized.
+     * @param forBase64 If true, optimizes for very small size (for base64 string), uses RGB_565.
+     *                  If false, optimizes for attachment (better quality/size), uses ARGB_8888 or original.
+     */
+    private fun createOutlookOptimizedBitmap(bitmap: Bitmap, forBase64: Boolean): Bitmap {
+        val maxWidth = if (forBase64) 500 else 600 // Drastically reduced for base64
+        val maxHeight = if (forBase64) 600 else 800 // Drastically reduced for base64
+        val targetConfig = if (forBase64) Bitmap.Config.RGB_565 else bitmap.config ?: Bitmap.Config.ARGB_8888
+
+        val originalWidth = bitmap.width
+        val originalHeight = bitmap.height
+
+        if (originalWidth <= maxWidth && originalHeight <= maxHeight && bitmap.config == targetConfig) {
+            return if (bitmap.isMutable) bitmap.copy(targetConfig, false) else bitmap
+        }
+
+        var newWidth = originalWidth
+        var newHeight = originalHeight
+
+        val ratioBitmap = originalWidth.toFloat() / originalHeight.toFloat()
+        if (originalWidth > maxWidth || originalHeight > maxHeight) {
+            if (originalWidth.toFloat() / maxWidth.toFloat() > originalHeight.toFloat() / maxHeight.toFloat()) {
+                newWidth = maxWidth
+                newHeight = (newWidth / ratioBitmap).toInt()
+            } else {
+                newHeight = maxHeight
+                newWidth = (newHeight * ratioBitmap).toInt()
+            }
+        }
+        
+        if (newWidth <= 0) newWidth = 1
+        if (newHeight <= 0) newHeight = 1
+
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+
+        if (scaledBitmap.config != targetConfig) {
+            val finalBitmap = Bitmap.createBitmap(newWidth, newHeight, targetConfig)
+            val canvas = android.graphics.Canvas(finalBitmap)
+            val paint = android.graphics.Paint().apply {
+                isFilterBitmap = true
+                isAntiAlias = true
+                if (targetConfig == Bitmap.Config.RGB_565) isDither = true 
+            }
+            canvas.drawBitmap(scaledBitmap, 0f, 0f, paint)
+            // Recycle the intermediate scaledBitmap if it's different from the original and the final one
+            if (scaledBitmap != bitmap && scaledBitmap != finalBitmap && !scaledBitmap.isRecycled) {
+                scaledBitmap.recycle()
+            }
+            return finalBitmap
+        }
+        
+        // If scaledBitmap is the one we need (already correct config)
+        // and it's different from the original, and the original is not needed anymore, consider recycling original.
+        // However, be careful with recycling if 'bitmap' is passed from elsewhere and might be reused.
+        // For safety, let's assume 'bitmap' might be used elsewhere or is the direct result from Coil.
+        return scaledBitmap
+    }
+
+    /**
+     * Creates a rich HTML email with an embedded image via URL.
+     */
+    private fun createRichHtmlEmail(message: String, imageUrl: String, category: String, userName: String, userDesignation: String): String {
+        val sanitizedMessage = message.replace("\n", "<br />")
+        // Using a table for layout can sometimes be more robust in older/quirky email clients
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                <title>$category</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
+                    .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
+                    .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; } /* Increased margin-bottom */
+                    .image-container { text-align: center; margin-bottom: 30px; } /* Increased margin-bottom */
+                    .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="message-text">
+                        $sanitizedMessage
+                        <br /><br />
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="$imageUrl" alt="$category Greeting" style="max-width: 50%; width: 50%; height: auto; border: 0; display: block; margin: 0 auto;" /> 
+                        <br /> <br />
+                    </div>
+                    
+                    <div class="footer-text">
+                        Best Regards,<br />
+                       $userName<br />
+                       $userDesignation
+                    </div>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
     }
 }
 
