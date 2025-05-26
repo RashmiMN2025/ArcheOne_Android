@@ -106,12 +106,13 @@ class TodoController(
             isAddingTask = false
         )
     }
-    
-    fun addTask(title: String, priority: TaskPriority, startTime: LocalTime, endTime: LocalTime) {
-        if (title.isBlank()) {
-            return
-        }
+
+    fun addTask(title: String, priority: TaskPriority, startTime: LocalTime, endTime: LocalTime): TodoTask? {
         
+        if (title.isBlank()) {
+            return null
+        }
+
         val newTask = TodoTask(
             title = title,
             priority = priority,
@@ -119,16 +120,19 @@ class TodoController(
             endTime = endTime,
             dayOfWeek = model.selectedDay
         )
-        
+
         val updatedTasks = model.tasks.toMutableList()
         updatedTasks.add(newTask)
-        
+
         model = model.copy(
             tasks = updatedTasks,
             isAddingTask = false
         )
-        
+
+        Log.d("TodoController", "Tasks after add: ${model.tasks.size}")
+
         saveTasks()
+        return newTask // <-- Return the new task
     }
     
     fun startEditTask(task: TodoTask) {
@@ -182,6 +186,8 @@ class TodoController(
             selectedTask = null,
             showTaskDetail = false
         )
+        
+        Log.d("TodoController", "Tasks after delete: ${model.tasks.size}")
         
         saveTasks()
     }
