@@ -12,6 +12,7 @@ import com.archeGlobal.one.ImageViewerActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.model.Milestone
+import com.archeGlobal.one.model.GlobalEvent
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.network.ApiService
 import com.archeGlobal.one.network.CalendarRequest
@@ -40,6 +41,10 @@ class HolidayCalendarController(
     // LiveData for milestones
     private val _milestones = MutableLiveData<List<Milestone>>(emptyList())
     val milestones: LiveData<List<Milestone>> = _milestones
+    
+    // LiveData for global events
+    private val _globalEvents = MutableLiveData<List<GlobalEvent>>(emptyList())
+    val globalEvents: LiveData<List<GlobalEvent>> = _globalEvents
 
     // Set to track hidden holidays by their date string
     private val _hiddenHolidays = mutableSetOf<String>()
@@ -80,6 +85,130 @@ class HolidayCalendarController(
 
                 milestoneDateString == requestDateString
             } catch (e: Exception) {
+                false
+            }
+        } ?: emptyList()
+    }
+    
+    // Method to get global events for a specific date
+    fun getGlobalEventsForDate(date: String): List<GlobalEvent> {
+        if (date.isNullOrEmpty()) {
+            Log.e("HolidayCalendarController", "Empty date provided to getGlobalEventsForDate")
+            return emptyList()
+        }
+        
+        Log.d("HolidayCalendarController", "Looking for global events on date: $date")
+        Log.d("HolidayCalendarController", "Total global events available: ${_globalEvents.value?.size ?: 0}")
+        
+        // Hard-coded test for specific API event dates to verify if our data is loaded correctly
+        // The dates below are taken directly from the API response you provided
+        val knownDates = listOf(
+            "08-03-2025", // International Women's Day
+            "22-04-2025", // Earth Day
+            "07-04-2025", // World Health Day
+            "01-05-2025", // International Workers' day
+            "05-06-2025", // World Environment Day
+            "21-09-2025", // World Peace Day
+            "19-11-2025", // International Men's Day
+            "11-05-2025", // International Mother's Day
+            "15-06-2025", // International Father's Day
+            "11-04-2025", // International Pets Day
+            "28-06-2025"  // LGBT Pride Day
+        )
+        
+        // Check if the requested date matches any known global event date
+        if (knownDates.contains(date)) {
+            Log.d("HolidayCalendarController", "**** FOUND DIRECT MATCH FOR KNOWN DATE: $date ****")
+        }
+        
+        // First try parsing the request date
+        val requestDate = try {
+            val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+            LocalDate.parse(date, formatter)
+        } catch (e: Exception) {
+            Log.e("HolidayCalendarController", "Error parsing request date: $date - ${e.message}")
+            return emptyList()
+        }
+        
+        // Safe access to global events
+        if (_globalEvents.value.isNullOrEmpty()) {
+            Log.d("HolidayCalendarController", "No global events available")
+            return emptyList()
+        }
+        
+        // Log available events for debugging
+        _globalEvents.value?.forEach { event ->
+            Log.d("HolidayCalendarController", "Available global event: ${event.name}, date: ${event.date}")
+            
+            // Direct string comparison check
+            if (event.date == date) {
+                Log.d("HolidayCalendarController", "**** DIRECT STRING MATCH: ${event.name} on $date ****")
+            }
+        }
+        
+        // Find events matching this date
+        val events = _globalEvents.value?.filter { event ->
+            if (event.date.isNullOrEmpty()) {
+                Log.e("HolidayCalendarController", "Global event ${event.name} has null or empty date")
+                return@filter false
+            }
+            
+            // FIRST: Try simple string equality for direct match
+            if (event.date == date) {
+                Log.d("HolidayCalendarController", "Direct string match for ${event.name}: ${event.date} == $date")
+                return@filter true
+            }
+            
+            try {
+                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                val eventDate = LocalDate.parse(event.date, formatter)
+                
+                // Extract day and month for simple comparison
+                val eventDay = eventDate.dayOfMonth
+                val eventMonth = eventDate.monthValue
+                val requestDay = requestDate.dayOfMonth
+                val requestMonth = requestDate.monthValue
+                
+                // Compare day and month (ignore year for simplicity)
+                val matches = (eventDay == requestDay && eventMonth == requestMonth)
+                Log.d("HolidayCalendarController", "Comparing ${event.name}: day $eventDay/$eventMonth == $requestDay/$requestMonth => $matches")
+                matches
+            } catch (e: Exception) {
+                Log.e("HolidayCalendarController", "Error comparing dates for event ${event.name}: ${e.message}")
+                // Attempt direct string comparison as fallback
+                val eventDateParts = event.date.split("-")
+                val requestDateParts = date.split("-")
+                
+                if (eventDateParts.size >= 2 && requestDateParts.size >= 2) {
+                    val matches = (eventDateParts[0] == requestDateParts[0] && eventDateParts[1] == requestDateParts[1])
+                    Log.d("HolidayCalendarController", "Fallback string comparison for ${event.name}: ${eventDateParts[0]}-${eventDateParts[1]} == ${requestDateParts[0]}-${requestDateParts[1]} => $matches")
+                    matches
+                } else {
+                    false
+                }
+            }
+        } ?: emptyList()
+        
+        Log.d("HolidayCalendarController", "Found ${events.size} global events for date $date")
+        return events
+    }
+    
+    // Method to get all global events
+    fun getAllGlobalEvents(): List<GlobalEvent> {
+        return _globalEvents.value ?: emptyList()
+    }
+    
+    // Method to get global events for a specific month
+    fun getGlobalEventsForMonth(month: Int): List<GlobalEvent> {
+        return _globalEvents.value?.filter { event ->
+            try {
+                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                val eventDate = LocalDate.parse(event.date, formatter)
+                
+                // Global events are single-day events, so we just check if they're in this month
+                eventDate.monthValue == month
+            } catch (e: Exception) {
+                Log.e("HolidayCalendarController", "Error parsing date for global event: ${e.message}")
                 false
             }
         } ?: emptyList()
@@ -144,7 +273,18 @@ class HolidayCalendarController(
                             Log.w("HolidayCalendarController", "Using default holiday PDF URL: $defaultUrl")
                         }
                         
+                        // Update milestones and log count
                         _milestones.value = calendarResponse.milestones
+                        Log.d("HolidayCalendarController", "Loaded ${calendarResponse.milestones.size} milestones")
+                        
+                        // Update global events and log count
+                        _globalEvents.value = calendarResponse.globalEvents
+                        Log.d("HolidayCalendarController", "Loaded ${calendarResponse.globalEvents.size} global events")
+                        
+                        // Debug each global event
+                        calendarResponse.globalEvents.forEach { event ->
+                            Log.d("HolidayCalendarController", "Global event loaded: ${event.name}, date: ${event.date}")
+                        }
                     } else {
                         _holidays.value = NetworkResult.Error("Server returned error status: ${calendarResponse.status}")
                     }
