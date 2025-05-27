@@ -1,0 +1,26 @@
+name: MegaLinter Kotlin
+
+on:
+  push:
+    branches: [ Development ]
+  pull_request:
+    branches: [ Development ]
+
+jobs:
+  mega-linter:
+    name: MegaLinter Kotlin Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run MegaLinter (Base flavor with Kotlin)
+        uses: oxsecurity/megalinter/flavors/base@v7.11.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ENABLE_GITHUB_ACTIONS_ANNOTATIONS: true
+          SHOW_ERRORS: all
+          SHOW_ERRORS_LINES: true
+          ENABLE_LINTERS: KTLINT
+          REPORTERS_DISABLE: ALL  # Prevents the pop-from-empty-list error
