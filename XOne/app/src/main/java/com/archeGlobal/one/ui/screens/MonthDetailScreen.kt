@@ -389,7 +389,7 @@ fun MonthDetailScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(450.dp)
+                        .height(400.dp)
                         .padding(horizontal = 12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -648,11 +648,11 @@ fun MonthCalendarView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             LegendItem(color = Color(0xFFDD3825), text = "Holiday")
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             LegendItem(color = Color(0xFF2196F3), text = "RH")
-            Spacer(modifier = Modifier.width(16.dp))
-            LegendItem(color = Color(0xFF9C27B0).copy(alpha = 0.5f), text = "Global Event")
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            LegendItem(color = Color(0xFF4CAF50), text = "Global Event")
+            Spacer(modifier = Modifier.width(6.dp))
             LegendItem(color = Color(0xFFF5A623), text = "Milestone")
            // Spacer(modifier = Modifier.width(16.dp))
            //LegendItem(color = Color(0x), text = "Global Event")
@@ -696,15 +696,15 @@ fun MonthCalendarView(
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)                                .background(
                                     when {
                                         isMandatoryHoliday -> Color(0xFFDD3825) // Solid red for holidays
                                         isRegionalHoliday -> Color(0xFF2196F3)  // Solid blue for RH
-                                        hasGlobalEvent -> Color(0xFF9C27B0) // Solid purple for global events
-                                        // Show green for today if no user selection, or for selected day if user made a selection
+                                        hasGlobalEvent -> Color(0xFF4CAF50) // Solid green for global events
+                                        // Show blue for today if no user selection, or for selected day if user made a selection
                                         (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) -> 
-                                            Color(0xFF7EBD81).copy(alpha = 0.5f)
+                                            Color(0xFF2196F3).copy(alpha = 0.3f) // Blue with 30% opacity
                                         else -> Color.Transparent
                                     }
                                 )
@@ -721,6 +721,7 @@ fun MonthCalendarView(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {                                Text(
                                     text = day.toString(),
+                                    modifier = Modifier.padding(vertical = 2.dp),
                                     fontSize = 14.sp,
                                     color = when {
                                         isMandatoryHoliday || isRegionalHoliday -> Color.White
@@ -754,7 +755,7 @@ fun MonthCalendarView(
                                             modifier = Modifier
                                                 .size(4.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFF9C27B0))
+                                                .background(Color(0xFF4CAF50))
                                         )
                                     }
                                 }
@@ -763,7 +764,7 @@ fun MonthCalendarView(
                     } else {
                         // Empty space for days outside the month
                         Box(
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
@@ -793,27 +794,27 @@ fun HolidayDetailsBox(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp),
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Replace the header row containing title and close button with just the title
             Text(
                 text = "Holiday Details",
-                fontSize = 18.sp,
+                fontSize = 14.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 textAlign = TextAlign.Center
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
             // Icon and holiday name in a row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp)
+                    .padding(start = 8.dp)
             ) {
                 // Load holiday icon from URL
                 if (holiday.icon != null) {
@@ -824,7 +825,7 @@ fun HolidayDetailsBox(
                             .build(),
                         contentDescription = "${holiday.name} icon",
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(45.dp)
                             .clip(RoundedCornerShape(4.dp)),
                         loading = {
                             Box(
@@ -832,7 +833,7 @@ fun HolidayDetailsBox(
                                 contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(16.dp),
                                     color = Color(0xFFDD3825),
                                     strokeWidth = 2.dp
                                 )
@@ -846,13 +847,13 @@ fun HolidayDetailsBox(
                 } else {
                     // Fallback to Indian flag if no icon URL is available
                     Box(
-                        modifier = Modifier.size(60.dp)
+                        modifier = Modifier.size(45.dp)
                     ) {
                         DefaultIndianFlag()
                     }
                 }
                 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 
                 // Holiday name and date in a column
                 Column(
@@ -861,18 +862,18 @@ fun HolidayDetailsBox(
                 ) {
                     Text(
                         text = holiday.name,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
                     
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     
                     Text(
                         text = formatDetailDate(holiday.date),
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center
                     )
@@ -998,14 +999,15 @@ private fun LegendItem(color: Color, text: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(10.dp)
+                .size(8.dp)
                 .clip(CircleShape)
                 .background(color)
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = text,
-            fontSize = 12.sp,
+            fontSize = 10.sp,
+            fontFamily = GraphikFontFamily,
             color = Color.Black
         )
     }
@@ -1039,44 +1041,44 @@ fun MilestoneDetailsBox(
     ) {
         Column(
             modifier = Modifier
-                .padding(vertical = 18.dp, horizontal = 16.dp)
+                .padding(vertical = 12.dp, horizontal = 12.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Title with formatted date
             Text(
                 text = "Milestones of $formattedDate",
-                fontSize = 18.sp,
+                fontSize = 14.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 textAlign = TextAlign.Center
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
             // Display milestone information
             milestones.forEach { milestone ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 6.dp)
                 ) {
                     // Milestone bullet point in orange color
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 2.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
+                                .size(6.dp)
                                 .background(Color(0xFFF5A623), CircleShape)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = milestone.event,
                             color = Color.Black,
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             maxLines = 3,
@@ -1086,17 +1088,17 @@ fun MilestoneDetailsBox(
                     
                     // Customer information with left padding to align with the event text
                     Row(
-                        modifier = Modifier.padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 12.dp)
                     ) {
                         Text(
                             text = "Customer: ",
                             color = Color.Gray,
-                            fontSize = 14.sp
+                            fontSize = 12.sp
                         )
                         Text(
                             text = milestone.customer,
                             color = Color.Black,
-                            fontSize = 14.sp,
+                            fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
@@ -1104,17 +1106,17 @@ fun MilestoneDetailsBox(
                     
                     // Project information
                     Row(
-                        modifier = Modifier.padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 12.dp)
                     ) {
                         Text(
                             text = "Project: ",
                             color = Color.Gray,
-                            fontSize = 14.sp
+                            fontSize = 12.sp
                         )
                         Text(
                             text = milestone.project,
                             color = Color.Black,
-                            fontSize = 14.sp,
+                            fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
@@ -1122,17 +1124,17 @@ fun MilestoneDetailsBox(
                     
                     // Show original date (includes year)
                     Row(
-                        modifier = Modifier.padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 12.dp)
                     ) {
                         Text(
                             text = "Original Date: ",
                             color = Color.Gray,
-                            fontSize = 14.sp
+                            fontSize = 12.sp
                         )
                         Text(
                             text = formatMilestoneDate(milestone.poDate),
                             color = Color.Black,
-                            fontSize = 14.sp,
+                            fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium
                         )
@@ -1186,75 +1188,26 @@ fun GlobalEventDetailsBox(
     globalEvents: List<GlobalEvent>,
     controller: HolidayCalendarController
 ) {
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
-            // Keep the clickable to prevent clicks from propagating to parent
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = { /* Prevent click from reaching background */ }
-            ),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .padding(vertical = 18.dp, horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Header with purple background for the title
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color(0xFF9C27B0),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Global Events",
-                        fontSize = 18.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                    
-                    // Show the selected date
-                    Text(
-                        text = formatDetailDate(date),
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+        // Events list
+        globalEvents.forEach { event ->
+            GlobalEventItem(event, controller)
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Events list
-            globalEvents.forEach { event ->
-                GlobalEventItem(event, controller)
-                
-                // Add divider between events
-                if (event != globalEvents.last()) {
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        color = Color.LightGray,
-                        thickness = 1.dp
-                    )
-                }
+            // Add divider between events
+            if (event != globalEvents.last()) {
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    color = Color.LightGray,
+                    thickness = 1.dp
+                )
             }
         }
     }
@@ -1278,14 +1231,15 @@ fun GlobalEventItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = 90.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left side: Event image
+            // Event image on the left
             Box(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .size(60.dp)
+                    .clip(CircleShape)
                     .background(Color(0xFFF5F5F5))
             ) {
                 if (!event.image.isNullOrEmpty()) {
@@ -1297,14 +1251,14 @@ fun GlobalEventItem(
                         contentDescription = "${event.name} image",
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(8.dp)),
+                            .clip(CircleShape),
                         contentScale = ContentScale.Crop,
                         loading = {
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                CircularProgressIndicator(color = Color(0xFF9C27B0))
+                                CircularProgressIndicator(color = Color(0xFF4CAF50))
                             }
                         },
                         error = {
@@ -1316,8 +1270,8 @@ fun GlobalEventItem(
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Event Icon",
-                                    tint = Color(0xFF9C27B0),
-                                    modifier = Modifier.size(40.dp)
+                                    tint = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(30.dp)
                                 )
                             }
                         }
@@ -1331,8 +1285,8 @@ fun GlobalEventItem(
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Event Icon",
-                            tint = Color(0xFF9C27B0),
-                            modifier = Modifier.size(40.dp)
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(30.dp)
                         )
                     }
                 }
@@ -1340,41 +1294,48 @@ fun GlobalEventItem(
             
             Spacer(modifier = Modifier.width(16.dp))
             
-            // Right side: Event information
+            // Event information on the right
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.Start
             ) {
                 // Event name
                 Text(
                     text = event.name,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF9C27B0)
+                    color = Color.Black,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 
                 // Event date
                 Text(
                     text = formatDetailDate(event.date),
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 
                 // Event description
                 Text(
                     text = event.description,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,
                     maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
         }

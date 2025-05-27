@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
 import com.archeGlobal.one.model.Holiday
+import com.archeGlobal.one.model.GlobalEvent
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.NetworkResult
 import java.time.LocalDate
@@ -46,6 +47,7 @@ fun HolidayCalendarScreen(
 ) {
     val holidaysState = controller.holidays.observeAsState()
     val holidays = remember { mutableStateOf<List<Holiday>>(emptyList()) }
+    val globalEvents = remember { mutableStateOf<List<GlobalEvent>>(emptyList()) }
     val pdfUrl = remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     LaunchedEffect(holidaysState.value) {
@@ -53,11 +55,13 @@ fun HolidayCalendarScreen(
             is NetworkResult.Success -> {
                 result.data?.let { calendarResponse ->
                     holidays.value = calendarResponse.holidays
+                    globalEvents.value = calendarResponse.globalEvents ?: emptyList()
                     pdfUrl.value = calendarResponse.holidaysFile
                 }
             }
             is NetworkResult.Error -> {
                 holidays.value = controller.getDefaultHolidays()
+                globalEvents.value = emptyList()
             }
             is NetworkResult.Loading, null -> { /* Show loading */ }
         }
@@ -75,7 +79,7 @@ fun HolidayCalendarScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp, 12.dp, 12.dp, 0.dp)
+                .padding(2.dp, 12.dp, 2.dp, 0.dp) // Minimized horizontal padding
         ) {
             // Top Bar
             Box(
@@ -163,20 +167,32 @@ fun HolidayCalendarScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LegendItem(color = Color(0xFFDD3825), text = "Holidays")
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(11.dp))
                 LegendItem(color = Color(0xFF2196F3), text = "RH")
+                Spacer(modifier = Modifier.width(11.dp))
+                LegendItem(color = Color(0xFF4CAF50), text = "Global Event")
             }
             Spacer(modifier = Modifier.height(2.dp))            // Responsive Calendar Grid
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 115.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp), // Increased vertical spacing to 30dp
-                horizontalArrangement = Arrangement.spacedBy(8.dp), // Kept same horizontal spacing
+                columns = GridCells.Fixed(3), // Changed to 3 columns to match the image
+                verticalArrangement = Arrangement.spacedBy(20.dp), // Adjusted vertical spacing
+                horizontalArrangement = Arrangement.spacedBy(4.dp), // Further reduced horizontal spacing
+                contentPadding = PaddingValues(start = 2.dp, top = 8.dp, end = 2.dp, bottom = 100.dp), // Minimized side padding
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(12) { monthIndex ->
+                    val currentMonth = monthIndex + 1
                     MonthCard(
-                        month = monthIndex + 1,
-                        holidays = holidays.value.filter { it.month == monthIndex + 1 && it.isApplicable },
+                        month = currentMonth,
+                        holidays = holidays.value.filter { it.month == currentMonth && it.isApplicable },
+                        globalEvents = globalEvents.value.filter {
+                            try {
+                                val parts = it.date.split("-")
+                                parts.size == 3 && parts[1].toInt() == currentMonth
+                            } catch (e: Exception) {
+                                false
+                            }
+                        },
                         onMonthClick = onMonthClick
                     )
                 }
@@ -187,7 +203,7 @@ fun HolidayCalendarScreen(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MonthCard(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) {
+fun MonthCard(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEvent> = emptyList(), onMonthClick: (Int) -> Unit) {
     // Get screen width
     val screenWidth = LocalConfiguration.current.screenWidthDp
 
@@ -197,44 +213,48 @@ fun MonthCard(month: Int, holidays: List<Holiday>, onMonthClick: (Int) -> Unit) 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
-            .aspectRatio(1f) // Ensures the card is square
+            .height(140.dp) // Maintained height
+            .padding(horizontal = 0.5.dp) // Minimized padding
             .clickable { onMonthClick(month) },
         colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(6.dp), // Added equal padding inside the card
+                .padding(horizontal = 8.dp, vertical = 4.dp), // Reduced vertical padding
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
             Text(
                 text = YearMonth.of(2025, month)
                     .month
-                    .getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
-                fontSize = 16.sp,
+                    .getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                    .take(3), // Just first 3 characters to match image (Jan, Feb, etc.)
+                fontSize = 18.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 1.dp) // Reduced bottom padding
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            // Removed spacer to bring date numbers closer to month name
 
-            MonthDates(month, holidays)
+            MonthDates(month, holidays, globalEvents)
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MonthDates(month: Int, holidays: List<Holiday>) {
+fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEvent> = emptyList()) {
     val firstDayOfMonth = LocalDate.of(2025, month, 1).dayOfWeek.value % 7
     val totalDays = YearMonth.of(2025, month).lengthOfMonth()
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(1.5.dp)
+        verticalArrangement = Arrangement.spacedBy(3.dp), // Slightly reduced spacing between rows
+        modifier = Modifier.padding(top = 2.dp) // Small top padding to adjust position
     ) {
         var dayCounter = 1
         for (week in 0 until 6) {
@@ -250,7 +270,7 @@ fun MonthDates(month: Int, holidays: List<Holiday>) {
                               else if (dayCounter <= totalDays) dayCounter++ 
                               else 0
                     
-                    // Check for both mandatory and regional holidays
+                    // Check for holidays and global events
                     val mandatoryHoliday = holidays.any { 
                         it.day == date && it.holidayType == "Yes" 
                     }
@@ -259,7 +279,16 @@ fun MonthDates(month: Int, holidays: List<Holiday>) {
                         it.day == date && it.holidayType == "RH" 
                     }
                     
-                    DateView(date, mandatoryHoliday, regionalHoliday)
+                    val hasGlobalEvent = globalEvents.any {
+                        try {
+                            val parts = it.date.split("-")
+                            parts.size == 3 && parts[0].toInt() == date
+                        } catch (e: Exception) {
+                            false
+                        }
+                    }
+                    
+                    DateView(date, mandatoryHoliday, regionalHoliday, hasGlobalEvent)
                 }
             }
         }
@@ -267,11 +296,11 @@ fun MonthDates(month: Int, holidays: List<Holiday>) {
 }
 
 @Composable
-fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean) {
+fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean, hasGlobalEvent: Boolean = false) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(12.dp)
+            .size(14.dp) // Slightly reduced size
             .then(
                 when {
                     isMandatoryHoliday -> Modifier
@@ -280,6 +309,9 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean)
                     isRegionalHoliday -> Modifier
                         .clip(CircleShape)
                         .background(Color(0xFF2196F3)) // Blue for RH holidays
+                    hasGlobalEvent -> Modifier
+                        .clip(CircleShape)
+                        .background(Color(0xFF4CAF50)) // Green for global events
                     else -> Modifier
                 }
             )
@@ -287,11 +319,11 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean)
         if (date > 0) {
         Text(
                 text = date.toString(),
-                fontSize = 8.sp,
+                fontSize = 8.sp, // Smaller text size
                 lineHeight = 8.sp,
-                color = if (isMandatoryHoliday || isRegionalHoliday) Color.White else Color.Black,
+                color = if (isMandatoryHoliday || isRegionalHoliday || hasGlobalEvent) Color.White else Color.Black,
                 fontFamily = GraphikFontFamily,
-                fontWeight = if (isMandatoryHoliday || isRegionalHoliday) FontWeight.Bold else FontWeight.Normal
+                fontWeight = if (isMandatoryHoliday || isRegionalHoliday || hasGlobalEvent) FontWeight.Bold else FontWeight.Normal
             )
         }
     }
@@ -460,14 +492,15 @@ private fun LegendItem(color: Color, text: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(11.dp)
+                .size(8.dp)
                 .clip(CircleShape)
                 .background(color)
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = text,
-            fontSize = 12.sp,
+            fontSize = 10.sp,
+            fontFamily = GraphikFontFamily,
             color = Color.Black
         )
     }
