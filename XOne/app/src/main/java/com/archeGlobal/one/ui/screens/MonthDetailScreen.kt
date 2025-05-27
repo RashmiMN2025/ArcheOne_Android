@@ -554,12 +554,7 @@ fun MonthDetailScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        Text(
-                            text = "No information available for this date",
-                            color = Color.Gray,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center
-                        )
+
                     }
                 } else {
                     // Show details boxes in order: Holiday, Global Events, Milestones
