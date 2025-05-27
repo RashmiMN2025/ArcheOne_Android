@@ -38,15 +38,23 @@ interface ApiService {
     @POST("/logout")
     fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
 
+    // Document API - List Files
+    @Multipart
     @POST("/upload")
-    fun fetchDocuments(@Body request: MyDocRequest): Call<DocumentUploadResponse>
+    fun listDocuments(
+        @Part("email") email: RequestBody,
+        @Part("employeeId") employeeId: RequestBody
+    ): Call<DocumentListResponse>
+    
+    // Document API - Upload File
     @Multipart
     @POST("/upload")
     fun uploadDocument(
         @Part file: MultipartBody.Part,
+        @Part("email") email: RequestBody,
         @Part("employeeId") employeeId: RequestBody,
         @Part("documentType") documentType: RequestBody
-    ): Call<DocumentUploadResponse>
+    ): Call<DocumentListResponse>
 
     @GET("social")
     suspend fun getSocialContent(): Response<SocialContent>
@@ -98,7 +106,8 @@ data class LogoutRequest(
 
 data class MyDocRequest(
     val employeeId: String,
-    val documentType:String
+    val email: String,
+    val documentType: String? = null
 )
 
 data class LogoutResponse(
@@ -106,19 +115,24 @@ data class LogoutResponse(
     val message: String
 )
 
-data class DocumentUploadResponse(
+data class DocumentListResponse(
     val status: Int,
-    val message: String,
-    @SerializedName("filePath") val filePath: String? = null,
+    val message: Any, // Can be a string message or list of files
     val personalDoc: List<Document> = emptyList(),
     val professionalDoc: List<Document> = emptyList()
+)
+
+data class DocumentFile(
+    val fileName: String,
+    val url: String
 )
 
 data class Document(
     val id: Int,
     val docName: String,
-    val filePath: String,
-    val doc_type: String)
+    val filePath: String = "",
+    val doc_type: String
+)
 
 data class SOSResponse(
     @SerializedName("message") val message: String
