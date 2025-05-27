@@ -1091,8 +1091,8 @@ fun TaskFormDialog(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal
                             )
-                        }                
-            }
+                        } 
+                    }
         }
     }
         
@@ -1171,12 +1171,12 @@ val initialIsAM = initialHour < 12
                     Spacer(modifier = Modifier.height(8.dp))
                     Box(
                         modifier = Modifier
-                            .size(250.dp)
+                            .size(260.dp)
                             .background(Color(0xFFEBEBEB), shape = CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         with(LocalDensity.current) {
-                            val radius = 100.dp.toPx()
+                            val radius = 105.dp.toPx()
                             for (i in 0 until 12) {
                                 val angle = Math.toRadians((i * 30 - 60).toDouble())
                                 val x = kotlin.math.cos(angle) * radius
@@ -1208,8 +1208,8 @@ val initialIsAM = initialHour < 12
                                 ) {
                                     Text(
                                         text = hour.toString(),
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Normal,
                                         fontFamily = GraphikFontFamily,
                                         color = if (selectedHour == hour) Color.White else Color.Black
                                     )
@@ -1258,72 +1258,72 @@ val initialIsAM = initialHour < 12
                     Spacer(modifier = Modifier.height(8.dp))
                     Box(
                         modifier = Modifier
-                            .size(250.dp)
+                            .size(260.dp)
                             .background(Color(0xFFEBEBEB), shape = CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-        with(LocalDensity.current) {
-            val radius = 95.dp.toPx() // Increased radius for numbers
-            for (i in 0 until 12) {
-                val angle = Math.toRadians((i * 30 - 60).toDouble())
-                val x = kotlin.math.cos(angle) * radius
-                val y = kotlin.math.sin(angle) * radius
-                val minute = (i * 5) % 60
-                Box(
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(
-                                x = x.toInt(),
-                                y = y.toInt()
-                            )
-                        }
-                        .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent
+                        with(LocalDensity.current) {
+                            val radius = 100.dp.toPx() // Increased radius for numbers
+                            for (i in 0 until 12) {
+                                val angle = Math.toRadians((i * 30 - 60).toDouble())
+                                val x = kotlin.math.cos(angle) * radius
+                                val y = kotlin.math.sin(angle) * radius
+                                val minute = (i * 5) % 60
+                                Box(
+                                    modifier = Modifier
+                                        .offset {
+                                            IntOffset(
+                                                x = x.toInt(),
+                                                y = y.toInt()
+                                            )
+                                        }
+                                        .size(38.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent
+                                                    )
+                                                    .border(
+                                                        1.dp,
+                                                        if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent,
+                                                        CircleShape
+                                                    )
+                                        .clickable {
+                                            selectedMinute = minute
+                                            // Confirm immediately after minute selection
+                                            val hour24 = if (selectedHour == 12) {
+                                                if (isAM) 0 else 12
+                                            } else {
+                                                if (isAM) selectedHour!! else selectedHour!! + 12
+                                            }
+                                            onTimeSelected(hour24, selectedMinute)
+                                            onDismiss()
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "%02d".format(minute),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                        color = if (selectedMinute == minute) Color.White else Color.Black
                                     )
-                                    .border(
-                                        1.dp,
-                                        if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent,
-                                        CircleShape
-                                    )
-                        .clickable {
-                            selectedMinute = minute
-                            // Confirm immediately after minute selection
-                            val hour24 = if (selectedHour == 12) {
-                                if (isAM) 0 else 12
-                            } else {
-                                if (isAM) selectedHour!! else selectedHour!! + 12
+                                }
                             }
-                            onTimeSelected(hour24, selectedMinute)
-                            onDismiss()
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "%02d".format(minute),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily,
-                        color = if (selectedMinute == minute) Color.White else Color.Black
-                    )
-                }
-            }
-            // Back to hour selection in center (unchanged)
-            TextButton(
-                onClick = { isSelectingMinute = false },
-                modifier = Modifier.align(Alignment.Center)
-            ) {
-                Text(
-                    text = "Back",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = GraphikFontFamily,
-                    color = Color(0xFFDD3825)
-                )
-            }
-        }
-    }
+                            // Back to hour selection in center (unchanged)
+                            TextButton(
+                                onClick = { isSelectingMinute = false },
+                                modifier = Modifier.align(Alignment.Center)
+                            ) {
+                                Text(
+                                    text = "Back",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color(0xFFDD3825)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

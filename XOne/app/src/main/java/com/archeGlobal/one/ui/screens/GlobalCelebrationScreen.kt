@@ -215,47 +215,58 @@ fun GlobalCelebrationSubcategoryCard(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier
+            .width(160.dp)
+            .padding(8.dp)
+            .clickable(onClick = onClick)
     ) {
-        // Card with image
-        Card(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp) // Match height to GreetingCategoryCard in GreetingsScreen
-                .clip(RoundedCornerShape(12.dp)),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                .width(160.dp)
+                .aspectRatio(0.7f)
         ) {
-            // If files is not empty, show image, otherwise show text in center
-            if (subcategory.files.isNotEmpty()) {
-                AsyncImage(
-                    model = subcategory.files.first(),
-                    contentDescription = subcategory.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = subcategory.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(16.dp)
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFFF5F5F5),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(0.dp)
+            ) {
+                if (subcategory.files.isNotEmpty()) {
+                    AsyncImage(
+                        model = subcategory.files.first(),
+                        contentDescription = subcategory.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds
                     )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = subcategory.name,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
                 }
             }
         }
-        
-        // Category name below card
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subcategory.name,
-            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
-            fontSize = 16.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
         )
