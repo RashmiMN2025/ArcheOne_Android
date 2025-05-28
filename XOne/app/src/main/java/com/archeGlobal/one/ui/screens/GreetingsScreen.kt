@@ -1,6 +1,5 @@
 package com.archeGlobal.one.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,8 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,16 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.GreetingsController
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
@@ -38,67 +30,13 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.asPaddingValues
-import android.graphics.Bitmap
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.viewinterop.AndroidView
-import android.view.View
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.core.graphics.applyCanvas
-import androidx.core.view.drawToBitmap
-import kotlinx.coroutines.launch
-import coil.ImageLoader
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.graphics.Brush
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.model.GreetingSubcategory
 import androidx.compose.foundation.text.BasicTextField
-
-fun processCardView(
-    cardView: android.view.View?,
-    controller: GreetingsController,
-    onError: () -> Unit
-) {
-    if (cardView == null) {
-        onError()
-        return
-    }
-    try {
-        if (cardView is android.widget.ImageView && cardView.drawable != null) {
-            val drawable = cardView.drawable
-            val width = drawable.intrinsicWidth.takeIf { value -> value > 0 } ?: cardView.width
-            val height = drawable.intrinsicHeight.takeIf { value -> value > 0 } ?: cardView.height
-            android.util.Log.d("GreetingsScreen", "Capturing image with size: $width x $height")
-            if (width > 0 && height > 0) {
-                val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
-                val canvas = android.graphics.Canvas(bitmap)
-                drawable.setBounds(0, 0, canvas.width, canvas.height)
-                drawable.draw(canvas)
-                var hasContent = false
-                for (x in 0 until width) {
-                    for (y in 0 until height) {
-                        if (bitmap.getPixel(x, y) != android.graphics.Color.TRANSPARENT &&
-                            bitmap.getPixel(x, y) != android.graphics.Color.WHITE) {
-                            hasContent = true
-                            break
-                        }
-                    }
-                    if (hasContent) break
-                }
-                if (hasContent) {
-                    android.util.Log.d("GreetingsScreen", "Bitmap has content, sending greeting")
-                    controller.setCardScreenshot(bitmap)
-                    controller.sendGreeting()
-                    return
-                }
-            }
-        }
-    } catch (e: Exception) {
-        android.util.Log.e("GreetingsScreen", "Error capturing card: ${e.message}")
-    }
-    onError()
-}
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun GreetingCategoryCard(
@@ -107,32 +45,52 @@ fun GreetingCategoryCard(
     onClick: () -> Unit
 ) {
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .width(160.dp)
+            .padding(8.dp)
     ) {
-        Card(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                .width(160.dp)
+                .aspectRatio(0.7f)
         ) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = category,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
+            Card(
+                onClick = onClick,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(width = 2.dp, color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = category,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
         }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
         Text(
             text = category,
-            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            color = Color.Black,
+            fontSize = 14.sp,
+            maxLines = 2,
+            lineHeight = 16.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
         )
     }
 }
@@ -143,64 +101,41 @@ fun GreetingThumbnailCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .size(80.dp, 107.dp)
-            .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Color(0xFFDD3825) else Color.Transparent, // Changed to red
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = if (isSelected) CardDefaults.cardElevation(6.dp) else CardDefaults.cardElevation(2.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Greeting thumbnail",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
-            )
-        }
-    }
-}
+    val shape = if (isSelected) RoundedCornerShape(12.dp) else RectangleShape
+    val scale by animateFloatAsState(if (isSelected) 1.07f else 1f, label = "hover-scale")
+    val borderWidth = if (isSelected) (2.dp / scale) else 0.dp // Thicker border, visually consistent
 
-@Composable
-fun SubcategoryGrid(
-    subcategories: List<GreetingSubcategory>,
-    onSubcategoryClick: (GreetingSubcategory) -> Unit
-) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Box(
+        modifier = Modifier
+            .size(80.dp, 100.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                shadowElevation = 0f // No shadow
+                this.shape = shape
+                clip = true
+            }
+            .border(
+                width = borderWidth,
+                color = if (isSelected) Color(0xFFDD3825) else Color.Transparent,
+                shape = shape
+            )
+            .clip(shape)
+            .clickable(onClick = onClick)
     ) {
-        items(subcategories) { subcategory: GreetingSubcategory ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clickable { onSubcategoryClick(subcategory) },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Box(
+        Card(
+            modifier = Modifier.fillMaxSize(),
+            shape = shape,
+            elevation = CardDefaults.cardElevation(0.dp), // No Card shadow
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Greeting thumbnail",
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = subcategory.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        color = Color(0xFF1A1A1A),
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+                    contentScale = ContentScale.Fit
+                )
             }
         }
     }
@@ -290,7 +225,7 @@ fun GreetingsScreen(
                             },
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
                             color = Color.Black
                         )
@@ -371,6 +306,9 @@ fun GreetingsScreen(
                 }
             }
 
+            // Place this at the top of your Composable (inside GreetingsScreen)
+            var selectedGreeting by remember { mutableStateOf<String?>(null) }
+
             // In the main categories grid, filter categories by local searchQuery
             when {
                 currentSelectedCategory == null && currentSelectedSubcategory == null -> {
@@ -407,10 +345,13 @@ fun GreetingsScreen(
                         } else {
                             controller.getGreetingsForCategory(currentSelectedCategory.toString())
                         }
+
                         items(greetings) { greetingUrl ->
                             GreetingCard(
                                 imageUrl = greetingUrl,
+                                isSelected = selectedGreeting == greetingUrl,
                                 onClick = {
+                                    selectedGreeting = greetingUrl
                                     controller.onGreetingSelected(greetingUrl)
                                 }
                             )
@@ -425,48 +366,47 @@ fun GreetingsScreen(
 @Composable
 fun GreetingCard(
     imageUrl: String,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = "Greeting",
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f),
-            contentScale = ContentScale.Crop
-        )
-    }
-}
+    val shape = if (isSelected) RoundedCornerShape(16.dp) else RoundedCornerShape(0.dp)
+    val scale by animateFloatAsState(if (isSelected) 1.07f else 1f, label = "hover-scale")
+    val borderWidth = if (isSelected) (2.dp / scale) else 0.dp // Keeps border visually same thickness
 
-@Composable
-fun GreetingDetailCard(
-    imageUrl: String,
-    modifier: Modifier = Modifier
-            .fillMaxWidth(0.55f)
-            .aspectRatio(0.75f)
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        border = BorderStroke(1.dp, Color(0xFFFFD700))
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Greeting detail",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                shadowElevation = 0f // No shadow for any card
+                this.shape = shape
+                clip = true
+            }
+            .border(
+                width = borderWidth,
+                color = if (isSelected) Color(0xFFDD3825) else Color.Transparent,
+                shape = shape
             )
+            .clip(shape)
+            .clickable(onClick = onClick)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxSize(),
+            elevation = CardDefaults.cardElevation(0.dp), // No Card shadow
+            shape = shape
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Greeting",
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

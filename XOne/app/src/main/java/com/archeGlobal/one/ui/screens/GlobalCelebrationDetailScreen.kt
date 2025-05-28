@@ -27,11 +27,13 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlobalCelebrationDetailScreen(
     subcategory: GreetingSubcategory,
@@ -48,15 +50,7 @@ fun GlobalCelebrationDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
-                    )
-                )
-            )
+            .background(Color(0xFFF5F5F5)) // Light gray background
     ) {
         Column(
             modifier = Modifier
@@ -87,8 +81,9 @@ fun GlobalCelebrationDetailScreen(
                     Text(
                         text = subcategory.name,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.Bold,
                         color = Color.Black,
+                        fontFamily = GraphikFontFamily,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
@@ -109,7 +104,7 @@ fun GlobalCelebrationDetailScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             // Main greeting card display
             Box(
                 modifier = Modifier
@@ -119,7 +114,7 @@ fun GlobalCelebrationDetailScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.70f)
+                        .fillMaxWidth(0.65f)
                         .aspectRatio(0.75f)
                 ) {
                     AsyncImage(
@@ -133,7 +128,7 @@ fun GlobalCelebrationDetailScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             // Message section
             Column(
                 modifier = Modifier
@@ -142,28 +137,50 @@ fun GlobalCelebrationDetailScreen(
             ) {
                 Text(
                     text = "Add Message",
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                OutlinedTextField(
-                    value = message,
-                    onValueChange = { message = it },
+                Spacer(modifier = Modifier.height(6.dp))
+                val messageScroll = rememberScrollState()
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = Color.LightGray,
-                        unfocusedBorderColor = Color.LightGray
-                    ),
-                    minLines = 5
-                )
+                        .fillMaxWidth(0.9f)
+                        .height(150.dp)
+                        .background(Color.White, RoundedCornerShape(8.dp))
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                        .padding(6.dp)
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    BasicTextField(
+                        value = message,
+                        onValueChange = { message = it },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(messageScroll),
+                        textStyle = LocalTextStyle.current.copy(
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 14.sp,
+                            color = Color.Black
+                        ),
+                        maxLines = Int.MAX_VALUE,
+                        singleLine = false,
+                        decorationBox = { innerTextField ->
+                            if (message.isEmpty()) {
+                                Text(
+                                    text = "Enter your message...",
+                                    color = Color.LightGray,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 15.sp
+                                )
+                            }
+                            innerTextField()
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(18.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -172,35 +189,43 @@ fun GlobalCelebrationDetailScreen(
                 ) {
                     Button(
                         onClick = { onSendGreeting(currentSelectedImage, message) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(45.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFDD3825)
                         ),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text = "Send Greeting",
-                            fontSize = 14.sp,
-                            color = Color.White
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                     Button(
                         onClick = { onSendInOutlook(currentSelectedImage, message) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(45.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF2196F3)
                         ),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text = "Send in Outlook",
-                            fontSize = 14.sp,
-                            color = Color.White
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(22.dp))
         }
     }
 }

@@ -49,6 +49,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 private const val THUMBNAIL_WIDTH = 300 // unified thumbnail width for both remote and PDF
 
@@ -97,7 +100,15 @@ fun CommuniqueScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)) // Light gray background
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(
+                        WelcomeBackgroundTop,
+                        WelcomeBackgroundMiddle,
+                        WelcomeBackgroundBottom
+                    )
+                )
+            )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
