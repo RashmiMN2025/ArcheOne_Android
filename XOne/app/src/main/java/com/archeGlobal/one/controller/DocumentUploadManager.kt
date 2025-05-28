@@ -13,6 +13,7 @@ import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
@@ -25,6 +26,13 @@ import java.io.FileOutputStream
  * This class handles document upload operations with the new API
  */
 class DocumentUploadManager(private val context: Context) {
+    // Companion object for static members
+    companion object {
+        private const val TAG = "DocumentUploadManager"
+    }
+    
+    // Add UserDataManager reference
+    private val userDataManager = UserDataManager.getInstance(context)
     
     // Status indicators
     val isLoading = MutableLiveData(false)
@@ -33,9 +41,9 @@ class DocumentUploadManager(private val context: Context) {
     
     // Document type mapping for personal documents
     private val personalDocTypes = mapOf(
-        "aadhar" to "Aadhar Card",
-        "passport" to "Passport",
-        "pan" to "PAN Card"
+        "id" to "ID Card",
+        "pan" to "PAN Card",
+        "medical" to "Medical Insurance"
     )
     
     // Document type mapping for professional documents
@@ -84,22 +92,30 @@ class DocumentUploadManager(private val context: Context) {
      * Get document type code from display name
      */
     fun getDocTypeCode(displayName: String): String? {
-        // Try personal document types first
-        val personalEntry = personalDocTypes.entries.find { it.value == displayName }
-        if (personalEntry != null) {
-            Log.d("DocumentUploadManager", "Found personal doc type: ${personalEntry.key} for $displayName")
-            return personalEntry.key
+        // Direct mapping for the three required document types
+        return when (displayName) {
+            "ID Card" -> "id"
+            "PAN Card" -> "pan"
+            "Medical Insurance" -> "medical"
+            else -> {
+                // Try personal document types as fallback
+                val personalEntry = personalDocTypes.entries.find { it.value == displayName }
+                if (personalEntry != null) {
+                    Log.d("DocumentUploadManager", "Found personal doc type: ${personalEntry.key} for $displayName")
+                    return personalEntry.key
+                }
+                
+                // Try professional document types as fallback
+                val professionalEntry = professionalDocTypes.entries.find { it.value == displayName }
+                if (professionalEntry != null) {
+                    Log.d("DocumentUploadManager", "Found professional doc type: ${professionalEntry.key} for $displayName")
+                    return professionalEntry.key
+                }
+                
+                Log.e("DocumentUploadManager", "No document type found for: $displayName")
+                null
+            }
         }
-        
-        // Try professional document types
-        val professionalEntry = professionalDocTypes.entries.find { it.value == displayName }
-        if (professionalEntry != null) {
-            Log.d("DocumentUploadManager", "Found professional doc type: ${professionalEntry.key} for $displayName")
-            return professionalEntry.key
-        }
-        
-        Log.e("DocumentUploadManager", "No document type found for: $displayName")
-        return null
     }
     
     /**
@@ -119,16 +135,18 @@ class DocumentUploadManager(private val context: Context) {
         }
         
         isLoading.postValue(true)
+        errorMessage.postValue(null)
         
         try {
             val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
+            val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
             
             // Log request parameters
-            Log.d("DocumentUploadManager", "Listing documents for email: $email, employeeId: $employeeId")
+            Log.d(TAG, "Listing documents for email: $email, employeeId: $employeeId, isPersonal: true")
             
-            val call = RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart)
-            Log.d("DocumentUploadManager", "List documents request URL: ${call.request().url}")
+            val call = RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart)
+            Log.d(TAG, "List documents request URL: ${call.request().url}")
             
             call.enqueue(object : Callback<DocumentListResponse> {
                 override fun onResponse(
@@ -139,7 +157,13 @@ class DocumentUploadManager(private val context: Context) {
                     
                     if (response.isSuccessful && response.body() != null) {
                         val responseBody = response.body()!!
-                        Log.d("DocumentUploadManager", "List documents success, status: ${responseBody.status}")
+                        Log.d(TAG, "List documents success, status: ${responseBody.status}")
+                        
+                        // Log all documents returned
+                        responseBody.personalDoc.forEach { doc ->
+                            Log.d(TAG, "Document: ${doc.document_name}, type: ${doc.documentType}, " +
+                                   "has data: ${!doc.doc_data.isNullOrBlank()}")
+                        }
                         
                         if (responseBody.status == 200) {
                             onSuccess(responseBody)
@@ -156,7 +180,7 @@ class DocumentUploadManager(private val context: Context) {
                 }
             })
         } catch (e: Exception) {
-            Log.e("DocumentUploadManager", "Exception preparing list documents request", e)
+            Log.e(TAG, "Exception preparing list documents request", e)
             isLoading.postValue(false)
             errorMessage.postValue("Error: ${e.message}")
         }
@@ -185,11 +209,23 @@ class DocumentUploadManager(private val context: Context) {
         // Get document type code
         val documentType = getDocTypeCode(documentName)
         if (documentType == null) {
-            errorMessage.postValue("Invalid document type: $documentName")
+            errorMessage.postValue("Unknown document type: $documentName")
             return
         }
         
-        // Convert URI to file
+        // Get the MIME type of the file
+        val mimeType = context.contentResolver.getType(uri)
+        
+        // Check if the file is a PDF
+        if (mimeType != "application/pdf") {
+            // Try to check the file extension as a fallback
+            val fileName = getFileNameFromUri(uri)
+            if (fileName == null || !fileName.lowercase().endsWith(".pdf")) {
+                errorMessage.postValue("Only PDF files are allowed. Please select a PDF document.")
+                return
+            }
+        }
+        
         val file = getFileFromUri(uri)
         if (file == null) {
             errorMessage.postValue("Failed to process file. Please try again.")
@@ -283,10 +319,20 @@ class DocumentUploadManager(private val context: Context) {
             val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val documentTypePart = documentType.toRequestBody("text/plain".toMediaTypeOrNull())
+            val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
             
-            // Make the API call
+            Log.d("DocumentUploadManager", "- isPersonal: true")
+            
+            // Create a map for additional params to add isPersonal parameter
+            val params = HashMap<String, RequestBody>()
+            params["email"] = emailPart
+            params["employeeId"] = employeeIdPart
+            params["documentType"] = documentTypePart
+            params["isPersonal"] = isPersonalPart // Add isPersonal=true parameter
+            
+            // Make the API call with isPersonal parameter
             val call = RetrofitClient.apiService.uploadDocument(
-                filePart, emailPart, employeeIdPart, documentTypePart
+                filePart, params
             )
             
             // Log request details
@@ -380,13 +426,46 @@ class DocumentUploadManager(private val context: Context) {
         isLoading.postValue(false)
         val errorMsg = "Network error: ${t.message}"
         errorMessage.postValue(errorMsg)
-        Log.e("DocumentUploadManager", errorMsg, t)
+        Log.e(TAG, errorMsg, t)
         
         try {
-            Log.e("DocumentUploadManager", "Failed request URL: ${call.request().url}")
-            Log.e("DocumentUploadManager", "Failed request method: ${call.request().method}")
+            Log.e(TAG, "Failed request URL: ${call.request().url}")
+            Log.e(TAG, "Failed request method: ${call.request().method}")
         } catch (e: Exception) {
-            Log.e("DocumentUploadManager", "Error logging request details", e)
+            Log.e(TAG, "Error logging request details", e)
+        }
+    }
+    
+    // The listDocuments method is already defined above
+    
+    /**
+     * Get filename from URI
+     */
+    private fun getFileNameFromUri(uri: Uri): String? {
+        var fileName: String? = null
+        try {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val displayNameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (displayNameIndex != -1) {
+                        fileName = it.getString(displayNameIndex)
+                    }
+                }
+            }
+            
+            // If we couldn't get the filename from the cursor, try to get it from the URI path
+            if (fileName == null) {
+                fileName = uri.path?.let { path ->
+                    path.substring(path.lastIndexOf('/') + 1)
+                }
+            }
+            
+            Log.d("DocumentUploadManager", "File name from URI: $fileName")
+            return fileName
+        } catch (e: Exception) {
+            Log.e("DocumentUploadManager", "Error getting filename from URI: ${e.message}")
+            return null
         }
     }
     
@@ -398,21 +477,21 @@ class DocumentUploadManager(private val context: Context) {
             val contentResolver = context.contentResolver
             val fileExtension = contentResolver.getType(uri)?.let { mimeType ->
                 MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-            } ?: "tmp" // Default to "tmp" if extension can't be determined
-            
-            val fileName = "temp_upload.$fileExtension"
+            } ?: "pdf" // Default to PDF if the extension cannot be determined
+
+            val fileName = getFileNameFromUri(uri) ?: "temp_upload.$fileExtension"
             val file = File(context.cacheDir, fileName)
-            
-            contentResolver.openInputStream(uri)?.use { input ->
+
+            val inputStream = contentResolver.openInputStream(uri)
+            inputStream?.use { input ->
                 file.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
-            
             Log.d("DocumentUploadManager", "Converted URI to file: ${file.absolutePath} (${file.length()} bytes)")
             file
         } catch (e: Exception) {
-            Log.e("DocumentUploadManager", "Error converting URI to file", e)
+            Log.e("DocumentUploadManager", "Error converting Uri to File: ${e.message}")
             null
         }
     }

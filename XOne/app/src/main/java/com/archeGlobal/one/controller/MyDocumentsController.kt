@@ -52,18 +52,46 @@ class MyDocumentsController(private val context: Context) {
 
         // Update file paths and upload status from response
         response.personalDoc.forEach { doc ->
-            if (!doc.filePath.isNullOrEmpty()) {
-                val displayName = personalDocTypes[doc.doc_type] ?: doc.docName
-                newPersonalDocs[displayName] = doc.filePath
-                newUploadStatus[displayName] = true
+            // Use doc_data from the API response or fall back to filePath
+            val docData = doc.doc_data ?: doc.filePath
+            if (!docData.isNullOrEmpty()) {
+                // Use document_name from API or fall back to mapping from documentType/doc_type
+                val docType = doc.documentType ?: doc.doc_type
+                val displayName = if (doc.document_name != null) {
+                    doc.document_name
+                } else if (docType != null) {
+                    personalDocTypes[docType] ?: doc.docName ?: "Unknown Document"
+                } else {
+                    doc.docName ?: "Unknown Document"
+                }
+                
+                // Only add if we have a valid display name
+                if (displayName.isNotEmpty()) {
+                    newPersonalDocs[displayName] = docData
+                    newUploadStatus[displayName] = true
+                }
             }
         }
         
         response.professionalDoc.forEach { doc ->
-            if (!doc.filePath.isNullOrEmpty()) {
-                val displayName = professionalDocTypes[doc.doc_type] ?: doc.docName
-                newProfessionalDocs[displayName] = doc.filePath
-                newUploadStatus[displayName] = true
+            // Use doc_data from the API response or fall back to filePath
+            val docData = doc.doc_data ?: doc.filePath
+            if (!docData.isNullOrEmpty()) {
+                // Use document_name from API or fall back to mapping from documentType/doc_type
+                val docType = doc.documentType ?: doc.doc_type
+                val displayName = if (doc.document_name != null) {
+                    doc.document_name
+                } else if (docType != null) {
+                    professionalDocTypes[docType] ?: doc.docName ?: "Unknown Document"
+                } else {
+                    doc.docName ?: "Unknown Document"
+                }
+                
+                // Only add if we have a valid display name
+                if (displayName.isNotEmpty()) {
+                    newProfessionalDocs[displayName] = docData
+                    newUploadStatus[displayName] = true
+                }
             }
         }
 

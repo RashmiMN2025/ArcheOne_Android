@@ -15,6 +15,7 @@ import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
@@ -130,8 +131,14 @@ class ProfileController(
             Log.d("ProfileController", "Making upload request to: ${RetrofitClient.BASE_URL}upload")
             Log.d("ProfileController", "Request params: employeeId=$employeeId, documentType=profile_pic")
             
+            // Create a map for all parameters
+            val params = HashMap<String, RequestBody>()
+            params["email"] = emailPart
+            params["employeeId"] = employeeIdPart
+            params["documentType"] = documentTypePart
+            
             // Make the API call to upload the profile picture
-            val call = RetrofitClient.apiService.uploadDocument(filePart, emailPart, employeeIdPart, documentTypePart)
+            val call = RetrofitClient.apiService.uploadDocument(filePart, params)
             
             // Log the call details
             Log.d("ProfileController", "Call URL: ${call.request().url}")
@@ -189,7 +196,7 @@ class ProfileController(
                                         // Check both personal and professional docs for profile picture
                                         responseBody.personalDoc.forEach { doc ->
                                             Log.d("ProfileController", "Checking personal doc: ${doc.docName}, path: ${doc.filePath}")
-                                            if (doc.doc_type == "profile_pic" && doc.filePath.isNotEmpty()) {
+                                            if (doc.doc_type == "profile_pic" && doc.filePath?.isNotEmpty() == true) {
                                                 filePathFromDocs = doc.filePath
                                                 Log.d("ProfileController", "Found profile pic in personal docs: $filePathFromDocs")
                                             }
@@ -197,7 +204,7 @@ class ProfileController(
                                         
                                         responseBody.professionalDoc.forEach { doc ->
                                             Log.d("ProfileController", "Checking professional doc: ${doc.docName}, path: ${doc.filePath}")
-                                            if (doc.doc_type == "profile_pic" && doc.filePath.isNotEmpty()) {
+                                            if (doc.doc_type == "profile_pic" && doc.filePath?.isNotEmpty() == true) {
                                                 filePathFromDocs = doc.filePath
                                                 Log.d("ProfileController", "Found profile pic in professional docs: $filePathFromDocs")
                                             }

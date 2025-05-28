@@ -122,10 +122,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                             "aadhar" -> "Aadhar Card"
                             "passport" -> "Passport"
                             "pan" -> "PAN Card"
-                            else -> doc.docName
+                            else -> doc.docName ?: "Unknown Document"
                         }
-                        newPersonalDocs[displayName] = doc.filePath
-                        newUploadStatus[displayName] = true
+                        // Only add if we have valid data
+                        if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                            newPersonalDocs[displayName] = doc.filePath!!
+                            newUploadStatus[displayName] = true
+                        }
                     }
                 }
                 
@@ -136,10 +139,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                             "offer_letter" -> "Offer Letter"
                             "certificate" -> "Certificate"
                             "exp_letter" -> "Experience Letter"
-                            else -> doc.docName
+                            else -> doc.docName ?: "Unknown Document"
                         }
-                        newProfessionalDocs[displayName] = doc.filePath
-                        newUploadStatus[displayName] = true
+                        // Only add if we have valid data
+                        if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                            newProfessionalDocs[displayName] = doc.filePath!!
+                            newUploadStatus[displayName] = true
+                        }
                     }
                 }
                 
@@ -166,10 +172,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         "aadhar" -> "Aadhar Card"
                         "passport" -> "Passport"
                         "pan" -> "PAN Card"
-                        else -> doc.docName
+                        else -> doc.docName ?: "Unknown Document"
                     }
-                    newPersonalDocs[displayName] = doc.filePath
-                    newUploadStatus[displayName] = true
+                    // Only add if we have valid data
+                    if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                        newPersonalDocs[displayName] = doc.filePath!!
+                        newUploadStatus[displayName] = true
+                    }
                 }
             }
             
@@ -180,10 +189,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         "offer_letter" -> "Offer Letter"
                         "certificate" -> "Certificate"
                         "exp_letter" -> "Experience Letter"
-                        else -> doc.docName
+                        else -> doc.docName ?: "Unknown Document"
                     }
-                    newProfessionalDocs[displayName] = doc.filePath
-                    newUploadStatus[displayName] = true
+                    // Only add if we have valid data
+                    if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                        newProfessionalDocs[displayName] = doc.filePath!!
+                        newUploadStatus[displayName] = true
+                    }
                 }
             }
             

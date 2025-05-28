@@ -18,6 +18,7 @@ import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.PartMap
 
 interface ApiService {
     @POST("send-otp")
@@ -43,7 +44,8 @@ interface ApiService {
     @POST("/upload")
     fun listDocuments(
         @Part("email") email: RequestBody,
-        @Part("employeeId") employeeId: RequestBody
+        @Part("employeeId") employeeId: RequestBody,
+        @Part("isPersonal") isPersonal: RequestBody
     ): Call<DocumentListResponse>
     
     // Document API - Upload File
@@ -51,9 +53,7 @@ interface ApiService {
     @POST("/upload")
     fun uploadDocument(
         @Part file: MultipartBody.Part,
-        @Part("email") email: RequestBody,
-        @Part("employeeId") employeeId: RequestBody,
-        @Part("documentType") documentType: RequestBody
+        @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>
     ): Call<DocumentListResponse>
 
     @GET("social")
@@ -128,10 +128,14 @@ data class DocumentFile(
 )
 
 data class Document(
-    val id: Int,
-    val docName: String,
-    val filePath: String = "",
-    val doc_type: String
+    val id: Int? = null,
+    val docName: String? = null,
+    val filePath: String? = null,
+    val doc_type: String? = null,
+    // Fields from the API response
+    val document_name: String? = null,
+    val doc_data: String? = null,
+    val documentType: String? = null
 )
 
 data class SOSResponse(
@@ -213,7 +217,8 @@ data class UserDetails(
 
 data class UserDocument(
     val document_name: String = "",
-    val doc_data: String = ""
+    val doc_data: String = "" ,
+    val documentType: String = ""
 )
 
 data class Service(
