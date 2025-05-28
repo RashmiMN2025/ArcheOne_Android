@@ -18,6 +18,7 @@ import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.PartMap
 
 interface ApiService {
     @POST("send-otp")
@@ -38,15 +39,22 @@ interface ApiService {
     @POST("/logout")
     fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
 
+    // Document API - List Files
+    @Multipart
     @POST("/upload")
-    fun fetchDocuments(@Body request: MyDocRequest): Call<DocumentUploadResponse>
+    fun listDocuments(
+        @Part("email") email: RequestBody,
+        @Part("employeeId") employeeId: RequestBody,
+        @Part("isPersonal") isPersonal: RequestBody
+    ): Call<DocumentListResponse>
+    
+    // Document API - Upload File
     @Multipart
     @POST("/upload")
     fun uploadDocument(
         @Part file: MultipartBody.Part,
-        @Part("employeeId") employeeId: RequestBody,
-        @Part("documentType") documentType: RequestBody
-    ): Call<DocumentUploadResponse>
+        @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>
+    ): Call<DocumentListResponse>
 
     @GET("social")
     suspend fun getSocialContent(): Response<SocialContent>
@@ -98,7 +106,8 @@ data class LogoutRequest(
 
 data class MyDocRequest(
     val employeeId: String,
-    val documentType:String
+    val email: String,
+    val documentType: String? = null
 )
 
 data class LogoutResponse(
@@ -106,19 +115,28 @@ data class LogoutResponse(
     val message: String
 )
 
-data class DocumentUploadResponse(
+data class DocumentListResponse(
     val status: Int,
-    val message: String,
-    @SerializedName("filePath") val filePath: String? = null,
+    val message: Any, // Can be a string message or list of files
     val personalDoc: List<Document> = emptyList(),
     val professionalDoc: List<Document> = emptyList()
 )
 
+data class DocumentFile(
+    val fileName: String,
+    val url: String
+)
+
 data class Document(
-    val id: Int,
-    val docName: String,
-    val filePath: String,
-    val doc_type: String)
+    val id: Int? = null,
+    val docName: String? = null,
+    val filePath: String? = null,
+    val doc_type: String? = null,
+    // Fields from the API response
+    val document_name: String? = null,
+    val doc_data: String? = null,
+    val documentType: String? = null
+)
 
 data class SOSResponse(
     @SerializedName("message") val message: String
@@ -199,7 +217,8 @@ data class UserDetails(
 
 data class UserDocument(
     val document_name: String = "",
-    val doc_data: String = ""
+    val doc_data: String = "" ,
+    val documentType: String = ""
 )
 
 data class Service(

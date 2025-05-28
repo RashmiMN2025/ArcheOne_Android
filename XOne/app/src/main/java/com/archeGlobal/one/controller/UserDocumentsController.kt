@@ -3,278 +3,227 @@ package com.archeGlobal.one.controller
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.archeGlobal.one.WebViewActivity
+import com.archeGlobal.one.ImageViewerActivity
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.navigation.AndroidNavigator
+import com.archeGlobal.one.network.DocumentListResponse
+import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.UserDocument
 import com.archeGlobal.one.utils.UserDataManager
-import java.io.File
-import java.io.FileOutputStream
-import androidx.core.content.FileProvider
-import com.archeGlobal.one.navigation.AndroidNavigator
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class UserDocumentsController(private val context: Context) {
     
+    companion object {
+        private const val TAG = "UserDocumentsController"
+    }
+    
     private val userDataManager = UserDataManager.getInstance(context)
     private val navigator: Navigator = AndroidNavigator(context as ComponentActivity)
+    private val documentUploadManager = DocumentUploadManager(context)
     
     // LiveData for documents
     private val _userDocuments = MutableLiveData<List<UserDocument>>(emptyList())
     val userDocuments: LiveData<List<UserDocument>> = _userDocuments
     
+    // Expose DocumentUploadManager states
+    val isLoading = documentUploadManager.isLoading
+    val errorMessage = documentUploadManager.errorMessage
+    val uploadSuccess = documentUploadManager.uploadSuccess
+    
     init {
         loadUserDocuments()
+        fetchDocumentsFromApi()
+    }
+    
+    /**
+     * Public method to refresh documents data when returning to the screen
+     * Call this method in onResume or when the screen becomes visible again
+     */
+    fun refreshDocuments() {
+        Log.d(TAG, "Refreshing documents data")
+        fetchDocumentsFromApi()
     }
     
     private fun loadUserDocuments() {
         val userData = userDataManager.getUserData()
         val documents = userData?.userDetails?.documents ?: emptyList()
         _userDocuments.value = documents
-        Log.d(TAG, "Loaded ${documents.size} documents")
+        Log.d(TAG, "Loaded ${documents.size} documents from user data")
+    }
+    
+    private fun fetchDocumentsFromApi() {
+        Log.d(TAG, "Fetching latest documents from API")
+        isLoading.postValue(true)
+        documentUploadManager.listDocuments { response ->
+            isLoading.postValue(false)
+            processApiResponse(response)
+        }
+    }
+    
+    private fun processApiResponse(response: DocumentListResponse) {
+        // Process personal documents from the API response
+        val personalDocs = response.personalDoc.map { doc ->
+            // Use the document_name from the API response directly if available
+            // Otherwise, map from documentType
+            val docName = doc.document_name ?: when (doc.documentType) {
+                "id" -> "ID Card"
+                "pan" -> "PAN Card"
+                "medical" -> "Medical Insurance"
+                else -> "Unknown Document"
+            }
+            
+            UserDocument(
+                document_name = docName,
+                doc_data = doc.doc_data ?: ""
+            )
+        }
+        
+        // Log the documents for debugging
+        personalDocs.forEach { doc ->
+            Log.d(TAG, "Processed document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) "empty" else "has data"}")
+        }
+        
+        // Update the LiveData with the new documents
+        _userDocuments.postValue(personalDocs)
+        Log.d(TAG, "Updated documents from API: ${personalDocs.size} documents")
     }
     
     fun viewDocument(document: UserDocument) {
-        if (document.doc_data.isBlank()) {
-            Toast.makeText(context, "No data available for ${document.document_name}", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
         try {
-            // Force treat PAN Card and Medical Insurance Card as PDFs
-            val forcePdf = document.document_name == "PAN Card" || document.document_name == "Medical Insurance Card"
+            Log.d(TAG, "Requesting document for viewing: ${document.document_name}, type: ${document.documentType}")
             
-            Log.d(TAG, "Viewing document: ${document.document_name}, forcePdf: $forcePdf")
+            // Show loading indicator
+            isLoading.postValue(true)
             
-            // Create a temporary file from base64 data
-            val fileInfo = saveBase64ToTempFile(document.doc_data, document.document_name, forcePdf)
-
-            // Special handling for PAN Card and Medical Insurance Card - open directly with WebView in offline mode
-            if (document.document_name == "PAN Card" || document.document_name == "Medical Insurance Card") {
-                Log.d(TAG, "Special handling for ${document.document_name}: using WebView in offline mode")
-                val intent = Intent(context, WebViewActivity::class.java).apply {
-                    putExtra("fileUrl", fileInfo.uri.toString())
-                    putExtra("title", document.document_name)
-                    putExtra("isLocalFile", true)
-                    putExtra("isPdf", true)
-                    putExtra("base64Data", document.doc_data)  // Include raw base64 data
-                    putExtra("useOfflineMode", true)  // Use offline mode for direct viewing
-                }
-                context.startActivity(intent)
+            // Get user credentials
+            val email = userDataManager.getUserData()?.email ?: ""
+            val employeeId = userDataManager.getUserData()?.employeeId ?: ""
+            
+            if (email.isEmpty() || employeeId.isEmpty()) {
+                Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
+                isLoading.postValue(false)
                 return
             }
             
-            // Standard handling for other documents
-            if (fileInfo.isPdf) {
-                // For PDFs, use the dedicated PDF Viewer that policy uses
-                Log.d(TAG, "Opening PDF with PDF Viewer: ${fileInfo.uri}, doc name: ${document.document_name}")
+            // Make an API call to get the latest document URL
+            val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
+            val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
+            
+            // Make the document listing API call to get latest URLs
+            RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart).enqueue(object : Callback<DocumentListResponse> {
+                override fun onResponse(
+                    call: Call<DocumentListResponse>,
+                    response: Response<DocumentListResponse>
+                ) {
+                    isLoading.postValue(false)
+                    
+                    if (response.isSuccessful && response.body() != null) {
+                        val body = response.body()!!
+                        
+                        // Log the entire response for debugging
+                        Log.d(TAG, "API response status: ${body.status}, message: ${body.message}")
+                        Log.d(TAG, "Personal docs count: ${body.personalDoc.size}")
+                        
+                        // Log all documents in response for debugging
+                        body.personalDoc.forEach { doc ->
+                            Log.d(TAG, "Document in response: name=${doc.document_name}, type=${doc.documentType}, " +
+                                  "has data: ${!doc.doc_data.isNullOrBlank()}")
+                            if (!doc.doc_data.isNullOrBlank()) {
+                                Log.d(TAG, "Doc data starts with: ${doc.doc_data?.take(30)}...")
+                            }
+                        }
+                        
+                        // Try finding by document name first
+                        var matchingDoc = body.personalDoc.find { it.document_name == document.document_name }
+                        
+                        // If not found by name, try by document type
+                        if (matchingDoc == null && document.documentType.isNotBlank()) {
+                            matchingDoc = body.personalDoc.find { it.documentType == document.documentType }
+                            Log.d(TAG, "Searching by document type: ${document.documentType}")
+                        }
+                        
+                        Log.d(TAG, "Looking for document: ${document.document_name}, type: ${document.documentType}")
+                        
+                        if (matchingDoc != null) {
+                            Log.d(TAG, "Found matching document: ${matchingDoc.document_name}, " +
+                                  "type: ${matchingDoc.documentType}, has data: ${!matchingDoc.doc_data.isNullOrBlank()}")
+                            
+                            if (!matchingDoc.doc_data.isNullOrBlank()) {
+                                // We have a valid URL, open the document
+                                val filePath = matchingDoc.doc_data!!
+                                Log.d(TAG, "Found document URL: $filePath")
+                                
+                                // Since all documents are PDFs, always use WebViewActivity
+                                val intent = Intent(context, WebViewActivity::class.java)
+                                
+                                // Pass the necessary parameters
+                                intent.putExtra("fileUrl", filePath)
+                                intent.putExtra("title", matchingDoc.document_name ?: document.document_name)
+                                
+                                // Add PDF specific flags
+                                intent.putExtra("isPdf", true)
+                                
+                                // Add isPersonal flag specific to UserDocuments
+                                intent.putExtra("isPersonal", true)
+                                
+                                Log.d(TAG, "Starting WebViewActivity for PDF: $filePath with isPersonal=true")
+                                context.startActivity(intent)
+                            } else {
+                                // Document found but no URL available
+                                Toast.makeText(context, "Document found but no URL available for ${document.document_name}", Toast.LENGTH_SHORT).show()
+                                Log.d(TAG, "Document found but no URL in doc_data for ${document.document_name}")
+                            }
+                        } else {
+                            // No matching document found
+                            Toast.makeText(context, "No matching document found for ${document.document_name}", Toast.LENGTH_SHORT).show()
+                            Log.d(TAG, "No matching document found for ${document.document_name} in response")
+                        }
+                    } else {
+                        // API call failed
+                        Toast.makeText(context, "Failed to get document data", Toast.LENGTH_SHORT).show()
+                        Log.e(TAG, "API call failed: ${response.code()} ${response.message()}")
+                    }
+                }
                 
-                // Try opening with the PDF viewer
-                try {
-                    navigator.navigateToPDFViewer(fileInfo.uri.toString(), document.document_name)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error navigating to PDF Viewer: ${e.message}")
-                    
-                    // Try with WebView as fallback
-                    Log.d(TAG, "Falling back to WebView for PDF: ${fileInfo.uri}")
-                    val intent = Intent(context, WebViewActivity::class.java).apply {
-                        putExtra("fileUrl", fileInfo.uri.toString())
-                        putExtra("title", document.document_name)
-                        putExtra("isLocalFile", true)
-                        putExtra("isPdf", true)
-                        putExtra("base64Data", document.doc_data) // Add base64 data as additional fallback
-                    }
-                    
-                    try {
-                        context.startActivity(intent)
-                    } catch (e2: Exception) {
-                        Log.e(TAG, "Error opening WebView fallback: ${e2.message}")
-                        Toast.makeText(context, "Error viewing document: ${e2.message}", Toast.LENGTH_SHORT).show()
-                    }
+                override fun onFailure(call: Call<DocumentListResponse>, t: Throwable) {
+                    isLoading.postValue(false)
+                    Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Network error: ${t.message}")
                 }
-            } else {
-                // For images and other non-PDF files, use WebView
-                Log.d(TAG, "Opening non-PDF with WebView: ${fileInfo.uri}, doc name: ${document.document_name}")
-                val intent = Intent(context, WebViewActivity::class.java).apply {
-                    putExtra("fileUrl", fileInfo.uri.toString())
-                    putExtra("title", document.document_name)
-                    putExtra("isLocalFile", true)
-                    putExtra("isPdf", false) // Explicitly mark as not PDF
-                }
-                context.startActivity(intent)
-            }
+            })
         } catch (e: Exception) {
+            isLoading.postValue(false)
             Log.e(TAG, "Error viewing document: ${e.message}")
             Toast.makeText(context, "Error viewing document: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-    }    fun uploadDocument(document: UserDocument) {
-        if (document.doc_data.isBlank()) {
-            Toast.makeText(context, "No data available for ${document.document_name}", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        try {
-            // Force treat PAN Card and Medical Insurance Card as PDFs
-            val forcePdf = document.document_name == "PAN Card" || document.document_name == "Medical Insurance Card"
-              // Create a file in the uploads folder
-            val uploadFile = saveBase64ToUploads(document.doc_data, document.document_name, forcePdf)
-            
-            Toast.makeText(context, "${document.document_name} uploaded successfully", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-            Log.e(TAG, "Error downloading document: ${e.message}")
-            Toast.makeText(context, "Error downloading document: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
     }
     
-    // Class to hold file data and type information
-    data class FileInfo(val uri: Uri, val isPdf: Boolean)
-    
-    private fun saveBase64ToTempFile(base64Data: String, documentName: String, forcePdf: Boolean = false): FileInfo {
-        // Sanity check - make sure we have data
-        if (base64Data.isBlank()) {
-            Log.e(TAG, "Empty base64 data for $documentName")
-            throw IllegalArgumentException("No data available for $documentName")
-        }
+    fun uploadDocument(documentName: String, uri: Uri, onSuccess: (DocumentListResponse) -> Unit) {
+        // DocumentUploadManager will handle determining document type from documentName
         
-        // Check if the base64 string begins with a data URI prefix
-        val isPdfDataUri = base64Data.startsWith("data:application/pdf;base64,")
-        val isImageDataUri = base64Data.startsWith("data:image/")
-        
-        // Log the beginning of the data for debugging
-        val firstFewChars = if (base64Data.length > 30) base64Data.substring(0, 30) + "..." else base64Data
-        Log.d(TAG, "Data for $documentName starts with: $firstFewChars")
-        
-        // Remove Base64 prefix if any (like "data:application/pdf;base64,")
-        val pureBase64 = when {
-            base64Data.contains(",") -> {
-                base64Data.substring(base64Data.indexOf(",") + 1)
-            }
-            else -> base64Data
-        }
-        
-        try {
-            // Decode Base64 to byte array
-            val decodedBytes = Base64.decode(pureBase64, Base64.DEFAULT)
-            Log.d(TAG, "Decoded ${decodedBytes.size} bytes for $documentName")
-            
-            // Create a file info before writing to ensure we get the right type
-            val fileExtensionInfo = guessFileExtension(decodedBytes)
-            
-            // Override isPdf if forced
-            val adjustedFileExtensionInfo = if (forcePdf) {
-                FileExtensionInfo("pdf", true)
+        // Use DocumentUploadManager to handle the upload
+        documentUploadManager.uploadDocumentFromUri(documentName, uri) { response ->
+            if (response.status == 200) {
+                Toast.makeText(context, "$documentName uploaded successfully", Toast.LENGTH_SHORT).show()
+                // Process the response and update the documents list
+                processApiResponse(response)
+                onSuccess(response)
             } else {
-                fileExtensionInfo
-            }
-            
-            Log.d(TAG, "Determined file type: ${adjustedFileExtensionInfo.extension}, isPdf: ${adjustedFileExtensionInfo.isPdf} (force: $forcePdf)")
-            
-            // Use a safer filename
-            val safeFileName = documentName.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
-            val tempFile = File(context.cacheDir, "${safeFileName}.${adjustedFileExtensionInfo.extension}")
-            
-            // Write decoded data to file
-            FileOutputStream(tempFile).use { outputStream ->
-                outputStream.write(decodedBytes)
-                outputStream.flush()
-            }
-            
-            // Verify file was created and has content
-            if (tempFile.exists() && tempFile.length() > 0) {
-                Log.d(TAG, "Successfully created file at ${tempFile.absolutePath}, size: ${tempFile.length()} bytes")
-            } else {
-                Log.e(TAG, "File creation failed or file is empty: ${tempFile.absolutePath}")
-            }
-            
-            // Force isPdf if it came with PDF MIME type or if forced by parameter
-            val finalIsPdf = isPdfDataUri || adjustedFileExtensionInfo.isPdf || forcePdf
-            
-            // Create a content URI using FileProvider for better access
-            val fileUri = try {
-                // Try to use FileProvider for secure access
-                FileProvider.getUriForFile(
-                    context,
-                    context.packageName + ".provider",
-                    tempFile
-                )
-            } catch (e: Exception) {
-                // Fall back to basic file URI if FileProvider fails
-                Log.w(TAG, "FileProvider failed, falling back to basic URI: ${e.message}")
-                Uri.fromFile(tempFile)
-            }
-            
-            Log.d(TAG, "Final URI for $documentName: $fileUri, isPdf: $finalIsPdf")
-            
-            return FileInfo(fileUri, finalIsPdf)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error processing base64 data: ${e.message}", e)
-            throw e
-        }
-    }
-    
-    data class FileExtensionInfo(val extension: String, val isPdf: Boolean)
-    
-    private fun guessFileExtension(bytes: ByteArray): FileExtensionInfo {
-        // Check file signature (magic numbers)
-        if (bytes.size > 4) {
-            // PDF signature: %PDF (25 50 44 46)
-            if (bytes[0] == 0x25.toByte() && bytes[1] == 0x50.toByte() && 
-                bytes[2] == 0x44.toByte() && bytes[3] == 0x46.toByte()) {
-                return FileExtensionInfo("pdf", true)
-            }
-            
-            // JPG signature: FF D8 FF
-            if (bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte() && 
-                bytes[2] == 0xFF.toByte()) {
-                return FileExtensionInfo("jpg", false)
-            }
-            
-            // PNG signature: 89 50 4E 47
-            if (bytes[0] == 0x89.toByte() && bytes[1] == 0x50.toByte() && 
-                bytes[2] == 0x4E.toByte() && bytes[3] == 0x47.toByte()) {
-                return FileExtensionInfo("png", false)
+                val errorMsg = if (response.message.toString().isNotBlank()) response.message.toString() else "Upload failed"
+                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
             }
         }
-        
-        // Default to PDF if unable to determine
-        return FileExtensionInfo("pdf", true)
     }
-    
-    private fun saveBase64ToUploads(base64Data: String, documentName: String, forcePdf: Boolean = false): File {
-        // Remove Base64 prefix if any
-        val pureBase64 = if (base64Data.contains(",")) {
-            base64Data.substring(base64Data.indexOf(",") + 1)
-        } else {
-            base64Data
-        }
-        
-        // Decode Base64 to byte array
-        val decodedBytes = Base64.decode(pureBase64, Base64.DEFAULT)
-        
-        // Determine file extension
-        val fileExtensionInfo = guessFileExtension(decodedBytes)
-        
-        // Apply force PDF if requested
-        val adjustedFileExtensionInfo = if (forcePdf) {
-            FileExtensionInfo("pdf", true)
-        } else {
-            fileExtensionInfo
-        }
-          // Create file in uploads directory
-        val uploadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOCUMENTS)
-        val uploadFile = File(uploadsDir, "${documentName.replace(" ", "_")}.${adjustedFileExtensionInfo.extension}")
-        
-        // Write decoded data to file
-        FileOutputStream(uploadFile).use { it.write(decodedBytes) }
-        
-        return uploadFile
-    }
-    
-    companion object {
-        private const val TAG = "UserDocumentsController"
-    }
-} 
+}

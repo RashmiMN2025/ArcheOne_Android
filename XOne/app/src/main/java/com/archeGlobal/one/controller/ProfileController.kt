@@ -8,13 +8,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.ProfileModel
 import com.archeGlobal.one.navigation.Navigator
-import com.archeGlobal.one.network.DocumentUploadResponse
+import com.archeGlobal.one.network.DocumentListResponse
 import com.archeGlobal.one.network.LogoutRequest
 import com.archeGlobal.one.network.LogoutResponse
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
@@ -116,19 +117,35 @@ class ProfileController(
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val documentTypePart = "profile_pic".toRequestBody("text/plain".toMediaTypeOrNull())
             
+            // Get email from user data
+            val email = userData?.email ?: ""
+            if (email.isEmpty()) {
+                Toast.makeText(context, "Email not available", Toast.LENGTH_SHORT).show()
+                Log.e("ProfileController", "Upload failed - email is empty")
+                return
+            }
+            
+            val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            
             // Log the request parameters
             Log.d("ProfileController", "Making upload request to: ${RetrofitClient.BASE_URL}upload")
             Log.d("ProfileController", "Request params: employeeId=$employeeId, documentType=profile_pic")
             
+            // Create a map for all parameters
+            val params = HashMap<String, RequestBody>()
+            params["email"] = emailPart
+            params["employeeId"] = employeeIdPart
+            params["documentType"] = documentTypePart
+            
             // Make the API call to upload the profile picture
-            val call = RetrofitClient.apiService.uploadDocument(filePart, employeeIdPart, documentTypePart)
+            val call = RetrofitClient.apiService.uploadDocument(filePart, params)
             
             // Log the call details
             Log.d("ProfileController", "Call URL: ${call.request().url}")
             Log.d("ProfileController", "Call Method: ${call.request().method}")
             
-            call.enqueue(object : Callback<DocumentUploadResponse> {
-                override fun onResponse(call: Call<DocumentUploadResponse>, response: Response<DocumentUploadResponse>) {
+            call.enqueue(object : Callback<DocumentListResponse> {
+                override fun onResponse(call: Call<DocumentListResponse>, response: Response<DocumentListResponse>) {
                     // Log the raw response for debugging
                     Log.d("ProfileController", "Response received - Code: ${response.code()}")
                     
@@ -149,36 +166,45 @@ class ProfileController(
                             // Handle the profile picture update in user data
                             val userData = userDataManager.getUserData()
                             if (userData != null) {
-                                // Get the profile picture URL from the response
-                                val profilePicUrl = responseBody.filePath
+                                // With the new API, profile picture URL will be in the documents or message
+                                var profilePicUrl: String? = null
                                 
-                                Log.d("ProfileController", "Direct file path from response: $profilePicUrl")
+                                // Check if message contains a file URL (if it's a list of files)
+                                if (responseBody.message is List<*>) {
+                                    val fileList = responseBody.message as? List<*>
+                                    fileList?.forEach { fileItem ->
+                                        if (fileItem is Map<*, *>) {
+                                            val url = fileItem["url"] as? String
+                                            if (url != null && url.contains("profile", ignoreCase = true)) {
+                                                profilePicUrl = url
+                                                Log.d("ProfileController", "Found profile URL in message: $profilePicUrl")
+                                            }
+                                        }
+                                    }
+                                }
                                 
-                                if (profilePicUrl != null && profilePicUrl.isNotEmpty()) {
+                                if (profilePicUrl != null) {
                                     // Use central method to broadcast the update
                                     broadcastProfilePictureUpdate(profilePicUrl)
-                                    
                                     Log.d("ProfileController", "Current model.profilePicture: ${model.profilePicture}")
-                                    
                                     Toast.makeText(context, "Profile picture updated successfully", Toast.LENGTH_SHORT).show()
                                 } else {
-                                    // Fallback to the old way of getting filePath from the response
                                     // Find the profile picture URL from the response
                                     var filePathFromDocs: String? = null
                                     
                                     try {
                                         // Check both personal and professional docs for profile picture
-                                        responseBody.personalDoc?.forEach { doc ->
+                                        responseBody.personalDoc.forEach { doc ->
                                             Log.d("ProfileController", "Checking personal doc: ${doc.docName}, path: ${doc.filePath}")
-                                            if (doc.docName == "profile_pic" && !doc.filePath.isNullOrEmpty()) {
+                                            if (doc.doc_type == "profile_pic" && doc.filePath?.isNotEmpty() == true) {
                                                 filePathFromDocs = doc.filePath
                                                 Log.d("ProfileController", "Found profile pic in personal docs: $filePathFromDocs")
                                             }
                                         }
                                         
-                                        responseBody.professionalDoc?.forEach { doc ->
+                                        responseBody.professionalDoc.forEach { doc ->
                                             Log.d("ProfileController", "Checking professional doc: ${doc.docName}, path: ${doc.filePath}")
-                                            if (doc.docName == "profile_pic" && !doc.filePath.isNullOrEmpty()) {
+                                            if (doc.doc_type == "profile_pic" && doc.filePath?.isNotEmpty() == true) {
                                                 filePathFromDocs = doc.filePath
                                                 Log.d("ProfileController", "Found profile pic in professional docs: $filePathFromDocs")
                                             }
@@ -201,11 +227,11 @@ class ProfileController(
                             }
                         } else {
                             // Error response from server
-                            Toast.makeText(context, "Failed to update profile picture: ${responseBody.message}", Toast.LENGTH_SHORT).show()
-                            Log.e("ProfileController", "Upload failed with status: ${responseBody.status}, message: ${responseBody.message}")
+                            Toast.makeText(context, "Error: ${response.message()}", Toast.LENGTH_SHORT).show()
+                            Log.e("ProfileController", "API error: ${response.message()}", null)
                         }
                     } else {
-                        // HTTP error - log detailed error information
+                        // HTTP error response
                         val errorMsg = "Profile picture upload failed: ${response.code()} ${response.message()}"
                         Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
                         Log.e("ProfileController", errorMsg)
@@ -219,7 +245,7 @@ class ProfileController(
                     }
                 }
                 
-                override fun onFailure(call: Call<DocumentUploadResponse>, t: Throwable) {
+                override fun onFailure(call: Call<DocumentListResponse>, t: Throwable) {
                     // Network error - log detailed error information
                     val errorMsg = "Network error during profile picture upload: ${t.message}"
                     Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()

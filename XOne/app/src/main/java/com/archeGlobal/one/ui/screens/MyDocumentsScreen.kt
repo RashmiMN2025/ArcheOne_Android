@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.archeGlobal.one.controller.MyDocumentsController
+import com.archeGlobal.one.controller.DocumentUploadManager
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import com.archeGlobal.one.R
@@ -37,12 +38,21 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, employeeId: String, onBackPressed: () -> Unit) {
+fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBackPressed: () -> Unit) {
+    // Create the document upload manager
+    val uploadManager = remember { DocumentUploadManager(context) }
+    
     val personalDocs by controller.personalDocs.observeAsState(emptyMap())
     val professionalDocs by controller.professionalDocs.observeAsState(emptyMap())
-    val isLoading by controller.isLoading.observeAsState(false)
+    val uploadStatus by controller.uploadStatus.observeAsState(emptyMap())
+    val isLoading by uploadManager.isLoading.observeAsState(false)
+    val errorMessage by uploadManager.errorMessage.observeAsState(null)
+    val uploadSuccess by uploadManager.uploadSuccess.observeAsState(false)
+    
     var showUploadDialog by remember { mutableStateOf(false) }
     var selectedDocument by remember { mutableStateOf<String?>(null) }
+    
+    // We no longer need to explicitly get the email as it's retrieved from user data
 
     // Camera permission state
     var hasCameraPermission by remember {
@@ -88,11 +98,114 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
         }
     }
 
-    LaunchedEffect(Unit) {
-        val sampleName = "" // Change this based on your document
-        val sampleUri = null // You need a valid URI to upload a document
-        controller.uploadDocument(sampleName, sampleUri, employeeId,true)
+    // Show error message if any
+    errorMessage?.let { error ->
+        LaunchedEffect(error) {
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+        }
     }
+    
+    // Handle upload success
+    LaunchedEffect(uploadSuccess) {
+        if (uploadSuccess) {
+            // Refresh document list
+            uploadManager.listDocuments { response ->
+                // Update UI with the response
+                val newPersonalDocs = mutableMapOf<String, String>()
+                val newProfessionalDocs = mutableMapOf<String, String>()
+                val newUploadStatus = mutableMapOf<String, Boolean>()
+                
+                // Process personal documents
+                response.personalDoc.forEach { doc ->
+                    if (!doc.filePath.isNullOrEmpty()) {
+                        val displayName = when (doc.doc_type) {
+                            "aadhar" -> "Aadhar Card"
+                            "passport" -> "Passport"
+                            "pan" -> "PAN Card"
+                            else -> doc.docName ?: "Unknown Document"
+                        }
+                        // Only add if we have valid data
+                        if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                            newPersonalDocs[displayName] = doc.filePath!!
+                            newUploadStatus[displayName] = true
+                        }
+                    }
+                }
+                
+                // Process professional documents
+                response.professionalDoc.forEach { doc ->
+                    if (!doc.filePath.isNullOrEmpty()) {
+                        val displayName = when (doc.doc_type) {
+                            "offer_letter" -> "Offer Letter"
+                            "certificate" -> "Certificate"
+                            "exp_letter" -> "Experience Letter"
+                            else -> doc.docName ?: "Unknown Document"
+                        }
+                        // Only add if we have valid data
+                        if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                            newProfessionalDocs[displayName] = doc.filePath!!
+                            newUploadStatus[displayName] = true
+                        }
+                    }
+                }
+                
+                // Update LiveData values
+                controller.personalDocs.postValue(newPersonalDocs)
+                controller.professionalDocs.postValue(newProfessionalDocs)
+                controller.uploadStatus.postValue(newUploadStatus)
+            }
+        }
+    }
+    
+    // Fetch documents on screen launch
+    LaunchedEffect(Unit) {
+        uploadManager.listDocuments { response ->
+            // Update UI with the response
+            val newPersonalDocs = mutableMapOf<String, String>()
+            val newProfessionalDocs = mutableMapOf<String, String>()
+            val newUploadStatus = mutableMapOf<String, Boolean>()
+            
+            // Process personal documents
+            response.personalDoc.forEach { doc ->
+                if (!doc.filePath.isNullOrEmpty()) {
+                    val displayName = when (doc.doc_type) {
+                        "aadhar" -> "Aadhar Card"
+                        "passport" -> "Passport"
+                        "pan" -> "PAN Card"
+                        else -> doc.docName ?: "Unknown Document"
+                    }
+                    // Only add if we have valid data
+                    if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                        newPersonalDocs[displayName] = doc.filePath!!
+                        newUploadStatus[displayName] = true
+                    }
+                }
+            }
+            
+            // Process professional documents
+            response.professionalDoc.forEach { doc ->
+                if (!doc.filePath.isNullOrEmpty()) {
+                    val displayName = when (doc.doc_type) {
+                        "offer_letter" -> "Offer Letter"
+                        "certificate" -> "Certificate"
+                        "exp_letter" -> "Experience Letter"
+                        else -> doc.docName ?: "Unknown Document"
+                    }
+                    // Only add if we have valid data
+                    if (displayName.isNotEmpty() && !doc.filePath.isNullOrEmpty()) {
+                        newProfessionalDocs[displayName] = doc.filePath!!
+                        newUploadStatus[displayName] = true
+                    }
+                }
+            }
+            
+            // Update LiveData values
+            controller.personalDocs.postValue(newPersonalDocs)
+            controller.professionalDocs.postValue(newProfessionalDocs)
+            controller.uploadStatus.postValue(newUploadStatus)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -187,7 +300,15 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 listOf("Aadhar Card", "Passport", "PAN Card").forEach { item ->
-                                    DocumentCard(item, personalDocs[item], controller, context, employeeId, true)
+                                    DocumentCard(
+                                        name = item,
+                                        filePath = personalDocs[item],
+                                        isUploaded = uploadStatus[item] ?: false,
+                                        controller = controller,
+                                        context = context,
+                                        isPersonal = true,
+                                        uploadManager = uploadManager
+                                    )
                                 }
                             }
 
@@ -208,7 +329,15 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, emplo
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 listOf("Offer Letter", "Certificate", "Experience Letter").forEach { item ->
-                                    DocumentCard(item, professionalDocs[item], controller, context, employeeId, false)
+                                    DocumentCard(
+                                        name = item,
+                                        filePath = professionalDocs[item],
+                                        isUploaded = uploadStatus[item] ?: false,
+                                        controller = controller,
+                                        context = context,
+                                        isPersonal = false,
+                                        uploadManager = uploadManager
+                                    )
                                 }
                             }
 
@@ -311,7 +440,7 @@ private fun UploadDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_fingerprint),
+                        painter = painterResource(id = R.drawable.ic_camera),
                         contentDescription = "Camera",
                         modifier = Modifier.padding(end = 8.dp)
                     )
@@ -377,10 +506,11 @@ private fun UploadDialog(
 fun DocumentCard(
     name: String,
     filePath: String?,
+    isUploaded: Boolean,
     controller: MyDocumentsController,
     context: Context,
-    employeeId: String,
-    isPersonal: Boolean
+    isPersonal: Boolean,
+    uploadManager: DocumentUploadManager
 ) {
     // State to show the upload options menu
     var showUploadOptions by remember { mutableStateOf(false) }
@@ -397,8 +527,10 @@ fun DocumentCard(
 
     // Launcher for camera capture
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        if (bitmap != null) {
-            controller.onUploadCameraImage(name, bitmap, employeeId)
+        bitmap?.let {
+            uploadManager.uploadDocumentFromBitmap(name, it) { response ->
+                // Handle success - UI will be updated via the uploadSuccess LiveData observer
+            }
         }
     }
 
@@ -417,14 +549,18 @@ fun DocumentCard(
     // Launcher for file selection
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            controller.onUploadClick(name, uri, employeeId)
+            uploadManager.uploadDocumentFromUri(name, uri) { response ->
+                // Handle success - UI will be updated via the uploadSuccess LiveData observer
+            }
         }
     }
 
     // Launcher for image picker
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            controller.onUploadClick(name, uri, employeeId)
+            uploadManager.uploadDocumentFromUri(name, uri) { response ->
+                // Handle success - UI will be updated via the uploadSuccess LiveData observer
+            }
         }
     }
 
