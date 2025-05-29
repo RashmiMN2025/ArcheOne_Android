@@ -144,42 +144,60 @@ class GreetingDetailActivity : ComponentActivity() {
     }
 
     // Create HTML email with image URL (width 300px) and signature
-private fun createHtmlEmailWithImageUrl(
-    message: String,
-    imageUrl: String,
-    userName: String,
-    userDesignation: String,
-    userMobile: String
-): String {
-    val sanitizedMessage = message.replace("\n", "<br>")
-    // Use helper to get base64 PNG string for the icon
-    val iconBase64 = getBase64FromDrawable(R.drawable.arche_sign)
-    val signatureImgTag = if (iconBase64.isNotEmpty()) {
-        """<img src="$iconBase64" width="60" height="50" alt="User Icon" style="vertical-align: middle;"/>"""
-    } else {
-        ""
-    }
+    private fun createHtmlEmailWithImageUrl(
+        message: String,
+        imageUrl: String,
+        userName: String,
+        userDesignation: String,
+        userMobile: String
+    ): String {
+        val sanitizedMessage = message.replace("\n", "<br>")
+        // Use the public URL for the signature icon
+        val iconUrl = "https://pulse.netcon.in:7000/signature/sign.png"
+        val signatureImgTag = """<img src="$iconUrl" width="90" height="80" alt="User Icon" style="vertical-align: middle;"/>"""
 
         return """
-            <html>
-            <body style="font-family: Arial, sans-serif;">
-                <p>$sanitizedMessage</p>
-                <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" />
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
+                .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
+                .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; }
+                .image-container { text-align: center; margin-bottom: 30px; }
+                .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
+            </style>
+        </head>
+        <body>
+            <div class="email-container">
+                <div class="message-text">
+                    $sanitizedMessage
+                    <br /><br />
+                </div>
+                
+                <div class="image-container">
+                    <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
+                    <br /> <br />
+                </div>
+                
                 <p style="margin-top: 20px;">Best Regards,</p>
+                
                 <table style="margin-top: 10px;">
                     <tr>
-                    <td style="vertical-align: middle;">
-                        $signatureImgTag
-                    </td>
-                        <td style="padding-left: 12px; vertical-align: middle;">
+                        <td style="vertical-align: middle;">
+                            $signatureImgTag
+                        </td>
+                        <td style="padding-left: 18px; vertical-align: middle;">
                             <strong>$userName</strong><br/>
                             $userDesignation<br/>
                             $userMobile
                         </td>
                     </tr>
                 </table>
-            </body>
-            </html>
-        """.trimIndent()
+            </div>
+        </body>
+        </html>
+    """.trimIndent()
     }
 }

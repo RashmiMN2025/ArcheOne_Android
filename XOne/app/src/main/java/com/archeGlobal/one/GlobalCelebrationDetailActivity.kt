@@ -48,13 +48,13 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
                 com.archeGlobal.one.ui.screens.GlobalCelebrationDetailScreen(
                     subcategory = com.archeGlobal.one.model.GreetingSubcategory(
                         id = 0, // You may want to pass the real id
-                        name = intent.getStringExtra("category") ?: "Global Celebration",
+                        name = category,
                         files = allGreetings,
                         message = editableMessage
                     ),
                     onBackPressed = { finish() },
-                    onSendGreeting = { imageUrl, message -> sendGreeting(imageUrl, message, "Global Celebration") },
-                    onSendInOutlook = { imageUrl, message -> sendGreetingInOutlook(imageUrl, message, "Global Celebration") }
+                    onSendGreeting = { imageUrl, message -> sendGreeting(imageUrl, message, category) },
+                    onSendInOutlook = { imageUrl, message -> sendGreetingInOutlook(imageUrl, message, category) }
                 )
             }
         }
@@ -155,9 +155,10 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
                 val userData = userDataManager.getUserData()
                 val userName = userData?.name ?: "Your Name"
                 val userDesignation = userData?.designation ?: "Your Designation"
+                val userMobile = userData?.mobile ?: " "
                 
                 // Use the direct imageUrl for the HTML email content
-                val htmlEmailContent = createRichHtmlEmail(message, imageUrl, category, userName, userDesignation)
+                val htmlEmailContent = createRichHtmlEmail(message, imageUrl, userName, userDesignation, userMobile)
                 
                 // Prepare image for attachment (better quality, for fallback)
                 val bitmapForAttachment = createOutlookOptimizedBitmap(originalBitmap)
@@ -274,44 +275,62 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
     /**
      * Creates a rich HTML email with an embedded image via URL.
      */
-    private fun createRichHtmlEmail(message: String, imageUrl: String, category: String, userName: String, userDesignation: String): String {
-        val sanitizedMessage = message.replace("\n", "<br />")
-        return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                <title>$category</title>
-                <style>
-                    body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
-                    .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
-                    .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; } /* Increased margin-bottom */
-                    .image-container { text-align: center; margin-bottom: 30px; } /* Increased margin-bottom */
-                    .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
-                </style>
-            </head>
-            <body>
-                <div class="email-container">
-                    <div class="message-text">
-                        $sanitizedMessage
-                        <br /><br />
-                    </div>
-                    
-                    <div class="image-container">
-                        <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
-                        <br /> <br />
-                    </div>
-                    
-                    <div class="footer-text">
-                        Best Regards,<br />
-                       $userName<br />
-                       $userDesignation
-                    </div>
+    private fun createRichHtmlEmail(
+    message: String,
+    imageUrl: String,
+    userName: String,
+    userDesignation: String,
+    userMobile: String
+): String {
+    val sanitizedMessage = message.replace("\n", "<br />")
+    // Use the public URL for the signature icon
+    val iconUrl = "https://pulse.netcon.in:7000/signature/sign.png"
+    val signatureImgTag = """<img src="$iconUrl" width="90" height="80" alt="User Icon" style="vertical-align: middle;"/>"""
+
+    return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
+                .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
+                .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; }
+                .image-container { text-align: center; margin-bottom: 30px; }
+                .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
+            </style>
+        </head>
+        <body>
+            <div class="email-container">
+                <div class="message-text">
+                    $sanitizedMessage
+                    <br /><br />
                 </div>
-            </body>
-            </html>
-        """.trimIndent()
-    }
+                
+                <div class="image-container">
+                    <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
+                    <br /> <br />
+                </div>
+                
+                <p style="margin-top: 20px;">Best Regards,</p>
+                
+                <table style="margin-top: 10px;">
+                    <tr>
+                        <td style="vertical-align: middle;">
+                            $signatureImgTag
+                        </td>
+                        <td style="padding-left: 18px; vertical-align: middle;">
+                            <strong>$userName</strong><br/>
+                            $userDesignation<br/>
+                            $userMobile
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </body>
+        </html>
+    """.trimIndent()
+}
 
     private fun shareLinkOnly(imageUrl: String, message: String, category: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
