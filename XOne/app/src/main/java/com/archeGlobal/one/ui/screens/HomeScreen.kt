@@ -617,6 +617,7 @@ fun HomeScreen(
 private fun formatServiceTitle(title: String): String {
     // Special cases for specific long titles - forcing proper line breaks
     return when (title) {
+        "DeskCart" -> "DeskCart"
         "Vision" -> "Vision"
         "Core Values" -> "CoreValues"
         "Communique" -> "Communique"
@@ -766,7 +767,7 @@ private fun AppIcon(
     Box(modifier = modifier) {
         // Check if it's a default app
         when (title) {
-            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave",
+            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "Finance", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
             "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "Checkmate" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
@@ -778,6 +779,7 @@ private fun AppIcon(
                     Image(
                         painter = painterResource(
                             id = when (title.lowercase().replace(" ", "")) {
+                                "deskcart" -> R.drawable.deskcart
                                 "vision" -> R.drawable.vision
                                 "corevalues" -> R.drawable.core_values
                                 "communique" -> R.drawable.communique

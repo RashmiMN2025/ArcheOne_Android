@@ -199,7 +199,7 @@ fun GlobalCelebrationDetailScreen(
                     ) {
                         Text(
                             text = "Send Greeting",
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             color = Color.White,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold
@@ -217,7 +217,7 @@ fun GlobalCelebrationDetailScreen(
                     ) {
                         Text(
                             text = "Send in Outlook",
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             color = Color.White,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold

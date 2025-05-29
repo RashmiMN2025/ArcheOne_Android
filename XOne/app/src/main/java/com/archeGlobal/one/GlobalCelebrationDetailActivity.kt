@@ -298,7 +298,7 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
                     </div>
                     
                     <div class="image-container">
-                        <img src="$imageUrl" alt="$category Greeting" style="max-width: 50%; width: 50%; height: auto; border: 0; display: block; margin: 0 auto;" /> 
+                        <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
                         <br /> <br />
                     </div>
                     

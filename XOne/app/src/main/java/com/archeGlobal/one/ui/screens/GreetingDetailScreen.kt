@@ -23,15 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import com.archeGlobal.one.ui.screens.GreetingThumbnailCard // Use the one from GreetingsScreen.kt
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.ui.text.input.TextFieldValue
 
@@ -228,7 +221,7 @@ fun GreetingDetailScreen(
                     ) {
                         Text(
                             text = "Send Greeting",
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             color = Color.White,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold
@@ -248,7 +241,7 @@ fun GreetingDetailScreen(
                     ) {
                         Text(
                             text = "Send in Outlook",
-                            fontSize = 16.sp,
+                            fontSize = 14.sp,
                             color = Color.White,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.SemiBold

@@ -2,7 +2,6 @@ package com.archeGlobal.one
 
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,15 +16,30 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import coil.ImageLoader
-import coil.request.ImageRequest
 import android.util.Log
+import android.graphics.drawable.BitmapDrawable
+import android.util.Base64
+import java.io.ByteArrayOutputStream
+import androidx.core.content.ContextCompat
+import android.graphics.BitmapFactory
+import coil.imageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 
 class GreetingDetailActivity : ComponentActivity() {
     private lateinit var navigator: AndroidNavigator
     private var allGreetings by mutableStateOf<List<String>>(emptyList())
     private var editableMessage by mutableStateOf("")
     private var selectedGreetingUrl by mutableStateOf("")
+
+    private fun getBase64FromDrawable(resId: Int): String {
+    val drawable = ContextCompat.getDrawable(applicationContext, resId) as? BitmapDrawable
+    val bitmap = drawable?.bitmap ?: return ""
+    val outputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+    val byteArray = outputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,14 +144,22 @@ class GreetingDetailActivity : ComponentActivity() {
     }
 
     // Create HTML email with image URL (width 300px) and signature
-    private fun createHtmlEmailWithImageUrl(
-        message: String,
-        imageUrl: String,
-        userName: String,
-        userDesignation: String,
-        userMobile: String
-    ): String {
-        val sanitizedMessage = message.replace("\n", "<br>")
+private fun createHtmlEmailWithImageUrl(
+    message: String,
+    imageUrl: String,
+    userName: String,
+    userDesignation: String,
+    userMobile: String
+): String {
+    val sanitizedMessage = message.replace("\n", "<br>")
+    // Use helper to get base64 PNG string for the icon
+    val iconBase64 = getBase64FromDrawable(R.drawable.arche_sign)
+    val signatureImgTag = if (iconBase64.isNotEmpty()) {
+        """<img src="$iconBase64" width="60" height="50" alt="User Icon" style="vertical-align: middle;"/>"""
+    } else {
+        ""
+    }
+
         return """
             <html>
             <body style="font-family: Arial, sans-serif;">
@@ -146,10 +168,10 @@ class GreetingDetailActivity : ComponentActivity() {
                 <p style="margin-top: 20px;">Best Regards,</p>
                 <table style="margin-top: 10px;">
                     <tr>
-                        <td>
-                            <!-- Optionally add your icon here if it's a URL -->
-                        </td>
-                        <td style="padding-left: 8px;">
+                    <td style="vertical-align: middle;">
+                        $signatureImgTag
+                    </td>
+                        <td style="padding-left: 12px; vertical-align: middle;">
                             <strong>$userName</strong><br/>
                             $userDesignation<br/>
                             $userMobile
