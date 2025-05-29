@@ -55,6 +55,15 @@ interface ApiService {
         @Part file: MultipartBody.Part,
         @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>
     ): Call<DocumentListResponse>
+    
+    // Profile Picture API - Upload
+    @Multipart
+    @POST("/upload_profile")
+    fun uploadProfilePicture(
+        @Part file: MultipartBody.Part,
+        @Part("email") email: RequestBody,
+        @Part("employeeId") employeeId: RequestBody
+    ): Call<ProfilePictureResponse>
 
     @GET("social")
     suspend fun getSocialContent(): Response<SocialContent>
