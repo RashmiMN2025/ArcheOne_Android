@@ -281,5 +281,54 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
         if (isLoading) {
             UniversalLoader(isLoading = true)
         }
+        
+        // Reset Password Button
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 36.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .clickable {
+                        // Navigate to password reset screen
+                        navigator.navigateToPasswordReset()
+                    },
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 16.dp, horizontal = 24.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_key),
+                        contentDescription = "Reset Password Icon",
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Reset Password",
+                            color = Color.Black,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily
+                        )
+                        Text(
+                            text = "For Outlook, and more",
+                            color = Color.Gray,
+                            fontSize = 12.sp,
+                            fontFamily = GraphikFontFamily
+                        )
+                    }
+                }
+            }
+        }
     }
 }

@@ -7,6 +7,8 @@ import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.CommuniqueModel
+import com.archeGlobal.one.model.PasswordResetRequest
+import com.archeGlobal.one.model.PasswordResetResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -82,6 +84,9 @@ interface ApiService {
 
     @POST("feedback")
     suspend fun submitFeedback(@Body request: FeedbackRequest): Response<FeedbackResponse>
+    
+    @POST("/reset-password")
+    fun resetPassword(@Body request: PasswordResetRequest): Call<PasswordResetResponse>
 }
 
 data class FeedbackRequest(
@@ -127,8 +132,8 @@ data class LogoutResponse(
 data class DocumentListResponse(
     val status: Int,
     val message: Any, // Can be a string message or list of files
-    val personalDoc: List<Document> = emptyList(),
-    val professionalDoc: List<Document> = emptyList()
+    val personalDoc: List<Document>? = emptyList(),
+    val professionalDoc: List<Document>? = emptyList()
 )
 
 data class DocumentFile(

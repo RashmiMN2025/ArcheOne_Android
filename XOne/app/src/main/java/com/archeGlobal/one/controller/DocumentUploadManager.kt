@@ -30,29 +30,29 @@ class DocumentUploadManager(private val context: Context) {
     companion object {
         private const val TAG = "DocumentUploadManager"
     }
-    
+
     // Add UserDataManager reference
     private val userDataManager = UserDataManager.getInstance(context)
-    
+
     // Status indicators
     val isLoading = MutableLiveData(false)
     val errorMessage = MutableLiveData<String?>(null)
     val uploadSuccess = MutableLiveData<Boolean>(false)
-    
+
     // Document type mapping for personal documents
     private val personalDocTypes = mapOf(
         "id" to "ID Card",
         "pan" to "PAN Card",
         "medical" to "Medical Insurance"
     )
-    
+
     // Document type mapping for professional documents
     private val professionalDocTypes = mapOf(
         "offer_letter" to "Offer Letter",
         "certificate" to "Certificate",
         "exp_letter" to "Experience Letter"
     )
-    
+
     /**
      * Get the current user's employee ID
      */
@@ -62,18 +62,18 @@ class DocumentUploadManager(private val context: Context) {
             Log.e("DocumentUploadManager", "Employee ID not found in user data")
             return null
         }
-        
+
         // Validate the format: must be NT followed by 4 digits
         if (!employeeId.matches(Regex("^NT\\d{4}$"))) {
             Log.e("DocumentUploadManager", "Employee ID has invalid format: $employeeId. Must be NT followed by 4 digits.")
             errorMessage.postValue("Invalid employee ID format. It must start with 'NT' followed by exactly 4 digits (e.g., NT1234)")
             return null
         }
-        
+
         Log.d("DocumentUploadManager", "Retrieved employee ID from user data: $employeeId")
         return employeeId
     }
-    
+
     /**
      * Get the current user's email
      */
@@ -87,7 +87,7 @@ class DocumentUploadManager(private val context: Context) {
         Log.d("DocumentUploadManager", "Retrieved email from user data: $email")
         return email
     }
-    
+
     /**
      * Get document type code from display name
      */
@@ -104,20 +104,20 @@ class DocumentUploadManager(private val context: Context) {
                     Log.d("DocumentUploadManager", "Found personal doc type: ${personalEntry.key} for $displayName")
                     return personalEntry.key
                 }
-                
+
                 // Try professional document types as fallback
                 val professionalEntry = professionalDocTypes.entries.find { it.value == displayName }
                 if (professionalEntry != null) {
                     Log.d("DocumentUploadManager", "Found professional doc type: ${professionalEntry.key} for $displayName")
                     return professionalEntry.key
                 }
-                
+
                 Log.e("DocumentUploadManager", "No document type found for: $displayName")
                 null
             }
         }
     }
-    
+
     /**
      * List documents for a user
      */
@@ -127,44 +127,44 @@ class DocumentUploadManager(private val context: Context) {
         if (employeeId == null) {
             return // Error message already set in getEmployeeId()
         }
-        
+
         // Get email from user data
         val email = getUserEmail()
         if (email == null) {
             return // Error message already set in getUserEmail()
         }
-        
+
         isLoading.postValue(true)
         errorMessage.postValue(null)
-        
+
         try {
             val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
-            
+
             // Log request parameters
             Log.d(TAG, "Listing documents for email: $email, employeeId: $employeeId, isPersonal: true")
-            
+
             val call = RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart)
             Log.d(TAG, "List documents request URL: ${call.request().url}")
-            
+
             call.enqueue(object : Callback<DocumentListResponse> {
                 override fun onResponse(
                     call: Call<DocumentListResponse>,
                     response: Response<DocumentListResponse>
                 ) {
                     isLoading.postValue(false)
-                    
+
                     if (response.isSuccessful && response.body() != null) {
                         val responseBody = response.body()!!
                         Log.d(TAG, "List documents success, status: ${responseBody.status}")
-                        
+
                         // Log all documents returned
-                        responseBody.personalDoc.forEach { doc ->
+                        responseBody.personalDoc?.forEach { doc ->
                             Log.d(TAG, "Document: ${doc.document_name}, type: ${doc.documentType}, " +
-                                   "has data: ${!doc.doc_data.isNullOrBlank()}")
+                                    "has data: ${!doc.doc_data.isNullOrBlank()}")
                         }
-                        
+
                         if (responseBody.status == 200) {
                             onSuccess(responseBody)
                         } else {
@@ -174,7 +174,7 @@ class DocumentUploadManager(private val context: Context) {
                         handleApiError(response)
                     }
                 }
-                
+
                 override fun onFailure(call: Call<DocumentListResponse>, t: Throwable) {
                     handleNetworkError(call, t)
                 }
@@ -185,7 +185,7 @@ class DocumentUploadManager(private val context: Context) {
             errorMessage.postValue("Error: ${e.message}")
         }
     }
-    
+
     /**
      * Upload a document from a URI
      */
@@ -199,23 +199,23 @@ class DocumentUploadManager(private val context: Context) {
         if (employeeId == null) {
             return // Error message already set in getEmployeeId()
         }
-        
+
         // Get email from user data
         val email = getUserEmail()
         if (email == null) {
             return // Error message already set in getUserEmail()
         }
-        
+
         // Get document type code
         val documentType = getDocTypeCode(documentName)
         if (documentType == null) {
             errorMessage.postValue("Unknown document type: $documentName")
             return
         }
-        
+
         // Get the MIME type of the file
         val mimeType = context.contentResolver.getType(uri)
-        
+
         // Check if the file is a PDF
         if (mimeType != "application/pdf") {
             // Try to check the file extension as a fallback
@@ -225,23 +225,23 @@ class DocumentUploadManager(private val context: Context) {
                 return
             }
         }
-        
+
         val file = getFileFromUri(uri)
         if (file == null) {
             errorMessage.postValue("Failed to process file. Please try again.")
             return
         }
-        
+
         // Check file size (5MB = 5 * 1024 * 1024 bytes)
         if (file.length() > 5 * 1024 * 1024) {
             errorMessage.postValue("File too large. Max allowed size is 5MB.")
             return
         }
-        
+
         // Upload the file
         uploadDocument(documentType, file, email, employeeId, onSuccess)
     }
-    
+
     /**
      * Upload a document from a bitmap (e.g., from camera)
      */
@@ -255,37 +255,37 @@ class DocumentUploadManager(private val context: Context) {
         if (employeeId == null) {
             return // Error message already set in getEmployeeId()
         }
-        
+
         // Get email from user data
         val email = getUserEmail()
         if (email == null) {
             return // Error message already set in getUserEmail()
         }
-        
+
         // Get document type code
         val documentType = getDocTypeCode(documentName)
         if (documentType == null) {
             errorMessage.postValue("Invalid document type: $documentName")
             return
         }
-        
+
         // Convert bitmap to file
         val file = saveBitmapToFile(bitmap)
         if (file == null) {
             errorMessage.postValue("Failed to process image. Please try again.")
             return
         }
-        
+
         // Check file size (5MB = 5 * 1024 * 1024 bytes)
         if (file.length() > 5 * 1024 * 1024) {
             errorMessage.postValue("File too large. Max allowed size is 5MB.")
             return
         }
-        
+
         // Upload the file
         uploadDocument(documentType, file, email, employeeId, onSuccess)
     }
-    
+
     /**
      * Core upload method
      */
@@ -299,7 +299,7 @@ class DocumentUploadManager(private val context: Context) {
         isLoading.postValue(true)
         errorMessage.postValue(null)
         uploadSuccess.postValue(false)
-        
+
         try {
             // Log all parameters
             Log.d("DocumentUploadManager", "Uploading document with parameters:")
@@ -307,12 +307,12 @@ class DocumentUploadManager(private val context: Context) {
             Log.d("DocumentUploadManager", "- Email: $email")
             Log.d("DocumentUploadManager", "- Employee ID: $employeeId")
             Log.d("DocumentUploadManager", "- File: ${file.name} (${file.length()} bytes)")
-            
+
             // Get MIME type
             val mimeType = MimeTypeMap.getSingleton()
                 .getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
             Log.d("DocumentUploadManager", "- MIME Type: $mimeType")
-            
+
             // Create request parts
             val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
             val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
@@ -320,25 +320,25 @@ class DocumentUploadManager(private val context: Context) {
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val documentTypePart = documentType.toRequestBody("text/plain".toMediaTypeOrNull())
             val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
-            
+
             Log.d("DocumentUploadManager", "- isPersonal: true")
-            
+
             // Create a map for additional params to add isPersonal parameter
             val params = HashMap<String, RequestBody>()
             params["email"] = emailPart
             params["employeeId"] = employeeIdPart
             params["documentType"] = documentTypePart
             params["isPersonal"] = isPersonalPart // Add isPersonal=true parameter
-            
+
             // Make the API call with isPersonal parameter
             val call = RetrofitClient.apiService.uploadDocument(
                 filePart, params
             )
-            
+
             // Log request details
             Log.d("DocumentUploadManager", "Upload request URL: ${call.request().url}")
             Log.d("DocumentUploadManager", "Upload request method: ${call.request().method}")
-            
+
             // Execute the request
             call.enqueue(object : Callback<DocumentListResponse> {
                 override fun onResponse(
@@ -346,11 +346,11 @@ class DocumentUploadManager(private val context: Context) {
                     response: Response<DocumentListResponse>
                 ) {
                     isLoading.postValue(false)
-                    
+
                     if (response.isSuccessful && response.body() != null) {
                         val responseBody = response.body()!!
                         Log.d("DocumentUploadManager", "Upload success, status: ${responseBody.status}")
-                        
+
                         if (responseBody.status == 200) {
                             // Show success message
                             Toast.makeText(context, "Document uploaded successfully!", Toast.LENGTH_SHORT).show()
@@ -363,7 +363,7 @@ class DocumentUploadManager(private val context: Context) {
                         handleApiError(response)
                     }
                 }
-                
+
                 override fun onFailure(call: Call<DocumentListResponse>, t: Throwable) {
                     handleNetworkError(call, t)
                 }
@@ -374,7 +374,7 @@ class DocumentUploadManager(private val context: Context) {
             errorMessage.postValue("Error preparing upload: ${e.message}")
         }
     }
-    
+
     /**
      * Handle error response from API
      */
@@ -404,7 +404,7 @@ class DocumentUploadManager(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Handle API error response
      */
@@ -418,7 +418,7 @@ class DocumentUploadManager(private val context: Context) {
             errorMessage.postValue("Error: ${response.message()}")
         }
     }
-    
+
     /**
      * Handle network error
      */
@@ -427,7 +427,7 @@ class DocumentUploadManager(private val context: Context) {
         val errorMsg = "Network error: ${t.message}"
         errorMessage.postValue(errorMsg)
         Log.e(TAG, errorMsg, t)
-        
+
         try {
             Log.e(TAG, "Failed request URL: ${call.request().url}")
             Log.e(TAG, "Failed request method: ${call.request().method}")
@@ -435,9 +435,9 @@ class DocumentUploadManager(private val context: Context) {
             Log.e(TAG, "Error logging request details", e)
         }
     }
-    
+
     // The listDocuments method is already defined above
-    
+
     /**
      * Get filename from URI
      */
@@ -453,14 +453,14 @@ class DocumentUploadManager(private val context: Context) {
                     }
                 }
             }
-            
+
             // If we couldn't get the filename from the cursor, try to get it from the URI path
             if (fileName == null) {
                 fileName = uri.path?.let { path ->
                     path.substring(path.lastIndexOf('/') + 1)
                 }
             }
-            
+
             Log.d("DocumentUploadManager", "File name from URI: $fileName")
             return fileName
         } catch (e: Exception) {
@@ -468,7 +468,7 @@ class DocumentUploadManager(private val context: Context) {
             return null
         }
     }
-    
+
     /**
      * Convert URI to File
      */
@@ -495,7 +495,7 @@ class DocumentUploadManager(private val context: Context) {
             null
         }
     }
-    
+
     /**
      * Save Bitmap to File
      */
@@ -503,11 +503,11 @@ class DocumentUploadManager(private val context: Context) {
         return try {
             val fileName = "temp_upload.jpg"
             val file = File(context.cacheDir, fileName)
-            
+
             FileOutputStream(file).use { outputStream ->
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
             }
-            
+
             Log.d("DocumentUploadManager", "Saved bitmap to file: ${file.absolutePath} (${file.length()} bytes)")
             file
         } catch (e: Exception) {

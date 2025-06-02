@@ -41,17 +41,17 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBackPressed: () -> Unit) {
     // Create the document upload manager
     val uploadManager = remember { DocumentUploadManager(context) }
-    
+
     val personalDocs by controller.personalDocs.observeAsState(emptyMap())
     val professionalDocs by controller.professionalDocs.observeAsState(emptyMap())
     val uploadStatus by controller.uploadStatus.observeAsState(emptyMap())
     val isLoading by uploadManager.isLoading.observeAsState(false)
     val errorMessage by uploadManager.errorMessage.observeAsState(null)
     val uploadSuccess by uploadManager.uploadSuccess.observeAsState(false)
-    
+
     var showUploadDialog by remember { mutableStateOf(false) }
     var selectedDocument by remember { mutableStateOf<String?>(null) }
-    
+
     // We no longer need to explicitly get the email as it's retrieved from user data
 
     // Camera permission state
@@ -104,7 +104,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             Toast.makeText(context, error, Toast.LENGTH_LONG).show()
         }
     }
-    
+
     // Handle upload success
     LaunchedEffect(uploadSuccess) {
         if (uploadSuccess) {
@@ -114,9 +114,9 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                 val newPersonalDocs = mutableMapOf<String, String>()
                 val newProfessionalDocs = mutableMapOf<String, String>()
                 val newUploadStatus = mutableMapOf<String, Boolean>()
-                
+
                 // Process personal documents
-                response.personalDoc.forEach { doc ->
+                response.personalDoc?.forEach { doc ->
                     if (!doc.filePath.isNullOrEmpty()) {
                         val displayName = when (doc.doc_type) {
                             "aadhar" -> "Aadhar Card"
@@ -131,9 +131,9 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         }
                     }
                 }
-                
+
                 // Process professional documents
-                response.professionalDoc.forEach { doc ->
+                response.professionalDoc?.forEach { doc ->
                     if (!doc.filePath.isNullOrEmpty()) {
                         val displayName = when (doc.doc_type) {
                             "offer_letter" -> "Offer Letter"
@@ -148,7 +148,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         }
                     }
                 }
-                
+
                 // Update LiveData values
                 controller.personalDocs.postValue(newPersonalDocs)
                 controller.professionalDocs.postValue(newProfessionalDocs)
@@ -156,7 +156,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             }
         }
     }
-    
+
     // Fetch documents on screen launch
     LaunchedEffect(Unit) {
         uploadManager.listDocuments { response ->
@@ -164,9 +164,9 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             val newPersonalDocs = mutableMapOf<String, String>()
             val newProfessionalDocs = mutableMapOf<String, String>()
             val newUploadStatus = mutableMapOf<String, Boolean>()
-            
+
             // Process personal documents
-            response.personalDoc.forEach { doc ->
+            response.personalDoc?.forEach { doc ->
                 if (!doc.filePath.isNullOrEmpty()) {
                     val displayName = when (doc.doc_type) {
                         "aadhar" -> "Aadhar Card"
@@ -181,9 +181,9 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                     }
                 }
             }
-            
+
             // Process professional documents
-            response.professionalDoc.forEach { doc ->
+            response.professionalDoc?.forEach { doc ->
                 if (!doc.filePath.isNullOrEmpty()) {
                     val displayName = when (doc.doc_type) {
                         "offer_letter" -> "Offer Letter"
@@ -198,7 +198,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                     }
                 }
             }
-            
+
             // Update LiveData values
             controller.personalDocs.postValue(newPersonalDocs)
             controller.professionalDocs.postValue(newProfessionalDocs)
@@ -417,7 +417,7 @@ private fun UploadDialog(
                         .padding(bottom = 2.dp),
                     textAlign = TextAlign.Center
                 )
-                
+
                 Text(
                     "Choose an option to upload your document",
                     fontSize = 16.sp,
@@ -658,7 +658,7 @@ fun DocumentCard(
                         color = Color.Gray,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
-                    
+
                     // Camera Button
                     Button(
                         onClick = {
@@ -683,9 +683,9 @@ fun DocumentCard(
                         )
                         Text("Camera", color = Color.White, fontSize = 14.sp)
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Gallery Button
                     Button(
                         onClick = {

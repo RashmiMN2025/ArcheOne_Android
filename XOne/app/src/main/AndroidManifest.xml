@@ -185,6 +185,14 @@
             android:screenOrientation="portrait"
             android:label="Global Celebration Detail"
             android:theme="@style/Theme.XOne" />
+            
+        <!-- Add PasswordResetActivity -->
+        <activity
+            android:name=".PasswordResetActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Reset Password"
+            android:theme="@style/Theme.XOne" />
 
         <!-- Keep only this FileProvider at the end -->
         <provider
