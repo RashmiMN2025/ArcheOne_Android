@@ -50,7 +50,10 @@ import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.ui.components.EmptyFavorites
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.UniversalLoader
+import com.archeGlobal.one.ui.components.EventPopup
 import coil.compose.rememberAsyncImagePainter
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import com.archeGlobal.one.utils.ImageCache
@@ -70,6 +73,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.FeedbackRequest
+import com.archeGlobal.one.model.EventResponse
+import com.archeGlobal.one.ui.components.EventPopup
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ProfileHeader(
@@ -224,6 +230,9 @@ fun HomeScreen(
     isAuthenticating: Boolean = false,
     onRefresh: () -> Unit = {},
     controller: HomeController // <-- Add this parameter
+    eventData: EventResponse? = null,
+    showEventPopup: Boolean = false,
+    onDismissEventPopup: () -> Unit = {}
 ) {
     val backgroundModel = remember { WelcomeBackgroundModel() }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
@@ -259,6 +268,21 @@ fun HomeScreen(
         }
     }
 
+    // Show event popup if available and visibility is true
+    if (eventData != null && showEventPopup) {
+        Log.d("HomeScreen", "Showing event popup with data: Title=${eventData.title}, Image=${eventData.image}")
+        Log.d("HomeScreen", "Event description: ${eventData.description}")
+        EventPopup(
+            event = eventData,
+            onDismiss = onDismissEventPopup
+        )
+    } else {
+        Log.d("HomeScreen", "Not showing event popup - eventData present: ${eventData != null}, showEventPopup: $showEventPopup")
+        if (eventData != null) {
+            Log.d("HomeScreen", "Event data exists but popup flag is false - Title: ${eventData.title}")
+        }
+    }
+    
     // Wrap with FooterScaffold for bottom navigation
     FooterScaffold(
         footerNavigation = model.footerNavigation,

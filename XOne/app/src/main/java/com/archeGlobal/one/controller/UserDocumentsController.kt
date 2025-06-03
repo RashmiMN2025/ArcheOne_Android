@@ -73,7 +73,7 @@ class UserDocumentsController(private val context: Context) {
     
     private fun processApiResponse(response: DocumentListResponse) {
         // Process personal documents from the API response
-        val personalDocs = response.personalDoc.map { doc ->
+        val personalDocs = response.personalDoc?.map { doc ->
             // Use the document_name from the API response directly if available
             // Otherwise, map from documentType
             val docName = doc.document_name ?: when (doc.documentType) {
@@ -90,13 +90,13 @@ class UserDocumentsController(private val context: Context) {
         }
         
         // Log the documents for debugging
-        personalDocs.forEach { doc ->
+        personalDocs?.forEach { doc ->
             Log.d(TAG, "Processed document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) "empty" else "has data"}")
         }
         
         // Update the LiveData with the new documents
-        _userDocuments.postValue(personalDocs)
-        Log.d(TAG, "Updated documents from API: ${personalDocs.size} documents")
+        _userDocuments.postValue(personalDocs ?: emptyList())
+        Log.d(TAG, "Updated documents from API: ${personalDocs?.size ?: 0} documents")
     }
     
     fun viewDocument(document: UserDocument) {
@@ -121,7 +121,7 @@ class UserDocumentsController(private val context: Context) {
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
             
-            // Make the document listing API call to get latest URLs
+            // Make the document listing API call to get latest URLs - isPersonal is required for UserDocuments
             RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart).enqueue(object : Callback<DocumentListResponse> {
                 override fun onResponse(
                     call: Call<DocumentListResponse>,
@@ -134,10 +134,10 @@ class UserDocumentsController(private val context: Context) {
                         
                         // Log the entire response for debugging
                         Log.d(TAG, "API response status: ${body.status}, message: ${body.message}")
-                        Log.d(TAG, "Personal docs count: ${body.personalDoc.size}")
+                        Log.d(TAG, "Personal docs count: ${body.personalDoc?.size ?: 0}")
                         
                         // Log all documents in response for debugging
-                        body.personalDoc.forEach { doc ->
+                        body.personalDoc?.forEach { doc ->
                             Log.d(TAG, "Document in response: name=${doc.document_name}, type=${doc.documentType}, " +
                                   "has data: ${!doc.doc_data.isNullOrBlank()}")
                             if (!doc.doc_data.isNullOrBlank()) {
@@ -146,11 +146,11 @@ class UserDocumentsController(private val context: Context) {
                         }
                         
                         // Try finding by document name first
-                        var matchingDoc = body.personalDoc.find { it.document_name == document.document_name }
+                        var matchingDoc = body.personalDoc?.find { it.document_name == document.document_name }
                         
                         // If not found by name, try by document type
                         if (matchingDoc == null && document.documentType.isNotBlank()) {
-                            matchingDoc = body.personalDoc.find { it.documentType == document.documentType }
+                            matchingDoc = body.personalDoc?.find { it.documentType == document.documentType }
                             Log.d(TAG, "Searching by document type: ${document.documentType}")
                         }
                         

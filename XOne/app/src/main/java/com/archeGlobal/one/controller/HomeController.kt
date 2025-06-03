@@ -1,5 +1,7 @@
 package com.archeGlobal.one.controller
 
+import com.archeGlobal.one.utils.UserDataManager
+
 import com.archeGlobal.one.model.HomeModel
 import com.archeGlobal.one.model.HomeItem
 import com.archeGlobal.one.navigation.Navigator
@@ -23,10 +25,23 @@ import com.archeGlobal.one.HolidayOptionsActivity
 import com.archeGlobal.one.LocationsActivity
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.model.AboutMeModel
+import com.archeGlobal.one.network.ApiService
+import com.archeGlobal.one.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HomeController(
     private val navigator: Navigator,
-    private val context: Context
+    private val context: Context,
+    initialModel: HomeModel = HomeModel()
 ) {
     var employeeData by mutableStateOf(
         AboutMeModel(
@@ -34,6 +49,27 @@ class HomeController(
             email = OtpVerificationController.getUserData()?.email ?: ""
         )
     )
+    private val _eventData = MutableStateFlow<com.archeGlobal.one.model.EventResponse?>(null)
+    val eventData: StateFlow<com.archeGlobal.one.model.EventResponse?> = _eventData.asStateFlow()
+
+    // Companion object and other class members follow
+    companion object {
+        private const val PREF_NAME = "event_preferences"
+        private const val KEY_LAST_SHOWN_DATE = "last_shown_date"
+    }
+    
+
+    
+    private val _showEventPopup = MutableStateFlow(false)
+    val showEventPopup: StateFlow<Boolean> = _showEventPopup.asStateFlow()
+    
+    // Initialize event handling
+    init {
+        Log.d("EventController", "Initializing HomeController and fetching daily event")
+        Log.d("EventController", "UserDataManager instance: ${UserDataManager.getInstance(context)}")
+        fetchEventFromLoginData()
+    }
+    
     private val preferencesManager = PreferencesManager(context)
     
     // Helper method to navigate within the same activity
@@ -53,6 +89,131 @@ class HomeController(
             onShowRatingDialog?.invoke()
         }
         action()
+    }
+    
+    // Event-related methods
+    // Process event data to ensure image URLs are valid and properly formatted
+    private fun processEventData(event: com.archeGlobal.one.model.EventResponse?): com.archeGlobal.one.model.EventResponse? {
+        if (event == null) return null
+        val originalImageUrl = event.image ?: ""
+
+        Log.d("EventController", "Processing event image URL: $originalImageUrl")
+        
+        // Check if the image URL is valid and properly formatted
+        if (originalImageUrl.isBlank()) {
+            Log.d("EventController", "Image URL is blank or null, returning original event")
+            return event // Return original event if image is blank or null
+        }
+        
+        // Ensure the URL is properly formatted (starts with http:// or https://)
+        val formattedImageUrl = if (!originalImageUrl.startsWith("http://") && !originalImageUrl.startsWith("https://")) {
+            // Assuming pulse.netcon.in is the base for relative paths
+            "https://pulse.netcon.in:7000/$originalImageUrl".trim()
+        } else {
+            originalImageUrl.trim()
+        }
+        
+        Log.d("EventController", "Formatted event image URL: $formattedImageUrl")
+        return event.copy(image = formattedImageUrl)
+    }
+    
+    private fun fetchEventFromLoginData() {
+        Log.d("EventController", "Starting to fetch daily event from login response")
+        val scope = CoroutineScope(Dispatchers.IO)
+        
+        scope.launch {
+            try {
+                // Get event data from UserDataManager instead of making a separate API call
+                val userDataManager = UserDataManager.getInstance(context)
+                var eventResponse = userDataManager.getEventData() // eventResponse is EventResponse?
+                Log.d("EventController", "Fetched event from UserDataManager: Title=${eventResponse?.title}, Image=${eventResponse?.image}")
+
+                // Process the event data (e.g., format image URL)
+                eventResponse = processEventData(eventResponse)
+
+                // Update the StateFlow with the processed event data
+                _eventData.value = eventResponse
+                Log.d("EventController", "Updated _eventData StateFlow. New value: Title=${_eventData.value?.title}, Image=${_eventData.value?.image}")
+
+                // Switch to main thread for UI updates related to event popup visibility
+                withContext(Dispatchers.Main) {
+                    checkIfShouldShowEvent() // This will use the new _eventData.value
+                }
+            } catch (e: Exception) {
+                Log.e("EventController", "Exception while fetching event from login data: ${e.message}")
+                e.printStackTrace()
+                // Do not create a mock event on exception
+                _eventData.value = null
+            }
+        }
+    }
+    
+    private fun checkIfShouldShowEvent() {
+        // Only show the event if we have event data
+        val currentEventData = _eventData.value
+        if (currentEventData == null) {
+            Log.d("EventController", "Event data is null, not showing popup")
+            _showEventPopup.value = false
+            return
+        }
+        
+        Log.d("EventController", "Event data available: Title=${currentEventData.title}, Image=${currentEventData.image}")
+        
+        val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val lastShownDate = sharedPref.getString(KEY_LAST_SHOWN_DATE, "")
+        val currentDate = getCurrentDate()
+        
+        Log.d("EventController", "Last shown date: '$lastShownDate', Current date: '$currentDate'")
+        
+        // Show popup if it hasn't been shown today
+        if (lastShownDate != currentDate) {
+            Log.d("EventController", "Setting showEventPopup to TRUE - not shown today yet")
+            _showEventPopup.value = true
+            
+            // For debugging purposes, let's log the current state
+            Log.d("EventController", "Current state - showEventPopup: ${_showEventPopup.value}, eventData: ${_eventData.value != null}")
+        } else {
+            Log.d("EventController", "Setting showEventPopup to FALSE - already shown today")
+            _showEventPopup.value = false
+        }
+        
+        // Uncomment for development/testing to always show the popup:
+        // _showEventPopup.value = true
+        
+        // For development/testing only - uncomment to force clear the last shown date
+        // with(sharedPref.edit()) { 
+        //     remove(KEY_LAST_SHOWN_DATE)
+        //     apply() 
+        // }
+    }
+    
+    fun dismissEventPopup() {
+        Log.d("EventController", "dismissEventPopup called")
+        
+        // Save the current date as the last shown date
+        val currentDate = getCurrentDate()
+        val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        
+        Log.d("EventController", "Saving last shown date: $currentDate")
+        
+        with(sharedPref.edit()) {
+            putString(KEY_LAST_SHOWN_DATE, currentDate)
+            apply()
+        }
+        
+        // Verify the date was saved correctly
+        val savedDate = sharedPref.getString(KEY_LAST_SHOWN_DATE, "")
+        Log.d("EventController", "Verified saved date: $savedDate")
+        
+        // Hide the popup
+        _showEventPopup.value = false
+        Log.d("EventController", "Set showEventPopup to false")
+    }
+    
+    // Format date as yyyy-MM-dd
+    private fun getCurrentDate(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return dateFormat.format(Date())
     }
     
     var model by mutableStateOf(HomeModel(

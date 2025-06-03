@@ -108,8 +108,27 @@ class OtpVerificationController(
                 val response = RetrofitClient.apiService.login(token, request).execute()
                 val responseBody = response.body()
 
+                // Detailed logging before conditional check
+                Log.d("LoginProcess", "Response received. isSuccessful: ${response.isSuccessful}, code: ${response.code()}, message: ${response.message()}")
+                Log.d("LoginProcess", "ResponseBody is null: ${responseBody == null}")
+                if (responseBody != null) {
+                    Log.d("LoginProcess", "ResponseBody status: ${responseBody.status}")
+                    Log.d("LoginProcess", "ResponseBody eventData is null: ${responseBody.eventData == null}")
+                    if (responseBody.eventData != null) {
+                        Log.d("LoginProcess", "ResponseBody eventData content: Name=${responseBody.eventData?.title}, Image=${responseBody.eventData?.image}")
+                    }
+                } else {
+                    Log.d("LoginProcess", "ResponseBody is null, errorBody: ${response.errorBody()?.string()}")
+                }
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && responseBody != null && responseBody.status == 200) {
+                        // Log event data presence in the response
+                        Log.d("LoginProcess", "Login successful, event data present: ${responseBody.eventData != null}")
+                        if (responseBody.eventData != null) {
+                            Log.d("LoginProcess", "Event data details: Name=${responseBody.eventData?.title}, Image=${responseBody.eventData?.image}")
+                        }
+                        
                         // Save all user data through the centralized UserDataManager
                         userDataManager.saveUserDataFromResponse(responseBody, token)
                         

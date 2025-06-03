@@ -7,6 +7,9 @@ import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.CommuniqueModel
+import com.archeGlobal.one.model.EventResponse
+import com.archeGlobal.one.model.PasswordResetRequest
+import com.archeGlobal.one.model.PasswordResetResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -45,7 +48,7 @@ interface ApiService {
     fun listDocuments(
         @Part("email") email: RequestBody,
         @Part("employeeId") employeeId: RequestBody,
-        @Part("isPersonal") isPersonal: RequestBody
+        @Part("isPersonal") isPersonal: RequestBody? = null
     ): Call<DocumentListResponse>
     
     // Document API - Upload File
@@ -82,6 +85,12 @@ interface ApiService {
 
     @POST("feedback")
     suspend fun submitFeedback(@Body request: FeedbackRequest): Response<FeedbackResponse>
+    
+    @POST("/reset-password")
+    fun resetPassword(@Body request: PasswordResetRequest): Call<PasswordResetResponse>
+    
+    @GET("daily-event")
+    suspend fun getDailyEvent(): Response<EventResponse>
 }
 
 data class FeedbackRequest(
@@ -127,8 +136,8 @@ data class LogoutResponse(
 data class DocumentListResponse(
     val status: Int,
     val message: Any, // Can be a string message or list of files
-    val personalDoc: List<Document> = emptyList(),
-    val professionalDoc: List<Document> = emptyList()
+    val personalDoc: List<Document>? = emptyList(),
+    val professionalDoc: List<Document>? = emptyList()
 )
 
 data class DocumentFile(
@@ -195,7 +204,8 @@ data class VerifyOtpResponse(
     val assetDetails: List<AssetDetail> = emptyList(),
     val communique: List<CommuniqueModel.Communique> = emptyList(),
     val greetings: Map<String, List<String>>? = null,
-    val greetingCategories1: List<ApiGreetingCategory>? = null // changed from greetingCategories
+    val greetingCategories1: List<ApiGreetingCategory>? = null, // changed from greetingCategories
+    @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null
 )
 
 data class User(

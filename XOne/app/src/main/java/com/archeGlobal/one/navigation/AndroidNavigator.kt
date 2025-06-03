@@ -290,7 +290,7 @@ class AndroidNavigator(
     }
 
     override fun navigateToPasswordReset() {
-        // Implementation not provided
+        startActivity(Intent(activity, PasswordResetActivity::class.java))
     }
 
     override fun navigateToPolicy() {
