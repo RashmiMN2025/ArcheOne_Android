@@ -121,7 +121,7 @@ class UserDocumentsController(private val context: Context) {
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
             
-            // Make the document listing API call to get latest URLs
+            // Make the document listing API call to get latest URLs - isPersonal is required for UserDocuments
             RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart).enqueue(object : Callback<DocumentListResponse> {
                 override fun onResponse(
                     call: Call<DocumentListResponse>,

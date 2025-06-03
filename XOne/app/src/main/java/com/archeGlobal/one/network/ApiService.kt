@@ -47,7 +47,7 @@ interface ApiService {
     fun listDocuments(
         @Part("email") email: RequestBody,
         @Part("employeeId") employeeId: RequestBody,
-        @Part("isPersonal") isPersonal: RequestBody
+        @Part("isPersonal") isPersonal: RequestBody? = null
     ): Call<DocumentListResponse>
     
     // Document API - Upload File

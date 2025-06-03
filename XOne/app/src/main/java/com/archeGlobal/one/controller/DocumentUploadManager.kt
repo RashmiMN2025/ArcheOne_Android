@@ -48,6 +48,9 @@ class DocumentUploadManager(private val context: Context) {
 
     // Document type mapping for professional documents
     private val professionalDocTypes = mapOf(
+        "aadhar" to "Aadhar Card",
+        "passport" to "Passport",
+        "pan" to "PAN card",
         "offer_letter" to "Offer Letter",
         "certificate" to "Certificate",
         "exp_letter" to "Experience Letter"
@@ -140,12 +143,11 @@ class DocumentUploadManager(private val context: Context) {
         try {
             val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
-            val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
 
             // Log request parameters
-            Log.d(TAG, "Listing documents for email: $email, employeeId: $employeeId, isPersonal: true")
+            Log.d(TAG, "Listing documents for email: $email, employeeId: $employeeId")
 
-            val call = RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart)
+            val call = RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart)
             Log.d(TAG, "List documents request URL: ${call.request().url}")
 
             call.enqueue(object : Callback<DocumentListResponse> {
@@ -307,30 +309,18 @@ class DocumentUploadManager(private val context: Context) {
             Log.d("DocumentUploadManager", "- Email: $email")
             Log.d("DocumentUploadManager", "- Employee ID: $employeeId")
             Log.d("DocumentUploadManager", "- File: ${file.name} (${file.length()} bytes)")
-
-            // Get MIME type
-            val mimeType = MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(file.extension) ?: "application/octet-stream"
-            Log.d("DocumentUploadManager", "- MIME Type: $mimeType")
-
-            // Create request parts
-            val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
-            val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
-            val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
-            val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
-            val documentTypePart = documentType.toRequestBody("text/plain".toMediaTypeOrNull())
-            val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
-
-            Log.d("DocumentUploadManager", "- isPersonal: true")
-
-            // Create a map for additional params to add isPersonal parameter
+            
+            // Create a map for request parameters
             val params = HashMap<String, RequestBody>()
-            params["email"] = emailPart
-            params["employeeId"] = employeeIdPart
-            params["documentType"] = documentTypePart
-            params["isPersonal"] = isPersonalPart // Add isPersonal=true parameter
+            params["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            params["employeeId"] = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
+            params["documentType"] = documentType.toRequestBody("text/plain".toMediaTypeOrNull())
+            
+            // Create MultipartBody.Part from file
+            val requestFile = file.asRequestBody("multipart/form-data".toMediaTypeOrNull())
+            val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
-            // Make the API call with isPersonal parameter
+            // Make the API call with parameters
             val call = RetrofitClient.apiService.uploadDocument(
                 filePart, params
             )

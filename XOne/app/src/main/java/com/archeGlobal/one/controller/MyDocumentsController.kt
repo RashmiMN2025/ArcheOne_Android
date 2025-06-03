@@ -46,51 +46,63 @@ class MyDocumentsController(private val context: Context) {
     // This method is only used for the UI state now,
     // actual document processing has been moved to DocumentUploadManager
     fun updateDocumentsFromResponse(response: DocumentListResponse) {
+        Log.d("MyDocumentsController", "Processing document response with ${response.personalDoc?.size ?: 0} personal docs and ${response.professionalDoc?.size ?: 0} professional docs")
+        
         val newPersonalDocs = mutableMapOf<String, String>()
         val newProfessionalDocs = mutableMapOf<String, String>()
         val newUploadStatus = uploadStatus.value ?: mutableMapOf()
 
         // Update file paths and upload status from response
-        response.personalDoc?.forEach { doc ->
-            // Use doc_data from the API response or fall back to filePath
-            val docData = doc.doc_data ?: doc.filePath
+        response.personalDoc?.forEachIndexed { index, doc ->
+            Log.d("MyDocumentsController", "Processing personal doc[$index]: docName=${doc.docName}, doc_type=${doc.doc_type}, filePath=${doc.filePath}")
+            
+            // Prioritize filePath over doc_data since the API primarily uses filePath
+            val docData = doc.filePath ?: doc.doc_data
             if (!docData.isNullOrEmpty()) {
-                // Use document_name from API or fall back to mapping from documentType/doc_type
-                val docType = doc.documentType ?: doc.doc_type
-                val displayName = if (doc.document_name != null) {
-                    doc.document_name
-                } else if (docType != null) {
-                    personalDocTypes[docType] ?: doc.docName ?: "Unknown Document"
-                } else {
-                    doc.docName ?: "Unknown Document"
-                }
-
+                // Simpler display name resolution strategy - prefer docName from API directly
+                val displayName = doc.docName ?: personalDocTypes[doc.doc_type] ?: "Unknown Document"
+                
                 // Only add if we have a valid display name
                 if (displayName.isNotEmpty()) {
                     newPersonalDocs[displayName] = docData
                     newUploadStatus[displayName] = true
+                    Log.d("MyDocumentsController", "✓ Added personal doc: $displayName with path: $docData")
+                } else {
+                    Log.w("MyDocumentsController", "✗ Skipped personal doc with empty display name: ${doc.doc_type}")
+                }
+            } else {
+                // Still track upload status even if file path is empty
+                val displayName = doc.docName ?: personalDocTypes[doc.doc_type] ?: "Unknown Document"
+                if (displayName.isNotEmpty()) {
+                    newUploadStatus[displayName] = false
+                    Log.d("MyDocumentsController", "✗ Document has no file path: $displayName")
                 }
             }
         }
 
-        response.professionalDoc?.forEach { doc ->
-            // Use doc_data from the API response or fall back to filePath
-            val docData = doc.doc_data ?: doc.filePath
+        response.professionalDoc?.forEachIndexed { index, doc ->
+            Log.d("MyDocumentsController", "Processing professional doc[$index]: docName=${doc.docName}, doc_type=${doc.doc_type}, filePath=${doc.filePath}")
+            
+            // Prioritize filePath over doc_data since the API primarily uses filePath
+            val docData = doc.filePath ?: doc.doc_data
             if (!docData.isNullOrEmpty()) {
-                // Use document_name from API or fall back to mapping from documentType/doc_type
-                val docType = doc.documentType ?: doc.doc_type
-                val displayName = if (doc.document_name != null) {
-                    doc.document_name
-                } else if (docType != null) {
-                    professionalDocTypes[docType] ?: doc.docName ?: "Unknown Document"
-                } else {
-                    doc.docName ?: "Unknown Document"
-                }
-
+                // Simpler display name resolution strategy - prefer docName from API directly
+                val displayName = doc.docName ?: professionalDocTypes[doc.doc_type] ?: "Unknown Document"
+                
                 // Only add if we have a valid display name
                 if (displayName.isNotEmpty()) {
                     newProfessionalDocs[displayName] = docData
                     newUploadStatus[displayName] = true
+                    Log.d("MyDocumentsController", "✓ Added professional doc: $displayName with path: $docData")
+                } else {
+                    Log.w("MyDocumentsController", "✗ Skipped professional doc with empty display name: ${doc.doc_type}")
+                }
+            } else {
+                // Still track upload status even if file path is empty
+                val displayName = doc.docName ?: professionalDocTypes[doc.doc_type] ?: "Unknown Document"
+                if (displayName.isNotEmpty()) {
+                    newUploadStatus[displayName] = false
+                    Log.d("MyDocumentsController", "✗ Document has no file path: $displayName")
                 }
             }
         }
@@ -99,6 +111,10 @@ class MyDocumentsController(private val context: Context) {
         personalDocs.postValue(newPersonalDocs)
         professionalDocs.postValue(newProfessionalDocs)
         uploadStatus.postValue(newUploadStatus)
+        
+        // Log the document maps for debugging
+        Log.d("MyDocumentsController", "Personal docs after update: ${newPersonalDocs.keys}")
+        Log.d("MyDocumentsController", "Professional docs after update: ${newProfessionalDocs.keys}")
     }
 
     private fun validateAndFormatUrlAndDetectPdf(url: String?): Pair<String?, Boolean> {
@@ -129,16 +145,28 @@ class MyDocumentsController(private val context: Context) {
     }
 
     // Handle viewing documents
-    fun onViewClick(context: Context, documentName: String, isPersonal: Boolean) {
-        val rawFilePath = if (isPersonal) {
-            personalDocs.value?.get(documentName)
-        } else {
-            professionalDocs.value?.get(documentName)
+    fun onViewClick(context: Context, documentName: String) {
+        Log.d("MyDocumentsController", "onViewClick: Looking for document: $documentName")
+        Log.d("MyDocumentsController", "Current personal docs: ${personalDocs.value?.keys?.joinToString() ?: "empty"}")
+        Log.d("MyDocumentsController", "Current professional docs: ${professionalDocs.value?.keys?.joinToString() ?: "empty"}")
+        
+        // Check both personal and professional documents
+        var rawFilePath = personalDocs.value?.get(documentName)
+        if (!rawFilePath.isNullOrEmpty()) {
+            Log.d("MyDocumentsController", "Found in personal docs: $documentName -> $rawFilePath")
+        }
+        
+        // If not found in personal docs, check professional docs
+        if (rawFilePath.isNullOrEmpty()) {
+            rawFilePath = professionalDocs.value?.get(documentName)
+            if (!rawFilePath.isNullOrEmpty()) {
+                Log.d("MyDocumentsController", "Found in professional docs: $documentName -> $rawFilePath")
+            }
         }
 
         if (rawFilePath.isNullOrEmpty()) {
             errorMessage.postValue("No document found for $documentName. Please upload document first.")
-            Log.w("MyDocumentsController", "onViewClick: No file path found for document: $documentName, isPersonal: $isPersonal")
+            Log.w("MyDocumentsController", "onViewClick: No file path found for document: $documentName")
             return
         }
         Log.d("MyDocumentsController", "onViewClick: Raw file path for $documentName: $rawFilePath")
