@@ -13,6 +13,7 @@ import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.utils.UserDataManager
 import androidx.core.content.FileProvider
+import com.archeGlobal.one.CommuniqueActivity
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.CoroutineScope
@@ -101,46 +102,55 @@ class GreetingsController(
         return model.categoryMessages[category] ?: ""
     }
 
-    fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
-        try {
-            // For Global Celebration, just select the category and show subcategories
-            if (category == "Global Celebration" && model.subcategories.isNotEmpty()) {
-                Log.d("GreetingsController", "Selected parent category: $category with ${model.subcategories.size} subcategories")
-                model = model.copy(
-                    selectedCategory = category,
-                    selectedSubcategory = null,
-                    selectedGreeting = null,
-                    message = getMessageForCategory(category)
-                )
-                return
-            }
-            // For other categories, select the first greeting
-            val greetingsInCategory = model.categories[category]
-            Log.d("GreetingsController", "Complete categories map: ${model.categories}")
-            if (greetingsInCategory.isNullOrEmpty()) {
-                Log.e("GreetingsController", "Error: No greetings found for category: $category")
-                return
-            }
-            val firstGreetingInCategory = greetingsInCategory.firstOrNull()
-            Log.d("GreetingsController", "onCategorySelected called with category: $category")
-            Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory.size} greetings")
-            Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
-            cardScreenshot = null
-            val categoryMessage = getMessageForCategory(category)
-            Log.d("GreetingsController", "Using message from API data: $categoryMessage")
+fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
+    try {
+        // For Global Celebration, just select the category and show subcategories
+        if (category == "Global Celebration" && model.subcategories.isNotEmpty()) {
+            Log.d("GreetingsController", "Selected parent category: $category with ${model.subcategories.size} subcategories")
             model = model.copy(
                 selectedCategory = category,
                 selectedSubcategory = null,
-                selectedGreeting = firstGreetingInCategory,
-                message = categoryMessage
+                selectedGreeting = null,
+                message = getMessageForCategory(category)
             )
-            if (navigateToDetail && firstGreetingInCategory != null) {
-                navigateToGreetingDetail(firstGreetingInCategory)
-            }
-        } catch (e: Exception) {
-            Log.e("GreetingsController", "Error in onCategorySelected: ${e.message}", e)
+            return
         }
+        // For other categories, select the first greeting
+        val greetingsInCategory = model.categories[category]
+        Log.d("GreetingsController", "Complete categories map: ${model.categories}")
+        if (greetingsInCategory.isNullOrEmpty()) {
+            Log.e("GreetingsController", "Error: No greetings found for category: $category")
+            return
+        }
+        val firstGreetingInCategory = greetingsInCategory.firstOrNull()
+        Log.d("GreetingsController", "onCategorySelected called with category: $category")
+        Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory.size} greetings")
+        Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
+        cardScreenshot = null
+        val categoryMessage = getMessageForCategory(category)
+        Log.d("GreetingsController", "Using message from API data: $categoryMessage")
+
+        // FIX: Navigate before updating the model to avoid intermediate page
+        if (navigateToDetail && firstGreetingInCategory != null) {
+            navigator.navigateToGreetingDetail(
+                firstGreetingInCategory,
+                greetingsInCategory,
+                categoryMessage,
+                category
+            )
+            return // Prevent model update and recomposition
+        }
+
+        model = model.copy(
+            selectedCategory = category,
+            selectedSubcategory = null,
+            selectedGreeting = firstGreetingInCategory,
+            message = categoryMessage
+        )
+    } catch (e: Exception) {
+        Log.e("GreetingsController", "Error in onCategorySelected: ${e.message}", e)
     }
+}
 
     fun onGreetingSelected(greetingUrl: String) {
         Log.d("GreetingsController", "onGreetingSelected method called with URL: $greetingUrl")
@@ -159,18 +169,18 @@ class GreetingsController(
         navigateToGreetingDetail(greetingUrl)
     }
     
-    // Function to navigate to greeting detail screen
     private fun navigateToGreetingDetail(greetingUrl: String) {
-        try {
-            val currentCategory = model.selectedCategory ?: "Greeting"
-            val currentMessage = model.message
-            
-            Log.d("GreetingsController", "Navigating to greeting detail: $currentCategory, URL: $greetingUrl")
-            navigator.navigateToGreetingDetail(greetingUrl, currentMessage, currentCategory)
-        } catch (e: Exception) {
-            Log.e("GreetingsController", "Error navigating to greeting detail: ${e.message}", e)
-        }
+    try {
+        val currentCategory = model.selectedCategory ?: "Greeting"
+        val currentMessage = model.message
+        val allGreetings = model.categories[currentCategory] ?: listOf(greetingUrl)
+
+        Log.d("GreetingsController", "Navigating to greeting detail: $currentCategory, URL: $greetingUrl")
+        navigator.navigateToGreetingDetail(greetingUrl, allGreetings, currentMessage, currentCategory)
+    } catch (e: Exception) {
+        Log.e("GreetingsController", "Error navigating to greeting detail: ${e.message}", e)
     }
+}
 
     fun updateMessage(message: String) {
         model = model.copy(message = message)
@@ -363,7 +373,9 @@ class GreetingsController(
             }
             else -> false
         }
-    }    fun onCategoryClick(category: String) {
+    }
+
+    fun onCategoryClick(category: String) {
         if (category == "Global Celebration") {
             // Navigate to the Global Celebration screen instead of showing subcategories inline
             navigator.navigateToGlobalCelebration()

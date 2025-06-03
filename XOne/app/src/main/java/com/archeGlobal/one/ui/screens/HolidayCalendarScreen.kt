@@ -130,7 +130,7 @@ fun HolidayCalendarScreen(
                     onClick = {
                         pdfUrl.value?.let { url ->
                             controller.onViewClick(context = context, documentName = "Holiday List 2025", filePath = url)
-                           // onHolidayListClick(url)
+                            // onHolidayListClick(url)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
@@ -259,26 +259,26 @@ fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEve
         var dayCounter = 1
         for (week in 0 until 6) {
             if (dayCounter > totalDays) break
-            
+
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
                 for (day in 0 until 7) {
-                    val date = if (week == 0 && day < firstDayOfMonth) 0 
-                              else if (dayCounter <= totalDays) dayCounter++ 
-                              else 0
-                    
+                    val date = if (week == 0 && day < firstDayOfMonth) 0
+                    else if (dayCounter <= totalDays) dayCounter++
+                    else 0
+
                     // Check for holidays and global events
-                    val mandatoryHoliday = holidays.any { 
-                        it.day == date && it.holidayType == "Yes" 
+                    val mandatoryHoliday = holidays.any {
+                        it.day == date && it.holidayType == "Yes"
                     }
-                    
-                    val regionalHoliday = holidays.any { 
-                        it.day == date && it.holidayType == "RH" 
+
+                    val regionalHoliday = holidays.any {
+                        it.day == date && it.holidayType == "RH"
                     }
-                    
+
                     val hasGlobalEvent = globalEvents.any {
                         try {
                             val parts = it.date.split("-")
@@ -287,7 +287,7 @@ fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEve
                             false
                         }
                     }
-                    
+
                     DateView(date, mandatoryHoliday, regionalHoliday, hasGlobalEvent)
                 }
             }
@@ -317,7 +317,7 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean,
             )
     ) {
         if (date > 0) {
-        Text(
+            Text(
                 text = date.toString(),
                 fontSize = 8.sp, // Smaller text size
                 lineHeight = 8.sp,
@@ -344,7 +344,7 @@ fun PreviewHolidayCalendarScreen() {
         Holiday("Gandhi Jayanti", "02-10-2025", "Yes"),
         Holiday("Christmas", "25-12-2025", "Yes")
     )
-    
+
     // Create a custom composable for preview instead of using the actual screen
     Box(
         modifier = Modifier
@@ -378,7 +378,7 @@ fun PreviewHolidayCalendarScreen() {
                         tint = Color.Black
                     )
                 }
-                
+
                 Text(
                     text = "Holiday Calendar",
                     color = Color.Black,
@@ -390,7 +390,7 @@ fun PreviewHolidayCalendarScreen() {
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -403,7 +403,7 @@ fun PreviewHolidayCalendarScreen() {
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                
+
                 Button(
                     onClick = { },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
@@ -428,7 +428,7 @@ fun PreviewHolidayCalendarScreen() {
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // Calendar grid - only show if API level allows
@@ -445,7 +445,7 @@ fun PreviewHolidayCalendarScreen() {
                     Spacer(modifier = Modifier.width(16.dp))
                     LegendItem(color = Color(0xFF2196F3), text = "RH")
                 }
-                
+
                 // Calendar grid
                 Column(
                     modifier = Modifier.fillMaxWidth(),

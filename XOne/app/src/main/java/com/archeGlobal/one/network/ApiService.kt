@@ -88,7 +88,7 @@ data class FeedbackRequest(
     val name: String? = null,
     val email: String,
     val category: String? = null,
-    val feedback: String,
+    val feedback: String?,
     val rating: Int,
     val platform: String,
     val deviceName: String,

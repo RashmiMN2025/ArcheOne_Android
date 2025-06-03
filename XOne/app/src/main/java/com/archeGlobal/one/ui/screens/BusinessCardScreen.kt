@@ -90,7 +90,9 @@ private fun CustomTopAppBar(
                 modifier = Modifier.width(48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                IconButton(onClick = onBackPressed) {
+                IconButton(
+                    onClick = onBackPressed
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",

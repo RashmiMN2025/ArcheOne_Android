@@ -15,12 +15,25 @@ import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.utils.ImageCache
 import java.util.Comparator
 import android.net.Uri
+import com.archeGlobal.one.AssetActivity
+import com.archeGlobal.one.BusinessCardActivity
+import com.archeGlobal.one.CommuniqueActivity
+import com.archeGlobal.one.GreetingsActivity
+import com.archeGlobal.one.HolidayOptionsActivity
+import com.archeGlobal.one.LocationsActivity
 import com.archeGlobal.one.navigation.AndroidNavigator
+import com.archeGlobal.one.model.AboutMeModel
 
 class HomeController(
     private val navigator: Navigator,
     private val context: Context
 ) {
+    var employeeData by mutableStateOf(
+        AboutMeModel(
+            name = OtpVerificationController.getUserData()?.name ?: "",
+            email = OtpVerificationController.getUserData()?.email ?: ""
+        )
+    )
     private val preferencesManager = PreferencesManager(context)
     
     // Helper method to navigate within the same activity
@@ -28,6 +41,18 @@ class HomeController(
         if (navigator is AndroidNavigator) {
             navigator.navController?.navigate(route)
         }
+    }
+
+    // Add these:
+    private var navigationCount = 0
+    var onShowRatingDialog: (() -> Unit)? = null
+
+    private fun handleNavigation(action: () -> Unit) {
+        navigationCount++
+        if (navigationCount % 5 == 0) {
+            onShowRatingDialog?.invoke()
+        }
+        action()
     }
     
     var model by mutableStateOf(HomeModel(
@@ -69,17 +94,32 @@ class HomeController(
     ))
         private set
 
-    fun onItemClick(item: HomeItem) {
-        Log.d("HomeController", "onItemClick: ${item.title}")
+        fun onItemClick(item: HomeItem) {
+        handleNavigation {
+            // ...existing navigation logic...
+            Log.d("HomeController", "onItemClick: ${item.title}")
         when (item.title.lowercase()) {
             "locations" -> {
-                Log.d("HomeController", "Navigating to Locations")
-                navigator.navigateToLocations(showHeader = true)
+                val intent = Intent(context, LocationsActivity::class.java)
+                context.startActivity(intent)
             }
             "business card" -> {
-                Log.d("HomeController", "Navigating to Business Card")
-                navigator.navigateToBusinessCard()
-            }            "profile connect" -> {
+                val intent = Intent(context, BusinessCardActivity::class.java)
+                context.startActivity(intent)
+            }
+            "asset" -> {
+                val intent = Intent(context, AssetActivity::class.java)
+                context.startActivity(intent)
+            }
+            "calendar" -> {
+                val intent = Intent(context, HolidayOptionsActivity::class.java)
+                context.startActivity(intent)
+            }
+            "greetings" -> {
+                val intent = Intent(context, GreetingsActivity::class.java)
+                context.startActivity(intent)
+            }
+            "profile connect" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Profile Connect")
                 navigate("service_not_available?serviceName=Profile Connect")
             }
@@ -92,23 +132,27 @@ class HomeController(
                 navigator.navigateToTodo()
             }
             "id" -> navigator.navigateToID()
-            "asset" -> navigator.navigateToAsset()            "timesheet" -> {
+            "timesheet" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Timesheet")
                 navigate("service_not_available?serviceName=Timesheet")
-            }            "leave" -> {
+            }
+            "leave" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Leave")
                 navigate("service_not_available?serviceName=Leave")
             }
             "my documents", "mydocuments" -> {
                 Log.d("MyDocuments", "Navigating to My Documents")
                 navigator.navigateToMyDocuments()
-            }            "my career" -> {
+            }
+            "my career" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for My Career")
                 navigate("service_not_available?serviceName=My Career")
-            }            "elearning" -> {
+            }
+            "elearning" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for eLearning")
                 navigate("service_not_available?serviceName=eLearning")
-            }            "goal setting/kpi", "goal" -> {
+            }
+            "goal setting/kpi", "goal" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Goal Setting/KPI")
                 navigate("service_not_available?serviceName=Goal Setting/KPI")
             }
@@ -117,20 +161,18 @@ class HomeController(
             "zinghr" -> {
                 Log.d("HomeController", "Navigating to ZingHR")
                 navigator.navigateToZingHR()
-            }            "admin" -> {
+            }
+            "admin" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Admin")
                 navigate("service_not_available?serviceName=Admin")
-            }            "hr" -> {
+            }
+            "hr" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for HR")
                 navigate("service_not_available?serviceName=HR")
             }
-            "calendar" -> navigator.navigateToHolidayOptions()            "client calendar" -> {
+            "client calendar" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Client Calendar")
                 navigate("service_not_available?serviceName=Client Calendar")
-            }
-            "greetings" -> {
-                Log.d("HomeController", "Navigating to Greetings")
-                navigator.navigateToGreetings()
             }
             "connect" -> {
                 Log.d("XConnect", "Navigating to XConnect")
@@ -139,14 +181,17 @@ class HomeController(
             "blogs" -> {
                 Log.d("XConnect", "Navigating to XConnect for blogs")
                 navigator.navigateToXConnect("Blogs")
-            }            "helpdesk" -> {
+            }
+            "helpdesk" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Helpdesk")
                 navigate("service_not_available?serviceName=Helpdesk")
-            }            "announcements" -> {
+            }
+            "announcements" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Announcements")
                 navigate("service_not_available?serviceName=Announcements")
             }
-            "xprofile" -> navigator.navigateToXProfile()            "password reset" -> {
+            "xprofile" -> navigator.navigateToXProfile()
+            "password reset" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Password Reset")
                 navigate("service_not_available?serviceName=Password Reset")
             }
@@ -155,7 +200,7 @@ class HomeController(
                 Log.d("SOS", "Navigating to SOS")
                 navigator.navigateToSOS(false)
             }
-            "travel & expenses" -> {
+            "travel" -> {
                 Log.d("HomeController", "Navigating to Travel & Expenses")
                 val intent = Intent(context, WebViewActivity::class.java).apply {
                     putExtra("fileUrl", "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml")
@@ -176,9 +221,10 @@ class HomeController(
             "vision" -> {
                 Log.d("HomeController", "Navigating to Vision")
                 navigator.navigateToVision()
-            }            "communique" -> {
-                Log.d("HomeController", "Navigating to Communique directly")
-                navigator.navigateToCommunique()
+            }
+            "communique" -> {
+                val intent = Intent(context, CommuniqueActivity::class.java)
+                context.startActivity(intent)
             }
             "archeodyssey", "arche odyssey" -> {
                 Log.d("HomeController", "Navigating to Arche Odyssey")
@@ -201,9 +247,10 @@ class HomeController(
                 navigate("service_not_available?serviceName=${Uri.encode(item.title)}")
             }
         }
+        }
     }
 
-    fun onAllAppsClick() {
+    fun onAllAppsClick() = handleNavigation {
         Log.d("HomeController", "All Apps clicked. Current state: ${model.showAllApps}")
         model = model.copy(
             showAllApps = true,
@@ -212,7 +259,7 @@ class HomeController(
         Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
     }
 
-    fun onFavoritesClick() {
+    fun onFavoritesClick() = handleNavigation {
         Log.d("HomeController", "Favorites clicked. Current state: ${model.viewFavorites}")
         model = model.copy(
             viewFavorites = true,
@@ -221,7 +268,7 @@ class HomeController(
         Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
     }
 
-    fun onShowProfileClick() {
+    fun onShowProfileClick() = handleNavigation {
         navigator.navigateToXProfile()
     }
 
@@ -268,24 +315,24 @@ class HomeController(
         )
     }
 
-    fun onFooterHomeClick() {
+    fun onFooterHomeClick() = handleNavigation {
         // Already on home screen, no action needed
     }
 
-    fun onFooterChatClick() {
+    fun onFooterChatClick() = handleNavigation {
         navigator.navigateToChat()
     }
 
-    fun onFooterSOSClick() {
+    fun onFooterSOSClick() = handleNavigation {
         // Use the navigator to navigate to SOS screen
         navigator.navigateToSOS(true)
     }
 
-    fun onFooterProfileClick() {
+    fun onFooterProfileClick() = handleNavigation {
         navigator.navigateToProfile()
     }
 
-    fun onXCardClick() {
+    fun onXCardClick() = handleNavigation {
         navigator.navigateToBusinessCard()
     }
 

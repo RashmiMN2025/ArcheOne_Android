@@ -59,6 +59,17 @@ import androidx.activity.compose.BackHandler
 import android.app.Activity
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.window.Dialog
+import com.archeGlobal.one.controller.HomeController
+import com.archeGlobal.one.model.AboutMeModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.network.FeedbackRequest
 
 @Composable
 fun ProfileHeader(
@@ -199,6 +210,7 @@ fun ProfileHeader(
 @Composable
 fun HomeScreen(
     model: HomeModel,
+    employeeData: AboutMeModel,
     onItemClick: (HomeItem) -> Unit,
     onAllAppsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
@@ -210,7 +222,8 @@ fun HomeScreen(
     onFooterProfileClick: () -> Unit,
     onXCardClick: () -> Unit,
     isAuthenticating: Boolean = false,
-    onRefresh: () -> Unit = {}
+    onRefresh: () -> Unit = {},
+    controller: HomeController // <-- Add this parameter
 ) {
     val backgroundModel = remember { WelcomeBackgroundModel() }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
@@ -218,8 +231,23 @@ fun HomeScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    // Get user data (replace with your actual user data source)
+    val apiService = RetrofitClient.apiService
+
     // State to track the current view (All Apps or Favorites)
     var currentView by remember { mutableStateOf("All Apps") }
+
+    // --- Rating Pop-up Logic ---
+    var navigationCount by rememberSaveable { mutableStateOf(0) }
+    var showRatingDialog by rememberSaveable { mutableStateOf(false) }
+    var rating by rememberSaveable { mutableStateOf(0) }
+    var feedbackText by rememberSaveable { mutableStateOf("") }
+    var isSubmitting by remember { mutableStateOf(false) }
+
+    // Register the callback with the controller
+    LaunchedEffect(Unit) {
+        controller.onShowRatingDialog = { showRatingDialog = true }
+    }
 
     // Effect to handle refresh completion
     LaunchedEffect(isRefreshing) {
@@ -289,8 +317,7 @@ fun HomeScreen(
                     ) {
                         Button(
                         onClick = {
-                            currentView = "All Apps"
-                            onAllAppsClick()
+                            onAllAppsClick(); currentView = "All Apps"
                         },
                         modifier = Modifier.width(150.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -320,8 +347,7 @@ fun HomeScreen(
 
                         Button(
                         onClick = {
-                            currentView = "Favorites"
-                            onFavoritesClick()
+                           onFavoritesClick(); currentView = "Favorites" 
                         },
                         modifier = Modifier.width(150.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -377,6 +403,7 @@ fun HomeScreen(
                                                 AppItem(
                                                     title = item.title,
                                                     isFavorite = item.isFavorite,
+                                                    // Wrap onClick with handleNavigation!
                                                     onClick = { onItemClick(item) },
                                                     onFavoriteClick = { onToggleFavorite(item) },
                                                     modifier = Modifier.weight(1f),
@@ -429,6 +456,7 @@ fun HomeScreen(
                                                     AppItem(
                                                         title = item.title,
                                                         isFavorite = true,
+                                                        // Wrap onClick with handleNavigation!
                                                         onClick = { onItemClick(item) },
                                                         onFavoriteClick = { onToggleFavorite(item) },
                                                         modifier = Modifier.weight(1f),
@@ -609,6 +637,152 @@ fun HomeScreen(
                     )
                 }
             }
+
+               // --- Rating Dialog ---
+            if (showRatingDialog) {
+                Dialog(onDismissRequest = { showRatingDialog = false }) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "How was your experience?",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = Color.Black,
+                                maxLines = 2,
+                                lineHeight = 14.sp,
+                                textAlign = TextAlign.Center, // Center align the text
+                                modifier = Modifier.fillMaxWidth() // Make sure it uses the full width
+                            )
+    
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                for (i in 1..5) {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = if (i <= rating) R.drawable.ic_star_filled else R.drawable.ic_star_outline
+                                        ),
+                                        contentDescription = "Star $i",
+                                        tint = Color(0xFFFFD700),
+                                        modifier = Modifier
+                                            .size(45.dp)
+                                            .clickable { rating = i }
+                                            .padding(4.dp)
+                                    )
+                                }
+                            }
+
+                            // Show feedback field if rating is 3 or below and user has selected a rating
+                            if (rating in 1..3) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedTextField(
+                                    value = feedbackText,
+                                    onValueChange = { feedbackText = it },
+                                    placeholder = { Text("Please tell us what could be better") },
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.LightGray,
+                                        cursorColor = Color.Gray,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    textStyle = TextStyle(
+                                        fontSize = 16.sp,
+                                        color = Color.Black,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    maxLines = 4
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = {
+                                    if (rating == 0) {
+                                        Toast.makeText(context, "Please select a rating.", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+                                    if (rating <= 3 && feedbackText.isBlank()) {
+                                        Toast.makeText(context, "Please provide feedback.", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+                                    isSubmitting = true
+
+                                    // Prepare request
+                                    val feedbackRequest = FeedbackRequest(
+                                        name = employeeData.name,
+                                        email = employeeData.email,
+                                        category = "App rating",
+                                        feedback = if (rating >= 4) null else feedbackText,
+                                        rating = rating,
+                                        platform = "Android",
+                                        deviceName = android.os.Build.MODEL,
+                                        version = android.os.Build.VERSION.RELEASE
+                                    )
+
+                                    // Call API
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            val response = apiService.submitFeedback(feedbackRequest)
+                                            withContext(Dispatchers.Main) {
+                                                isSubmitting = false
+                                                if (response.isSuccessful) {
+                                                    Toast.makeText(context, "Thank you for your feedback!", Toast.LENGTH_SHORT).show()
+                                                    showRatingDialog = false
+                                                    rating = 0
+                                                    feedbackText = ""
+                                                } else {
+                                                    Toast.makeText(context, "Failed to submit feedback.", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            withContext(Dispatchers.Main) {
+                                                isSubmitting = false
+                                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                enabled = !isSubmitting,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
+                                    contentColor = Color.White,
+                                    disabledContentColor = Color.White
+                                ),
+                            ) {
+                                Text(
+                                    if (isSubmitting) "Submit" else "Submit",
+                                    fontSize = 12.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White
+                                    )
+                            }
+                        }
+                    }
+                }
+            }
+
         }
     }
 }
@@ -625,7 +799,7 @@ private fun formatServiceTitle(title: String): String {
         "Calendar" -> "Calendar"
         "Holiday Calendar" -> "Holiday\nCalendar"
         "New Onboarding" -> "New\nOnboarding"
-        "Travel & Expenses" -> "Travel &\nExpenses"
+        "Travel" -> "Travel"
         "Goal Setting/KPI" -> "Goal\nSetting/KPI"
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
@@ -770,7 +944,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "Finance", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
-            "Locations", "Travel & Expenses", "Policy", "New Onboarding", "Profile", "Profile Connect", "Checkmate" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
+            "Locations", "Travel", "Policy", "New Onboarding", "Profile", "Profile Connect", "Checkmate" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -804,7 +978,7 @@ private fun AppIcon(
                                 "medical" -> R.drawable.medical
                                 "blogs" -> R.drawable.xconnect
                                 "locations" -> R.drawable.locations
-                                "travel&expenses" -> R.drawable.travel
+                                "travel" -> R.drawable.travel
                                 "policy" -> R.drawable.policy
                                 "newonboarding" -> R.drawable.new_onboarding
                                 "profile" -> R.drawable.profile

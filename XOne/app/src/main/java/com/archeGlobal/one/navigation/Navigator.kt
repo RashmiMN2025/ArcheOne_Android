@@ -62,6 +62,11 @@ interface Navigator {
     fun refreshCurrentScreen()
     
     // Navigation method for greeting detail screen
-    fun navigateToGreetingDetail(imageUrl: String, message: String, category: String)
+    fun navigateToGreetingDetail(
+        selectedGreetingUrl: String,
+        allGreetings: List<String>,
+        message: String,
+        category: String
+    )
     fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory)
 }

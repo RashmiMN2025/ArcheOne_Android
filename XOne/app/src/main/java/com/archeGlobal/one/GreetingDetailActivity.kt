@@ -47,7 +47,8 @@ class GreetingDetailActivity : ComponentActivity() {
         val imageUrl = intent.getStringExtra("imageUrl") ?: ""
         val message = intent.getStringExtra("message") ?: ""
         val category = intent.getStringExtra("category") ?: "Greeting"
-
+        val greetingsList = intent.getStringArrayListExtra("allGreetings")
+        allGreetings = greetingsList ?: listOf(imageUrl)
         selectedGreetingUrl = imageUrl
         editableMessage = message
 
@@ -55,8 +56,6 @@ class GreetingDetailActivity : ComponentActivity() {
         val userDataManager = UserDataManager.getInstance(this)
         val greetingsData = userDataManager.getGreetingsData()
         val categoryMessages = userDataManager.getGreetingCategoriesData()
-
-        allGreetings = greetingsData?.get(category) ?: listOf(imageUrl)
 
         if (editableMessage.isEmpty()) {
             categoryMessages?.find { it.name == category }?.let { categoryData ->
@@ -153,7 +152,7 @@ class GreetingDetailActivity : ComponentActivity() {
     ): String {
         val sanitizedMessage = message.replace("\n", "<br>")
         // Use the public URL for the signature icon
-        val iconUrl = "https://pulse.netcon.in:7000/signature/sign.png"
+        val iconUrl = "https://pulse.netcon.in:7000/signature"
         val signatureImgTag = """<img src="$iconUrl" width="90" height="80" alt="User Icon" style="vertical-align: middle;"/>"""
 
         return """

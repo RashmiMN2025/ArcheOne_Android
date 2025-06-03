@@ -67,9 +67,6 @@ fun IdeaVaultScreen(
     apiService: ApiService
 ) {
     val employeeData = controller.employeeData
-    var selectedCategory by remember { mutableStateOf("Select Category") }
-    var feedbackText by remember { mutableStateOf("") }
-    var selectedStars by remember { mutableStateOf(0) }
     var isSubmitting by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -326,38 +323,7 @@ fun IdeaVaultScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Rate the App Section
-                            Text(
-                                text = "Rate the App",
-                                fontSize = 18.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                val starCount = 5
-
-                                for (i in 1..starCount) {
-                                    Icon(
-                                        painter = painterResource(
-                                            id = if (i <= selectedStars) R.drawable.ic_star_filled else R.drawable.ic_star_outline
-                                        ),
-                                        contentDescription = "Star $i",
-                                        tint = Color(0xFFFFD700), // Gold color for stars
-                                        modifier = Modifier
-                                            .size(45.dp)
-                                            .clickable { selectedStars = i }
-                                            .padding(4.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
+                        
 
                             var feedbackText by remember { mutableStateOf("") }
 
@@ -399,15 +365,6 @@ fun IdeaVaultScreen(
                                         return@Button
                                     }
 
-                                    if (selectedStars == 0) {
-                                        Toast.makeText(
-                                            context,
-                                            "Please provide a rating before submitting.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        return@Button
-                                    }
-
                                     isSubmitting = true
 
                                     // Prepare the request body
@@ -416,7 +373,7 @@ fun IdeaVaultScreen(
                                         email = employeeData.email,
                                         category = if (selectedCategory != "Select Category") selectedCategory else null,
                                         feedback = feedbackText,
-                                        rating = selectedStars,
+                                        rating = 0,
                                         platform = "Android",
                                         deviceName = Build.MODEL,
                                         version = Build.VERSION.RELEASE
@@ -459,9 +416,10 @@ fun IdeaVaultScreen(
                                     .fillMaxWidth()
                                     .height(52.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(
-                                        0xFFDD3825
-                                    )
+                                    containerColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
+                                    contentColor = Color.White,
+                                    disabledContentColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(24.dp),
                                 enabled = !isSubmitting

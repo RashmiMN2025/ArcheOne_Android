@@ -2,6 +2,8 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.util.Log
+import com.archeGlobal.one.BusinessCardActivity
+import com.archeGlobal.one.HolidayOptionsActivity
 import com.archeGlobal.one.navigation.Navigator
 
 /**
@@ -24,7 +26,6 @@ class HolidayOptionsController(
     }
     
     fun onBackPressed() {
-        // Go back to the home screen
-        navigator.navigateToHome()
+        (context as? HolidayOptionsActivity)?.finishWithAnimation()
     }
 }

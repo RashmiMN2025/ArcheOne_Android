@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.utils.UserDataManager
 import android.util.Log
+import com.archeGlobal.one.AssetActivity
 
 class AssetController(
     private val context: Context,
@@ -195,6 +196,6 @@ class AssetController(
     }
     
     fun onBackPressed() {
-        navigator.navigateToHome()
+        (context as? AssetActivity)?.finishWithAnimation()
     }
 }

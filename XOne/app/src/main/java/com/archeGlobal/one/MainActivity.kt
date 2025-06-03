@@ -119,9 +119,11 @@ class MainActivity : ComponentActivity() {
                                     onXOneClick = welcomeController::onXOneClick,
                                 )
                             }
+
                             composable("home") {
                                 HomeScreen(
                                     model = homeController.model,
+                                    employeeData = homeController.employeeData, // <-- Add this line
                                     onItemClick = homeController::onItemClick,
                                     onAllAppsClick = homeController::onAllAppsClick,
                                     onFavoritesClick = homeController::onFavoritesClick,
@@ -131,9 +133,11 @@ class MainActivity : ComponentActivity() {
                                     onFooterChatClick = homeController::onFooterChatClick,
                                     onFooterProfileClick = homeController::onFooterProfileClick,
                                     onFooterSOSClick = homeController::onFooterSOSClick,
-                                    onXCardClick = homeController::onXCardClick
+                                    onXCardClick = homeController::onXCardClick,
+                                    controller = homeController// <-- Add this
                                 )
                             }
+
                             composable("locations") {
                                 // Check if this is from emergency contact view
                                 val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
@@ -150,9 +154,11 @@ class MainActivity : ComponentActivity() {
                                     navController = navController,
                                     controller = locationsController,
                                     isEmergencyContact = isEmergencyContact,
-                                    showHeader = true
+                                    showHeader = true,
+                                    onBackToHome = { navController.navigate("home") { popUpTo("home") { inclusive = true } } }
                                 )
                             }
+
                             composable(
                                 route = "business_card",
                                 enterTransition = {
@@ -185,6 +191,7 @@ class MainActivity : ComponentActivity() {
                                     controller = businessCardController
                                 )
                             }
+
                             composable("core_values") {
                                 CoreValuesScreen(
                                     onBackPressed = { navController.popBackStack() }

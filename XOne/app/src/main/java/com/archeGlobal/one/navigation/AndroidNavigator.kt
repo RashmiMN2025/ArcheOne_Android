@@ -13,10 +13,11 @@ import com.archeGlobal.one.ui.screens.CoreValuesActivity
 import com.archeGlobal.one.ui.screens.IdeaVaultActivity
 import java.net.URLEncoder
 import com.archeGlobal.one.GlobalCelebrationDetailActivity
-import com.google.gson.Gson
 
+class AndroidNavigator(
+    private val activity: ComponentActivity
+) : Navigator {
 
-class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     internal var navController: NavController? = null
 
     fun setNavController(controller: NavController) {
@@ -141,16 +142,20 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
             activity.finish()
         }
     }
-      // Implementation of navigateToGreetingDetail method
-    override fun navigateToGreetingDetail(imageUrl: String, message: String, category: String) {
-        Log.d("AndroidNavigator", "Navigating to greeting detail: $category")
+
+    override fun navigateToGreetingDetail(
+        selectedGreetingUrl: String,
+        allGreetings: List<String>,
+        message: String,
+        category: String
+    ) {
         val intent = Intent(activity, GreetingDetailActivity::class.java).apply {
-            putExtra("imageUrl", imageUrl)
-            putExtra("message", message)
+            putExtra("imageUrl", selectedGreetingUrl)
             putExtra("category", category)
+            putExtra("message", message)
+            putStringArrayListExtra("allGreetings", ArrayList(allGreetings))
         }
-        // Use custom slide animation for a smoother transition
-        startActivity(intent, true)
+        activity.startActivity(intent)
     }
 
     override fun navigateToLocations(showHeader: Boolean) {
@@ -229,12 +234,15 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
 
     override fun navigateToHolidayCalendar() {
-        navigate("calendar")
+        val intent = Intent(activity, HolidayCalendarActivity::class.java)
+        activity.startActivity(intent)
     }
 
     override fun navigateToClientCalendar() {
         // Implementation not provided
-    }    override fun navigateToGreetings() {
+    }
+
+    override fun navigateToGreetings() {
         if (activity is HomeActivity) {
             navigate("greetings")
         } else {
@@ -245,13 +253,8 @@ class AndroidNavigator(private val activity: ComponentActivity) : Navigator {
     }
     
     override fun navigateToGlobalCelebration() {
-        if (activity is HomeActivity) {
-            navigate("global_celebration")
-        } else {
-            startActivity(Intent(activity, HomeActivity::class.java).apply {
-                putExtra("navigateTo", "global_celebration")
-            })
-        }
+        val intent = Intent(activity, GlobalCelebrationActivity::class.java)
+        activity.startActivity(intent)
     }
 
     override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {

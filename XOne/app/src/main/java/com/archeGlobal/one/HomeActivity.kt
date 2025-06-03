@@ -263,6 +263,7 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         HomeScreen(
                             model = controller.model,
+                            employeeData = controller.employeeData,
                             onItemClick = controller::onItemClick,
                             onAllAppsClick = controller::onAllAppsClick,
                             onFavoritesClick = controller::onFavoritesClick,
@@ -274,7 +275,8 @@ class HomeActivity : AppCompatActivity() {
                             onFooterProfileClick = controller::onFooterProfileClick,
                             onXCardClick = controller::onXCardClick,
                             isAuthenticating = isAuthenticating.value,
-                            onRefresh = { refreshHomeData() }
+                            onRefresh = { refreshHomeData() },
+                            controller = controller // <-- Add this
                         )
                     }
 
@@ -335,9 +337,11 @@ class HomeActivity : AppCompatActivity() {
                             navController = navController,
                             controller = locationsController,
                             isEmergencyContact = isEmergencyContact,
-                            showHeader = showHeader
+                            showHeader = showHeader,
+                            onBackToHome = { navigator.navigateToHome() }
                         )
                     }
+
                     composable(
                         route = "business_card",
                         enterTransition = {
@@ -356,6 +360,27 @@ class HomeActivity : AppCompatActivity() {
                         BusinessCardScreen(
                             businessCard = businessCardController.businessCard,
                             controller = businessCardController
+                        )
+                    }
+
+                    composable(
+                        route = "idea_vault",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }                        ) {
+                        IdeaVaultScreen(
+                            onBackPressed = { navController.popBackStack() },
+                            controller = ideaVaultController, // Pass the initialized controller
+                            apiService = RetrofitClient.apiService
                         )
                     }
 
@@ -379,27 +404,6 @@ class HomeActivity : AppCompatActivity() {
                             onPolicyClick = policyController::onPolicyClick,
                             onBackClick = policyController::onBackClick,
                             isLoading = policyController.isLoading.value
-                        )
-                    }
-
-                    composable(
-                        route = "arche_odyssey",
-                        enterTransition = {
-                            fadeIn(animationSpec = tween(300))
-                        },
-                        exitTransition = {
-                            fadeOut(animationSpec = tween(300))
-                        },
-                        popEnterTransition = {
-                            fadeIn(animationSpec = tween(300))
-                        },
-                        popExitTransition = {
-                            fadeOut(animationSpec = tween(300))
-                        }
-                    ) {
-                        ArcheOdysseyScreen(
-                            controller = archeOdysseyController,
-                            onBackPressed = archeOdysseyController::onBackPressed
                         )
                     }
 
@@ -574,27 +578,6 @@ class HomeActivity : AppCompatActivity() {
                         )
                     }
 
-                    composable(
-                        route = "archeodyssey",
-                        enterTransition = {
-                            fadeIn(animationSpec = tween(300))
-                        },
-                        exitTransition = {
-                            fadeOut(animationSpec = tween(300))
-                        },
-                        popEnterTransition = {
-                            fadeIn(animationSpec = tween(300))
-                        },
-                        popExitTransition = {
-                            fadeOut(animationSpec = tween(300))
-                        }
-                    ) {
-                        ArcheOdysseyScreen(
-                            controller = archeOdysseyController,
-                            onBackPressed = { navController.popBackStack() }
-                        )
-                    }
-
                     composable("core_values") {
                         CoreValuesScreen(
                             onBackPressed = { navController.popBackStack() }
@@ -763,6 +746,7 @@ class HomeActivity : AppCompatActivity() {
                             onBackPressed = { navigator.navigateToHome() }
                         )
                     }; // <-- Add comma to separate composables
+
                     composable(
                         route = "greetings",
                         enterTransition = {
@@ -783,6 +767,7 @@ class HomeActivity : AppCompatActivity() {
                             onBackPressed = { navigator.navigateToHome() }
                         )
                     }; // <-- Add comma to separate composables
+
                     composable(
                         route = "global_celebration",
                         enterTransition = {
@@ -806,27 +791,6 @@ class HomeActivity : AppCompatActivity() {
                         GlobalCelebrationScreen(
                             controller = globalCelebrationController,
                             onBackPressed = { navigator.navigateToGreetings() }
-                        )
-                    }
-
-                    composable(
-                            route = "idea_vault",
-                            enterTransition = {
-                                fadeIn(animationSpec = tween(300))
-                            },
-                            exitTransition = {
-                                fadeOut(animationSpec = tween(300))
-                            },
-                            popEnterTransition = {
-                                fadeIn(animationSpec = tween(300))
-                            },
-                            popExitTransition = {
-                                fadeOut(animationSpec = tween(300))
-                            }                        ) {
-                            IdeaVaultScreen(
-                            onBackPressed = { navController.popBackStack() },
-                            controller = ideaVaultController, // Pass the initialized controller
-                            apiService = RetrofitClient.apiService
                         )
                     }
 

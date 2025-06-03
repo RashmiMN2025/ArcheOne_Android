@@ -284,7 +284,7 @@ class GlobalCelebrationDetailActivity : ComponentActivity() {
 ): String {
     val sanitizedMessage = message.replace("\n", "<br />")
     // Use the public URL for the signature icon
-    val iconUrl = "https://pulse.netcon.in:7000/signature/sign.png"
+    val iconUrl = "https://pulse.netcon.in:7000/signature"
     val signatureImgTag = """<img src="$iconUrl" width="90" height="80" alt="User Icon" style="vertical-align: middle;"/>"""
 
     return """

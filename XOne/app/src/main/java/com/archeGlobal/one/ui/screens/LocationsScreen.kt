@@ -50,7 +50,8 @@ fun LocationsScreen(
     navController: NavHostController,
     controller: LocationsController,
     isEmergencyContact: Boolean = false,
-    showHeader:Boolean
+    showHeader:Boolean,
+    onBackToHome: () -> Unit // <-- Add this
 ) {
     val context = LocalContext.current
     val locationController = controller ?: remember { LocationsController(context) }
@@ -62,7 +63,6 @@ fun LocationsScreen(
     
     // Add BackHandler to handle back swipe gestures
     BackHandler {
-        // Use the same logic as the back arrow button
         if (locationController.isInEmergencyContactMode()) {
             val stayInCurrentScreen = locationController.onEmergencyBackPressed()
             if (!stayInCurrentScreen) {
@@ -71,8 +71,15 @@ fun LocationsScreen(
                 }
             }
         } else {
-            if (!locationController.onBackPressed()) {
-                navController.popBackStack()
+            // If at top-level, go to home
+            val state = locationController.getState()
+            val atTopLevel = !state.showingStateList && !state.showingDetails
+            if (atTopLevel) {
+                onBackToHome() // <-- Call the callback
+            } else {
+                if (!locationController.onBackPressed()) {
+                    navController.popBackStack()
+                }
             }
         }
     }
@@ -147,12 +154,18 @@ fun LocationsScreen(
                                             }
                                         }
                                     } else {
-                                        if (!locationController.onBackPressed()) {
-                                            navController.popBackStack()
+                                        val state = locationController.getState()
+                                        val atTopLevel = !state.showingStateList && !state.showingDetails
+                                        if (atTopLevel) {
+                                            onBackToHome()
+                                        } else {
+                                            if (!locationController.onBackPressed()) {
+                                                navController.popBackStack()
+                                            }
                                         }
                                     }
                                 }
-                            ) {
+                            ){
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",

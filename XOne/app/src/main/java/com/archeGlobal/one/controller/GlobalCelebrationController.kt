@@ -72,11 +72,16 @@ class GlobalCelebrationController(
         }
         context.startActivity(intent)
     }
-    
-    private fun navigateToGreetingDetail(greetingUrl: String, message: String, category: String) {
-        navigator.navigateToGreetingDetail(greetingUrl, message, category)
+
+    private fun navigateToGreetingDetail(
+        greetingUrl: String,
+        allGreetings: List<String>,
+        message: String,
+        category: String
+    ) {
+        navigator.navigateToGreetingDetail(greetingUrl, allGreetings, message, category)
     }
-    
+
     fun onBackPressed() {
         if (model.selectedSubcategory != null) {
             // Clear selection if a subcategory is selected

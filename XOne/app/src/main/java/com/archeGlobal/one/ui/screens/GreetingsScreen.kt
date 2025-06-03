@@ -161,7 +161,7 @@ fun GreetingsScreen(
             controller.onBackPressed()
         } else {
             onBackPressed()
-        }
+       }
     }
 
     Box(

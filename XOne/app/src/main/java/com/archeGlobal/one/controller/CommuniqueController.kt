@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import com.archeGlobal.one.CommuniqueActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.navigation.Navigator
@@ -67,7 +68,7 @@ class CommuniqueController(
     }
 
     fun onBackPressed() {
-        navigator.navigateToHome()
+        (context as? CommuniqueActivity)?.finishWithAnimation()
     }
     
     // Clean up resources when no longer needed

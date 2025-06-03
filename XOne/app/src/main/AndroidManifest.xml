@@ -136,7 +136,7 @@
         <!-- Add RaiseConcernActivity -->
         <activity
             android:name=".RaiseConcernActivity"
-            android:exported="false"
+            android:exported="true"
             android:screenOrientation="portrait"
             android:label="Raise a Concern"
             android:theme="@style/Theme.XOne" />
@@ -168,13 +168,14 @@
             android:theme="@style/Theme.XOne"  />
 
         <activity
-            android:name=".ui.screens.IdeaVaultActivity"            android:exported="true"
+            android:name=".ui.screens.IdeaVaultActivity"
+            android:exported="true"
             android:label="idea_vault"
             android:theme="@style/Theme.XOne"/>
             
         <activity
             android:name=".GreetingDetailActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="Greeting Detail"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne"/>
@@ -184,6 +185,69 @@
             android:exported="true"
             android:screenOrientation="portrait"
             android:label="Global Celebration Detail"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".BusinessCardActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Business Card"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".AssetActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Asset"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".HolidayCalendarActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Holiday Calendar"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".HolidayOptionsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Holiday Options"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".MonthDetailActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Month Details"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".CommuniqueActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Communique"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".GreetingsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Greetings"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".GlobalCelebrationActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Global Celebration"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".LocationsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Locations"
             android:theme="@style/Theme.XOne" />
 
         <!-- Keep only this FileProvider at the end -->

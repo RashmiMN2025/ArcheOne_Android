@@ -84,8 +84,13 @@ class PreviewNavigator : Navigator {
         // Return an empty intent for preview purposes
         return android.content.Intent()
     }
-    
-    override fun navigateToGreetingDetail(imageUrl: String, message: String, category: String) {
+
+    override fun navigateToGreetingDetail(
+        selectedGreetingUrl: String,
+        allGreetings: List<String>,
+        message: String,
+        category: String
+    ) {
         // No-op for preview purposes
     }
 
