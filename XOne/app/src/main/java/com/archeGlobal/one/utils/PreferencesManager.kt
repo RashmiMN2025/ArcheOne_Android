@@ -2,6 +2,7 @@ package com.archeGlobal.one.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.archeGlobal.one.model.ApiGreetingCategory
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.HomeItem
@@ -193,6 +194,7 @@ class PreferencesManager(context: Context) {
             remove(KEY_SOS_BLOGS_DATA)
             remove(KEY_ASSET_DETAILS)
             remove(KEY_COMMUNIQUE_DATA)
+            remove(KEY_EVENT_DATA)
         }.apply()
     }
 
@@ -208,14 +210,13 @@ class PreferencesManager(context: Context) {
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
         private const val KEY_PROFILE_UPDATE_TIMESTAMP = "profile_update_timestamp"
         private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
+        private const val KEY_EVENT_DATA = "event_data"
+        private const val KEY_TASKS_DATA = "tasks_data"
         private const val KEY_BIOMETRIC_EMAIL = "biometric_email"
         private const val KEY_BIOMETRIC_MOBILE = "biometric_mobile"
         private const val KEY_BIOMETRIC_EMPLOYEE_ID = "biometric_employee_id"
         private const val KEY_GREETINGS_DATA = "greetings_data"
-        private const val KEY_TASKS_DATA = "tasks_data"
     }
-    
-    // Check if this is the first launch of the app
     fun isFirstLaunch(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
     }
@@ -346,5 +347,23 @@ class PreferencesManager(context: Context) {
     // Get tasks data
     fun getTasks(): String {
         return sharedPreferences.getString(KEY_TASKS_DATA, "") ?: ""
+    }
+    
+    // Save event data
+    fun saveEventData(eventDataJson: String?) {
+        if (eventDataJson == null) {
+            Log.d("PreferencesManager", "Removing event data from preferences")
+            sharedPreferences.edit().remove(KEY_EVENT_DATA).apply()
+        } else {
+            Log.d("PreferencesManager", "Saving event data to preferences: ${eventDataJson.take(100)}...")
+            sharedPreferences.edit().putString(KEY_EVENT_DATA, eventDataJson).apply()
+        }
+    }
+    
+    // Get event data
+    fun getEventData(): String? {
+        val eventData = sharedPreferences.getString(KEY_EVENT_DATA, null)
+        Log.d("PreferencesManager", "Retrieved event data from preferences: ${eventData?.take(100) ?: "null"}...")
+        return eventData
     }
 }

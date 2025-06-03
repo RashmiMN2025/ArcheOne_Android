@@ -18,11 +18,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -261,6 +263,16 @@ class HomeActivity : AppCompatActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) {
+                        val eventData = controller.eventData.collectAsState().value
+                        val showEventPopup = controller.showEventPopup.collectAsState().value
+                        
+                        Log.d("HomeActivity", "Event data present: ${eventData != null}, showEventPopup: $showEventPopup")
+                        if (eventData != null) {
+                            Log.d("HomeActivity", "Event details - Title: ${eventData.title}, Image: ${eventData.image}")
+                        } else {
+                            Log.d("HomeActivity", "No event data available to display")
+                        }
+                        
                         HomeScreen(
                             model = controller.model,
                             onItemClick = controller::onItemClick,
@@ -274,7 +286,11 @@ class HomeActivity : AppCompatActivity() {
                             onFooterProfileClick = controller::onFooterProfileClick,
                             onXCardClick = controller::onXCardClick,
                             isAuthenticating = isAuthenticating.value,
-                            onRefresh = { refreshHomeData() }
+                            onRefresh = { refreshHomeData() },
+                            // Pass event-related parameters
+                            eventData = eventData,
+                            showEventPopup = showEventPopup,
+                            onDismissEventPopup = controller::dismissEventPopup
                         )
                     }
 

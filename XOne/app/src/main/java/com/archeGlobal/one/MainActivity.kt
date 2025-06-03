@@ -29,7 +29,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContentTransitionScope
 import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import com.archeGlobal.one.navigation.AndroidNavigator
+import com.archeGlobal.one.network.RetrofitClient
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -58,6 +60,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermission()
+        
+        // Initialize RetrofitClient
+        RetrofitClient.initialize(applicationContext)
+        Log.d("MainActivity", "RetrofitClient initialized")
 
         preferencesManager = PreferencesManager(applicationContext)
         
@@ -120,6 +126,14 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable("home") {
+                                // Collect event-related state flows
+                                val eventData = homeController.eventData.collectAsState().value
+                                val showEventPopup = homeController.showEventPopup.collectAsState().value
+                                
+                                // Debug logs for event popup
+                                Log.d("MainActivity", "Event data: $eventData")
+                                Log.d("MainActivity", "Show event popup: $showEventPopup")
+                                
                                 HomeScreen(
                                     model = homeController.model,
                                     onItemClick = homeController::onItemClick,
@@ -131,7 +145,11 @@ class MainActivity : ComponentActivity() {
                                     onFooterChatClick = homeController::onFooterChatClick,
                                     onFooterProfileClick = homeController::onFooterProfileClick,
                                     onFooterSOSClick = homeController::onFooterSOSClick,
-                                    onXCardClick = homeController::onXCardClick
+                                    onXCardClick = homeController::onXCardClick,
+                                    // Pass event data and visibility state
+                                    eventData = eventData,
+                                    showEventPopup = showEventPopup,
+                                    onDismissEventPopup = homeController::dismissEventPopup
                                 )
                             }
                             composable("locations") {

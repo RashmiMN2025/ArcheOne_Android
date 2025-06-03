@@ -7,6 +7,7 @@ import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.CommuniqueModel
+import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
 import com.google.gson.annotations.SerializedName
@@ -87,6 +88,9 @@ interface ApiService {
     
     @POST("/reset-password")
     fun resetPassword(@Body request: PasswordResetRequest): Call<PasswordResetResponse>
+    
+    @GET("daily-event")
+    suspend fun getDailyEvent(): Response<EventResponse>
 }
 
 data class FeedbackRequest(
@@ -200,7 +204,8 @@ data class VerifyOtpResponse(
     val assetDetails: List<AssetDetail> = emptyList(),
     val communique: List<CommuniqueModel.Communique> = emptyList(),
     val greetings: Map<String, List<String>>? = null,
-    val greetingCategories1: List<ApiGreetingCategory>? = null // changed from greetingCategories
+    val greetingCategories1: List<ApiGreetingCategory>? = null, // changed from greetingCategories
+    @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null
 )
 
 data class User(

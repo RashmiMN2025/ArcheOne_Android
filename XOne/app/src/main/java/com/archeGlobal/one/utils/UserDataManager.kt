@@ -5,12 +5,14 @@ import android.util.Log
 import com.archeGlobal.one.model.ApiGreetingCategory
 import com.archeGlobal.one.model.AssetDetails
 import com.archeGlobal.one.model.CommuniqueModel
+import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.network.AssetDetail
 import com.archeGlobal.one.network.Office
 import com.archeGlobal.one.network.VerifyOtpResponse
+import com.google.gson.Gson
 
 /**
  * Singleton class to manage user data throughout the application.
@@ -19,6 +21,7 @@ import com.archeGlobal.one.network.VerifyOtpResponse
 class UserDataManager private constructor(context: Context) {
     
     private val preferencesManager = PreferencesManager(context.applicationContext)
+    private val gson = Gson()
     
     // In-memory cached data for quick access
     private var userData: UserData? = null
@@ -29,6 +32,7 @@ class UserDataManager private constructor(context: Context) {
     private var communiqueData: List<CommuniqueModel.Communique>? = null
     private var greetingsData: Map<String, List<String>>? = null
     private var greetingCategoriesData: List<ApiGreetingCategory>? = null
+    private var eventData: EventResponse? = null
     
     private val PREF_LAST_LOGIN_TIME = "last_login_time"
     
@@ -47,6 +51,21 @@ class UserDataManager private constructor(context: Context) {
         communiqueData = preferencesManager.getCommuniqueData()
         greetingsData = preferencesManager.getGreetings()
         greetingCategoriesData = preferencesManager.getGreetingCategories()
+        
+        // Load event data from preferences
+        val eventDataJson = preferencesManager.getEventData()
+        if (eventDataJson != null) {
+            try {
+                eventData = gson.fromJson(eventDataJson, EventResponse::class.java)
+                Log.d(TAG, "Loaded event data from preferences: ${eventData?.title}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing event data from preferences: ${e.message}")
+                eventData = null
+            }
+        } else {
+            Log.d(TAG, "No event data found in preferences")
+            eventData = null
+        }
         
         Log.d(TAG, "Loaded data from preferences - User: ${userData != null}, " +
                 "Offices: ${officesData?.size ?: 0}, " +
@@ -139,6 +158,23 @@ class UserDataManager private constructor(context: Context) {
         greetingsData = fullGreetingsData
         greetingCategoriesData = apiGreetingCategories
         
+        // Save event data from login response
+        eventData = response.eventData
+        val localEventData = eventData // Use local variable to avoid smart cast issue
+        if (localEventData != null) {
+            Log.d(TAG, "EventResponse object (localEventData) found in login response. Title: ${localEventData.title}")
+            // Save event data to preferences
+            try {
+                val eventDataJson = gson.toJson(localEventData)
+                preferencesManager.saveEventData(eventDataJson)
+                Log.d(TAG, "Saved EventResponse (localEventData) to preferences. Title: ${localEventData.title}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving EventResponse (localEventData) to preferences: ${e.message}")
+            }
+        } else {
+            Log.d(TAG, "No event data found in login response")
+        }
+        
         // Save to persistent storage
         preferencesManager.saveUserData(newUserData)
         preferencesManager.saveOfficesData(response.offices)
@@ -208,6 +244,32 @@ class UserDataManager private constructor(context: Context) {
     
     fun getGreetingCategoriesData(): List<ApiGreetingCategory>? = greetingCategoriesData
     
+    fun getEventData(): EventResponse? {
+        val localEventData = eventData // Use local variable to avoid smart cast issue
+        if (localEventData != null) {
+            Log.d(TAG, "Returning cached event data: ${localEventData.title}")
+            return localEventData
+        }
+        
+        // If not in memory, try to load from preferences
+        val eventDataJson = preferencesManager.getEventData()
+        if (eventDataJson != null) {
+            try {
+                val loadedEventData = gson.fromJson(eventDataJson, EventResponse::class.java)
+                // Update in-memory cache
+                eventData = loadedEventData
+                Log.d(TAG, "Loaded event data from preferences: ${loadedEventData.title}")
+                return loadedEventData
+            } catch (e: Exception) {
+                Log.e(TAG, "Error parsing event data from preferences: ${e.message}")
+            }
+        } else {
+            Log.d(TAG, "No event data found in preferences")
+        }
+        
+        return null
+    }
+    
     fun logout() {
         userData = null
         officesData = null
@@ -217,8 +279,10 @@ class UserDataManager private constructor(context: Context) {
         communiqueData = null
         greetingsData = null
         greetingCategoriesData = null
+        eventData = null
         preferencesManager.clearAllUserData()
         preferencesManager.clearAuthToken()
+        preferencesManager.saveEventData(null) // Clear event data from preferences
         Log.d(TAG, "Cleared all user data on logout")
     }
     
