@@ -59,6 +59,9 @@ class ChatActivity : ComponentActivity() {
                             startDestination = "chat"
                         ) {
                             composable("chat") {
+                                // Call onChatScreenEnter when entering the chat screen
+                                chatController.onChatScreenEnter()
+                                
                                 ChatScreen(
                                     viewModel = chatController.viewModel,
                                     navController = navController,

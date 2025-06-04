@@ -308,7 +308,10 @@ class AndroidNavigator(
     }
 
     override fun navigateToTravelExpenses() {
-        openWebView("https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml", "Travel & Expenses")
+        navController?.navigate("travel_history") {
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     override fun navigateToSAP() {
@@ -328,7 +331,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToChat() {
+        // Get reference to ChatController to clear history before navigation
         if (activity is HomeActivity) {
+            val chatController = (activity as HomeActivity).getChatController()
+            // Clear chat history before navigating
+            chatController?.clearChatHistory()
             navigate("chat")
         } else {
             startActivity(Intent(activity, ChatActivity::class.java))

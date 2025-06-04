@@ -148,6 +148,7 @@ class MainActivity : ComponentActivity() {
                                     onFooterProfileClick = homeController::onFooterProfileClick,
                                     onFooterSOSClick = homeController::onFooterSOSClick,
                                     onXCardClick = homeController::onXCardClick,
+                                    controller = homeController,
                                     // Pass event data and visibility state
                                     eventData = eventData,
                                     showEventPopup = showEventPopup,

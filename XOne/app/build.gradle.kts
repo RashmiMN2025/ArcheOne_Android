@@ -77,6 +77,8 @@ dependencies {
     
     // Material Design
     implementation(libs.material)
+    // Compose Material (Material Design 2) for components like Card, Scaffold, etc.
+    implementation(libs.androidx.material)
     
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)

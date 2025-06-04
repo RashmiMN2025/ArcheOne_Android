@@ -229,7 +229,7 @@ fun HomeScreen(
     onXCardClick: () -> Unit,
     isAuthenticating: Boolean = false,
     onRefresh: () -> Unit = {},
-    controller: HomeController // <-- Add this parameter
+    controller: HomeController, // <-- Add this parameter
     eventData: EventResponse? = null,
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {}

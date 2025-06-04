@@ -196,4 +196,15 @@ class ChatViewModel : ViewModel() {
             }
         }
     }
+    
+    /**
+     * Clears the chat history when exiting the chat screen
+     * This ensures a fresh chat experience when the user returns
+     */
+    fun clearChatHistory() {
+        messages.clear()
+        inputText.value = ""
+        isTyping.value = false
+        lastUserQuestion = ""
+    }
 }

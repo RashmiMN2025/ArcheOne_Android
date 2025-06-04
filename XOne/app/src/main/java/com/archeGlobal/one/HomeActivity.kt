@@ -208,6 +208,8 @@ class HomeActivity : AppCompatActivity() {
                 chatController = ChatController(this@HomeActivity, navigator)
                 communiqueController = CommuniqueController(this@HomeActivity, navigator)
                 archeOdysseyController = ArcheOdysseyController(navigator)
+                // Initialize travel controller
+                val travelController = TravelController(navigator)
                 var isLoading by remember { mutableStateOf(false) }
 
                 // If we have a destination or navigateTo, navigate to it
@@ -288,6 +290,7 @@ class HomeActivity : AppCompatActivity() {
                             onXCardClick = controller::onXCardClick,
                             isAuthenticating = isAuthenticating.value,
                             onRefresh = { refreshHomeData() },
+                            controller = controller,
                             // Pass event-related parameters
                             eventData = eventData,
                             showEventPopup = showEventPopup,
@@ -311,6 +314,11 @@ class HomeActivity : AppCompatActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) {
+                        // Call onChatScreenEnter when entering the chat screen
+                        LaunchedEffect(Unit) {
+                            chatController.onChatScreenEnter()
+                        }
+                        
                         ChatScreen(
                             viewModel = chatController.viewModel,
                             navController = navController,
@@ -832,6 +840,27 @@ class HomeActivity : AppCompatActivity() {
                             serviceName = serviceName
                         )
                     }
+
+                    // Add the travel_history route
+                    composable(
+                        route = "travel_history",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        TravelHistoryScreen(
+                            controller = travelController
+                        )
+                    }
                 }
             }
         }
@@ -867,38 +896,50 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        val currentTime = System.currentTimeMillis()
+        val timeInBackground = currentTime - lastPauseTime
         
-        // Skip biometric check if we're coming from login
-        if (!isFromLogin && System.currentTimeMillis() - lastPauseTime > BACKGROUND_THRESHOLD) {
-            val biometricHelper = BiometricHelper(this)
-            if (biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()) {
-                isAuthenticating.value = true // Set authenticating state to true
-                biometricHelper.showBiometricPrompt(
-                    activity = this,
-                    title = "Verify Identity",
-                    subtitle = "Use your fingerprint to continue",
-                    onSuccess = {
-                        // Continue with the app
-                        Log.d("BiometricCheck", "Biometric verification successful")
-                        isAuthenticating.value = false // Reset authenticating state
-                    },
-                    onError = { error ->
-                        // If biometric fails, go back to login
-                        Log.e("BiometricCheck", "Biometric verification failed: $error")
-                        Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
-                        userDataManager.clearUserData()
-                        val intent = Intent(this, LoginActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
-                        finish()
-                    }
-                )
+        if (timeInBackground > BACKGROUND_THRESHOLD && lastPauseTime > 0) {
+            // Check if we need to show biometric authentication
+            val userData = userDataManager.getUserData()
+            if (userData != null && !isFromLogin) {
+                // Only show biometric if we're not coming directly from login
+                val biometricHelper = BiometricHelper(this)
+                if (biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()) {
+                    isAuthenticating.value = true // Set authenticating state to true
+                    biometricHelper.showBiometricPrompt(
+                        activity = this,
+                        title = "Verify Identity",
+                        subtitle = "Use your fingerprint to continue",
+                        onSuccess = {
+                            // Continue with the app
+                            Log.d("BiometricCheck", "Biometric verification successful")
+                            isAuthenticating.value = false // Reset authenticating state
+                        },
+                        onError = { error ->
+                            // If biometric fails, go back to login
+                            Log.e("BiometricCheck", "Biometric verification failed: $error")
+                            Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
+                            userDataManager.clearUserData()
+                            val intent = Intent(this, LoginActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            finish()
+                        }
+                    )
+                }
             }
         }
         
-        // Reset the flag after first resume
-        if (isFromLogin) {
-            isFromLogin = false
-        }
+        // Reset the flag since we're no longer coming from login
+        isFromLogin = false
+    }
+    
+    /**
+     * Provides access to the ChatController for other components
+     * Used by AndroidNavigator to clear chat history when navigating
+     */
+    fun getChatController(): ChatController? {
+        return if (::chatController.isInitialized) chatController else null
     }
 }

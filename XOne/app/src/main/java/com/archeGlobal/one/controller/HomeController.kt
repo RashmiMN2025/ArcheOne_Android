@@ -362,12 +362,8 @@ class HomeController(
                 navigator.navigateToSOS(false)
             }
             "travel" -> {
-                Log.d("HomeController", "Navigating to Travel & Expenses")
-                val intent = Intent(context, WebViewActivity::class.java).apply {
-                    putExtra("fileUrl", "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml")
-                    putExtra("title", "Travel & Expenses")
-                }
-                context.startActivity(intent)
+                Log.d("HomeController", "Navigating to Travel History Screen")
+                navigator.navigateToTravelExpenses()
             }
             "sap" -> navigator.navigateToSAP()
             "ample" -> navigator.navigateToAmple()
