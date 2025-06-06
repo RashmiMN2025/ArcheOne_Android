@@ -36,6 +36,18 @@ class UserDataManager private constructor(context: Context) {
     
     private val PREF_LAST_LOGIN_TIME = "last_login_time"
     
+    companion object {
+        private const val TAG = "UserDataManager"
+        @Volatile
+        private var INSTANCE: UserDataManager? = null
+        
+        fun getInstance(context: Context): UserDataManager {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: UserDataManager(context).also { INSTANCE = it }
+            }
+        }
+    }
+    
     init {
         // Load data from SharedPreferences on initialization
         loadDataFromPreferences()
@@ -284,20 +296,5 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.clearAuthToken()
         preferencesManager.saveEventData(null) // Clear event data from preferences
         Log.d(TAG, "Cleared all user data on logout")
-    }
-    
-    companion object {
-        private const val TAG = "UserDataManager"
-        
-        @Volatile
-        private var INSTANCE: UserDataManager? = null
-        
-        fun getInstance(context: Context): UserDataManager {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: UserDataManager(context).also {
-                    INSTANCE = it
-                }
-            }
-        }
     }
 }

@@ -39,6 +39,7 @@ interface Navigator {
     fun navigateToPasswordReset()
     fun navigateToPolicy()
     fun navigateToSOS(showHeader: Boolean = true)
+    fun navigateToTravel()
     fun navigateToTravelExpenses()
     fun navigateToSAP()
     fun navigateToAmple()

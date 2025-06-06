@@ -45,6 +45,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToPasswordReset() {}
     override fun navigateToPolicy() {}
     override fun navigateToSOS(showHeader: Boolean) {}
+    override fun navigateToTravel() {}
     override fun navigateToTravelExpenses() {}
     override fun navigateToSAP() {}
     override fun navigateToAmple() {}

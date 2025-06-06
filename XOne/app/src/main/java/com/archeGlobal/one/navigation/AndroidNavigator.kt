@@ -307,6 +307,13 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToTravel() {
+        navController?.navigate("travel") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     override fun navigateToTravelExpenses() {
         navController?.navigate("travel_history") {
             launchSingleTop = true

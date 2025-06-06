@@ -209,7 +209,7 @@ class HomeActivity : AppCompatActivity() {
                 communiqueController = CommuniqueController(this@HomeActivity, navigator)
                 archeOdysseyController = ArcheOdysseyController(navigator)
                 // Initialize travel controller
-                val travelController = TravelController(navigator)
+                val travelController = TravelController(navigator, this@HomeActivity)
                 var isLoading by remember { mutableStateOf(false) }
 
                 // If we have a destination or navigateTo, navigate to it
@@ -838,6 +838,27 @@ class HomeActivity : AppCompatActivity() {
                         ServiceNotAvailableScreen(
                             navController = navController,
                             serviceName = serviceName
+                        )
+                    }
+
+                    // Add the travel route
+                    composable(
+                        route = "travel",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        TravelScreen(
+                            controller = travelController
                         )
                     }
 

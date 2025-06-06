@@ -10,6 +10,10 @@ import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
+import com.archeGlobal.one.model.TravelRequestSubmission
+import com.archeGlobal.one.model.TravelRequestResponse
+import com.archeGlobal.one.model.TravelHistoryRequest
+import com.archeGlobal.one.model.TravelHistoryResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -91,6 +95,12 @@ interface ApiService {
     
     @GET("daily-event")
     suspend fun getDailyEvent(): Response<EventResponse>
+    
+    @POST("travel-request")
+    fun submitTravelRequest(@Body request: TravelRequestSubmission): Call<TravelRequestResponse>
+    
+    @POST("travel-request")
+    fun getTravelHistory(@Body request: TravelHistoryRequest): Call<TravelHistoryResponse>
 }
 
 data class FeedbackRequest(
