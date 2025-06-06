@@ -294,7 +294,8 @@ class HomeActivity : AppCompatActivity() {
                             // Pass event-related parameters
                             eventData = eventData,
                             showEventPopup = showEventPopup,
-                            onDismissEventPopup = controller::dismissEventPopup
+                            onDismissEventPopup = controller::dismissEventPopup,
+                            controller = controller // <-- Add this
                         )
                     }
 
@@ -423,7 +424,7 @@ class HomeActivity : AppCompatActivity() {
                         }
                     ) {
                         PolicyScreen(
-                            model = policyController.model,
+                            model = policyController.model.value,
                             onPolicyClick = policyController::onPolicyClick,
                             onBackClick = policyController::onBackClick,
                             isLoading = policyController.isLoading.value

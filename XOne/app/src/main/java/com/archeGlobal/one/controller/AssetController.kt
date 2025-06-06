@@ -58,6 +58,7 @@ class AssetController(
                         configuration = asset.configuration,
                         assetType = asset.asset_type,
                         purchaseDate = formatDate(asset.purchase_date ?: ""),
+                        hostName = asset.hostname ?: ""
                     )
                 }
 

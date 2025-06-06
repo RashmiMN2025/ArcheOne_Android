@@ -130,7 +130,7 @@ fun TodoScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth() // Stretch to full width
-                    .height(650.dp) // Increase height as needed
+                    .weight(0.85f) // Increase height as needed
                     .background(Color(0xFFF8F8F0)), // Beige color
                 contentAlignment = Alignment.TopCenter
             ) {
