@@ -63,11 +63,9 @@ fun PolicyScreen(
     var searchQuery by remember { mutableStateOf("") } // State for search query
 
     // Filter policies based on the search query
-    val filteredPolicies = remember(searchQuery) {
-        model.policies.filter { policy ->
-            policy.policyName.contains(searchQuery, ignoreCase = true)
-        }
-    }
+    val filteredPolicies = model.policies.filter { policy ->
+    policy.policyName.contains(searchQuery, ignoreCase = true)
+}
 
     Box(
         modifier = Modifier
@@ -198,7 +196,7 @@ fun PolicyScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(filteredPolicies) { policy ->
+                        items(filteredPolicies, key = { it.filePath }) { policy ->
                             PolicyCard(policy = policy, onClick = { onPolicyClick(policy) })
                         }
                     }

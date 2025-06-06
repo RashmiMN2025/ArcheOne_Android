@@ -53,13 +53,13 @@ fun GreetingCategoryCard(
         Box(
             modifier = Modifier
                 .width(160.dp)
-                .aspectRatio(0.7f)
+                .aspectRatio(0.8f)
         ) {
             Card(
                 onClick = onClick,
                 modifier = Modifier
                     .fillMaxSize()
-                    .border(width = 2.dp, color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
+                    .border(width = 2.dp, color = Color(0xFFF5F5F5), shape = RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
@@ -369,36 +369,30 @@ fun GreetingCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = if (isSelected) RoundedCornerShape(16.dp) else RoundedCornerShape(0.dp)
-    val scale by animateFloatAsState(if (isSelected) 1.07f else 1f, label = "hover-scale")
-    val borderWidth = if (isSelected) (2.dp / scale) else 0.dp // Keeps border visually same thickness
-
-    Box(
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                shadowElevation = 0f // No shadow for any card
-                this.shape = shape
-                clip = true
-            }
-            .border(
-                width = borderWidth,
-                color = if (isSelected) Color(0xFFDD3825) else Color.Transparent,
-                shape = shape
-            )
-            .clip(shape)
+            .width(160.dp)
+            .padding(8.dp)
             .clickable(onClick = onClick)
     ) {
-        Card(
-            modifier = Modifier.fillMaxSize(),
-            elevation = CardDefaults.cardElevation(0.dp), // No Card shadow
-            shape = shape
+        Box(
+            modifier = Modifier
+                .width(160.dp)
+                .aspectRatio(0.8f)
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(
+                        width = 2.dp,
+                        color = if (isSelected) Color(0xFFDD3825) else Color(0xFFF5F5F5),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(0.dp)
             ) {
                 AsyncImage(
                     model = imageUrl,
@@ -408,5 +402,6 @@ fun GreetingCard(
                 )
             }
         }
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }

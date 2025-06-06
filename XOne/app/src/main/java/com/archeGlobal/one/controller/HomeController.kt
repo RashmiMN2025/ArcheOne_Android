@@ -23,6 +23,7 @@ import com.archeGlobal.one.CommuniqueActivity
 import com.archeGlobal.one.GreetingsActivity
 import com.archeGlobal.one.HolidayOptionsActivity
 import com.archeGlobal.one.LocationsActivity
+import com.archeGlobal.one.PolicyActivity
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.model.AboutMeModel
 import com.archeGlobal.one.network.ApiService
@@ -280,6 +281,10 @@ class HomeController(
                 val intent = Intent(context, GreetingsActivity::class.java)
                 context.startActivity(intent)
             }
+            "policy" -> {
+                val intent = Intent(context, PolicyActivity::class.java)
+                context.startActivity(intent)
+            }
             "profile connect" -> {
                 Log.d("HomeController", "Navigating to Service Not Available screen for Profile Connect")
                 navigate("service_not_available?serviceName=Profile Connect")
@@ -356,7 +361,6 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Service Not Available screen for Password Reset")
                 navigate("service_not_available?serviceName=Password Reset")
             }
-            "policy" -> navigator.navigateToPolicy()
             "sos" -> {
                 Log.d("SOS", "Navigating to SOS")
                 navigator.navigateToSOS(false)

@@ -289,7 +289,8 @@ data class AssetDetail(
     val date_of_issue: String,
     val model: String,
     val purchase_date: String?,
-    val serial_number: String
+    val serial_number: String,
+    val hostname: String? 
 )
 
 data class CalendarRequest(

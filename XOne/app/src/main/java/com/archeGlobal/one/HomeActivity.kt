@@ -416,7 +416,7 @@ class HomeActivity : AppCompatActivity() {
                         }
                     ) {
                         PolicyScreen(
-                            model = policyController.model,
+                            model = policyController.model.value,
                             onPolicyClick = policyController::onPolicyClick,
                             onBackClick = policyController::onBackClick,
                             isLoading = policyController.isLoading.value

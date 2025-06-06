@@ -392,6 +392,9 @@ fun IdeaVaultScreen(
                                                         "Feedback submitted successfully!",
                                                         Toast.LENGTH_SHORT
                                                     ).show()
+                                                    // Clear fields after successful submission
+                                                    selectedCategory = "Select Category"
+                                                    feedbackText = ""
                                                 } else {
                                                     Toast.makeText(
                                                         context,
