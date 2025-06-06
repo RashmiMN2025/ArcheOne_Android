@@ -223,7 +223,7 @@ fun GlobalCelebrationSubcategoryCard(
         Box(
             modifier = Modifier
                 .width(160.dp)
-                .aspectRatio(0.7f)
+                .aspectRatio(0.8f)
         ) {
             Card(
                 modifier = Modifier

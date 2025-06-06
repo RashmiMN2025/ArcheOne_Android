@@ -45,15 +45,15 @@ fun CoreValuesScreen(
                 Text(
                     text = "Our values to keep you at the centre.",
                     color = Color.Black,
-                    fontSize = 32.sp,
+                    fontSize = 30.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     lineHeight = 36.sp, // Added line spacing
                     modifier = Modifier.padding(horizontal = 10.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Blocks
             val blocks = listOf(
@@ -85,7 +85,7 @@ fun CoreValuesScreen(
             )
 
             blocks.forEach { (title, icon, description) ->
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

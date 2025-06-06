@@ -8,6 +8,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import com.archeGlobal.one.BusinessCardActivity
+import com.archeGlobal.one.PolicyActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.navigation.Navigator
@@ -27,10 +29,9 @@ class PolicyController(
     private val _isLoading = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
 
-    private val _policies = mutableStateOf<List<PolicyModel.Policy>>(emptyList())
-    
-    val model: PolicyModel
-        get() = PolicyModel(policies = _policies.value)
+    // Use State for model so Compose will recompose when policies change
+    private val _model = mutableStateOf(PolicyModel())
+    val model: State<PolicyModel> = _model
     
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
@@ -54,13 +55,13 @@ class PolicyController(
                             previewUrl = policyResponse.previewUrl
                         )
                     }
-                    _policies.value = transformedPolicies
+                    _model.value = PolicyModel(policies = transformedPolicies)
                     Log.d("PolicyController", "Loaded ${transformedPolicies.size} policies from API")
                 } else {
                     // Fallback to cached data if API fails
                     val policiesData = OtpVerificationController.getPoliciesData()
                     if (policiesData != null) {
-                        _policies.value = policiesData
+                        _model.value = PolicyModel(policies = policiesData)
                         Log.d("PolicyController", "Loaded ${policiesData.size} policies from cache")
                     } else {
                         Log.e("PolicyController", "No policies data available")
@@ -70,9 +71,9 @@ class PolicyController(
             } catch (e: Exception) {
                 // Try to load from cache if API call fails
                 try {
-                    val policiesData = OtpVerificationController.getPoliciesData()
+                    val policiesData = com.archeGlobal.one.controller.OtpVerificationController.getPoliciesData()
                     if (policiesData != null) {
-                        _policies.value = policiesData
+                        _model.value = PolicyModel(policies = policiesData)
                         Log.d("PolicyController", "Loaded ${policiesData.size} policies from cache after API error")
                     } else {
                         throw e // Re-throw if no cache available
@@ -102,7 +103,7 @@ class PolicyController(
     }
 
     fun onBackClick() {
-        navigator.navigateToHome()
+        (context as? PolicyActivity)?.finishWithAnimation()
     }
     
     // Clean up resources when no longer needed

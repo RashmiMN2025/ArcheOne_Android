@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.archeGlobal.one.R
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 @Composable
@@ -80,6 +82,7 @@ fun ServiceNotAvailableScreen(
             Text(
                 text = "Service Not Available",
                 fontSize = 24.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
                 color = Color.Black,
@@ -91,7 +94,7 @@ fun ServiceNotAvailableScreen(
             // Description text
             Text(
                 text = "This service is currently under development or\nnot available.",
-                fontSize = 14.sp,
+                fontSize = 16.sp,
                 textAlign = TextAlign.Center,
                 color = Color.Black,
                 modifier = Modifier.fillMaxWidth()
@@ -104,13 +107,16 @@ fun ServiceNotAvailableScreen(
             ) {                
                 Text(
                     "Meanwhile, you can ",
-                    fontSize = 16.sp,
-                    color = Color.DarkGray
+                    fontSize = 14.sp,
+                    color = Color.DarkGray,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
                 )
                 
                 Text(
                     "explore our website",
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFFE84C3D),
                     modifier = Modifier.clickable { 
@@ -128,7 +134,7 @@ fun ServiceNotAvailableScreen(
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
+                    .fillMaxWidth(0.7f)
                     .padding(bottom = 48.dp)
                     .align(Alignment.CenterHorizontally),
                 shape = RoundedCornerShape(24.dp),
@@ -139,6 +145,7 @@ fun ServiceNotAvailableScreen(
                 Text(
                     text = "Go Back",
                     fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(vertical = 4.dp),
                     color = Color.White

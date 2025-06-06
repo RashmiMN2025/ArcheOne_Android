@@ -25,5 +25,6 @@ data class AssetDetails(
     val assetType: String = "",
     val assetId: String = "",
     val purchaseDate: String = "",
-    val oldAssetId: String = ""
+    val oldAssetId: String = "",
+    val hostName: String = "" // <-- Added
 ) 

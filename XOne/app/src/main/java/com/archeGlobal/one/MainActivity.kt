@@ -152,7 +152,8 @@ class MainActivity : ComponentActivity() {
                                     // Pass event data and visibility state
                                     eventData = eventData,
                                     showEventPopup = showEventPopup,
-                                    onDismissEventPopup = homeController::dismissEventPopup
+                                    onDismissEventPopup = homeController::dismissEventPopup,
+                                    controller = homeController // <-- Add this
                                 )
                             }
 
