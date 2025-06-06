@@ -153,7 +153,7 @@ class MainActivity : ComponentActivity() {
                                     eventData = eventData,
                                     showEventPopup = showEventPopup,
                                     onDismissEventPopup = homeController::dismissEventPopup,
-                                    controller = homeController // <-- Add this
+                                    //controller = homeController // <-- Add this
                                 )
                             }
 

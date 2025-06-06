@@ -295,7 +295,7 @@ class HomeActivity : AppCompatActivity() {
                             eventData = eventData,
                             showEventPopup = showEventPopup,
                             onDismissEventPopup = controller::dismissEventPopup,
-                            controller = controller // <-- Add this
+                          //  controller = controller // <-- Add this
                         )
                     }
 
