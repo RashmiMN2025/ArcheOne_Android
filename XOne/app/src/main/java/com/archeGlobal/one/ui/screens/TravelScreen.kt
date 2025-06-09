@@ -104,7 +104,9 @@ fun TravelScreen(
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 actions = {
-                    Spacer(modifier = Modifier.width(48.dp))
+                    IconButton(onClick = { controller.navigateToTravelHistory() }) {
+                        Icon(Icons.Default.DateRange, contentDescription = "Travel History", tint = Color.Black)
+                    }
                 }
             )
             
@@ -125,14 +127,39 @@ fun TravelScreen(
                         .verticalScroll(scrollState)
                         .padding(16.dp)
                 ) {
-                    // Employee Details Section
-                    Text(
-                        text = "Employee Details",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = GraphikFontFamily,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    // Employee Details Section with Approval button
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Employee Details",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = GraphikFontFamily
+                        )
+                        
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = PrimaryRed,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .clickable { controller.navigateToTravelApprovals() }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "Approval",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
+                    }
                     
                     // Employee Name
                     Row(
@@ -551,31 +578,14 @@ fun TravelScreen(
                                 text = "Submit Travel Request",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White
                             )
                         }
                     }
                     
+                    // Spacer at the bottom for better padding
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Travel History Button
-                    Button(
-                        onClick = { controller.navigateToTravelHistory() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Gray
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "View Travel History",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
                 }
             }
         }

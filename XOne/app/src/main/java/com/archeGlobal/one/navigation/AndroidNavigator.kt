@@ -311,11 +311,29 @@ class AndroidNavigator(
         navController?.navigate("travel") {
             launchSingleTop = true
             restoreState = true
+            popUpTo("home") {
+                // Not inclusive so the home screen remains in the back stack
+                inclusive = false
+            }
         }
     }
 
     override fun navigateToTravelExpenses() {
         navController?.navigate("travel_history") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+    
+    override fun navigateToTravelRequestDetail() {
+        navController?.navigate("travel_request_detail") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+    
+    override fun navigateToTravelApprovals() {
+        navController?.navigate("travel_approvals") {
             launchSingleTop = true
             restoreState = true
         }

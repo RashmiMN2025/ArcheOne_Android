@@ -883,6 +883,57 @@ class HomeActivity : AppCompatActivity() {
                             controller = travelController
                         )
                     }
+                    
+                    // Add the travel_request_detail route
+                    composable(
+                        route = "travel_request_detail",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        // Only show the detail screen if a travel request is selected
+                        travelController.selectedTravelRequest?.let { travelRequest ->
+                            TravelRequestDetailScreen(
+                                controller = travelController,
+                                travelRequest = travelRequest
+                            )
+                        } ?: run {
+                            // If no travel request is selected, go back to travel history
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+                    
+                    // Add the travel_approvals route
+                    composable(
+                        route = "travel_approvals",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        TravelApprovalsScreen(
+                            controller = travelController
+                        )
+                    }
                 }
             }
         }

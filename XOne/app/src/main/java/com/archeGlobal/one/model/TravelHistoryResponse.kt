@@ -99,7 +99,11 @@ data class TravelHistoryItem(
             destination = travelDestination,
             approver = reportingManagerName,
             createdDate = createdDate ?: Date(),
-            status = travelStatus
+            status = travelStatus,
+            businessJustification = businessJustification,
+            modeOfTransport = modeOfTransport,
+            departureDate = departureDate,
+            arrivalDate = arrivalDate
         )
     }
 }

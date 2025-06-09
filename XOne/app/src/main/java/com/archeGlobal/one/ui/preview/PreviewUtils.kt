@@ -47,6 +47,8 @@ class PreviewNavigator : Navigator {
     override fun navigateToSOS(showHeader: Boolean) {}
     override fun navigateToTravel() {}
     override fun navigateToTravelExpenses() {}
+    override fun navigateToTravelRequestDetail() {}
+    override fun navigateToTravelApprovals() {}
     override fun navigateToSAP() {}
     override fun navigateToAmple() {}
     override fun navigateToZingHR() {}

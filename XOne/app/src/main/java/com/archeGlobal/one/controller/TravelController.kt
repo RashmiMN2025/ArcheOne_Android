@@ -35,6 +35,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
     // UI state
     var travelHistoryState by mutableStateOf<TravelHistoryState>(TravelHistoryState.Loading)
         private set
+        
+    // Selected travel request for detail view
+    var selectedTravelRequest by mutableStateOf<TravelRequest?>(null)
+        private set
     
     // Employee data for travel form
     var employeeName by mutableStateOf("")
@@ -142,9 +146,16 @@ class TravelController(private val navigator: Navigator, private val context: Co
     
     /**
      * Navigate back to previous screen
+     * @param fromTravelDetail If true, we're navigating back from the travel request detail screen
      */
-    fun onBackPressed() {
-        navigator.navigateToHome()
+    fun onBackPressed(fromTravelDetail: Boolean = false) {
+        if (fromTravelDetail) {
+            // When in travel request detail, navigate back to travel history
+            navigator.navigateToTravel()
+        } else {
+            // When in travel or travel history screen, navigate back to home
+            navigator.navigateToHome()
+        }
     }
     
     /**
@@ -161,7 +172,48 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Navigate to travel request details screen
      */
     fun navigateToTravelDetails(travelRequestId: String) {
-        // To be implemented when creating the travel details screen
+        // Find the travel request with the given ID from the current state
+        val currentState = travelHistoryState
+        if (currentState is TravelHistoryState.Success) {
+            val request = currentState.travelRequests.find { it.id == travelRequestId }
+            if (request != null) {
+                // Store the selected travel request
+                selectedTravelRequest = request
+                // Navigate to the detail screen
+                navigator.navigateToTravelRequestDetail()
+            } else {
+                Log.e("TravelController", "Travel request with ID $travelRequestId not found")
+            }
+        } else {
+            Log.e("TravelController", "Cannot navigate to travel details: travel history not loaded")
+        }
+    }
+    
+    /**
+     * Navigate to travel approvals screen
+     */
+    fun navigateToTravelApprovals() {
+        navigator.navigateToTravelApprovals()
+    }
+    
+    /**
+     * Approve a travel request
+     */
+    fun approveTravelRequest(travelRequestId: String) {
+        // In a real implementation, this would make an API call to approve the request
+        Log.d("TravelController", "Approving travel request: $travelRequestId")
+        // For now, we'll just show a log message
+        // TODO: Implement the actual API call
+    }
+    
+    /**
+     * Reject a travel request
+     */
+    fun rejectTravelRequest(travelRequestId: String) {
+        // In a real implementation, this would make an API call to reject the request
+        Log.d("TravelController", "Rejecting travel request: $travelRequestId")
+        // For now, we'll just show a log message
+        // TODO: Implement the actual API call
     }
     
     /**
