@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +33,65 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 fun TravelApprovalsScreen(
     controller: TravelController
 ) {
+    // State for rejection dialog
+    var showRejectionDialog by remember { mutableStateOf(false) }
+    var rejectionRemarks by remember { mutableStateOf("") }
+    var selectedRequestId by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    // Rejection dialog
+    if (showRejectionDialog) {
+        AlertDialog(
+            onDismissRequest = { 
+                showRejectionDialog = false 
+                rejectionRemarks = ""
+            },
+            title = { Text("Rejection Reason", fontFamily = GraphikFontFamily, fontWeight = FontWeight.Bold) },
+            text = { 
+                Column {
+                    Text(
+                        "Please provide a reason for rejecting this travel request:",
+                        fontFamily = GraphikFontFamily
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = rejectionRemarks,
+                        onValueChange = { rejectionRemarks = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
+                        placeholder = { Text("Enter rejection reason") },
+                        maxLines = 3
+                    )
+                    
+                    // Focus the text field when dialog appears
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        controller.rejectTravelRequest(selectedRequestId, rejectionRemarks)
+                        showRejectionDialog = false
+                        rejectionRemarks = ""
+                    },
+                    enabled = rejectionRemarks.isNotBlank()
+                ) {
+                    Text("Submit", color = if (rejectionRemarks.isNotBlank()) PrimaryRed else Color.Gray)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showRejectionDialog = false 
+                    rejectionRemarks = ""
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -81,50 +137,106 @@ fun TravelApprovalsScreen(
                 }
             )
             
-            // Mock data for travel approval requests
-            val mockApprovalRequests = listOf(
-                TravelRequest(
-                    id = "TRV028",
-                    destination = "Delhi",
-                    project = "Archeone",
-                    approver = "Annamalai Kalyanasundaram",
-                    createdDate = java.util.Date(),
-                    status = com.archeGlobal.one.model.TravelStatus.APPROVED,
-                    businessJustification = "Client meeting"
-                ),
-                TravelRequest(
-                    id = "TRV027",
-                    destination = "New York",
-                    project = "Project Alpha",
-                    approver = "Annamalai",
-                    createdDate = java.util.Date(),
-                    status = com.archeGlobal.one.model.TravelStatus.PENDING,
-                    businessJustification = "Team training"
-                ),
-                TravelRequest(
-                    id = "TRV026",
-                    destination = "New York",
-                    project = "Project Alpha",
-                    approver = "JD",
-                    createdDate = java.util.Date(),
-                    status = com.archeGlobal.one.model.TravelStatus.PENDING,
-                    businessJustification = "Conference"
-                )
-            )
+            // Trigger loading of travel approval requests when the screen is shown
+            LaunchedEffect(Unit) {
+                controller.loadTravelApprovals()
+            }
             
-            // Main content
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(mockApprovalRequests) { request ->
-                    ApprovalRequestCard(
-                        request = request,
-                        onApprove = { controller.approveTravelRequest(request.id) },
-                        onReject = { controller.rejectTravelRequest(request.id) }
-                    )
+            // Main content based on state
+            when (val state = controller.travelApprovalsState) {
+                is TravelController.TravelApprovalsState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = PrimaryRed)
+                    }
+                }
+                
+                is TravelController.TravelApprovalsState.Success -> {
+                    if (state.approvalRequests.isEmpty()) {
+                        // Empty state
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No travel requests to approve",
+                                color = Color.Gray,
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else {
+                        // Show list of approval requests
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(state.approvalRequests) { request ->
+                                ApprovalRequestCard(
+                                    request = request,
+                                    onApprove = { 
+                                        // Pass the request ID and action token (if available)
+                                        controller.approveTravelRequest(request.id) 
+                                    },
+                                    onReject = { 
+                                        // Show the rejection dialog and set the selected request ID
+                                        selectedRequestId = request.id
+                                        showRejectionDialog = true
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                is TravelController.TravelApprovalsState.Error -> {
+                    // Error state
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Error loading travel approvals",
+                                color = Color.Red,
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = state.message,
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(PrimaryRed)
+                                    .clickable { controller.loadTravelApprovals() }
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = "Retry",
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -191,10 +303,27 @@ fun ApprovalRequestCard(
             )
             
             // Request details
-            DetailItem(icon = "👤", label = "Approver", value = request.approver)
+            DetailItem(icon = "👤", label = "Requester", value = request.approver)
             DetailItem(icon = "🌍", label = "Destination", value = request.destination)
             DetailItem(icon = "📁", label = "Project", value = request.project)
             DetailItem(icon = "📅", label = "Created", value = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(request.createdDate))
+            
+            // Additional details from API
+            request.businessJustification?.let {
+                DetailItem(icon = "📝", label = "Reason", value = it)
+            }
+            
+            request.modeOfTransport?.let {
+                DetailItem(icon = "🚗", label = "Transport", value = it)
+            }
+            
+            request.departureDate?.let {
+                DetailItem(icon = "🛫", label = "Departure", value = it)
+            }
+            
+            request.arrivalDate?.let {
+                DetailItem(icon = "🛬", label = "Arrival", value = it)
+            }
             
             // Show action buttons only for pending requests
             if (request.status == com.archeGlobal.one.model.TravelStatus.PENDING) {
@@ -251,8 +380,9 @@ fun ApprovalRequestCard(
 fun DetailItem(
     icon: String,
     label: String,
-    value: String
+    value: String?
 ) {
+    if (value == null) return
     Row(
         modifier = Modifier
             .fillMaxWidth()
