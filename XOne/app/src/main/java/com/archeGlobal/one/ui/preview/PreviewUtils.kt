@@ -49,6 +49,8 @@ class PreviewNavigator : Navigator {
     override fun navigateToTravelExpenses() {}
     override fun navigateToTravelRequestDetail() {}
     override fun navigateToTravelApprovals() {}
+    override fun navigateToTravelApprovalDetail() {}
+    override fun navigateToTravelApprovalConfirm() {}
     override fun navigateToSAP() {}
     override fun navigateToAmple() {}
     override fun navigateToZingHR() {}

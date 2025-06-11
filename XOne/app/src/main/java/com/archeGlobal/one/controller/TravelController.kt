@@ -16,8 +16,10 @@ import com.archeGlobal.one.model.TravelApprovalResponse
 import com.archeGlobal.one.model.TravelApprovalItem
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.ui.screens.TravelApprovalDetailScreen
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
+import androidx.navigation.NavController
 import com.archeGlobal.one.utils.UserDataManager
 import retrofit2.Call
 import retrofit2.Callback
@@ -42,6 +44,14 @@ class TravelController(private val navigator: Navigator, private val context: Co
         data class Error(val message: String) : TravelApprovalsState()
     }
     
+    // State for travel approval actions
+    sealed class TravelApprovalActionState {
+        object Idle : TravelApprovalActionState()
+        object Loading : TravelApprovalActionState()
+        data class Success(val message: String) : TravelApprovalActionState()
+        data class Error(val message: String) : TravelApprovalActionState()
+    }
+    
     // Date formatters
     private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -56,6 +66,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
         
     // Selected travel request for detail view
     var selectedTravelRequest by mutableStateOf<TravelRequest?>(null)
+        private set
+        
+    // Travel approval action state
+    var approvalActionState by mutableStateOf<TravelApprovalActionState>(TravelApprovalActionState.Idle)
         private set
     
     // Employee data for travel form
@@ -167,6 +181,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * @param fromTravelDetail If true, we're navigating back from the travel request detail screen
      */
     fun onBackPressed(fromTravelDetail: Boolean = false) {
+        // Reset approval action state when navigating back
+        resetApprovalActionState()
+        
         if (fromTravelDetail) {
             // When in travel request detail, navigate back to travel history
             navigator.navigateToTravel()
@@ -211,9 +228,42 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Navigate to travel approvals screen
      */
     fun navigateToTravelApprovals() {
-        // Load travel approvals data before navigating
         loadTravelApprovals()
         navigator.navigateToTravelApprovals()
+    }
+    
+    /**
+     * Navigate to the travel approval detail screen
+     */
+    fun navigateToTravelApprovalDetail(travelRequest: TravelRequest) {
+        selectedTravelRequest = travelRequest
+        navigator.navigateToTravelApprovalDetail()
+    }
+    
+    /**
+     * Navigate to the travel approval confirmation screen
+     */
+    fun navigateToTravelApprovalConfirm(travelRequest: TravelRequest) {
+        selectedTravelRequest = travelRequest
+        navigator.navigateToTravelApprovalConfirm()
+    }
+    
+    /**
+     * Navigate back to the previous screen
+     */
+    fun navigateBack() {
+        // Reset approval action state when navigating back
+        resetApprovalActionState()
+        // Navigate to travel approvals screen instead of trying to use popBackStack
+        // This ensures we go back to the approvals list after an action
+        navigator.navigateToTravelApprovals()
+    }
+    
+    /**
+     * Reset the approval action state to Idle
+     */
+    fun resetApprovalActionState() {
+        approvalActionState = TravelApprovalActionState.Idle
     }
     
     /**
@@ -261,7 +311,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
     /**
      * Approve a travel request
      */
-    fun approveTravelRequest(travelRequestId: String, actionToken: String? = null) {
+    fun approveTravelRequest(travelRequestId: String, remarks: String = "") {
+        // Set the action state to loading
+        approvalActionState = TravelApprovalActionState.Loading
+        
         // Find the request in the current state
         val currentState = travelApprovalsState
         if (currentState is TravelApprovalsState.Success) {
@@ -269,6 +322,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
             val request = currentState.approvalRequests.find { it.id == travelRequestId }
             if (request == null) {
                 Log.e("TravelController", "Travel request with ID $travelRequestId not found")
+                approvalActionState = TravelApprovalActionState.Error("Travel request not found")
                 return
             }
             
@@ -287,12 +341,23 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Log the action
             Log.d("TravelController", "Approving travel request: $travelRequestId")
             
+            // Get the user email from UserDataManager
+            val userEmail = userDataManager.getUserData()?.email ?: ""
+            if (userEmail.isEmpty()) {
+                Log.e("TravelController", "User email is empty, cannot approve travel request")
+                approvalActionState = TravelApprovalActionState.Error("User email not found")
+                return
+            }
+            
+            // Get the action token from the request
+            val token = request.businessJustification ?: "" // In a real implementation, this would be the actual token from the API
+            
             // Make the API call to approve the request
-            val token = actionToken ?: "dummy-token" // In a real implementation, this would come from the API
             val approveRequest = TravelApprovalActionRequest(
+                email = userEmail,
                 requestId = travelRequestId,
-                actionToken = token,
-                action = "approve"
+                token = token,
+                remarks = remarks
             )
             
             RetrofitClient.apiService.approveTravelRequest(approveRequest).enqueue(object : Callback<TravelApprovalActionResponse> {
@@ -301,14 +366,20 @@ class TravelController(private val navigator: Navigator, private val context: Co
                         val approvalResponse = response.body()
                         if (approvalResponse != null && approvalResponse.status == 200) {
                             Log.d("TravelController", "Successfully approved travel request: $travelRequestId")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Success(approvalResponse.message ?: "Request approved successfully")
                             // State is already updated, no need to do anything else
                         } else {
                             Log.e("TravelController", "Error approving travel request: ${approvalResponse?.message}")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Error(approvalResponse?.message ?: "Failed to approve request")
                             // Revert the state change if the API call failed
                             loadTravelApprovals() // Reload the data
                         }
                     } else {
                         Log.e("TravelController", "Error approving travel request: ${response.code()} ${response.message()}")
+                        // Update the approval action state
+                        approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
                         // Revert the state change if the API call failed
                         loadTravelApprovals() // Reload the data
                     }
@@ -316,6 +387,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 
                 override fun onFailure(call: Call<TravelApprovalActionResponse>, t: Throwable) {
                     Log.e("TravelController", "Error approving travel request", t)
+                    // Update the approval action state
+                    approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
                     // Revert the state change if the API call failed
                     loadTravelApprovals() // Reload the data
                 }
@@ -327,6 +400,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Reject a travel request
      */
     fun rejectTravelRequest(travelRequestId: String, remarks: String = "", actionToken: String? = null) {
+        // Set the action state to loading
+        approvalActionState = TravelApprovalActionState.Loading
+        
         // Find the request in the current state
         val currentState = travelApprovalsState
         if (currentState is TravelApprovalsState.Success) {
@@ -334,6 +410,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
             val request = currentState.approvalRequests.find { it.id == travelRequestId }
             if (request == null) {
                 Log.e("TravelController", "Travel request with ID $travelRequestId not found")
+                approvalActionState = TravelApprovalActionState.Error("Travel request not found")
                 return
             }
             
@@ -352,29 +429,46 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Log the action
             Log.d("TravelController", "Rejecting travel request: $travelRequestId with remarks: $remarks")
             
-            // Make the API call to reject the request
-            val token = actionToken ?: "dummy-token" // In a real implementation, this would come from the API
+            // Get the user email from UserDataManager
+            val userEmail = userDataManager.getUserData()?.email ?: ""
+            if (userEmail.isEmpty()) {
+                Log.e("TravelController", "User email is empty, cannot reject travel request")
+                approvalActionState = TravelApprovalActionState.Error("User email not found")
+                return
+            }
+            
+            // Get the action token from the request
+            val token = request.businessJustification ?: "" // In a real implementation, this would be the actual token from the API
+            
+            // Make the API call to reject the request (using the same endpoint as approve)
             val rejectRequest = TravelApprovalActionRequest(
+                email = userEmail,
                 requestId = travelRequestId,
-                actionToken = token,
-                action = "reject",
-                remarks = remarks
+                token = token,
+                remarks = remarks,
+                action = "reject" // This is the key difference from the approve request
             )
             
-            RetrofitClient.apiService.rejectTravelRequest(rejectRequest).enqueue(object : Callback<TravelApprovalActionResponse> {
+            RetrofitClient.apiService.approveTravelRequest(rejectRequest).enqueue(object : Callback<TravelApprovalActionResponse> {
                 override fun onResponse(call: Call<TravelApprovalActionResponse>, response: Response<TravelApprovalActionResponse>) {
                     if (response.isSuccessful) {
                         val rejectionResponse = response.body()
                         if (rejectionResponse != null && rejectionResponse.status == 200) {
                             Log.d("TravelController", "Successfully rejected travel request: $travelRequestId")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Success(rejectionResponse.message ?: "Request rejected successfully")
                             // State is already updated, no need to do anything else
                         } else {
                             Log.e("TravelController", "Error rejecting travel request: ${rejectionResponse?.message}")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Error(rejectionResponse?.message ?: "Failed to reject request")
                             // Revert the state change if the API call failed
                             loadTravelApprovals() // Reload the data
                         }
                     } else {
                         Log.e("TravelController", "Error rejecting travel request: ${response.code()} ${response.message()}")
+                        // Update the approval action state
+                        approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
                         // Revert the state change if the API call failed
                         loadTravelApprovals() // Reload the data
                     }
@@ -382,6 +476,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 
                 override fun onFailure(call: Call<TravelApprovalActionResponse>, t: Throwable) {
                     Log.e("TravelController", "Error rejecting travel request", t)
+                    // Update the approval action state
+                    approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
                     // Revert the state change if the API call failed
                     loadTravelApprovals() // Reload the data
                 }

@@ -189,6 +189,10 @@ fun TravelApprovalsScreen(
                                         // Show the rejection dialog and set the selected request ID
                                         selectedRequestId = request.id
                                         showRejectionDialog = true
+                                    },
+                                    onClick = {
+                                        // Navigate to the detail screen when card is clicked
+                                        controller.navigateToTravelApprovalDetail(request)
                                     }
                                 )
                             }
@@ -247,7 +251,8 @@ fun TravelApprovalsScreen(
 fun ApprovalRequestCard(
     request: TravelRequest,
     onApprove: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),

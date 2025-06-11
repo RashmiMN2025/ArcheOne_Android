@@ -111,9 +111,6 @@ interface ApiService {
     
     @POST("travel-request/approve")
     fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
-    
-    @POST("travel-request/reject")
-    fun rejectTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
 }
 
 data class FeedbackRequest(

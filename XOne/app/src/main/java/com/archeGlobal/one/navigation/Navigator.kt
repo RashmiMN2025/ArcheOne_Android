@@ -43,6 +43,8 @@ interface Navigator {
     fun navigateToTravelExpenses()
     fun navigateToTravelRequestDetail()
     fun navigateToTravelApprovals()
+    fun navigateToTravelApprovalDetail()
+    fun navigateToTravelApprovalConfirm()
     fun navigateToSAP()
     fun navigateToAmple()
     fun navigateToZingHR()

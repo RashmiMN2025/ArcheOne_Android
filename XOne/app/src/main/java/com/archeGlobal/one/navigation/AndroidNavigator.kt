@@ -338,6 +338,20 @@ class AndroidNavigator(
             restoreState = true
         }
     }
+    
+    override fun navigateToTravelApprovalDetail() {
+        navController?.navigate("travel_approval_detail") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+    
+    override fun navigateToTravelApprovalConfirm() {
+        navController?.navigate("travel_approval_confirm") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     override fun navigateToSAP() {
         openWebView("https://my422539.businessbydesign.cloud.sap", "SAP")
