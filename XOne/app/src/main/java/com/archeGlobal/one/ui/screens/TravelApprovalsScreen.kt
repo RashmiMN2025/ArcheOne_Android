@@ -21,6 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import com.google.gson.Gson
+import com.archeGlobal.one.ui.activities.TravelApproveActivity
+import com.archeGlobal.one.ui.activities.TravelRejectActivity
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -38,6 +43,7 @@ fun TravelApprovalsScreen(
     var rejectionRemarks by remember { mutableStateOf("") }
     var selectedRequestId by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
+    val context = LocalContext.current
     // Rejection dialog
     if (showRejectionDialog) {
         AlertDialog(
@@ -182,13 +188,18 @@ fun TravelApprovalsScreen(
                                 ApprovalRequestCard(
                                     request = request,
                                     onApprove = { 
-                                        // Pass the request ID and action token (if available)
-                                        controller.approveTravelRequest(request.id) 
+                                        // Navigate to dedicated approval screen instead of calling API directly
+                                        val intent = Intent(context, TravelApproveActivity::class.java).apply {
+                                            putExtra("travel_request", Gson().toJson(request))
+                                        }
+                                        context.startActivity(intent)
                                     },
                                     onReject = { 
-                                        // Show the rejection dialog and set the selected request ID
-                                        selectedRequestId = request.id
-                                        showRejectionDialog = true
+                                        // Navigate to dedicated rejection screen instead of direct API call
+                                        val intent = Intent(context, TravelRejectActivity::class.java).apply {
+                                            putExtra("travel_request", Gson().toJson(request))
+                                        }
+                                        context.startActivity(intent)
                                     },
                                     onClick = {
                                         // Navigate to the detail screen when card is clicked

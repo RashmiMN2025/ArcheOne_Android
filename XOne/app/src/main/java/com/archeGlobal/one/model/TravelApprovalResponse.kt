@@ -86,7 +86,8 @@ data class TravelApprovalItem(
             businessJustification = businessJustification,
             modeOfTransport = modeOfTransport,
             departureDate = departureDate,
-            arrivalDate = arrivalDate
+            arrivalDate = arrivalDate,
+            actionToken = actionToken
         )
     }
     

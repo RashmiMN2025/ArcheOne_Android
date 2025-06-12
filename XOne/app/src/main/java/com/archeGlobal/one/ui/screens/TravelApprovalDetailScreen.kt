@@ -28,6 +28,11 @@ import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelStatus
 import com.archeGlobal.one.ui.theme.*
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import com.google.gson.Gson
+import com.archeGlobal.one.ui.activities.TravelApproveActivity
+import com.archeGlobal.one.ui.activities.TravelRejectActivity
 
 /**
  * Screen for approving or rejecting a travel request with detailed view
@@ -38,10 +43,16 @@ fun TravelApprovalDetailScreen(
     travelRequest: TravelRequest
 ) {
     val selectedRequest = travelRequest
+    val context = LocalContext.current // moved here for reuse without composable call in lambdas
     var remarks by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
+    
+    // State for showing approval or rejection UI inline
+    var showApprovalUI by remember { mutableStateOf(false) }
+    var showRejectionUI by remember { mutableStateOf(false) }
+    
     // Observe the approval action state from the controller
     val approvalActionState = controller.approvalActionState
     
@@ -211,9 +222,12 @@ fun TravelApprovalDetailScreen(
                         
                         // Approve button
                         Button(
-                            onClick = { 
-                                // Navigate to the approval confirmation screen instead of making the API call directly
-                                controller.navigateToTravelApprovalConfirm(selectedRequest)
+                            onClick = {
+                                // Navigate to the dedicated approval screen instead of calling the API
+                                val intent = Intent(context, TravelApproveActivity::class.java).apply {
+                                    putExtra("travel_request", Gson().toJson(travelRequest))
+                                }
+                                context.startActivity(intent)
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -246,9 +260,12 @@ fun TravelApprovalDetailScreen(
                         
                         // Reject button
                         OutlinedButton(
-                            onClick = { 
-                                controller.rejectTravelRequest(selectedRequest.id, remarks)
-                                // State management and navigation will happen via the LaunchedEffect
+                            onClick = {
+                                // Navigate to the dedicated rejection screen instead of calling the API
+                                val intent = Intent(context, TravelRejectActivity::class.java).apply {
+                                    putExtra("travel_request", Gson().toJson(travelRequest))
+                                }
+                                context.startActivity(intent)
                             },
                             modifier = Modifier
                                 .fillMaxWidth()

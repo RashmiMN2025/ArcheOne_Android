@@ -15,7 +15,8 @@ data class TravelRequest(
     val businessJustification: String? = null, // Business justification for the travel
     val modeOfTransport: String? = null,       // Mode of transport for the travel
     val departureDate: String? = null,         // Departure date for the travel
-    val arrivalDate: String? = null            // Arrival date for the travel
+    val arrivalDate: String? = null,           // Arrival date for the travel
+    val actionToken: String? = null            // Token required for approve/reject API
 )
 
 /**

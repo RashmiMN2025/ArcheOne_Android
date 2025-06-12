@@ -352,6 +352,39 @@ class AndroidNavigator(
             restoreState = true
         }
     }
+    
+    override fun navigateToTravelApprove() {
+        android.util.Log.d("AndroidNavigator", "navigateToTravelApprove called")
+        android.util.Log.d("AndroidNavigator", "navController is ${if (navController == null) "null" else "not null"}")
+        
+        // Log current navigation state
+        navController?.let { nc ->
+            val currentRoute = nc.currentDestination?.route
+            android.util.Log.d("AndroidNavigator", "Current navigation destination: $currentRoute")
+            // We can't access the private backQueue property directly
+            android.util.Log.d("AndroidNavigator", "Attempting to navigate to travel_approve")
+        }
+        
+        try {
+            navController?.navigate("travel_approve") {
+                launchSingleTop = true
+                restoreState = true
+            }
+            android.util.Log.d("AndroidNavigator", "After navigate() call - navigation command sent successfully")
+        } catch (e: Exception) {
+            android.util.Log.e("AndroidNavigator", "Error during navigation: ${e.message}", e)
+        }
+        
+        // Verify navigation occurred
+        android.util.Log.d("AndroidNavigator", "Current destination after navigation attempt: ${navController?.currentDestination?.route}")
+    }
+    
+    override fun navigateToTravelReject() {
+        navController?.navigate("travel_reject") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     override fun navigateToSAP() {
         openWebView("https://my422539.businessbydesign.cloud.sap", "SAP")

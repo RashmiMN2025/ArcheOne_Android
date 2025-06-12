@@ -18,6 +18,7 @@ import com.archeGlobal.one.model.TravelApprovalRequest
 import com.archeGlobal.one.model.TravelApprovalResponse
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -111,6 +112,9 @@ interface ApiService {
     
     @POST("travel-request/approve")
     fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
+    
+    @POST("travel-request/reject")
+    fun rejectTravelRequest(@Body request: TravelRejectActionRequest): Call<TravelApprovalActionResponse>
 }
 
 data class FeedbackRequest(
