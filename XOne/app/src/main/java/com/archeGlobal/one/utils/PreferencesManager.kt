@@ -217,6 +217,23 @@ class PreferencesManager(context: Context) {
         private const val KEY_BIOMETRIC_EMPLOYEE_ID = "biometric_employee_id"
         private const val KEY_GREETINGS_DATA = "greetings_data"
     }
+
+    fun setBoolean(key: String, value: Boolean) {
+        sharedPreferences.edit().putBoolean(key, value).apply()
+    }
+
+    fun getBoolean(key: String, default: Boolean): Boolean {
+        return sharedPreferences.getBoolean(key, default)
+    }
+
+    fun setString(key: String, value: String) {
+        sharedPreferences.edit().putString(key, value).apply()
+    }
+
+    fun getString(key: String, default: String): String? {
+        return sharedPreferences.getString(key, default)
+    }
+    
     fun isFirstLaunch(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
     }
@@ -260,6 +277,13 @@ class PreferencesManager(context: Context) {
         return if (email != null && mobile != null && employeeId != null) {
             Triple(email, mobile, employeeId)
         } else null
+    }
+
+    fun clearBiometricCredentials() {
+        setBoolean("biometric_enabled", false)
+        setString("biometric_email", "")
+        setString("biometric_mobile", "")
+        setString("biometric_employee_id", "")
     }
 
     fun clearBiometricData() {

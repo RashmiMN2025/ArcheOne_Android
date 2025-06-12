@@ -332,6 +332,8 @@ fun IssueDialog(
 
 @Composable
 fun AssetDetailCard(asset: AssetDetails) {
+    // Add this log at the start of the composable
+    android.util.Log.d("AssetScreen", "Displaying asset: hostName=${asset.hostName}")
     Column(
         modifier = Modifier
             .fillMaxWidth()

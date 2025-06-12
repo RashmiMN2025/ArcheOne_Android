@@ -3,7 +3,6 @@ package com.archeGlobal.one.utils
 import android.content.Context
 import android.util.Log
 import com.archeGlobal.one.model.ApiGreetingCategory
-import com.archeGlobal.one.model.AssetDetails
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PolicyModel
@@ -33,6 +32,9 @@ class UserDataManager private constructor(context: Context) {
     private var greetingsData: Map<String, List<String>>? = null
     private var greetingCategoriesData: List<ApiGreetingCategory>? = null
     private var eventData: EventResponse? = null
+    private var lastUsername: String? = null
+    // Private var isLoggedIn: Boolean = false
+    // private var hasLoggedIn: Boolean = false
     
     private val PREF_LAST_LOGIN_TIME = "last_login_time"
     
@@ -76,7 +78,32 @@ class UserDataManager private constructor(context: Context) {
                 "Greetings: ${greetingsData?.size ?: 0}, " +
                 "GreetingCategories: ${greetingCategoriesData?.size ?: 0}")
     }
+
+    fun setIsLoggedIn(value: Boolean) {
+        preferencesManager.setBoolean("isLoggedIn", value)
+    }
+
+    fun isLoggedIn(): Boolean = preferencesManager.getBoolean("isLoggedIn", false)
+
+    fun setHasLoggedIn(value: Boolean) {
+        preferencesManager.setBoolean("hasLoggedIn", value)
+    }
+
+    fun hasUserLoggedIn(): Boolean = preferencesManager.getBoolean("hasLoggedIn", false)
     
+    fun setLastUsername(username: String?) {
+        lastUsername = username
+        preferencesManager.setString("lastUsername", username ?: "")
+    }
+
+    fun getLastUsername(): String? {
+        if (lastUsername == null) {
+            val stored = preferencesManager.getString("lastUsername", "")
+            lastUsername = if (stored.isNullOrEmpty()) null else stored
+        }
+        return lastUsername
+    }
+
     fun getUserData(): UserData? = userData
     
     fun getOfficesData(): List<Office>? = officesData
@@ -90,8 +117,6 @@ class UserDataManager private constructor(context: Context) {
     fun getCommuniqueData(): List<CommuniqueModel.Communique>? = communiqueData
     
     fun getGreetingsData(): Map<String, List<String>>? = greetingsData
-    
-    fun isLoggedIn(): Boolean = preferencesManager.isLoggedIn()
     
     fun getAuthToken(): String? = preferencesManager.getAuthToken()
     
@@ -196,21 +221,23 @@ class UserDataManager private constructor(context: Context) {
     }
     
     fun clearUserData() {
-        // Clear in-memory cache
-        userData = null
-        officesData = null
-        policiesData = null
-        sosBlogsData = null
-        assetDetails = null
-        communiqueData = null
-        greetingsData = null
-        greetingCategoriesData = null
-        
-        // Clear persistent storage
-        preferencesManager.clearAllUserData()
-        
-        Log.d(TAG, "User data cleared from both memory and preferences")
-    }
+    // Clear in-memory cache
+    userData = null
+    officesData = null
+    policiesData = null
+    sosBlogsData = null
+    assetDetails = null
+    communiqueData = null
+    greetingsData = null
+    greetingCategoriesData = null
+    lastUsername = null
+
+    // Clear persistent storage
+    preferencesManager.clearAllUserData()
+    preferencesManager.setString("lastUsername", "")
+    preferencesManager.clearBiometricCredentials()
+    Log.d(TAG, "User data cleared from both memory and preferences")
+}
     
     fun updateProfilePicture(profilePicUrl: String?) {
         // Get current user data

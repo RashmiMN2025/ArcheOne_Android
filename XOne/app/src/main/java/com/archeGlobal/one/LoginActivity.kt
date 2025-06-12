@@ -1,5 +1,6 @@
 package com.archeGlobal.one
 
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,7 +23,8 @@ class LoginActivity : AppCompatActivity() {
                 // Exit the app when back is pressed at login
                 finish()
             }
-        })
+        }
+        )
 
         setContent {
             XOneTheme {

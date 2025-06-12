@@ -336,7 +336,7 @@ fun MonthDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(4.dp, 12.dp, 4.dp, 0.dp) // Minimized horizontal padding
                 .clickable(
                     enabled = true,
                     interactionSource = remember { MutableInteractionSource() },
@@ -347,7 +347,8 @@ fun MonthDetailScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, bottom = 10.dp)
+                    .statusBarsPadding() // Add this for proper top spacing
+                    .padding(bottom = 10.dp)
             ) {
                 IconButton(
                     onClick = onBackPressed,

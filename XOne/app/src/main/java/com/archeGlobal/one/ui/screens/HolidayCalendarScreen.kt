@@ -79,13 +79,14 @@ fun HolidayCalendarScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(2.dp, 12.dp, 2.dp, 0.dp) // Minimized horizontal padding
+                .padding(6.dp, 12.dp, 6.dp, 0.dp) // Minimized horizontal padding
         ) {
             // Top Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, bottom = 10.dp)
+                    .statusBarsPadding()
+                    .padding(bottom = 10.dp)
             ) {
                 IconButton(
                     onClick = onBackPressed,
@@ -172,6 +173,7 @@ fun HolidayCalendarScreen(
                 Spacer(modifier = Modifier.width(11.dp))
                 LegendItem(color = Color(0xFF4CAF50), text = "Global Event")
             }
+
             Spacer(modifier = Modifier.height(2.dp))            // Responsive Calendar Grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3), // Changed to 3 columns to match the image

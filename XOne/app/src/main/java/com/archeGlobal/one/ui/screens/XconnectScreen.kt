@@ -93,7 +93,8 @@ fun XConnectScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, bottom = 10.dp) // Moved heading and back arrow slightly down
+                    .statusBarsPadding()
+                    .padding(bottom = 10.dp)
             ) {
                 // Back button at the left edge
                 IconButton(

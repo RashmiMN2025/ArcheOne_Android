@@ -335,69 +335,14 @@ class ProfileController(
     }
 
     fun onLogoutClick() {
-        // Get the employeeId from the stored user data
-        val employeeId = OtpVerificationController.getUserData()?.employeeId ?: ""
-        
-        if (employeeId.isEmpty()) {
-            // If no employeeId is available, simply navigate to login screen
-            Toast.makeText(context, "No user session found. Logging out...", Toast.LENGTH_SHORT).show()
-            // Clear all user data
-            userDataManager.clearUserData()
-            navigator.navigateToLoginScreen()
-            return
-        }
-        
-        // Create the logout request
-        val request = LogoutRequest(employeeId = employeeId)
-        
-        // Show a loading message
-        Toast.makeText(context, "Logging out...", Toast.LENGTH_SHORT).show()
-        
-        // Make the API call
-        RetrofitClient.apiService.logout(request).enqueue(object : Callback<LogoutResponse> {
-            override fun onResponse(call: Call<LogoutResponse>, response: Response<LogoutResponse>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val responseBody = response.body()!!
-                    
-                    if (responseBody.status == 200) {
-                        // Successful logout
-                        Toast.makeText(context, responseBody.message, Toast.LENGTH_SHORT).show()
-                        
-                        // Clear user data from central manager
-                        userDataManager.clearUserData()
-                    } else {
-                        // Server returned non-200 status
-                        Toast.makeText(context, "Logout failed: ${responseBody.message}", Toast.LENGTH_SHORT).show()
-                        Log.e("ProfileController", "Logout failed with status: ${responseBody.status}, message: ${responseBody.message}")
-                    }
-                } else {
-                    // HTTP error response
-                    val errorMsg = "Logout failed: ${response.code()} ${response.message()}"
-                    Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                    Log.e("ProfileController", errorMsg)
-                }
-                
-                // Clear user data regardless of the response
-                userDataManager.clearUserData()
-                
-                // Navigate to login screen regardless of the result
-                // This ensures the user can log in again even if the logout API call fails
-                navigator.navigateToLoginScreen()
-            }
-            
-            override fun onFailure(call: Call<LogoutResponse>, t: Throwable) {
-                // Network error
-                val errorMsg = "Network error during logout: ${t.message}"
-                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-                Log.e("ProfileController", errorMsg, t)
-                
-                // Clear user data even on failure
-                userDataManager.clearUserData()
-                
-                // Navigate to login screen anyway
-                navigator.navigateToLoginScreen()
-            }
-        })
+        val userData = userDataManager.getUserData()
+        val employeeName = userData?.name ?: userData?.email ?: ""
+        userDataManager.setLastUsername(employeeName) // Save for welcome text
+
+        // Only clear login state, not all user data
+        userDataManager.setIsLoggedIn(false)
+        userDataManager.setHasLoggedIn(true)
+        navigator.navigateToLoginScreen()
     }
 
     fun onBackPressed() {

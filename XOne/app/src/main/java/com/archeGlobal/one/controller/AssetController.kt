@@ -51,6 +51,7 @@ class AssetController(
             } else {
                 // Map the asset details to a list of AssetDetails objects
                 val assetDetailsList = assetDetails.map { asset ->
+                    Log.d("AssetController", "Mapping asset: hostname=${asset.hostname}")
                     AssetDetails(
                         serialNo = asset.serial_number,
                         deviceModel = asset.model,

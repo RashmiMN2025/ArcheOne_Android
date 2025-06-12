@@ -49,49 +49,37 @@ fun HolidayOptionsScreen(
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
-        ) {            // Add top padding to push everything down
-            Spacer(modifier = Modifier.height(50.dp))
-            
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp, 12.dp, 4.dp, 0.dp) // Minimized horizontal padding
+        ) {
             // Top App Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .background(Color.Transparent)
+                    .statusBarsPadding()
+                    .padding(bottom = 10.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // Back button aligned to start
+                IconButton(
+                    onClick = { controller.onBackPressed() },
+                    modifier = Modifier.align(Alignment.CenterStart)
                 ) {
-                    // Back button
-                    IconButton(
-                        onClick = { controller.onBackPressed() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    }
-                              // Title
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Calendar",
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-                      // Empty space to balance the layout
-                    Spacer(modifier = Modifier.width(48.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.Black
+                    )
                 }
+                // Title centered
+                Text(
+                    text = "Calendar",
+                    fontSize = 20.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
             
             // Two option cards side by side

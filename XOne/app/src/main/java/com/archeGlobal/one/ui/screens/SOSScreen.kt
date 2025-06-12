@@ -201,7 +201,7 @@ fun SOSScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 50.dp)
+                            .statusBarsPadding()
                     ) {
                         IconButton(
                             onClick = onBackPressed,

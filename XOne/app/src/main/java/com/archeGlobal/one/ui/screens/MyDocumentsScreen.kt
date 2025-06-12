@@ -148,7 +148,8 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 40.dp, bottom = 10.dp)
+                    .statusBarsPadding()
+                    .padding(bottom = 10.dp)
             ) {
                 IconButton(onClick = onBackPressed) {
                     Icon(

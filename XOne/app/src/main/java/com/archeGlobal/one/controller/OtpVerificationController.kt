@@ -131,6 +131,10 @@ class OtpVerificationController(
                         
                         // Save all user data through the centralized UserDataManager
                         userDataManager.saveUserDataFromResponse(responseBody, token)
+
+                        // --- ADD THESE LINES: ---
+                        userDataManager.setIsLoggedIn(true)
+                        userDataManager.setHasLoggedIn(true)
                         
                         Log.d("LoginProcess", "Login successful")
                         callback("Login successful", false)

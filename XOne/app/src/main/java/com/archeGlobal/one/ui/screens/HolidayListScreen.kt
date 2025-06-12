@@ -76,6 +76,7 @@ fun HolidayListScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding() // This adds top padding for the status bar
                     .padding(vertical = 8.dp)
             ) {
                 // Back button aligned to the left

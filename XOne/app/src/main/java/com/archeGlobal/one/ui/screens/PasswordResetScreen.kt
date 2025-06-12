@@ -184,13 +184,14 @@ fun PasswordResetScreen(navigator: Navigator) {
                     }
                 },
                 modifier = Modifier
-                    .fillMaxWidth(0.85f)
+                    .fillMaxWidth(0.97f)
                     .height(65.dp)
-                    .padding(top = 16.dp),
+                    .padding(top = 10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFDD3825),
                     disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
                 ),
+                shape = MaterialTheme.shapes.medium,
                 enabled = !isLoading
             ) {
                 Text(
