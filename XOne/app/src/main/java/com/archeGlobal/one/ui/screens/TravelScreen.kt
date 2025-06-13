@@ -1,0 +1,593 @@
+package com.archeGlobal.one.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.DisplayMode
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.controller.TravelController
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.ui.theme.PrimaryRed
+import java.text.SimpleDateFormat
+import java.util.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TravelScreen(
+    controller: TravelController
+) {
+    // State for date picker dialogs
+    var showDepartureDatePicker by remember { mutableStateOf(false) }
+    var showArrivalDatePicker by remember { mutableStateOf(false) }
+    
+    // Date format for display
+    val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        WelcomeBackgroundTop,    // Light Beige/Grey
+                        WelcomeBackgroundMiddle, // Light Grey
+                        WelcomeBackgroundBottom  // Dark Grey
+                    )
+                )
+            )
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Add space at the top to push everything down
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            TopAppBar(
+                title = { 
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Travel",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { controller.onBackPressed() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                    }
+                },
+                backgroundColor = Color.Transparent,
+                elevation = 0.dp,
+                actions = {
+                    IconButton(onClick = { controller.navigateToTravelHistory() }) {
+                        Icon(Icons.Default.DateRange, contentDescription = "Travel History", tint = Color.Black)
+                    }
+                }
+            )
+            
+            // Main content
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = 1.dp,
+                backgroundColor = Color.White
+            ) {
+                val scrollState = rememberScrollState()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                        .padding(16.dp)
+                ) {
+                    // Employee Details Section with Approval button
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Employee Details",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = GraphikFontFamily
+                        )
+                        
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = PrimaryRed,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .clickable { controller.navigateToTravelApprovals() }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "Approval",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
+                    }
+                    
+                    // Employee Name
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Name:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = controller.employeeName,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Employee ID
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Employee ID:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = controller.employeeId,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Mobile Number
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Mobile No:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = controller.mobileNumber,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Employee Grade
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Employee Grade:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = controller.employeeGrade,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        color = Color.LightGray,
+                        thickness = 1.dp
+                    )
+                    
+                    // Travel Details Section
+                    Text(
+                        text = "Travel Details",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    // Travel Destination
+                    OutlinedTextField(
+                        value = controller.destination,
+                        onValueChange = { controller.updateDestination(it) },
+                        label = { Text("Travel Destination") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            cursorColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White,
+                            unfocusedTextColor = Color.Black,
+                            focusedTextColor = Color.Black
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Project Name
+                    OutlinedTextField(
+                        value = controller.projectName,
+                        onValueChange = { controller.updateProjectName(it) },
+                        label = { Text("Project Name") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            cursorColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White,
+                            unfocusedTextColor = Color.Black,
+                            focusedTextColor = Color.Black
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Business Justification
+                    OutlinedTextField(
+                        value = controller.businessJustification,
+                        onValueChange = { controller.updateBusinessJustification(it) },
+                        label = { Text("Business Justification") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            cursorColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White,
+                            unfocusedTextColor = Color.Black,
+                            focusedTextColor = Color.Black
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Mode of Transport
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = controller.modeOfTransport,
+                            onValueChange = { },
+                            label = { Text("Mode of Transport") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                                .clickable(onClick = { controller.toggleTransportDropdown() }),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.LightGray,
+                                focusedBorderColor = Color.Gray,
+                                cursorColor = Color.Gray,
+                                unfocusedContainerColor = Color.White,
+                                focusedContainerColor = Color.White,
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "Dropdown",
+                                    tint = Color.Gray,
+                                    modifier = Modifier.clickable { controller.toggleTransportDropdown() }
+                                )
+                            },
+                            readOnly = true
+                        )
+                        
+                        DropdownMenu(
+                            expanded = controller.isTransportDropdownExpanded,
+                            onDismissRequest = { controller.dismissTransportDropdown() },
+                            modifier = Modifier
+                                .width(with(LocalDensity.current) { 300.dp })
+                                .background(Color.White)
+                        ) {
+                            controller.transportOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(text = option) },
+                                    onClick = { controller.updateModeOfTransport(option) }
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Date Selection Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Departure Date
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Departure Date",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            
+                            OutlinedTextField(
+                                value = controller.departureDate,
+                                onValueChange = { controller.updateDepartureDate(it) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 8.dp)
+                                    .clickable { showDepartureDatePicker = true },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Gray,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                readOnly = true,
+                                trailingIcon = {
+                                    androidx.compose.material.Icon(
+                                        Icons.Default.DateRange,
+                                        contentDescription = "Select Date",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.clickable { showDepartureDatePicker = true }
+                                    )
+                                }
+                            )
+                            
+                            // Departure Date Picker Dialog
+                            if (showDepartureDatePicker) {
+                                val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
+                                DatePickerDialog(
+                                    onDismissRequest = { showDepartureDatePicker = false },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            datePickerState.selectedDateMillis?.let { millis ->
+                                                val date = Date(millis)
+                                                controller.updateDepartureDate(dateFormatter.format(date))
+                                            }
+                                            showDepartureDatePicker = false
+                                        }) {
+                                            Text("OK")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { showDepartureDatePicker = false }) {
+                                            Text("Cancel")
+                                        }
+                                    }
+                                ) {
+                                    DatePicker(state = datePickerState)
+                                }
+                            }
+                        }
+                        
+                        // Arrival Date
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Arrival Date",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            
+                            OutlinedTextField(
+                                value = controller.arrivalDate,
+                                onValueChange = { controller.updateArrivalDate(it) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp)
+                                    .clickable { showArrivalDatePicker = true },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Gray,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                readOnly = true,
+                                trailingIcon = {
+                                    androidx.compose.material.Icon(
+                                        Icons.Default.DateRange,
+                                        contentDescription = "Select Date",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.clickable { showArrivalDatePicker = true }
+                                    )
+                                }
+                            )
+                            
+                            // Arrival Date Picker Dialog
+                            if (showArrivalDatePicker) {
+                                val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
+                                DatePickerDialog(
+                                    onDismissRequest = { showArrivalDatePicker = false },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            datePickerState.selectedDateMillis?.let { millis ->
+                                                val date = Date(millis)
+                                                controller.updateArrivalDate(dateFormatter.format(date))
+                                            }
+                                            showArrivalDatePicker = false
+                                        }) {
+                                            Text("OK")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { showArrivalDatePicker = false }) {
+                                            Text("Cancel")
+                                        }
+                                    }
+                                ) {
+                                    DatePicker(state = datePickerState)
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Approval Chain
+                    Text(
+                        text = "Approval Chain",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    // Reporting Manager
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Reporting Manager:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = controller.reportingManagerName,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Error message if submission failed
+                    controller.submissionError?.let { error ->
+                        Text(
+                            text = error,
+                            color = Color.Red,
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                    
+                    // Submit Button
+                    Button(
+                        onClick = { controller.submitTravelRequest() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryRed
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = !controller.isSubmitting
+                    ) {
+                        if (controller.isSubmitting) {
+                            androidx.compose.material.CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Submit Travel Request",
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White
+                            )
+                        }
+                    }
+                    
+                    // Spacer at the bottom for better padding
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+}

@@ -65,6 +65,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var chatController: ChatController
     private lateinit var communiqueController: CommuniqueController
     private lateinit var archeOdysseyController: ArcheOdysseyController
+    private lateinit var travelController: TravelController
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
     private lateinit var greetingsController: GreetingsController
@@ -162,7 +163,7 @@ class HomeActivity : AppCompatActivity() {
         })
         // Initialize controllers that need context
         otpVerificationController = OtpVerificationController(
-            navigator = AndroidNavigator(this),
+            navigator = navigator, // Use the existing navigator instance
             context = this
         )
 
@@ -208,8 +209,10 @@ class HomeActivity : AppCompatActivity() {
                 chatController = ChatController(this@HomeActivity, navigator)
                 communiqueController = CommuniqueController(this@HomeActivity, navigator)
                 archeOdysseyController = ArcheOdysseyController(navigator)
-                // Initialize travel controller
-                val travelController = TravelController(navigator)
+                // Initialize travel controller as class-level property
+                travelController = TravelController(navigator, this@HomeActivity)
+                // Log that the travel controller was initialized
+                android.util.Log.d("HomeActivity", "TravelController initialized with navigator: ${navigator.hashCode()}")
                 var isLoading by remember { mutableStateOf(false) }
 
                 // If we have a destination or navigateTo, navigate to it
@@ -841,6 +844,27 @@ class HomeActivity : AppCompatActivity() {
                         )
                     }
 
+                    // Add the travel route
+                    composable(
+                        route = "travel",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        TravelScreen(
+                            controller = travelController
+                        )
+                    }
+
                     // Add the travel_history route
                     composable(
                         route = "travel_history",
@@ -860,6 +884,225 @@ class HomeActivity : AppCompatActivity() {
                         TravelHistoryScreen(
                             controller = travelController
                         )
+                    }
+                    
+                    // Add the travel_request_detail route
+                    composable(
+                        route = "travel_request_detail",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        // Only show the detail screen if a travel request is selected
+                        travelController.selectedTravelRequest?.let { travelRequest ->
+                            TravelRequestDetailScreen(
+                                controller = travelController,
+                                travelRequest = travelRequest
+                            )
+                        } ?: run {
+                            // If no travel request is selected, go back to travel history
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+                    
+                    // Add the travel_approvals route
+                    composable(
+                        route = "travel_approvals",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        TravelApprovalsScreen(
+                            controller = travelController
+                        )
+                    }
+                    
+                    // Add the travel_approval_detail route
+                    composable(
+                        route = "travel_approval_detail",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) {
+                        // Only show the detail screen if a travel request is selected
+                        travelController.selectedTravelRequest?.let { travelRequest ->
+                            TravelApprovalDetailScreen(
+                                controller = travelController,
+                                travelRequest = travelRequest
+                            )
+                        } ?: run {
+                            // If no travel request is selected, go back to travel approvals
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+                    
+                    // Add the travel_approval_confirm route
+                    composable(
+                        route = "travel_approval_confirm",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) {
+                        // Only show the confirmation screen if a travel request is selected
+                        travelController.selectedTravelRequest?.let { travelRequest ->
+                            TravelApprovalConfirmScreen(
+                                controller = travelController,
+                                travelRequest = travelRequest
+                            )
+                        } ?: run {
+                            // If no travel request is selected, go back to travel approvals
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+                    
+                    // Add the travel_approve route
+                    composable(
+                        route = "travel_approve",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) {
+                        // Only show the approval screen if a travel request is selected
+                        travelController.selectedTravelRequest?.let { travelRequest ->
+                            TravelApproveScreen(
+                                controller = travelController,
+                                travelRequest = travelRequest
+                            )
+                        } ?: run {
+                            // If no travel request is selected, go back to travel approvals
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+                    
+                    // Add the travel_reject route
+                    composable(
+                        route = "travel_reject",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) {
+                        // Only show the rejection screen if a travel request is selected
+                        travelController.selectedTravelRequest?.let { travelRequest ->
+                            TravelRejectScreen(
+                                controller = travelController,
+                                travelRequest = travelRequest
+                            )
+                        } ?: run {
+                            // If no travel request is selected, go back to travel approvals
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
                     }
                 }
             }

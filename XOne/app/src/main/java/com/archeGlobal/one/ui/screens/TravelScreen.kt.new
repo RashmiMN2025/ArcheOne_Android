@@ -1,0 +1,446 @@
+package com.archeGlobal.one.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.controller.TravelController
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.ui.theme.PrimaryRed
+import java.text.SimpleDateFormat
+import java.util.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TravelScreen(
+    controller: TravelController
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        WelcomeBackgroundTop,    // Light Beige/Grey
+                        WelcomeBackgroundMiddle, // Light Grey
+                        WelcomeBackgroundBottom  // Dark Grey
+                    )
+                )
+            )
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Add space at the top to push everything down
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            TopAppBar(
+                title = { 
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Travel",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { controller.onBackPressed() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                    }
+                },
+                backgroundColor = Color.Transparent,
+                elevation = 0.dp,
+                actions = {
+                    Spacer(modifier = Modifier.width(48.dp))
+                }
+            )
+            
+            // Main content
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = 1.dp,
+                backgroundColor = Color.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    // Employee Details Section
+                    Text(
+                        text = "Employee Details",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    // Employee Name
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Name:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "Biswajit Dixit",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Employee ID
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Employee ID:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "NT1426",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Mobile Number
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Mobile No:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "6370360254",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Employee Grade
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Employee Grade:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "N/A",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        color = Color.LightGray,
+                        thickness = 1.dp
+                    )
+                    
+                    // Travel Details Section
+                    Text(
+                        text = "Travel Details",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    // Travel Destination
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = { },
+                        label = { Text("Travel Destination") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Project Name
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = { },
+                        label = { Text("Project Name") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Business Justification
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = { },
+                        label = { Text("Business Justification") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Mode of Transport
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = { },
+                        label = { Text("Mode of Transport") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
+                            focusedLabelColor = Color.Gray,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Dropdown",
+                                tint = Color.Gray
+                            )
+                        },
+                        readOnly = true
+                    )
+                    
+                    // Date Selection Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Departure Date
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Departure Date",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            
+                            OutlinedTextField(
+                                value = "2 Jun 2025",
+                                onValueChange = { },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                readOnly = true
+                            )
+                        }
+                        
+                        // Arrival Date
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Arrival Date",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            
+                            OutlinedTextField(
+                                value = "2 Jun 2025",
+                                onValueChange = { },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                readOnly = true
+                            )
+                        }
+                    }
+                    
+                    // Approval Chain
+                    Text(
+                        text = "Approval Chain",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    // Reporting Manager
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Reporting Manager:",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "Brindha Arvindaraj",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Submit Button
+                    Button(
+                        onClick = { /* Submit travel request */ },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryRed
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Submit Travel Request",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Travel History Button
+                    Button(
+                        onClick = { controller.navigateToTravelHistory() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "View Travel History",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

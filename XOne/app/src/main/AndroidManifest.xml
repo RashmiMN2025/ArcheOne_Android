@@ -147,6 +147,22 @@
             android:exported="false"
             android:theme="@style/Theme.XOne" />
 
+        <!-- Add TravelApproveActivity -->
+        <activity
+            android:name=".ui.activities.TravelApproveActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:label="Approve Travel Request"
+            android:theme="@style/Theme.XOne" />
+
+        <!-- Add TravelRejectActivity -->
+        <activity
+            android:name=".ui.activities.TravelRejectActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:label="Reject Travel Request"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Add TodoActivity -->
         <activity
             android:name=".TodoActivity"

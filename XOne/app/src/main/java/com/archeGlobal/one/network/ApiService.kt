@@ -10,6 +10,15 @@ import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
+import com.archeGlobal.one.model.TravelRequestSubmission
+import com.archeGlobal.one.model.TravelRequestResponse
+import com.archeGlobal.one.model.TravelHistoryRequest
+import com.archeGlobal.one.model.TravelHistoryResponse
+import com.archeGlobal.one.model.TravelApprovalRequest
+import com.archeGlobal.one.model.TravelApprovalResponse
+import com.archeGlobal.one.model.TravelApprovalActionRequest
+import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -91,6 +100,21 @@ interface ApiService {
     
     @GET("daily-event")
     suspend fun getDailyEvent(): Response<EventResponse>
+    
+    @POST("travel-request")
+    fun submitTravelRequest(@Body request: TravelRequestSubmission): Call<TravelRequestResponse>
+    
+    @POST("travel-request")
+    fun getTravelHistory(@Body request: TravelHistoryRequest): Call<TravelHistoryResponse>
+    
+    @POST("travel-request/approval-history")
+    fun getTravelApprovalHistory(@Body request: TravelApprovalRequest): Call<TravelApprovalResponse>
+    
+    @POST("travel-request/approve")
+    fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
+    
+    @POST("travel-request/reject")
+    fun rejectTravelRequest(@Body request: TravelRejectActionRequest): Call<TravelApprovalActionResponse>
 }
 
 data class FeedbackRequest(

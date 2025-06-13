@@ -366,8 +366,8 @@ class HomeController(
                 navigator.navigateToSOS(false)
             }
             "travel" -> {
-                Log.d("HomeController", "Navigating to Travel History Screen")
-                navigator.navigateToTravelExpenses()
+                Log.d("HomeController", "Navigating to Travel Screen")
+                navigator.navigateToTravel()
             }
             "sap" -> navigator.navigateToSAP()
             "ample" -> navigator.navigateToAmple()
