@@ -12,10 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.activity.ComponentActivity
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -103,19 +106,37 @@ fun TravelApproveScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
+            // Add space at the top to push everything down
+            Spacer(modifier = Modifier.height(48.dp))
+            
             // Top App Bar
             TopAppBar(
-                title = { Text("Approve Travel Request", fontFamily = GraphikFontFamily) },
+                title = { 
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Approve Travel Request",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = { controller.navigateBack() }) {
+                    val context = LocalContext.current
+                    IconButton(onClick = { 
+                        (context as? ComponentActivity)?.finish()
+                    }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = Color.White
+                backgroundColor = Color.Transparent,
+                elevation = 0.dp
             )
-            
-            // Add spacer to move content slightly down from the app bar
-            Spacer(modifier = Modifier.height(16.dp))
             
             // Main content
             Column(

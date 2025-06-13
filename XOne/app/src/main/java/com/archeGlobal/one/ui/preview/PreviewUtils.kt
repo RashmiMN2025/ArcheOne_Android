@@ -101,5 +101,9 @@ class PreviewNavigator : Navigator {
         // No-op for preview purposes
     }
 
+    override fun navigateToTravelApprovalDetails() {}
+    
+    override fun popBackStack() {
+        // No-op for preview purposes
+    }
 }
-

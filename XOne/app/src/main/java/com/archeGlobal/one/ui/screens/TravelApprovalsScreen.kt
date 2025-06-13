@@ -266,7 +266,9 @@ fun ApprovalRequestCard(
     onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = 1.dp,
         backgroundColor = Color.White

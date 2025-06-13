@@ -10,15 +10,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.activity.ComponentActivity
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import kotlinx.coroutines.delay
 
 /**
@@ -69,7 +76,15 @@ fun TravelRejectScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        WelcomeBackgroundTop,    // Light Beige/Grey
+                        WelcomeBackgroundMiddle, // Light Grey
+                        WelcomeBackgroundBottom  // Dark Grey
+                    )
+                )
+            )
     ) {
         // Loading overlay
         if (isLoading) {
@@ -92,15 +107,36 @@ fun TravelRejectScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
+            // Add space at the top to push everything down
+            Spacer(modifier = Modifier.height(48.dp))
+            
             // Top App Bar
             TopAppBar(
-                title = { Text("Reject Travel Request", fontFamily = GraphikFontFamily) },
+                title = { 
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Reject Travel Request",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = { controller.navigateBack() }) {
+                    val context = LocalContext.current
+                    IconButton(onClick = { 
+                        (context as? ComponentActivity)?.finish()
+                    }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = Color.White
+                backgroundColor = Color.Transparent,
+                elevation = 0.dp
             )
             
             // Main content

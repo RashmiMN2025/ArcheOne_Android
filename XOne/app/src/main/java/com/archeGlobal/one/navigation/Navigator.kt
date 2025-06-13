@@ -44,6 +44,7 @@ interface Navigator {
     fun navigateToTravelRequestDetail()
     fun navigateToTravelApprovals()
     fun navigateToTravelApprovalDetail()
+    fun navigateToTravelApprovalDetails()
     fun navigateToTravelApprovalConfirm()
     fun navigateToTravelApprove()
     fun navigateToTravelReject()
@@ -67,6 +68,7 @@ interface Navigator {
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?
     fun refreshCurrentScreen()
+    fun popBackStack()
     
     // Navigation method for greeting detail screen
     fun navigateToGreetingDetail(

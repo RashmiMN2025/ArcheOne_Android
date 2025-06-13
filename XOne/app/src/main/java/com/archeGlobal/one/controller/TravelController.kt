@@ -237,8 +237,16 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Navigate to the travel approval detail screen
      */
     fun navigateToTravelApprovalDetail(travelRequest: TravelRequest) {
+        // Store the selected request so the destination screen can read it
         selectedTravelRequest = travelRequest
-        navigator.navigateToTravelApprovalDetail()
+
+        // If the request is already processed (approved / rejected) just show the read-only
+        // details page that we reuse from travel history. Otherwise open the approval page
+        if (travelRequest.status == TravelStatus.APPROVED || travelRequest.status == TravelStatus.REJECTED) {
+            navigator.navigateToTravelApprovalDetails()
+        } else {
+            navigator.navigateToTravelApprovalDetail()
+        }
     }
     
     /**
@@ -312,9 +320,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
     fun navigateBack() {
         // Reset approval action state when navigating back
         resetApprovalActionState()
-        // Navigate to travel approvals screen instead of trying to use popBackStack
-        // This ensures we go back to the approvals list after an action
-        navigator.navigateToTravelApprovals()
+        // Use popBackStack to go back, just like the back swipe gesture
+        navigator.popBackStack()
     }
     
     /**
