@@ -131,10 +131,6 @@ class OtpVerificationController(
                         
                         // Save all user data through the centralized UserDataManager
                         userDataManager.saveUserDataFromResponse(responseBody, token)
-
-                        // --- ADD THESE LINES: ---
-                        userDataManager.setIsLoggedIn(true)
-                        userDataManager.setHasLoggedIn(true)
                         
                         Log.d("LoginProcess", "Login successful")
                         callback("Login successful", false)
@@ -146,7 +142,6 @@ class OtpVerificationController(
                                 val canUse = biometricHelper.canUseBiometric()
                                 val isEnabled = biometricHelper.isBiometricEnabled()
                                 if (canUse && !isEnabled) {
-                                    showBiometricSetupDialog(email, mobile, employeeId, token)
                                     navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
                                 } else {
                                     navigator.navigateToHome(fromOtp)
@@ -170,7 +165,7 @@ class OtpVerificationController(
         }
     }
 
-    private fun showBiometricSetupDialog(email: String, mobile: String, employeeId: String, token: String) {
+    private fun showBiometricSetupDialog(email: String, mobile: String, employeeId: String) {
         Log.d("BiometricSetup", "Starting showBiometricSetupDialog")
         
         val activity = context as? FragmentActivity
@@ -192,7 +187,7 @@ class OtpVerificationController(
                         subtitle = "Verify your fingerprint to enable quick login",
                         onSuccess = {
                             Log.d("BiometricSetup", "Biometric setup successful")
-                            biometricHelper.saveCredentials(email, mobile, employeeId, token)
+                            biometricHelper.saveCredentials(email, mobile, employeeId)
                             Toast.makeText(context, "Fingerprint login enabled successfully!", Toast.LENGTH_SHORT).show()
                         },
                         onError = { error ->

@@ -49,12 +49,13 @@ class BiometricHelper(private val context: Context) {
         biometricPrompt.authenticate(promptInfo)
     }
 
-    fun saveCredentials(email: String, mobile: String, employeeId: String, token: String) {
-        preferencesManager.saveBiometricCredentials(email, mobile, employeeId, token)
+    fun saveCredentials(email: String, mobile: String, employeeId: String) {
+        preferencesManager.saveBiometricCredentials(email, mobile, employeeId)
+        preferencesManager.setBiometricEnabled(true)
     }
 
-    fun getStoredCredentialsWithToken(): Quad<String, String, String, String>? {
-        return preferencesManager.getBiometricCredentialsWithToken()
+    fun getStoredCredentials(): Triple<String, String, String>? {
+        return preferencesManager.getBiometricCredentials()
     }
 
     fun isBiometricEnabled(): Boolean {

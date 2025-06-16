@@ -323,7 +323,7 @@ class HomeController(
                 navigate("service_not_available?serviceName=Goal Setting/KPI")
             }
             "medical" -> navigator.navigateToMedical()
-            "finance" -> navigator.navigateToFinance()
+            "mypay" -> navigator.navigateToFinance()
             "zinghr" -> {
                 Log.d("HomeController", "Navigating to ZingHR")
                 navigator.navigateToZingHR()

@@ -833,7 +833,7 @@ private fun formatServiceTitle(title: String): String {
         "Admin" -> "Admin" 
         "Medical" -> "Medical"
         "ID" -> "ID"
-        "Finance" -> "Finance"
+        "MyPay" -> "MyPay"
         "SAP" -> "SAP"
         "Ample" -> "Ample"
         "SOS" -> "SOS"
@@ -967,7 +967,7 @@ private fun AppIcon(
         when (title) {
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
-            "Finance", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
+            "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
             "Locations", "Travel", "Policy", "New Onboarding", "Profile", "Profile Connect", "Checkmate" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
@@ -992,7 +992,7 @@ private fun AppIcon(
                                 "timesheet" -> R.drawable.timesheet
                                 "goalsetting/kpi", "goal" -> R.drawable.goals
                                 "admin" -> R.drawable.admin
-                                "finance" -> R.drawable.finance
+                                "mypay" -> R.drawable.finance
                                 "sap" -> R.drawable.sap
                                 "ample" -> R.drawable.ample
                                 "sos" -> R.drawable.sos

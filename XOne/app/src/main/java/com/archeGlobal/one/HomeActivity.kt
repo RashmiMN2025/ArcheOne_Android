@@ -128,12 +128,13 @@ class HomeActivity : AppCompatActivity() {
                         .setTitle("Enable Fingerprint Login")
                         .setMessage("Would you like to use fingerprint for faster login next time?")
                         .setPositiveButton("Yes") { dialog: DialogInterface, _: Int ->
+                            val token = userDataManager.getAuthToken() ?: ""
                             biometricHelper.showBiometricPrompt(
                                 activity = this,
                                 title = "Setup Fingerprint",
                                 subtitle = "Verify your fingerprint to enable quick login",
                                 onSuccess = {
-                                    biometricHelper.saveCredentials(email, mobile, employeeId)
+                                    biometricHelper.saveCredentials(email, mobile, employeeId, token)
                                     Toast.makeText(this, "Fingerprint login enabled successfully!", Toast.LENGTH_SHORT).show()
                                 },
                                 onError = { error ->

@@ -73,6 +73,10 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     val showBiometricButton = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
     var showFingerprint by remember { mutableStateOf(showBiometricButton && !firstTimeLogin) }
 
+    var showPolicyWebView by remember { mutableStateOf(false) }
+    var policyUrl by remember { mutableStateOf("") }
+    var policyTitle by remember { mutableStateOf("") }
+
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
@@ -444,15 +448,26 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                             biometricHelper.showBiometricPrompt(
                                 activity = activity,
                                 onSuccess = {
-                                    biometricHelper.getStoredCredentials()?.let { (savedEmail, savedMobile, savedEmployeeId) ->
+                                    biometricHelper.getStoredCredentialsWithToken()?.let { (savedEmail, savedMobile, savedEmployeeId, savedToken) ->
                                         isLoading = true
-                                        val otpController = OtpVerificationController(navigator, context)
-                                        otpController.verifyWithBiometric(savedEmail, savedMobile, savedEmployeeId) { message: String, isError: Boolean ->
+                                        controller.loginWithToken(
+                                            token = savedToken,
+                                            email = savedEmail,
+                                            mobile = savedMobile,
+                                            employeeId = savedEmployeeId
+                                        ) { message, isError ->
                                             isLoading = false
-                                            if (isError) {
+                                            if (!isError) {
+                                                UserDataManager.getInstance(context).setHasLoggedIn(true)
+                                                setFirstTimeLogin(context, false)
+                                                firstTimeLogin = false
+                                                navigator.navigateToHome(false)
+                                            } else {
                                                 errorMessage = message
                                             }
                                         }
+                                    } ?: run {
+                                        errorMessage = "No biometric credentials found"
                                     }
                                 },
                                 onError = { error ->
@@ -617,7 +632,11 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
                     .padding(top = 16.dp)
-                    .clickable { /* Handle Privacy Policy click */ },
+                    .clickable {
+                        policyUrl = "https://arche.global/arche-one-privacy-policy"
+                        policyTitle = "Privacy Policy"
+                        showPolicyWebView = true
+                    },
                 textDecoration = TextDecoration.Underline
             )
 
@@ -636,7 +655,11 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { /* Handle Anti-Bribery click */ }
+                        .clickable {
+                            policyUrl = "https://arche.global/anti-bribery-and-anti-corruption-policy"
+                            policyTitle = "Anti-Bribery Policy"
+                            showPolicyWebView = true
+                        }
                         .padding(end = 8.dp),
                     textDecoration = TextDecoration.Underline,
                     maxLines = 2,
@@ -659,7 +682,11 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { /* Handle Code of Conduct click */ }
+                        .clickable {
+                            policyUrl = "https://arche.global/employee-code-of-conduct"
+                            policyTitle = "Employee Code of Conduct"
+                            showPolicyWebView = true
+                        }
                         .padding(start = 10.dp),
                     textDecoration = TextDecoration.Underline,
                     maxLines = 2,
@@ -667,58 +694,82 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     textAlign = TextAlign.Center
                 )
             }
-
         }
 
-
-    // Reset Password Button at the bottom
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .height(70.dp)
-            .align(Alignment.CenterHorizontally)
-            .clickable {
-                navigator.navigateToPasswordReset()
-            },
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(vertical = 10.dp, horizontal = 20.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_key),
-                contentDescription = "Reset Password Icon",
-                tint = Color.Black,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Reset Password",
-                    color = Color.Black,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = GraphikFontFamily
+        // Policy WebView Dialog
+        if (showPolicyWebView) {
+            Dialog(
+                onDismissRequest = { showPolicyWebView = false },
+                properties = DialogProperties(
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true,
+                    usePlatformDefaultWidth = false
                 )
-                Text(
-                    text = "For Outlook, and more",
-                    color = Color.Gray,
-                    fontSize = 12.sp,
-                    fontFamily = GraphikFontFamily
-                )
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                ) {
+                    MicrosoftLoginWebView(
+                        url = policyUrl,
+                        onReceiveAuth = { /* Not needed for policy pages */ },
+                        onClose = { showPolicyWebView = false }
+                    )
+                }
             }
         }
-    }
+
+
+        // Reset Password Button at the bottom
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .height(70.dp)
+                .align(Alignment.CenterHorizontally)
+                .clickable {
+                    navigator.navigateToPasswordReset()
+                },
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(vertical = 10.dp, horizontal = 20.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_key),
+                    contentDescription = "Reset Password Icon",
+                    tint = Color.Black,
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Reset Password",
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily
+                    )
+                    Text(
+                        text = "For Outlook, and more",
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        fontFamily = GraphikFontFamily
+                    )
+                }
+            }
+        }
 
         // Loading indicator
         if (isLoading) {
             UniversalLoader(isLoading = true)
-        }
-        
+        }        
     }
 }
