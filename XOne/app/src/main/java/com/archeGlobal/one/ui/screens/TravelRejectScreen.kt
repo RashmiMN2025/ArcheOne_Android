@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.clickable
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -172,17 +173,20 @@ fun TravelRejectScreen(
                                 fontSize = 16.sp
                             )
                             
+                            val statusColor = Color(0xFFFFC107) // Amber/Yellow for pending
+                            
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFFFFD700)) // Yellow for pending
-                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    .background(statusColor.copy(alpha = 0.2f))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Text(
                                     "Pending",
-                                    color = Color.Black,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
+                                    color = statusColor,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily
                                 )
                             }
                         }
@@ -243,27 +247,26 @@ fun TravelRejectScreen(
                             )
                         }
                         
-                        // Submit Rejection button
-                        Button(
-                            onClick = { 
-                                if (remarks.isBlank()) {
-                                    errorMessage = "Please provide a reason for rejection"
-                                } else {
-                                    controller.rejectTravelRequest(selectedRequest.id, remarks)
-                                }
-                            },
+                        // Submit Rejection button (styled same as Reject button in travel approvals page)
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = PrimaryRed, // Red color
-                                disabledBackgroundColor = Color.Gray
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            enabled = !isLoading
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = PrimaryRed) // Red color matching reject button
+                                .padding(vertical = 12.dp)
+                                .clickable(enabled = !isLoading) { 
+                                    if (!isLoading) {
+                                        if (remarks.isBlank()) {
+                                            errorMessage = "Please provide a reason for rejection"
+                                        } else {
+                                            controller.rejectTravelRequest(selectedRequest.id, remarks)
+                                        }
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "Submit Rejection",
+                                text = "Submit Rejection",
                                 color = Color.White,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,

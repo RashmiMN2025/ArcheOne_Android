@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -170,32 +171,24 @@ fun TravelScreen(
                                     fontFamily = GraphikFontFamily
                                 )
                                 
-                                if (controller.hasPendingApprovals()) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .background(Color.White, CircleShape)
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Default.Notifications,
-                                                contentDescription = "Pending approvals",
-                                                tint = Color(0xFF4CAF50),
-                                                modifier = Modifier.size(14.dp)
-                                            )
-                                            
-                                            val count = controller.pendingApprovalCount
-                                            if (count > 0) {
-                                                Text(
-                                                    text = if (count > 99) "99+" else count.toString(),
-                                                    color = Color(0xFF4CAF50),
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontFamily = GraphikFontFamily
-                                                )
-                                            }
-                                        }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Pending approvals",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    
+                                    val count = controller.pendingApprovalCount
+                                    if (count > 0) {
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Text(
+                                            text = if (count > 99) "99+" else count.toString(),
+                                            color = Color.White,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = GraphikFontFamily
+                                        )
                                     }
                                 }
                             }
@@ -551,6 +544,275 @@ fun TravelScreen(
                                 }
                             }
                         }
+                    }
+                    
+                    // Flight Time Preference - only show if mode of transport is Flight
+                    if (controller.modeOfTransport == "Flight") {
+                        // Note about flight booking
+                        Text(
+                            text = "Note: Flight bookings must be made 1 week prior to departure.",
+                            fontSize = 12.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = PrimaryRed,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        
+                        // Flight Time Preference Dropdown
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = controller.flightTimePreference,
+                                onValueChange = { },
+                                label = { Text("Flight Time Preference") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp)
+                                    .clickable(onClick = { controller.toggleFlightTimeDropdown() }),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Gray,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.clickable { controller.toggleFlightTimeDropdown() }
+                                    )
+                                },
+                                readOnly = true
+                            )
+                            
+                            DropdownMenu(
+                                expanded = controller.isFlightTimeDropdownExpanded,
+                                onDismissRequest = { controller.dismissFlightTimeDropdown() },
+                                modifier = Modifier
+                                    .width(with(LocalDensity.current) { 300.dp })
+                                    .background(Color(0xCC000000)) // 80% opacity black background
+                            ) {
+                                controller.flightTimeOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option, color = Color.White) },
+                                        onClick = { controller.updateFlightTimePreference(option) }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Seat Preference Dropdown
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = controller.seatPreference,
+                                onValueChange = { },
+                                label = { Text("Seat Preference") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp)
+                                    .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Gray,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.clickable { controller.toggleSeatPrefDropdown() }
+                                    )
+                                },
+                                readOnly = true
+                            )
+                            
+                            DropdownMenu(
+                                expanded = controller.isSeatPrefDropdownExpanded,
+                                onDismissRequest = { controller.dismissSeatPrefDropdown() },
+                                modifier = Modifier
+                                    .width(with(LocalDensity.current) { 300.dp })
+                                    .background(Color(0xCC000000)) // 80% opacity black background
+                            ) {
+                                controller.seatPreferenceOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option, color = Color.White) },
+                                        onClick = { controller.updateSeatPreference(option) }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Frequent Flyer Number Button
+                        Button(
+                            onClick = { controller.showFrequentFlyerNumberDialog() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = Color.Black
+                            ),
+                            border = BorderStroke(1.dp, Color.LightGray),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Enter Frequent Flyer Number",
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        
+                        // Frequent Flyer Number Dialog
+                        if (controller.showFrequentFlyerDialog) {
+                            androidx.compose.material.AlertDialog(
+                                onDismissRequest = { controller.dismissFrequentFlyerNumberDialog() },
+                                title = { Text(text = "Enter Frequent Flyer Number") },
+                                text = {
+                                    OutlinedTextField(
+                                        value = controller.frequentFlyerNumber,
+                                        onValueChange = { controller.updateFrequentFlyerNumber(it) },
+                                        label = { Text("Frequent Flyer Number") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color.LightGray,
+                                            focusedBorderColor = Color.Gray,
+                                            cursorColor = Color.Gray,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedContainerColor = Color.White,
+                                            unfocusedTextColor = Color.Black,
+                                            focusedTextColor = Color.Black
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = { controller.dismissFrequentFlyerNumberDialog() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                                    ) {
+                                        Text("Submit")
+                                    }
+                                },
+                                backgroundColor = Color.White,
+                                contentColor = Color.Black
+                            )
+                        }
+                    }
+                    
+                    // Meal Preference Toggle and Dropdown
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Select Meal Preference",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black
+                        )
+                        
+                        // Toggle switch
+                        androidx.compose.material.Switch(
+                            checked = controller.mealPreferenceEnabled,
+                            onCheckedChange = { controller.toggleMealPreference(it) },
+                            colors = androidx.compose.material.SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF4CAF50),
+                                checkedTrackColor = Color(0xFFADE1B6),
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.LightGray
+                            )
+                        )
+                    }
+                    
+                    // Show meal preference dropdown if enabled
+                    if (controller.mealPreferenceEnabled) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = controller.mealPreference,
+                                onValueChange = { },
+                                label = { Text("Meal Preference") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp)
+                                    .clickable(onClick = { controller.toggleMealPrefDropdown() }),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Gray,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.clickable { controller.toggleMealPrefDropdown() }
+                                    )
+                                },
+                                readOnly = true
+                            )
+                            
+                            DropdownMenu(
+                                expanded = controller.isMealPrefDropdownExpanded,
+                                onDismissRequest = { controller.dismissMealPrefDropdown() },
+                                modifier = Modifier
+                                    .width(with(LocalDensity.current) { 300.dp })
+                                    .background(Color.White)
+                            ) {
+                                controller.mealPreferenceOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option) },
+                                        onClick = { controller.updateMealPreference(option) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Stay Required Toggle
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Stay Required",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black
+                        )
+                        
+                        // Toggle switch
+                        androidx.compose.material.Switch(
+                            checked = controller.stayRequired,
+                            onCheckedChange = { controller.toggleStayRequired(it) },
+                            colors = androidx.compose.material.SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF4CAF50),
+                                checkedTrackColor = Color(0xFFADE1B6),
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.LightGray
+                            )
+                        )
                     }
                     
                     // Approval Chain

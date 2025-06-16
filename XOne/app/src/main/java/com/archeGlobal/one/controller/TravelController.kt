@@ -114,6 +114,44 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
     var arrivalDate by mutableStateOf("2 Jun 2025")
         private set
+        
+    // Flight time preference options
+    val flightTimeOptions = listOf(
+        "Early Morning (00:00-06:00)", 
+        "Morning (06:00-12:00)", 
+        "Mid Day (12:00-18:00)", 
+        "Night (18:00-23:00)"
+    )
+    var flightTimePreference by mutableStateOf("")
+        private set
+    var isFlightTimeDropdownExpanded by mutableStateOf(false)
+        private set
+        
+    // Seat preference options
+    val seatPreferenceOptions = listOf("Aisle", "Window", "Any")
+    var seatPreference by mutableStateOf("")
+        private set
+    var isSeatPrefDropdownExpanded by mutableStateOf(false)
+        private set
+        
+    // Meal preference
+    var mealPreferenceEnabled by mutableStateOf(false)
+        private set
+    val mealPreferenceOptions = listOf("Veg", "Non-Veg", "Jain")
+    var mealPreference by mutableStateOf("")
+        private set
+    var isMealPrefDropdownExpanded by mutableStateOf(false)
+        private set
+        
+    // Stay required
+    var stayRequired by mutableStateOf(false)
+        private set
+        
+    // Frequent flyer number
+    var frequentFlyerNumber by mutableStateOf("0")
+        private set
+    var showFrequentFlyerDialog by mutableStateOf(false)
+        private set
     
     init {
         loadEmployeeDetails()
@@ -614,6 +652,114 @@ class TravelController(private val navigator: Navigator, private val context: Co
         arrivalDate = value
     }
     
+    /**
+     * Update flight time preference field
+     */
+    fun updateFlightTimePreference(value: String) {
+        flightTimePreference = value
+        // Close dropdown after selection
+        isFlightTimeDropdownExpanded = false
+    }
+    
+    /**
+     * Toggle the flight time dropdown expanded state
+     */
+    fun toggleFlightTimeDropdown() {
+        isFlightTimeDropdownExpanded = !isFlightTimeDropdownExpanded
+    }
+    
+    /**
+     * Dismiss the flight time dropdown
+     */
+    fun dismissFlightTimeDropdown() {
+        isFlightTimeDropdownExpanded = false
+    }
+    
+    /**
+     * Update seat preference field
+     */
+    fun updateSeatPreference(value: String) {
+        seatPreference = value
+        // Close dropdown after selection
+        isSeatPrefDropdownExpanded = false
+    }
+    
+    /**
+     * Toggle the seat preference dropdown expanded state
+     */
+    fun toggleSeatPrefDropdown() {
+        isSeatPrefDropdownExpanded = !isSeatPrefDropdownExpanded
+    }
+    
+    /**
+     * Dismiss the seat preference dropdown
+     */
+    fun dismissSeatPrefDropdown() {
+        isSeatPrefDropdownExpanded = false
+    }
+    
+    /**
+     * Toggle meal preference enabled state
+     */
+    fun toggleMealPreference(enabled: Boolean) {
+        mealPreferenceEnabled = enabled
+        // If disabled, clear the meal preference
+        if (!enabled) {
+            mealPreference = ""
+        }
+    }
+    
+    /**
+     * Update meal preference field
+     */
+    fun updateMealPreference(value: String) {
+        mealPreference = value
+        // Close dropdown after selection
+        isMealPrefDropdownExpanded = false
+    }
+    
+    /**
+     * Toggle the meal preference dropdown expanded state
+     */
+    fun toggleMealPrefDropdown() {
+        isMealPrefDropdownExpanded = !isMealPrefDropdownExpanded
+    }
+    
+    /**
+     * Dismiss the meal preference dropdown
+     */
+    fun dismissMealPrefDropdown() {
+        isMealPrefDropdownExpanded = false
+    }
+    
+    /**
+     * Toggle stay required state
+     */
+    fun toggleStayRequired(required: Boolean) {
+        stayRequired = required
+    }
+    
+    /**
+     * Update frequent flyer number
+     */
+    fun updateFrequentFlyerNumber(value: String) {
+        frequentFlyerNumber = value
+    }
+    
+    /**
+     * Show frequent flyer number dialog
+     */
+    fun showFrequentFlyerNumberDialog() {
+        showFrequentFlyerDialog = true
+    }
+    
+    /**
+     * Dismiss frequent flyer number dialog
+     */
+    fun dismissFrequentFlyerNumberDialog() {
+        showFrequentFlyerDialog = false
+    }
+    
     // State for travel request submission status
     var isSubmitting by mutableStateOf(false)
     var submissionError by mutableStateOf<String?>(null)
@@ -639,6 +785,15 @@ class TravelController(private val navigator: Navigator, private val context: Co
         isSubmitting = true
         submissionError = null
         
+        // Extract the flight time value without the time range
+        val flightTimeValue = when {
+            flightTimePreference.contains("Early Morning") -> "Early Morning"
+            flightTimePreference.contains("Morning") -> "Morning"
+            flightTimePreference.contains("Mid Day") -> "Mid Day"
+            flightTimePreference.contains("Night") -> "Night"
+            else -> flightTimePreference
+        }
+        
         // Create travel request submission object
         val travelRequest = TravelRequestSubmission(
             employeeId = employeeId,
@@ -652,7 +807,12 @@ class TravelController(private val navigator: Navigator, private val context: Co
             departureDate = convertToApiDateFormat(departureDate),
             arrivalDate = convertToApiDateFormat(arrivalDate),
             reportingManagerName = reportingManagerName,
-            reportingManagerEmail = reportingManagerEmail
+            reportingManagerEmail = reportingManagerEmail,
+            flightTime = flightTimeValue,
+            seatPreference = seatPreference,
+            mealPreference = if (mealPreferenceEnabled) mealPreference else "",
+            stayRequired = stayRequired,
+            frequentFlyerNumber = frequentFlyerNumber
         )
         
         // Make API call
