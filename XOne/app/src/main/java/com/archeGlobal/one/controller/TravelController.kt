@@ -72,6 +72,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
     // Travel approval action state
     var approvalActionState by mutableStateOf<TravelApprovalActionState>(TravelApprovalActionState.Idle)
         private set
+        
+    // Count of pending travel approvals
+    var pendingApprovalCount by mutableStateOf(0)
+        private set
     
     // Employee data for travel form
     var employeeName by mutableStateOf("")
@@ -332,6 +336,14 @@ class TravelController(private val navigator: Navigator, private val context: Co
     }
     
     /**
+     * Check if there are any pending travel approvals
+     * @return True if there are pending approvals, false otherwise
+     */
+    fun hasPendingApprovals(): Boolean {
+        return pendingApprovalCount > 0
+    }
+    
+    /**
      * Load travel approval requests from the API
      */
     fun loadTravelApprovals() {
@@ -358,6 +370,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
                         // Convert API response to UI models
                         val approvalRequests = approvalResponse.approvalHistory.map { it.toTravelRequest() }
                         travelApprovalsState = TravelApprovalsState.Success(approvalRequests)
+                        
+                        // Update pending approvals count
+                        pendingApprovalCount = approvalRequests.count { it.status == TravelStatus.PENDING }
                     } else {
                         travelApprovalsState = TravelApprovalsState.Error("Failed to load approval requests")
                     }

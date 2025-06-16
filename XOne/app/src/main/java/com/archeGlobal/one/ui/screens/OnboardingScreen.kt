@@ -7,11 +7,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -75,7 +78,8 @@ fun OnboardingScreen(
         // Pager for onboarding screens
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = false // Disable swipe gesture
         ) { page ->
             OnboardingPage(
                 page = pages[page],
@@ -103,31 +107,33 @@ fun OnboardingScreen(
             }
         }
 
-        // Next button - aligned with dots
+        // Next button - adjusted position
         AnimatedVisibility(
             visible = currentPage < pages.size - 1,
             enter = fadeIn(animationSpec = tween(300)),
             exit = fadeOut(animationSpec = tween(300)),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 24.dp, bottom = 60.dp) // Aligned with dots' bottom padding
+                .padding(end = 24.dp, bottom = 50.dp) // Moved down slightly from dots
         ) {
-            IconButton(
-                onClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(currentPage + 1)
-                    }
-                },
+            // Custom implementation with white circle and arrow
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(40.dp) // Smaller circle (was 48dp)
+                    .size(32.dp) // Further increased circle size
                     .clip(CircleShape)
                     .background(Color.White)
+                    .clickable {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(currentPage + 1)
+                        }
+                    }
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.ArrowForward, // Using Material icon for better arrow
+                    imageVector = androidx.compose.material.icons.Icons.Default.ArrowForward,
                     contentDescription = "Next",
                     tint = Color.Black,
-                    modifier = Modifier.size(20.dp) // Smaller icon
+                    modifier = Modifier.size(22.dp) // Further increased arrow size
                 )
             }
         }

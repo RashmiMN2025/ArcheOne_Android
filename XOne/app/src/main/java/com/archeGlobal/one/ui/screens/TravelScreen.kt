@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.platform.LocalDensity
@@ -142,22 +144,61 @@ fun TravelScreen(
                             fontFamily = GraphikFontFamily
                         )
                         
+                        // Load travel approvals when the screen is shown to get the latest count
+                        LaunchedEffect(Unit) {
+                            controller.loadTravelApprovals()
+                        }
+                        
                         Box(
                             modifier = Modifier
                                 .background(
-                                    color = PrimaryRed,
+                                    color = if (controller.hasPendingApprovals()) Color(0xFF4CAF50) else PrimaryRed,
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .clickable { controller.navigateToTravelApprovals() }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text(
-                                text = "Approval",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Approval",
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily
+                                )
+                                
+                                if (controller.hasPendingApprovals()) {
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .background(Color.White, CircleShape)
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Notifications,
+                                                contentDescription = "Pending approvals",
+                                                tint = Color(0xFF4CAF50),
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            
+                                            val count = controller.pendingApprovalCount
+                                            if (count > 0) {
+                                                Text(
+                                                    text = if (count > 99) "99+" else count.toString(),
+                                                    color = Color(0xFF4CAF50),
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     

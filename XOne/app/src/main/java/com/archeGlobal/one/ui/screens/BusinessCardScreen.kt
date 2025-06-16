@@ -6,6 +6,7 @@ import android.view.View
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -48,6 +49,15 @@ import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.network.Office
 import com.archeGlobal.one.network.RegionalOffice
 import android.widget.Toast
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.Font
@@ -491,7 +501,7 @@ fun BusinessCardScreen(
                 }
 
                 Button(
-                    onClick = { controller.onEditLocation() },
+                    onClick = { controller.onEditCard() },
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp),
@@ -503,7 +513,7 @@ fun BusinessCardScreen(
                     border = BorderStroke(1.dp, Color.Black)
                 ) {
                     Text(
-                        "Edit Location",
+                        "Edit Card",
                         style = MaterialTheme.typography.bodyLarge,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -516,82 +526,171 @@ fun BusinessCardScreen(
         }
     }
 
-    // Show Edit Location Dialog
-    if (controller.showEditLocationDialog.value) {
+    // Show Edit Card Dialog
+    if (controller.showEditCardDialog.value) {
+        var newPhone by remember(businessCard.phone) { mutableStateOf(businessCard.phone) }
+        
+        // Define keywords for designation check
+        val keywords = listOf("sales", "lead", "practice", "head", "ceo", "managing", "director", "management", "manager", "senior")
+        
+        // Check if user has permission to edit phone number based on designation
+        val canEditPhone = businessCard.designation.lowercase().split(" ").any { word ->
+            keywords.any { keyword -> word.contains(keyword) }
+        }
+        
         AlertDialog(
-            onDismissRequest = { controller.showEditLocationDialog.value = false },
+            onDismissRequest = { controller.showEditCardDialog.value = false },
             containerColor = Color(0xFFF5F5F5),
             title = {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Edit Location", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text(text = "Edit Card", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 }
             },
             text = {
-                var isFocused by remember { mutableStateOf(false) }
-
-                OutlinedTextField(
-                    value = newLocation,
-                    onValueChange = { newLocation = it },
-                    placeholder = { Text("Enter new location") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        cursorColor = Color.Black,
-                        focusedIndicatorColor = Color.Black,
-                        unfocusedIndicatorColor = Color.Black,
-                        focusedPlaceholderColor = Color.Gray,
-                        unfocusedPlaceholderColor = Color.Gray
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Location field with dropdown
+                    val offices = OtpVerificationController.getOfficesData()
+                    var expanded by remember { mutableStateOf(false) }
+                    var selectedLocation by remember { mutableStateOf(businessCard.location) }
+                    
+                    // Get all available locations
+                    val locations = mutableListOf<String>()
+                    offices?.forEach { office ->
+                        locations.add(office.country)
+                        office.regionaloffice?.forEach { regional ->
+                            locations.add(regional.region)
+                        }
+                    }
+                    
+                    // Add "Other" option
+                    locations.add("Other")
+                    
+                    Text(
+                        text = "Location",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
-                )
+                    
+                    Box {
+                        OutlinedTextField(
+                            value = selectedLocation,
+                            onValueChange = { 
+                                selectedLocation = it
+                                newLocation = it
+                            },
+                            readOnly = expanded,
+                            trailingIcon = {
+                                IconButton(onClick = { expanded = !expanded }) {
+                                    Icon(
+                                        imageVector = if (expanded) androidx.compose.material.icons.Icons.Default.KeyboardArrowUp 
+                                                     else androidx.compose.material.icons.Icons.Default.KeyboardArrowDown,
+                                        contentDescription = if (expanded) "Collapse" else "Expand"
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { expanded = true },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                cursorColor = Color.Black,
+                                focusedIndicatorColor = Color.Black,
+                                unfocusedIndicatorColor = Color.Black
+                            ),
+                            singleLine = true
+                        )
+                        
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .fillMaxWidth(0.9f),
+                            // Override the container color to make it transparent black
+                            properties = PopupProperties(focusable = true),
+                            containerColor = Color(0xCC000000) // 80% transparent black
+                        ) {
+                            locations.forEach { location ->
+                                DropdownMenuItem(
+                                    text = { Text(text = location, color = Color.White) },
+                                    onClick = {
+                                        if (location == "Other") {
+                                            selectedLocation = "Bangalore"
+                                            newLocation = "Bangalore"
+                                            Toast.makeText(
+                                                context,
+                                                "Using default location: Bangalore",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        } else {
+                                            selectedLocation = location
+                                            newLocation = location
+                                        }
+                                        expanded = false
+                                    },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = Color.White,
+                                        leadingIconColor = Color.White,
+                                        trailingIconColor = Color.White,
+                                        disabledTextColor = Color.White.copy(alpha = 0.5f),
+                                        disabledLeadingIconColor = Color.White.copy(alpha = 0.5f),
+                                        disabledTrailingIconColor = Color.White.copy(alpha = 0.5f)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Only show phone number field if user has permission
+                    if (canEditPhone) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Phone number field
+                        Text(
+                            text = "Phone Number",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        
+                        OutlinedTextField(
+                            value = newPhone,
+                            onValueChange = { newPhone = it },
+                            placeholder = { Text("Enter phone number") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                cursorColor = Color.Black,
+                                focusedIndicatorColor = Color.Black,
+                                unfocusedIndicatorColor = Color.Black,
+                                focusedPlaceholderColor = Color.Gray,
+                                unfocusedPlaceholderColor = Color.Gray
+                            )
+                        )
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
-                    onClick = {                        if (newLocation.isNotEmpty()) {
-                            val trimmedLocation = newLocation.trim()
-                            
-                            // Handle N/A case first
-                            if (trimmedLocation.equals("N/A", ignoreCase = true)) {
-                                val defaultLocation = "Bangalore"
-                                Toast.makeText(
-                                    context, 
-                                    "Using $defaultLocation instead of N/A",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                controller.onLocationUpdated(defaultLocation)
-                            } else {
-                                val offices = OtpVerificationController.getOfficesData()
-                                
-                                // Validate against office locations
-                                val isValid = offices?.any { office ->
-                                    office.country.equals(trimmedLocation, true) || 
-                                    office.regionaloffice?.any { regional ->
-                                        regional.region.contains(trimmedLocation, true)
-                                    } == true
-                                } ?: false
-
-                                if (!isValid) {
-                                    // Set default to Bangalore and show toast
-                                    val defaultLocation = "Bangalore"
-                                    Toast.makeText(
-                                        context, 
-                                        "Invalid location, defaulting to $defaultLocation",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    controller.onLocationUpdated(defaultLocation)
-                                } else {
-                                    controller.onLocationUpdated(trimmedLocation)
-                                }
-                            }
-                            newLocation = ""
+                    onClick = {
+                        // If user can't edit phone, pass the existing phone number
+                        if (canEditPhone) {
+                            controller.onCardUpdated(newLocation, newPhone)
+                        } else {
+                            controller.onCardUpdated(newLocation, businessCard.phone)
                         }
-                        controller.showEditLocationDialog.value = false
                     }
                 ) {
                     Text("Save", color = Color(0xFFDD3825))
@@ -599,7 +698,7 @@ fun BusinessCardScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { controller.showEditLocationDialog.value = false }
+                    onClick = { controller.showEditCardDialog.value = false }
                 ) {
                     Text("Cancel", color = Color.Gray)
                 }
