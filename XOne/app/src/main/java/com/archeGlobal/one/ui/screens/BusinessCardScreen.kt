@@ -612,14 +612,22 @@ fun BusinessCardScreen(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
                             modifier = Modifier
-                                .fillMaxWidth(0.9f),
+                                .width(240.dp)
+                                .heightIn(max = 350.dp),
                             // Override the container color to make it transparent black
                             properties = PopupProperties(focusable = true),
                             containerColor = Color(0xCC000000) // 80% transparent black
                         ) {
                             locations.forEach { location ->
                                 DropdownMenuItem(
-                                    text = { Text(text = location, color = Color.White) },
+                                    text = { 
+                                        Text(
+                                            text = location, 
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            modifier = Modifier.padding(vertical = 0.dp)
+                                        ) 
+                                    },
                                     onClick = {
                                         if (location == "Other") {
                                             selectedLocation = "Bangalore"
@@ -642,7 +650,8 @@ fun BusinessCardScreen(
                                         disabledTextColor = Color.White.copy(alpha = 0.5f),
                                         disabledLeadingIconColor = Color.White.copy(alpha = 0.5f),
                                         disabledTrailingIconColor = Color.White.copy(alpha = 0.5f)
-                                    )
+                                    ),
+                                    modifier = Modifier.height(30.dp)
                                 )
                             }
                         }
