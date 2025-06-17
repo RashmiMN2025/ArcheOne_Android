@@ -24,6 +24,7 @@ interface Navigator {
     fun navigateToXCard()
     fun navigateToMedical()
     fun navigateToFinance()
+    fun navigateToMyPay()
     fun navigateToAdmin()
     fun navigateToHR()
     fun navigateToHolidayOptions()

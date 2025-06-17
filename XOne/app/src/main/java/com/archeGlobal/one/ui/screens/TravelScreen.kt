@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.ui.platform.LocalDensity
@@ -90,6 +91,7 @@ fun TravelScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
+                            modifier = Modifier.offset(x = 24.dp),
                             text = "Travel",
                             color = Color.Black,
                             fontSize = 20.sp,
@@ -107,8 +109,25 @@ fun TravelScreen(
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp,
                 actions = {
-                    IconButton(onClick = { controller.navigateToTravelHistory() }) {
-                        Icon(Icons.Default.DateRange, contentDescription = "Travel History", tint = Color.Black)
+                    Row(
+                        modifier = Modifier
+                            .clickable { controller.navigateToTravelHistory() }
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "History",
+                            color = PrimaryRed,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Filled.History,
+                            contentDescription = "Travel History",
+                            tint = PrimaryRed
+                        )
                     }
                 }
             )

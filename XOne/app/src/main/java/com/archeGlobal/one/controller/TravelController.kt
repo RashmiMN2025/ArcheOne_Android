@@ -11,8 +11,7 @@ import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
 import com.archeGlobal.one.model.TravelStatus
-import com.archeGlobal.one.model.TravelApprovalRequest
-import com.archeGlobal.one.model.TravelApprovalResponse
+import com.archeGlobal.one.model.TravelCombinedHistoryResponse
 import com.archeGlobal.one.model.TravelApprovalItem
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
@@ -35,6 +34,18 @@ import java.util.Locale
  * Controller for the Travel screens following MVC architecture
  */
 class TravelController(private val navigator: Navigator, private val context: Context) {
+    
+    /**
+     * Sealed class representing the state of travel history
+     */
+    sealed class TravelHistoryState {
+        object Loading : TravelHistoryState()
+        data class Success(
+            val historyItems: List<TravelRequest>,
+            val approvalItems: List<TravelRequest> = emptyList()
+        ) : TravelHistoryState()
+        data class Error(val message: String) : TravelHistoryState()
+    }
     
     /**
      * Sealed class representing the state of travel approvals
@@ -155,7 +166,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
     
     init {
         loadEmployeeDetails()
-        loadTravelHistory()
+        loadCombinedTravelHistory()
     }
     
     /**
@@ -180,7 +191,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
     }
     
     /**
-     * Load travel history for the current user
+     * Load travel history for the current user using the legacy API
+     * This is kept for backward compatibility
      */
     fun loadTravelHistory() {
         // Set to loading state
@@ -217,6 +229,53 @@ class TravelController(private val navigator: Navigator, private val context: Co
         })
     }
     
+    /**
+     * Load combined travel history for the current user
+     * This uses the new combined history API endpoint
+     */
+    fun loadCombinedTravelHistory() {
+        // Set to loading state
+        travelHistoryState = TravelHistoryState.Loading
+        
+        // Create request with employee email (new API only needs email)
+        val request = TravelHistoryRequest(
+            employeeId = employeeId,
+            employeeEmail = employeeEmail
+        )
+        
+        // Make API call to get combined travel history
+        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(object : Callback<TravelCombinedHistoryResponse> {
+            override fun onResponse(call: Call<TravelCombinedHistoryResponse>, response: Response<TravelCombinedHistoryResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val orderHistoryItems = response.body()!!.orderHistory.map { it.toTravelRequest() }
+                    val approvalHistoryItems = response.body()!!.approvalHistory.map { it.toTravelRequest() }
+                    
+                    // Update state with both order history and approval history
+                    travelHistoryState = TravelHistoryState.Success(
+                        historyItems = orderHistoryItems,
+                        approvalItems = approvalHistoryItems
+                    )
+                    
+                    Log.d("TravelController", "Loaded combined history: ${orderHistoryItems.size} orders, ${approvalHistoryItems.size} approvals")
+                } else {
+                    try {
+                        val errorBody = response.errorBody()?.string()
+                        Log.e("TravelController", "Error loading combined history: ${response.code()}, Error: $errorBody")
+                        travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+                    } catch (e: Exception) {
+                        Log.e("TravelController", "Error parsing error response", e)
+                        travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+                    }
+                }
+            }
+            
+            override fun onFailure(call: Call<TravelCombinedHistoryResponse>, t: Throwable) {
+                Log.e("TravelController", "Network error loading combined history", t)
+                travelHistoryState = TravelHistoryState.Error("Network error. Please check your connection and try again.")
+            }
+        })
+    }
+    
     // We now use real data from the API instead of mock data
     
     /**
@@ -241,8 +300,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Refreshes travel history data before navigating
      */
     fun navigateToTravelHistory() {
-        // Refresh travel history data before navigating
-        loadTravelHistory()
+        // Refresh travel history data before navigating using the new combined API
+        loadCombinedTravelHistory()
         navigator.navigateToTravelExpenses()
     }
     
@@ -253,7 +312,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
         // Find the travel request with the given ID from the current state
         val currentState = travelHistoryState
         if (currentState is TravelHistoryState.Success) {
-            val request = currentState.travelRequests.find { it.id == travelRequestId }
+            // Search in both history items and approval items
+            val request = currentState.historyItems.find { it.id == travelRequestId } 
+                ?: currentState.approvalItems.find { it.id == travelRequestId }
+                
             if (request != null) {
                 // Store the selected travel request
                 selectedTravelRequest = request
@@ -396,17 +458,17 @@ class TravelController(private val navigator: Navigator, private val context: Co
             return
         }
         
-        // Create the request body
-        val request = TravelApprovalRequest(managerEmail = userEmail)
+        // Create the request body for combined history
+        val request = TravelHistoryRequest(employeeId = "", employeeEmail = userEmail)
         
-        // Make the API call
-        RetrofitClient.apiService.getTravelApprovalHistory(request).enqueue(object : Callback<TravelApprovalResponse> {
-            override fun onResponse(call: Call<TravelApprovalResponse>, response: Response<TravelApprovalResponse>) {
+        // Make the API call using combined history endpoint
+        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(object : Callback<TravelCombinedHistoryResponse> {
+            override fun onResponse(call: Call<TravelCombinedHistoryResponse>, response: Response<TravelCombinedHistoryResponse>) {
                 if (response.isSuccessful) {
-                    val approvalResponse = response.body()
-                    if (approvalResponse != null && approvalResponse.status == 200) {
-                        // Convert API response to UI models
-                        val approvalRequests = approvalResponse.approvalHistory.map { it.toTravelRequest() }
+                    val combinedResponse = response.body()
+                    if (combinedResponse != null && combinedResponse.status == 200) {
+                        // Convert API response to UI models (only approval history)
+                        val approvalRequests = combinedResponse.approvalHistory.map { it.toTravelRequest() }
                         travelApprovalsState = TravelApprovalsState.Success(approvalRequests)
                         
                         // Update pending approvals count
@@ -419,7 +481,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 }
             }
             
-            override fun onFailure(call: Call<TravelApprovalResponse>, t: Throwable) {
+            override fun onFailure(call: Call<TravelCombinedHistoryResponse>, t: Throwable) {
                 Log.e("TravelController", "Error loading travel approvals", t)
                 travelApprovalsState = TravelApprovalsState.Error("Network error: ${t.message}")
             }
@@ -855,12 +917,20 @@ class TravelController(private val navigator: Navigator, private val context: Co
     
     /**
      * Explicitly set the selected travel request when navigating via Intent-based
-     * activities (e.g. TravelApproveActivity / TravelRejectActivity). This avoids
-     * the need for the request to exist in [travelApprovalsState] when the user
-     * launches a dedicated confirmation screen.
+     * activities (e.g. TravelApproveActivity / TravelRejectActivity).
      */
     fun selectTravelRequest(request: TravelRequest) {
         selectedTravelRequest = request
+    }
+
+
+
+    /**
+     * Handle back navigation from Travel-related screens so that the
+     * top-left back arrow behaves like the system back gesture.
+     */
+    fun onBackPressed() {
+        navigator.popBackStack()
     }
 }
 

@@ -293,8 +293,8 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Profile")
                 navigator.navigateToProfile()
             }
-            "checkmate" -> {
-                Log.d("HomeController", "Navigating to checkmate")
+            "checkmate", "zentask" -> {
+                Log.d("HomeController", "Navigating to todo screen")
                 navigator.navigateToTodo()
             }
             "id" -> navigator.navigateToID()
@@ -324,6 +324,7 @@ class HomeController(
             }
             "medical" -> navigator.navigateToMedical()
             "finance" -> navigator.navigateToFinance()
+            "mypay" -> navigator.navigateToMyPay()
             "zinghr" -> {
                 Log.d("HomeController", "Navigating to ZingHR")
                 navigator.navigateToZingHR()

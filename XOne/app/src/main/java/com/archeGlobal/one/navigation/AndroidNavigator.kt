@@ -218,7 +218,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToFinance() {
-        openWebView("https://ess.azatecon.com/login", "Finance")
+        navigate("service_not_available?serviceName=Finance")
+    }
+
+    override fun navigateToMyPay() {
+        openWebView("https://ess.azatecon.com/login", "MyPay")
     }
 
     override fun navigateToAdmin() {

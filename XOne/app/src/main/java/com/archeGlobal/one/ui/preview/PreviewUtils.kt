@@ -31,6 +31,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToXCard() {}
     override fun navigateToMedical() {}
     override fun navigateToFinance() {}
+    override fun navigateToMyPay() {}
     override fun navigateToAdmin() {}
     override fun navigateToHR() {}
     override fun navigateToHolidayOptions() {} // Added missing method
