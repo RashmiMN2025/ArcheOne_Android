@@ -309,6 +309,14 @@ class PreferencesManager(context: Context) {
         }
     }
 
+    fun setLocked(value: Boolean) {
+        sharedPreferences.edit().putBoolean("isLocked", value).apply()
+    }
+
+    fun isLocked(): Boolean {
+        return sharedPreferences.getBoolean("isLocked", false)
+    }
+
     fun saveGreetingsList(greetings: Map<String, List<String>>?) {
         if (greetings == null) {
             sharedPreferences.edit().remove(KEY_GREETINGS_DATA).apply()

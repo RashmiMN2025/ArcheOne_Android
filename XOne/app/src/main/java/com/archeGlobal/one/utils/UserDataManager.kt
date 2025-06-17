@@ -19,7 +19,7 @@ import com.google.gson.Gson
  */
 class UserDataManager private constructor(context: Context) {
     
-    private val preferencesManager = PreferencesManager(context.applicationContext)
+    val preferencesManager = PreferencesManager(context.applicationContext)
     private val gson = Gson()
     
     // In-memory cached data for quick access

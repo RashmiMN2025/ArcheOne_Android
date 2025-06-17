@@ -26,6 +26,7 @@ import com.archeGlobal.one.navigation.Navigator
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.components.UniversalLoader
 import androidx.compose.material3.Icon
@@ -45,6 +46,7 @@ import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -97,17 +99,18 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     )
                 )
             )
-            .padding(bottom = 32.dp), // Increased from 10.dp to 32.dp
-            verticalArrangement = Arrangement.SpaceBetween
+            .padding(bottom = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(90.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             // Company Logo
             CompanyLogo(modifier = Modifier.height(120.dp))
@@ -622,7 +625,6 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 )
             }
 
-
             // Privacy Policy
             Text(
                 text = "Privacy Policy",
@@ -721,7 +723,6 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 }
             }
         }
-
 
         // Reset Password Button at the bottom
         Card(

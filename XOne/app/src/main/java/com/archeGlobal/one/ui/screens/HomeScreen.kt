@@ -52,8 +52,6 @@ import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.components.EventPopup
 import coil.compose.rememberAsyncImagePainter
-import android.content.Context
-import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import com.archeGlobal.one.utils.ImageCache
@@ -61,7 +59,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.BackHandler
 import android.app.Activity
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.window.Dialog
@@ -74,8 +71,6 @@ import kotlinx.coroutines.withContext
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.FeedbackRequest
 import com.archeGlobal.one.model.EventResponse
-import com.archeGlobal.one.ui.components.EventPopup
-import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ProfileHeader(
@@ -828,7 +823,7 @@ private fun formatServiceTitle(title: String): String {
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
         "MyDocuments" -> "My\nDocuments"
-        "Checkmate" -> "Checkmate"
+        "ZenTask" -> "ZenTask"
         "My Career" -> "My\nCareer"
         "Admin" -> "Admin" 
         "Medical" -> "Medical"
@@ -968,7 +963,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
-            "Locations", "Travel", "Policy", "New Onboarding", "Profile", "Profile Connect", "Checkmate" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
+            "Locations", "Travel", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -1007,7 +1002,7 @@ private fun AppIcon(
                                 "newonboarding" -> R.drawable.new_onboarding
                                 "profile" -> R.drawable.profile
                                 "profileconnect" -> R.drawable.profile
-                                "checkmate" -> R.drawable.todo
+                                "zentask" -> R.drawable.todo
                                 "passwordreset" -> R.drawable.password_reset
                                 "knowyourog" -> R.drawable.know_your_org
                                 "archeodyssey" -> R.drawable.arche_odyssey

@@ -111,7 +111,8 @@ dependencies {
     
     // ZXing QR Code generator
     implementation(libs.core)
-    
+    implementation(libs.androidx.security.crypto)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

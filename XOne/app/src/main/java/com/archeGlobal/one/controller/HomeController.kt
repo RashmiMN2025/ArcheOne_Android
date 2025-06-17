@@ -293,8 +293,8 @@ class HomeController(
                 Log.d("HomeController", "Navigating to Profile")
                 navigator.navigateToProfile()
             }
-            "checkmate" -> {
-                Log.d("HomeController", "Navigating to checkmate")
+            "zentask" -> {
+                Log.d("HomeController", "Navigating to Zentask")
                 navigator.navigateToTodo()
             }
             "id" -> navigator.navigateToID()

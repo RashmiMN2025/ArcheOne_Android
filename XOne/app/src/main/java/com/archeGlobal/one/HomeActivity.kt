@@ -75,6 +75,7 @@ class HomeActivity : AppCompatActivity() {
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
     private var isAuthenticating = mutableStateOf(false) // New state for biometric authentication
+    private var isLocked = false
 
     private fun refreshHomeData() {
         val userData = userDataManager.getUserData()
@@ -1133,50 +1134,32 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (!isFromLogin) {
-            lastPauseTime = System.currentTimeMillis()
+        if (userDataManager.isLoggedIn() && BiometricHelper(this).isBiometricEnabled()) {
+            isLocked = true
         }
     }
 
     override fun onResume() {
         super.onResume()
-        val currentTime = System.currentTimeMillis()
-        val timeInBackground = currentTime - lastPauseTime
-        
-        if (timeInBackground > BACKGROUND_THRESHOLD && lastPauseTime > 0) {
-            // Check if we need to show biometric authentication
-            val userData = userDataManager.getUserData()
-            if (userData != null && !isFromLogin) {
-                // Only show biometric if we're not coming directly from login
-                val biometricHelper = BiometricHelper(this)
-                if (biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()) {
-                    isAuthenticating.value = true // Set authenticating state to true
-                    biometricHelper.showBiometricPrompt(
-                        activity = this,
-                        title = "Verify Identity",
-                        subtitle = "Use your fingerprint to continue",
-                        onSuccess = {
-                            // Continue with the app
-                            Log.d("BiometricCheck", "Biometric verification successful")
-                            isAuthenticating.value = false // Reset authenticating state
-                        },
-                        onError = { error ->
-                            // If biometric fails, go back to login
-                            Log.e("BiometricCheck", "Biometric verification failed: $error")
-                            Toast.makeText(this, "Authentication required", Toast.LENGTH_SHORT).show()
-                            userDataManager.clearUserData()
-                            val intent = Intent(this, LoginActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            startActivity(intent)
-                            finish()
-                        }
-                    )
+        val biometricHelper = BiometricHelper(this)
+        val isLoggedIn = userDataManager.isLoggedIn()
+        val isLocked = userDataManager.preferencesManager.isLocked()
+
+        // Only show biometric if user is logged in, biometric is enabled, and app is locked
+        if (isLoggedIn && biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() && isLocked) {
+            isAuthenticating.value = true
+            biometricHelper.showBiometricPrompt(
+                activity = this,
+                onSuccess = {
+                    isAuthenticating.value = false
+                    userDataManager.preferencesManager.setLocked(false) // Unlock the app
+                },
+                onError = { error ->
+                    isAuthenticating.value = false
                 }
-            }
+            )
+            return
         }
-        
-        // Reset the flag since we're no longer coming from login
-        isFromLogin = false
     }
     
     /**
