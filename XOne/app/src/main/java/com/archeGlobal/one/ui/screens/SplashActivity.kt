@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.HomeActivity
 import com.archeGlobal.one.LoginActivity
-import com.archeGlobal.one.MainActivity
+import com.archeGlobal.one.OnboardingActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
@@ -44,10 +44,8 @@ class SplashActivity : ComponentActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             // Check if this is the first launch of the app
             if (preferencesManager.isFirstLaunch()) {
-                // First launch, show welcome screen
-                startActivity(Intent(this, MainActivity::class.java).apply {
-                    putExtra("showWelcomeScreen", true)
-                })
+                // First launch, show onboarding screens
+                startActivity(Intent(this, OnboardingActivity::class.java))
             } else {
                 // Not first launch, check if user is logged in
                 val isLoggedIn = userDataManager.isLoggedIn()

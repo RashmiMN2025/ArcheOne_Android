@@ -12,10 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.clickable
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -103,19 +107,37 @@ fun TravelApproveScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
+            // Add space at the top to push everything down
+            Spacer(modifier = Modifier.height(48.dp))
+            
             // Top App Bar
             TopAppBar(
-                title = { Text("Approve Travel Request", fontFamily = GraphikFontFamily) },
+                title = { 
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Approve Travel Request",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = { controller.navigateBack() }) {
+                    val context = LocalContext.current
+                    IconButton(onClick = { 
+                        (context as? ComponentActivity)?.finish()
+                    }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = Color.White
+                backgroundColor = Color.Transparent,
+                elevation = 0.dp
             )
-            
-            // Add spacer to move content slightly down from the app bar
-            Spacer(modifier = Modifier.height(16.dp))
             
             // Main content
             Column(
@@ -150,17 +172,20 @@ fun TravelApproveScreen(
                                 fontSize = 16.sp
                             )
                             
+                            val statusColor = Color(0xFFFFC107) // Amber/Yellow for pending
+                            
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFFFFD700)) // Yellow for pending
-                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    .background(statusColor.copy(alpha = 0.2f))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Text(
                                     "Pending",
-                                    color = Color.Black,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
+                                    color = statusColor,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily
                                 )
                             }
                         }
@@ -220,27 +245,26 @@ fun TravelApproveScreen(
                             )
                         }
                         
-                        // Submit Approval button (styled same as Approve button on previous page)
-                        Button(
-                            onClick = { 
-                                controller.approveTravelRequest(selectedRequest.id, remarks)
-                            },
+                        // Submit Approval button (styled same as Approve button in travel approvals page)
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = Color(0xFF4CD964), // Same green as Approve button
-                                disabledBackgroundColor = Color.Gray
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            enabled = !isLoading
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = Color(0xFF4CAF50)) // Green color matching approval button
+                                .padding(vertical = 12.dp)
+                                .clickable(enabled = !isLoading) { 
+                                    if (!isLoading) {
+                                        controller.approveTravelRequest(selectedRequest.id, remarks)
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "Submit Approval",
+                                text = "Submit Approval",
                                 color = Color.White,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
                             )
                         }
                     }

@@ -35,6 +35,14 @@
         </activity>
 
 
+        <!-- OnboardingActivity -->
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XOne">
+        </activity>
+        
         <!-- MainActivity -->
         <activity
             android:name=".MainActivity"

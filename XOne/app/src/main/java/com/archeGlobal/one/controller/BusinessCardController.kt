@@ -27,14 +27,14 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.utils.QRCodeGenerator
 
 interface BusinessCardController {
-    val showEditLocationDialog: MutableState<Boolean> // Add this
-    val businessCard: BusinessCardModel // Expose businessCard
+    val showEditCardDialog: MutableState<Boolean>
+    val businessCard: BusinessCardModel
     fun onBackPressed()
     fun onDownloadCard(bitmap: Bitmap)
     fun onShareCard(bitmap: Bitmap)
-    fun onEditLocation()
-    fun onLocationUpdated(newLocation: String)
-    fun refreshQRCode(isPortraitMode: Boolean) // Add method to refresh QR code based on layout
+    fun onEditCard()
+    fun onCardUpdated(newLocation: String, newPhone: String)
+    fun refreshQRCode(isPortraitMode: Boolean)
 }
 
 class BusinessCardControllerImpl(
@@ -42,34 +42,49 @@ class BusinessCardControllerImpl(
     private val navigator: AndroidNavigator
 ) : BusinessCardController {
 
-    override val showEditLocationDialog: MutableState<Boolean> = mutableStateOf(false)
+    override val showEditCardDialog: MutableState<Boolean> = mutableStateOf(false)
 
     override val businessCard: BusinessCardModel
-        get() = _businessCard.value  // Expose as read-only
+        get() = _businessCard.value
 
-    override fun onEditLocation() {
-        showEditLocationDialog.value = true  // Open the dialog
-    }    override fun onLocationUpdated(newLocation: String) {
-        if (newLocation.isNotEmpty()) {
-            // If user enters "N/A", replace with "Bangalore"
+    override fun onEditCard() {
+        showEditCardDialog.value = true
+    }
+
+    override fun onCardUpdated(newLocation: String, newPhone: String) {
+        var isValid = true
+        var message = ""
+
+        if (newLocation.isEmpty()) {
+            isValid = false
+            message = "Location cannot be empty!"
+        }
+
+        if (newPhone.isEmpty()) {
+            isValid = false
+            message = if (message.isEmpty()) "Phone number cannot be empty!" else "Location and phone number cannot be empty!"
+        }
+
+        if (isValid) {
             val locationValue = if (newLocation.trim().equals("N/A", ignoreCase = true)) {
                 "Bangalore"
             } else {
                 newLocation
             }
-            
-            // Create a new card with updated location and regenerated QR code
-            val updatedCard = _businessCard.value.copy(location = locationValue)
+
+            val updatedCard = _businessCard.value.copy(
+                location = locationValue,
+                phone = newPhone
+            )
             _businessCard.value = generateQRCodeForCard(updatedCard)
-            
-            showEditLocationDialog.value = false  // Close the dialog
-            Toast.makeText(context, "Location updated!", Toast.LENGTH_SHORT).show()
+
+            showEditCardDialog.value = false
+            Toast.makeText(context, "Card updated!", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(context, "Location cannot be empty!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Safely access notification manager - will be null in preview
     private val notificationManager by lazy {
         try {
             ContextCompat.getSystemService(

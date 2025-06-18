@@ -9,6 +9,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.*
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -202,8 +207,10 @@ fun TravelApprovalsScreen(
                                         context.startActivity(intent)
                                     },
                                     onClick = {
-                                        // Navigate to the detail screen when card is clicked
-                                        controller.navigateToTravelApprovalDetail(request)
+                                        // Only navigate to detail screen for non-pending requests
+                                        if (request.status != com.archeGlobal.one.model.TravelStatus.PENDING) {
+                                            controller.navigateToTravelApprovalDetail(request)
+                                        }
                                     }
                                 )
                             }
@@ -266,7 +273,9 @@ fun ApprovalRequestCard(
     onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = 1.dp,
         backgroundColor = Color.White
@@ -318,28 +327,11 @@ fun ApprovalRequestCard(
                 color = Color.LightGray.copy(alpha = 0.5f)
             )
             
-            // Request details
-            DetailItem(icon = "👤", label = "Requester", value = request.approver)
-            DetailItem(icon = "🌍", label = "Destination", value = request.destination)
-            DetailItem(icon = "📁", label = "Project", value = request.project)
-            DetailItem(icon = "📅", label = "Created", value = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(request.createdDate))
-            
-            // Additional details from API
-            request.businessJustification?.let {
-                DetailItem(icon = "📝", label = "Reason", value = it)
-            }
-            
-            request.modeOfTransport?.let {
-                DetailItem(icon = "🚗", label = "Transport", value = it)
-            }
-            
-            request.departureDate?.let {
-                DetailItem(icon = "🛫", label = "Departure", value = it)
-            }
-            
-            request.arrivalDate?.let {
-                DetailItem(icon = "🛬", label = "Arrival", value = it)
-            }
+            // Request details - only show the 4 required items
+            DetailItem(iconRes = Icons.Default.Person, label = "Employee", value = request.approver)
+            DetailItem(iconRes = Icons.Default.LocationOn, label = "Destination", value = request.destination)
+            DetailItem(iconRes = Icons.Default.Info, label = "Project", value = request.project)
+            DetailItem(iconRes = Icons.Default.DateRange, label = "Created", value = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault()).format(request.createdDate))
             
             // Show action buttons only for pending requests
             if (request.status == com.archeGlobal.one.model.TravelStatus.PENDING) {
@@ -394,7 +386,7 @@ fun ApprovalRequestCard(
 
 @Composable
 fun DetailItem(
-    icon: String,
+    iconRes: ImageVector,
     label: String,
     value: String?
 ) {
@@ -405,23 +397,26 @@ fun DetailItem(
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = icon,
-            fontSize = 16.sp,
-            modifier = Modifier.width(24.dp)
+        Icon(
+            imageVector = iconRes,
+            contentDescription = label,
+            tint = Color.Gray,
+            modifier = Modifier.size(18.dp)
         )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = label,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            color = Color.Gray,
-            modifier = Modifier.width(80.dp)
+            color = Color.Gray
         )
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = value,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.End
         )
     }
 }
