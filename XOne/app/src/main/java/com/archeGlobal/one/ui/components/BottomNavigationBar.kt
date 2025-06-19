@@ -33,6 +33,7 @@ import com.archeGlobal.one.model.FooterNavigationModel
 @Composable
 fun BottomNavigationBar(
     model: FooterNavigationModel,
+    isUsingPrideIcon: Boolean,
     onHomeClick: () -> Unit,
     onChatClick: () -> Unit,
     onSOSClick: () -> Unit,
@@ -62,11 +63,16 @@ fun BottomNavigationBar(
                         .padding(top = 4.dp)
                         .fillMaxWidth()
                 ) {
+                    val homeIconRes = when {
+                        isUsingPrideIcon && model.showHome -> R.drawable.homepride
+                        isUsingPrideIcon -> R.drawable.archepride
+                        else -> R.drawable.arche_black2
+                    }
                     Image(
-                        painter = painterResource(id = R.drawable.arche_black2),
+                        painter = painterResource(id = homeIconRes),
                         contentDescription = "Home",
                         modifier = Modifier.size(20.dp),
-                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor) // Always black
+                        colorFilter = if (isUsingPrideIcon && model.showHome) null else androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(

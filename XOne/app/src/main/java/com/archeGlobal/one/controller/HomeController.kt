@@ -38,6 +38,7 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Calendar
 
 class HomeController(
     private val navigator: Navigator,
@@ -52,27 +53,44 @@ class HomeController(
     )
     private val _eventData = MutableStateFlow<com.archeGlobal.one.model.EventResponse?>(null)
     val eventData: StateFlow<com.archeGlobal.one.model.EventResponse?> = _eventData.asStateFlow()
+    
+    private val _showEventPopup = MutableStateFlow(false)
+    val showEventPopup: StateFlow<Boolean> = _showEventPopup.asStateFlow()
+
+    // Pride Month specific state
+    private val _isPrideMonth = MutableStateFlow(false)
+    val isPrideMonth: StateFlow<Boolean> = _isPrideMonth.asStateFlow()
+
+    private val _showPrideMonthDialog = MutableStateFlow(false)
+    val showPrideMonthDialog: StateFlow<Boolean> = _showPrideMonthDialog.asStateFlow()
 
     // Companion object and other class members follow
     companion object {
         private const val PREF_NAME = "event_preferences"
         private const val KEY_LAST_SHOWN_DATE = "last_shown_date"
+        private const val KEY_PRIDE_MONTH_SHOWN = "pride_month_shown"
+        private const val KEY_USING_PRIDE_ICON = "using_pride_icon"
     }
-    
 
-    
-    private val _showEventPopup = MutableStateFlow(false)
-    val showEventPopup: StateFlow<Boolean> = _showEventPopup.asStateFlow()
-    
     // Initialize event handling
     init {
         Log.d("EventController", "Initializing HomeController and fetching daily event")
         Log.d("EventController", "UserDataManager instance: ${UserDataManager.getInstance(context)}")
-        fetchEventFromLoginData()
+
+        // Check if current month is June (Pride Month)
+        checkIfPrideMonth()
+
+        if (_isPrideMonth.value) {
+            // Directly check if we should show the Pride Month dialog
+            checkIfShouldShowPrideMonthDialog()
+        } else {
+            // If not Pride Month, fetch the regular daily event
+            fetchEventFromLoginData()
+        }
     }
-    
+
     private val preferencesManager = PreferencesManager(context)
-    
+
     // Helper method to navigate within the same activity
     private fun navigate(route: String) {
         if (navigator is AndroidNavigator) {
@@ -91,7 +109,7 @@ class HomeController(
         }
         action()
     }
-    
+
     // Event-related methods
     // Process event data to ensure image URLs are valid and properly formatted
     private fun processEventData(event: com.archeGlobal.one.model.EventResponse?): com.archeGlobal.one.model.EventResponse? {
@@ -99,13 +117,13 @@ class HomeController(
         val originalImageUrl = event.image ?: ""
 
         Log.d("EventController", "Processing event image URL: $originalImageUrl")
-        
+
         // Check if the image URL is valid and properly formatted
         if (originalImageUrl.isBlank()) {
             Log.d("EventController", "Image URL is blank or null, returning original event")
             return event // Return original event if image is blank or null
         }
-        
+
         // Ensure the URL is properly formatted (starts with http:// or https://)
         val formattedImageUrl = if (!originalImageUrl.startsWith("http://") && !originalImageUrl.startsWith("https://")) {
             // Assuming pulse.netcon.in is the base for relative paths
@@ -113,15 +131,15 @@ class HomeController(
         } else {
             originalImageUrl.trim()
         }
-        
+
         Log.d("EventController", "Formatted event image URL: $formattedImageUrl")
         return event.copy(image = formattedImageUrl)
     }
-    
+
     private fun fetchEventFromLoginData() {
         Log.d("EventController", "Starting to fetch daily event from login response")
         val scope = CoroutineScope(Dispatchers.IO)
-        
+
         scope.launch {
             try {
                 // Get event data from UserDataManager instead of making a separate API call
@@ -148,8 +166,15 @@ class HomeController(
             }
         }
     }
-    
+
     private fun checkIfShouldShowEvent() {
+        // If it's Pride Month, we'll show the Pride Month dialog instead of regular events
+        if (_isPrideMonth.value) {
+            Log.d("EventController", "It's Pride Month, checking if we should show Pride Month dialog")
+            checkIfShouldShowPrideMonthDialog()
+            return
+        }
+
         // Only show the event if we have event data
         val currentEventData = _eventData.value
         if (currentEventData == null) {
@@ -157,66 +182,163 @@ class HomeController(
             _showEventPopup.value = false
             return
         }
-        
+
         Log.d("EventController", "Event data available: Title=${currentEventData.title}, Image=${currentEventData.image}")
-        
+
         val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val lastShownDate = sharedPref.getString(KEY_LAST_SHOWN_DATE, "")
         val currentDate = getCurrentDate()
-        
+
         Log.d("EventController", "Last shown date: '$lastShownDate', Current date: '$currentDate'")
-        
+
         // Show popup if it hasn't been shown today
         if (lastShownDate != currentDate) {
             Log.d("EventController", "Setting showEventPopup to TRUE - not shown today yet")
             _showEventPopup.value = true
-            
+
             // For debugging purposes, let's log the current state
             Log.d("EventController", "Current state - showEventPopup: ${_showEventPopup.value}, eventData: ${_eventData.value != null}")
         } else {
             Log.d("EventController", "Setting showEventPopup to FALSE - already shown today")
             _showEventPopup.value = false
         }
-        
-        // Uncomment for development/testing to always show the popup:
-        // _showEventPopup.value = true
-        
-        // For development/testing only - uncomment to force clear the last shown date
-        // with(sharedPref.edit()) { 
-        //     remove(KEY_LAST_SHOWN_DATE)
-        //     apply() 
-        // }
     }
-    
+
     fun dismissEventPopup() {
         Log.d("EventController", "dismissEventPopup called")
-        
+
         // Save the current date as the last shown date
         val currentDate = getCurrentDate()
         val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        
+
         Log.d("EventController", "Saving last shown date: $currentDate")
-        
+
         with(sharedPref.edit()) {
             putString(KEY_LAST_SHOWN_DATE, currentDate)
             apply()
         }
-        
+
         // Verify the date was saved correctly
         val savedDate = sharedPref.getString(KEY_LAST_SHOWN_DATE, "")
         Log.d("EventController", "Verified saved date: $savedDate")
-        
+
         // Hide the popup
         _showEventPopup.value = false
         Log.d("EventController", "Set showEventPopup to false")
     }
-    
+
     // Format date as yyyy-MM-dd
     private fun getCurrentDate(): String {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         return dateFormat.format(Date())
     }
-    
+
+    // Check if current month is June (Pride Month)
+    open fun checkIfPrideMonth() {
+        val calendar = Calendar.getInstance()
+        val currentMonth = calendar.get(Calendar.MONTH)
+
+        // June is month 5 in Calendar (0-based index)
+        _isPrideMonth.value = currentMonth == Calendar.JUNE
+
+        Log.d("EventController", "Current month: ${currentMonth + 1}, Is Pride Month: ${_isPrideMonth.value}")
+    }
+
+    // Check if we should show the Pride Month dialog
+    fun checkIfShouldShowPrideMonthDialog() {
+        val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val prideMonthShown = sharedPref.getBoolean(KEY_PRIDE_MONTH_SHOWN, false)
+
+        // Show Pride Month dialog if it hasn't been shown yet during this Pride Month
+        if (!prideMonthShown) {
+            Log.d("EventController", "Setting showPrideMonthDialog to TRUE - not shown yet this Pride Month")
+            _showPrideMonthDialog.value = true
+
+            // Mark as shown
+            with(sharedPref.edit()) {
+                putBoolean(KEY_PRIDE_MONTH_SHOWN, true)
+                apply()
+            }
+        } else {
+            Log.d("EventController", "Not showing Pride Month dialog - already shown this Pride Month")
+        }
+    }
+
+    // Force show Pride Month dialog (triggered by pin)
+    fun showPrideMonthDialog() {
+        _showPrideMonthDialog.value = true
+    }
+
+    // Dismiss Pride Month dialog
+    fun dismissPrideMonthDialog() {
+        Log.d("EventController", "dismissPrideMonthDialog called")
+        _showPrideMonthDialog.value = false
+    }
+
+    // Toggle between default and Pride Month launcher icons by enabling/disabling
+    // activity-alias components declared in AndroidManifest.xml
+    fun togglePrideIcon() {
+        val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val currentlyUsingPrideIcon = sharedPref.getBoolean(KEY_USING_PRIDE_ICON, false)
+
+        // Component names for the two launcher aliases
+        val defaultAlias = android.content.ComponentName(
+            context,
+            "com.archeGlobal.one.SplashAlias"
+        )
+        val prideAlias = android.content.ComponentName(
+            context,
+            "com.archeGlobal.one.SplashAliasPride"
+        )
+
+        val pm = context.packageManager
+        if (currentlyUsingPrideIcon) {
+            // Switch back to default icon
+            pm.setComponentEnabledSetting(
+                defaultAlias,
+                android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                android.content.pm.PackageManager.DONT_KILL_APP
+            )
+            pm.setComponentEnabledSetting(
+                prideAlias,
+                android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                android.content.pm.PackageManager.DONT_KILL_APP
+            )
+        } else {
+            // Switch to pride icon
+            pm.setComponentEnabledSetting(
+                prideAlias,
+                android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                android.content.pm.PackageManager.DONT_KILL_APP
+            )
+            pm.setComponentEnabledSetting(
+                defaultAlias,
+                android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                android.content.pm.PackageManager.DONT_KILL_APP
+            )
+        }
+
+        // Persist the new state
+        sharedPref.edit().putBoolean(KEY_USING_PRIDE_ICON, !currentlyUsingPrideIcon).apply()
+
+        // Notify user – the launcher might take a moment to refresh
+        val msg = if (currentlyUsingPrideIcon) {
+            "Switched back to regular app icon"
+        } else {
+            "Switched to Pride app icon"
+        }
+        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+
+        // Close the dialog
+        dismissPrideMonthDialog()
+    }
+
+    // Check if we're using the Pride icon
+    fun isUsingPrideIcon(): Boolean {
+        val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(KEY_USING_PRIDE_ICON, false)
+    }
+
     var model by mutableStateOf(HomeModel(
         userName = OtpVerificationController.getUserData()?.name ?: "",
         designation = OtpVerificationController.getUserData()?.designation ?: "",
