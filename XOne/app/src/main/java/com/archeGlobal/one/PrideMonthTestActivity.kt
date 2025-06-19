@@ -78,6 +78,7 @@ fun PrideMonthTestScreen() {
             override fun navigateToAdmin() {}
             override fun navigateToHR() {}
             override fun navigateToHolidayOptions() {}
+            override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String) {}
             override fun navigateToHolidayCalendar() {}
             override fun navigateToClientCalendar() {}
             override fun navigateToGreetings() {}

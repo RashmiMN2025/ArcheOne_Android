@@ -60,15 +60,9 @@ import com.archeGlobal.one.utils.ImageCache
 import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.BackHandler
 import android.app.Activity
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.Dialog
 import com.archeGlobal.one.controller.HomeController
 import com.archeGlobal.one.model.AboutMeModel
@@ -79,12 +73,7 @@ import kotlinx.coroutines.withContext
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.FeedbackRequest
 import com.archeGlobal.one.model.EventResponse
-import com.archeGlobal.one.controller.MpinController
 import com.archeGlobal.one.utils.UserDataManager
-import com.archeGlobal.one.utils.BiometricHelper
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.zIndex
 
 @Composable
 fun ProfileHeader(
@@ -243,7 +232,12 @@ fun HomeScreen(
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {}
 ) {
-    val backgroundModel = remember { WelcomeBackgroundModel() }
+    // Get the user data manager to access preferences
+    val userDataManager = UserDataManager.getInstance(LocalContext.current)
+    // Observe the locked state
+    val lockedState = userDataManager.preferencesManager.lockedState.collectAsState().value
+    // Initialize background model with proper colors to prevent black screen
+    val backgroundModel = remember(lockedState) { WelcomeBackgroundModel() }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
     var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -262,17 +256,6 @@ fun HomeScreen(
     var feedbackText by rememberSaveable { mutableStateOf("") }
     var isSubmitting by remember { mutableStateOf(false) }
 
-    val mpinController = remember { MpinController(context) }
-    val userDataManager = remember { UserDataManager.getInstance(context) }
-    val lockedState by userDataManager.preferencesManager.lockedState.collectAsState()
-    val biometricHelper = remember { BiometricHelper(context) }
-    val isBiometricEnabled = biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()
-    var enteredMpin by remember { mutableStateOf("") }
-    var mpinError by remember { mutableStateOf<String?>(null) }
-    val focusRequesters = List(4) { remember { FocusRequester() } }
-
-    var isVerifyingMpin by remember { mutableStateOf(false) }
-
     // Register the callback with the controller
     LaunchedEffect(Unit) {
         controller.onShowRatingDialog = { showRatingDialog = true }
@@ -288,225 +271,6 @@ fun HomeScreen(
         }
     }
 
-    // Always show MPIN prompt if locked and biometric is not enabled
-    if (lockedState && !isBiometricEnabled) {
-        // Overlay to block all interaction and blur background
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.25f))
-                .blur(12.dp)
-                .zIndex(100f) // High zIndex to block everything
-                .pointerInput(Unit) {} // Block pointer events
-        )
-
-        // Universal loader when verifying MPIN
-        if (isVerifyingMpin) {
-            UniversalLoader(isLoading = true)
-        }
-
-        val navController = androidx.navigation.compose.rememberNavController()
-
-       // Centered MPIN prompt box
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(101f),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = Color(0xFFFEF7F2),
-                shadowElevation = 24.dp,
-                tonalElevation = 2.dp,
-                modifier = Modifier
-                    .widthIn(min = 340.dp, max = 420.dp)
-                    .padding(horizontal = 16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp, vertical = 28.dp)
-                        .widthIn(min = 340.dp, max = 420.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Red lock icon
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_lock), // Use your red lock icon
-                        contentDescription = "Lock",
-                        tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
-                    // Title
-                    Text(
-                        "Enter Your MPIN",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 26.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    // Subtitle
-                    Column (
-                        modifier = Modifier
-                            .padding(16.dp, 0.dp, 16.dp, 0.dp)
-                    ) {
-                        Text(
-                            "Please enter your 4-digit MPIN to unlock the app",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 16.sp,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 18.sp
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(28.dp))
-                    // "Enter MPIN" label
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Enter MPIN",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 16.sp,
-                            color = Color(0xFF7B7B7B),
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    // MPIN digit boxes
-                    var focusedIndex by remember { mutableStateOf(-1) }
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        for (i in 0 until 4) {
-                            // ...inside your Row for MPIN digit boxes...
-                            OutlinedTextField(
-                                value = enteredMpin.getOrNull(i)?.toString() ?: "",
-                                onValueChange = { value ->
-                                    if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        val chars = enteredMpin.padEnd(4).toCharArray()
-                                        chars[i] = value.firstOrNull() ?: ' '
-                                        enteredMpin = String(chars).replace(" ", "")
-                                        if (value.isNotEmpty() && i < 3) {
-                                            focusRequesters[i + 1].requestFocus()
-                                        }
-                                    }
-                                    if (value.isEmpty() && i > 0) {
-                                        val chars = enteredMpin.padEnd(4).toCharArray()
-                                        chars[i] = ' '
-                                        enteredMpin = String(chars).replace(" ", "")
-                                        focusRequesters[i - 1].requestFocus()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .width(65.dp)
-                                    .height(65.dp)
-                                    .focusRequester(focusRequesters[i])
-                                    .padding(horizontal = 4.dp)
-                                    .onFocusChanged { focusState ->
-                                        if (focusState.isFocused) {
-                                            focusedIndex = i
-                                        }
-                                    }
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
-                                        shape = MaterialTheme.shapes.medium
-                                    ),
-                                textStyle = TextStyle(
-                                    fontSize = 28.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center
-                                ),
-                                singleLine = true,
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                shape = MaterialTheme.shapes.medium,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    disabledContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    disabledTextColor = Color.Black,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent
-                                ),
-                                isError = mpinError != null && enteredMpin.length == 4
-                            )
-                            if (i < 3) Spacer(modifier = Modifier.width(8.dp))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(26.dp))
-                    // Unlock button
-                    Button(
-                        onClick = {
-                            if (enteredMpin.length == 4 && mpinController.validateMpin(enteredMpin)) {
-                                userDataManager.preferencesManager.setLocked(false)
-                                mpinError = null
-                                enteredMpin = ""
-                                Toast.makeText(context, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
-                            } else {
-                                mpinError = "Invalid MPIN. Please try again."
-                                enteredMpin = ""
-                                Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text(
-                            "Unlock",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 20.sp
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    // Reset MPIN button
-                    OutlinedButton(
-                        onClick = {
-                            val intent = android.content.Intent(context, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
-                            intent.putExtra("resetMpin", true)
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier
-                            .width(140.dp)
-                            .height(38.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE0B4AA),
-                            contentColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFE0B4AA),
-                            disabledContentColor = Color(0xFFDD3825)
-                        ),
-                        border = BorderStroke(1.dp, Color(0xFFDD3825)),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text(
-                            "Reset MPIN",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-            }
-        }
     // Collect Pride Month related states
     val isPrideMonth = controller.isPrideMonth.collectAsState().value
     val showPrideMonthDialog = controller.showPrideMonthDialog.collectAsState().value
@@ -554,11 +318,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(
-                        radius = if (lockedState && !isBiometricEnabled) 12.dp
-                        else if (isAuthenticating) 10.dp
-                        else 0.dp
-                    )
+                    .blur(radius = if (isAuthenticating) 10.dp else 0.dp)
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(
                             onDragEnd = { /* Handle drag end */ },
