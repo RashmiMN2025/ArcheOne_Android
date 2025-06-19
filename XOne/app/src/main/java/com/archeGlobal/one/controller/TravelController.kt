@@ -116,7 +116,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
     
     // Mode of transport options
-    val transportOptions = listOf("Bus", "Car", "Flight", "Train")
+    val transportOptions = listOf("Bus",  "Flight", "Train")
     var modeOfTransport by mutableStateOf("")
         private set
     var isTransportDropdownExpanded by mutableStateOf(false)

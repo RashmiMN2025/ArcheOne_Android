@@ -248,7 +248,7 @@ fun BusinessCardScreen(
             Card(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(0.75f)
+                    .width(280.dp)
                     .height(450.dp)
                     .onGloballyPositioned { coordinates ->
                         val bounds = coordinates.boundsInRoot()
@@ -280,176 +280,166 @@ fun BusinessCardScreen(
                             horizontalAlignment = Alignment.Start
                         ) {
                             // Logo
+                    // Logo
                     Image(
-                                painter = painterResource(id = R.drawable.arche_black),
-                                contentDescription = "Arche Logo",
-                                modifier = Modifier
-                                    .size(39.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(135.dp))
-
-                            // Name and Designation
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(
-                                SpanStyle(
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = Color.Black
-                                )
-                            ) {
-                                append(businessCard.name)
-                                append("\n")
-                            }
-                            withStyle(
-                                SpanStyle(
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 12.sp,
-                                    color = Color.Gray
-                                )
-                            ) {
-                                append(businessCard.designation)
-                            }
-                        },
-                        lineHeight = 16.sp
+                        painter = painterResource(id = R.drawable.arche_black),
+                        contentDescription = "Arche Logo",
+                        modifier = Modifier
+                            .size(40.dp)
                     )
+                    
+                    Spacer(modifier = Modifier.height(90.dp))
+                    
+                    // Name and Designation section
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Name
+                        Text(
+                            text = businessCard.name,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 18.sp,
+                            color = Color.Black
+                        )
+                        
+                        // Designation
+                        Text(
+                            text = businessCard.designation,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 15.sp,
+                            color = Color.Gray
+                        )
+                    }
+                    
+                    // Add spacing between designation and contact info
+                    Spacer(modifier = Modifier.height(25.dp))
 
-                            Spacer(modifier = Modifier.height(28.dp))
-
-                            // Company Details and QR Code side by side
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 45.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                // Company Details
-                                Column(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        text = buildAnnotatedString {
-                                            withStyle(
-                                                SpanStyle(
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Medium,
-                                                    fontSize = 10.sp,
-                                                    color = Color.Black
-                                                )
-                                            ) {
-                                                append("Arche Global Pvt Ltd\n")
-                                            }
-                                            withStyle(
-                                                SpanStyle(
-                                                    fontWeight = FontWeight.Normal,
-                                                    fontSize = 10.sp,
-                                                    color = Color.Black
-                                                )
-                                            ) {
-                                                append(businessCard.email)
-                                                append("\n")
-                                                append(businessCard.phone)
-                                                append("\n")
-                                                append(controller.businessCard.location)
-                                            }
-                                        },
-                                        lineHeight = 15.sp
-                                    )
-                                }
-
-                                // QR Code and arche text
-                                Column(
-                                    horizontalAlignment = Alignment.End,
-                                    modifier = Modifier
-                                        .padding(start = 12.dp)
-                                        .offset(x = 8.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(72.dp)
-                                            .offset(y = (-6).dp),
-                                        contentAlignment = Alignment.TopCenter
-                                    ) {
-                                        businessCard.qrCode?.let { qrBitmap ->
-                                            ComposeQRCodeImage(
-                                                bitmap = qrBitmap,
-                                                contentDescription = "QR Code",
-                                                modifier = Modifier.size(76.dp),
-
-                                            )
-                                        }
-                                    }
-
-                                    Box(
-                                        modifier = Modifier.width(54.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "arche",
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = Color.Black,
-                                            modifier = Modifier.offset(x = (-7).dp, y = (-8).dp)
-                                        )
-                                    }
-                                }
-                            }
+                    // Contact information section
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Email
+                        Text(
+                            text = businessCard.email,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 15.sp,
+                            color = Color.Black
+                        )
+                        
+                        // Phone
+                        Text(
+                            text = businessCard.phone,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 15.sp,
+                            color = Color.Black
+                        )
+                        
+                        // Location
+                        Text(
+                            text = controller.businessCard.location,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 15.sp,
+                            color = Color.Black
+                        )
+                    }
+                    
+                    // Push content to bottom of card
+                    Spacer(modifier = Modifier.weight(1f))
+                            
+                    // Bottom row with arche text and QR code
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        // Arche text at bottom left
+                        Text(
+                            text = "arche",
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black,
+                            modifier = Modifier.offset(y = (-10).dp) // Move up slightly while keeping in the row
+                        )
+                        
+                        // QR Code at bottom right
+                        businessCard.qrCode?.let { qrBitmap ->
+                            ComposeQRCodeImage(
+                                bitmap = qrBitmap,
+                                contentDescription = "QR Code",
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
+                    }
                         }
                     } else {
                         // Back side
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp),
+                                .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Top
+                            verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Spacer(modifier = Modifier.height(0.dp))  // Small top spacing
-
-                            // Text first (moved up)
+                            // Top quote
                             Text(
                                 text = "This could be the start of something great.",
-                                fontSize = 9.sp,
+                                fontSize = 14.sp,
                                 fontFamily = FontFamily(Font(R.font.canela_regular)),
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Medium,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
-                                lineHeight = 17.sp
+                                maxLines = 1,
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .padding(top = 20.dp)
                             )
-
-                            Spacer(modifier = Modifier.height(100.dp))  // Reduced spacing
-
-                            // Logo moved below text
+                            
+                            // Logo in the middle
                             Image(
                                 painter = painterResource(id = R.drawable.arche_black),
                                 contentDescription = "Arche Logo",
                                 modifier = Modifier
-                                    .size(84.dp)
+                                    .size(90.dp)
+                                    .aspectRatio(9f/8f)
                             )
-
-                            Spacer(modifier = Modifier.height(100.dp))
-
-                    Text(
-                        text = businessCard.website,
-                        fontSize = 9.sp,
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 7.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(7.dp))
-
-                    Text(
-                        text = location.address,
-                        fontSize = 8.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 13.sp
-                    )
+                            
+                            // Bottom section with company name, address, and website
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Arche Global Private Limited",
+                                    fontSize = 15.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 10.dp)
+                                )
+                                
+                                // Use the location data already resolved in the front side
+                                val officeAddress = location.address
+                                
+                                Text(
+                                    text = officeAddress,
+                                    fontSize = 9.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 11.sp,
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 20.dp)
+                                )
+                                
+                                Text(
+                                    text = "www.arche.global",
+                                    fontSize = 15.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 10.dp)
+                                )
+                            }
                 }
             }
         }

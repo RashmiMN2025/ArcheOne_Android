@@ -51,6 +51,8 @@ import com.archeGlobal.one.ui.components.EmptyFavorites
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.components.EventPopup
+import com.archeGlobal.one.ui.components.PrideMonthDialog
+import androidx.compose.runtime.collectAsState
 import coil.compose.rememberAsyncImagePainter
 import android.util.Log
 import android.widget.Toast
@@ -224,7 +226,7 @@ fun HomeScreen(
     onXCardClick: () -> Unit,
     isAuthenticating: Boolean = false,
     onRefresh: () -> Unit = {},
-    controller: HomeController, // <-- Add this parameter
+    controller: HomeController,
     eventData: EventResponse? = null,
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {}
@@ -263,8 +265,26 @@ fun HomeScreen(
         }
     }
 
+    // Collect Pride Month related states
+    val isPrideMonth = controller.isPrideMonth.collectAsState().value
+    val showPrideMonthDialog = controller.showPrideMonthDialog.collectAsState().value
+    val isUsingPrideIcon = remember { mutableStateOf(controller.isUsingPrideIcon()) }
+
+    // Show Pride Month Dialog if it's Pride Month and dialog should be shown
+    if (isPrideMonth && showPrideMonthDialog) {
+        PrideMonthDialog(
+            isUsingPrideIcon = isUsingPrideIcon.value,
+            onDismiss = { controller.dismissPrideMonthDialog() },
+            onToggleIcon = {
+                controller.togglePrideIcon()
+                isUsingPrideIcon.value = controller.isUsingPrideIcon()
+            }
+        )
+    }
+
     // Show event popup if available and visibility is true
-    if (eventData != null && showEventPopup) {
+    // Only show regular event popup if it's not Pride Month
+    if (!isPrideMonth && eventData != null && showEventPopup) {
         Log.d("HomeScreen", "Showing event popup with data: Title=${eventData.title}, Image=${eventData.image}")
         Log.d("HomeScreen", "Event description: ${eventData.description}")
         EventPopup(
@@ -281,6 +301,7 @@ fun HomeScreen(
     // Wrap with FooterScaffold for bottom navigation
     FooterScaffold(
         footerNavigation = model.footerNavigation,
+        isUsingPrideIcon = isUsingPrideIcon.value,
         onFooterHomeClick = onFooterHomeClick,
         onFooterChatClick = onFooterChatClick,
         onFooterSOSClick = onFooterSOSClick,
@@ -324,6 +345,62 @@ fun HomeScreen(
                         model = model,
                         onShowProfileClick = onShowProfileClick
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Pride banner with pins
+                    if (isPrideMonth) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .background(
+                                    color = Color(0x1ADD3825),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(vertical = 8.dp, horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = { controller.showPrideMonthDialog() },
+                                modifier = Modifier
+                                    .size(24.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.leftpin),
+                                    contentDescription = "Change Icon",
+                                    tint = Color(0xFFDD3825),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Celebrating love, equality, and pride this month and always.",
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { controller.showPrideMonthDialog() }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = { controller.showPrideMonthDialog() },
+                                modifier = Modifier
+                                    .size(24.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.rightpin),
+                                    contentDescription = "Change Icon",
+                                    tint = Color(0xFFDD3825),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
