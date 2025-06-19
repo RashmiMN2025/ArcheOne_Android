@@ -6,20 +6,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +33,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
-import com.archeGlobal.one.controller.TravelHistoryState
+import com.archeGlobal.one.controller.TravelController.TravelHistoryState
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelStatus
 import java.text.SimpleDateFormat
@@ -103,24 +98,38 @@ fun TravelHistoryScreen(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
             ) {
+                // Render UI based on current travel history state
                 when (val currentState = state) {
                     is TravelHistoryState.Loading -> {
-                        androidx.compose.material.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     }
                     is TravelHistoryState.Success -> {
-                        TravelHistoryList(
-                            travelRequests = currentState.travelRequests,
-                            onTravelRequestClick = { travelId -> controller.navigateToTravelDetails(travelId) }
-                        )
+                        if (currentState.historyItems.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "No travel history found")
+                            }
+                        } else {
+                            TravelHistoryList(
+                                travelRequests = currentState.historyItems,
+                                onTravelRequestClick = { requestId ->
+                                    controller.navigateToTravelDetails(requestId)
+                                }
+                            )
+                        }
                     }
                     is TravelHistoryState.Error -> {
                         Column(
-                            modifier = Modifier.align(Alignment.Center),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(text = currentState.message)
-                            androidx.compose.material.Button(
-                                onClick = { controller.loadTravelHistory() },
+                            Button(
+                                onClick = { controller.loadCombinedTravelHistory() },
                                 modifier = Modifier.padding(top = 8.dp)
                             ) {
                                 Text("Retry")
@@ -133,21 +142,70 @@ fun TravelHistoryScreen(
     }
 }
 
+// Removed TabbedTravelHistory - Approval tab no longer required
+/*
+    orderHistory: List<TravelRequest>,
+    approvalHistory: List<TravelRequest>,
+    onTravelRequestClick: (String) -> Unit
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Order History", "Approval History")
+    
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Tab Row
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            backgroundColor = Color.Transparent,
+            contentColor = Color.Black
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    text = { Text(title) },
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index }
+                )
+            }
+        }
+        
+        // Tab Content
+        when (selectedTabIndex) {
+            0 -> TravelHistoryList(
+                travelRequests = orderHistory,
+                onTravelRequestClick = onTravelRequestClick
+            )
+            1 -> TravelHistoryList(
+                travelRequests = approvalHistory,
+                onTravelRequestClick = onTravelRequestClick
+            )
+        }
+    }
+}
+
+*/
 @Composable
 fun TravelHistoryList(
     travelRequests: List<TravelRequest>,
     onTravelRequestClick: (String) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
-    ) {
-        items(travelRequests) { request ->
-            TravelRequestCard(
-                travelRequest = request,
-                onClick = { onTravelRequestClick(request.id) }
-            )
+    if (travelRequests.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "No items found")
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            items(travelRequests) { request ->
+                TravelRequestCard(
+                    travelRequest = request,
+                    onClick = { onTravelRequestClick(request.id) }
+                )
+            }
         }
     }
 }

@@ -218,6 +218,10 @@ class AndroidNavigator(
     }
 
     override fun navigateToFinance() {
+        navigate("service_not_available?serviceName=Finance")
+    }
+
+    override fun navigateToMyPay() {
         openWebView("https://ess.azatecon.com/login", "MyPay")
     }
 
@@ -386,6 +390,13 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToTravelApprovalDetails() {
+        navController?.navigate("travel_approval_details") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     override fun navigateToSAP() {
         openWebView("https://my422539.businessbydesign.cloud.sap", "SAP")
     }
@@ -471,6 +482,16 @@ class AndroidNavigator(
             } catch (e: Exception) {
                 Log.e("AndroidNavigator", "Error refreshing screen", e)
             }
+        }
+    }
+    
+    override fun popBackStack() {
+        try {
+            navController?.popBackStack()
+        } catch (e: Exception) {
+            Log.e("AndroidNavigator", "Error popping back stack", e)
+            // Fallback to navigating to travel approvals if pop fails
+            navigateToTravelApprovals()
         }
     }
 

@@ -50,6 +50,11 @@ class PreferencesManager(context: Context) {
         return sharedPreferences.getString(KEY_AUTH_TOKEN, null)
     }
     
+    // Check if this is the first launch of the app
+    fun isFirstLaunch(): Boolean {
+        return sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
+    }
+    
     // Check if user is logged in
     fun isLoggedIn(): Boolean {
         return getAuthToken() != null
@@ -234,10 +239,6 @@ class PreferencesManager(context: Context) {
 
     fun getString(key: String, default: String): String? {
         return sharedPreferences.getString(key, default)
-    }
-    
-    fun isFirstLaunch(): Boolean {
-        return sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
     }
     
     // Mark that the app has been launched before

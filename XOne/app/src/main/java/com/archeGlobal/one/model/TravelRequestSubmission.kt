@@ -40,7 +40,22 @@ data class TravelRequestSubmission(
     val reportingManagerName: String,
     
     @SerializedName("reportingManagerEmail")
-    val reportingManagerEmail: String
+    val reportingManagerEmail: String,
+    
+    @SerializedName("flightTime")
+    val flightTime: String = "",
+    
+    @SerializedName("seatPref")
+    val seatPreference: String = "",
+    
+    @SerializedName("mealPref")
+    val mealPreference: String = "",
+    
+    @SerializedName("stayRequired")
+    val stayRequired: Boolean = false,
+    
+    @SerializedName("frequentFlyerNum")
+    val frequentFlyerNumber: String = "0"
 )
 
 /**

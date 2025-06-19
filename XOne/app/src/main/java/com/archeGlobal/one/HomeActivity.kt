@@ -1122,6 +1122,41 @@ class HomeActivity : AppCompatActivity() {
                             }
                         }
                     }
+                    
+                    // Add the travel_approval_details route
+                    composable(
+                        route = "travel_approval_details",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) {
+                        travelController.selectedTravelRequest?.let { tr ->
+                            TravelApprovalDetailsScreen(controller = travelController, travelRequest = tr)
+                        } ?: run {
+                            LaunchedEffect(Unit) { navController.popBackStack() }
+                        }
+                    }
                 }
             }
         }

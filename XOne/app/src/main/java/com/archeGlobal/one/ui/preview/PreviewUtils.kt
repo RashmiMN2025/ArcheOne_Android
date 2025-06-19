@@ -31,6 +31,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToXCard() {}
     override fun navigateToMedical() {}
     override fun navigateToFinance() {}
+    override fun navigateToMyPay() {}
     override fun navigateToAdmin() {}
     override fun navigateToHR() {}
     override fun navigateToHolidayOptions() {} // Added missing method
@@ -102,5 +103,9 @@ class PreviewNavigator : Navigator {
     }
 
     override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String) {}
+    override fun navigateToTravelApprovalDetails() {}
+    
+    override fun popBackStack() {
+        // No-op for preview purposes
+    }
 }
-

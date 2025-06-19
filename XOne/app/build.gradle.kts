@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.ui.graphics)
     
     // Material Design
+    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.material)
     // Compose Material (Material Design 2) for components like Card, Scaffold, etc.
     implementation(libs.androidx.material)

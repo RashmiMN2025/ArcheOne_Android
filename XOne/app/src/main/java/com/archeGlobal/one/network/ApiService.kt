@@ -18,6 +18,7 @@ import com.archeGlobal.one.model.TravelApprovalRequest
 import com.archeGlobal.one.model.TravelApprovalResponse
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.model.TravelCombinedHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
@@ -106,6 +107,9 @@ interface ApiService {
     
     @POST("travel-request")
     fun getTravelHistory(@Body request: TravelHistoryRequest): Call<TravelHistoryResponse>
+    
+    @POST("travel-request/combined-history")
+    fun getTravelCombinedHistory(@Body request: TravelHistoryRequest): Call<TravelCombinedHistoryResponse>
     
     @POST("travel-request/approval-history")
     fun getTravelApprovalHistory(@Body request: TravelApprovalRequest): Call<TravelApprovalResponse>
