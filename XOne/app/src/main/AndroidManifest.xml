@@ -281,6 +281,13 @@
             android:label="Policies"
             android:theme="@style/Theme.XOne" />
 
+        <activity
+            android:name=".ui.screens.MpinActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Set MPIN"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Keep only this FileProvider at the end -->
         <provider
             android:name="androidx.core.content.FileProvider"

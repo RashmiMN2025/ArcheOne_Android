@@ -490,4 +490,15 @@ class AndroidNavigator(
             putExtra("navigateTo", "home")
         }
     }
+
+    override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token:String) {
+        val intent = Intent(activity, com.archeGlobal.one.ui.screens.MpinActivity::class.java).apply {
+            putExtra("email", email)
+            putExtra("mobile", mobile)
+            putExtra("employeeId", employeeId)
+            putExtra("token", token)
+        }
+        activity.startActivity(intent)
+        activity.finish()
+    }
 }

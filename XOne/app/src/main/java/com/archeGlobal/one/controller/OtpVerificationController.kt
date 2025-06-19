@@ -46,7 +46,15 @@ class OtpVerificationController(
 
                     if (token.isNotEmpty()) {
                         // Save the token for future use
-                        loginWithToken(token, email, mobile, employeeId,false,true,callback,)
+                        loginWithToken(token, email, mobile, employeeId, false, true) { msg, isError ->
+                            if (!isError) {
+                                // Instead of navigating to Home, go to MPIN setup
+                                if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                    navigator.navigateToMpinSetup(email, mobile, employeeId, token)
+                                }
+                            }
+                            callback(msg, isError)
+                        }
                     } else {
                         callback("OTP verified, but no token received!", true)
                     }
@@ -142,15 +150,7 @@ class OtpVerificationController(
                         if(!fromHome){
                             // Pass biometric setup flag to HomeActivity
                             if (fromOtp) {
-                                val biometricHelper = BiometricHelper(context)
-                                val canUse = biometricHelper.canUseBiometric()
-                                val isEnabled = biometricHelper.isBiometricEnabled()
-                                if (canUse && !isEnabled) {
-                                    showBiometricSetupDialog(email, mobile, employeeId, token)
-                                    navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
-                                } else {
-                                    navigator.navigateToHome(fromOtp)
-                                }
+                                navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
                             } else {
                                 navigator.navigateToHome(fromOtp)
                             }
@@ -167,47 +167,6 @@ class OtpVerificationController(
                     callback("Network error: ${e.message}", true)
                 }
             }
-        }
-    }
-
-    private fun showBiometricSetupDialog(email: String, mobile: String, employeeId: String, token: String) {
-        Log.d("BiometricSetup", "Starting showBiometricSetupDialog")
-        
-        val activity = context as? FragmentActivity
-        if (activity == null) {
-            Log.e("BiometricSetup", "Context is not a FragmentActivity: ${context.javaClass.simpleName}")
-            return
-        }
-        
-        try {
-            android.app.AlertDialog.Builder(activity)
-                .setTitle("Enable Fingerprint Login")
-                .setMessage("Would you like to use fingerprint for faster login next time?")
-                .setPositiveButton("Yes") { _, _ ->
-                    Log.d("BiometricSetup", "User clicked Yes")
-                    val biometricHelper = BiometricHelper(context)
-                    biometricHelper.showBiometricPrompt(
-                        activity = activity,
-                        title = "Setup Fingerprint",
-                        subtitle = "Verify your fingerprint to enable quick login",
-                        onSuccess = {
-                            Log.d("BiometricSetup", "Biometric setup successful")
-                            biometricHelper.saveCredentials(email, mobile, employeeId, token)
-                            Toast.makeText(context, "Fingerprint login enabled successfully!", Toast.LENGTH_SHORT).show()
-                        },
-                        onError = { error ->
-                            Log.e("BiometricSetup", "Biometric setup failed: $error")
-                            Toast.makeText(context, "Failed to setup fingerprint: $error", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
-                .setNegativeButton("No") { _, _ ->
-                    Log.d("BiometricSetup", "User clicked No")
-                }
-                .show()
-            Log.d("BiometricSetup", "Dialog shown successfully")
-        } catch (e: Exception) {
-            Log.e("BiometricSetup", "Failed to show dialog", e)
         }
     }
 

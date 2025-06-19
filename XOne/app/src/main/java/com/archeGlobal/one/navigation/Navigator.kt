@@ -76,4 +76,5 @@ interface Navigator {
         category: String
     )
     fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory)
+    fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String)
 }

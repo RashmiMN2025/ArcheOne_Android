@@ -13,6 +13,8 @@ import com.archeGlobal.one.network.AssetDetail
 import com.archeGlobal.one.network.Office
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class PreferencesManager(context: Context) {
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
@@ -309,8 +311,12 @@ class PreferencesManager(context: Context) {
         }
     }
 
+    private val _lockedState = MutableStateFlow(isLocked())
+    val lockedState: StateFlow<Boolean> get() = _lockedState
+
     fun setLocked(value: Boolean) {
         sharedPreferences.edit().putBoolean("isLocked", value).apply()
+        _lockedState.value = value
     }
 
     fun isLocked(): Boolean {

@@ -47,6 +47,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import android.content.DialogInterface
+import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.navigation.AndroidNavigator
 
 class HomeActivity : AppCompatActivity() {
@@ -76,6 +77,7 @@ class HomeActivity : AppCompatActivity() {
     private var isFromLogin = false // Flag to track if we're coming from login
     private var isAuthenticating = mutableStateOf(false) // New state for biometric authentication
     private var isLocked = false
+    private var biometricPromptShown = false
 
     private fun refreshHomeData() {
         val userData = userDataManager.getUserData()
@@ -111,44 +113,55 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         userDataManager = UserDataManager.getInstance(this)
         navigator = AndroidNavigator(this)
+
+        // If MPIN is not set, redirect to MPIN setup
+        if (!com.archeGlobal.one.utils.MpinManager.checkMpinExists(this)) {
+            val email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
+            val mobile = intent.getStringExtra("mobile") ?: userDataManager.getUserData()?.mobile ?: ""
+            val employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
+            val mpinIntent = android.content.Intent(this, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
+            mpinIntent.putExtra("email", email)
+            mpinIntent.putExtra("mobile", mobile)
+            mpinIntent.putExtra("employeeId", employeeId)
+            startActivity(mpinIntent)
+            finish()
+            return
+        }
         
         // Check if we're coming from login
         isFromLogin = intent.getBooleanExtra("fromLogin", false)
 
-        val showBiometricSetup = intent.getBooleanExtra("showBiometricSetup", false)
+        val fromMpin = intent.getBooleanExtra("fromMpin", false)
         val email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
         val mobile = intent.getStringExtra("mobile") ?: userDataManager.getUserData()?.mobile ?: ""
         val employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
+        val token = intent.getStringExtra("token") ?: userDataManager.getAuthToken() ?: ""
+        val mpin = intent.getStringExtra("mpin") ?: ""
 
-        // Handle biometric setup if needed
-        if (showBiometricSetup) {
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                val biometricHelper = BiometricHelper(this)
-                try {
-                    android.app.AlertDialog.Builder(this)
-                        .setTitle("Enable Fingerprint Login")
-                        .setMessage("Would you like to use fingerprint for faster login next time?")
-                        .setPositiveButton("Yes") { dialog: DialogInterface, _: Int ->
-                            val token = userDataManager.getAuthToken() ?: ""
-                            biometricHelper.showBiometricPrompt(
-                                activity = this,
-                                title = "Setup Fingerprint",
-                                subtitle = "Verify your fingerprint to enable quick login",
-                                onSuccess = {
-                                    biometricHelper.saveCredentials(email, mobile, employeeId, token)
-                                    Toast.makeText(this, "Fingerprint login enabled successfully!", Toast.LENGTH_SHORT).show()
-                                },
-                                onError = { error ->
-                                    Toast.makeText(this, "Failed to setup fingerprint: $error", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
-                        .setNegativeButton("No", null)
-                        .show()
-                } catch (e: Exception) {
-                    Log.e("BiometricSetup", "Failed to show dialog", e)
-                }
-            }, 1000)
+        if (fromMpin && !biometricPromptShown) {
+            biometricPromptShown = true
+            val biometricHelper = com.archeGlobal.one.utils.BiometricHelper(this)
+            if (biometricHelper.canUseBiometric() && !biometricHelper.isBiometricEnabled()) {
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("Enable Fingerprint Login")
+                    .setMessage("Would you like to use fingerprint for faster login next time?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        biometricHelper.showBiometricPrompt(
+                            activity = this,
+                            title = "Setup Fingerprint",
+                            subtitle = "Verify your fingerprint to enable quick login",
+                            onSuccess = {
+                                biometricHelper.saveCredentials(email, mobile, employeeId, token)
+                                userDataManager.preferencesManager.setBiometricEnabled(true)
+                                userDataManager.preferencesManager.setLocked(false)
+                            },
+                            onError = { _ -> }
+                        )
+                    }
+                    .setNegativeButton("No", null)
+                    .setCancelable(false)
+                    .show()
+            }
         }
 
         // Disable back navigation to login
@@ -163,6 +176,7 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         })
+
         // Initialize controllers that need context
         otpVerificationController = OtpVerificationController(
             navigator = navigator, // Use the existing navigator instance
@@ -272,6 +286,7 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         val eventData = controller.eventData.collectAsState().value
                         val showEventPopup = controller.showEventPopup.collectAsState().value
+                        var showBiometricPrompt by remember { mutableStateOf(fromMpin) }
                         
                         Log.d("HomeActivity", "Event data present: ${eventData != null}, showEventPopup: $showEventPopup")
                         if (eventData != null) {
@@ -301,6 +316,7 @@ class HomeActivity : AppCompatActivity() {
                             showEventPopup = showEventPopup,
                             onDismissEventPopup = controller::dismissEventPopup
                         )
+
                     }
 
                     // Add chat screen composable
@@ -1134,8 +1150,8 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (userDataManager.isLoggedIn() && BiometricHelper(this).isBiometricEnabled()) {
-            isLocked = true
+        if (userDataManager.isLoggedIn()) {
+            userDataManager.preferencesManager.setLocked(true) // <-- Persist locked state
         }
     }
 

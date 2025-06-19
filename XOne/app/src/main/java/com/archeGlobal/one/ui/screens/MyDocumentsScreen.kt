@@ -31,11 +31,25 @@ import androidx.compose.ui.text.style.TextAlign
 import com.archeGlobal.one.R
 import com.archeGlobal.one.ui.components.UniversalLoader
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.text.font.FontFamily
 import androidx.core.content.ContextCompat
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.controller.MpinController
+import com.archeGlobal.one.utils.UserDataManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.zIndex
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +66,15 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
 
     var showUploadDialog by remember { mutableStateOf(false) }
     var selectedDocument by remember { mutableStateOf<String?>(null) }
+
+    val mpinController = remember { MpinController(context) }
+    val userDataManager = remember { UserDataManager.getInstance(context) }
+    var showMpinPrompt by remember { mutableStateOf(true) }
+    var enteredMpin by remember { mutableStateOf("") }
+    var mpinError by remember { mutableStateOf<String?>(null) }
+    val focusRequesters = remember { List(4) { FocusRequester() } }
+    var focusedIndex by remember { mutableStateOf(-1) }
+    var isVerifyingMpin by remember { mutableStateOf(false) }
 
     // We no longer need to explicitly get the email as it's retrieved from user data
 
@@ -129,6 +152,10 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
 
     Box(
         modifier = Modifier
+        .fillMaxSize()
+    ) {
+        Box(
+        modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
@@ -139,6 +166,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                     )
                 )
             )
+            .then(if (showMpinPrompt) Modifier.blur(8.dp) else Modifier)
     ) {
         Column(
             modifier = Modifier
@@ -304,6 +332,226 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             )
         }
     }
+
+    if (showMpinPrompt) {
+        // Blur and block background
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.50f))
+                .blur(6.dp)
+                .zIndex(10f)
+                .pointerInput(Unit) {}
+        )
+
+        // Loader if verifying
+        if (isVerifyingMpin) {
+            UniversalLoader(isLoading = true)
+        }
+
+        // Centered MPIN prompt box
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(101f),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = Color(0xFFFEF7F2),
+                shadowElevation = 24.dp,
+                tonalElevation = 2.dp,
+                modifier = Modifier
+                    .widthIn(min = 340.dp, max = 420.dp)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp, vertical = 28.dp)
+                        .widthIn(min = 340.dp, max = 420.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        painter = painterResource(id = com.archeGlobal.one.R.drawable.ic_lock),
+                        contentDescription = "Lock",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Text(
+                        "Enter Your MPIN",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 26.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        "Please enter your 4-digit MPIN to access your documents",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(28.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Enter MPIN",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                            color = Color(0xFF7B7B7B),
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        for (i in 0 until 4) {
+                            val hasDigit = enteredMpin.getOrNull(i)?.isDigit() == true
+                            OutlinedTextField(
+                                value = enteredMpin.getOrNull(i)?.toString() ?: "",
+                                onValueChange = { value ->
+                                    if (value.length <= 1 && value.all { it.isDigit() }) {
+                                        val chars = enteredMpin.padEnd(4).toCharArray()
+                                        chars[i] = value.firstOrNull() ?: ' '
+                                        enteredMpin = String(chars).replace(" ", "")
+                                        if (value.isNotEmpty() && i < 3) {
+                                            focusRequesters[i + 1].requestFocus()
+                                        }
+                                    }
+                                    if (value.isEmpty() && i > 0) {
+                                        val chars = enteredMpin.padEnd(4).toCharArray()
+                                        chars[i] = ' '
+                                        enteredMpin = String(chars).replace(" ", "")
+                                        focusRequesters[i - 1].requestFocus()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .width(65.dp)
+                                    .height(65.dp)
+                                    .focusRequester(focusRequesters[i])
+                                    .padding(horizontal = 4.dp)
+                                    .onFocusChanged { focusState ->
+                                        if (focusState.isFocused) focusedIndex = i
+                                    }
+                                    .border(
+                                        width = 1.5.dp,
+                                        color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
+                                        shape = MaterialTheme.shapes.medium
+                                    ),
+                                textStyle = TextStyle(
+                                    fontSize = 28.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center
+                                ),
+                                singleLine = true,
+                                visualTransformation = PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                                shape = MaterialTheme.shapes.medium,
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    disabledContainerColor = Color.White,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    disabledTextColor = Color.Black,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent
+                                ),
+                                isError = mpinError != null && enteredMpin.length == 4
+                            )
+                            if (i < 3) Spacer(modifier = Modifier.width(8.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(26.dp))
+                    Button(
+                        onClick = {
+                            if (enteredMpin.length == 4) {
+                                isVerifyingMpin = true
+                                mpinError = null
+                                // Simulate async verification
+                                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                    kotlinx.coroutines.delay(700)
+                                    if (mpinController.validateMpin(enteredMpin)) {
+                                        mpinError = null
+                                        enteredMpin = ""
+                                        showMpinPrompt = false
+                                        Toast.makeText(context, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        mpinError = "Invalid MPIN. Please try again."
+                                        enteredMpin = ""
+                                        Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
+                                    }
+                                    isVerifyingMpin = false
+                                }
+                            } else {
+                                mpinError = "Please enter 4 digits."
+                                Toast.makeText(context, "Please enter 4 digits.", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825),
+                            contentColor = Color.White
+                        ),
+                        enabled = !isVerifyingMpin
+                    ) {
+                        Text(
+                            "Unlock",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 20.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // Reset MPIN button
+                    OutlinedButton(
+                        onClick = {
+                            val intent = android.content.Intent(context, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
+                            intent.putExtra("resetMpin", true)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .width(140.dp)
+                            .height(38.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE0B4AA),
+                            contentColor = Color(0xFFDD3825),
+                            disabledContainerColor = Color(0xFFE0B4AA),
+                            disabledContentColor = Color(0xFFDD3825)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFFDD3825)),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Text(
+                            "Reset MPIN",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+            }
+        }
+        return // Block rest of the screen until MPIN is entered
+    }
+    }
+
 }
 
 @Composable

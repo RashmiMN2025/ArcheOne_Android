@@ -101,5 +101,6 @@ class PreviewNavigator : Navigator {
         // No-op for preview purposes
     }
 
+    override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String) {}
 }
 

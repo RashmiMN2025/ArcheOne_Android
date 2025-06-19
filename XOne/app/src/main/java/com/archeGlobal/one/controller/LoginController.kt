@@ -95,8 +95,12 @@ class LoginController(
                         response.isSuccessful && responseBody != null -> {
                             // Save user data here!
                             UserDataManager.getInstance(context).saveUserDataFromResponse(responseBody, token)
-                            UserDataManager.getInstance(context).setIsLoggedIn(true)      // <-- Add this
-                            UserDataManager.getInstance(context).setHasLoggedIn(true)     // <-- Add this
+                            UserDataManager.getInstance(context).setIsLoggedIn(true)
+                            UserDataManager.getInstance(context).setHasLoggedIn(true)
+                            // Instead of navigating to Home, go to MPIN setup
+                            if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                navigator.navigateToMpinSetup(email, mobile, employeeId, token)
+                            }
                             callback("Login successful", false)
                         }
                         errorBody != null -> {
