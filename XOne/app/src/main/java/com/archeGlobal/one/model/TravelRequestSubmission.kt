@@ -42,6 +42,15 @@ data class TravelRequestSubmission(
     @SerializedName("reportingManagerEmail")
     val reportingManagerEmail: String,
     
+    @SerializedName("grade")
+    val grade: String,
+    
+    @SerializedName("aadhar_number")
+    val aadharNumber: String,
+    
+    @SerializedName("date_of_birth")
+    val dateOfBirth: String,
+    
     @SerializedName("flightTime")
     val flightTime: String = "",
     
