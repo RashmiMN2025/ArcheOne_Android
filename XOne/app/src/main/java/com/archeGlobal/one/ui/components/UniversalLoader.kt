@@ -61,7 +61,6 @@ fun UniversalLoader(isLoading: Boolean) {
     }
 }
 
-
 @Composable
 fun EmptyFavorites(
     modifier: Modifier = Modifier
@@ -70,24 +69,25 @@ fun EmptyFavorites(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .offset(y = (-120).dp),
+            .offset(y = (-80).dp), // Moved further down by changing from -100.dp to -80.dp
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Spacer(modifier = Modifier.height(15.dp)) // Increased from 10.dp to 15.dp
         Image(
             painter = painterResource(id = R.drawable.ic_star),
             contentDescription = "No favorites",
             modifier = Modifier.size(56.dp),
             colorFilter = ColorFilter.tint(Color.Gray)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp)) // Increased from 20.dp to 22.dp
         Text(
             text = "No Favourite Services",
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
             color = Color.Black
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp)) // Increased from 10.dp to 12.dp
         Text(
             text = "Long-press a service in 'All Apps' to add it to your favourites.",
             fontSize = 14.sp,

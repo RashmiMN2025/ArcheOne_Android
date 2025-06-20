@@ -119,8 +119,19 @@ class TravelController(private val navigator: Navigator, private val context: Co
     var businessJustification by mutableStateOf("")
         private set
     
-    // Mode of transport options
-    val transportOptions = listOf("Bus",  "Flight", "Train")
+    // Mode of transport options based on employee grade
+    val transportOptions: List<String>
+        get() {
+            // Extract grade as a number if possible
+            val gradeNumber = employeeGrade.replace("Grade ", "").toIntOrNull() ?: 0
+            
+            // For grade 6 and above, include flight option
+            return if (gradeNumber >= 6) {
+                listOf("Bus", "Flight", "Train")
+            } else {
+                listOf("Bus", "Train")
+            }
+        }
     var modeOfTransport by mutableStateOf("")
         private set
     var isTransportDropdownExpanded by mutableStateOf(false)
@@ -690,9 +701,20 @@ class TravelController(private val navigator: Navigator, private val context: Co
     
     /**
      * Update mode of transport field
+     * If the selected mode is not available for the employee's grade, it will be reset
      */
     fun updateModeOfTransport(value: String) {
-        modeOfTransport = value
+        // Check if the selected mode is available for the employee's grade
+        if (transportOptions.contains(value)) {
+            modeOfTransport = value
+            
+            // Reset flight-related fields if mode is not Flight
+            if (value != "Flight") {
+                flightTimePreference = ""
+                seatPreference = ""
+                frequentFlyerNumber = "0"
+            }
+        }
         // Close dropdown after selection
         isTransportDropdownExpanded = false
     }
