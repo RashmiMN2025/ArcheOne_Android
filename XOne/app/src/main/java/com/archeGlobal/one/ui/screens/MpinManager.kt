@@ -28,8 +28,17 @@ object MpinManager {
     fun getMpin(context: Context): String? = prefs(context).getString(KEY_MPIN, null)
 
     fun clearMpin(context: Context) {
-        prefs(context).edit().remove(KEY_MPIN).apply()
+        val prefs = getPrefs(context)
+        prefs.edit().remove(KEY_MPIN).apply()
     }
+
+    fun clearSecurityQuestions(context: Context) {
+        val prefs = getPrefs(context)
+        prefs.edit().remove("security_questions").apply()
+    }
+
+    private fun getPrefs(context: Context) =
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     fun saveSecurityQuestions(context: Context, questions: List<SecurityQuestion>) {
         prefs(context).edit()

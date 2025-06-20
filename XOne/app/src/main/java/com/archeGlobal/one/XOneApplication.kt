@@ -1,6 +1,7 @@
 package com.archeGlobal.one
 
 import android.app.Application
+import androidx.lifecycle.ProcessLifecycleOwner
 import android.content.res.Configuration
 import android.util.Log
 import com.archeGlobal.one.controller.SocialDataProvider
@@ -18,6 +19,7 @@ class XOneApplication : Application() {
     
     override fun onCreate() {
         super.onCreate()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(AppLifecycleObserver(this))
         
         // Force a consistent font scale across all devices
         resources.forceAppFontScale(1.0f)
@@ -78,4 +80,5 @@ class XOneApplication : Application() {
     init {
         instance = this
     }
+
 } 

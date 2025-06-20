@@ -58,7 +58,6 @@ fun HolidayOptionsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(bottom = 10.dp)
             ) {
                 // Back button aligned to start
                 IconButton(
@@ -81,31 +80,33 @@ fun HolidayOptionsScreen(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-            
-            // Two option cards side by side
-            Row(
+
+        }
+
+        // Two option cards side by side
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {                // Holiday Calendar Option
+            OptionCard(
+                title = "Holiday Calendar", // Added line break to display on two lines
+                subtitle = "Company Holidays",
+                iconResId = R.drawable.holiday2,
+                onClick = { controller.navigateToHolidayCalendar() },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(30.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {                // Holiday Calendar Option
-                OptionCard(
-                    title = "Holiday Calendar", // Added line break to display on two lines
-                    subtitle = "Company Holidays",
-                    iconResId = R.drawable.holiday2,
-                    onClick = { controller.navigateToHolidayCalendar() },
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // Kudos Option
-                OptionCard(
-                    title = "Kudos",
-                    subtitle = "Celebrate Peers",
-                    iconResId = R.drawable.kudos,
-                    onClick = { controller.navigateToKudos() },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+                    .width(200.dp)
+                    .padding(top = 125.dp)
+            )
+
+            // Kudos Option
+//                OptionCard(
+//                    title = "Kudos",
+//                    subtitle = "Celebrate Peers",
+//                    iconResId = R.drawable.kudos,
+//                    onClick = { controller.navigateToKudos() },
+//                    modifier = Modifier.weight(1f)
+//                )
         }
     }
 }

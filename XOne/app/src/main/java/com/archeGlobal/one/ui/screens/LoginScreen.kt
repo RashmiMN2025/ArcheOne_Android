@@ -26,7 +26,9 @@ import com.archeGlobal.one.navigation.Navigator
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.components.UniversalLoader
 import androidx.compose.material3.Icon
@@ -47,8 +49,11 @@ import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -65,8 +70,6 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var firstTimeLogin by remember { mutableStateOf(isFirstTimeLogin(context)) }
     var showWebView by remember { mutableStateOf(false) }
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
-    var showOtpFields by remember { mutableStateOf(firstTimeLogin) }
-    var selectedLoginMethod by remember { mutableStateOf("OTP") } // Track which button is selected
 
     val lastEmployeeName = UserDataManager.getInstance(context).getLastUsername()
     val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn() 
@@ -78,6 +81,35 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var showPolicyWebView by remember { mutableStateOf(false) }
     var policyUrl by remember { mutableStateOf("") }
     var policyTitle by remember { mutableStateOf("") }
+
+    val mpinController = remember { com.archeGlobal.one.controller.MpinController(context) }
+    val hasMpin = remember { mpinController.isMpinSet() }
+    var selectedLoginMethod by remember { mutableStateOf(if (firstTimeLogin) "OTP" else if (hasMpin) "MPIN" else "OTP") }
+    var showOtpFields by remember { mutableStateOf(firstTimeLogin) }
+    var enteredMpin by remember { mutableStateOf("") }
+    var mpinError by remember { mutableStateOf<String?>(null) }
+    val focusRequesters = List(4) { remember { androidx.compose.ui.focus.FocusRequester() } }
+    var focusedIndex by remember { mutableStateOf(-1) }
+    var isVerifyingMpin by remember { mutableStateOf(false) }
+
+    var showOtpButton by remember { mutableStateOf(firstTimeLogin) }
+    var isDifferentUserMode by remember { mutableStateOf(false) }
+
+    var termsAccepted by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        // This will run every time LoginScreen is shown (e.g., after logout)
+        showOtpButton = firstTimeLogin
+        isDifferentUserMode = false
+        if (firstTimeLogin) {
+            selectedLoginMethod = "OTP"
+            showOtpFields = true
+        } else {
+            selectedLoginMethod = if (hasMpin) "MPIN" else "MFA"
+            showOtpFields = false
+        }
+    }
 
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {
@@ -149,31 +181,58 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     .height(52.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Button(
-                    onClick = { selectedLoginMethod = "OTP"; showOtpFields = firstTimeLogin },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    shape = MaterialTheme.shapes.medium,
-                    contentPadding = PaddingValues(0.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                        contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
-                    ),
-                    border = BorderStroke(0.5.dp, Color(0xFFDD3825))
-                ) {
-                    Text(
-                        "OTP",
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        maxLines = 1,
-                        softWrap = false
-                    )
+                if (!isDifferentUserMode && hasMpin) {
+                    Button(
+                        onClick = { selectedLoginMethod = "MPIN" },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        shape = MaterialTheme.shapes.medium,
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
+                            contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black
+                        ),
+                        border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                    ) {
+                        Text(
+                            "MPIN",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                }
+
+                if (showOtpButton) {
+                    Button(
+                        onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        shape = MaterialTheme.shapes.medium,
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                            contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
+                        ),
+                        border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                    ) {
+                        Text(
+                            "OTP",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
 
                 Button(
-                    onClick = { selectedLoginMethod = "MFA"; showOtpFields = false },
+                    onClick = { selectedLoginMethod = "MFA" },
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
@@ -230,7 +289,24 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             if (!firstTimeLogin && selectedLoginMethod == "OTP" && !showOtpFields) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Button(
-                    onClick = { showOtpFields = true },
+                    onClick = { 
+                        showOtpFields = true 
+                        if (!termsAccepted) {
+                            Toast.makeText(context, "Please accept the terms and condition", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        isLoading = true
+                        controller.sendOtp(email, mobile, employeeId) { message, isError ->
+                            isLoading = false
+                            if (!isError) {
+                                setFirstTimeLogin(context, false)
+                                firstTimeLogin = false
+                                navigator.navigateToOtpVerification(email, mobile, employeeId)
+                            } else {
+                                errorMessage = message
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth(0.97f)
                         .height(62.dp),
@@ -355,9 +431,41 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     shape = MaterialTheme.shapes.medium
                 )
 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(0.dp, 8.dp, 0.dp, 8.dp)
+                ) {
+                    Checkbox(
+                        checked = termsAccepted,
+                        onCheckedChange = { checked ->
+                            termsAccepted = checked
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFFDD3825),
+                            uncheckedColor = Color.Gray,
+                            checkmarkColor = Color.White
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "I agree to the terms and condition",
+                        color = Color.Black,
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.clickable { showTermsDialog = true }
+                    )
+                }
+
                 // Login Button
                 Button(
                     onClick = {
+                        if (!termsAccepted) {
+                            Toast.makeText(context, "Please accept the terms and condition", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
                         isLoading = true
                         controller.sendOtp(email, mobile, employeeId) { message, isError ->
                             isLoading = false
@@ -511,6 +619,169 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                 }
             }
 
+            if (selectedLoginMethod == "MPIN" && hasMpin) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    "Enter MPIN",
+                    fontSize = 16.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(start = 12.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    for (i in 0 until 4) {
+                        OutlinedTextField(
+                            value = enteredMpin.getOrNull(i)?.toString() ?: "",
+                            onValueChange = { value ->
+                                if (value.length <= 1 && value.all { it.isDigit() }) {
+                                    val chars = enteredMpin.padEnd(4).toCharArray()
+                                    chars[i] = value.firstOrNull() ?: ' '
+                                    enteredMpin = String(chars).replace(" ", "")
+                                    if (value.isNotEmpty() && i < 3) focusRequesters[i + 1].requestFocus()
+                                }
+                                if (value.isEmpty() && i > 0) {
+                                    val chars = enteredMpin.padEnd(4).toCharArray()
+                                    chars[i] = ' '
+                                    enteredMpin = String(chars).replace(" ", "")
+                                    focusRequesters[i - 1].requestFocus()
+                                }
+                            },
+                            modifier = Modifier
+                                .width(65.dp)
+                                .height(65.dp)
+                                .focusRequester(focusRequesters[i])
+                                .padding(horizontal = 4.dp)
+                                .onFocusChanged { focusState ->
+                                    if (focusState.isFocused) focusedIndex = i
+                                }
+                                .border(
+                                    width = 1.5.dp,
+                                    color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
+                                    shape = MaterialTheme.shapes.medium
+                                ),
+                            textStyle = TextStyle(
+                                fontSize = 28.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            ),
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                            shape = MaterialTheme.shapes.medium,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                disabledContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                disabledTextColor = Color.Black,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            isError = mpinError != null && enteredMpin.length == 4
+                        )
+                        if (i < 3) Spacer(modifier = Modifier.width(8.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = {
+                        isVerifyingMpin = true
+                        mpinError = null
+                        if (enteredMpin.length == 4 && mpinController.validateMpin(enteredMpin)) {
+                            mpinError = null
+                            enteredMpin = ""
+                            isVerifyingMpin = false
+                            // Navigate to HomeActivity
+                            val intent = android.content.Intent(context, com.archeGlobal.one.HomeActivity::class.java)
+                            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            context.startActivity(intent)
+                        } else {
+                            enteredMpin = ""
+                            isVerifyingMpin = false
+                            Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.97f)
+                        .height(65.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDD3825),
+                        contentColor = Color.White
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                    enabled = !isVerifyingMpin
+                ) {
+                    Icon(
+                        painter = painterResource(id = com.archeGlobal.one.R.drawable.ic_lock),
+                        contentDescription = "Lock",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Login with MPIN",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                if (mpinError != null) {
+                    Text(
+                        text = mpinError ?: "",
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                // Reset MPIN
+                ClickableText(
+                    text = buildAnnotatedString {
+                        append("Reset MPIN")
+                        addStyle(
+                            style = androidx.compose.ui.text.SpanStyle(
+                                color = Color(0xFFDD3825),
+                                textDecoration = TextDecoration.Underline,
+                                fontWeight = FontWeight.Normal
+                            ),
+                            start = 0,
+                            end = "Reset MPIN".length
+                        )
+                        addStringAnnotation(
+                            tag = "reset_mpin",
+                            annotation = "reset_mpin",
+                            start = 0,
+                            end = "Reset MPIN".length
+                        )
+                    },
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color(0xFFDD3825)
+                    ),
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    onClick = { offset ->
+                        // Navigate to MPIN reset screen
+                        val intent = android.content.Intent(context, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
+                        intent.putExtra("resetMpin", true)
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
             if (showWebView) {
                 Dialog(
                     onDismissRequest = { showWebView = false },
@@ -611,14 +882,17 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                                 UserDataManager.getInstance(context).setIsLoggedIn(false)
                                 UserDataManager.getInstance(context).setHasLoggedIn(false)
                                 setFirstTimeLogin(context, true)
+                                com.archeGlobal.one.utils.MpinManager.clearMpin(context)
+                                com.archeGlobal.one.utils.MpinManager.clearSecurityQuestions(context)
                                 firstTimeLogin = true
-                                showOtpFields = true
+                                showOtpButton = true
+                                isDifferentUserMode = true
                                 selectedLoginMethod = "OTP"
+                                showOtpFields = true
                                 showFingerprint = false
                                 email = ""
                                 mobile = ""
                                 employeeId = ""
-                                forceUpdate = !forceUpdate
                             }
                     },
                     modifier = Modifier.padding(top = 8.dp)
@@ -772,5 +1046,145 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
         if (isLoading) {
             UniversalLoader(isLoading = true)
         }        
+    }
+
+    if (showTermsDialog) {
+        Dialog(
+            onDismissRequest = { showTermsDialog = false }
+        ) {
+            Surface(
+                shape = RoundedCornerShape(18.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth(1f) // Increase width to 98% of the screen
+                    .padding(horizontal = 0.dp, vertical = 12.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_policy_default), // Use your document icon
+                        contentDescription = "Document",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        "Terms and condition",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .heightIn(min = 120.dp, max = 260.dp)
+                            .verticalScroll(rememberScrollState())
+                            .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Column {
+                            Text(
+                                "Welcome to Arche's official application.\n\n" +
+                                "This application is the property of Arche Global Private Limited and is intended solely for authorized use by employees, contractors, or designated users. By accessing or using this application, you agree to the following terms:\n\n",
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                lineHeight = 18.sp
+                            )
+                            Text(
+                                "✅ Usage Terms\n\n",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                lineHeight = 18.sp
+                            )
+                            Text(
+                                "- You acknowledge that this application is owned and managed by [Organization Name].\n" +
+                                "- You agree to use the application only for purposes permitted by your role and organizational policies.\n" +
+                                "- You agree not to share access credentials or sensitive information with unauthorized individuals.\n" +
+                                "- You consent to the collection and processing of usage data for operational, security, and compliance purposes.\n\n",
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                lineHeight = 18.sp
+                            )
+                            Text(
+                                "🔐 Privacy & Security\n\n",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                lineHeight = 18.sp
+                            )
+                            Text(
+                                "- Your data is protected under applicable data protection laws and internal security protocols.\n" +
+                                "- Unauthorized access, misuse, or tampering with the application may result in disciplinary action or legal consequences.\n\n\n" +
+                                "By tapping \"Accept\", you confirm that you have read, understood, and agreed to abide by these terms and our Privacy Policy.\n",
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = { showTermsDialog = false },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.LightGray,
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                "Cancel",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 18.sp,
+                                color = Color.Black
+                                )
+                        }
+                        Button(
+                            onClick = {
+                                termsAccepted = true
+                                showTermsDialog = false
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                "Accept",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 18.sp,
+                                color = Color.White
+                                )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

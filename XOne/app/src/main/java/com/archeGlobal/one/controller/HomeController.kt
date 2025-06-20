@@ -104,7 +104,7 @@ class HomeController(
 
     private fun handleNavigation(action: () -> Unit) {
         navigationCount++
-        if (navigationCount % 5 == 0) {
+        if (navigationCount % 10 == 0) {
             onShowRatingDialog?.invoke()
         }
         action()

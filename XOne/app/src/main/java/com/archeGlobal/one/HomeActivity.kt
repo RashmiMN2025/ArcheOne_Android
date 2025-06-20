@@ -1183,21 +1183,18 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (userDataManager.isLoggedIn()) {
-            userDataManager.preferencesManager.setLocked(true) // <-- Persist locked state
-        }
-    }
+//    override fun onPause() {
+//        super.onPause()
+//        lastPauseTime = System.currentTimeMillis()
+//    }
 
     override fun onResume() {
         super.onResume()
         val biometricHelper = BiometricHelper(this)
         val isLoggedIn = userDataManager.isLoggedIn()
-        val isLocked = userDataManager.preferencesManager.isLocked()
 
         // Only show biometric if user is logged in, biometric is enabled, and app is locked
-        if (isLoggedIn && biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() && isLocked) {
+        if (isLoggedIn && biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() && userDataManager.preferencesManager.isLocked()) {
             isAuthenticating.value = true
             biometricHelper.showBiometricPrompt(
                 activity = this,
