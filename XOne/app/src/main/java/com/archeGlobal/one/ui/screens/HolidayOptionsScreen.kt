@@ -81,31 +81,31 @@ fun HolidayOptionsScreen(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-            
-            // Two option cards side by side
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(30.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {                // Holiday Calendar Option
-                OptionCard(
-                    title = "Holiday Calendar", // Added line break to display on two lines
-                    subtitle = "Company Holidays",
-                    iconResId = R.drawable.holiday2,
-                    onClick = { controller.navigateToHolidayCalendar() },
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // Kudos Option
-                OptionCard(
-                    title = "Kudos",
-                    subtitle = "Celebrate Peers",
-                    iconResId = R.drawable.kudos,
-                    onClick = { controller.navigateToKudos() },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+
+        }
+
+        // Two option cards side by side
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {                // Holiday Calendar Option
+            OptionCard(
+                title = "Holiday Calendar", // Added line break to display on two lines
+                subtitle = "Company Holidays",
+                iconResId = R.drawable.holiday2,
+                onClick = { controller.navigateToHolidayCalendar() },
+                modifier = Modifier.width(200.dp)
+            )
+
+            // Kudos Option
+//                OptionCard(
+//                    title = "Kudos",
+//                    subtitle = "Celebrate Peers",
+//                    iconResId = R.drawable.kudos,
+//                    onClick = { controller.navigateToKudos() },
+//                    modifier = Modifier.weight(1f)
+//                )
         }
     }
 }
