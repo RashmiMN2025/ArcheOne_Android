@@ -19,9 +19,9 @@ class AppLifecycleObserver(
         val now = System.currentTimeMillis()
         if (lastBackgroundTime == 0L) {
             // Cold start: always lock
-            userDataManager.preferencesManager.setLocked(true)
+            userDataManager.preferencesManager.setAppLockState(true)
         } else if (now - lastBackgroundTime > BACKGROUND_THRESHOLD) {
-            userDataManager.preferencesManager.setLocked(true)
+            userDataManager.preferencesManager.setAppLockState(true)
         }
     }
 
