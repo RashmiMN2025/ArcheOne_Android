@@ -339,8 +339,8 @@ fun AssetDetailCard(asset: AssetDetails) {
             .fillMaxWidth()
             .padding(vertical = 8.dp) // Add some spacing between assets
     ) {
-        InfoRow("Host Name:", asset.hostName)
         InfoRow("Asset Type:", asset.assetType)
+        InfoRow("Asset ID/Host Name:", asset.hostName)
         InfoRow("Serial No:", asset.serialNo)
         InfoRow("Device Model:", asset.deviceModel)
         InfoRow("Date Of Issue:", asset.dateOfIssue)

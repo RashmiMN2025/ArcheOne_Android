@@ -2,9 +2,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
 }
 
 android {
+
     namespace = "com.archeGlobal.one"
     compileSdk = 35
 
@@ -53,6 +55,10 @@ android {
     buildFeatures {
         compose = true
     }
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+    }
 }
 
 dependencies {
@@ -71,45 +77,45 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.foundation)
-    
+
     // Manual implementation of UI graphics to ensure it's included
     implementation(libs.ui.graphics)
-    
+
     // Material Design
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.material)
     // Compose Material (Material Design 2) for components like Card, Scaffold, etc.
     implementation(libs.androidx.material)
-    
+
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
-    
+
     // Image Loading
     implementation(libs.coil)
     implementation(libs.coil.compose)
-    
+
     // Network
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.okhttp.v4110)
     implementation(libs.logging.interceptor.v4110)
-    
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
-    
+
     // Accompanist
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.swiperefresh)
     implementation(libs.lottie.compose)
-    
+
     // PDF Viewer - use web view based approach instead of PDF library
     implementation(libs.androidx.webkit)
     implementation(libs.generativeai)
 
-    //biometric
-    implementation (libs.androidx.biometric)
-    
+    // biometric
+    implementation(libs.androidx.biometric)
+
     // ZXing QR Code generator
     implementation(libs.core)
     implementation(libs.androidx.security.crypto)
@@ -123,5 +129,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
 }

@@ -15,6 +15,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class PreferencesManager(context: Context) {
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
@@ -205,6 +206,22 @@ class PreferencesManager(context: Context) {
         }.apply()
     }
 
+    // Locked state management with MutableStateFlow for better reactivity
+    private val _lockedState = MutableStateFlow(getAppLockState())
+    val lockedState: StateFlow<Boolean> = _lockedState.asStateFlow()
+    
+    // Check if app is locked
+    fun getAppLockState(): Boolean {
+        return sharedPreferences.getBoolean(KEY_APP_LOCKED, false)
+    }
+    
+    // Set app locked state
+    fun setAppLockState(locked: Boolean) {
+        Log.d("PreferencesManager", "Setting locked state to: $locked")
+        sharedPreferences.edit().putBoolean(KEY_APP_LOCKED, locked).apply()
+        _lockedState.value = locked
+    }
+    
     companion object {
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_AUTH_TOKEN = "auth_token"
@@ -215,6 +232,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_ASSET_DETAILS = "asset_details"
         private const val KEY_COMMUNIQUE_DATA = "communique_data"
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
+        private const val KEY_APP_LOCKED = "app_locked"
         private const val KEY_PROFILE_UPDATE_TIMESTAMP = "profile_update_timestamp"
         private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
         private const val KEY_EVENT_DATA = "event_data"
@@ -310,18 +328,6 @@ class PreferencesManager(context: Context) {
         } else {
             null
         }
-    }
-
-    private val _lockedState = MutableStateFlow(isLocked())
-    val lockedState: StateFlow<Boolean> get() = _lockedState
-
-    fun setLocked(value: Boolean) {
-        sharedPreferences.edit().putBoolean("isLocked", value).apply()
-        _lockedState.value = value
-    }
-
-    fun isLocked(): Boolean {
-        return sharedPreferences.getBoolean("isLocked", false)
     }
 
     fun saveGreetingsList(greetings: Map<String, List<String>>?) {

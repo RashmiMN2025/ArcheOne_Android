@@ -22,9 +22,10 @@ import android.util.Base64
 import java.io.ByteArrayOutputStream
 import androidx.core.content.ContextCompat
 import android.graphics.BitmapFactory
-import coil.imageLoader
+import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import androidx.core.content.FileProvider
 
 class GreetingDetailActivity : ComponentActivity() {
     private lateinit var navigator: AndroidNavigator
@@ -33,13 +34,13 @@ class GreetingDetailActivity : ComponentActivity() {
     private var selectedGreetingUrl by mutableStateOf("")
 
     private fun getBase64FromDrawable(resId: Int): String {
-    val drawable = ContextCompat.getDrawable(applicationContext, resId) as? BitmapDrawable
-    val bitmap = drawable?.bitmap ?: return ""
-    val outputStream = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-    val byteArray = outputStream.toByteArray()
-    return Base64.encodeToString(byteArray, Base64.NO_WRAP)
-}
+        val drawable = ContextCompat.getDrawable(applicationContext, resId) as? BitmapDrawable
+        val bitmap = drawable?.bitmap ?: return ""
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,7 +86,7 @@ class GreetingDetailActivity : ComponentActivity() {
 
     private fun sendGreeting(imageUrl: String, message: String, category: String) {
         android.widget.Toast.makeText(this, "Preparing greeting to send...", android.widget.Toast.LENGTH_SHORT).show()
-        shareLinkOnly(imageUrl, message, category)
+        downloadImageAndShare(imageUrl, message, category)
     }
 
     private fun shareLinkOnly(imageUrl: String, message: String, category: String) {
@@ -100,6 +101,55 @@ class GreetingDetailActivity : ComponentActivity() {
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
         startActivity(Intent.createChooser(intent, "Send Greeting"))
+    }
+
+    private fun downloadImageAndShare(imageUrl: String, message: String, category: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val imageLoader = ImageLoader(this@GreetingDetailActivity)
+                val request = ImageRequest.Builder(this@GreetingDetailActivity)
+                    .data(imageUrl)
+                    .allowHardware(false)
+                    .build()
+                val result = imageLoader.execute(request)
+                val imageBitmap = result.drawable?.let { drawable ->
+                    when (drawable) {
+                        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                        else -> {
+                            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
+                            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
+                            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                            val canvas = android.graphics.Canvas(bitmap)
+                            drawable.setBounds(0, 0, canvas.width, canvas.height)
+                            drawable.draw(canvas)
+                            bitmap
+                        }
+                    }
+                }
+                val imageUri = saveBitmapToCache(imageBitmap)
+                withContext(Dispatchers.Main) {
+                    if (imageUri != null) {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "image/jpeg"
+                            putExtra(Intent.EXTRA_STREAM, imageUri)
+                            putExtra(Intent.EXTRA_SUBJECT, category)
+                            if (message.isNotEmpty()) {
+                                putExtra(Intent.EXTRA_TEXT, message)
+                            }
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        startActivity(Intent.createChooser(intent, "Send Greeting"))
+                    } else {
+                        shareLinkOnly(imageUrl, message, category)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("GreetingDetailActivity", "Error downloading image: ", e)
+                withContext(Dispatchers.Main) {
+                    shareLinkOnly(imageUrl, message, category)
+                }
+            }
+        }
     }
 
     // --- Send via Outlook with image URL and small display in body ---
@@ -198,5 +248,24 @@ class GreetingDetailActivity : ComponentActivity() {
         </body>
         </html>
     """.trimIndent()
+    }
+    
+    private fun saveBitmapToCache(bitmap: Bitmap?): android.net.Uri? {
+        if (bitmap == null) return null
+        try {
+            val cacheDir = cacheDir
+            val file = java.io.File(cacheDir, "greeting_card_${System.currentTimeMillis()}.jpg")
+            java.io.FileOutputStream(file).use { outputStream ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            }
+            return FileProvider.getUriForFile(
+                this,
+                "${packageName}.provider",
+                file
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("GreetingDetailActivity", "Error saving bitmap: ", e)
+            return null
+        }
     }
 }

@@ -69,7 +69,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
+import com.archeGlobal.one.controller.MpinController
+import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.controller.HomeController
 import com.archeGlobal.one.model.AboutMeModel
 import kotlinx.coroutines.CoroutineScope
@@ -79,12 +84,7 @@ import kotlinx.coroutines.withContext
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.FeedbackRequest
 import com.archeGlobal.one.model.EventResponse
-import com.archeGlobal.one.controller.MpinController
 import com.archeGlobal.one.utils.UserDataManager
-import com.archeGlobal.one.utils.BiometricHelper
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.zIndex
 
 @Composable
 fun ProfileHeader(
@@ -243,7 +243,21 @@ fun HomeScreen(
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {}
 ) {
-    val backgroundModel = remember { WelcomeBackgroundModel() }
+    // Get the user data manager to access preferences
+    val userDataManager = UserDataManager.getInstance(LocalContext.current)
+    // Observe the locked state
+    val lockedState = userDataManager.preferencesManager.lockedState.collectAsState().value
+    // Initialize background model with proper colors to prevent black screen
+    val backgroundModel = remember(lockedState) { WelcomeBackgroundModel() }
+    
+    val appContext = LocalContext.current
+    val mpinController = remember { MpinController(appContext) }
+    val biometricHelper = remember { BiometricHelper(appContext) }
+    val isBiometricEnabled = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
+    var enteredMpin by remember { mutableStateOf("") }
+    var mpinError by remember { mutableStateOf<String?>(null) }
+    val focusRequesters = List(4) { remember { FocusRequester() } }
+    var isVerifyingMpin by remember { mutableStateOf(false) }
     var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
     var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -262,17 +276,6 @@ fun HomeScreen(
     var feedbackText by rememberSaveable { mutableStateOf("") }
     var isSubmitting by remember { mutableStateOf(false) }
 
-    val mpinController = remember { MpinController(context) }
-    val userDataManager = remember { UserDataManager.getInstance(context) }
-    val lockedState by userDataManager.preferencesManager.lockedState.collectAsState()
-    val biometricHelper = remember { BiometricHelper(context) }
-    val isBiometricEnabled = biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()
-    var enteredMpin by remember { mutableStateOf("") }
-    var mpinError by remember { mutableStateOf<String?>(null) }
-    val focusRequesters = List(4) { remember { FocusRequester() } }
-
-    var isVerifyingMpin by remember { mutableStateOf(false) }
-
     // Register the callback with the controller
     LaunchedEffect(Unit) {
         controller.onShowRatingDialog = { showRatingDialog = true }
@@ -286,6 +289,23 @@ fun HomeScreen(
             kotlinx.coroutines.delay(1000)
             isRefreshing = false
         }
+    }
+
+    // Collect Pride Month related states
+    val isPrideMonth = controller.isPrideMonth.collectAsState().value
+    val showPrideMonthDialog = controller.showPrideMonthDialog.collectAsState().value
+    val isUsingPrideIcon = remember { mutableStateOf(controller.isUsingPrideIcon()) }
+
+    // Show Pride Month Dialog if it's Pride Month and dialog should be shown
+    if (isPrideMonth && showPrideMonthDialog) {
+        PrideMonthDialog(
+            isUsingPrideIcon = isUsingPrideIcon.value,
+            onDismiss = { controller.dismissPrideMonthDialog() },
+            onToggleIcon = {
+                controller.togglePrideIcon()
+                isUsingPrideIcon.value = controller.isUsingPrideIcon()
+            }
+        )
     }
 
     // Always show MPIN prompt if locked and biometric is not enabled
@@ -451,14 +471,14 @@ fun HomeScreen(
                     Button(
                         onClick = {
                             if (enteredMpin.length == 4 && mpinController.validateMpin(enteredMpin)) {
-                                userDataManager.preferencesManager.setLocked(false)
+                                userDataManager.preferencesManager.setAppLockState(false)
                                 mpinError = null
                                 enteredMpin = ""
-                                Toast.makeText(context, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(appContext, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
                             } else {
                                 mpinError = "Invalid MPIN. Please try again."
                                 enteredMpin = ""
-                                Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(appContext, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier
@@ -481,9 +501,9 @@ fun HomeScreen(
                     // Reset MPIN button
                     OutlinedButton(
                         onClick = {
-                            val intent = android.content.Intent(context, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
+                            val intent = android.content.Intent(appContext, MpinActivity::class.java)
                             intent.putExtra("resetMpin", true)
-                            context.startActivity(intent)
+                            appContext.startActivity(intent)
                         },
                         modifier = Modifier
                             .width(140.dp)
@@ -507,21 +527,6 @@ fun HomeScreen(
                 }
             }
         }
-    // Collect Pride Month related states
-    val isPrideMonth = controller.isPrideMonth.collectAsState().value
-    val showPrideMonthDialog = controller.showPrideMonthDialog.collectAsState().value
-    val isUsingPrideIcon = remember { mutableStateOf(controller.isUsingPrideIcon()) }
-
-    // Show Pride Month Dialog if it's Pride Month and dialog should be shown
-    if (isPrideMonth && showPrideMonthDialog) {
-        PrideMonthDialog(
-            isUsingPrideIcon = isUsingPrideIcon.value,
-            onDismiss = { controller.dismissPrideMonthDialog() },
-            onToggleIcon = {
-                controller.togglePrideIcon()
-                isUsingPrideIcon.value = controller.isUsingPrideIcon()
-            }
-        )
     }
 
     // Show event popup if available and visibility is true

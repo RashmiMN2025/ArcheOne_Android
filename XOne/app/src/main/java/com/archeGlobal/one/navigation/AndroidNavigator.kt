@@ -234,7 +234,9 @@ class AndroidNavigator(
     }
 
     override fun navigateToHolidayOptions() {
-        navigate("holiday_options")
+        // Navigate directly to HolidayCalendarActivity instead of the intermediate options screen
+        val intent = Intent(activity, HolidayCalendarActivity::class.java)
+        activity.startActivity(intent)
     }
 
     override fun navigateToHolidayCalendar() {

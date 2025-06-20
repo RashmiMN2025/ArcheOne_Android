@@ -97,6 +97,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
     var employeeGrade by mutableStateOf("N/A")
         private set
+    var dateOfBirth by mutableStateOf("")
+        private set
+    var aadharNumber by mutableStateOf("")
+        private set
     var reportingManagerName by mutableStateOf("")
         private set
     var reportingManagerEmail by mutableStateOf("biswajit.d@arche.global")
@@ -115,15 +119,30 @@ class TravelController(private val navigator: Navigator, private val context: Co
     var businessJustification by mutableStateOf("")
         private set
     
-    // Mode of transport options
-    val transportOptions = listOf("Bus",  "Flight", "Train")
+    // Mode of transport options based on employee grade
+    val transportOptions: List<String>
+        get() {
+            // Extract grade as a number if possible
+            val gradeNumber = employeeGrade.replace("Grade ", "").toIntOrNull() ?: 0
+            
+            // For grade 6 and above, include flight option
+            return if (gradeNumber >= 6) {
+                listOf("Bus", "Flight", "Train")
+            } else {
+                listOf("Bus", "Train")
+            }
+        }
     var modeOfTransport by mutableStateOf("")
         private set
     var isTransportDropdownExpanded by mutableStateOf(false)
         private set
-    var departureDate by mutableStateOf("2 Jun 2025")
+    // Initialize with current date
+    private val currentDateFormatter = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
+    private val currentDate = currentDateFormatter.format(Date())
+    
+    var departureDate by mutableStateOf(currentDate)
         private set
-    var arrivalDate by mutableStateOf("2 Jun 2025")
+    var arrivalDate by mutableStateOf(currentDate)
         private set
         
     // Flight time preference options
@@ -182,11 +201,14 @@ class TravelController(private val navigator: Navigator, private val context: Co
             employeeEmail = user.email
             mobileNumber = user.mobile
             
-            // Get reporting manager name from user details if available
+            // Get reporting manager name and other details from user details if available
             user.userDetails?.let { details ->
                 reportingManagerName = details.reporting_manager
+                reportingManagerEmail = details.reporting_manager_mail.ifEmpty { "biswajit.d@arche.global" }
+                dateOfBirth = details.date_of_birth
+                aadharNumber = details.aadhar_number
+                employeeGrade = details.grade.ifEmpty { "N/A" }
             }
-            // reportingManagerEmail is already set to "biswajit.d@arche.global"
         }
     }
     
@@ -679,9 +701,20 @@ class TravelController(private val navigator: Navigator, private val context: Co
     
     /**
      * Update mode of transport field
+     * If the selected mode is not available for the employee's grade, it will be reset
      */
     fun updateModeOfTransport(value: String) {
-        modeOfTransport = value
+        // Check if the selected mode is available for the employee's grade
+        if (transportOptions.contains(value)) {
+            modeOfTransport = value
+            
+            // Reset flight-related fields if mode is not Flight
+            if (value != "Flight") {
+                flightTimePreference = ""
+                seatPreference = ""
+                frequentFlyerNumber = "0"
+            }
+        }
         // Close dropdown after selection
         isTransportDropdownExpanded = false
     }

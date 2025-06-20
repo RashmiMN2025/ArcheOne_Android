@@ -153,7 +153,7 @@ class HomeActivity : AppCompatActivity() {
                             onSuccess = {
                                 biometricHelper.saveCredentials(email, mobile, employeeId, token)
                                 userDataManager.preferencesManager.setBiometricEnabled(true)
-                                userDataManager.preferencesManager.setLocked(false)
+                                userDataManager.preferencesManager.setAppLockState(false)
                             },
                             onError = { _ -> }
                         )
@@ -531,7 +531,7 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         HolidayCalendarScreen(
                             controller = holidayCalendarController,
-                            onBackPressed = { navigator.navigateToHolidayOptions() },
+                            onBackPressed = { navController.navigate("home") },
                             onMonthClick = { month ->
                                 navController.navigate("monthDetail/$month")
                             },
@@ -1183,15 +1183,18 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-//    override fun onPause() {
-//        super.onPause()
-//        lastPauseTime = System.currentTimeMillis()
-//    }
+    override fun onPause() {
+        super.onPause()
+        if (userDataManager.isLoggedIn()) {
+            userDataManager.preferencesManager.setAppLockState(true) // <-- Persist locked state
+        }
+    }
 
     override fun onResume() {
         super.onResume()
         val biometricHelper = BiometricHelper(this)
         val isLoggedIn = userDataManager.isLoggedIn()
+        val isLocked = userDataManager.preferencesManager.getAppLockState()
 
         // Only show biometric if user is logged in, biometric is enabled, and app is locked
         if (isLoggedIn && biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() && userDataManager.preferencesManager.isLocked()) {
@@ -1200,7 +1203,7 @@ class HomeActivity : AppCompatActivity() {
                 activity = this,
                 onSuccess = {
                     isAuthenticating.value = false
-                    userDataManager.preferencesManager.setLocked(false) // Unlock the app
+                    userDataManager.preferencesManager.setAppLockState(false) // Unlock the app
                 },
                 onError = { error ->
                     isAuthenticating.value = false

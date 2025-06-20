@@ -74,7 +74,7 @@ class BusinessCardControllerImpl(
 
             val updatedCard = _businessCard.value.copy(
                 location = locationValue,
-                phone = newPhone
+                phone = formatPhoneNumber(newPhone)
             )
             _businessCard.value = generateQRCodeForCard(updatedCard)
 
@@ -82,6 +82,16 @@ class BusinessCardControllerImpl(
             Toast.makeText(context, "Card updated!", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun formatPhoneNumber(phone: String): String {
+        val cleanPhone = phone.trim()
+        return when {
+            cleanPhone.isEmpty() -> ""
+            cleanPhone.startsWith("+91") -> cleanPhone
+            cleanPhone.startsWith("91") -> "+$cleanPhone"
+            else -> "+91$cleanPhone"
         }
     }
 
@@ -144,7 +154,7 @@ class BusinessCardControllerImpl(
                 designation = userData.designation,
                 department = userData.department,
                 email = userData.email,
-                phone = userData.mobile,
+                phone = formatPhoneNumber(userData.mobile),
                 location = locationValue, // Updated location with Bangalore fallback
                 website = "www.arche.global"
             )
