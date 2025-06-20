@@ -104,16 +104,37 @@ fun TravelRequestDetailScreen(
                     // Use fields from the TravelRequest model
                     DetailRow(label = "Business Justification:", value = travelRequest.businessJustification ?: "N/A")
                     DetailRow(label = "Mode of Transport:", value = travelRequest.modeOfTransport ?: "N/A")
-                    DetailRow(label = "Departure Date:", value = travelRequest.departureDate ?: "N/A")
-                    DetailRow(label = "Arrival Date:", value = travelRequest.arrivalDate ?: "N/A")
-                    // Format the created date for display
-                    val formattedDate = try {
-                        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-                            .format(travelRequest.createdDate)
+                    // Format departure date in the format: day Month year (e.g., 3 Jul 2025)
+                    val formattedDepartureDate = try {
+                        val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            .parse(travelRequest.departureDate ?: "")
+                        if (date != null) {
+                            java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
+                                .format(date)
+                        } else "N/A"
                     } catch (e: Exception) {
                         "N/A"
                     }
-                    DetailRow(label = "Request Date:", value = formattedDate)
+                    
+                    // Format arrival date in the format: day Month year (e.g., 17 Jul 2025)
+                    val formattedArrivalDate = try {
+                        val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            .parse(travelRequest.arrivalDate ?: "")
+                        if (date != null) {
+                            java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
+                                .format(date)
+                        } else "N/A"
+                    } catch (e: Exception) {
+                        "N/A"
+                    }
+                    
+                    DetailRow(label = "Departure Date:", value = formattedDepartureDate)
+                    DetailRow(label = "Arrival Date:", value = formattedArrivalDate)
+                    DetailRow(label = "Stay Required:", value = travelRequest.stayRequired ?: "N/A")
+                    DetailRow(label = "Meal Preference:", value = travelRequest.mealPreference ?: "None")
+                    DetailRow(label = "Seat Preference:", value = travelRequest.seatPreference ?: "None")
+                    DetailRow(label = "Flight Time:", value = travelRequest.flightTime ?: "None")
+                    DetailRow(label = "Frequent\nFlyer Number:", value = travelRequest.frequentFlyerNumber ?: "None")
                 }
                 
                 // Approval Details Card
@@ -121,15 +142,19 @@ fun TravelRequestDetailScreen(
                     DetailRow(
                         label = "Status:",
                         value = travelRequest.status.name.capitalize(),
-                        valueColor = when (travelRequest.status) {
-                            TravelStatus.APPROVED -> Color.Black
-                            TravelStatus.REJECTED -> Color.Black
-                            else -> Color.Black
-                        }
+                        valueColor = Color.Black // All status colors set to black
                     )
-                    DetailRow(label = "Approver:", value = travelRequest.approver)
                     DetailRow(label = "Reporting Manager:", value = controller.reportingManagerName)
                     DetailRow(label = "Manager Email:", value = controller.reportingManagerEmail)
+                    
+                    // Format the created date for display in the format: yyyy-MM-dd HH:mm:ss
+                    val formattedCreatedAt = try {
+                        java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                            .format(travelRequest.createdDate)
+                    } catch (e: Exception) {
+                        "N/A"
+                    }
+                    DetailRow(label = "Created At:", value = formattedCreatedAt)
                 }
             }
         }
@@ -174,20 +199,20 @@ fun DetailRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 4.dp)
     ) {
         Text(
             text = label,
-            fontSize = 16.sp,
+            fontSize = 14.sp,  // Smaller font size
             fontFamily = GraphikFontFamily,
-            color = Color.Gray
+            color = Color.Gray,
+            modifier = Modifier.width(140.dp) // Fixed width for alignment
         )
         Text(
             text = value,
-            fontSize = 16.sp,
+            fontSize = 14.sp,  // Smaller font size
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal, // Normal font weight
             color = valueColor
         )
     }

@@ -43,8 +43,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.TravelController
@@ -214,97 +216,13 @@ fun TravelScreen(
                         }
                     }
                     
-                    // Employee Name
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Name:",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = controller.employeeName,
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    
-                    // Employee ID
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Employee ID:",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = controller.employeeId,
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    
-                    // Mobile Number
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Mobile No:",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = controller.mobileNumber,
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                    
-                    // Employee Grade
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Employee Grade:",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = controller.employeeGrade,
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                    // Employee Details with proper alignment
+                    EmployeeDetailRow(label = "Name:", value = controller.employeeName)
+                    EmployeeDetailRow(label = "Employee ID:", value = controller.employeeId)
+                    EmployeeDetailRow(label = "Mobile No:", value = controller.mobileNumber)
+                    EmployeeDetailRow(label = "Employee Grade:", value = controller.employeeGrade)
+                    EmployeeDetailRow(label = "Date of Birth:", value = controller.dateOfBirth)
+                    EmployeeDetailRow(label = "Aadhar Number:", value = controller.aadharNumber)
                     
                     Divider(
                         modifier = Modifier
@@ -471,7 +389,12 @@ fun TravelScreen(
                                     ),
                                     shape = RoundedCornerShape(8.dp),
                                     readOnly = true,
-                                    enabled = true
+                                    enabled = true,
+                                    textStyle = TextStyle(
+                                        background = Color(0xFFEEEEEE),
+                                        color = Color.Black,
+                                        fontSize = 15.sp
+                                    )
                                 )
                                 
                                 // Add invisible clickable overlay
@@ -485,7 +408,9 @@ fun TravelScreen(
                             
                             // Departure Date Picker Dialog
                             if (showDepartureDatePicker) {
-                                val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
+                                val datePickerState = rememberDatePickerState(
+                                    initialDisplayMode = DisplayMode.Picker,
+                                    initialSelectedDateMillis = System.currentTimeMillis())
                                 DatePickerDialog(
                                     onDismissRequest = { showDepartureDatePicker = false },
                                     confirmButton = {
@@ -543,7 +468,12 @@ fun TravelScreen(
                                     ),
                                     shape = RoundedCornerShape(8.dp),
                                     readOnly = true,
-                                    enabled = true
+                                    enabled = true,
+                                    textStyle = TextStyle(
+                                        background = Color(0xFFEEEEEE),
+                                        color = Color.Black,
+                                        fontSize = 15.sp
+                                    )
                                 )
                                 
                                 // Add invisible clickable overlay
@@ -557,7 +487,9 @@ fun TravelScreen(
                             
                             // Arrival Date Picker Dialog
                             if (showArrivalDatePicker) {
-                                val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
+                                val datePickerState = rememberDatePickerState(
+                                    initialDisplayMode = DisplayMode.Picker,
+                                    initialSelectedDateMillis = System.currentTimeMillis())
                                 DatePickerDialog(
                                     onDismissRequest = { showArrivalDatePicker = false },
                                     confirmButton = {
@@ -855,32 +787,15 @@ fun TravelScreen(
                     // Approval Chain
                     Text(
                         text = "Approval Chain",
-                        fontSize = 14.sp,
+                        fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        fontWeight = FontWeight.Bold
                     )
                     
-                    // Reporting Manager
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Reporting Manager:",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = controller.reportingManagerName,
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                    // Reporting Manager - using the same EmployeeDetailRow component for consistent alignment
+                    EmployeeDetailRow(label = "Reporting Manager:", value = controller.reportingManagerName)
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -929,5 +844,33 @@ fun TravelScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Composable for displaying employee detail rows with proper alignment
+ */
+@Composable
+fun EmployeeDetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontFamily = GraphikFontFamily,
+            color = Color.Gray,
+            modifier = Modifier.width(140.dp)  // Increased fixed width for alignment
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
+            color = Color.Black
+        )
     }
 }

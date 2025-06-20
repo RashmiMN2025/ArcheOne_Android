@@ -97,6 +97,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
     var employeeGrade by mutableStateOf("N/A")
         private set
+    var dateOfBirth by mutableStateOf("")
+        private set
+    var aadharNumber by mutableStateOf("")
+        private set
     var reportingManagerName by mutableStateOf("")
         private set
     var reportingManagerEmail by mutableStateOf("biswajit.d@arche.global")
@@ -121,9 +125,13 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
     var isTransportDropdownExpanded by mutableStateOf(false)
         private set
-    var departureDate by mutableStateOf("2 Jun 2025")
+    // Initialize with current date
+    private val currentDateFormatter = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
+    private val currentDate = currentDateFormatter.format(Date())
+    
+    var departureDate by mutableStateOf(currentDate)
         private set
-    var arrivalDate by mutableStateOf("2 Jun 2025")
+    var arrivalDate by mutableStateOf(currentDate)
         private set
         
     // Flight time preference options
@@ -182,11 +190,14 @@ class TravelController(private val navigator: Navigator, private val context: Co
             employeeEmail = user.email
             mobileNumber = user.mobile
             
-            // Get reporting manager name from user details if available
+            // Get reporting manager name and other details from user details if available
             user.userDetails?.let { details ->
                 reportingManagerName = details.reporting_manager
+                reportingManagerEmail = details.reporting_manager_mail.ifEmpty { "biswajit.d@arche.global" }
+                dateOfBirth = details.date_of_birth
+                aadharNumber = details.aadhar_number
+                employeeGrade = details.grade.ifEmpty { "N/A" }
             }
-            // reportingManagerEmail is already set to "biswajit.d@arche.global"
         }
     }
     

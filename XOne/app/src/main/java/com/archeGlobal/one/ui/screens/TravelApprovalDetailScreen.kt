@@ -122,13 +122,28 @@ fun TravelApprovalDetailScreen(
         ) {
             // Top App Bar
             TopAppBar(
-                title = { Text("Approve Travel Request", fontFamily = GraphikFontFamily) },
+                title = { 
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Approve Travel Request",
+                            fontFamily = GraphikFontFamily,
+                            modifier = Modifier.align(Alignment.Center),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { controller.navigateBack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = Color.White
+                backgroundColor = Color.White,
+                actions = {
+                    // Empty action to balance the navigation icon
+                    IconButton(onClick = {}) {
+                        Box(modifier = Modifier.size(24.dp))
+                    }
+                }
             )
             
             // Main content
@@ -183,8 +198,8 @@ fun TravelApprovalDetailScreen(
                             DetailRow("Destination", selectedRequest.destination)
                             DetailRow("Project", selectedRequest.project)
                             DetailRow("Business Justification", selectedRequest.businessJustification ?: "N/A")
-                            DetailRow("Date of Departure", selectedRequest.departureDate ?: "N/A")
-                            DetailRow("Date of Arrival", selectedRequest.arrivalDate ?: "N/A")
+                            DetailRow("Date of Departure", formatDate(selectedRequest.departureDate))
+                            DetailRow("Date of Arrival", formatDate(selectedRequest.arrivalDate))
                             DetailRow("Mode of Transport", selectedRequest.modeOfTransport ?: "N/A")
                         }
                     }
@@ -371,4 +386,24 @@ private fun DetailRow(label: String, value: String) {
 
 private fun String.capitalize(): String {
     return this.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+/**
+ * Format date string to "d MMM yyyy" format (e.g., "10 Jun 2025")
+ */
+private fun formatDate(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return "N/A"
+    
+    try {
+        // Parse the input date string (assuming it's in a standard format like yyyy-MM-dd)
+        val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+        val date = inputFormat.parse(dateString)
+        
+        // Format to the desired output format
+        val outputFormat = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.US)
+        return date?.let { outputFormat.format(it) } ?: "N/A"
+    } catch (e: Exception) {
+        // If parsing fails, return the original string
+        return dateString
+    }
 }

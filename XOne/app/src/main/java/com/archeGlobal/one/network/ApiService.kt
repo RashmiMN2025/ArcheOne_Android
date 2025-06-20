@@ -250,9 +250,13 @@ data class User(
 
 data class UserDetails(
     val reporting_manager: String = "",
+    val reporting_manager_mail: String = "",
     val divisional_head: String = "",
     val pan: String = "",
     val uan: String = "",
+    val grade: String = "",
+    val aadhar_number: String = "",
+    val date_of_birth: String = "",
     val blood_group: String = "",
     val permanent_address: String = "",
     val temporary_address: String = "",
