@@ -21,6 +21,7 @@ import com.archeGlobal.one.AssetActivity
 import com.archeGlobal.one.BusinessCardActivity
 import com.archeGlobal.one.CommuniqueActivity
 import com.archeGlobal.one.GreetingsActivity
+import com.archeGlobal.one.HolidayCalendarActivity
 import com.archeGlobal.one.HolidayOptionsActivity
 import com.archeGlobal.one.LocationsActivity
 import com.archeGlobal.one.PolicyActivity
@@ -396,7 +397,7 @@ class HomeController(
                 context.startActivity(intent)
             }
             "calendar" -> {
-                val intent = Intent(context, HolidayOptionsActivity::class.java)
+                val intent = Intent(context, HolidayCalendarActivity::class.java)
                 context.startActivity(intent)
             }
             "greetings" -> {

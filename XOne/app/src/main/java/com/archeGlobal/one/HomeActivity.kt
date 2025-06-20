@@ -531,7 +531,7 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         HolidayCalendarScreen(
                             controller = holidayCalendarController,
-                            onBackPressed = { navigator.navigateToHolidayOptions() },
+                            onBackPressed = { navController.navigate("home") },
                             onMonthClick = { month ->
                                 navController.navigate("monthDetail/$month")
                             },
