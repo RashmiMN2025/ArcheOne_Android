@@ -58,7 +58,6 @@ fun HolidayOptionsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(bottom = 10.dp)
             ) {
                 // Back button aligned to start
                 IconButton(
@@ -88,14 +87,16 @@ fun HolidayOptionsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.TopCenter
         ) {                // Holiday Calendar Option
             OptionCard(
                 title = "Holiday Calendar", // Added line break to display on two lines
                 subtitle = "Company Holidays",
                 iconResId = R.drawable.holiday2,
                 onClick = { controller.navigateToHolidayCalendar() },
-                modifier = Modifier.width(200.dp)
+                modifier = Modifier
+                    .width(200.dp)
+                    .padding(top = 125.dp)
             )
 
             // Kudos Option
