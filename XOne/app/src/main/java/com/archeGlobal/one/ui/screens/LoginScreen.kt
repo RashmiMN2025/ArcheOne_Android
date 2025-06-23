@@ -105,7 +105,7 @@ fun LoginScreen(
     var showTermsDialog by remember { mutableStateOf(false) }
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-    LaunchedEffect(firstTimeLogin, hasMpin) {
+    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode) {
         // If forceOriginalLogin is true, always show original login form
         if (forceOriginalLogin) {
             showOtpButton = true
@@ -113,20 +113,24 @@ fun LoginScreen(
             showOtpFields = true
             isDifferentUserMode = false
         } else {
-            // Show OTP button only if biometric is not available
-            showOtpButton = !showBiometricButton
+            // Show OTP button only for first-time users or different users
+            showOtpButton = firstTimeLogin || isDifferentUserMode
             
-            if (firstTimeLogin) {
-                selectedLoginMethod = if (showBiometricButton) "Fingerprint" else "OTP"
-                showOtpFields = !showBiometricButton
-                isDifferentUserMode = false // Reset this flag
+            if (firstTimeLogin || isDifferentUserMode) {
+                selectedLoginMethod = "OTP"
+                showOtpFields = true
             } else if (hasMpin) {
-                // If biometric is available, default to Fingerprint, otherwise OTP
-                selectedLoginMethod = if (showBiometricButton) "Fingerprint" else "OTP"
-                showOtpFields = !showBiometricButton
+                // For existing users, default to MPIN if available
+                selectedLoginMethod = "MPIN"
+                showOtpFields = false
+            } else if (showBiometricButton) {
+                // If biometric is available, default to Fingerprint
+                selectedLoginMethod = "Fingerprint"
+                showOtpFields = false
             } else {
-                selectedLoginMethod = if (showBiometricButton) "Fingerprint" else "OTP"
-                showOtpFields = !showBiometricButton
+                // Default to MFA for existing users without MPIN or biometric
+                selectedLoginMethod = "MFA"
+                showOtpFields = false
             }
         }
     }
@@ -229,7 +233,7 @@ fun LoginScreen(
                     }
                 }
 
-                if (showOtpButton && !showBiometricButton) {
+                if (showOtpButton) {
                     Button(
                         onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
                         modifier = Modifier
@@ -277,31 +281,28 @@ fun LoginScreen(
                     )
                 }
 
-                if (showFingerprint && !firstTimeLogin && showBiometricButton) {
-                    // Show fingerprint button if biometric is available and not first time login
-                    if (showBiometricButton && !firstTimeLogin) {
-                        Button(
-                            onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            shape = MaterialTheme.shapes.medium,
-                            contentPadding = PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
-                                contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black
-                            ),
-                            border = BorderStroke(0.5.dp, Color(0xFFDD3825))
-                        ) {
-                            Text(
-                                "Fingerprint",
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
+                if (showBiometricButton && !firstTimeLogin && !isDifferentUserMode) {
+                    Button(
+                        onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        shape = MaterialTheme.shapes.medium,
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
+                            contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black
+                        ),
+                        border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                    ) {
+                        Text(
+                            "Fingerprint",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
             }
