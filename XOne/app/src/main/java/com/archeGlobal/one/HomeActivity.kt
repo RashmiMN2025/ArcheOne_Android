@@ -244,12 +244,14 @@ class HomeActivity : AppCompatActivity() {
                                     // Clear all user data
                                     userDataManager.clearUserData()
                                     navigator.navigateToLoginScreen()
-                                } else {
-                                    Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
                                 }
+                                // Don't show toast for non-critical errors when returning to app
+                                // This prevents the "Login failed" message from appearing
+                                // Log the error instead for debugging purposes
+                                Log.d("HomeActivity", "Token refresh result: $message, isError: $isError")
                             } else {
-                                //  Handle successful login, e.g., navigate to home
-                                //Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
+                                // Successful token refresh, update user data silently
+                                controller.refreshUserData()
                             }
                         }
                     }
