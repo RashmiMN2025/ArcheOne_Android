@@ -170,44 +170,117 @@ class ChatData private constructor() {
         val queryLowercase = query.lowercase().trim()
         // Split the query into individual words for better matching
         val queryWords = queryLowercase.split(Regex("\\s+")).filter { it.length > 2 } // Filter out very short words
-        val results = mutableSetOf<FAQItem>()
+        val results = mutableListOf<Pair<FAQItem, Double>>()
         
-        // Search in main FAQs with improved matching
-        results.addAll(faqs.filter { faq ->
+        // Search in main FAQs with improved matching and relevance scoring
+        faqs.forEach { faq ->
             val questionLower = faq.question.lowercase()
             val answerLower = faq.answer.lowercase()
+            val titleLower = faq.title.lowercase()
             
-            // Check if full query is contained
-            questionLower.contains(queryLowercase) || 
-            answerLower.contains(queryLowercase) ||
-            // Check if any meaningful word from the query is contained
-            queryWords.any { word -> 
-                questionLower.contains(word) || 
-                answerLower.contains(word) 
+            // Calculate relevance score based on different matching criteria
+            var score = 0.0
+            
+            // Exact match gets highest score
+            if (questionLower == queryLowercase) {
+                score += 100.0
             }
-        })
+            
+            // Contains full query
+            if (questionLower.contains(queryLowercase)) {
+                score += 50.0
+            }
+            
+            // Title match
+            if (titleLower.contains(queryLowercase)) {
+                score += 40.0
+            }
+            
+            // Answer contains query
+            if (answerLower.contains(queryLowercase)) {
+                score += 20.0
+            }
+            
+            // Word-level matching
+            queryWords.forEach { word ->
+                if (questionLower.contains(word)) {
+                    // Words at the beginning of the question get higher score
+                    if (questionLower.startsWith(word)) {
+                        score += 15.0
+                    } else {
+                        score += 10.0
+                    }
+                }
+                
+                if (titleLower.contains(word)) {
+                    score += 8.0
+                }
+                
+                if (answerLower.contains(word)) {
+                    score += 5.0
+                }
+            }
+            
+            // Only add items with some relevance
+            if (score > 0) {
+                results.add(Pair(faq, score))
+            }
+        }
         
         // Search in keyword mappings with improved matching
         for ((keywordGroup, items) in keywordMappings) {
             val keywordArray = keywordGroup.split(",").map { it.trim().lowercase() }
             
-            // Check full query against keywords
-            val fullQueryMatches = keywordArray.any { 
-                it.contains(queryLowercase) || queryLowercase.contains(it) 
-            }
+            // Calculate keyword relevance
+            var keywordScore = 0.0
             
-            // Check individual words from query against keywords
-            val wordMatches = queryWords.any { word ->
-                keywordArray.any { keyword -> 
-                    keyword.contains(word) || word.contains(keyword) 
+            // Check full query against keywords
+            keywordArray.forEach { keyword ->
+                if (keyword == queryLowercase) {
+                    keywordScore += 30.0
+                } else if (keyword.contains(queryLowercase)) {
+                    keywordScore += 20.0
+                } else if (queryLowercase.contains(keyword)) {
+                    keywordScore += 15.0
                 }
             }
             
-            if (fullQueryMatches || wordMatches) {
-                results.addAll(items)
+            // Check individual words from query against keywords
+            queryWords.forEach { word ->
+                keywordArray.forEach { keyword ->
+                    if (keyword.contains(word)) {
+                        keywordScore += 8.0
+                    } else if (word.contains(keyword)) {
+                        keywordScore += 5.0
+                    }
+                }
+            }
+            
+            // If keywords match, score each FAQ item in this category
+            if (keywordScore > 0) {
+                items.forEach { faq ->
+                    val questionLower = faq.question.lowercase()
+                    
+                    // Base score from keyword match
+                    var itemScore = keywordScore
+                    
+                    // Additional scoring based on question content
+                    if (questionLower.contains(queryLowercase)) {
+                        itemScore += 10.0
+                    }
+                    
+                    queryWords.forEach { word ->
+                        if (questionLower.contains(word)) {
+                            itemScore += 5.0
+                        }
+                    }
+                    
+                    results.add(Pair(faq, itemScore))
+                }
             }
         }
         
-        return results.toList()
+        // Sort by relevance score (descending) and return the FAQs
+        return results.sortedByDescending { it.second }.map { it.first }.distinct()
     }
 }

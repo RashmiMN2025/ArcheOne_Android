@@ -46,7 +46,7 @@ class OtpVerificationController(
 
                     if (token.isNotEmpty()) {
                         // Save the token for future use
-                        loginWithToken(token, email, mobile, employeeId, false, true) { msg, isError ->
+                        loginWithToken(token, email, mobile, employeeId, false, true, false) { msg, isError ->
                             if (!isError) {
                                 // Instead of navigating to Home, go to MPIN setup
                                 if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
@@ -106,6 +106,7 @@ class OtpVerificationController(
         employeeId: String,
         fromHome:Boolean = false,
         fromOtp: Boolean = false,
+        shouldNavigateToHome: Boolean = true,
         callback: (String, Boolean) -> Unit
     ) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -144,10 +145,13 @@ class OtpVerificationController(
                         userDataManager.setIsLoggedIn(true)
                         userDataManager.setHasLoggedIn(true)
                         
+                        // Only set firstTimeLogin to false when user actually successfully logs in
+                        com.archeGlobal.one.utils.setFirstTimeLogin(context, false)
+                        
                         Log.d("LoginProcess", "Login successful")
                         callback("Login successful", false)
 
-                        if(!fromHome){
+                        if(!fromHome && shouldNavigateToHome){
                             // Pass biometric setup flag to HomeActivity
                             if (fromOtp) {
                                 navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)

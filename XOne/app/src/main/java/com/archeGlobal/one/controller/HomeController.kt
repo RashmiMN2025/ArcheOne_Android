@@ -82,8 +82,9 @@ class HomeController(
         checkIfPrideMonth()
 
         if (_isPrideMonth.value) {
-            // Directly check if we should show the Pride Month dialog
-            checkIfShouldShowPrideMonthDialog()
+            // Don't automatically show Pride Month dialog - only show when pinned message is clicked
+            // Just set the flag that it's Pride Month, but don't show dialog
+            Log.d("EventController", "It's Pride Month, but not showing dialog automatically")
         } else {
             // If not Pride Month, fetch the regular daily event
             fetchEventFromLoginData()
@@ -169,10 +170,9 @@ class HomeController(
     }
 
     private fun checkIfShouldShowEvent() {
-        // If it's Pride Month, we'll show the Pride Month dialog instead of regular events
+        // If it's Pride Month, don't show regular events and don't auto-show Pride Month dialog
         if (_isPrideMonth.value) {
-            Log.d("EventController", "It's Pride Month, checking if we should show Pride Month dialog")
-            checkIfShouldShowPrideMonthDialog()
+            Log.d("EventController", "It's Pride Month, not showing regular events or auto Pride Month dialog")
             return
         }
 

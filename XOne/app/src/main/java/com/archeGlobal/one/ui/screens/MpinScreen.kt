@@ -44,7 +44,7 @@ import androidx.compose.ui.text.style.TextDecoration
 
 private val securityQuestionsList = listOf(
     "What is the name of your first school?",
-    "What is your mother’s maiden name?",
+    "What is your mother's maiden name?",
     "What was the name of your first company?",
     "What is the name of your childhood best friend?",
     "What is the name of the street you grew up on?",
@@ -541,7 +541,7 @@ fun MpinScreen(
                                 ) },
                             modifier = Modifier
                                 .fillMaxWidth(0.97f)
-                                .padding(bottom = 16.dp),
+                                .padding(bottom = if (i == 0) 8.dp else 16.dp),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.White,
                                 unfocusedContainerColor = Color.White,
@@ -576,8 +576,37 @@ fun MpinScreen(
                                 }
                             }
                         )
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(if (i == 0) 8.dp else 14.dp))
                     }
+                    
+                    // Info message with red icon
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_info),
+                            contentDescription = "Info",
+                            tint = Color(0xFFDD3825),
+                            modifier = Modifier
+                                .size(16.dp)
+                                .padding(top = 2.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
+                            fontSize = 12.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Black,
+                            lineHeight = 16.sp
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
                     Button(
                         onClick = {
                             if (selectedQuestions.any { it.isBlank() } || answers.any { it.isBlank() }) {
@@ -592,7 +621,7 @@ fun MpinScreen(
                         modifier = Modifier
                             .fillMaxWidth(0.97f)
                             .height(65.dp)
-                            .padding(top = 18.dp),
+                            .padding(top = 8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFDD3825),
                             disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled

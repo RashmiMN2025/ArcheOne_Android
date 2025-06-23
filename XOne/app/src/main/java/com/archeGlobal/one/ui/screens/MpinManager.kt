@@ -28,13 +28,29 @@ object MpinManager {
     fun getMpin(context: Context): String? = prefs(context).getString(KEY_MPIN, null)
 
     fun clearMpin(context: Context) {
+        // Clear from encrypted preferences
+        prefs(context).edit().remove(KEY_MPIN).apply()
+        // Also clear from regular preferences as fallback
         val prefs = getPrefs(context)
         prefs.edit().remove(KEY_MPIN).apply()
     }
 
     fun clearSecurityQuestions(context: Context) {
+        // Clear from encrypted preferences
+        prefs(context).edit()
+            .remove(KEY_QUESTION_1)
+            .remove(KEY_ANSWER_1)
+            .remove(KEY_QUESTION_2)
+            .remove(KEY_ANSWER_2)
+            .apply()
+        // Also clear from regular preferences as fallback
         val prefs = getPrefs(context)
         prefs.edit().remove("security_questions").apply()
+    }
+
+    fun clearAllMpinData(context: Context) {
+        clearMpin(context)
+        clearSecurityQuestions(context)
     }
 
     private fun getPrefs(context: Context) =

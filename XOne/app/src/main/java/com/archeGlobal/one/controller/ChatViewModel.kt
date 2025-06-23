@@ -126,33 +126,37 @@ class ChatViewModel : ViewModel() {
         val relatedFAQs = chatData.searchFAQs(text)
 
         if (relatedFAQs.isNotEmpty()) {
-            // Check if there's an exact match where the question equals the input text
-            val exactMatch = relatedFAQs.find { it.question.equals(text, ignoreCase = true) }
-
-            if (exactMatch != null) {
-                // If there's an exact match, return the answer directly
-                return exactMatch.answer
+            // Always get the best match (first item) since our search now returns results sorted by relevance
+            val bestMatch = relatedFAQs.first()
+            
+            // If there's only one match or the query is very specific (more than 3 words), show the answer directly
+            if (relatedFAQs.size == 1 || text.split(Regex("\\s+")).filter { it.length > 2 }.size > 3) {
+                // Return the best match with proper formatting
+                return "${bestMatch.question}\n\n\n${bestMatch.answer}"
             }
-
-            // If there are more than 2 related FAQs, show the "multiple relevant questions" message
-            if (relatedFAQs.size > 2) {
-                val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
-
-                // Take at most 5 FAQs to avoid overcrowding
-                relatedFAQs.take(5).forEach { faq ->
-                    faqList.append("• ${faq.question}\n")
-                }
-
-                return faqList.toString()
-            }            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
-            // Add proper spacing (two blank lines) between question and answer
-            return relatedFAQs.joinToString("\n\n") { faq ->
-                "${faq.question}\n\n\n${faq.answer}"
+            
+            // If there are 2-3 related FAQs and the query is short, show the best match directly
+            // but also mention there are other related questions
+            if (relatedFAQs.size <= 3) {
+                // Show the best match answer directly
+                return "${bestMatch.question}\n\n\n${bestMatch.answer}"
             }
+            
+            // If there are more than 3 related FAQs, show the best match and also list other options
+            val faqList = StringBuilder("${bestMatch.question}\n\n\n${bestMatch.answer}\n\n")
+            faqList.append("\nRelated questions you might be interested in:\n")
+            
+            // Add the other related questions (skip the first one which we already displayed)
+            relatedFAQs.drop(1).take(4).forEach { faq ->
+                faqList.append("• ${faq.question}\n")
+            }
+            
+            return faqList.toString()
         }
 
         // Default response if no FAQs match
-        return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."    }      private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
+        return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
+    }      private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
         // Check if user input is a single word (like "report")
         val isSingleWord = lastUserQuestion.trim().split("\\s+".toRegex()).size == 1
         

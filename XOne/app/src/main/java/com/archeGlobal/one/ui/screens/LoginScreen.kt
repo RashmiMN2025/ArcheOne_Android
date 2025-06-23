@@ -59,7 +59,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 @Composable
-fun LoginScreen(controller: LoginController, navigator: Navigator) {
+fun LoginScreen(
+    controller: LoginController, 
+    navigator: Navigator, 
+    forceOriginalLogin: Boolean = false
+) {
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
@@ -67,9 +71,10 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
-    var firstTimeLogin by remember { mutableStateOf(isFirstTimeLogin(context)) }
+    var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
     var showWebView by remember { mutableStateOf(false) }
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
+    var showMfaTermsDialog by remember { mutableStateOf(false) }
 
     val lastEmployeeName = UserDataManager.getInstance(context).getLastUsername()
     val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn() 
@@ -83,31 +88,46 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
     var policyTitle by remember { mutableStateOf("") }
 
     val mpinController = remember { com.archeGlobal.one.controller.MpinController(context) }
-    val hasMpin = remember { mpinController.isMpinSet() }
-    var selectedLoginMethod by remember { mutableStateOf(if (firstTimeLogin) "OTP" else if (hasMpin) "MPIN" else "OTP") }
-    var showOtpFields by remember { mutableStateOf(firstTimeLogin) }
+    // Make hasMpin reactive to changes - don't use remember so it re-evaluates
+    val hasMpin = mpinController.isMpinSet()
+    var selectedLoginMethod by remember { mutableStateOf("OTP") }
+    var showOtpFields by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
     var enteredMpin by remember { mutableStateOf("") }
     var mpinError by remember { mutableStateOf<String?>(null) }
     val focusRequesters = List(4) { remember { androidx.compose.ui.focus.FocusRequester() } }
     var focusedIndex by remember { mutableStateOf(-1) }
     var isVerifyingMpin by remember { mutableStateOf(false) }
 
-    var showOtpButton by remember { mutableStateOf(firstTimeLogin) }
+    var showOtpButton by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
     var isDifferentUserMode by remember { mutableStateOf(false) }
 
     var termsAccepted by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        // This will run every time LoginScreen is shown (e.g., after logout)
-        showOtpButton = firstTimeLogin
-        isDifferentUserMode = false
-        if (firstTimeLogin) {
+    // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
+    LaunchedEffect(firstTimeLogin, hasMpin) {
+        // If forceOriginalLogin is true, always show original login form
+        if (forceOriginalLogin) {
+            showOtpButton = true
             selectedLoginMethod = "OTP"
             showOtpFields = true
+            isDifferentUserMode = false
         } else {
-            selectedLoginMethod = if (hasMpin) "MPIN" else "MFA"
-            showOtpFields = false
+            // Show OTP button only if biometric is not available
+            showOtpButton = !showBiometricButton
+            
+            if (firstTimeLogin) {
+                selectedLoginMethod = if (showBiometricButton) "Fingerprint" else "OTP"
+                showOtpFields = !showBiometricButton
+                isDifferentUserMode = false // Reset this flag
+            } else if (hasMpin) {
+                // If biometric is available, default to Fingerprint, otherwise OTP
+                selectedLoginMethod = if (showBiometricButton) "Fingerprint" else "OTP"
+                showOtpFields = !showBiometricButton
+            } else {
+                selectedLoginMethod = if (showBiometricButton) "Fingerprint" else "OTP"
+                showOtpFields = !showBiometricButton
+            }
         }
     }
 
@@ -154,11 +174,14 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
             if (!lastEmployeeName.isNullOrEmpty()) {
                 Text(
                     text = "Welcome, $lastEmployeeName",
-                    fontSize = 28.sp,
+                    fontSize = 22.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -181,7 +204,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     .height(52.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                if (!isDifferentUserMode && hasMpin) {
+                if (!isDifferentUserMode && hasMpin && !firstTimeLogin) {
                     Button(
                         onClick = { selectedLoginMethod = "MPIN" },
                         modifier = Modifier
@@ -206,7 +229,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     }
                 }
 
-                if (showOtpButton) {
+                if (showOtpButton && !showBiometricButton) {
                     Button(
                         onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
                         modifier = Modifier
@@ -299,8 +322,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                         controller.sendOtp(email, mobile, employeeId) { message, isError ->
                             isLoading = false
                             if (!isError) {
-                                setFirstTimeLogin(context, false)
-                                firstTimeLogin = false
+                                // Don't set firstTimeLogin to false here - user hasn't logged in yet
                                 navigator.navigateToOtpVerification(email, mobile, employeeId)
                             } else {
                                 errorMessage = message
@@ -431,17 +453,26 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                     shape = MaterialTheme.shapes.medium
                 )
 
+                // Entire row is clickable to show dialog or uncheck if already checked
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(0.dp, 8.dp, 0.dp, 8.dp)
+                        .clickable {
+                            if (termsAccepted) {
+                                // If already checked, allow unchecking directly
+                                termsAccepted = false
+                            } else {
+                                // If not checked, show dialog to read terms first
+                                showTermsDialog = true
+                            }
+                        }
                 ) {
+                    // Checkbox with no onCheckedChange - handled by row click
                     Checkbox(
                         checked = termsAccepted,
-                        onCheckedChange = { checked ->
-                            termsAccepted = checked
-                        },
+                        onCheckedChange = null, // Disable default behavior
                         colors = CheckboxDefaults.colors(
                             checkedColor = Color(0xFFDD3825),
                             uncheckedColor = Color.Gray,
@@ -449,13 +480,13 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                         )
                     )
                     Spacer(modifier = Modifier.width(4.dp))
+                    // Text with no clickable - handled by row click
                     Text(
                         text = "I agree to the terms and condition",
                         color = Color.Black,
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        modifier = Modifier.clickable { showTermsDialog = true }
+                        fontWeight = FontWeight.Normal
                     )
                 }
 
@@ -470,8 +501,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                         controller.sendOtp(email, mobile, employeeId) { message, isError ->
                             isLoading = false
                             if (!isError) {
-                                setFirstTimeLogin(context, false)
-                                firstTimeLogin = false
+                                // Don't set firstTimeLogin to false here - user hasn't logged in yet
                                 navigator.navigateToOtpVerification(email, mobile, employeeId)
                             } else {
                                 errorMessage = message
@@ -513,9 +543,10 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
 
             if (selectedLoginMethod == "MFA") {
                 Spacer(modifier = Modifier.height(10.dp))
+                
                 Button(
                     onClick = {
-                        showWebView = true
+                        showMfaTermsDialog = true
                     },
                     modifier = Modifier
                         .fillMaxWidth(0.97f)
@@ -572,9 +603,7 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                                                 UserDataManager.getInstance(context).setHasLoggedIn(true)
                                                 setFirstTimeLogin(context, false)
                                                 firstTimeLogin = false
-                                                navigator.navigateToHome(false)
-                                            } else {
-                                                errorMessage = message
+                                                // Navigation is now handled by LoginController.loginWithToken()
                                             }
                                         }
                                     } ?: run {
@@ -702,10 +731,8 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                             mpinError = null
                             enteredMpin = ""
                             isVerifyingMpin = false
-                            // Navigate to HomeActivity
-                            val intent = android.content.Intent(context, com.archeGlobal.one.HomeActivity::class.java)
-                            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            context.startActivity(intent)
+                            // Navigate to HomeActivity using navigator to ensure proper flags are set
+                            navigator.navigateToHome(false)
                         } else {
                             enteredMpin = ""
                             isVerifyingMpin = false
@@ -808,21 +835,13 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                                     email = response.email,
                                     mobile = response.mobilePhone,
                                     employeeId = response.employeeId
-                                ) {
-                                message, isError ->
+                                ) { message, isError ->
                                     isLoading = false
                                     if (!isError) {
-                                        UserDataManager.getInstance(context).setHasLoggedIn(true) // <-- Place here
+                                        UserDataManager.getInstance(context).setHasLoggedIn(true)
                                         setFirstTimeLogin(context, false)
                                         firstTimeLogin = false
-                                        val biometricHelper = BiometricHelper(context)
-                                        val canUse = biometricHelper.canUseBiometric()
-                                        val isEnabled = biometricHelper.isBiometricEnabled()
-                                        if (canUse && !isEnabled) {
-                                            navigator.navigateToHome(false, true, response.email, response.mobilePhone, response.employeeId)
-                                        } else {
-                                            navigator.navigateToHome(false)
-                                        }
+                                        // Navigation is now handled by LoginController.loginWithToken()
                                     }
                                 }
                             },
@@ -882,8 +901,10 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                                 UserDataManager.getInstance(context).setIsLoggedIn(false)
                                 UserDataManager.getInstance(context).setHasLoggedIn(false)
                                 setFirstTimeLogin(context, true)
-                                com.archeGlobal.one.utils.MpinManager.clearMpin(context)
-                                com.archeGlobal.one.utils.MpinManager.clearSecurityQuestions(context)
+                                com.archeGlobal.one.utils.MpinManager.clearAllMpinData(context)
+                                BiometricHelper(context).disableBiometric() // Disable biometric
+                                
+                                // Reset all UI state
                                 firstTimeLogin = true
                                 showOtpButton = true
                                 isDifferentUserMode = true
@@ -893,6 +914,13 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                                 email = ""
                                 mobile = ""
                                 employeeId = ""
+                                enteredMpin = ""
+                                mpinError = null
+                                showMfaTermsDialog = false
+                                termsAccepted = false
+                                
+                                // Force a UI refresh
+                                forceUpdate = !forceUpdate
                             }
                     },
                     modifier = Modifier.padding(top = 8.dp)
@@ -1048,9 +1076,12 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
         }        
     }
 
-    if (showTermsDialog) {
+    if (showTermsDialog || showMfaTermsDialog) {
         Dialog(
-            onDismissRequest = { showTermsDialog = false }
+            onDismissRequest = { 
+                if (showTermsDialog) showTermsDialog = false
+                if (showMfaTermsDialog) showMfaTermsDialog = false
+            }
         ) {
             Surface(
                 shape = RoundedCornerShape(18.dp),
@@ -1142,7 +1173,10 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = { showTermsDialog = false },
+                            onClick = { 
+                                if (showTermsDialog) showTermsDialog = false
+                                if (showMfaTermsDialog) showMfaTermsDialog = false 
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(46.dp),
@@ -1163,7 +1197,13 @@ fun LoginScreen(controller: LoginController, navigator: Navigator) {
                         Button(
                             onClick = {
                                 termsAccepted = true
-                                showTermsDialog = false
+                                if (showTermsDialog) {
+                                    showTermsDialog = false
+                                }
+                                if (showMfaTermsDialog) {
+                                    showMfaTermsDialog = false
+                                    showWebView = true
+                                }
                             },
                             modifier = Modifier
                                 .weight(1f)

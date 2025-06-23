@@ -88,22 +88,24 @@ fun OnboardingScreen(
             )
         }
 
-        // Page indicator - moved higher up
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 60.dp), // Increased from 32dp to move indicators up
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(pages.size) { iteration ->
-                val color = if (pagerState.currentPage == iteration) Color.White else Color.Gray.copy(alpha = 0.5f)
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 4.dp)
-                        .size(if (pagerState.currentPage == iteration) 10.dp else 8.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                )
+        // Page indicator - only show on first 2 screens, hide on third screen with Get Started button
+        if (currentPage < 2) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 60.dp), // Increased from 32dp to move indicators up
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(pages.size) { iteration ->
+                    val color = if (pagerState.currentPage == iteration) Color.White else Color.Gray.copy(alpha = 0.5f)
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (pagerState.currentPage == iteration) 10.dp else 8.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                    )
+                }
             }
         }
 

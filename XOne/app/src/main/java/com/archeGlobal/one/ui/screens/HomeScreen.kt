@@ -300,7 +300,9 @@ fun HomeScreen(
     if (isPrideMonth && showPrideMonthDialog) {
         PrideMonthDialog(
             isUsingPrideIcon = isUsingPrideIcon.value,
-            onDismiss = { controller.dismissPrideMonthDialog() },
+            onDismiss = { 
+                controller.dismissPrideMonthDialog()
+            },
             onToggleIcon = {
                 controller.togglePrideIcon()
                 isUsingPrideIcon.value = controller.isUsingPrideIcon()
@@ -599,7 +601,7 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Pride banner with pins
+                    // Pride banner with pins - click to open change icon dialog
                     if (isPrideMonth) {
                         Row(
                             modifier = Modifier
@@ -635,7 +637,10 @@ fun HomeScreen(
                                 color = Color.Black,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clickable { controller.showPrideMonthDialog() }
+                                    .clickable { 
+                                        // Show Pride Month dialog when text is clicked
+                                        controller.showPrideMonthDialog()
+                                    }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             IconButton(

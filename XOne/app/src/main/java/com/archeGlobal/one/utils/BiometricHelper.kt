@@ -61,6 +61,15 @@ class BiometricHelper(private val context: Context) {
         return preferencesManager.isBiometricEnabled()
     }
 
+    fun enableBiometric() {
+        preferencesManager.setBiometricEnabled(true)
+    }
+
+    fun disableBiometric() {
+        preferencesManager.setBiometricEnabled(false)
+        preferencesManager.clearBiometricData()
+    }
+
     fun clearBiometricData() {
         preferencesManager.clearBiometricData()
     }

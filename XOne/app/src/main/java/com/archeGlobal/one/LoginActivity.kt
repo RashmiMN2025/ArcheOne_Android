@@ -16,6 +16,9 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val navigator = AndroidNavigator(this)
         val loginController = LoginController(this, navigator)
+        
+        // Check if we should force original login form
+        val forceOriginalLogin = intent.getBooleanExtra("forceOriginalLogin", false)
 
         // Handle back press in login screen - exit app instead of going back
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -28,7 +31,11 @@ class LoginActivity : AppCompatActivity() {
 
         setContent {
             XOneTheme {
-                LoginScreen(controller = loginController, navigator = navigator)
+                LoginScreen(
+                    controller = loginController, 
+                    navigator = navigator,
+                    forceOriginalLogin = forceOriginalLogin
+                )
             }
         }
     }

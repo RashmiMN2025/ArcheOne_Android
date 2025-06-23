@@ -114,8 +114,12 @@ class HomeActivity : AppCompatActivity() {
         userDataManager = UserDataManager.getInstance(this)
         navigator = AndroidNavigator(this)
 
-        // If MPIN is not set, redirect to MPIN setup
-        if (!com.archeGlobal.one.utils.MpinManager.checkMpinExists(this)) {
+        // Check if we're coming from login
+        val fromLogin = intent.getBooleanExtra("fromLogin", false)
+        
+        // If MPIN is not set and we're NOT coming from login, redirect to MPIN setup
+        // Users coming from login should not be forced to set up MPIN
+        if (!com.archeGlobal.one.utils.MpinManager.checkMpinExists(this) && !fromLogin) {
             val email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
             val mobile = intent.getStringExtra("mobile") ?: userDataManager.getUserData()?.mobile ?: ""
             val employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
@@ -128,8 +132,8 @@ class HomeActivity : AppCompatActivity() {
             return
         }
         
-        // Check if we're coming from login
-        isFromLogin = intent.getBooleanExtra("fromLogin", false)
+        // Set the class-level variable
+        isFromLogin = fromLogin
 
         val fromMpin = intent.getBooleanExtra("fromMpin", false)
         val email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
@@ -137,6 +141,17 @@ class HomeActivity : AppCompatActivity() {
         val employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
         val token = intent.getStringExtra("token") ?: userDataManager.getAuthToken() ?: ""
         val mpin = intent.getStringExtra("mpin") ?: ""
+
+        // If coming from login or MPIN setup, don't show MPIN prompt on home screen
+        if (fromLogin || fromMpin) {
+            userDataManager.preferencesManager.setAppLockState(false)
+        } else {
+            // If not coming from login/MPIN setup and MPIN exists, set lock state to true
+            // This ensures MPIN prompt shows when app is reopened
+            if (com.archeGlobal.one.utils.MpinManager.checkMpinExists(this)) {
+                userDataManager.preferencesManager.setAppLockState(true)
+            }
+        }
 
         if (fromMpin && !biometricPromptShown) {
             biometricPromptShown = true
@@ -236,7 +251,7 @@ class HomeActivity : AppCompatActivity() {
                     if (!fromOtp) {
                         val token = userDataManager.getAuthToken() ?: "your_token_here"
                         isLoading = true // Start loading
-                        otpVerificationController.loginWithToken(token, email, mobile, employeeId, true) { message, isError ->
+                        otpVerificationController.loginWithToken(token, email, mobile, employeeId, true, false, true) { message, isError ->
                             isLoading = false // Stop loading
                             if (isError) {
                                 if (message.contains("Invalid Token")) {
