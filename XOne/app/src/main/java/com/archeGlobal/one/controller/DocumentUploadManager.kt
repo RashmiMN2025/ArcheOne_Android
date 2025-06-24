@@ -43,7 +43,7 @@ class DocumentUploadManager(private val context: Context) {
     private val personalDocTypes = mapOf(
         "id" to "ID Card",
         "pan" to "PAN Card",
-        "medical" to "Medical Insurance"
+        "medical" to "Medical Insurance Card"
     )
 
     // Document type mapping for professional documents
