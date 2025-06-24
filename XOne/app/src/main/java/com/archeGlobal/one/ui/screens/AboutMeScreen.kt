@@ -91,6 +91,7 @@ fun AboutMeScreen(
                             icon = R.drawable.personaldetails,
                             title = "Personal Details",
                             items = listOf(
+                                LabeledInfo("Aadhar Number", controller.model.aadharNumber),
                                 LabeledInfo("PAN Number", controller.model.panNumber),
                                 LabeledInfo("UAN Number", controller.model.uanNumber),
                                 LabeledInfo("Blood Group", controller.model.bloodGroup)

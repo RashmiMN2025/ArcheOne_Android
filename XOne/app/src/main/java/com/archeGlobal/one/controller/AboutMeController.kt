@@ -17,6 +17,7 @@ class AboutMeController(
         employeeId = OtpVerificationController.getUserData()?.employeeId ?: "",
         
         // Personal Details - from userDetails
+        aadharNumber = OtpVerificationController.getUserData()?.userDetails?.aadhar_number ?: "",
         panNumber = OtpVerificationController.getUserData()?.userDetails?.pan ?: "",
         uanNumber = OtpVerificationController.getUserData()?.userDetails?.uan ?: "",
         bloodGroup = OtpVerificationController.getUserData()?.userDetails?.blood_group ?: "",

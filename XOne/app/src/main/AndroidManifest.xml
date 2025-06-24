@@ -111,6 +111,15 @@
             android:theme="@style/Theme.XOne" >
         </activity>
 
+        <!-- No Document Found Activity -->
+        <activity
+            android:name=".NoDocumentFoundActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:label="No Document Found"
+            android:theme="@style/Theme.XOne" >
+        </activity>
+
         <!-- Add HomeActivity -->
         <activity
             android:name=".HomeActivity"

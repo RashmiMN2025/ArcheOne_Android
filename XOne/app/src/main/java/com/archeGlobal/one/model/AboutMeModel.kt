@@ -8,6 +8,7 @@ data class AboutMeModel(
     val employeeId: String = "",
     
     // Additional Details (even if currently empty)
+    val aadharNumber: String = "",
     val panNumber: String = "",
     val uanNumber: String = "",
     val bloodGroup: String = "",

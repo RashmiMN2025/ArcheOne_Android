@@ -178,6 +178,9 @@ class ChatData private constructor() {
             val answerLower = faq.answer.lowercase()
             val titleLower = faq.title.lowercase()
             
+            // Split question into words for word-level matching
+            val questionWords = questionLower.split(Regex("\\s+")).filter { it.length > 2 }
+            
             // Calculate relevance score based on different matching criteria
             var score = 0.0
             
@@ -201,7 +204,29 @@ class ChatData private constructor() {
                 score += 20.0
             }
             
-            // Word-level matching
+            // New word-level matching logic: Count matching words
+            var matchingWordsCount = 0
+            queryWords.forEach { queryWord ->
+                questionWords.forEach { questionWord ->
+                    // Check for exact word matches or partial matches
+                    if (questionWord == queryWord || 
+                        questionWord.contains(queryWord) || 
+                        queryWord.contains(questionWord)) {
+                        matchingWordsCount++
+                    }
+                }
+            }
+            
+            // If 5 or more words match, give high score
+            if (matchingWordsCount >= 5) {
+                score += 80.0
+            } else if (matchingWordsCount >= 3) {
+                score += 40.0
+            } else if (matchingWordsCount >= 2) {
+                score += 20.0
+            }
+            
+            // Original word-level matching (keeping for compatibility)
             queryWords.forEach { word ->
                 if (questionLower.contains(word)) {
                     // Words at the beginning of the question get higher score
@@ -260,6 +285,7 @@ class ChatData private constructor() {
             if (keywordScore > 0) {
                 items.forEach { faq ->
                     val questionLower = faq.question.lowercase()
+                    val questionWords = questionLower.split(Regex("\\s+")).filter { it.length > 2 }
                     
                     // Base score from keyword match
                     var itemScore = keywordScore
@@ -267,6 +293,27 @@ class ChatData private constructor() {
                     // Additional scoring based on question content
                     if (questionLower.contains(queryLowercase)) {
                         itemScore += 10.0
+                    }
+                    
+                    // Apply same word matching logic here too
+                    var matchingWordsCount = 0
+                    queryWords.forEach { queryWord ->
+                        questionWords.forEach { questionWord ->
+                            if (questionWord == queryWord || 
+                                questionWord.contains(queryWord) || 
+                                queryWord.contains(questionWord)) {
+                                matchingWordsCount++
+                            }
+                        }
+                    }
+                    
+                    // If 5 or more words match, give high score
+                    if (matchingWordsCount >= 5) {
+                        itemScore += 60.0
+                    } else if (matchingWordsCount >= 3) {
+                        itemScore += 30.0
+                    } else if (matchingWordsCount >= 2) {
+                        itemScore += 15.0
                     }
                     
                     queryWords.forEach { word ->

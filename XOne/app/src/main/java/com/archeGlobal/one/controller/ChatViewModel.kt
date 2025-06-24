@@ -134,7 +134,41 @@ class ChatViewModel : ViewModel() {
                 return exactMatch.answer
             }
 
-            // If there are more than 2 related FAQs, show the "multiple relevant questions" message
+            // Check for high-quality matches (when 5+ words match)
+            val highQualityMatches = relatedFAQs.filter { faq ->
+                val queryWords = text.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
+                val questionWords = faq.question.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
+                
+                var matchingWordsCount = 0
+                queryWords.forEach { queryWord ->
+                    questionWords.forEach { questionWord ->
+                        if (questionWord == queryWord || 
+                            questionWord.contains(queryWord) || 
+                            queryWord.contains(questionWord)) {
+                            matchingWordsCount++
+                        }
+                    }
+                }
+                matchingWordsCount >= 5
+            }
+
+            // If we have high-quality matches (5+ words matching), show them even if there are many
+            if (highQualityMatches.isNotEmpty()) {
+                if (highQualityMatches.size == 1) {
+                    // If there's only one high-quality match, show question and answer
+                    val faq = highQualityMatches.first()
+                    return "${faq.question}\n\n\n${faq.answer}"
+                } else {
+                    // If there are multiple high-quality matches, show them as options
+                    val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
+                    highQualityMatches.take(5).forEach { faq ->
+                        faqList.append("• ${faq.question}\n")
+                    }
+                    return faqList.toString()
+                }
+            }
+
+            // If there are more than 2 related FAQs (but no high-quality matches), show the "multiple relevant questions" message
             if (relatedFAQs.size > 2) {
                 val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
 
@@ -144,7 +178,9 @@ class ChatViewModel : ViewModel() {
                 }
 
                 return faqList.toString()
-            }            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
+            }            
+            
+            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
             // Add proper spacing (two blank lines) between question and answer
             return relatedFAQs.joinToString("\n\n") { faq ->
                 "${faq.question}\n\n\n${faq.answer}"
@@ -152,7 +188,10 @@ class ChatViewModel : ViewModel() {
         }
 
         // Default response if no FAQs match
-        return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."    }      private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
+        return "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
+    }
+
+    private fun addBotMessage(text: String, showMoreCategories: Boolean = false, showFAQs: Boolean = false, includeUserQuestion: Boolean = false) {
         // Check if user input is a single word (like "report")
         val isSingleWord = lastUserQuestion.trim().split("\\s+".toRegex()).size == 1
 
@@ -176,16 +215,19 @@ class ChatViewModel : ViewModel() {
         )
         messages.add(botMessage)
     }
+
     fun refreshChat() {
         messages.clear() // Clear old messages
         loadMessages() // Fetch fresh messages
     }
+
     fun loadMessages() {
         addBotMessage("👋 Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.")
 
         // Add support categories message
         addBotMessage("Here's what I can help you with:\nFeel free to ask any questions!", showFAQs = true)
     }
+
     fun loadMoreFAQs(messageId: String) {
         val messageToUpdate = messages.find { it.id == messageId }
         if (messageToUpdate != null) {

@@ -1137,7 +1137,7 @@ fun LoginScreen(
                                 lineHeight = 18.sp
                             )
                             Text(
-                                "- You acknowledge that this application is owned and managed by [Organization Name].\n" +
+                                "- You acknowledge that this application is owned and managed by Arche Global Private Limited.\n" +
                                 "- You agree to use the application only for purposes permitted by your role and organizational policies.\n" +
                                 "- You agree not to share access credentials or sensitive information with unauthorized individuals.\n" +
                                 "- You consent to the collection and processing of usage data for operational, security, and compliance purposes.\n\n",
