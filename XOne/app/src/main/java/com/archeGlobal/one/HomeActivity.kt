@@ -1,5 +1,6 @@
 package com.archeGlobal.one
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -97,6 +98,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("ViewModelConstructorInComposable")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         userDataManager = UserDataManager.getInstance(this)
