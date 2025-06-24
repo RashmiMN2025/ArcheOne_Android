@@ -17,9 +17,12 @@ class XOneApplication : Application() {
     lateinit var userDataManager: UserDataManager
         private set
 
+    private lateinit var appLifecycleObserver: AppLifecycleObserver
+
     override fun onCreate() {
         super.onCreate()
-        ProcessLifecycleOwner.get().lifecycle.addObserver(AppLifecycleObserver(this))
+        appLifecycleObserver = AppLifecycleObserver(this)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
 
         // Force a consistent font scale across all devices
         resources.forceAppFontScale(1.0f)
@@ -67,6 +70,10 @@ class XOneApplication : Application() {
                 Log.e("XOneApplication", "Error preloading social data: ${e.message}", e)
             }
         }
+    }
+
+    fun getAppLifecycleObserver(): AppLifecycleObserver {
+        return appLifecycleObserver
     }
 
     companion object {

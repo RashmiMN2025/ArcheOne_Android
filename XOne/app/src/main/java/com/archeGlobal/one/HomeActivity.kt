@@ -135,6 +135,8 @@ class HomeActivity : AppCompatActivity() {
         // If coming from login or MPIN setup, don't show MPIN prompt on home screen
         if (fromLogin || fromMpin) {
             userDataManager.preferencesManager.setAppLockState(false)
+            // Mark authentication session as active when coming from login/MPIN
+            XOneApplication.getInstance().getAppLifecycleObserver().setAuthenticationSessionActive(true)
         } else {
             // If not coming from login/MPIN setup and MPIN exists, set lock state to true
             // This ensures MPIN prompt shows when app is reopened
@@ -1199,21 +1201,33 @@ class HomeActivity : AppCompatActivity() {
         val biometricHelper = BiometricHelper(this)
         val isLoggedIn = userDataManager.isLoggedIn()
         val isLocked = userDataManager.preferencesManager.getAppLockState()
+        val appLifecycleObserver = XOneApplication.getInstance().getAppLifecycleObserver()
 
-        // Only show biometric if user is logged in, biometric is enabled, and app is locked
-        if (isLoggedIn && biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() && userDataManager.preferencesManager.getAppLockState()) {
+        // Only show biometric if:
+        // 1. User is logged in
+        // 2. Biometric is available and enabled
+        // 3. App is locked (this is set by AppLifecycleObserver when app goes to background)
+        // 4. Haven't already authenticated in this session
+        // 5. Not already showing authentication
+        if (isLoggedIn &&
+            biometricHelper.canUseBiometric() &&
+            biometricHelper.isBiometricEnabled() &&
+            isLocked &&
+            !appLifecycleObserver.isAuthenticationSessionActive() &&
+            !isAuthenticating.value
+        ) {
             isAuthenticating.value = true
             biometricHelper.showBiometricPrompt(
                 activity = this,
                 onSuccess = {
                     isAuthenticating.value = false
+                    appLifecycleObserver.setAuthenticationSessionActive(true)
                     userDataManager.preferencesManager.setAppLockState(false) // Unlock the app
                 },
                 onError = { error ->
                     isAuthenticating.value = false
                 }
             )
-            return
         }
     }
 
