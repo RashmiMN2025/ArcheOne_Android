@@ -35,12 +35,12 @@ fun ChatBottomNavigationBar(
     onChatClick: () -> Unit,
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
-    val homeSelectedColor = Color(0xFF000000)  // Black for home
-    val selectedColor = Color(0xFFDD3825)      // Red for other items
-    val unselectedColor = Color(0xFF808080)    // Gray for unselected
-    
+    val homeSelectedColor = Color(0xFF000000) // Black for home
+    val selectedColor = Color(0xFFDD3825) // Red for other items
+    val unselectedColor = Color(0xFF808080) // Gray for unselected
+
     NavigationBar(
         modifier = modifier.height(56.dp),
         containerColor = Color.White,
@@ -74,15 +74,15 @@ fun ChatBottomNavigationBar(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = homeSelectedColor,  // Black for home when selected
+                selectedIconColor = homeSelectedColor, // Black for home when selected
                 unselectedIconColor = unselectedColor,
-                selectedTextColor = homeSelectedColor,  // Black for home when selected
+                selectedTextColor = homeSelectedColor, // Black for home when selected
                 unselectedTextColor = unselectedColor,
                 indicatorColor = Color.White
             ),
             alwaysShowLabel = false
         )
-        
+
         // Chat item - always selected in Chat screen
         NavigationBarItem(
             selected = true,
@@ -118,7 +118,7 @@ fun ChatBottomNavigationBar(
             ),
             alwaysShowLabel = false
         )
-        
+
         // SOS item - always unselected in Chat screen
         NavigationBarItem(
             selected = false,
@@ -146,15 +146,15 @@ fun ChatBottomNavigationBar(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,  // Red for SOS when selected
+                selectedIconColor = selectedColor, // Red for SOS when selected
                 unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,  // Red for SOS when selected
+                selectedTextColor = selectedColor, // Red for SOS when selected
                 unselectedTextColor = unselectedColor,
                 indicatorColor = Color.White
             ),
             alwaysShowLabel = false
         )
-        
+
         // Profile item - always unselected in Chat screen
         NavigationBarItem(
             selected = false,
@@ -182,13 +182,13 @@ fun ChatBottomNavigationBar(
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,  // Red for Profile when selected
+                selectedIconColor = selectedColor, // Red for Profile when selected
                 unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,  // Red for Profile when selected
+                selectedTextColor = selectedColor, // Red for Profile when selected
                 unselectedTextColor = unselectedColor,
                 indicatorColor = Color.White
             ),
             alwaysShowLabel = false
         )
     }
-} 
+}

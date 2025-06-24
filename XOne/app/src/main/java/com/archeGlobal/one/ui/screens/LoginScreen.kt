@@ -1,67 +1,65 @@
 package com.archeGlobal.one.ui.screens
 
 import MicrosoftLoginWebView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
-import com.archeGlobal.one.controller.LoginController
-import com.archeGlobal.one.controller.OtpVerificationController
-import com.archeGlobal.one.ui.components.CompanyLogo
-import androidx.compose.material3.Text
-import com.archeGlobal.one.navigation.Navigator
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.ui.components.UniversalLoader
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import com.archeGlobal.one.R
-import com.archeGlobal.one.utils.BiometricHelper
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
+import com.archeGlobal.one.R
+import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.model.AuthResponse
+import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.ui.components.CompanyLogo
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun LoginScreen(
-    controller: LoginController, 
-    navigator: Navigator, 
+    controller: LoginController,
+    navigator: Navigator,
     forceOriginalLogin: Boolean = false
 ) {
     val context = LocalContext.current
@@ -77,8 +75,8 @@ fun LoginScreen(
     var showMfaTermsDialog by remember { mutableStateOf(false) }
 
     val lastEmployeeName = UserDataManager.getInstance(context).getLastUsername()
-    val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn() 
-    val hasLoggedIn = UserDataManager.getInstance(context).hasUserLoggedIn() 
+    val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn()
+    val hasLoggedIn = UserDataManager.getInstance(context).hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
     val showBiometricButton = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
     var showFingerprint by remember { mutableStateOf(showBiometricButton && !firstTimeLogin) }
@@ -115,7 +113,7 @@ fun LoginScreen(
         } else {
             // Show OTP button only for first-time users or different users
             showOtpButton = firstTimeLogin || isDifferentUserMode
-            
+
             if (firstTimeLogin || isDifferentUserMode) {
                 selectedLoginMethod = "OTP"
                 showOtpFields = true
@@ -151,7 +149,7 @@ fun LoginScreen(
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
+                        Color(0xFF474749) // Dark Gray
                     )
                 )
             )
@@ -313,8 +311,8 @@ fun LoginScreen(
             if (!firstTimeLogin && selectedLoginMethod == "OTP" && !showOtpFields) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Button(
-                    onClick = { 
-                        showOtpFields = true 
+                    onClick = {
+                        showOtpFields = true
                         if (!termsAccepted) {
                             Toast.makeText(context, "Please accept the terms and condition", Toast.LENGTH_SHORT).show()
                             return@Button
@@ -515,7 +513,7 @@ fun LoginScreen(
                         .padding(top = 6.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFDD3825),
-                        disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                        disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                     ),
                     shape = MaterialTheme.shapes.medium,
                     enabled = !isLoading
@@ -544,7 +542,7 @@ fun LoginScreen(
 
             if (selectedLoginMethod == "MFA") {
                 Spacer(modifier = Modifier.height(10.dp))
-                
+
                 Button(
                     onClick = {
                         showMfaTermsDialog = true
@@ -554,7 +552,7 @@ fun LoginScreen(
                         .height(62.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFDD3825),
-                        disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                        disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                     ),
                     shape = MaterialTheme.shapes.medium,
                     enabled = !isLoading
@@ -622,7 +620,7 @@ fun LoginScreen(
                         .height(62.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFDD3825),
-                        disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                        disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                     ),
                     shape = MaterialTheme.shapes.medium,
                     enabled = !isLoading
@@ -904,7 +902,7 @@ fun LoginScreen(
                                 setFirstTimeLogin(context, true)
                                 com.archeGlobal.one.utils.MpinManager.clearAllMpinData(context)
                                 BiometricHelper(context).disableBiometric() // Disable biometric
-                                
+
                                 // Reset all UI state
                                 firstTimeLogin = true
                                 showOtpButton = true
@@ -919,7 +917,7 @@ fun LoginScreen(
                                 mpinError = null
                                 showMfaTermsDialog = false
                                 termsAccepted = false
-                                
+
                                 // Force a UI refresh
                                 forceUpdate = !forceUpdate
                             }
@@ -1074,12 +1072,12 @@ fun LoginScreen(
         // Loading indicator
         if (isLoading) {
             UniversalLoader(isLoading = true)
-        }        
+        }
     }
 
     if (showTermsDialog || showMfaTermsDialog) {
         Dialog(
-            onDismissRequest = { 
+            onDismissRequest = {
                 if (showTermsDialog) showTermsDialog = false
                 if (showMfaTermsDialog) showMfaTermsDialog = false
             }
@@ -1121,7 +1119,7 @@ fun LoginScreen(
                         Column {
                             Text(
                                 "Welcome to Arche's official application.\n\n" +
-                                "This application is the property of Arche Global Private Limited and is intended solely for authorized use by employees, contractors, or designated users. By accessing or using this application, you agree to the following terms:\n\n",
+                                    "This application is the property of Arche Global Private Limited and is intended solely for authorized use by employees, contractors, or designated users. By accessing or using this application, you agree to the following terms:\n\n",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -1138,9 +1136,9 @@ fun LoginScreen(
                             )
                             Text(
                                 "- You acknowledge that this application is owned and managed by Arche Global Private Limited.\n" +
-                                "- You agree to use the application only for purposes permitted by your role and organizational policies.\n" +
-                                "- You agree not to share access credentials or sensitive information with unauthorized individuals.\n" +
-                                "- You consent to the collection and processing of usage data for operational, security, and compliance purposes.\n\n",
+                                    "- You agree to use the application only for purposes permitted by your role and organizational policies.\n" +
+                                    "- You agree not to share access credentials or sensitive information with unauthorized individuals.\n" +
+                                    "- You consent to the collection and processing of usage data for operational, security, and compliance purposes.\n\n",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -1157,8 +1155,8 @@ fun LoginScreen(
                             )
                             Text(
                                 "- Your data is protected under applicable data protection laws and internal security protocols.\n" +
-                                "- Unauthorized access, misuse, or tampering with the application may result in disciplinary action or legal consequences.\n\n\n" +
-                                "By tapping \"Accept\", you confirm that you have read, understood, and agreed to abide by these terms and our Privacy Policy.\n",
+                                    "- Unauthorized access, misuse, or tampering with the application may result in disciplinary action or legal consequences.\n\n\n" +
+                                    "By tapping \"Accept\", you confirm that you have read, understood, and agreed to abide by these terms and our Privacy Policy.\n",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -1174,9 +1172,9 @@ fun LoginScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = { 
+                            onClick = {
                                 if (showTermsDialog) showTermsDialog = false
-                                if (showMfaTermsDialog) showMfaTermsDialog = false 
+                                if (showMfaTermsDialog) showMfaTermsDialog = false
                             },
                             modifier = Modifier
                                 .weight(1f)
@@ -1193,7 +1191,7 @@ fun LoginScreen(
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 18.sp,
                                 color = Color.Black
-                                )
+                            )
                         }
                         Button(
                             onClick = {
@@ -1221,7 +1219,7 @@ fun LoginScreen(
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 18.sp,
                                 color = Color.White
-                                )
+                            )
                         }
                     }
                 }

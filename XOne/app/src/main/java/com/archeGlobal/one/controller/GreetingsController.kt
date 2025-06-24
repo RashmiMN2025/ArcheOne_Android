@@ -8,48 +8,47 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.FileProvider
 import com.archeGlobal.one.model.GreetingModel
 import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.utils.UserDataManager
-import androidx.core.content.FileProvider
-import com.archeGlobal.one.CommuniqueActivity
-import java.io.File
-import java.io.FileOutputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 class GreetingsController(
     private val context: Context,
     private val navigator: Navigator
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
-    
+
     var model by mutableStateOf(GreetingModel())
         private set
-    
+
     // Captured card screenshot bitmap
-    private var cardScreenshot: Bitmap? = null    // This will be populated from API data
+    private var cardScreenshot: Bitmap? = null // This will be populated from API data
     private val categoryMessages = mutableMapOf<String, String>()
 
     init {
         loadGreetings()
-    }    private fun loadGreetings() {
+    } private fun loadGreetings() {
         val greetings = userDataManager.getGreetingsData()
         val greetingCategories = userDataManager.getGreetingCategoriesData()
         var subcategories: List<GreetingSubcategory> = emptyList()
-        
+
         // Find subcategories for Global Celebration from API data
         if (greetingCategories != null) {
             // Two approaches to identify subcategories:
             // 1. Check if files contain "/Global Celebration/" path
             // 2. Check if message field is "Global Celebration" (indicates it's a subcategory)
-            subcategories = greetingCategories.filter { cat -> 
+            subcategories = greetingCategories.filter { cat ->
                 cat.files.any { file -> file.contains("/Global Celebration/") } ||
-                cat.message == "Global Celebration" ||
-                cat.name != "Global Celebration" && (cat.files.any { file -> file.contains("global") || file.contains("celebration") })
+                    cat.message == "Global Celebration" ||
+                    cat.name != "Global Celebration" && (cat.files.any { file -> file.contains("global") || file.contains("celebration") })
             }.map { cat ->
                 GreetingSubcategory(
                     id = cat.id,
@@ -60,7 +59,7 @@ class GreetingsController(
             }
             Log.d("GreetingsController", "Found ${subcategories.size} subcategories for Global Celebration")
         }
-        
+
         // Always add Global Celebration to categories regardless if we have subcategories or not
         // This ensures it appears in the UI
         val categoriesWithGlobal = if (greetings != null) {
@@ -77,10 +76,10 @@ class GreetingsController(
             // If no categories at all, at least add Global Celebration
             mapOf("Global Celebration" to emptyList<String>())
         }
-        
+
         model = model.copy(categories = categoriesWithGlobal, subcategories = subcategories)
         Log.d("GreetingsController", "Loaded ${categoriesWithGlobal.size} greeting categories with Global Celebration")
-        
+
         if (greetingCategories != null) {
             val messages = mutableMapOf<String, String>()
             greetingCategories.forEach { category ->
@@ -96,91 +95,91 @@ class GreetingsController(
             Log.e("GreetingsController", "No greeting category messages available")
         }
     }
-    
+
     // Get message for category from API data or fallback to empty
     private fun getMessageForCategory(category: String): String {
         return model.categoryMessages[category] ?: ""
     }
 
-fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
-    try {
-        // For Global Celebration, just select the category and show subcategories
-        if (category == "Global Celebration" && model.subcategories.isNotEmpty()) {
-            Log.d("GreetingsController", "Selected parent category: $category with ${model.subcategories.size} subcategories")
+    fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
+        try {
+            // For Global Celebration, just select the category and show subcategories
+            if (category == "Global Celebration" && model.subcategories.isNotEmpty()) {
+                Log.d("GreetingsController", "Selected parent category: $category with ${model.subcategories.size} subcategories")
+                model = model.copy(
+                    selectedCategory = category,
+                    selectedSubcategory = null,
+                    selectedGreeting = null,
+                    message = getMessageForCategory(category)
+                )
+                return
+            }
+            // For other categories, select the first greeting
+            val greetingsInCategory = model.categories[category]
+            Log.d("GreetingsController", "Complete categories map: ${model.categories}")
+            if (greetingsInCategory.isNullOrEmpty()) {
+                Log.e("GreetingsController", "Error: No greetings found for category: $category")
+                return
+            }
+            val firstGreetingInCategory = greetingsInCategory.firstOrNull()
+            Log.d("GreetingsController", "onCategorySelected called with category: $category")
+            Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory.size} greetings")
+            Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
+            cardScreenshot = null
+            val categoryMessage = getMessageForCategory(category)
+            Log.d("GreetingsController", "Using message from API data: $categoryMessage")
+
+            // FIX: Navigate before updating the model to avoid intermediate page
+            if (navigateToDetail && firstGreetingInCategory != null) {
+                navigator.navigateToGreetingDetail(
+                    firstGreetingInCategory,
+                    greetingsInCategory,
+                    categoryMessage,
+                    category
+                )
+                return // Prevent model update and recomposition
+            }
+
             model = model.copy(
                 selectedCategory = category,
                 selectedSubcategory = null,
-                selectedGreeting = null,
-                message = getMessageForCategory(category)
+                selectedGreeting = firstGreetingInCategory,
+                message = categoryMessage
             )
-            return
+        } catch (e: Exception) {
+            Log.e("GreetingsController", "Error in onCategorySelected: ${e.message}", e)
         }
-        // For other categories, select the first greeting
-        val greetingsInCategory = model.categories[category]
-        Log.d("GreetingsController", "Complete categories map: ${model.categories}")
-        if (greetingsInCategory.isNullOrEmpty()) {
-            Log.e("GreetingsController", "Error: No greetings found for category: $category")
-            return
-        }
-        val firstGreetingInCategory = greetingsInCategory.firstOrNull()
-        Log.d("GreetingsController", "onCategorySelected called with category: $category")
-        Log.d("GreetingsController", "Selected category: $category, found ${greetingsInCategory.size} greetings")
-        Log.d("GreetingsController", "First greeting URL: $firstGreetingInCategory")
-        cardScreenshot = null
-        val categoryMessage = getMessageForCategory(category)
-        Log.d("GreetingsController", "Using message from API data: $categoryMessage")
-
-        // FIX: Navigate before updating the model to avoid intermediate page
-        if (navigateToDetail && firstGreetingInCategory != null) {
-            navigator.navigateToGreetingDetail(
-                firstGreetingInCategory,
-                greetingsInCategory,
-                categoryMessage,
-                category
-            )
-            return // Prevent model update and recomposition
-        }
-
-        model = model.copy(
-            selectedCategory = category,
-            selectedSubcategory = null,
-            selectedGreeting = firstGreetingInCategory,
-            message = categoryMessage
-        )
-    } catch (e: Exception) {
-        Log.e("GreetingsController", "Error in onCategorySelected: ${e.message}", e)
     }
-}
 
     fun onGreetingSelected(greetingUrl: String) {
         Log.d("GreetingsController", "onGreetingSelected method called with URL: $greetingUrl")
-        
+
         // Clear any existing screenshot when changing greeting
         cardScreenshot = null
-        
+
         // Create and assign a new model to ensure recomposition
         val updatedModel = model.copy(selectedGreeting = greetingUrl)
         model = updatedModel
-        
+
         // Verify the update took effect
         Log.d("GreetingsController", "Model updated. New selectedGreeting: ${model.selectedGreeting}")
-        
+
         // Navigate to greeting detail screen
         navigateToGreetingDetail(greetingUrl)
     }
-    
-    private fun navigateToGreetingDetail(greetingUrl: String) {
-    try {
-        val currentCategory = model.selectedCategory ?: "Greeting"
-        val currentMessage = model.message
-        val allGreetings = model.categories[currentCategory] ?: listOf(greetingUrl)
 
-        Log.d("GreetingsController", "Navigating to greeting detail: $currentCategory, URL: $greetingUrl")
-        navigator.navigateToGreetingDetail(greetingUrl, allGreetings, currentMessage, currentCategory)
-    } catch (e: Exception) {
-        Log.e("GreetingsController", "Error navigating to greeting detail: ${e.message}", e)
+    private fun navigateToGreetingDetail(greetingUrl: String) {
+        try {
+            val currentCategory = model.selectedCategory ?: "Greeting"
+            val currentMessage = model.message
+            val allGreetings = model.categories[currentCategory] ?: listOf(greetingUrl)
+
+            Log.d("GreetingsController", "Navigating to greeting detail: $currentCategory, URL: $greetingUrl")
+            navigator.navigateToGreetingDetail(greetingUrl, allGreetings, currentMessage, currentCategory)
+        } catch (e: Exception) {
+            Log.e("GreetingsController", "Error navigating to greeting detail: ${e.message}", e)
+        }
     }
-}
 
     fun updateMessage(message: String) {
         model = model.copy(message = message)
@@ -211,17 +210,17 @@ fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
             Log.e("GreetingsController", "No card screenshot available")
             return null
         }
-        
+
         try {
             // Create a temporary file in the cache directory
             val cacheDir = context.cacheDir
             val file = File(cacheDir, "greeting_card_${System.currentTimeMillis()}.jpg")
-            
+
             // Save bitmap to file
             FileOutputStream(file).use { outputStream ->
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
             }
-            
+
             // Get content URI using FileProvider
             return FileProvider.getUriForFile(
                 context,
@@ -237,7 +236,7 @@ fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
     fun sendGreeting() {
         val imageUri = saveBitmapForSharing(cardScreenshot)
         val greetingTitle = model.selectedCategory ?: "Greeting"
-        
+
         if (imageUri != null) {
             // Send both card screenshot and text
             val intent = Intent(Intent.ACTION_SEND).apply {
@@ -257,10 +256,10 @@ fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
             }
             context.startActivity(Intent.createChooser(intent, "Send Greeting"))
         }
-    }    // Removed controller-level sendInOutlook implementation
+    } // Removed controller-level sendInOutlook implementation
     // This functionality should only be handled by GreetingDetailActivity
     // to avoid conflicting implementations
-    
+
     // Note: sendInOutlook and sendTextOnlyToOutlook have been removed
     // to ensure that all Outlook-related actions are handled
     // consistently by the GreetingDetailActivity instead
@@ -271,9 +270,9 @@ fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
             Log.e("GreetingsController", "Empty image URL")
             return
         }
-        
+
         Log.d("GreetingsController", "Downloading image directly from: $imageUrl")
-        
+
         // Use Coil to download the image in the background
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -301,12 +300,12 @@ fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
                         }
                     }
                 }
-                
+
                 // If image was successfully downloaded and converted to bitmap
                 if (imageBitmap != null) {
                     // Set as card screenshot
                     cardScreenshot = imageBitmap
-                    
+
                     // Switch to main thread to start share intent
                     withContext(Dispatchers.Main) {
                         sendGreeting()

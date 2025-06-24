@@ -1,12 +1,11 @@
 package com.archeGlobal.one
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import android.content.Intent
-import com.archeGlobal.one.model.SosBlogModel
 import androidx.activity.compose.setContent
-import com.archeGlobal.one.ui.screens.SOSDetailScreen
-import android.os.Build
+import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.navigation.AndroidNavigator
+import com.archeGlobal.one.ui.screens.SOSDetailScreen
 
 class SOSDetailActivity : ComponentActivity() {
     private lateinit var navigator: AndroidNavigator
@@ -21,13 +20,13 @@ class SOSDetailActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             intent.getParcelableExtra("blog") as? SosBlogModel
         }
-        
+
         navigator = AndroidNavigator(this)
 
         setContent {
             blog?.let {
                 SOSDetailScreen(
-                    blog = it, 
+                    blog = it,
                     onBackPressed = { finish() }
                 )
             }

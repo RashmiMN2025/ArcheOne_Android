@@ -5,16 +5,12 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.HomeController
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.GreetingSubcategory
@@ -49,7 +45,7 @@ class PrideMonthTestActivity : ComponentActivity() {
 @Composable
 fun PrideMonthTestScreen() {
     // Mock data for testing
-    val mockNavigator = remember { 
+    val mockNavigator = remember {
         object : Navigator {
             override fun openPulseLogin() {}
             override fun navigateToLoginScreen() {}
@@ -144,7 +140,7 @@ fun PrideMonthTestScreen() {
     var isPrideMonth by remember { mutableStateOf(currentMonth == Calendar.JUNE) }
     var showPrideDialog by remember { mutableStateOf(false) }
     var usingPrideIcon by remember { mutableStateOf(false) }
-    
+
     // Create a test controller
     val context = LocalContext.current
     val controller = remember { HomeController(mockNavigator, context) }
@@ -161,9 +157,9 @@ fun PrideMonthTestScreen() {
             text = "Pride Month Feature Test",
             style = MaterialTheme.typography.headlineMedium
         )
-        
+
         Divider()
-        
+
         // Current month display
         Text(
             text = "Current Test Month: ${if (currentMonth == Calendar.JUNE) "June (Pride Month)" else "Not June"}"
@@ -171,7 +167,7 @@ fun PrideMonthTestScreen() {
         Text(
             text = "Pride Month Active: ${if (isPrideMonth) "Yes" else "No"}"
         )
-        
+
         // Month toggle button
         Button(
             onClick = {
@@ -182,9 +178,9 @@ fun PrideMonthTestScreen() {
         ) {
             Text("Toggle Month (June/Not June)")
         }
-        
+
         Divider()
-        
+
         // Pride Month Dialog controls
         Button(
             onClick = { showPrideDialog = true },
@@ -192,7 +188,7 @@ fun PrideMonthTestScreen() {
         ) {
             Text("Show Pride Month Dialog")
         }
-        
+
         // Regular Event Popup controls
         Button(
             onClick = { showRegularEvent = true },
@@ -200,15 +196,15 @@ fun PrideMonthTestScreen() {
         ) {
             Text("Show Regular Event Popup")
         }
-        
+
         Divider()
-        
+
         // Status information
         Text(
             text = "Pride Icon Active: ${if (usingPrideIcon) "Yes" else "No"}"
         )
     }
-    
+
     // Show Pride Month Dialog if needed
     if (isPrideMonth && showPrideDialog) {
         com.archeGlobal.one.ui.components.PrideMonthDialog(
@@ -224,7 +220,7 @@ fun PrideMonthTestScreen() {
             }
         )
     }
-    
+
     // Show regular event popup if needed
     if (!isPrideMonth && showRegularEvent) {
         EventPopup(

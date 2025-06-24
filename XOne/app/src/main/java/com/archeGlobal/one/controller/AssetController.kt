@@ -1,22 +1,22 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.archeGlobal.one.AssetActivity
+import com.archeGlobal.one.model.AssetDetails
 import com.archeGlobal.one.model.AssetModel
+import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
-import com.archeGlobal.one.model.AssetDetails
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.archeGlobal.one.model.SOSRequest
-import com.archeGlobal.one.utils.UserDataManager
-import android.util.Log
-import com.archeGlobal.one.AssetActivity
 
 class AssetController(
     private val context: Context,
@@ -29,7 +29,7 @@ class AssetController(
         // Get user data and asset details from UserDataManager instead of making API call
         loadAssetDetails()
     }
-    
+
     private fun loadAssetDetails() {
         val userData = OtpVerificationController.getUserData()
         val assetDetails = UserDataManager.getInstance(context).getAssetDetails()
@@ -90,7 +90,7 @@ class AssetController(
         if (dateStr.contains("-") && !dateStr.matches(Regex("\\d+"))) {
             return dateStr
         }
-        
+
         // Otherwise, try to parse it as an Excel date number
         return try {
             val days = dateStr.toDouble().toInt()
@@ -108,10 +108,10 @@ class AssetController(
         // Log both before and after state for debugging
         val oldDesc = model.issueDescription
         Log.d("AssetController", "Updating description: '$oldDesc' -> '$description'")
-        
+
         // Update the model with the new description
         model = model.copy(issueDescription = description)
-        
+
         // Verify the update was successful
         Log.d("AssetController", "Description updated: '${model.issueDescription}'")
     }
@@ -123,7 +123,7 @@ class AssetController(
         Log.d("AssetController", "Description length: ${model.issueDescription.length}")
         Log.d("AssetController", "Description chars: ${model.issueDescription.toCharArray().joinToString { "'$it' (${it.code})" }}")
         Log.d("AssetController", "==========================================")
-        
+
         // Check if the description is blank after trimming whitespace
         val trimmedDescription = model.issueDescription.trim()
         if (trimmedDescription.isBlank()) {
@@ -161,15 +161,15 @@ class AssetController(
             query = description,
             description = "" // Add missing parameter with empty string as default
         )
-        
+
         Log.d("AssetController", "Created SOS request: $request")
-        
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.d("AssetController", "Sending SOS request")
                 // Use submitSOS like in RaiseConcernScreen instead of createSOSRequest
                 val response = RetrofitClient.apiService.submitSOS(request)
-                
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         val responseBody = response.body()
@@ -196,7 +196,7 @@ class AssetController(
             }
         }
     }
-    
+
     fun onBackPressed() {
         (context as? AssetActivity)?.finishWithAnimation()
     }

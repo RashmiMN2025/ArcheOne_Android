@@ -2,11 +2,11 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.util.Log
-import com.archeGlobal.one.network.*
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.*
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.*
 import org.json.JSONObject
-import com.archeGlobal.one.utils.UserDataManager
 
 class LoginController(
     private val context: Context,
@@ -76,11 +76,11 @@ class LoginController(
     }
 
     fun loginWithToken(
-    token: String,
-    email: String,
-    mobile: String,
-    employeeId: String,
-    callback: (String, Boolean) -> Unit
+        token: String,
+        email: String,
+        mobile: String,
+        employeeId: String,
+        callback: (String, Boolean) -> Unit
     ) {
         Log.d("LoginController", "Token used for login: $token")
         CoroutineScope(Dispatchers.IO).launch {
@@ -97,11 +97,11 @@ class LoginController(
                             UserDataManager.getInstance(context).saveUserDataFromResponse(responseBody, token)
                             UserDataManager.getInstance(context).setIsLoggedIn(true)
                             UserDataManager.getInstance(context).setHasLoggedIn(true)
-                            
+
                             // Check if MPIN is already set up before navigating
                             val mpinController = com.archeGlobal.one.controller.MpinController(context)
                             val hasMpinSet = mpinController.isMpinSet()
-                            
+
                             if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
                                 if (!hasMpinSet) {
                                     // MPIN not set, go to MPIN setup

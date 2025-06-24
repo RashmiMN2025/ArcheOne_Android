@@ -11,10 +11,10 @@ import java.util.Locale
 data class TravelCombinedHistoryResponse(
     @SerializedName("status")
     val status: Int,
-    
+
     @SerializedName("order_history")
     val orderHistory: List<TravelOrderHistoryItem>,
-    
+
     @SerializedName("approval_history")
     val approvalHistory: List<TravelApprovalHistoryItem>
 )
@@ -25,70 +25,70 @@ data class TravelCombinedHistoryResponse(
 data class TravelOrderHistoryItem(
     @SerializedName("request_id")
     val requestId: String,
-    
+
     @SerializedName("employee_name")
     val employeeName: String,
-    
+
     @SerializedName("employee_email")
     val employeeEmail: String,
-    
+
     @SerializedName("employee_id")
     val employeeId: String,
-    
+
     @SerializedName("mobile")
     val mobile: String,
-    
+
     @SerializedName("travel_destination")
     val travelDestination: String,
-    
+
     @SerializedName("project_name")
     val projectName: String,
-    
+
     @SerializedName("business_justification")
     val businessJustification: String,
-    
+
     @SerializedName("departure_date")
     val departureDate: String,
-    
+
     @SerializedName("arrival_date")
     val arrivalDate: String,
-    
+
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
-    
+
     @SerializedName("reporting_manager_name")
     val reportingManagerName: String,
-    
+
     @SerializedName("reporting_manager_email")
     val reportingManagerEmail: String,
-    
+
     @SerializedName("action_token")
     val actionToken: String,
-    
+
     @SerializedName("status")
     val status: String,
-    
+
     @SerializedName("rejection_description")
     val rejectionDescription: String?,
-    
+
     @SerializedName("created_at")
     val createdAt: String,
-    
+
     @SerializedName("updated_at")
     val updatedAt: String,
-    
+
     @SerializedName("stay_required")
     val stayRequired: String?,
-    
+
     @SerializedName("meal_pref")
     val mealPreference: String?,
-    
+
     @SerializedName("seat_pref")
     val seatPreference: String?,
-    
+
     @SerializedName("flight_time")
     val flightTime: String?,
-    
+
     @SerializedName("frequent_flyer_num")
     val frequentFlyerNumber: String?
 ) {
@@ -103,14 +103,14 @@ data class TravelOrderHistoryItem(
         } catch (e: Exception) {
             Date() // Fallback to current date if parsing fails
         }
-        
+
         // Map status string to TravelStatus enum
         val travelStatus = when (status.lowercase()) {
             "approved" -> TravelStatus.APPROVED
             "rejected" -> TravelStatus.REJECTED
             else -> TravelStatus.PENDING
         }
-        
+
         return TravelRequest(
             id = requestId,
             project = projectName,
@@ -137,61 +137,61 @@ data class TravelOrderHistoryItem(
 data class TravelApprovalHistoryItem(
     @SerializedName("request_id")
     val requestId: String,
-    
+
     @SerializedName("employee_name")
     val employeeName: String,
-    
+
     @SerializedName("employee_email")
     val employeeEmail: String,
-    
+
     @SerializedName("employee_id")
     val employeeId: String,
-    
+
     @SerializedName("mobile")
     val mobile: String,
-    
+
     @SerializedName("travel_destination")
     val travelDestination: String,
-    
+
     @SerializedName("project_name")
     val projectName: String,
-    
+
     @SerializedName("business_justification")
     val businessJustification: String,
-    
+
     @SerializedName("departure_date")
     val departureDate: String,
-    
+
     @SerializedName("arrival_date")
     val arrivalDate: String,
-    
+
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
-    
+
     @SerializedName("status")
     val status: String,
-    
+
     @SerializedName("action_token")
     val actionToken: String,
-    
+
     @SerializedName("created_at")
     val createdAt: String,
-    
+
     @SerializedName("remarks")
     val remarks: String?,
-    
+
     @SerializedName("stay_required")
     val stayRequired: String?,
-    
+
     @SerializedName("meal_pref")
     val mealPreference: String?,
-    
+
     @SerializedName("seat_pref")
     val seatPreference: String?,
-    
+
     @SerializedName("flight_time")
     val flightTime: String?,
-    
+
     @SerializedName("frequent_flyer_num")
     val frequentFlyerNumber: String?
 ) {
@@ -206,14 +206,14 @@ data class TravelApprovalHistoryItem(
         } catch (e: Exception) {
             Date() // Fallback to current date if parsing fails
         }
-        
+
         // Map status string to TravelStatus enum
         val travelStatus = when (status.lowercase()) {
             "approved" -> TravelStatus.APPROVED
             "rejected" -> TravelStatus.REJECTED
             else -> TravelStatus.PENDING
         }
-        
+
         return TravelRequest(
             id = requestId,
             project = projectName,

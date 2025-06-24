@@ -2,7 +2,6 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.network.ApiService
 import kotlinx.coroutines.CoroutineScope
@@ -91,7 +90,7 @@ class EventController(
             putString(KEY_LAST_SHOWN_DATE, currentDate)
             apply()
         }
-        
+
         // Hide the popup
         _isEventPopupVisible.value = false
     }

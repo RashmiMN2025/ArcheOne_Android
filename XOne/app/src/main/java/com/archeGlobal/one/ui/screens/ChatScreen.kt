@@ -2,7 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import android.annotation.SuppressLint
 import android.text.format.DateFormat
-import androidx.compose.foundation.BorderStroke
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -18,21 +18,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,16 +35,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -58,20 +47,16 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.ChatViewModel
-import com.archeGlobal.one.model.Message
-import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.ChatBottomNavigationBar
-import com.archeGlobal.one.ui.components.BottomNavigationBar
+import com.archeGlobal.one.model.Message
 import com.archeGlobal.one.ui.components.TypingIndicator
 import com.archeGlobal.one.utils.ChatData
 import java.util.Date
-import androidx.activity.compose.BackHandler
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,7 +95,7 @@ fun ChatScreen(
                         colors = listOf(
                             Color(0xFFE0DCD1), // Light grey at top
                             Color(0xFFC8C8CA), // Medium grey in middle
-                            Color(0xFF474749)  // Dark grey at bottom
+                            Color(0xFF474749) // Dark grey at bottom
                         )
                     )
                 )
@@ -298,10 +283,11 @@ fun MessageBubble(
                                         modifier = Modifier.padding(vertical = 4.dp)
                                     )
                                 }
-                            }                        } else if (message.content.contains("\n\n\n")) {
+                            }
+                        } else if (message.content.contains("\n\n\n")) {
                             // Handle the new format with triple newline separator
                             val parts = message.content.split("\n\n\n", limit = 2)
-                              if (parts.size == 2) {                                // Display user question
+                            if (parts.size == 2) { // Display user question
                                 Text(
                                     text = parts[0], // This is the question
                                     color = Color.Black,
@@ -310,7 +296,7 @@ fun MessageBubble(
                                     lineHeight = 20.sp,
                                     modifier = Modifier.padding(bottom = 24.dp) // Increased padding for more space
                                 )
-                                
+
                                 // Display the answer with double spacing
                                 Text(
                                     text = parts[1], // This is the answer
@@ -330,13 +316,13 @@ fun MessageBubble(
                         } else if (message.content.startsWith("You asked:")) {
                             // This block is kept for backward compatibility with older messages
                             val parts = message.content.split("\n\n", limit = 2)
-                            
+
                             if (parts.size > 1) {
                                 // Get the question part and remove the "You asked:" prefix and quotes
                                 val questionText = parts[0].removePrefix("You asked: ")
                                     .trim()
                                     .removeSurrounding("\"")
-                                  // Display question with the same style as the answer text
+                                // Display question with the same style as the answer text
                                 Text(
                                     text = questionText,
                                     color = Color.Black,
@@ -345,7 +331,7 @@ fun MessageBubble(
                                     lineHeight = 20.sp,
                                     modifier = Modifier.padding(bottom = 16.dp)
                                 )
-                                
+
                                 // Display the answer with proper spacing
                                 Text(
                                     text = parts[1],
@@ -362,20 +348,20 @@ fun MessageBubble(
                                     lineHeight = 20.sp
                                 )
                             }
-                            
+
                             // Append FAQ list if `showFAQs` is true
                             if (message.showFAQs) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                
+
                                 // Display FAQ categories
                                 val faqsToShow = if (message.showMoreCategories) chatData.faqs else chatData.faqs.take(5)
-                                
+
                                 faqsToShow.forEach { faq ->
                                     FAQQuestionRow(question = faq.title) {
                                         viewModel.selectFAQ(faq.question)
                                     }
                                 }
-                                
+
                                 // Show "Show More" button if not all FAQs are displayed
                                 if (!message.showMoreCategories && chatData.faqs.size > 5) {
                                     Box(
@@ -450,14 +436,14 @@ fun MessageBubble(
                 }
             }
         }
-        
+
         // Timestamp
         Text(
             text = formatTime(message.timestamp),
             fontSize = 10.sp,
             color = Color(0xFFFFFAF5),
             modifier = Modifier.padding(top = 4.dp, start = if (message.isUser) 0.dp else 8.dp, end = if (!message.isUser) 0.dp else 8.dp)
-    )
+        )
     }
 }
 

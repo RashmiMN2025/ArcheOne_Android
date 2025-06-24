@@ -1,8 +1,7 @@
 package com.archeGlobal.one.controller
 
-import android.content.Intent
-import android.net.Uri
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,7 +10,6 @@ import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.Job
 import com.archeGlobal.one.model.SocialArticle
 import com.archeGlobal.one.model.SocialContent
-import com.archeGlobal.one.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,11 +18,11 @@ import kotlinx.coroutines.withContext
 class SocialController(private val context: Context) {
     // Get reference to the data provider
     private val dataProvider = SocialDataProvider.getInstance(context)
-    
+
     // Local state for UI
     private var _socialState by mutableStateOf(SocialContent())
     val socialContent: SocialContent get() = _socialState
-    
+
     init {
         // If data is already loaded, use it immediately; otherwise fetch it
         if (dataProvider.isLoaded) {
@@ -33,12 +31,12 @@ class SocialController(private val context: Context) {
         } else {
             // Ensure data is being loaded
             dataProvider.preloadData()
-            
+
             // Also trigger a local fetch to update the UI state when data becomes available
             fetchSocialContent()
         }
     }
-    
+
     private fun fetchSocialContent() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -48,7 +46,7 @@ class SocialController(private val context: Context) {
                     attempts++
                     kotlinx.coroutines.delay(500)
                 }
-                
+
                 withContext(Dispatchers.Main) {
                     if (dataProvider.isLoaded) {
                         _socialState = dataProvider.socialContent
@@ -62,7 +60,7 @@ class SocialController(private val context: Context) {
             }
         }
     }
-    
+
     fun getJobs(): List<Job> {
         return if (dataProvider.isLoaded) {
             dataProvider.jobs
@@ -70,7 +68,7 @@ class SocialController(private val context: Context) {
             _socialState.jobs
         }
     }
-    
+
     fun getBlogs(): List<SocialArticle> {
         return if (dataProvider.isLoaded) {
             dataProvider.blogs
@@ -87,7 +85,7 @@ class SocialController(private val context: Context) {
             }
         }
     }
-    
+
     fun getCaseStudies(): List<SocialArticle> {
         return if (dataProvider.isLoaded) {
             dataProvider.caseStudies
@@ -106,11 +104,10 @@ class SocialController(private val context: Context) {
                 }
             } else {
                 // Fallback to filtering jobs if case studies aren't available
-                _socialState.jobs.filter { 
-                    it.Title.contains("Guide") || 
-                    it.Title.contains("Strategy") ||
-                    it.Slug.contains("guide") ||
-                    it.Slug.contains("strategy")
+                _socialState.jobs.filter {
+                    it.Title.contains("Guide") || it.Title.contains("Strategy") ||
+                        it.Slug.contains("guide") ||
+                        it.Slug.contains("strategy")
                 }.map { job ->
                     SocialArticle(
                         id = job.Slug,
@@ -123,7 +120,7 @@ class SocialController(private val context: Context) {
             }
         }
     }
-    
+
     fun getJobPostings(): List<Job> {
         return if (dataProvider.isLoaded) {
             dataProvider.jobs
@@ -132,18 +129,18 @@ class SocialController(private val context: Context) {
             _socialState.jobs.filter { job ->
                 // Jobs have specific characteristics like experience requirements
                 job.Description.contains("Experience") ||
-                job.Description.contains("yrs") ||
-                job.Title.contains("Manager") ||
-                job.Title.contains("Engineer") ||
-                job.Title.contains("Lead") ||
-                job.Title.contains("L1") ||
-                job.Title.contains("L2") ||
-                job.Title.contains("L3") ||
-                job.Title.contains("SME") ||
-                job.Title.contains("Sales") ||
-                job.Title.contains("Presales") ||
-                job.Title.contains("Security") ||
-                job.Title.contains("Practice")
+                    job.Description.contains("yrs") ||
+                    job.Title.contains("Manager") ||
+                    job.Title.contains("Engineer") ||
+                    job.Title.contains("Lead") ||
+                    job.Title.contains("L1") ||
+                    job.Title.contains("L2") ||
+                    job.Title.contains("L3") ||
+                    job.Title.contains("SME") ||
+                    job.Title.contains("Sales") ||
+                    job.Title.contains("Presales") ||
+                    job.Title.contains("Security") ||
+                    job.Title.contains("Practice")
             }
         }
     }
@@ -155,18 +152,21 @@ class SocialController(private val context: Context) {
             "Blogs" -> "$baseUrl/blog/$slug"
             else -> "$baseUrl/jobs/$slug"
         }
-        
+
         // Use WebViewActivity instead of external browser
         val intent = Intent(context, WebViewActivity::class.java).apply {
             putExtra("fileUrl", url)
-            putExtra("title", when (type) {
-                "Case Studies" -> "Case Study"
-                "Blogs" -> "Blog"
-                else -> "Job Details"
-            })
+            putExtra(
+                "title",
+                when (type) {
+                    "Case Studies" -> "Case Study"
+                    "Blogs" -> "Blog"
+                    else -> "Job Details"
+                }
+            )
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
         Log.d("SocialController", "Opening $type link in WebViewActivity: $url")
     }
-} 
+}

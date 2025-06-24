@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
 import com.archeGlobal.one.model.Holiday
-import com.archeGlobal.one.utils.NetworkResult
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.NetworkResult
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -37,9 +37,9 @@ fun HolidayListScreen(
 ) {
     val holidaysState = controller.holidays.observeAsState()
     val holidayFileUrl = controller.holidayFileUrl.observeAsState()
-    
+
     var holidays by remember { mutableStateOf<List<Holiday>>(emptyList()) }
-    
+
     // Update holidays when LiveData changes
     LaunchedEffect(holidaysState.value) {
         when (val result = holidaysState.value) {
@@ -92,7 +92,7 @@ fun HolidayListScreen(
                         tint = Color.Black
                     )
                 }
-                
+
                 // Title centered in the Box
                 Text(
                     text = "Holiday List 2025",
@@ -102,7 +102,7 @@ fun HolidayListScreen(
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.align(Alignment.Center)
                 )
-                
+
                 // View PDF button aligned to the right
                 holidayFileUrl.value?.let { url ->
                     if (url.isNotEmpty()) {
@@ -183,9 +183,9 @@ fun HolidayListScreen(
                         textAlign = TextAlign.End
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Holiday list
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -227,15 +227,15 @@ fun HolidayItem(holiday: Holiday) {
                         .clip(CircleShape)
                         .background(
                             when (holiday.holidayType) {
-                                "Yes" -> Color(0xFFDD3825)  // Red for mandatory holidays
-                                "RH" -> Color(0xFF2196F3)   // Blue for RH holidays
-                                else -> Color.Gray          // Gray for others
+                                "Yes" -> Color(0xFFDD3825) // Red for mandatory holidays
+                                "RH" -> Color(0xFF2196F3) // Blue for RH holidays
+                                else -> Color.Gray // Gray for others
                             }
                         )
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 Column {
                     Text(
                         text = holiday.name,
@@ -251,16 +251,16 @@ fun HolidayItem(holiday: Holiday) {
                     )
                 }
             }
-            
+
             // Holiday type badge
             Text(
-                text = when(holiday.holidayType) {
+                text = when (holiday.holidayType) {
                     "Yes" -> "Holiday"
                     "RH" -> "RH"
                     else -> "Other"
                 },
                 fontSize = 12.sp,
-                color = when(holiday.holidayType) {
+                color = when (holiday.holidayType) {
                     "Yes" -> Color(0xFFDD3825)
                     "RH" -> Color(0xFF2196F3)
                     else -> Color.Gray
@@ -282,4 +282,4 @@ private fun formatDate(dateStr: String): String {
     } catch (e: Exception) {
         dateStr // Return original string if parsing fails
     }
-} 
+}

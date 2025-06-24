@@ -12,30 +12,34 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.CommuniqueModel
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import com.archeGlobal.one.ui.components.UniversalLoader
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -45,13 +49,6 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.size.Size
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 private const val THUMBNAIL_WIDTH = 300 // unified thumbnail width for both remote and PDF
 
@@ -91,9 +88,12 @@ fun CommuniqueScreen(
 
     // Filter communiques by partial match in the name (case-insensitive)
     val filteredCommuniques = remember(searchQuery, model.communiques) {
-        if (searchQuery.isBlank()) model.communiques
-        else model.communiques.filter { communique ->
-            communique.communiqueName.contains(searchQuery, ignoreCase = true)
+        if (searchQuery.isBlank()) {
+            model.communiques
+        } else {
+            model.communiques.filter { communique ->
+                communique.communiqueName.contains(searchQuery, ignoreCase = true)
+            }
         }
     }
 
@@ -112,7 +112,7 @@ fun CommuniqueScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
-                title = { 
+                title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -218,7 +218,7 @@ fun CommuniqueScreen(
                 }
             }
         }
-        
+
         UniversalLoader(isLoading = isLoading)
     }
 }
@@ -368,23 +368,23 @@ private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? =
     try {
         val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
         val outputFile = File(context.cacheDir, fileName)
-        
+
         val url = URL(pdfUrl)
         connection = url.openConnection() as HttpURLConnection
         connection.connectTimeout = 5000 // Reduced from 15000
         connection.readTimeout = 10000 // Reduced from 15000
-        
+
         if (connection.responseCode != HttpURLConnection.HTTP_OK) {
             Log.e("CommuniqueThumbnail", "HTTP error code: ${connection.responseCode}")
             return@withContext null
         }
-        
+
         connection.inputStream.use { input ->
             FileOutputStream(outputFile).use { output ->
                 input.copyTo(output)
             }
         }
-        
+
         if (outputFile.exists() && outputFile.length() > 0) {
             Log.d("CommuniqueThumbnail", "PDF downloaded successfully to ${outputFile.absolutePath}")
             return@withContext outputFile
@@ -421,7 +421,7 @@ private fun renderPdfThumbnail(context: Context, pdfFile: File): Bitmap? {
         var pageHeight = page.height
         if (pageWidth <= 0 || pageHeight <= 0) {
             Log.w("CommuniqueThumbnail", "Page reported zero width/height. Using fallback dimensions.")
-            pageWidth = 595  // A4 width in points at 72 dpi
+            pageWidth = 595 // A4 width in points at 72 dpi
             pageHeight = 842 // A4 height in points at 72 dpi
         }
         // Create a scaled bitmap (fixed thumbnail width for consistency)

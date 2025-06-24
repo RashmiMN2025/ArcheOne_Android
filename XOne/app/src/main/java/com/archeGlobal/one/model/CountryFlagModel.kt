@@ -15,4 +15,4 @@ fun getCountryFlag(countryName: String): String {
         "Latin America" -> "🇵🇪" // Using Peru flag since that's the specific location
         else -> "🌎"
     }
-} 
+}

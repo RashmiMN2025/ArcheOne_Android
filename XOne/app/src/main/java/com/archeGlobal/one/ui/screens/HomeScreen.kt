@@ -1,97 +1,93 @@
 package com.archeGlobal.one.ui.screens
+import android.app.Activity
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.model.HomeModel
-import com.archeGlobal.one.model.HomeItem
-import com.archeGlobal.one.ui.theme.*
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.graphicsLayer
-import com.archeGlobal.one.model.WelcomeBackgroundModel
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import com.archeGlobal.one.R
-import com.archeGlobal.one.ui.theme.getColorForApp
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import com.archeGlobal.one.ui.components.EmptyFavorites
-import com.archeGlobal.one.ui.components.FooterScaffold
-import com.archeGlobal.one.ui.components.UniversalLoader
-import com.archeGlobal.one.ui.components.EventPopup
-import com.archeGlobal.one.ui.components.PrideMonthDialog
-import androidx.compose.runtime.collectAsState
-import coil.compose.rememberAsyncImagePainter
-import android.util.Log
-import android.widget.Toast
-import com.archeGlobal.one.utils.ImageCache
-import androidx.compose.runtime.collectAsState
-import androidx.activity.compose.BackHandler
-import android.app.Activity
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
-import com.archeGlobal.one.controller.MpinController
-import com.archeGlobal.one.utils.BiometricHelper
+import coil.compose.rememberAsyncImagePainter
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HomeController
+import com.archeGlobal.one.controller.MpinController
 import com.archeGlobal.one.model.AboutMeModel
+import com.archeGlobal.one.model.EventResponse
+import com.archeGlobal.one.model.HomeItem
+import com.archeGlobal.one.model.HomeModel
+import com.archeGlobal.one.model.WelcomeBackgroundModel
+import com.archeGlobal.one.network.FeedbackRequest
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.ui.components.EmptyFavorites
+import com.archeGlobal.one.ui.components.EventPopup
+import com.archeGlobal.one.ui.components.FooterScaffold
+import com.archeGlobal.one.ui.components.PrideMonthDialog
+import com.archeGlobal.one.ui.components.UniversalLoader
+import com.archeGlobal.one.ui.theme.*
+import com.archeGlobal.one.ui.theme.getColorForApp
+import com.archeGlobal.one.utils.BiometricHelper
+import com.archeGlobal.one.utils.ImageCache
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.archeGlobal.one.network.RetrofitClient
-import com.archeGlobal.one.network.FeedbackRequest
-import com.archeGlobal.one.model.EventResponse
-import com.archeGlobal.one.utils.UserDataManager
 
 @Composable
 fun ProfileHeader(
     model: HomeModel,
     onShowProfileClick: () -> Unit
 ) {
-
     val context = LocalContext.current
     val activity = remember { context as? Activity }
 
@@ -118,7 +114,7 @@ fun ProfileHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 27.dp, end = 16.dp, top = 70.dp, bottom = 16.dp),  // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
+                .padding(start = 27.dp, end = 16.dp, top = 70.dp, bottom = 16.dp), // Adjusted top padding from 60.dp to 50.dp and bottom from 24.dp to 16.dp
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -129,7 +125,7 @@ fun ProfileHeader(
                 // Profile picture
                 Surface(
                     modifier = Modifier
-                        .size(90.dp,95.dp)
+                        .size(90.dp, 95.dp)
                         .padding(top = 8.dp)
                         .clickable(onClick = onShowProfileClick),
                     shape = CircleShape,
@@ -156,12 +152,10 @@ fun ProfileHeader(
                                 Image(
                                     painter = rememberAsyncImagePainter(
                                         ImageCache.createProfileImageRequest(
-                                            context = context, 
+                                            context = context,
                                             url = model.profilePicture
                                         ),
-                                        onSuccess = { 
-                                            Log.d("HomeScreen", "Profile image loaded successfully: ${model.profilePicture}") 
-                                        }
+                                        onSuccess = { Log.d("HomeScreen", "Profile image loaded successfully: ${model.profilePicture}") }
                                     ),
                                     contentDescription = "Profile Picture",
                                     modifier = Modifier.fillMaxSize(),
@@ -249,7 +243,7 @@ fun HomeScreen(
     val lockedState = userDataManager.preferencesManager.lockedState.collectAsState().value
     // Initialize background model with proper colors to prevent black screen
     val backgroundModel = remember(lockedState) { WelcomeBackgroundModel() }
-    
+
     val appContext = LocalContext.current
     val mpinController = remember { MpinController(appContext) }
     val biometricHelper = remember { BiometricHelper(appContext) }
@@ -300,7 +294,7 @@ fun HomeScreen(
     if (isPrideMonth && showPrideMonthDialog) {
         PrideMonthDialog(
             isUsingPrideIcon = isUsingPrideIcon.value,
-            onDismiss = { 
+            onDismiss = {
                 controller.dismissPrideMonthDialog()
             },
             onToggleIcon = {
@@ -329,7 +323,7 @@ fun HomeScreen(
 
         val navController = androidx.navigation.compose.rememberNavController()
 
-       // Centered MPIN prompt box
+        // Centered MPIN prompt box
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -370,7 +364,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     // Subtitle
-                    Column (
+                    Column(
                         modifier = Modifier
                             .padding(16.dp, 0.dp, 16.dp, 0.dp)
                     ) {
@@ -546,7 +540,7 @@ fun HomeScreen(
             Log.d("HomeScreen", "Event data exists but popup flag is false - Title: ${eventData.title}")
         }
     }
-    
+
     // Wrap with FooterScaffold for bottom navigation
     FooterScaffold(
         footerNavigation = model.footerNavigation,
@@ -555,16 +549,20 @@ fun HomeScreen(
         onFooterChatClick = onFooterChatClick,
         onFooterSOSClick = onFooterSOSClick,
         onFooterProfileClick = onFooterProfileClick
-    )  {
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Main content with conditional blur and pull-to-refresh
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .blur(
-                        radius = if (lockedState && !isBiometricEnabled) 12.dp
-                        else if (isAuthenticating) 10.dp
-                        else 0.dp
+                        radius = if (lockedState && !isBiometricEnabled) {
+                            12.dp
+                        } else if (isAuthenticating) {
+                            10.dp
+                        } else {
+                            0.dp
+                        }
                     )
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(
@@ -637,8 +635,7 @@ fun HomeScreen(
                                 color = Color.Black,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clickable { 
-                                        // Show Pride Month dialog when text is clicked
+                                    .clickable { // Show Pride Month dialog when text is clicked
                                         controller.showPrideMonthDialog()
                                     }
                             )
@@ -668,60 +665,72 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Button(
-                        onClick = {
-                            onAllAppsClick(); currentView = "All Apps"
-                        },
-                        modifier = Modifier.width(150.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (currentView == "All Apps")
-                                Color(0xFFDD3825) else CardBackground,
-                            contentColor = if (currentView == "All Apps")
-                                Color.White else Color.Black
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (currentView == "All Apps") Color(0xFFDD3825) else DividerColor
-                        ),
-                        shape = RoundedCornerShape(8.dp)
+                            onClick = {
+                                onAllAppsClick(); currentView = "All Apps"
+                            },
+                            modifier = Modifier.width(150.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (currentView == "All Apps") {
+                                    Color(0xFFDD3825)
+                                } else {
+                                    CardBackground
+                                },
+                                contentColor = if (currentView == "All Apps") {
+                                    Color.White
+                                } else {
+                                    Color.Black
+                                }
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (currentView == "All Apps") Color(0xFFDD3825) else DividerColor
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = "All Apps",
                                 fontSize = 16.sp, // Added font size
                                 fontFamily = GraphikFontFamily, // Added font family
-                                fontWeight = FontWeight.Medium, // Added font weight
+                                fontWeight = FontWeight.Medium // Added font weight
                             )
                         }
 
                         Spacer(modifier = Modifier.width(30.dp))
 
                         Button(
-                        onClick = {
-                           onFavoritesClick(); currentView = "Favorites" 
-                        },
-                        modifier = Modifier.width(150.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (currentView == "Favorites")
-                                Color(0xFFDD3825) else CardBackground,
-                            contentColor = if (currentView == "Favorites")
-                                Color.White else Color.Black
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 0.dp
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (currentView == "Favorites") Color(0xFFDD3825) else DividerColor
-                        ),
-                        shape = RoundedCornerShape(8.dp)
+                            onClick = {
+                                onFavoritesClick(); currentView = "Favorites"
+                            },
+                            modifier = Modifier.width(150.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (currentView == "Favorites") {
+                                    Color(0xFFDD3825)
+                                } else {
+                                    CardBackground
+                                },
+                                contentColor = if (currentView == "Favorites") {
+                                    Color.White
+                                } else {
+                                    Color.Black
+                                }
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (currentView == "Favorites") Color(0xFFDD3825) else DividerColor
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = "Favorites",
                                 fontSize = 16.sp, // Added font size
                                 fontFamily = GraphikFontFamily, // Added font family
-                                fontWeight = FontWeight.Medium, // Added font weight
+                                fontWeight = FontWeight.Medium // Added font weight
                             )
                         }
                     }
@@ -856,7 +865,7 @@ fun HomeScreen(
                 selectedPosition?.let { (x, y) ->
                     val density = LocalDensity.current
                     val itemSize = 80.dp
-                    val scaleFactor = 1.2f  // Slightly bigger than original
+                    val scaleFactor = 1.2f // Slightly bigger than original
                     val itemSizePx = with(density) { itemSize.toPx() }
 
                     Box(
@@ -925,7 +934,7 @@ fun HomeScreen(
             if (selectedApp != null && selectedPosition != null) {
                 selectedPosition?.let { (x, y) ->
                     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-                    val dialogWidth = 160.dp  // Return to original width
+                    val dialogWidth = 160.dp // Return to original width
                     val density = LocalDensity.current
 
                     val dialogWidthPx = with(density) { dialogWidth.toPx() }
@@ -990,7 +999,7 @@ fun HomeScreen(
                 }
             }
 
-               // --- Rating Dialog ---
+            // --- Rating Dialog ---
             if (showRatingDialog) {
                 Dialog(onDismissRequest = { showRatingDialog = false }) {
                     Card(
@@ -1013,7 +1022,7 @@ fun HomeScreen(
                                 textAlign = TextAlign.Center, // Center align the text
                                 modifier = Modifier.fillMaxWidth() // Make sure it uses the full width
                             )
-    
+
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Row(
@@ -1120,7 +1129,7 @@ fun HomeScreen(
                                     disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
                                     contentColor = Color.White,
                                     disabledContentColor = Color.White
-                                ),
+                                )
                             ) {
                                 Text(
                                     if (isSubmitting) "Submit" else "Submit",
@@ -1128,13 +1137,12 @@ fun HomeScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color.White
-                                    )
+                                )
                             }
                         }
                     }
                 }
             }
-
         }
     }
 }
@@ -1158,8 +1166,7 @@ private fun formatServiceTitle(title: String): String {
         "MyDocuments" -> "My\nDocuments"
         "ZenTask" -> "ZenTask"
         "My Career" -> "My\nCareer"
-        "Admin" -> "Admin" 
-        "Medical" -> "Medical"
+        "Admin" -> "Admin" "Medical" -> "Medical"
         "ID" -> "ID"
         "MyPay" -> "MyPay"
         "SAP" -> "SAP"
@@ -1236,10 +1243,10 @@ private fun AppItem(
             }
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onTap = { 
+                    onTap = {
                         onClick()
                     },
-                    onLongPress = { 
+                    onLongPress = {
                         itemPosition?.let { pos -> onLongPress(pos) }
                     }
                 )
@@ -1262,7 +1269,6 @@ private fun AppItem(
                     .padding(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Spacer(modifier = Modifier.height(12.dp))
                 // Icon at the top
                 AppIcon(title = title, modifier = Modifier.size(50.dp))
@@ -1270,15 +1276,15 @@ private fun AppItem(
                 Spacer(modifier = Modifier.height(3.dp))
 
                 Text(
-                        text = formattedTitle,
-                        fontSize = 12.sp,
-                        color = Color.Black,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        lineHeight = 14.sp,
-                        overflow = TextOverflow.Visible, // Changed from Ellipsis to make sure text is visible
+                    text = formattedTitle,
+                    fontSize = 12.sp,
+                    color = Color.Black,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    lineHeight = 14.sp,
+                    overflow = TextOverflow.Visible // Changed from Ellipsis to make sure text is visible
                 )
             }
         }
@@ -1296,7 +1302,7 @@ private fun AppIcon(
             "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
-            "Locations", "Travel", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask" ,"Password Reset" ,"Know Your Org" ,"Arche Odyssey","ZingHR", "IdeaVault" ,"Pulse" -> {
+            "Locations", "Travel", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse" -> {
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),

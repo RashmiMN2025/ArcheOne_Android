@@ -1,37 +1,35 @@
 package com.archeGlobal.one
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.archeGlobal.one.controller.*
-import com.archeGlobal.one.utils.PreferencesManager
-import com.archeGlobal.one.ui.screens.*
-import com.archeGlobal.one.ui.theme.XOneTheme
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.AnimatedContentTransitionScope
-import android.util.Log
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.ui.screens.*
+import com.archeGlobal.one.ui.theme.XOneTheme
+import com.archeGlobal.one.utils.PreferencesManager
 
 class MainActivity : ComponentActivity() {
     private lateinit var welcomeController: WelcomeController
@@ -60,28 +58,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermission()
-        
+
         // Initialize RetrofitClient
         RetrofitClient.initialize(applicationContext)
         Log.d("MainActivity", "RetrofitClient initialized")
 
         preferencesManager = PreferencesManager(applicationContext)
-        
+
         // Get the flag indicating whether to show the welcome screen
         val showWelcomeScreen = intent.getBooleanExtra("showWelcomeScreen", false)
 
         // Disable back button when showing welcome screen
         if (showWelcomeScreen) {
-            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    // This is the first launch, so just finish the app when back is pressed
-                    finish()
+            onBackPressedDispatcher.addCallback(
+                this,
+                object : OnBackPressedCallback(true) {
+                    override fun handleOnBackPressed() {
+                        // This is the first launch, so just finish the app when back is pressed
+                        finish()
+                    }
                 }
-            })
+            )
         }
-        
+
         val navigator = AndroidNavigator(this)
-        
+
         // Create a custom WelcomeController that marks first launch as complete
         welcomeController = object : WelcomeController(navigator) {
             override fun onXOneClick() {
@@ -91,7 +92,7 @@ class MainActivity : ComponentActivity() {
                 super.onXOneClick()
             }
         }
-        
+
         homeController = HomeController(navigator, this)
         locationsController = LocationsController(this)
         businessCardController = BusinessCardControllerImpl(this, navigator)
@@ -100,14 +101,14 @@ class MainActivity : ComponentActivity() {
         ProfileController.setHomeController(homeController)
 
         enableEdgeToEdge()
-        
+
         setContent {
             val navController = rememberNavController()
-            
+
             LaunchedEffect(navController) {
-    navigator.setNavController(navController)
-}
-            
+                navigator.setNavController(navController)
+            }
+
             XOneTheme {
                 Scaffold { padding ->
                     Surface(
@@ -118,11 +119,11 @@ class MainActivity : ComponentActivity() {
                     ) {
                         // Set the start destination based on whether we should show the welcome screen
                         val startDestination = if (showWelcomeScreen) "welcome" else "home"
-                        
+
                         NavHost(navController = navController, startDestination = startDestination) {
                             composable("welcome") {
                                 WelcomeScreen(
-                                    onXOneClick = welcomeController::onXOneClick,
+                                    onXOneClick = welcomeController::onXOneClick
                                 )
                             }
 
@@ -130,11 +131,11 @@ class MainActivity : ComponentActivity() {
                                 // Collect event-related state flows
                                 val eventData = homeController.eventData.collectAsState().value
                                 val showEventPopup = homeController.showEventPopup.collectAsState().value
-                                
+
                                 // Debug logs for event popup
                                 Log.d("MainActivity", "Event data: $eventData")
                                 Log.d("MainActivity", "Show event popup: $showEventPopup")
-                                
+
                                 HomeScreen(
                                     model = homeController.model,
                                     employeeData = homeController.employeeData, // <-- Add this line
@@ -159,7 +160,7 @@ class MainActivity : ComponentActivity() {
                             composable("locations") {
                                 // Check if this is from emergency contact view
                                 val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
-                                
+
                                 // Reset the intent extra to avoid persisting it across navigations
                                 if (isEmergencyContact) {
                                     Log.d("MainActivity", "Locations route accessed with isEmergencyContact=true")
@@ -167,7 +168,7 @@ class MainActivity : ComponentActivity() {
                                 } else {
                                     Log.d("MainActivity", "Locations route accessed with isEmergencyContact=false (normal navigation)")
                                 }
-                                
+
                                 LocationsScreen(
                                     navController = navController,
                                     controller = locationsController,
@@ -217,9 +218,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                       // Delay printNavigationGraph until NavHost is fully initialized
-                       LaunchedEffect(Unit) {
-                        navigator.printNavigationGraph()
+                        // Delay printNavigationGraph until NavHost is fully initialized
+                        LaunchedEffect(Unit) {
+                            navigator.printNavigationGraph()
                         }
                     }
                 }

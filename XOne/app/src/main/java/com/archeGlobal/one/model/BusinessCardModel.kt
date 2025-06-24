@@ -12,4 +12,4 @@ data class BusinessCardModel(
     val location: String,
     val website: String,
     val qrCode: Bitmap? = null // QR Code bitmap, nullable with default value
-) 
+)

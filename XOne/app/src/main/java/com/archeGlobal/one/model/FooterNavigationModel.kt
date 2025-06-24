@@ -11,4 +11,4 @@ data class FooterNavigationItem(
     val title: String,
     val icon: String,
     val isSelected: Boolean
-) 
+)

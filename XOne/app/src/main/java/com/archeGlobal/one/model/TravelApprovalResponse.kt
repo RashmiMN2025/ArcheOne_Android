@@ -11,7 +11,7 @@ import java.util.Locale
 data class TravelApprovalResponse(
     @SerializedName("status")
     val status: Int,
-    
+
     @SerializedName("approval_history")
     val approvalHistory: List<TravelApprovalItem>
 )
@@ -22,46 +22,46 @@ data class TravelApprovalResponse(
 data class TravelApprovalItem(
     @SerializedName("employee_name")
     val employeeName: String,
-    
+
     @SerializedName("employee_email")
     val employeeEmail: String,
-    
+
     @SerializedName("employee_id")
     val employeeId: String,
-    
+
     @SerializedName("mobile")
     val mobile: String,
-    
+
     @SerializedName("travel_destination")
     val travelDestination: String,
-    
+
     @SerializedName("project_name")
     val projectName: String,
-    
+
     @SerializedName("business_justification")
     val businessJustification: String,
-    
+
     @SerializedName("departure_date")
     val departureDate: String,
-    
+
     @SerializedName("arrival_date")
     val arrivalDate: String,
-    
+
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
-    
+
     @SerializedName("status")
     val status: String,
-    
+
     @SerializedName("request_id")
     val requestId: String,
-    
+
     @SerializedName("created_at")
     val createdAt: String,
-    
+
     @SerializedName("action_token")
     val actionToken: String,
-    
+
     @SerializedName("remarks")
     val remarks: String
 ) {
@@ -75,7 +75,7 @@ data class TravelApprovalItem(
             "rejected" -> TravelStatus.REJECTED
             else -> TravelStatus.PENDING
         }
-        
+
         return TravelRequest(
             id = requestId,
             project = projectName,
@@ -90,7 +90,7 @@ data class TravelApprovalItem(
             actionToken = actionToken
         )
     }
-    
+
     private fun parseDate(dateString: String): Date {
         return try {
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(dateString) ?: Date()

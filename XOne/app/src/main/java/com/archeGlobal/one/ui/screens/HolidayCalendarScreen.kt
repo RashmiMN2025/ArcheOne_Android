@@ -10,27 +10,27 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayCalendarController
-import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.model.GlobalEvent
+import com.archeGlobal.one.model.Holiday
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.NetworkResult
 import java.time.LocalDate
@@ -159,7 +159,7 @@ fun HolidayCalendarScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))            // Legend for holiday types
+            Spacer(modifier = Modifier.height(24.dp)) // Legend for holiday types
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -174,7 +174,7 @@ fun HolidayCalendarScreen(
                 LegendItem(color = Color(0xFF4CAF50), text = "Global Event")
             }
 
-            Spacer(modifier = Modifier.height(2.dp))            // Responsive Calendar Grid
+            Spacer(modifier = Modifier.height(2.dp)) // Responsive Calendar Grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3), // Changed to 3 columns to match the image
                 verticalArrangement = Arrangement.spacedBy(20.dp), // Adjusted vertical spacing
@@ -268,9 +268,13 @@ fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEve
                     .fillMaxWidth()
             ) {
                 for (day in 0 until 7) {
-                    val date = if (week == 0 && day < firstDayOfMonth) 0
-                    else if (dayCounter <= totalDays) dayCounter++
-                    else 0
+                    val date = if (week == 0 && day < firstDayOfMonth) {
+                        0
+                    } else if (dayCounter <= totalDays) {
+                        dayCounter++
+                    } else {
+                        0
+                    }
 
                     // Check for holidays and global events
                     val mandatoryHoliday = holidays.any {
@@ -305,15 +309,18 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean,
             .size(14.dp) // Slightly reduced size
             .then(
                 when {
-                    isMandatoryHoliday -> Modifier
-                        .clip(CircleShape)
-                        .background(Color(0xFFDD3825)) // Red for mandatory holidays
-                    isRegionalHoliday -> Modifier
-                        .clip(CircleShape)
-                        .background(Color(0xFF2196F3)) // Blue for RH holidays
-                    hasGlobalEvent -> Modifier
-                        .clip(CircleShape)
-                        .background(Color(0xFF4CAF50)) // Green for global events
+                    isMandatoryHoliday ->
+                        Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFFDD3825)) // Red for mandatory holidays
+                    isRegionalHoliday ->
+                        Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF2196F3)) // Blue for RH holidays
+                    hasGlobalEvent ->
+                        Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF4CAF50)) // Green for global events
                     else -> Modifier
                 }
             )
@@ -338,11 +345,11 @@ fun PreviewHolidayCalendarScreen() {
     val previewHolidays = listOf(
         Holiday("New Year", "01-01-2025", "Yes"),
         Holiday("Republic Day", "26-01-2025", "Yes"),
-        Holiday("Pongal", "15-01-2025", "RH"),  // Regional holiday
+        Holiday("Pongal", "15-01-2025", "RH"), // Regional holiday
         Holiday("Labor Day", "01-05-2025", "Yes"),
-        Holiday("Good Friday", "18-04-2025", "RH"),  // Regional holiday
+        Holiday("Good Friday", "18-04-2025", "RH"), // Regional holiday
         Holiday("Independence Day", "15-08-2025", "Yes"),
-        Holiday("Janmashtami", "16-08-2025", "RH"),  // Regional holiday
+        Holiday("Janmashtami", "16-08-2025", "RH"), // Regional holiday
         Holiday("Gandhi Jayanti", "02-10-2025", "Yes"),
         Holiday("Christmas", "25-12-2025", "Yes")
     )

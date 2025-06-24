@@ -38,7 +38,6 @@ import com.archeGlobal.one.controller.SocialController
 import com.archeGlobal.one.model.SocialArticle
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
-
 @Composable
 fun XConnectScreen(
     onBackPressed: () -> Unit,
@@ -78,7 +77,7 @@ fun XConnectScreen(
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
+                        Color(0xFF474749) // Dark Gray
                     )
                 )
             )
@@ -231,7 +230,7 @@ fun XConnectScreen(
             article = selectedArticle!!,
             type = selectedArticleType,
             onDismiss = { showDetailDialog = false },
-            onReadMore = { 
+            onReadMore = {
                 socialController.openInBrowser(selectedArticleType, selectedArticle!!.id)
                 showDetailDialog = false
             }
@@ -348,7 +347,7 @@ fun ArticleDetailDialog(
                         )
                     }
                 }
-            }   
+            }
         }
     }
 }
@@ -363,16 +362,16 @@ fun TabItem(
         modifier = Modifier
             .padding(end = 8.dp)
             .background(
-                color = if (isSelected) Color(0xFFDD3825) else Color.White,  // Red background when selected
-                shape = RoundedCornerShape(8.dp)  // Changed from 24.dp to 8.dp for less rounded corners
+                color = if (isSelected) Color(0xFFDD3825) else Color.White, // Red background when selected
+                shape = RoundedCornerShape(8.dp) // Changed from 24.dp to 8.dp for less rounded corners
             )
             .clickable { onTabSelected() }
-            .padding(horizontal = 16.dp, vertical = 8.dp)  // Reduced padding for a more compact look
+            .padding(horizontal = 16.dp, vertical = 8.dp) // Reduced padding for a more compact look
     ) {
         Text(
             text = text,
             color = if (isSelected) Color.White else Color.Black,
-            fontSize = 16.sp,  // Slightly smaller font size
+            fontSize = 16.sp, // Slightly smaller font size
             fontFamily = GraphikFontFamily,
             fontWeight = if (isSelected) FontWeight.Normal else FontWeight.Medium
         )
@@ -480,7 +479,7 @@ fun PostTile(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -501,7 +500,7 @@ fun PostTile(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp,12.dp,12.dp,4.dp),
+                    .padding(12.dp, 12.dp, 12.dp, 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -538,8 +537,11 @@ fun CaseStudiesContent(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (searchQuery.isEmpty()) "No case studies available" 
-                       else "No case studies found for '$searchQuery'",
+                text = if (searchQuery.isEmpty()) {
+                    "No case studies available"
+                } else {
+                    "No case studies found for '$searchQuery'"
+                },
                 color = Color.Gray
             )
         }
@@ -568,19 +570,19 @@ fun CaseStudiesContent(
                             showArticleDetail = showArticleDetail
                         )
                     }
-                        if (i + 1 < caseStudies.size) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                ArticleCard(
-                                    article = caseStudies[i + 1],
-                                    type = "Case Studies",
-                                    socialController = socialController,
-                                    showArticleDetail = showArticleDetail
-                                )
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
+                    if (i + 1 < caseStudies.size) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ArticleCard(
+                                article = caseStudies[i + 1],
+                                type = "Case Studies",
+                                socialController = socialController,
+                                showArticleDetail = showArticleDetail
+                            )
                         }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -603,8 +605,11 @@ fun BlogsContent(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (searchQuery.isEmpty()) "No blogs available" 
-                       else "No blogs found for '$searchQuery'",
+                text = if (searchQuery.isEmpty()) {
+                    "No blogs available"
+                } else {
+                    "No blogs found for '$searchQuery'"
+                },
                 color = Color.Gray
             )
         }
@@ -655,8 +660,8 @@ fun BlogsContent(
 
 @Composable
 fun ArticleCard(
-    article: SocialArticle, 
-    type: String, 
+    article: SocialArticle,
+    type: String,
     socialController: SocialController,
     showArticleDetail: (SocialArticle, String) -> Unit = { _, _ -> }
 ) {
@@ -670,7 +675,7 @@ fun ArticleCard(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)

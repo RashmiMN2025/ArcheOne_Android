@@ -9,15 +9,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.HomeActivity
 import com.archeGlobal.one.LoginActivity
 import com.archeGlobal.one.OnboardingActivity
@@ -28,13 +24,13 @@ import com.archeGlobal.one.utils.UserDataManager
 class SplashActivity : ComponentActivity() {
     private lateinit var userDataManager: UserDataManager
     private lateinit var preferencesManager: PreferencesManager
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         userDataManager = UserDataManager.getInstance(applicationContext)
         preferencesManager = PreferencesManager(applicationContext)
-        
+
         // Set Splash Screen UI
         setContent {
             XOneSplashScreen()
@@ -50,7 +46,7 @@ class SplashActivity : ComponentActivity() {
                 // Not first launch, check if user is logged in
                 val isLoggedIn = userDataManager.isLoggedIn()
                 Log.d("SplashActivity", "Login status: $isLoggedIn, userData: ${userDataManager.getUserData()?.name}")
-                
+
                 if (isLoggedIn) {
                     // User is logged in, go to Home screen
                     startActivity(Intent(this, HomeActivity::class.java))
@@ -79,4 +75,4 @@ fun XOneSplashScreen() {
             )
         }
     }
-} 
+}

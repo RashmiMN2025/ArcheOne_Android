@@ -11,7 +11,7 @@ import java.util.Locale
 data class TravelHistoryResponse(
     @SerializedName("status")
     val status: Int,
-    
+
     @SerializedName("order_history")
     val orderHistory: List<TravelHistoryItem>
 )
@@ -22,55 +22,55 @@ data class TravelHistoryResponse(
 data class TravelHistoryItem(
     @SerializedName("request_id")
     val requestId: String,
-    
+
     @SerializedName("employee_name")
     val employeeName: String,
-    
+
     @SerializedName("employee_email")
     val employeeEmail: String,
-    
+
     @SerializedName("employee_id")
     val employeeId: String,
-    
+
     @SerializedName("mobile")
     val mobile: String,
-    
+
     @SerializedName("travel_destination")
     val travelDestination: String,
-    
+
     @SerializedName("project_name")
     val projectName: String,
-    
+
     @SerializedName("business_justification")
     val businessJustification: String,
-    
+
     @SerializedName("departure_date")
     val departureDate: String,
-    
+
     @SerializedName("arrival_date")
     val arrivalDate: String,
-    
+
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
-    
+
     @SerializedName("reporting_manager_name")
     val reportingManagerName: String,
-    
+
     @SerializedName("reporting_manager_email")
     val reportingManagerEmail: String,
-    
+
     @SerializedName("action_token")
     val actionToken: String,
-    
+
     @SerializedName("status")
     val status: String,
-    
+
     @SerializedName("rejection_description")
     val rejectionDescription: String?,
-    
+
     @SerializedName("created_at")
     val createdAt: String,
-    
+
     @SerializedName("updated_at")
     val updatedAt: String
 ) {
@@ -85,14 +85,14 @@ data class TravelHistoryItem(
         } catch (e: Exception) {
             Date() // Fallback to current date if parsing fails
         }
-        
+
         // Map status string to TravelStatus enum
         val travelStatus = when (status.lowercase()) {
             "approved" -> TravelStatus.APPROVED
             "rejected" -> TravelStatus.REJECTED
             else -> TravelStatus.PENDING
         }
-        
+
         return TravelRequest(
             id = requestId,
             project = projectName,

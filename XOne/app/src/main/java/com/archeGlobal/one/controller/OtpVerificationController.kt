@@ -2,18 +2,14 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
-import androidx.fragment.app.FragmentActivity
 import com.archeGlobal.one.XOneApplication
+import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
-import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
-import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
-import com.archeGlobal.one.utils.BiometricHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -99,12 +95,12 @@ class OtpVerificationController(
         verifyOtp(email, mobile, employeeId, dummyOtp, true, callback)
     }
 
-     fun loginWithToken(
+    fun loginWithToken(
         token: String,
         email: String,
         mobile: String,
         employeeId: String,
-        fromHome:Boolean = false,
+        fromHome: Boolean = false,
         fromOtp: Boolean = false,
         shouldNavigateToHome: Boolean = true,
         callback: (String, Boolean) -> Unit
@@ -137,21 +133,21 @@ class OtpVerificationController(
                         if (responseBody.eventData != null) {
                             Log.d("LoginProcess", "Event data details: Name=${responseBody.eventData?.title}, Image=${responseBody.eventData?.image}")
                         }
-                        
+
                         // Save all user data through the centralized UserDataManager
                         userDataManager.saveUserDataFromResponse(responseBody, token)
 
                         // --- ADD THESE LINES: ---
                         userDataManager.setIsLoggedIn(true)
                         userDataManager.setHasLoggedIn(true)
-                        
+
                         // Only set firstTimeLogin to false when user actually successfully logs in
                         com.archeGlobal.one.utils.setFirstTimeLogin(context, false)
-                        
+
                         Log.d("LoginProcess", "Login successful")
                         callback("Login successful", false)
 
-                        if(!fromHome && shouldNavigateToHome){
+                        if (!fromHome && shouldNavigateToHome) {
                             // Pass biometric setup flag to HomeActivity
                             if (fromOtp) {
                                 navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
@@ -208,7 +204,7 @@ class OtpVerificationController(
             }
         })
     }
-    
+
     companion object {
         // Helper methods to access user data from UserDataManager
         fun getUserData(): UserData? = UserDataManager.getInstance(XOneApplication.getInstance()).getUserData()
@@ -217,7 +213,7 @@ class OtpVerificationController(
         fun getSosBlogsData(): List<SosBlogModel>? = UserDataManager.getInstance(XOneApplication.getInstance()).getSosBlogsData()
         fun getAssetDetails(): List<AssetDetail>? = UserDataManager.getInstance(XOneApplication.getInstance()).getAssetDetails()
         fun getCommuniquesData(): List<CommuniqueModel.Communique>? = UserDataManager.getInstance(XOneApplication.getInstance()).getCommuniqueData()
-        
+
         fun clearUserData() {
             UserDataManager.getInstance(XOneApplication.getInstance()).clearUserData()
             Log.d("UserData", "User data cleared during logout")

@@ -1,5 +1,6 @@
 package com.archeGlobal.one
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -18,22 +19,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.ui.components.UniversalLoader
-import android.annotation.SuppressLint
-import org.json.JSONObject
 import com.archeGlobal.one.ui.theme.XOneTheme
+import org.json.JSONObject
 
 class WebViewActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -42,28 +40,27 @@ class WebViewActivity : ComponentActivity() {
 
         val fileUrl = intent.getStringExtra("fileUrl") ?: ""
         val title = intent.getStringExtra("title") ?: "Floor Map"
-        
+
         // Get base64 data if available (for PDF fallback)
         val base64Data = intent.getStringExtra("base64Data")
-        
+
         // Determine if the URL is for a PDF
         val isPdf = intent.getBooleanExtra("isPdf", fileUrl.endsWith(".pdf", ignoreCase = true))
         // Check if this is a local file
         val isLocalFile = intent.getBooleanExtra("isLocalFile", false)
-        
+
         // Special handling flag for PAN and Medical Insurance documents
         val isSpecialDocument = title == "PAN Card" || title == "Medical Insurance Card"
-        
+
         // Special handling for Floor Map PDFs
         val isFloorMap = title == "Floor Map" || title.contains("Floor Map", ignoreCase = true) || title.contains("Location", ignoreCase = true)
-        
+
         // Flag to track if we should use offline mode (no PDF.js)
         val useOfflineMode = intent.getBooleanExtra("useOfflineMode", false)
-        
+
         // Check if this is specific policy that needs SOS button
-        val showSosButton = title.contains("Anti Bribery", ignoreCase = true) || 
-                            title.contains("POSH", ignoreCase = true)
-        
+        val showSosButton = title.contains("Anti Bribery", ignoreCase = true) || title.contains("POSH", ignoreCase = true)
+
         val rawHtmlContent = intent.getStringExtra("rawHtmlContent")
         if (rawHtmlContent != null && rawHtmlContent.isNotBlank()) {
             setContent {
@@ -74,9 +71,9 @@ class WebViewActivity : ComponentActivity() {
                             .background(
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color(0xFFE0DCD1),  // Light Grey/Beige
-                                        Color(0xFFC8C8CA),  // Medium Grey
-                                        Color(0xFF474749)   // Dark Grey
+                                        Color(0xFFE0DCD1), // Light Grey/Beige
+                                        Color(0xFFC8C8CA), // Medium Grey
+                                        Color(0xFF474749) // Dark Grey
                                     )
                                 )
                             )
@@ -86,7 +83,7 @@ class WebViewActivity : ComponentActivity() {
                         ) {
                             // Top app bar with gradient background
                             TopAppBar(
-                                title = { 
+                                title = {
                                     Box(
                                         modifier = Modifier.fillMaxWidth(),
                                         contentAlignment = Alignment.Center
@@ -116,7 +113,7 @@ class WebViewActivity : ComponentActivity() {
                                     containerColor = Color.Transparent
                                 )
                             )
-                            
+
                             // WebView content
                             AndroidView(
                                 factory = { ctx ->
@@ -125,7 +122,7 @@ class WebViewActivity : ComponentActivity() {
                                         settings.javaScriptEnabled = true
                                         loadDataWithBaseURL(null, rawHtmlContent, "text/html", "UTF-8", null)
                                     }
-                                }, 
+                                },
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .weight(1f)
@@ -136,7 +133,7 @@ class WebViewActivity : ComponentActivity() {
             }
             return
         }
-        
+
         Log.d("WebViewActivity", "Loading URL: $fileUrl, isPdf: $isPdf, isLocalFile: $isLocalFile, hasBase64: ${base64Data != null}, isSpecialDocument: $isSpecialDocument, isFloorMap: $isFloorMap, useOfflineMode: $useOfflineMode")
 
         setContent {
@@ -147,9 +144,9 @@ class WebViewActivity : ComponentActivity() {
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0xFFE0DCD1),  // Light Grey/Beige
-                                    Color(0xFFC8C8CA),  // Medium Grey
-                                    Color(0xFF474749)   // Dark Grey
+                                    Color(0xFFE0DCD1), // Light Grey/Beige
+                                    Color(0xFFC8C8CA), // Medium Grey
+                                    Color(0xFF474749) // Dark Grey
                                 )
                             )
                         )
@@ -160,7 +157,7 @@ class WebViewActivity : ComponentActivity() {
                     ) {
                         // Top app bar
                         TopAppBar(
-                            title = { 
+                            title = {
                                 Box(
                                     modifier = Modifier.fillMaxWidth(),
                                     contentAlignment = Alignment.Center
@@ -185,15 +182,14 @@ class WebViewActivity : ComponentActivity() {
                             actions = {
                                 // SOS button only for specified policies
                                 if (showSosButton) {
-                                    IconButton(onClick = { 
+                                    IconButton(onClick = {
                                         try {
                                             Log.d("WebViewActivity", "Navigating to SOS from policy")
                                             // Create intent for SOSActivity with special flags
                                             val intent = Intent(this@WebViewActivity, SOSActivity::class.java).apply {
                                                 // Don't use FLAG_ACTIVITY_NEW_TASK as it can cause issues with parcelable objects
-                                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or 
-                                                       Intent.FLAG_ACTIVITY_NO_ANIMATION
-                                                       
+                                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION
+
                                                 // Set showHeader to false to ensure we don't get navigation conflicts
                                                 putExtra("showHeader", false)
                                                 putExtra("fromPdfViewer", true)
@@ -201,13 +197,12 @@ class WebViewActivity : ComponentActivity() {
                                                 // Add this to track when opened from policy
                                                 putExtra("fromPolicy", true)
                                             }
-                                            
+
                                             // Force current activity to have proper display settings
                                             window.statusBarColor = android.graphics.Color.TRANSPARENT
                                             androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-                                            window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
-                                                                                 android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                            
+                                            window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+
                                             // Start activity with no animation
                                             startActivity(intent)
                                             overridePendingTransition(0, 0)
@@ -239,7 +234,7 @@ class WebViewActivity : ComponentActivity() {
                                 containerColor = Color.Transparent
                             )
                         )
-                        
+
                         // WebView Card that takes full width
                         Card(
                             modifier = Modifier
@@ -256,12 +251,12 @@ class WebViewActivity : ComponentActivity() {
                             ) {
                                 // Loading indicator
                                 var isLoading by remember { mutableStateOf(true) }
-                                
+
                                 // Show UniversalLoader while loading
                                 if (isLoading) {
                                     UniversalLoader(isLoading = true)
                                 }
-                                
+
                                 // WebView for content display
                                 AndroidView(
                                     modifier = Modifier
@@ -281,31 +276,31 @@ class WebViewActivity : ComponentActivity() {
                                                 loadsImagesAutomatically = true
                                                 mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                                                 cacheMode = WebSettings.LOAD_DEFAULT
-                                                
+
                                                 // Enhanced viewport and scaling settings for better width fitting
                                                 useWideViewPort = true
                                                 loadWithOverviewMode = true
                                                 setSupportZoom(true)
                                                 builtInZoomControls = true
                                                 displayZoomControls = false
-                                                
+
                                                 // Force width to match screen
                                                 layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
-                                                
+
                                                 // Additional settings for better rendering
                                                 @SuppressLint("SetJavaScriptEnabled")
                                                 javaScriptEnabled = true
                                                 setNeedInitialFocus(true)
-                                                
+
                                                 // Enable DOM storage and databases
                                                 domStorageEnabled = true
                                                 databaseEnabled = true
-                                                
+
                                                 // Additional settings for SAP portal
                                                 javaScriptCanOpenWindowsAutomatically = true
                                                 setSupportMultipleWindows(true)
                                                 allowContentAccess = true
-                                                
+
                                                 // Additional performance optimizations
                                                 @Suppress("DEPRECATION")
                                                 setRenderPriority(WebSettings.RenderPriority.HIGH)
@@ -315,7 +310,7 @@ class WebViewActivity : ComponentActivity() {
 
                                             webViewClient = object : WebViewClient() {
                                                 private var pageLoaded = false
-                                                
+
                                                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                                                     return false
                                                 }
@@ -324,34 +319,34 @@ class WebViewActivity : ComponentActivity() {
                                                     Log.d("WebViewActivity", "SSL Error: ${error.primaryError}")
                                                     handler.proceed()
                                                 }
-                                                
+
                                                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
                                                     val isPersonal = intent.getBooleanExtra("isPersonal", false)
                                                     val documentTitle = intent.getStringExtra("title") ?: ""
-                                                    
+
                                                     if (isPersonal && request?.url != null) {
                                                         Log.d("WebViewActivity", "Intercepting request for UserDocuments: ${request.url}")
-                                                        
+
                                                         // Check if the URL pattern suggests it might return HTML error content
                                                         val url = request.url.toString()
                                                         if (url.contains("download_doc") && url.contains("pulse.netcon.in")) {
                                                             Log.d("WebViewActivity", "Detected potential document download URL: $url")
                                                         }
                                                     }
-                                                    
+
                                                     return super.shouldInterceptRequest(view, request)
                                                 }
-                                                
+
                                                 override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                                     super.onPageStarted(view, url, favicon)
                                                     isLoading = true
                                                     pageLoaded = false
                                                     Log.d("WebViewActivity", "Page started loading: $url")
-                                                    
+
                                                     // Check if this is a UserDocuments screen
                                                     val isPersonal = intent.getBooleanExtra("isPersonal", false)
                                                     val documentTitle = intent.getStringExtra("title") ?: ""
-                                                    
+
                                                     // For UserDocuments, check if URL might lead to HTML content
                                                     if (isPersonal && url != null) {
                                                         Log.d("WebViewActivity", "UserDocuments page started loading: $url")
@@ -361,11 +356,11 @@ class WebViewActivity : ComponentActivity() {
                                                 override fun onPageFinished(view: WebView?, url: String?) {
                                                     super.onPageFinished(view, url)
                                                     pageLoaded = true
-                                                    
+
                                                     // Check if this is a UserDocuments screen and if the page contains HTML error content
                                                     val isPersonal = intent.getBooleanExtra("isPersonal", false)
                                                     val documentTitle = intent.getStringExtra("title") ?: ""
-                                                    
+
                                                     if (isPersonal && view != null) {
                                                         // Add a delay to ensure the page is fully loaded
                                                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
@@ -416,7 +411,7 @@ class WebViewActivity : ComponentActivity() {
                                                                             val htmlErrorContent = resultObj.getString("content")
                                                                             Log.d("WebViewActivity", "Detected HTML error content for document: $documentTitle")
                                                                             Log.d("WebViewActivity", "Content length: ${htmlErrorContent.length}")
-                                                                            
+
                                                                             // Create a formatted HTML display for the error content
                                                                             val formattedHtml = """
                                                                                 <!DOCTYPE html>
@@ -484,7 +479,7 @@ class WebViewActivity : ComponentActivity() {
                                                                                 </body>
                                                                                 </html>
                                                                             """.trimIndent()
-                                                                            
+
                                                                             // Load the formatted HTML content
                                                                             view.loadDataWithBaseURL(null, formattedHtml, "text/html", "UTF-8", null)
                                                                         }
@@ -494,7 +489,7 @@ class WebViewActivity : ComponentActivity() {
                                                                 }
                                                             }
                                                         }, 1000) // Reduced delay to 1 second
-                                                        
+
                                                         // Also try an immediate check
                                                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                                             view.evaluateJavascript("document.readyState") { readyState ->
@@ -502,19 +497,20 @@ class WebViewActivity : ComponentActivity() {
                                                             }
                                                         }, 500)
                                                     }
-                                                    
+
                                                     // Delay hiding the loader to ensure content is actually rendered
                                                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                                         if (pageLoaded) {
                                                             isLoading = false
                                                         }
                                                     }, 1000) // 1 second delay
-                                                    
+
                                                     Log.d("WebViewActivity", "Page finished loading: $url")
-                                                    
+
                                                     // Special handling for SAP portal
                                                     if (url?.contains("businessbydesign.cloud.sap") == true) {
-                                                        view?.evaluateJavascript("""
+                                                        view?.evaluateJavascript(
+                                                            """
                                                             (function() {
                                                                 var meta = document.querySelector('meta[name="viewport"]');
                                                                 if (!meta) {
@@ -562,7 +558,9 @@ class WebViewActivity : ComponentActivity() {
                                                                     mainContainer.style.opacity = '1';
                                                                 }
                                                             })();
-                                                        """.trimIndent(), null)
+                                                            """.trimIndent(),
+                                                            null
+                                                        )
                                                     }
                                                 }
 
@@ -581,12 +579,12 @@ class WebViewActivity : ComponentActivity() {
 
                                             // Set initial scale
                                             setInitialScale(100)
-                                            
+
                                             // Enable hardware acceleration
                                             setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
-                                            
+
                                             // Prevent WebView from losing focus
-                                            setOnTouchListener { _, _ -> 
+                                            setOnTouchListener { _, _ ->
                                                 requestFocus()
                                                 false
                                             }
@@ -595,20 +593,20 @@ class WebViewActivity : ComponentActivity() {
                                                 if (isLocalFile) {
                                                     // For local files
                                                     val uri = Uri.parse(fileUrl)
-                                                    
+
                                                     // Special direct handling for PAN Card, Medical Insurance Card, and Floor Map documents
                                                     if ((isSpecialDocument || isFloorMap) && isPdf) {
                                                         Log.d("WebViewActivity", "Using special PDF handling for: $title")
-                                                        
+
                                                         if (base64Data != null && base64Data.isNotEmpty()) {
-                                                        val pureBase64 = if (base64Data.contains(",")) {
-                                                            base64Data.substring(base64Data.indexOf(",") + 1)
-                                                        } else {
-                                                            base64Data
-                                                        }
-                                                        
-                                                        Log.d("WebViewActivity", "Base64 data length: ${pureBase64.length}")
-                                                        
+                                                            val pureBase64 = if (base64Data.contains(",")) {
+                                                                base64Data.substring(base64Data.indexOf(",") + 1)
+                                                            } else {
+                                                                base64Data
+                                                            }
+
+                                                            Log.d("WebViewActivity", "Base64 data length: ${pureBase64.length}")
+
                                                             // Use PDF.js for robust rendering with fallback
                                                             val htmlWrapper = """
                                                                 <!DOCTYPE html>
@@ -760,7 +758,7 @@ class WebViewActivity : ComponentActivity() {
                                                                 </body>
                                                                 </html>
                                                             """.trimIndent()
-                                                            
+
                                                             loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
                                                             Log.d("WebViewActivity", "Loaded document using PDF.js with fit-to-width scaling")
                                                             return@apply
@@ -769,14 +767,14 @@ class WebViewActivity : ComponentActivity() {
                                                             try {
                                                                 val actualPath = uri.path ?: ""
                                                                 val file = java.io.File(actualPath)
-                                                                
+
                                                                 if (file.exists()) {
                                                                     Log.d("WebViewActivity", "Floor Map PDF file exists at: ${file.absolutePath}, size: ${file.length()} bytes")
-                                                                    
+
                                                                     // Read the file bytes
                                                                     val bytes = file.readBytes()
                                                                     val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
-                                                                    
+
                                                                     // Use PDF.js for rendering
                                                                     val htmlWrapper = """
                                                                         <!DOCTYPE html>
@@ -928,7 +926,7 @@ class WebViewActivity : ComponentActivity() {
                                                                         </body>
                                                                         </html>
                                                                     """.trimIndent()
-                                                                    
+
                                                                     loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
                                                                     Log.d("WebViewActivity", "Loaded Floor Map PDF using PDF.js with fit-to-width scaling")
                                                                     return@apply
@@ -938,11 +936,11 @@ class WebViewActivity : ComponentActivity() {
                                                             }
                                                         }
                                                     }
-                                                    
+
                                                     if (isPdf) {
                                                         // For local PDF files, try a different approach
                                                         Log.d("WebViewActivity", "Loading local PDF file using alternative method")
-                                                        
+
                                                         // Enable all necessary settings for PDF content
                                                         settings.javaScriptEnabled = true
                                                         settings.allowFileAccess = true
@@ -950,7 +948,7 @@ class WebViewActivity : ComponentActivity() {
                                                         settings.domStorageEnabled = true
                                                         settings.setSupportZoom(true)
                                                         settings.builtInZoomControls = true
-                                                        
+
                                                         // Try direct base64 loading first if available
                                                         if (base64Data != null && base64Data.isNotEmpty()) {
                                                             val pureBase64 = if (base64Data.contains(",")) {
@@ -958,7 +956,7 @@ class WebViewActivity : ComponentActivity() {
                                                             } else {
                                                                 base64Data
                                                             }
-                                                            
+
                                                             val htmlWrapper = """
                                                                 <!DOCTYPE html>
                                                                 <html>
@@ -973,12 +971,12 @@ class WebViewActivity : ComponentActivity() {
                                                                 </body>
                                                                 </html>
                                                             """.trimIndent()
-                                                            
+
                                                             loadDataWithBaseURL(null, htmlWrapper, "text/html", "UTF-8", null)
                                                             Log.d("WebViewActivity", "Loaded PDF directly using base64 data")
                                                             return@apply
                                                         }
-                                                        
+
                                                         // Enable all necessary settings for PDF content
                                                         settings.javaScriptEnabled = true
                                                         settings.allowFileAccess = true
@@ -986,13 +984,13 @@ class WebViewActivity : ComponentActivity() {
                                                         settings.domStorageEnabled = true
                                                         settings.setSupportZoom(true)
                                                         settings.builtInZoomControls = true
-                                                        
+
                                                         // Add a timeout to give WebView time to initialize
                                                         Handler().postDelayed({
                                                             // Try loading directly with a data URI
                                                             val actualPath = uri.path ?: ""
                                                             val file = java.io.File(actualPath)
-                                                            
+
                                                             if (file.exists()) {
                                                                 Log.d("WebViewActivity", "PDF file exists at: ${file.absolutePath}, size: ${file.length()} bytes")
                                                                 // Try Content URI approach
@@ -1001,14 +999,14 @@ class WebViewActivity : ComponentActivity() {
                                                                     context.applicationContext.packageName + ".provider",
                                                                     file
                                                                 )
-                                                                
+
                                                                 if (isSpecialDocument) {
                                                                     // For PAN and Medical Insurance documents, try direct data URI loading first
                                                                     try {
                                                                         Log.d("WebViewActivity", "Special document fallback - loading directly")
                                                                         val bytes = file.readBytes()
                                                                         val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
-                                                                        
+
                                                                         // Use PDF.js for robust rendering
                                                                         val htmlWrapper = """
                                                                             <!DOCTYPE html>
@@ -1086,7 +1084,7 @@ class WebViewActivity : ComponentActivity() {
                                                                             </body>
                                                                             </html>
                                                                         """.trimIndent()
-                                                                        
+
                                                                         loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
                                                                         Log.d("WebViewActivity", "Loaded special document fallback using PDF.js")
                                                                         return@postDelayed
@@ -1094,10 +1092,10 @@ class WebViewActivity : ComponentActivity() {
                                                                         Log.e("WebViewActivity", "Error in special document direct loading: ${e.message}", e)
                                                                     }
                                                                 }
-                                                                
+
                                                                 Log.d("WebViewActivity", "Using content URI: $contentUri")
                                                                 loadUrl("https://docs.google.com/gview?embedded=true&url=$contentUri")
-                                                                
+
                                                                 // Set up a fallback timer in case Google Docs viewer doesn't work
                                                                 Handler().postDelayed({
                                                                     // Try direct base64 loading if we detect file wasn't loaded
@@ -1107,10 +1105,10 @@ class WebViewActivity : ComponentActivity() {
                                                                         if (bytes.isNotEmpty()) {
                                                                             // Convert to base64
                                                                             val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
-                                                                            
+
                                                                             // Create a data URI
                                                                             val dataUri = "data:application/pdf;base64,$base64"
-                                                                            
+
                                                                             // Load using an HTML wrapper with PDF.js
                                                                             val htmlWrapper = """
                                                                                 <!DOCTYPE html>
@@ -1126,7 +1124,7 @@ class WebViewActivity : ComponentActivity() {
                                                                                 </body>
                                                                                 </html>
                                                                             """.trimIndent()
-                                                                            
+
                                                                             loadDataWithBaseURL(null, htmlWrapper, "text/html", "UTF-8", null)
                                                                             Log.d("WebViewActivity", "Loaded PDF using data URI fallback approach")
                                                                         }
@@ -1172,7 +1170,7 @@ class WebViewActivity : ComponentActivity() {
                                                             </body>
                                                             </html>
                                                         """.trimIndent()
-                                                        
+
                                                         loadDataWithBaseURL(null, htmlWrapper, "text/html", "UTF-8", null)
                                                         Log.d("WebViewActivity", "Loading image file: $fileUrl")
                                                     }
@@ -1300,13 +1298,13 @@ class WebViewActivity : ComponentActivity() {
                                                             </body>
                                                             </html>
                                                         """.trimIndent()
-                                                        
+
                                                         loadDataWithBaseURL("https://example.com", htmlWrapper, "text/html", "UTF-8", null)
                                                         Log.d("WebViewActivity", "Loading Floor Map PDF using policy-style PDF.js viewer with fit-to-width: $fileUrl")
                                                     } else {
                                                         // Use Google Docs viewer for other PDF types
-                                                    loadUrl("https://docs.google.com/viewer?url=$fileUrl&embedded=true")
-                                                    Log.d("WebViewActivity", "Loading PDF using Google Docs viewer: $fileUrl")
+                                                        loadUrl("https://docs.google.com/viewer?url=$fileUrl&embedded=true")
+                                                        Log.d("WebViewActivity", "Loading PDF using Google Docs viewer: $fileUrl")
                                                     }
                                                 } else {
                                                     // For regular web content (case studies, blogs, job postings)

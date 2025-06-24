@@ -7,7 +7,6 @@ import android.util.Log
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
-import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.network.DocumentListResponse
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
@@ -163,8 +162,11 @@ class DocumentUploadManager(private val context: Context) {
 
                         // Log all documents returned
                         responseBody.personalDoc?.forEach { doc ->
-                            Log.d(TAG, "Document: ${doc.document_name}, type: ${doc.documentType}, " +
-                                    "has data: ${!doc.doc_data.isNullOrBlank()}")
+                            Log.d(
+                                TAG,
+                                "Document: ${doc.document_name}, type: ${doc.documentType}, " +
+                                    "has data: ${!doc.doc_data.isNullOrBlank()}"
+                            )
                         }
 
                         if (responseBody.status == 200) {
@@ -309,20 +311,21 @@ class DocumentUploadManager(private val context: Context) {
             Log.d("DocumentUploadManager", "- Email: $email")
             Log.d("DocumentUploadManager", "- Employee ID: $employeeId")
             Log.d("DocumentUploadManager", "- File: ${file.name} (${file.length()} bytes)")
-            
+
             // Create a map for request parameters
             val params = HashMap<String, RequestBody>()
             params["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
             params["employeeId"] = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             params["documentType"] = documentType.toRequestBody("text/plain".toMediaTypeOrNull())
-            
+
             // Create MultipartBody.Part from file
             val requestFile = file.asRequestBody("multipart/form-data".toMediaTypeOrNull())
             val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
             // Make the API call with parameters
             val call = RetrofitClient.apiService.uploadDocument(
-                filePart, params
+                filePart,
+                params
             )
 
             // Log request details

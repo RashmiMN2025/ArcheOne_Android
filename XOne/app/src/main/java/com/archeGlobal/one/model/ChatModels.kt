@@ -60,4 +60,4 @@ data class FAQItem(
         result = 31 * result + answer.hashCode()
         return result
     }
-} 
+}

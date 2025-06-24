@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
-import android.util.DisplayMetrics
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -13,8 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
 
 /**
  * Custom density for font scaling that can override system font scale.
@@ -39,18 +36,18 @@ fun FontScaleAdjusted(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    
+
     // Create a custom density that applies our font scale
     val customDensity = remember(density, fontScaleAdjustment) {
         val systemFontScale = if (fontScaleAdjustment.ignoreSystemFontScale) 1.0f else density.fontScale
         val adjustedFontScale = systemFontScale * fontScaleAdjustment.fontScale
-        
+
         Density(
             density = density.density,
             fontScale = adjustedFontScale
         )
     }
-    
+
     CompositionLocalProvider(
         LocalDensity provides customDensity,
         LocalAppFontScaleAdjustment provides fontScaleAdjustment,
@@ -73,7 +70,7 @@ fun TextStyle.withConsistentFontSize(sizeFactor: Float = 1.0f): TextStyle {
 fun getDeviceSpecificFontAdjustment(context: Context): AppFontScaleAdjustment {
     val displayMetrics = context.resources.displayMetrics
     val density = displayMetrics.density
-    
+
     // Adjust based on screen density and manufacturer/model if needed
     return when {
         Build.MANUFACTURER.contains("samsung", ignoreCase = true) -> {
@@ -99,4 +96,4 @@ fun Resources.forceAppFontScale(fontScale: Float) {
     val configuration = Configuration(configuration)
     configuration.fontScale = fontScale
     updateConfiguration(configuration, displayMetrics)
-} 
+}

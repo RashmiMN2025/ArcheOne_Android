@@ -2,7 +2,6 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -16,47 +15,51 @@ import com.archeGlobal.one.network.RegionalOffice as NetworkRegionalOffice
 class LocationsController(private val context: Context) {
     private var _locationState by mutableStateOf(LocationScreenState())
     private var isEmergencyContact = false
-    
+
     init {
         // Initialize locations from login response
         val offices = OtpVerificationController.getOfficesData()
         Log.d("LocationsController", "Received offices data: $offices")
-        
+
         if (offices != null) {
             val locationsList = mutableListOf<LocationInfo>()
-            
+
             offices.forEach { office: NetworkOffice ->
                 Log.d("LocationsController", "Processing office: ${office.country}")
                 when (office.country) {
                     "India" -> {
                         Log.d("LocationsController", "Processing Indian office with ${office.regionaloffice.size} regional offices")
-                        locationsList.add(LocationInfo(
-                            name = "India",
-                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
-                            address = office.address,
-                            email = office.email ?: "info@netcon.in",
-                            hasMultipleLocations = true,
-                            states = createIndianStates(office.regionaloffice)
-                        ))
+                        locationsList.add(
+                            LocationInfo(
+                                name = "India",
+                                companyName = office.companyName ?: "Arche Global Pvt Ltd",
+                                address = office.address,
+                                email = office.email ?: "info@netcon.in",
+                                hasMultipleLocations = true,
+                                states = createIndianStates(office.regionaloffice)
+                            )
+                        )
                         Log.d("LocationsController", "Added India location to the list")
                     }
                     else -> {
                         Log.d("LocationsController", "Processing ${office.country} office")
-                        locationsList.add(LocationInfo(
-                            name = office.country,
-                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
-                            address = office.address,
-                            email = office.email ?: "info@netcon.in",
-                            hasMultipleLocations = false
-                        ))
+                        locationsList.add(
+                            LocationInfo(
+                                name = office.country,
+                                companyName = office.companyName ?: "Arche Global Pvt Ltd",
+                                address = office.address,
+                                email = office.email ?: "info@netcon.in",
+                                hasMultipleLocations = false
+                            )
+                        )
                     }
                 }
             }
-            
+
             Log.d("LocationsController", "Created locations list with ${locationsList.size} locations")
             // Debug all location names
             Log.d("LocationsController", "Location names: ${locationsList.map { it.name }}")
-            
+
             _locationState = LocationScreenState(locations = locationsList)
         } else {
             Log.e("LocationsController", "Offices data is null")
@@ -79,7 +82,7 @@ class LocationsController(private val context: Context) {
                 name = stateName,
                 locations = offices.map { office ->
                     LocationInfo(
-                        name = office.region,  // Use exact region name from API
+                        name = office.region, // Use exact region name from API
                         companyName = office.companyName ?: "Arche Global Pvt Ltd",
                         address = office.address,
                         email = office.email ?: "info@netcon.in",
@@ -97,12 +100,12 @@ class LocationsController(private val context: Context) {
     }
 
     fun getLocations() = _locationState.locations
-    
+
     fun getState() = _locationState
-    
+
     fun selectLocation(location: LocationInfo) {
         Log.d("LocationsController", "Selecting location: ${location.name}, hasStates=${location.states != null}")
-        
+
         if (location.states != null) {
             // This is for the main India location
             Log.d("LocationsController", "Location has states, showing state list")
@@ -121,7 +124,7 @@ class LocationsController(private val context: Context) {
             )
         }
     }
-    
+
     fun selectState(state: StateInfo) {
         _locationState = _locationState.copy(
             selectedState = state,
@@ -129,7 +132,7 @@ class LocationsController(private val context: Context) {
             showingDetails = true
         )
     }
-    
+
     fun showFloorMap(mapUrl: String) {
         Log.d("LocationsController", "Attempting to open floor map in WebViewActivity: $mapUrl")
         try {
@@ -139,7 +142,7 @@ class LocationsController(private val context: Context) {
                 putExtra("title", "Floor Map") // Using just "Floor Map" as the title
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            
+
             context.startActivity(intent)
             _locationState = _locationState.copy(showingFloorMap = true)
             Log.d("LocationsController", "Opened floor map in WebViewActivity")
@@ -152,11 +155,11 @@ class LocationsController(private val context: Context) {
             ).show()
         }
     }
-    
+
     fun showContactInfo(show: Boolean) {
         _locationState = _locationState.copy(showingContactInfo = show)
     }
-    
+
     fun onBackPressed(): Boolean {
         return when {
             _locationState.showingContactInfo -> {
@@ -207,7 +210,7 @@ class LocationsController(private val context: Context) {
         val location = state.locations.firstOrNull() ?: return
         _locationState = _locationState.copy(
             selectedLocation = location,
-            selectedState = state,  // Always set the selectedState so back navigation works correctly
+            selectedState = state, // Always set the selectedState so back navigation works correctly
             showingStateList = false,
             showingDetails = true
         )
@@ -227,37 +230,41 @@ class LocationsController(private val context: Context) {
     fun initializeLocations() {
         val offices = OtpVerificationController.getOfficesData()
         Log.d("LocationsController", "Reinitializing with offices data: $offices")
-        
+
         if (offices != null) {
             val locationsList = mutableListOf<LocationInfo>()
-            
+
             offices.forEach { office: NetworkOffice ->
                 Log.d("LocationsController", "Processing office: ${office.country}")
                 when (office.country) {
                     "India" -> {
                         Log.d("LocationsController", "Processing Indian office with ${office.regionaloffice.size} regional offices")
-                        locationsList.add(LocationInfo(
-                            name = "India",
-                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
-                            address = office.address,
-                            email = office.email ?: "info@netcon.in",
-                            hasMultipleLocations = true,
-                            states = createIndianStates(office.regionaloffice)
-                        ))
+                        locationsList.add(
+                            LocationInfo(
+                                name = "India",
+                                companyName = office.companyName ?: "Arche Global Pvt Ltd",
+                                address = office.address,
+                                email = office.email ?: "info@netcon.in",
+                                hasMultipleLocations = true,
+                                states = createIndianStates(office.regionaloffice)
+                            )
+                        )
                     }
                     else -> {
                         Log.d("LocationsController", "Processing ${office.country} office")
-                        locationsList.add(LocationInfo(
-                            name = office.country,
-                            companyName = office.companyName ?: "Arche Global Pvt Ltd",
-                            address = office.address,
-                            email = office.email ?: "info@netcon.in",
-                            hasMultipleLocations = false
-                        ))
+                        locationsList.add(
+                            LocationInfo(
+                                name = office.country,
+                                companyName = office.companyName ?: "Arche Global Pvt Ltd",
+                                address = office.address,
+                                email = office.email ?: "info@netcon.in",
+                                hasMultipleLocations = false
+                            )
+                        )
                     }
                 }
             }
-            
+
             Log.d("LocationsController", "Created locations list with ${locationsList.size} locations")
             _locationState = LocationScreenState(locations = locationsList)
         } else {
@@ -269,7 +276,7 @@ class LocationsController(private val context: Context) {
         this.isEmergencyContact = isEmergencyContact
         Log.d("LocationsController", "Emergency contact mode set to $isEmergencyContact")
     }
-    
+
     fun isInEmergencyContactMode(): Boolean {
         return isEmergencyContact
     }
@@ -281,15 +288,15 @@ class LocationsController(private val context: Context) {
     fun onEmergencyBackPressed(): Boolean {
         // First handle any state changes like normal back button
         val handled = onBackPressed()
-        
+
         // In emergency contact mode, if we're back at the top level (showing locations list),
         // we should navigate to SOS instead
         val atTopLevel = !_locationState.showingStateList && !_locationState.showingDetails
-        
+
         Log.d("LocationsController", "onEmergencyBackPressed: handled=$handled, atTopLevel=$atTopLevel")
-        
+
         // If we're at the top level (main locations list) while in emergency mode,
         // we should go to SOS screen instead of staying here
         return !atTopLevel
     }
-} 
+}

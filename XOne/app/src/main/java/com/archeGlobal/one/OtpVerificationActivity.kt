@@ -2,9 +2,9 @@ package com.archeGlobal.one
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.compose.setContent
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.navigation.AndroidNavigator
@@ -17,23 +17,26 @@ class OtpVerificationActivity : AppCompatActivity() {
         val email = intent.getStringExtra("email") ?: ""
         val mobile = intent.getStringExtra("mobile") ?: ""
         val employeeId = intent.getStringExtra("employeeId") ?: ""
-        
+
         val navigator = AndroidNavigator(this)
         val loginController = LoginController(this, navigator)
         val controller = OtpVerificationController(navigator, this)
 
         // Handle back press to go back to original login screen
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Navigate back to login screen with extra to force original login form
-                val intent = Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra("forceOriginalLogin", true) // Force original login state
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Navigate back to login screen with extra to force original login form
+                    val intent = Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        putExtra("forceOriginalLogin", true) // Force original login state
+                    }
+                    startActivity(intent)
+                    finish()
                 }
-                startActivity(intent)
-                finish()
             }
-        })
+        )
 
         setContent {
             XOneTheme {

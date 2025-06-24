@@ -4,38 +4,33 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
-import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.ui.res.painterResource
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.foundation.border
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.focus.onFocusChanged
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -60,7 +55,6 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
         }
     }
 
-
     // Format time into MM:SS
     val formattedTime = String.format("%02d:%02d", timeLeft / 60, timeLeft % 60)
 
@@ -79,7 +73,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
+                        Color(0xFF474749) // Dark Gray
                     )
                 )
             )
@@ -120,7 +114,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 )
             }
 
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(32.dp, 16.dp, 32.dp, 32.dp)
@@ -229,14 +223,14 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                        text = "Resend OTP in $formattedTime",
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Start
-                    )
+                    text = "Resend OTP in $formattedTime",
+                    fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Start
+                )
 
                 // Resend OTP button (enabled only when timer is 0)
                 Button(
@@ -244,7 +238,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                         if (timeLeft == 0) {
                             controller.resendOtp(email, mobile, employeeId) { message ->
                                 if (message.contains("success", ignoreCase = true)) {
-                                    timeLeft = 60  // Restart timer
+                                    timeLeft = 60 // Restart timer
                                     Toast.makeText(context, "OTP sent successfully", Toast.LENGTH_SHORT).show()
                                 } else {
                                     errorMessage = message
@@ -290,7 +284,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                     controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
                         isLoading = false
                         if (isError) {
-                            errorMessage = message  // This will trigger the Toast via LaunchedEffect
+                            errorMessage = message // This will trigger the Toast via LaunchedEffect
                         }
                     }
                 },
@@ -300,7 +294,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                     .padding(top = 16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFDD3825),
-                    disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                    disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                 ),
                 shape = MaterialTheme.shapes.medium,
                 enabled = !isLoading && otp.length == 6

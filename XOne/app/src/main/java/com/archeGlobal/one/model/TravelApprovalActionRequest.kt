@@ -8,10 +8,10 @@ import com.google.gson.annotations.SerializedName
 data class TravelApprovalActionRequest(
     @SerializedName("email")
     val email: String,
-    
+
     @SerializedName("requestId")
     val requestId: String,
-    
+
     @SerializedName("token")
     val token: String
 )

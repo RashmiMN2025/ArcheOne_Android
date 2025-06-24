@@ -40,32 +40,32 @@ class PreferencesManager(context: Context) {
             emptyMap()
         }
     }
-    
+
     // Save the authentication token
     fun saveAuthToken(token: String) {
         sharedPreferences.edit().putString(KEY_AUTH_TOKEN, token).apply()
     }
-    
+
     // Get the saved authentication token
     fun getAuthToken(): String? {
         return sharedPreferences.getString(KEY_AUTH_TOKEN, null)
     }
-    
+
     // Check if this is the first launch of the app
     fun isFirstLaunch(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
     }
-    
+
     // Check if user is logged in
     fun isLoggedIn(): Boolean {
         return getAuthToken() != null
     }
-    
+
     // Clear auth token on logout
     fun clearAuthToken() {
         sharedPreferences.edit().remove(KEY_AUTH_TOKEN).apply()
     }
-    
+
     // Save user data
     fun saveUserData(userData: UserData?) {
         if (userData == null) {
@@ -75,7 +75,7 @@ class PreferencesManager(context: Context) {
             sharedPreferences.edit().putString(KEY_USER_DATA, json).apply()
         }
     }
-    
+
     // Get user data
     fun getUserData(): UserData? {
         val json = sharedPreferences.getString(KEY_USER_DATA, null)
@@ -86,7 +86,7 @@ class PreferencesManager(context: Context) {
             null
         }
     }
-    
+
     // Save offices data
     fun saveOfficesData(offices: List<Office>?) {
         if (offices == null) {
@@ -96,7 +96,7 @@ class PreferencesManager(context: Context) {
             sharedPreferences.edit().putString(KEY_OFFICES_DATA, json).apply()
         }
     }
-    
+
     // Get offices data
     fun getOfficesData(): List<Office>? {
         val json = sharedPreferences.getString(KEY_OFFICES_DATA, null)
@@ -107,7 +107,7 @@ class PreferencesManager(context: Context) {
             null
         }
     }
-    
+
     // Save policies data
     fun savePoliciesData(policies: List<PolicyModel.Policy>?) {
         if (policies == null) {
@@ -117,7 +117,7 @@ class PreferencesManager(context: Context) {
             sharedPreferences.edit().putString(KEY_POLICIES_DATA, json).apply()
         }
     }
-    
+
     // Get policies data
     fun getPoliciesData(): List<PolicyModel.Policy>? {
         val json = sharedPreferences.getString(KEY_POLICIES_DATA, null)
@@ -128,7 +128,7 @@ class PreferencesManager(context: Context) {
             null
         }
     }
-    
+
     // Save SOS blogs data
     fun saveSosBlogsData(sosBlogs: List<SosBlogModel>?) {
         if (sosBlogs == null) {
@@ -138,7 +138,7 @@ class PreferencesManager(context: Context) {
             sharedPreferences.edit().putString(KEY_SOS_BLOGS_DATA, json).apply()
         }
     }
-    
+
     // Get SOS blogs data
     fun getSosBlogsData(): List<SosBlogModel>? {
         val json = sharedPreferences.getString(KEY_SOS_BLOGS_DATA, null)
@@ -149,7 +149,7 @@ class PreferencesManager(context: Context) {
             null
         }
     }
-    
+
     // Save asset details
     fun saveAssetDetails(assetDetails: List<AssetDetail>?) {
         if (assetDetails == null) {
@@ -159,7 +159,7 @@ class PreferencesManager(context: Context) {
             sharedPreferences.edit().putString(KEY_ASSET_DETAILS, json).apply()
         }
     }
-    
+
     // Get asset details
     fun getAssetDetails(): List<AssetDetail>? {
         val json = sharedPreferences.getString(KEY_ASSET_DETAILS, null)
@@ -170,7 +170,7 @@ class PreferencesManager(context: Context) {
             null
         }
     }
-    
+
     // Save communique data
     fun saveCommuniqueData(communique: List<CommuniqueModel.Communique>?) {
         if (communique == null) {
@@ -180,7 +180,7 @@ class PreferencesManager(context: Context) {
             sharedPreferences.edit().putString(KEY_COMMUNIQUE_DATA, json).apply()
         }
     }
-    
+
     // Get communique data
     fun getCommuniqueData(): List<CommuniqueModel.Communique>? {
         val json = sharedPreferences.getString(KEY_COMMUNIQUE_DATA, null)
@@ -191,7 +191,7 @@ class PreferencesManager(context: Context) {
             null
         }
     }
-    
+
     // Clear all user-related data on logout
     fun clearAllUserData() {
         sharedPreferences.edit().apply {
@@ -209,19 +209,19 @@ class PreferencesManager(context: Context) {
     // Locked state management with MutableStateFlow for better reactivity
     private val _lockedState = MutableStateFlow(getAppLockState())
     val lockedState: StateFlow<Boolean> = _lockedState.asStateFlow()
-    
+
     // Check if app is locked
     fun getAppLockState(): Boolean {
         return sharedPreferences.getBoolean(KEY_APP_LOCKED, false)
     }
-    
+
     // Set app locked state
     fun setAppLockState(locked: Boolean) {
         Log.d("PreferencesManager", "Setting locked state to: $locked")
         sharedPreferences.edit().putBoolean(KEY_APP_LOCKED, locked).apply()
         _lockedState.value = locked
     }
-    
+
     companion object {
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_AUTH_TOKEN = "auth_token"
@@ -258,7 +258,7 @@ class PreferencesManager(context: Context) {
     fun getString(key: String, default: String): String? {
         return sharedPreferences.getString(key, default)
     }
-    
+
     // Mark that the app has been launched before
     fun setFirstLaunchComplete() {
         sharedPreferences.edit().putBoolean(KEY_IS_FIRST_LAUNCH, false).apply()
@@ -299,7 +299,9 @@ class PreferencesManager(context: Context) {
         val token = sharedPreferences.getString("biometric_token", null)
         return if (email != null && mobile != null && employeeId != null && token != null) {
             Quad(email, mobile, employeeId, token)
-        } else null
+        } else {
+            null
+        }
     }
 
     fun clearBiometricCredentials() {
@@ -321,7 +323,7 @@ class PreferencesManager(context: Context) {
     fun saveLong(key: String, value: Long) {
         sharedPreferences.edit().putLong(key, value).apply()
     }
-    
+
     fun getLong(key: String): Long? {
         return if (sharedPreferences.contains(key)) {
             sharedPreferences.getLong(key, 0)
@@ -390,12 +392,12 @@ class PreferencesManager(context: Context) {
     fun saveTasks(tasksJson: String) {
         sharedPreferences.edit().putString(KEY_TASKS_DATA, tasksJson).apply()
     }
-    
+
     // Get tasks data
     fun getTasks(): String {
         return sharedPreferences.getString(KEY_TASKS_DATA, "") ?: ""
     }
-    
+
     // Save event data
     fun saveEventData(eventDataJson: String?) {
         if (eventDataJson == null) {
@@ -406,7 +408,7 @@ class PreferencesManager(context: Context) {
             sharedPreferences.edit().putString(KEY_EVENT_DATA, eventDataJson).apply()
         }
     }
-    
+
     // Get event data
     fun getEventData(): String? {
         val eventData = sharedPreferences.getString(KEY_EVENT_DATA, null)

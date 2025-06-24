@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -169,7 +168,7 @@ fun OnboardingPage(
         ) {
             // Add appropriate spacing at the top based on whether it's the logo page
             Spacer(modifier = Modifier.height(if (page.showLogo) 70.dp else 0.dp))
-            
+
             // For non-logo pages, we need to center the content but position slightly higher
             if (!page.showLogo) {
                 Spacer(modifier = Modifier.weight(0.2f)) // Further reduced to move content even higher
@@ -185,7 +184,7 @@ fun OnboardingPage(
                         .padding(bottom = 12.dp)
                 )
             }
-            
+
             // Title with custom formatting based on page
             Text(
                 text = page.title,
@@ -234,7 +233,7 @@ fun OnboardingPage(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(64.dp))
         }
     }

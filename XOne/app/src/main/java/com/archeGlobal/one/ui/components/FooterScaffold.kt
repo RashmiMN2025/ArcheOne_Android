@@ -45,4 +45,4 @@ fun FooterScaffold(
             content()
         }
     }
-} 
+}

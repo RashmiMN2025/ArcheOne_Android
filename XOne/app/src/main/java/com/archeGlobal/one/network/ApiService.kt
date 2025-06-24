@@ -1,30 +1,30 @@
 package com.archeGlobal.one.network
 
 import com.archeGlobal.one.model.ApiGreetingCategory
-import com.archeGlobal.one.model.PolicyModel
-import com.archeGlobal.one.model.SOSRequest
-import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.CalendarResponse
-import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
-import com.archeGlobal.one.model.TravelRequestSubmission
-import com.archeGlobal.one.model.TravelRequestResponse
-import com.archeGlobal.one.model.TravelHistoryRequest
-import com.archeGlobal.one.model.TravelHistoryResponse
-import com.archeGlobal.one.model.TravelApprovalRequest
-import com.archeGlobal.one.model.TravelApprovalResponse
+import com.archeGlobal.one.model.PolicyModel
+import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.model.SocialContent
+import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.model.TravelApprovalRequest
+import com.archeGlobal.one.model.TravelApprovalResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
+import com.archeGlobal.one.model.TravelHistoryRequest
+import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
+import com.archeGlobal.one.model.TravelRequestResponse
+import com.archeGlobal.one.model.TravelRequestSubmission
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import retrofit2.Response
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -60,7 +60,7 @@ interface ApiService {
         @Part("employeeId") employeeId: RequestBody,
         @Part("isPersonal") isPersonal: RequestBody? = null
     ): Call<DocumentListResponse>
-    
+
     // Document API - Upload File
     @Multipart
     @POST("/upload")
@@ -68,7 +68,7 @@ interface ApiService {
         @Part file: MultipartBody.Part,
         @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>
     ): Call<DocumentListResponse>
-    
+
     // Profile Picture API - Upload
     @Multipart
     @POST("/upload_profile")
@@ -95,28 +95,28 @@ interface ApiService {
 
     @POST("feedback")
     suspend fun submitFeedback(@Body request: FeedbackRequest): Response<FeedbackResponse>
-    
+
     @POST("/reset-password")
     fun resetPassword(@Body request: PasswordResetRequest): Call<PasswordResetResponse>
-    
+
     @GET("daily-event")
     suspend fun getDailyEvent(): Response<EventResponse>
-    
+
     @POST("travel-request")
     fun submitTravelRequest(@Body request: TravelRequestSubmission): Call<TravelRequestResponse>
-    
+
     @POST("travel-request")
     fun getTravelHistory(@Body request: TravelHistoryRequest): Call<TravelHistoryResponse>
-    
+
     @POST("travel-request/combined-history")
     fun getTravelCombinedHistory(@Body request: TravelHistoryRequest): Call<TravelCombinedHistoryResponse>
-    
+
     @POST("travel-request/approval-history")
     fun getTravelApprovalHistory(@Body request: TravelApprovalRequest): Call<TravelApprovalResponse>
-    
+
     @POST("travel-request/approve")
     fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
-    
+
     @POST("travel-request/reject")
     fun rejectTravelRequest(@Body request: TravelRejectActionRequest): Call<TravelApprovalActionResponse>
 }
@@ -268,7 +268,7 @@ data class UserDetails(
 
 data class UserDocument(
     val document_name: String = "",
-    val doc_data: String = "" ,
+    val doc_data: String = "",
     val documentType: String = ""
 )
 
@@ -322,7 +322,7 @@ data class AssetDetail(
     val model: String,
     val purchase_date: String?,
     val serial_number: String,
-    val hostname: String? 
+    val hostname: String?
 )
 
 data class CalendarRequest(

@@ -16,13 +16,13 @@ fun CompanyLogo(modifier: Modifier = Modifier) {
         painter = painterResource(id = R.drawable.arche), // Changed from netcon to arche
         contentDescription = "Company Logo",
         modifier = Modifier
-            .height(40.dp)  // Reduced from 30.dp to 20.dp
-            .then(modifier)  // Apply any other modifiers after setting height
+            .height(40.dp) // Reduced from 30.dp to 20.dp
+            .then(modifier) // Apply any other modifiers after setting height
     )
 }
 
 @Preview
 @Composable
 fun PreviewCompanyLogo() {
-    CompanyLogo()  // No need to pass height modifier anymore
+    CompanyLogo() // No need to pass height modifier anymore
 }

@@ -99,7 +99,7 @@ class XConnectActivity : ComponentActivity() {
                                 ArticleDetailScreen(
                                     article = article,
                                     type = selectedArticleType,
-                                    onBackPressed = { 
+                                    onBackPressed = {
                                         currentScreen = Screen.XConnect
                                     },
                                     onReadMore = {

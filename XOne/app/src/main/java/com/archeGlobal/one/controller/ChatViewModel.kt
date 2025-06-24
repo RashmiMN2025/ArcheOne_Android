@@ -138,13 +138,11 @@ class ChatViewModel : ViewModel() {
             val highQualityMatches = relatedFAQs.filter { faq ->
                 val queryWords = text.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
                 val questionWords = faq.question.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
-                
+
                 var matchingWordsCount = 0
                 queryWords.forEach { queryWord ->
                     questionWords.forEach { questionWord ->
-                        if (questionWord == queryWord || 
-                            questionWord.contains(queryWord) || 
-                            queryWord.contains(questionWord)) {
+                        if (questionWord == queryWord || questionWord.contains(queryWord) || queryWord.contains(questionWord)) {
                             matchingWordsCount++
                         }
                     }
@@ -178,9 +176,7 @@ class ChatViewModel : ViewModel() {
                 }
 
                 return faqList.toString()
-            }            
-            
-            // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
+            } // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
             // Add proper spacing (two blank lines) between question and answer
             return relatedFAQs.joinToString("\n\n") { faq ->
                 "${faq.question}\n\n\n${faq.answer}"

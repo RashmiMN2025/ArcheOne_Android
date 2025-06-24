@@ -1,18 +1,18 @@
 package com.archeGlobal.one.navigation
 
-import android.content.Intent
-import android.util.Log
 import android.app.ActivityOptions
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.navOptions
 import com.archeGlobal.one.*
+import com.archeGlobal.one.GlobalCelebrationDetailActivity
 import com.archeGlobal.one.ui.screens.CoreValuesActivity
 import com.archeGlobal.one.ui.screens.IdeaVaultActivity
 import java.net.URLEncoder
-import com.archeGlobal.one.GlobalCelebrationDetailActivity
 
 class AndroidNavigator(
     private val activity: ComponentActivity
@@ -39,7 +39,8 @@ class AndroidNavigator(
                 if (slideLeft) R.anim.slide_in_left else R.anim.slide_in_right,
                 if (slideLeft) R.anim.slide_out_right else R.anim.slide_out_left
             ).toBundle()
-            activity.startActivity(intent, bundle)        } else {
+            activity.startActivity(intent, bundle)
+        } else {
             activity.startActivity(intent)
         }
     }
@@ -64,8 +65,8 @@ class AndroidNavigator(
         startActivity(
             Intent(activity, LoginActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP
             },
             false
         )
@@ -73,11 +74,13 @@ class AndroidNavigator(
     }
 
     override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String) {
-        startActivity(Intent(activity, OtpVerificationActivity::class.java).apply {
-            putExtra("email", email)
-            putExtra("mobile", mobile)
-            putExtra("employeeId", employeeId)
-        })
+        startActivity(
+            Intent(activity, OtpVerificationActivity::class.java).apply {
+                putExtra("email", email)
+                putExtra("mobile", mobile)
+                putExtra("employeeId", employeeId)
+            }
+        )
     }
 
     override fun navigateToHome(
@@ -162,14 +165,16 @@ class AndroidNavigator(
         if (activity is HomeActivity) {
             navigate("locations")
         } else {
-            startActivity(Intent(activity, HomeActivity::class.java).apply {
-                putExtra("isEmergencyContact", true)
-                putExtra("showHeader", showHeader)
-                putExtra("destination", "locations")
-            })
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    putExtra("isEmergencyContact", true)
+                    putExtra("showHeader", showHeader)
+                    putExtra("destination", "locations")
+                }
+            )
             activity.finish()
         }
-    }    override fun navigateToBusinessCard() {
+    } override fun navigateToBusinessCard() {
         navigate("business_card")
     }
 
@@ -252,12 +257,14 @@ class AndroidNavigator(
         if (activity is HomeActivity) {
             navigate("greetings")
         } else {
-            startActivity(Intent(activity, HomeActivity::class.java).apply {
-                putExtra("navigateTo", "greetings")
-            })
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    putExtra("navigateTo", "greetings")
+                }
+            )
         }
     }
-    
+
     override fun navigateToGlobalCelebration() {
         val intent = Intent(activity, GlobalCelebrationActivity::class.java)
         activity.startActivity(intent)
@@ -278,9 +285,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToXConnect(initialTab: String) {
-        startActivity(Intent(activity, XConnectActivity::class.java).apply {
-            putExtra("initialTab", initialTab)
-        })
+        startActivity(
+            Intent(activity, XConnectActivity::class.java).apply {
+                putExtra("initialTab", initialTab)
+            }
+        )
     }
 
     override fun navigateToHelpdesk() {
@@ -307,9 +316,11 @@ class AndroidNavigator(
         if (activity is HomeActivity) {
             navigate("sos?showHeader=$showHeader")
         } else {
-            startActivity(Intent(activity, SOSActivity::class.java).apply {
-                putExtra("showHeader", showHeader)
-            })
+            startActivity(
+                Intent(activity, SOSActivity::class.java).apply {
+                    putExtra("showHeader", showHeader)
+                }
+            )
         }
     }
 
@@ -330,39 +341,39 @@ class AndroidNavigator(
             restoreState = true
         }
     }
-    
+
     override fun navigateToTravelRequestDetail() {
         navController?.navigate("travel_request_detail") {
             launchSingleTop = true
             restoreState = true
         }
     }
-    
+
     override fun navigateToTravelApprovals() {
         navController?.navigate("travel_approvals") {
             launchSingleTop = true
             restoreState = true
         }
     }
-    
+
     override fun navigateToTravelApprovalDetail() {
         navController?.navigate("travel_approval_detail") {
             launchSingleTop = true
             restoreState = true
         }
     }
-    
+
     override fun navigateToTravelApprovalConfirm() {
         navController?.navigate("travel_approval_confirm") {
             launchSingleTop = true
             restoreState = true
         }
     }
-    
+
     override fun navigateToTravelApprove() {
         android.util.Log.d("AndroidNavigator", "navigateToTravelApprove called")
         android.util.Log.d("AndroidNavigator", "navController is ${if (navController == null) "null" else "not null"}")
-        
+
         // Log current navigation state
         navController?.let { nc ->
             val currentRoute = nc.currentDestination?.route
@@ -370,7 +381,7 @@ class AndroidNavigator(
             // We can't access the private backQueue property directly
             android.util.Log.d("AndroidNavigator", "Attempting to navigate to travel_approve")
         }
-        
+
         try {
             navController?.navigate("travel_approve") {
                 launchSingleTop = true
@@ -380,11 +391,11 @@ class AndroidNavigator(
         } catch (e: Exception) {
             android.util.Log.e("AndroidNavigator", "Error during navigation: ${e.message}", e)
         }
-        
+
         // Verify navigation occurred
         android.util.Log.d("AndroidNavigator", "Current destination after navigation attempt: ${navController?.currentDestination?.route}")
     }
-    
+
     override fun navigateToTravelReject() {
         navController?.navigate("travel_reject") {
             launchSingleTop = true
@@ -471,7 +482,7 @@ class AndroidNavigator(
 
     override fun navigateToTodo() {
         startActivity(Intent(activity, TodoActivity::class.java))
-    }    override fun getCurrentRoute(): String? {
+    } override fun getCurrentRoute(): String? {
         return navController?.currentDestination?.route
     }
 
@@ -486,7 +497,7 @@ class AndroidNavigator(
             }
         }
     }
-    
+
     override fun popBackStack() {
         try {
             navController?.popBackStack()
@@ -514,7 +525,7 @@ class AndroidNavigator(
         }
     }
 
-    override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token:String) {
+    override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String) {
         val intent = Intent(activity, com.archeGlobal.one.ui.screens.MpinActivity::class.java).apply {
             putExtra("email", email)
             putExtra("mobile", mobile)

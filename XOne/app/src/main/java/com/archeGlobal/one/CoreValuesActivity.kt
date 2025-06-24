@@ -1,8 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 
 class CoreValuesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

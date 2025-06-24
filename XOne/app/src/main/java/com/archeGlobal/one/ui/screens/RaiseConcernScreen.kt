@@ -1,7 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
-import android.widget.Toast
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -29,11 +28,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
-import com.archeGlobal.one.network.RetrofitClient.apiService
 import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.network.RetrofitClient.apiService
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun RaiseConcernScreen(onBackPressed: () -> Unit) {
@@ -43,14 +41,14 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
     // Get user data
     val userDataManager = remember { UserDataManager.getInstance(context) }
     val userData = remember { userDataManager.getUserData() }
-    
+
     // Form state
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var issueDescription by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
     var showAnonymousDialog by remember { mutableStateOf(false) }
-    
+
     // Categories based on the screenshot
     val categories = listOf(
         "Medical Emergency",
@@ -61,7 +59,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
         "PoSH",
         "Other Issue"
     )
-    
+
     // Submit functions
     suspend fun submitConcern(anonymous: Boolean) {
         if (selectedCategory == null || issueDescription.isBlank()) {
@@ -70,7 +68,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
         }
 
         isSubmitting = true
-        
+
         try {
             val user = userData
             if (user == null) {
@@ -78,7 +76,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 isSubmitting = false
                 return
             }
-            
+
             val request = SOSRequest(
                 name = user.name ?: "",
                 email = user.email ?: "",
@@ -88,12 +86,12 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 description = "",
                 anonymous = anonymous
             )
-            
+
             // Add debug log to verify description content
             Log.d("RaiseConcern", "Submitting concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous")
-            
+
             val response = apiService.submitSOS(request)
-            
+
             if (response.isSuccessful && response.body() != null) {
                 // Show success message based on anonymous status
                 if (anonymous) {
@@ -101,11 +99,11 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 } else {
                     Toast.makeText(context, "Concern submitted with your identity", Toast.LENGTH_SHORT).show()
                 }
-                
+
                 // Reset form on success
                 selectedCategory = null
                 issueDescription = ""
-                
+
                 // Go back after successful submission
                 onBackPressed()
             } else {
@@ -159,7 +157,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
             }
 
             Spacer(modifier = Modifier.height(40.dp))
-            
+
             // Category dropdown
             Box(
                 modifier = Modifier
@@ -191,7 +189,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                     ),
                     shape = RoundedCornerShape(8.dp)
                 )
-                
+
                 // Invisible clickable box over the TextField to trigger dropdown
                 Box(
                     modifier = Modifier
@@ -199,8 +197,8 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                         .padding(horizontal = 15.dp)
                         .clickable { expanded = true }
                 )
-                
-                // This will position the dropdown below the TextField 
+
+                // This will position the dropdown below the TextField
                 // with exact same width as parent
                 if (expanded) {
                     // Popup dialog instead of standard DropdownMenu to match the design
@@ -213,9 +211,9 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                         )
                     ) {
                         // The main container with padding to match the screen layout
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                         ) {
                             // Dropdown menu card
@@ -231,7 +229,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                 ) {
-                    categories.forEach { category ->
+                                    categories.forEach { category ->
                                         Column(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -240,15 +238,15 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                                                 text = category,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .clickable { 
-                                selectedCategory = category
-                                expanded = false
+                                                    .clickable {
+                                                        selectedCategory = category
+                                                        expanded = false
                                                     }
                                                     .padding(vertical = 16.dp, horizontal = 16.dp),
                                                 fontSize = 16.sp,
                                                 color = Color.Black
                                             )
-                                            
+
                                             // Add divider between items except for the last one
                                             if (category != categories.last()) {
                                                 Divider(
@@ -265,7 +263,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                     }
                 }
             }
-            
+
             // Issue description
             OutlinedTextField(
                 value = issueDescription,
@@ -315,7 +313,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 )
             }
         }
-        
+
         // Anonymous submission dialog
         if (showAnonymousDialog) {
             Dialog(onDismissRequest = { showAnonymousDialog = false }) {
@@ -346,7 +344,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                                 modifier = Modifier.size(60.dp)
                             )
                         }
-                        
+
                         // Title
                         Text(
                             text = "Submit Anonymously?",
@@ -356,7 +354,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
-                        
+
                         // Description
                         Text(
                             text = "Would you like to submit this concern anonymously? Your identity will not be disclosed.",
@@ -365,10 +363,10 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 24.dp)
                         )
-                        
+
                         // Submit anonymously button
                         Button(
-                            onClick = { 
+                            onClick = {
                                 showAnonymousDialog = false
                                 coroutineScope.launch { submitConcern(anonymous = true) }
                             },
@@ -385,10 +383,10 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                                 color = Color.White
                             )
                         }
-                        
+
                         // Submit with identity button
                         Button(
-                            onClick = { 
+                            onClick = {
                                 showAnonymousDialog = false
                                 coroutineScope.launch { submitConcern(anonymous = false) }
                             },
@@ -410,7 +408,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 }
             }
         }
-        
+
         // Show loading indicator when submitting
         if (isSubmitting) {
             Box(

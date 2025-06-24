@@ -10,4 +10,4 @@ data class CommuniqueModel(
         val showSosButton: Boolean = false,
         val previewUrl: String? = null
     )
-} 
+}

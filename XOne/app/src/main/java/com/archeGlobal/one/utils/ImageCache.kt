@@ -2,20 +2,18 @@ package com.archeGlobal.one.utils
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * Utility class to manage profile image caching and invalidation
  */
 object ImageCache {
     private const val TAG = "ImageCache"
-    
+
     // Version key to invalidate all images
     private var _profileImageVersion = MutableStateFlow(System.currentTimeMillis())
     val profileImageVersion: StateFlow<Long> = _profileImageVersion.asStateFlow()
@@ -47,7 +45,7 @@ object ImageCache {
         try {
             val cacheKey = getCacheKey(url)
             Log.d(TAG, "Creating profile image request for: $url with cache key: $cacheKey")
-            
+
             return ImageRequest.Builder(context)
                 .data(url)
                 .crossfade(true)
@@ -60,7 +58,7 @@ object ImageCache {
                 .build()
         } catch (e: Exception) {
             Log.e(TAG, "Error creating profile image request", e)
-            
+
             // Fallback to basic request in case of error
             return ImageRequest.Builder(context)
                 .data(url)
@@ -76,4 +74,4 @@ object ImageCache {
     private fun getCacheKey(url: String): String {
         return "profile_${url}_${_profileImageVersion.value}"
     }
-} 
+}

@@ -6,8 +6,8 @@ import java.time.format.DateTimeFormatter
 
 data class GlobalEvent(
     @SerializedName("name") val name: String,
-    @SerializedName("date") val date: String,  // Format: "DD-MM-YYYY"
-    @SerializedName("image") val image: String? = null,        // URL to the event image
+    @SerializedName("date") val date: String, // Format: "DD-MM-YYYY"
+    @SerializedName("image") val image: String? = null, // URL to the event image
     @SerializedName("description") val description: String = ""
 ) {
     // Convert date format if needed to ensure it's in DD-MM-YYYY format
@@ -23,15 +23,15 @@ data class GlobalEvent(
             date
         }
     }
-    
+
     // Derived property for fromDate to maintain compatibility with existing code
     val fromDate: String
         get() = getFormattedDate()
-        
+
     // Derived property for toDate (same as fromDate for single-day events)
     val toDate: String
         get() = getFormattedDate()
-    
+
     val month: Int
         get() = try {
             val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -40,7 +40,7 @@ data class GlobalEvent(
         } catch (e: Exception) {
             0
         }
-    
+
     val day: Int
         get() = try {
             val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -49,7 +49,7 @@ data class GlobalEvent(
         } catch (e: Exception) {
             0
         }
-        
+
     val isMultiDay: Boolean
         get() = try {
             val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -59,7 +59,7 @@ data class GlobalEvent(
         } catch (e: Exception) {
             false
         }
-    
+
     val durationInDays: Int
         get() = try {
             val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")

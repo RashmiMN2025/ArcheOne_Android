@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -33,10 +32,10 @@ fun TypingIndicator() {
     ) {
         // First dot with delay 0
         BouncingDot(0)
-        
+
         // Second dot with delay 100ms
         BouncingDot(100)
-        
+
         // Third dot with delay 200ms
         BouncingDot(200)
     }
@@ -54,7 +53,7 @@ private fun BouncingDot(delayMillis: Int) {
         ),
         label = "scaleAnimation"
     )
-    
+
     val opacity by infiniteTransition.animateFloat(
         initialValue = 0.5f,
         targetValue = 1f,
@@ -64,7 +63,7 @@ private fun BouncingDot(delayMillis: Int) {
         ),
         label = "opacityAnimation"
     )
-    
+
     Box(
         modifier = Modifier
             .padding(horizontal = 2.dp)
@@ -73,4 +72,4 @@ private fun BouncingDot(delayMillis: Int) {
             .clip(CircleShape)
             .background(Color.Gray.copy(alpha = opacity))
     )
-} 
+}

@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,11 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HolidayOptionsController
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import androidx.activity.compose.BackHandler
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @Composable
 fun HolidayOptionsScreen(
@@ -34,7 +34,7 @@ fun HolidayOptionsScreen(
     BackHandler {
         controller.onBackPressed()
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +80,6 @@ fun HolidayOptionsScreen(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-
         }
 
         // Two option cards side by side
@@ -88,7 +87,7 @@ fun HolidayOptionsScreen(
             modifier = Modifier
                 .fillMaxSize(),
             contentAlignment = Alignment.TopCenter
-        ) {                // Holiday Calendar Option
+        ) { // Holiday Calendar Option
             OptionCard(
                 title = "Holiday Calendar", // Added line break to display on two lines
                 subtitle = "Company Holidays",
@@ -130,7 +129,8 @@ fun OptionCard(
             defaultElevation = 4.dp
         ),
         shape = RoundedCornerShape(12.dp)
-    ) {        Column(
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp), // Reduced padding from 16dp to 12dp
@@ -145,7 +145,7 @@ fun OptionCard(
                     .size(50.dp) // Reduced from 60dp to 50dp
                     .clip(RoundedCornerShape(8.dp))
             )
-              Spacer(modifier = Modifier.height(8.dp)) // Reduced from 12dp to 8dp            // Title below icon
+            Spacer(modifier = Modifier.height(8.dp)) // Reduced from 12dp to 8dp            // Title below icon
             Text(
                 text = title,
                 fontSize = 14.sp, // Further reduced from 15.sp to 14.sp
@@ -156,9 +156,9 @@ fun OptionCard(
                 textAlign = TextAlign.Center,
                 lineHeight = 18.sp // Add line height to compress text vertically
             )
-            
+
             Spacer(modifier = Modifier.height(1.dp)) // Further reduced from 2dp to 1dp
-            
+
             // Subtitle below title
             Text(
                 text = subtitle,

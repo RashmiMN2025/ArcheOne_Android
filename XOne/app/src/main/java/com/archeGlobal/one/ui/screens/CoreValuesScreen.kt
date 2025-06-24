@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
-import com.archeGlobal.one.controller.ArcheOdysseyController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
@@ -37,7 +35,7 @@ fun CoreValuesScreen(
             // New Heading
             Spacer(modifier = Modifier.height(18.dp))
 
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(10.dp)

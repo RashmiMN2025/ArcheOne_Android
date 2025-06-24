@@ -1,13 +1,19 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -16,7 +22,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,19 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.archeGlobal.one.controller.GreetingsController
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.ui.graphics.Brush
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @Composable
 fun GreetingCategoryCard(
@@ -145,14 +145,13 @@ fun GreetingThumbnailCard(
 fun GreetingsScreen(
     controller: GreetingsController,
     onBackPressed: () -> Unit
-) {    
-    // Get the status bar padding to avoid overlapping with front camera
+) { // Get the status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
-    
+
     // Get current model state
     val currentSelectedCategory = controller.model.selectedCategory
     val currentSelectedSubcategory = controller.model.selectedSubcategory
-    
+
     // Add BackHandler to handle back swipe gesture
     BackHandler {
         if (currentSelectedSubcategory != null) {
@@ -161,7 +160,7 @@ fun GreetingsScreen(
             controller.onBackPressed()
         } else {
             onBackPressed()
-       }
+        }
     }
 
     Box(
@@ -181,7 +180,7 @@ fun GreetingsScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,7 +210,7 @@ fun GreetingsScreen(
                             tint = Color.Black
                         )
                     }
-                    
+
                     Box(
                         modifier = Modifier
                             .weight(1f),

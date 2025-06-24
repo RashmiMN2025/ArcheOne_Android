@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -40,9 +38,9 @@ fun BottomNavigationBar(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val homeSelectedColor = Color(0xFF000000)  // Black for home
-    val selectedColor = Color(0xFFDD3825)      // Red for other items
-    val unselectedColor = Color(0xFF808080)    // Gray for unselected
+    val homeSelectedColor = Color(0xFF000000) // Black for home
+    val selectedColor = Color(0xFFDD3825) // Red for other items
+    val unselectedColor = Color(0xFF808080) // Gray for unselected
 
     NavigationBar(
         modifier = modifier
@@ -203,4 +201,4 @@ fun BottomNavigationBar(
             alwaysShowLabel = false
         )
     }
-} 
+}

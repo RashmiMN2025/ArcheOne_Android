@@ -1,66 +1,62 @@
 package com.archeGlobal.one.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.LocationsController
 import com.archeGlobal.one.model.LocationInfo
 import com.archeGlobal.one.model.StateInfo
 import com.archeGlobal.one.ui.theme.*
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.remember
-import android.content.Intent
-import android.location.Address
-import android.net.Uri
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.foundation.shape.CircleShape
-import android.util.Log
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import com.archeGlobal.one.R
-
 
 @Composable
 fun LocationsScreen(
     navController: NavHostController,
     controller: LocationsController,
     isEmergencyContact: Boolean = false,
-    showHeader:Boolean,
+    showHeader: Boolean,
     onBackToHome: () -> Unit // <-- Add this
 ) {
     val context = LocalContext.current
     val locationController = controller ?: remember { LocationsController(context) }
-    
+
     // Check both the passed parameter and the saved state handle
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val savedEmergencyContact = savedStateHandle?.get<Boolean>("isEmergencyContact") ?: false
     val isEmergencyContactActual = savedEmergencyContact || isEmergencyContact
-    
+
     // Add BackHandler to handle back swipe gestures
     BackHandler {
         if (locationController.isInEmergencyContactMode()) {
@@ -83,17 +79,17 @@ fun LocationsScreen(
             }
         }
     }
-    
+
     LaunchedEffect(Unit) {
         Log.d("LocationsScreen", "Screen initialized with isEmergencyContact=$isEmergencyContactActual")
         locationController.resetState()
-        
+
         // Set the value in the controller
         locationController.setEmergencyContactMode(isEmergencyContactActual)
-        
+
         // Set the value in the saved state handle
         navController.currentBackStackEntry?.savedStateHandle?.set("isEmergencyContact", isEmergencyContactActual)
-        
+
         // Only auto-navigate to India location if in emergency contact mode
         if (isEmergencyContactActual) {
             Log.d("LocationsScreen", "Emergency contact mode enabled, looking for India location")
@@ -107,24 +103,24 @@ fun LocationsScreen(
         }
         // Otherwise, show the normal locations list without auto-navigation
     }
-    
+
     val state = locationController.getState()
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFE0DCD1),  // Light Beige/Grey
-                        Color(0xFFC8C8CA),  // Light Grey
-                        Color(0xFF474749)   // Dark Grey
+                        Color(0xFFE0DCD1), // Light Beige/Grey
+                        Color(0xFFC8C8CA), // Light Grey
+                        Color(0xFF474749) // Dark Grey
                     )
                 )
             )
     ) {
         val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
-        
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
@@ -165,7 +161,7 @@ fun LocationsScreen(
                                         }
                                     }
                                 }
-                            ){
+                            ) {
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
@@ -222,7 +218,9 @@ fun LocationsScreen(
                                 onClick = { locationController.selectLocation(location) },
                                 onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
                                     { location.mapFileName?.let { mapFile -> locationController.showFloorMap(mapFile) } }
-                                } else null
+                                } else {
+                                    null
+                                }
                             )
                         }
                     }
@@ -242,7 +240,7 @@ fun LocationsScreen(
                     if (selectedLocation != null) {
                         LocationDetails(
                             location = selectedLocation,
-                            onShowFloorMap = { 
+                            onShowFloorMap = {
                                 selectedLocation.mapFileName?.let { mapFile ->
                                     locationController.showFloorMap(mapFile)
                                 }
@@ -266,7 +264,6 @@ fun LocationsScreen(
     }
 }
 
-
 @Composable
 private fun LocationCard(
     location: LocationInfo,
@@ -275,7 +272,7 @@ private fun LocationCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -305,7 +302,7 @@ private fun LocationCard(
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
@@ -315,9 +312,9 @@ private fun LocationCard(
                 fontWeight = FontWeight.Normal,
                 color = TextSecondary
             )
-            
+
             Spacer(modifier = Modifier.height(6.dp))
-            
+
             Row(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -412,7 +409,7 @@ private fun LocationCard(
                     onClick = {
                         // Add debugging to see what's happening
                         Log.d("LocationsScreen", "View Location clicked for: ${location.name}, hasStates=${location.states != null}")
-                        
+
                         // For all locations except India, open in Google Maps
                         if (!location.name.equals("India", ignoreCase = true)) {
                             // Open Google Maps with the redirection link if available
@@ -442,7 +439,7 @@ private fun LocationCard(
                     )
                 }
             }
-            
+
             if (location.hasFloorMap && location.mapFileName != null) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
@@ -482,7 +479,7 @@ private fun StateList(
     controller: LocationsController
 ) {
     val context = LocalContext.current
-    
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -491,15 +488,13 @@ private fun StateList(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-
-            
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Display ALL states from the API response without filtering
                 items(states) { state ->
                     val location = state.locations.firstOrNull() ?: return@items
-                    
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -523,7 +518,7 @@ private fun StateList(
                                     modifier = Modifier.size(45.dp)
                                 )
                             }
-                            
+
                             // Office details
                             Column(
                                 modifier = Modifier
@@ -537,9 +532,9 @@ private fun StateList(
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimary
                                 )
-                                
+
                                 Spacer(modifier = Modifier.height(4.dp))
-                                
+
                                 Text(
                                     text = location.address,
                                     fontSize = 15.sp,
@@ -549,7 +544,7 @@ private fun StateList(
                                     lineHeight = 20.sp
                                 )
                             }
-                            
+
                             // Right arrow
                             Icon(
                                 imageVector = Icons.Default.KeyboardArrowRight,
@@ -572,7 +567,7 @@ private fun LocationDetails(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
+
     Card(
         modifier = modifier.fillMaxWidth().padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBackground),
@@ -590,7 +585,7 @@ private fun LocationDetails(
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
@@ -600,9 +595,9 @@ private fun LocationDetails(
                 fontWeight = FontWeight.Medium,
                 color = Color.Gray
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -622,7 +617,7 @@ private fun LocationDetails(
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 // Add location icon in a circular red background
                 Box(
                     modifier = Modifier
@@ -659,10 +654,8 @@ private fun LocationDetails(
             )
 
             // Only show Contact Information section if any contact info is available
-            val hasContactInfo = location.email.isNotEmpty() || 
-                                (location.hrName != null && location.hrNumber != null) || 
-                                (location.adminName != null && location.adminNumber != null)
-                                
+            val hasContactInfo = location.email.isNotEmpty() || (location.hrName != null && location.hrNumber != null) || (location.adminName != null && location.adminNumber != null)
+
             if (hasContactInfo) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
@@ -670,11 +663,11 @@ private fun LocationDetails(
                     fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Gray,
+                    color = Color.Gray
                 )
 
                 Spacer(modifier = Modifier.height(3.dp))
-                
+
                 // Email
                 if (location.email.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -708,7 +701,7 @@ private fun LocationDetails(
                 }
 
                 Spacer(modifier = Modifier.height(3.dp))
-                
+
                 // ADMIN Contact - only show if both name and number are available
                 if (location.adminName != null && location.adminNumber != null) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -752,7 +745,7 @@ private fun LocationDetails(
                                     fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black,
+                                    color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -769,7 +762,7 @@ private fun LocationDetails(
                 }
 
                 Spacer(modifier = Modifier.height(3.dp))
-                
+
                 // HR Contact - only show if both name and number are available
                 if (location.hrName != null && location.hrNumber != null) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -813,7 +806,7 @@ private fun LocationDetails(
                                     fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black,
+                                    color = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -831,7 +824,7 @@ private fun LocationDetails(
             }
 
             Spacer(modifier = Modifier.height(3.dp))
-            
+
             // Floor Map Button
             if (location.hasFloorMap && location.mapFileName != null) {
                 Spacer(modifier = Modifier.height(24.dp))
@@ -884,7 +877,9 @@ private fun LocationList(
                 onClick = { onLocationClick(location) },
                 onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
                     { location.mapFileName?.let { mapFile -> onShowFloorMap(mapFile) } }
-                } else null
+                } else {
+                    null
+                }
             )
         }
     }

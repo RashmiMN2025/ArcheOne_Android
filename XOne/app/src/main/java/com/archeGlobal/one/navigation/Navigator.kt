@@ -66,11 +66,12 @@ interface Navigator {
     fun navigateToAboutUs()
     fun navigateToTodo()
     fun navigateToIdeaVault()
+
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?
     fun refreshCurrentScreen()
     fun popBackStack()
-    
+
     // Navigation method for greeting detail screen
     fun navigateToGreetingDetail(
         selectedGreetingUrl: String,

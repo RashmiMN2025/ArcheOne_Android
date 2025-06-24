@@ -19,4 +19,4 @@ data class HomeItem(
     val icon: String,
     val isFavorite: Boolean = false,
     val category: String = ""
-) 
+)

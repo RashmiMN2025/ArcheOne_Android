@@ -12,30 +12,26 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.style.TextAlign
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.controller.TravelController.TravelHistoryState
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelStatus
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -44,16 +40,16 @@ fun TravelHistoryScreen(
     controller: TravelController
 ) {
     val state = controller.travelHistoryState
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,    // Light Beige/Grey (0xFFE0DCD1)
+                        WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
                         WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                        WelcomeBackgroundBottom  // Dark Grey (0xFF474749)
+                        WelcomeBackgroundBottom // Dark Grey (0xFF474749)
                     )
                 )
             )
@@ -61,9 +57,9 @@ fun TravelHistoryScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             // Add space at the top to push everything down
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             TopAppBar(
-                title = { 
+                title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -89,10 +85,10 @@ fun TravelHistoryScreen(
                     Spacer(modifier = Modifier.width(48.dp))
                 }
             )
-            
+
             // Add more space after the TopAppBar
             Spacer(modifier = Modifier.height(20.dp))
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -150,7 +146,7 @@ fun TravelHistoryScreen(
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Order History", "Approval History")
-    
+
     Column(modifier = Modifier.fillMaxSize()) {
         // Tab Row
         TabRow(
@@ -166,7 +162,7 @@ fun TravelHistoryScreen(
                 )
             }
         }
-        
+
         // Tab Content
         when (selectedTabIndex) {
             0 -> TravelHistoryList(
@@ -239,36 +235,36 @@ fun TravelRequestCard(
                     style = MaterialTheme.typography.subtitle1,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 StatusTag(status = travelRequest.status)
             }
-            
+
             Divider(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())
-            
+
             // Project
             DetailItem(
                 icon = R.drawable.ic_work,
                 label = "Project",
                 value = travelRequest.project
             )
-            
+
             // Destination
             DetailItem(
                 icon = R.drawable.ic_location,
                 label = "Destination",
                 value = travelRequest.destination
             )
-            
+
             // Approver
             DetailItem(
                 icon = Icons.Default.Person,
                 label = "Approver",
                 value = travelRequest.approver
             )
-            
+
             // Add divider line before Created date
             Divider(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())
-            
+
             // Created date
             DetailItem(
                 icon = R.drawable.ic_calendar,
@@ -287,7 +283,7 @@ fun StatusTag(status: TravelStatus) {
         TravelStatus.REJECTED -> Triple(Color(0xFFFCE8E6), Color(0xFFEA4335), "Rejected")
         TravelStatus.PENDING -> Triple(Color(0xFFFEF7E0), Color(0xFFFBBC05), "Pending")
     }
-    
+
     Surface(
         color = backgroundColor,
         shape = RoundedCornerShape(16.dp),
@@ -321,17 +317,17 @@ fun DetailItem(
             tint = Color.Gray,
             modifier = Modifier.size(18.dp)
         )
-        
+
         Spacer(modifier = Modifier.width(12.dp))
-        
+
         Text(
             text = label,
             style = MaterialTheme.typography.body2,
             color = Color.Gray
         )
-        
+
         Spacer(modifier = Modifier.weight(1f))
-        
+
         Text(
             text = value,
             style = MaterialTheme.typography.body2,
@@ -358,17 +354,17 @@ fun DetailItem(
             tint = Color.Gray,
             modifier = Modifier.size(18.dp)
         )
-        
+
         Spacer(modifier = Modifier.width(12.dp))
-        
+
         Text(
             text = label,
             style = MaterialTheme.typography.body2,
             color = Color.Gray
         )
-        
+
         Spacer(modifier = Modifier.weight(1f))
-        
+
         Text(
             text = value,
             style = MaterialTheme.typography.body2,

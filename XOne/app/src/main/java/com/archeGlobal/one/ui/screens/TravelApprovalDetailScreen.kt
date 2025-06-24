@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,30 +10,28 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.ui.theme.PrimaryRed
-import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelStatus
-import com.archeGlobal.one.ui.theme.*
-import android.content.Intent
-import androidx.compose.ui.platform.LocalContext
-import com.google.gson.Gson
 import com.archeGlobal.one.ui.activities.TravelApproveActivity
 import com.archeGlobal.one.ui.activities.TravelRejectActivity
+import com.archeGlobal.one.ui.theme.*
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.PrimaryRed
+import com.google.gson.Gson
+import kotlinx.coroutines.delay
 
 /**
  * Screen for approving or rejecting a travel request with detailed view
@@ -48,14 +47,14 @@ fun TravelApprovalDetailScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
-    
+
     // State for showing approval or rejection UI inline
     var showApprovalUI by remember { mutableStateOf(false) }
     var showRejectionUI by remember { mutableStateOf(false) }
-    
+
     // Observe the approval action state from the controller
     val approvalActionState = controller.approvalActionState
-    
+
     // Handle approval action state changes
     LaunchedEffect(approvalActionState) {
         when (approvalActionState) {
@@ -87,7 +86,7 @@ fun TravelApprovalDetailScreen(
             }
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -122,7 +121,7 @@ fun TravelApprovalDetailScreen(
         ) {
             // Top App Bar
             TopAppBar(
-                title = { 
+                title = {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Approve Travel Request",
@@ -145,7 +144,7 @@ fun TravelApprovalDetailScreen(
                     }
                 }
             )
-            
+
             // Main content
             if (selectedRequest != null) {
                 Column(
@@ -180,10 +179,10 @@ fun TravelApprovalDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp
                                 )
-                                
+
                                 StatusBadge(status = selectedRequest.status)
                             }
-                            
+
                             Divider(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -191,7 +190,7 @@ fun TravelApprovalDetailScreen(
                                 thickness = 1.dp,
                                 color = Color.LightGray
                             )
-                            
+
                             // Request details
                             DetailRow("Employee", selectedRequest.approver)
                             DetailRow("Mobile", selectedRequest.businessJustification ?: "N/A") // Using justification as mobile for demo
@@ -203,7 +202,7 @@ fun TravelApprovalDetailScreen(
                             DetailRow("Mode of Transport", selectedRequest.modeOfTransport ?: "N/A")
                         }
                     }
-                    
+
                     // Remarks input field
                     if (selectedRequest.status == TravelStatus.PENDING) {
                         OutlinedTextField(
@@ -216,7 +215,7 @@ fun TravelApprovalDetailScreen(
                             label = { Text("Enter remark (optional)") },
                             placeholder = { Text("Enter remark (optional)") }
                         )
-                        
+
                         // Error message display
                         errorMessage?.let {
                             Text(
@@ -225,7 +224,7 @@ fun TravelApprovalDetailScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                        
+
                         // Success message display
                         successMessage?.let {
                             Text(
@@ -234,7 +233,7 @@ fun TravelApprovalDetailScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                        
+
                         // Approve button
                         Button(
                             onClick = {
@@ -270,9 +269,9 @@ fun TravelApprovalDetailScreen(
                                 )
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Reject button
                         OutlinedButton(
                             onClick = {
@@ -340,7 +339,7 @@ private fun StatusBadge(status: TravelStatus) {
         TravelStatus.REJECTED -> PrimaryRed to Color.White // Red
         TravelStatus.PENDING -> Color(0xFFFFCC00) to Color.Black // Yellow
     }
-    
+
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -393,12 +392,12 @@ private fun String.capitalize(): String {
  */
 private fun formatDate(dateString: String?): String {
     if (dateString.isNullOrBlank()) return "N/A"
-    
+
     try {
         // Parse the input date string (assuming it's in a standard format like yyyy-MM-dd)
         val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
         val date = inputFormat.parse(dateString)
-        
+
         // Format to the desired output format
         val outputFormat = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.US)
         return date?.let { outputFormat.format(it) } ?: "N/A"

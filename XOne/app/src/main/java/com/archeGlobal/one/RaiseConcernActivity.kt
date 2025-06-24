@@ -8,11 +8,11 @@ import com.archeGlobal.one.ui.screens.RaiseConcernScreen
 class RaiseConcernActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         setContent {
             RaiseConcernScreen(
                 onBackPressed = { finish() }
             )
         }
     }
-} 
+}
