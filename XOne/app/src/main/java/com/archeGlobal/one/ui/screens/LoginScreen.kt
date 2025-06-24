@@ -193,7 +193,7 @@ fun LoginScreen(
                 text = "Log in with",
                 fontSize = 18.sp,
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Normal,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -876,7 +876,7 @@ fun LoginScreen(
                             color = Color(0xFFDD3825),
                             textDecoration = TextDecoration.Underline,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 14.sp
                         ),
                         start = start,
@@ -934,7 +934,7 @@ fun LoginScreen(
                 color = Color.Black,
                 fontSize = 16.sp,
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Normal,
                 modifier = Modifier
                     .padding(top = 16.dp)
                     .clickable {
@@ -957,7 +957,7 @@ fun LoginScreen(
                     color = Color.Black,
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Normal,
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
@@ -984,7 +984,7 @@ fun LoginScreen(
                     color = Color.Black,
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Normal,
                     modifier = Modifier
                         .weight(1f)
                         .clickable {

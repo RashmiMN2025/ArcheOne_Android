@@ -176,7 +176,7 @@ fun UserDocumentsScreen(
                     }
                     
                     // Always show all three document types
-                    val requiredDocs = listOf("ID Card", "PAN Card", "Medical Insurance")
+                    val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance")
                     
                     // Create a map of existing documents by name
                     val docMap = documents.associateBy { it.document_name }
