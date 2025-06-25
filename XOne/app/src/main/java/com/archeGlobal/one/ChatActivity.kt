@@ -39,11 +39,15 @@ class ChatActivity : ComponentActivity() {
 
                 Scaffold(
                     bottomBar = {
+                        val sharedPref = getSharedPreferences("event_preferences", android.content.Context.MODE_PRIVATE)
+                        val isUsingPrideIcon = sharedPref.getBoolean("using_pride_icon", false)
+
                         ChatBottomNavigationBar(
                             onHomeClick = { navigator.navigateToHome() },
                             onChatClick = { /* Already on Chat screen */ },
                             onSOSClick = { navigator.navigateToSOS(true) },
-                            onProfileClick = { navigator.navigateToProfile() }
+                            onProfileClick = { navigator.navigateToProfile() },
+                            isUsingPrideIcon = isUsingPrideIcon
                         )
                     }
                 ) { paddingValues ->

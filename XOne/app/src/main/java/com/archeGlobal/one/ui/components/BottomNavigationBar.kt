@@ -63,14 +63,14 @@ fun BottomNavigationBar(
                 ) {
                     val homeIconRes = when {
                         isUsingPrideIcon && model.showHome -> R.drawable.homepride
-                        isUsingPrideIcon -> R.drawable.archepride
+                        isUsingPrideIcon -> R.drawable.homepride
                         else -> R.drawable.arche_black2
                     }
                     Image(
                         painter = painterResource(id = homeIconRes),
                         contentDescription = "Home",
                         modifier = Modifier.size(20.dp),
-                        colorFilter = if (isUsingPrideIcon && model.showHome) null else androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
+                        colorFilter = if (isUsingPrideIcon) null else androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(

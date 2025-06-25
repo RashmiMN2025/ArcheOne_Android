@@ -210,11 +210,16 @@ fun ChatScreen(
 
                 // Bottom navigation
                 if (showBottomBar) {
+                    val context = LocalContext.current
+                    val sharedPref = context.getSharedPreferences("event_preferences", android.content.Context.MODE_PRIVATE)
+                    val isUsingPrideIcon = sharedPref.getBoolean("using_pride_icon", false)
+
                     ChatBottomNavigationBar(
                         onHomeClick = { navController.navigate("home") },
                         onChatClick = { /* Already on Chat screen */ },
                         onSOSClick = { navController.navigate("sos") },
-                        onProfileClick = { navController.navigate("profile") }
+                        onProfileClick = { navController.navigate("profile") },
+                        isUsingPrideIcon = isUsingPrideIcon
                     )
                 }
             }
