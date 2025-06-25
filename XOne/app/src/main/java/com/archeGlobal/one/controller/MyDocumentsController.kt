@@ -166,6 +166,8 @@ class MyDocumentsController(private val context: Context) {
         }
 
         if (rawFilePath.isNullOrEmpty()) {
+            // Show toast message when no document is found
+            android.widget.Toast.makeText(context, "No document found for $documentName. Please upload document for the same.", android.widget.Toast.LENGTH_SHORT).show()
             errorMessage.postValue("No document found for $documentName. Please upload document first.")
             Log.w("MyDocumentsController", "onViewClick: No file path found for document: $documentName")
             return

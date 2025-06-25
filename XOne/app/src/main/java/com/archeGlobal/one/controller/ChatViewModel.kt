@@ -182,7 +182,7 @@ class ChatViewModel : ViewModel() {
                 // Original logic for single word queries
                 if (relatedFAQs.size > 2) {
                     val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
-                    relatedFAQs.take(5).forEach { faq ->
+                    relatedFAQs.take(8).forEach { faq ->
                         faqList.append("• ${faq.question}\n")
                     }
                     return Pair(faqList.toString(), false)
@@ -202,7 +202,7 @@ class ChatViewModel : ViewModel() {
                 } else {
                     // If there are multiple high-quality matches, show them as options
                     val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
-                    highQualityMatches.take(5).forEach { faq ->
+                    highQualityMatches.take(8).forEach { faq ->
                         faqList.append("• ${faq.question}\n")
                     }
                     return Pair(faqList.toString(), false)
@@ -213,8 +213,8 @@ class ChatViewModel : ViewModel() {
             if (relatedFAQs.size > 2) {
                 val faqList = StringBuilder("I found multiple relevant questions. Please select one to see its answer:\n")
 
-                // Take at most 5 FAQs to avoid overcrowding
-                relatedFAQs.take(5).forEach { faq ->
+                // Take at most 8 FAQs to match iOS behavior
+                relatedFAQs.take(8).forEach { faq ->
                     faqList.append("• ${faq.question}\n")
                 }
 

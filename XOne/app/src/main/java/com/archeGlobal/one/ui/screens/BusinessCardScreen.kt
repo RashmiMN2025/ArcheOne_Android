@@ -372,14 +372,14 @@ fun BusinessCardScreen(
                             // Top quote
                             Text(
                                 text = "This could be the start of something great.",
-                                fontSize = 13.5.sp,
+                                fontSize = 12.5.sp,
                                 fontFamily = FontFamily(Font(R.font.canela_regular)),
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
                                 maxLines = 1,
                                 modifier = Modifier
-                                    .padding(horizontal = 1.dp)
+                                    .padding(horizontal = 0.dp)
                                     .padding(top = 20.dp)
                             )
 

@@ -244,7 +244,7 @@ fun TravelScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray,
                             focusedBorderColor = Color.Gray,
-                            cursorColor = Color.Transparent,
+                            cursorColor = Color.Black,
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
@@ -266,7 +266,7 @@ fun TravelScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray,
                             focusedBorderColor = Color.Gray,
-                            cursorColor = Color.Transparent,
+                            cursorColor = Color.Black,
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
@@ -289,7 +289,7 @@ fun TravelScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray,
                             focusedBorderColor = Color.Gray,
-                            cursorColor = Color.Transparent,
+                            cursorColor = Color.Black,
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
@@ -313,7 +313,7 @@ fun TravelScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = Color.LightGray,
                                 focusedBorderColor = Color.Gray,
-                                cursorColor = Color.Transparent,
+                                cursorColor = Color.Black,
                                 unfocusedContainerColor = Color(0xFFF5F5F5),
                                 focusedContainerColor = Color.White,
                                 unfocusedTextColor = Color.Black,
@@ -379,7 +379,7 @@ fun TravelScreen(
                                     colors = OutlinedTextFieldDefaults.colors(
                                         unfocusedBorderColor = Color.LightGray,
                                         focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Transparent,
+                                        cursorColor = Color.Black,
                                         unfocusedContainerColor = Color.White,
                                         focusedContainerColor = Color.White,
                                         unfocusedTextColor = Color.Black,
@@ -459,7 +459,7 @@ fun TravelScreen(
                                     colors = OutlinedTextFieldDefaults.colors(
                                         unfocusedBorderColor = Color.LightGray,
                                         focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Transparent,
+                                        cursorColor = Color.Black,
                                         unfocusedContainerColor = Color.White,
                                         focusedContainerColor = Color.White,
                                         unfocusedTextColor = Color.Black,
@@ -539,7 +539,7 @@ fun TravelScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.Gray,
-                                    cursorColor = Color.Transparent,
+                                    cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
@@ -588,7 +588,7 @@ fun TravelScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.Gray,
-                                    cursorColor = Color.Transparent,
+                                    cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
@@ -660,7 +660,7 @@ fun TravelScreen(
                                         colors = OutlinedTextFieldDefaults.colors(
                                             unfocusedBorderColor = Color.LightGray,
                                             focusedBorderColor = Color.Gray,
-                                            cursorColor = Color.Transparent,
+                                            cursorColor = Color.Black,
                                             unfocusedContainerColor = Color(0xFFF5F5F5),
                                             focusedContainerColor = Color.White,
                                             unfocusedTextColor = Color.Black,
@@ -727,7 +727,7 @@ fun TravelScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.Gray,
-                                    cursorColor = Color.Transparent,
+                                    cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
