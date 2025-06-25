@@ -1,4 +1,5 @@
 package com.archeGlobal.one.ui.screens
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
@@ -85,6 +86,9 @@ import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.FeedbackRequest
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.utils.UserDataManager
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 
 @Composable
 fun ProfileHeader(
@@ -222,8 +226,9 @@ fun ProfileHeader(
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun HomeScreen(
+fun ResponsiveHomeScreen(
     model: HomeModel,
     employeeData: AboutMeModel,
     onItemClick: (HomeItem) -> Unit,
@@ -242,6 +247,61 @@ fun HomeScreen(
     eventData: EventResponse? = null,
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val windowSizeClass = calculateWindowSizeClass(activity ?: return)
+    val columns = when (windowSizeClass.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 3 // Phone portrait
+        WindowWidthSizeClass.Medium -> 5  // Large phone/Small tablet
+        WindowWidthSizeClass.Expanded -> 6 // Tablet landscape
+        else -> 3
+    }
+
+    HomeScreenContent(
+        model = model,
+        employeeData = employeeData,
+        onItemClick = onItemClick,
+        onAllAppsClick = onAllAppsClick,
+        onFavoritesClick = onFavoritesClick,
+        onShowProfileClick = onShowProfileClick,
+        onToggleFavorite = onToggleFavorite,
+        onFooterHomeClick = onFooterHomeClick,
+        onFooterChatClick = onFooterChatClick,
+        onFooterSOSClick = onFooterSOSClick,
+        onFooterProfileClick = onFooterProfileClick,
+        onXCardClick = onXCardClick,
+        isAuthenticating = isAuthenticating,
+        onRefresh = onRefresh,
+        controller = controller,
+        eventData = eventData,
+        showEventPopup = showEventPopup,
+        onDismissEventPopup = onDismissEventPopup,
+        columns = columns // Pass the column count
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    model: HomeModel,
+    employeeData: AboutMeModel,
+    onItemClick: (HomeItem) -> Unit,
+    onAllAppsClick: () -> Unit,
+    onFavoritesClick: () -> Unit,
+    onShowProfileClick: () -> Unit,
+    onToggleFavorite: (HomeItem) -> Unit,
+    onFooterHomeClick: () -> Unit,
+    onFooterChatClick: () -> Unit,
+    onFooterSOSClick: () -> Unit,
+    onFooterProfileClick: () -> Unit,
+    onXCardClick: () -> Unit,
+    isAuthenticating: Boolean = false,
+    onRefresh: () -> Unit = {},
+    controller: HomeController,
+    eventData: EventResponse? = null,
+    showEventPopup: Boolean = false,
+    onDismissEventPopup: () -> Unit = {},
+    columns: Int = 3 // Default to 3 for phones
 ) {
     // Get the user data manager to access preferences
     val userDataManager = UserDataManager.getInstance(LocalContext.current)
@@ -746,7 +806,7 @@ fun HomeScreen(
                                         )
                                     }
 
-                                    items(items.chunked(3)) { rowItems ->
+                                    items(items.chunked(columns)) { rowItems ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -767,7 +827,7 @@ fun HomeScreen(
                                                     }
                                                 )
                                             }
-                                            repeat(3 - rowItems.size) {
+                                            repeat(columns - rowItems.size) {
                                                 Spacer(modifier = Modifier.weight(1f))
                                             }
                                         }
@@ -799,7 +859,7 @@ fun HomeScreen(
                                             )
                                         }
 
-                                        items(items.chunked(3)) { rowItems ->
+                                        items(items.chunked(columns)) { rowItems ->
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -820,7 +880,7 @@ fun HomeScreen(
                                                         }
                                                     )
                                                 }
-                                                repeat(3 - rowItems.size) {
+                                                repeat(columns - rowItems.size) {
                                                     Spacer(modifier = Modifier.weight(1f))
                                                 }
                                             }
@@ -872,8 +932,9 @@ fun HomeScreen(
 
                         Card(
                             modifier = Modifier
-                                .size(itemSize * scaleFactor),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                                .width(115.dp)           // Set fixed width
+                                .height(115.dp),        // Set fixed height
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -881,39 +942,24 @@ fun HomeScreen(
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(8.dp),
+                                        .padding(4.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.SpaceBetween
+                                    verticalArrangement = Arrangement.Center
                                 ) {
-                                    Spacer(modifier = Modifier.height(2.dp))
-
-                                    // Icon at the top - slightly larger
-                                    AppIcon(title = selectedApp!!.title, modifier = Modifier.size(46.dp))
-
-                                    // Text at the bottom with more space
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(min = 30.dp)
-                                    ) {
-                                        Text(
-                                            text = formattedTitle,
-                                            color = Color.Black,
-                                            fontSize = 10.sp, // Keep same as original
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Center,
-                                            maxLines = 2,
-                                            lineHeight = 13.sp,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 4.dp, vertical = 1.dp)
-                                                .align(Alignment.Center)
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.height(2.dp))
+                                    AppIcon(title = selectedApp!!.title, modifier = Modifier.size(50.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = formattedTitle,
+                                        fontSize = 12.sp,
+                                        color = Color.Black,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        lineHeight = 14.sp,
+                                        overflow = TextOverflow.Visible,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 }
                             }
                         }
@@ -1260,14 +1306,15 @@ private fun AppItem(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 // Icon at the top
                 AppIcon(title = title, modifier = Modifier.size(50.dp))
 
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                         text = formattedTitle,
@@ -1278,7 +1325,8 @@ private fun AppItem(
                         textAlign = TextAlign.Center,
                         maxLines = 2,
                         lineHeight = 14.sp,
-                        overflow = TextOverflow.Visible, // Changed from Ellipsis to make sure text is visible
+                        overflow = TextOverflow.Visible,
+                        modifier = Modifier.fillMaxWidth() 
                 )
             }
         }

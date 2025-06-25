@@ -13,12 +13,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,8 +40,6 @@ import com.archeGlobal.one.utils.BiometricHelper
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
-import android.content.DialogInterface
-import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.navigation.AndroidNavigator
 
 class HomeActivity : AppCompatActivity() {
@@ -311,8 +303,8 @@ class HomeActivity : AppCompatActivity() {
                         } else {
                             Log.d("HomeActivity", "No event data available to display")
                         }
-                        
-                        HomeScreen(
+
+                        ResponsiveHomeScreen(
                             model = controller.model,
                             employeeData = controller.employeeData,
                             onItemClick = controller::onItemClick,
@@ -332,6 +324,8 @@ class HomeActivity : AppCompatActivity() {
                             eventData = eventData,
                             showEventPopup = showEventPopup,
                             onDismissEventPopup = controller::dismissEventPopup
+
+
                         )
 
                     }

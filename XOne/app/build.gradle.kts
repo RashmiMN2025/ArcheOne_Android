@@ -16,7 +16,6 @@ android {
         targetSdk = 35
         versionCode = 5
         versionName = "1.3"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters += listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -62,6 +61,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.material3.window.size)
     // AndroidX Core and Lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -82,7 +82,7 @@ dependencies {
     implementation(libs.ui.graphics)
 
     // Material Design
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.material.icons.extended)
     implementation(libs.material)
     // Compose Material (Material Design 2) for components like Card, Scaffold, etc.
     implementation(libs.androidx.material)

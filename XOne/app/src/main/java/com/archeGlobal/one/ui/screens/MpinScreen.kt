@@ -41,6 +41,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ResponsiveMpinScreen(
+    isReset: Boolean,
+    onMpinSet: (String, List<SecurityQuestion>) -> Unit,
+    onForgotMpin: () -> Unit
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val contentPadding = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 16.dp   // Phone
+        WindowWidthSizeClass.Medium -> 48.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 120.dp // Tablet
+        else -> 16.dp
+    }
+    MpinScreen(
+        isReset = isReset,
+        onMpinSet = onMpinSet,
+        onForgotMpin = onForgotMpin,
+        contentPadding = contentPadding
+    )
+}
 
 private val securityQuestionsList = listOf(
     "What is the name of your first school?",
@@ -57,6 +87,7 @@ private val securityQuestionsList = listOf(
 fun MpinScreen(
     isReset: Boolean,
     onMpinSet: (String, List<SecurityQuestion>) -> Unit,
+    contentPadding: Dp = 16.dp,
     onForgotMpin: () -> Unit
 ) {
     // State
@@ -105,6 +136,7 @@ fun MpinScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(archeGradient)
+            .padding(horizontal = contentPadding)
     ) {
         Column(
             modifier = Modifier

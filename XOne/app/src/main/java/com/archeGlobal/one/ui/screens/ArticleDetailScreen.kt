@@ -25,11 +25,12 @@ import coil.request.ImageRequest
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.SocialArticle
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.platform.LocalContext
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ArticleDetailScreen(
     article: SocialArticle,
@@ -37,6 +38,16 @@ fun ArticleDetailScreen(
     onBackPressed: () -> Unit,
     onReadMore: () -> Unit
 ) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val imageHeight = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 250.dp
+        WindowWidthSizeClass.Medium -> 350.dp
+        WindowWidthSizeClass.Expanded -> 420.dp
+        else -> 250.dp
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -85,8 +96,9 @@ fun ArticleDetailScreen(
                 contentDescription = article.title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp),
+                    .height(imageHeight),
                 contentScale = ContentScale.Crop,
+                alignment = Alignment.TopCenter,
                 error = painterResource(id = R.drawable.ic_image_placeholder),
                 placeholder = painterResource(id = R.drawable.ic_image_placeholder)
             )

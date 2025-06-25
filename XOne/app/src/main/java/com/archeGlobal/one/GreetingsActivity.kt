@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.GreetingsController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.GreetingsScreen
+import com.archeGlobal.one.ui.screens.ResponsiveGreetingsScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 class GreetingsActivity : ComponentActivity() {
@@ -16,7 +17,7 @@ class GreetingsActivity : ComponentActivity() {
         controller = GreetingsController(this, AndroidNavigator(this))
         setContent {
             XOneTheme {
-                GreetingsScreen(
+                ResponsiveGreetingsScreen(
                     controller = controller,
                     onBackPressed = { finish() }
                 )

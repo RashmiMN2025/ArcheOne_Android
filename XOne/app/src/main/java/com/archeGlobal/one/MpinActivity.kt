@@ -3,7 +3,6 @@ package com.archeGlobal.one.ui.screens
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.archeGlobal.one.model.SecurityQuestion
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 class MpinActivity : ComponentActivity() {
@@ -16,7 +15,7 @@ class MpinActivity : ComponentActivity() {
         val token = intent.getStringExtra("token") ?: ""
         setContent {
             XOneTheme {
-                MpinScreen(
+                ResponsiveMpinScreen(
                     isReset = isReset,
                     onMpinSet = { mpin, questions ->
                         com.archeGlobal.one.utils.MpinManager.saveMpin(this, mpin)

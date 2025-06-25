@@ -185,12 +185,14 @@
         <!-- Add ImageViewerActivity -->
         <activity
             android:name=".ImageViewerActivity"
+            android:screenOrientation="portrait"
             android:exported="false"
             android:theme="@style/Theme.XOne" />
             
         <!-- Pride Month Test Activity -->
         <activity
             android:name=".PrideMonthTestActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:label="Pride Month Test"
             android:theme="@style/Theme.XOne" />
@@ -221,18 +223,21 @@
 
         <activity
             android:name=".ui.screens.CoreValuesActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:label="Core value"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".VisionActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:label="Vision"
             android:theme="@style/Theme.XOne"  />
 
         <activity
             android:name=".ui.screens.IdeaVaultActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:label="idea_vault"
             android:theme="@style/Theme.XOne"/>
