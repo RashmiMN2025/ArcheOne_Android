@@ -175,24 +175,27 @@ class ChatData private constructor() {
     fun searchFAQs(query: String): List<FAQItem> {
         val keywords = query.lowercase().trim()
         val results = mutableSetOf<FAQItem>()
-        
+
         // Search in main FAQs - exact match like iOS
-        results.addAll(faqs.filter { faq ->
-            faq.question.lowercase().contains(keywords) ||
-            faq.answer.lowercase().contains(keywords)
-        })
-        
+        results.addAll(
+            faqs.filter { faq ->
+                faq.question.lowercase().contains(keywords) ||
+                    faq.answer.lowercase().contains(keywords)
+            }
+        )
+
         // Search in keyword mappings - exact match like iOS
         for ((keywordGroup, items) in keywordMappings) {
             val keywordArray = keywordGroup.split(",").map { it.trim().lowercase() }
-            
+
             if (keywordArray.any { keyword ->
                 keyword.contains(keywords) || keywords.contains(keyword)
-            }) {
+            }
+            ) {
                 results.addAll(items)
             }
         }
-        
+
         return results.toList()
     }
 }

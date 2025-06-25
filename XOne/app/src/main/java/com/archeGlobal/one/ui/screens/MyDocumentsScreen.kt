@@ -151,7 +151,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
     LaunchedEffect(personalDocs, professionalDocs) {
         val hasPersonalDocs = personalDocs.isNotEmpty()
         val hasProfessionalDocs = professionalDocs.isNotEmpty()
-        
+
         if (!hasPersonalDocs && !hasProfessionalDocs && !isLoading) {
             Toast.makeText(context, "No documents found", Toast.LENGTH_SHORT).show()
         }
