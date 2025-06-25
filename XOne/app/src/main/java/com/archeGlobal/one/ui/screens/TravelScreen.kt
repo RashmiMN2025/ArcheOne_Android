@@ -237,7 +237,7 @@ fun TravelScreen(
                     OutlinedTextField(
                         value = controller.destination,
                         onValueChange = { controller.updateDestination(it) },
-                        label = { Text("Travel Destination") },
+                        placeholder = { Text("Travel Destination", color = Color.Gray, fontWeight = FontWeight.Medium) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
@@ -248,7 +248,9 @@ fun TravelScreen(
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
@@ -257,7 +259,7 @@ fun TravelScreen(
                     OutlinedTextField(
                         value = controller.projectName,
                         onValueChange = { controller.updateProjectName(it) },
-                        label = { Text("Project Name") },
+                        placeholder = { Text("Project Name", color = Color.Gray, fontWeight = FontWeight.Medium) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
@@ -268,7 +270,9 @@ fun TravelScreen(
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
@@ -277,7 +281,7 @@ fun TravelScreen(
                     OutlinedTextField(
                         value = controller.businessJustification,
                         onValueChange = { controller.updateBusinessJustification(it) },
-                        label = { Text("Business Justification") },
+                        placeholder = { Text("Business Justification", color = Color.Gray, fontWeight = FontWeight.Medium) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)
@@ -289,7 +293,9 @@ fun TravelScreen(
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
@@ -299,7 +305,7 @@ fun TravelScreen(
                         OutlinedTextField(
                             value = controller.modeOfTransport,
                             onValueChange = { },
-                            label = { Text("Mode of Transport") },
+                            placeholder = { Text("Mode of Transport", color = Color.Gray, fontWeight = FontWeight.Medium) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp)
@@ -537,7 +543,9 @@ fun TravelScreen(
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black
+                                    focusedTextColor = Color.Black,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 trailingIcon = {
@@ -584,7 +592,9 @@ fun TravelScreen(
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black
+                                    focusedTextColor = Color.Black,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 trailingIcon = {
@@ -642,22 +652,24 @@ fun TravelScreen(
                                 onDismissRequest = { controller.dismissFrequentFlyerNumberDialog() },
                                 title = { Text(text = "Enter Frequent Flyer Number") },
                                 text = {
-                                    OutlinedTextField(
-                                        value = controller.frequentFlyerNumber,
-                                        onValueChange = { controller.updateFrequentFlyerNumber(it) },
-                                        label = { Text("Frequent Flyer Number") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.Gray,
-                                            cursorColor = Color.Transparent,
-                                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                                            focusedContainerColor = Color.White,
-                                            unfocusedTextColor = Color.Black,
-                                            focusedTextColor = Color.Black
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
+                                                                    OutlinedTextField(
+                                    value = controller.frequentFlyerNumber,
+                                    onValueChange = { controller.updateFrequentFlyerNumber(it) },
+                                    label = { Text("Frequent Flyer Number") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.Gray,
+                                        cursorColor = Color.Transparent,
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedContainerColor = Color.White,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedLabelColor = Color.Gray,
+                                        focusedLabelColor = Color.Gray
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
                                 },
                                 confirmButton = {
                                     Button(
@@ -719,7 +731,9 @@ fun TravelScreen(
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black
+                                    focusedTextColor = Color.Black,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 trailingIcon = {
