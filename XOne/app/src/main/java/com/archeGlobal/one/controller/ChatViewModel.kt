@@ -20,7 +20,7 @@ class ChatViewModel : ViewModel() {
     val inputText = mutableStateOf("")
     val isTyping = mutableStateOf(false)
     private var lastUserQuestion: String = ""
-    
+
     // Define the FAQ message as a constant to ensure exact matching
     private val FAQ_MESSAGE = "I'm not sure about that. Could you please rephrase your question? If you have any issues, you can refer to the frequently asked questions below."
 
@@ -54,7 +54,7 @@ class ChatViewModel : ViewModel() {
 
             // Process the message and get a response with FAQ flag
             val (response, shouldShowFAQs) = processMessageWithFAQFlag(text)
-            
+
             if (shouldShowFAQs) {
                 // Send two separate messages: one for text, one for FAQ categories
                 addBotMessage(response, showFAQs = false, includeUserQuestion = false)
@@ -130,7 +130,7 @@ class ChatViewModel : ViewModel() {
 
         // Count words in the query
         val queryWords = text.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
-        
+
         // If query has 2-4 words, treat it like random text (skip all FAQ logic)
         if (queryWords.size in 2..4) {
             return Pair(FAQ_MESSAGE, true)
@@ -147,7 +147,7 @@ class ChatViewModel : ViewModel() {
                 // If there's an exact match, return the answer directly
                 return Pair(exactMatch.answer, false)
             }
-            
+
             // Check if we have 5+ words matching overall
             val overallMatchingWords = relatedFAQs.maxOfOrNull { faq ->
                 val questionWords = faq.question.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
@@ -161,7 +161,7 @@ class ChatViewModel : ViewModel() {
                 }
                 matchingWordsCount
             } ?: 0
-            
+
             // Check for high-quality matches (when 5+ words match)
             val highQualityMatches = relatedFAQs.filter { faq ->
                 val questionWords = faq.question.lowercase().split(Regex("\\s+")).filter { it.length > 2 }
@@ -219,8 +219,8 @@ class ChatViewModel : ViewModel() {
                 }
 
                 return Pair(faqList.toString(), false)
-            } 
-            
+            }
+
             // If there is exactly 1 or 2 related FAQs, show the question(s) with their answer(s)
             // Add proper spacing (two blank lines) between question and answer
             val response = relatedFAQs.joinToString("\n\n") { faq ->

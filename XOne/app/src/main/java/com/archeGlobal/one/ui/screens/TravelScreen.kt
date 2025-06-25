@@ -652,24 +652,24 @@ fun TravelScreen(
                                 onDismissRequest = { controller.dismissFrequentFlyerNumberDialog() },
                                 title = { Text(text = "Enter Frequent Flyer Number") },
                                 text = {
-                                                                    OutlinedTextField(
-                                    value = controller.frequentFlyerNumber,
-                                    onValueChange = { controller.updateFrequentFlyerNumber(it) },
-                                    label = { Text("Frequent Flyer Number") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Transparent,
-                                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                                        focusedContainerColor = Color.White,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedLabelColor = Color.Gray,
-                                        focusedLabelColor = Color.Gray
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
+                                    OutlinedTextField(
+                                        value = controller.frequentFlyerNumber,
+                                        onValueChange = { controller.updateFrequentFlyerNumber(it) },
+                                        label = { Text("Frequent Flyer Number") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color.LightGray,
+                                            focusedBorderColor = Color.Gray,
+                                            cursorColor = Color.Transparent,
+                                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                                            focusedContainerColor = Color.White,
+                                            unfocusedTextColor = Color.Black,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedLabelColor = Color.Gray,
+                                            focusedLabelColor = Color.Gray
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
                                 },
                                 confirmButton = {
                                     Button(
