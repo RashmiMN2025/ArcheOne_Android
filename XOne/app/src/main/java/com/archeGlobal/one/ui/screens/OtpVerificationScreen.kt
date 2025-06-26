@@ -10,9 +10,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -126,7 +123,8 @@ fun OtpVerificationScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(32.dp, 16.dp, 32.dp, 32.dp)
+                    .padding(32.dp, 16.dp, 32.dp, 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Enter the 6-digit OTP sent to your registered email",

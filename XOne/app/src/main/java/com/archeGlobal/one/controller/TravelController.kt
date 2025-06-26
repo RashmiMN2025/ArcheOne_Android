@@ -98,7 +98,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
     var reportingManagerName by mutableStateOf("")
         private set
-    var reportingManagerEmail by mutableStateOf("biswajit.d@arche.global")
+    var reportingManagerEmail by mutableStateOf("")
         private set
     var employeeEmail by mutableStateOf("")
         private set
@@ -200,7 +200,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Get reporting manager name and other details from user details if available
             user.userDetails?.let { details ->
                 reportingManagerName = details.reporting_manager
-                reportingManagerEmail = details.reporting_manager_mail.ifEmpty { "biswajit.d@arche.global" }
+                reportingManagerEmail = details.reporting_manager_mail
                 dateOfBirth = details.date_of_birth
                 aadharNumber = details.aadhar_number
                 employeeGrade = details.grade.ifEmpty { "N/A" }
