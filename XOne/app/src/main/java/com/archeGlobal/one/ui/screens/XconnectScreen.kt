@@ -3,6 +3,9 @@ package com.archeGlobal.one.ui.screens
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -12,6 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,14 +43,6 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.SocialController
 import com.archeGlobal.one.model.SocialArticle
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -59,7 +57,7 @@ fun ResponsiveArticleGrid(
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val columns = when (windowSizeClass?.widthSizeClass) {
         WindowWidthSizeClass.Compact -> 2 // Phone: single column
-        WindowWidthSizeClass.Medium -> 3  // Large phone/small tablet
+        WindowWidthSizeClass.Medium -> 3 // Large phone/small tablet
         WindowWidthSizeClass.Expanded -> 4 // Tablet: 3 columns
         else -> 2
     }

@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.PolicyController
 import com.archeGlobal.one.navigation.AndroidNavigator
-import com.archeGlobal.one.ui.screens.PolicyScreen
 import com.archeGlobal.one.ui.screens.ResponsivePolicyScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 

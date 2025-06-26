@@ -461,6 +461,19 @@ class TravelController(private val navigator: Navigator, private val context: Co
     }
 
     /**
+     * Check if there is any travel approval history
+     * @return True if there is approval history, false otherwise
+     */
+    fun hasApprovalHistory(): Boolean {
+        val currentState = travelHistoryState
+        return if (currentState is TravelHistoryState.Success) {
+            currentState.approvalItems.isNotEmpty()
+        } else {
+            false
+        }
+    }
+
+    /**
      * Load travel approval requests from the API
      */
     fun loadTravelApprovals() {

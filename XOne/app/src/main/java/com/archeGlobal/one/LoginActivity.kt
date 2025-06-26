@@ -1,9 +1,9 @@
 package com.archeGlobal.one
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ResponsiveLoginScreen
@@ -33,7 +33,7 @@ class LoginActivity : AppCompatActivity() {
         setContent {
             XOneTheme {
                 ResponsiveLoginScreen(
-                    controller = loginController, 
+                    controller = loginController,
                     navigator = navigator,
                     forceOriginalLogin = forceOriginalLogin,
                     forceDifferentUserMode = forceDifferentUserMode

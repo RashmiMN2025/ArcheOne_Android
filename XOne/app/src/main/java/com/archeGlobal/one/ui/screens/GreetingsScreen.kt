@@ -18,6 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,8 +30,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -37,15 +42,6 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -57,9 +53,9 @@ fun ResponsiveGreetingsScreen(
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val (columns, cardWidth) = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 2 to 160.dp   // Phone
-        WindowWidthSizeClass.Medium -> 3 to 180.dp    // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 4 to 220.dp  // Tablet
+        WindowWidthSizeClass.Compact -> 2 to 160.dp // Phone
+        WindowWidthSizeClass.Medium -> 3 to 180.dp // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 4 to 220.dp // Tablet
         else -> 2 to 160.dp
     }
     GreetingsScreen(
@@ -180,8 +176,7 @@ fun GreetingsScreen(
     onBackPressed: () -> Unit,
     columns: Int = 2,
     cardWidth: Dp = 160.dp
-) {    
-    // Get the status bar padding to avoid overlapping with front camera
+) { // Get the status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
     // Get current model state

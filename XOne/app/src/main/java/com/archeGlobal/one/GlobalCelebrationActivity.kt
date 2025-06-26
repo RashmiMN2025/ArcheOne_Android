@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.GlobalCelebrationController
 import com.archeGlobal.one.navigation.AndroidNavigator
-import com.archeGlobal.one.ui.screens.GlobalCelebrationScreen
 import com.archeGlobal.one.ui.screens.ResponsiveGlobalCelebrationScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 

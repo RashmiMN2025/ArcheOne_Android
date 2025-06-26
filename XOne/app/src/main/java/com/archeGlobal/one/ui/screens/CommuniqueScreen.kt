@@ -17,6 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -49,12 +53,6 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 private const val THUMBNAIL_WIDTH = 300 // unified thumbnail width for both remote and PDF
 
@@ -73,9 +71,9 @@ fun ResponsiveCommuniqueScreen(
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val (columns, contentPadding) = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 2 to 16.dp   // Phone
-        WindowWidthSizeClass.Medium -> 3 to 32.dp    // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 4 to 64.dp  // Tablet
+        WindowWidthSizeClass.Compact -> 2 to 16.dp // Phone
+        WindowWidthSizeClass.Medium -> 3 to 32.dp // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 4 to 64.dp // Tablet
         else -> 2 to 16.dp
     }
     CommuniqueScreen(

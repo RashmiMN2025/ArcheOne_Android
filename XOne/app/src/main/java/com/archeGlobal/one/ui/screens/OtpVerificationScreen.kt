@@ -10,6 +10,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,17 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -49,8 +48,8 @@ fun ResponsiveOtpVerificationScreen(
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val contentPadding = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 16.dp   // Phone
-        WindowWidthSizeClass.Medium -> 48.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Compact -> 16.dp // Phone
+        WindowWidthSizeClass.Medium -> 48.dp // Large phone/small tablet
         WindowWidthSizeClass.Expanded -> 120.dp // Tablet
         else -> 16.dp
     }

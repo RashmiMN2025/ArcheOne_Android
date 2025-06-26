@@ -328,7 +328,6 @@ class HomeActivity : AppCompatActivity() {
                             showEventPopup = showEventPopup,
                             onDismissEventPopup = controller::dismissEventPopup
 
-
                         )
                     }
 

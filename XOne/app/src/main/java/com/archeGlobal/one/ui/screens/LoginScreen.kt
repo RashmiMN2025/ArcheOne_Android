@@ -19,6 +19,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +42,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -55,10 +59,6 @@ import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.unit.Dp
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -72,8 +72,8 @@ fun ResponsiveLoginScreen(
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val contentPadding = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 16.dp   // Phone
-        WindowWidthSizeClass.Medium -> 48.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Compact -> 16.dp // Phone
+        WindowWidthSizeClass.Medium -> 48.dp // Large phone/small tablet
         WindowWidthSizeClass.Expanded -> 120.dp // Tablet
         else -> 16.dp
     }
@@ -88,8 +88,8 @@ fun ResponsiveLoginScreen(
 
 @Composable
 fun LoginScreen(
-    controller: LoginController, 
-    navigator: Navigator, 
+    controller: LoginController,
+    navigator: Navigator,
     forceOriginalLogin: Boolean = false,
     forceDifferentUserMode: Boolean = false,
     contentPadding: Dp = 16.dp // <-- Add this parameter

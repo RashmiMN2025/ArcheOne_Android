@@ -20,6 +20,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -82,9 +85,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 
 @Composable
 fun ProfileHeader(
@@ -246,7 +246,7 @@ fun ResponsiveHomeScreen(
     val windowSizeClass = calculateWindowSizeClass(activity ?: return)
     val columns = when (windowSizeClass.widthSizeClass) {
         WindowWidthSizeClass.Compact -> 3 // Phone portrait
-        WindowWidthSizeClass.Medium -> 5  // Large phone/Small tablet
+        WindowWidthSizeClass.Medium -> 5 // Large phone/Small tablet
         WindowWidthSizeClass.Expanded -> 6 // Tablet landscape
         else -> 3
     }
@@ -940,8 +940,8 @@ fun HomeScreenContent(
 
                         Card(
                             modifier = Modifier
-                                .width(115.dp)           // Set fixed width
-                                .height(115.dp),        // Set fixed height
+                                .width(115.dp) // Set fixed width
+                                .height(115.dp), // Set fixed height
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             shape = RoundedCornerShape(12.dp)
@@ -1315,7 +1315,6 @@ private fun AppItem(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-
                 Spacer(modifier = Modifier.height(8.dp))
                 // Icon at the top
                 AppIcon(title = title, modifier = Modifier.size(50.dp))
@@ -1323,16 +1322,16 @@ private fun AppItem(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                        text = formattedTitle,
-                        fontSize = 12.sp,
-                        color = Color.Black,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        lineHeight = 14.sp,
-                        overflow = TextOverflow.Visible,
-                        modifier = Modifier.fillMaxWidth() 
+                    text = formattedTitle,
+                    fontSize = 12.sp,
+                    color = Color.Black,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    lineHeight = 14.sp,
+                    overflow = TextOverflow.Visible,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

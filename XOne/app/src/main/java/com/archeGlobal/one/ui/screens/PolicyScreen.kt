@@ -19,6 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
@@ -45,13 +49,6 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 // Cache for PDF bitmaps to avoid re-rendering
 private val pdfThumbnailCache = ConcurrentHashMap<String, Bitmap?>()
@@ -68,9 +65,9 @@ fun ResponsivePolicyScreen(
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val (columns, cardWidth) = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 2 to 160.dp   // Phone
-        WindowWidthSizeClass.Medium -> 3 to 180.dp    // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 4 to 220.dp  // Tablet
+        WindowWidthSizeClass.Compact -> 2 to 160.dp // Phone
+        WindowWidthSizeClass.Medium -> 3 to 180.dp // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 4 to 220.dp // Tablet
         else -> 2 to 160.dp
     }
     PolicyScreen(

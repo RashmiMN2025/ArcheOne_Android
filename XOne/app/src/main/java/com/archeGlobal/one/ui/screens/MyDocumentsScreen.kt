@@ -139,24 +139,30 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         }
     }
 
-    // Fetch documents on screen launch
-    LaunchedEffect(Unit) {
-        Log.d("MyDocumentsScreen", "Initial document loading")
-        uploadManager.listDocuments { response ->
-            // Use the controller to process the response
-            controller.updateDocumentsFromResponse(response)
+    // Fetch documents only after MPIN is verified
+    LaunchedEffect(showMpinPrompt) {
+        if (!showMpinPrompt) {
+            Log.d("MyDocumentsScreen", "MPIN verified, loading documents")
+            uploadManager.listDocuments { response ->
+                // Use the controller to process the response
+                controller.updateDocumentsFromResponse(response)
+            }
         }
     }
 
-    // Check if there are no documents and show toast
-    LaunchedEffect(personalDocs, professionalDocs) {
-        val hasPersonalDocs = personalDocs.isNotEmpty()
-        val hasProfessionalDocs = professionalDocs.isNotEmpty()
+    // Track if initial load has completed to avoid showing toast prematurely
+    var hasInitialLoadCompleted by remember { mutableStateOf(false) }
 
-        if (!hasPersonalDocs && !hasProfessionalDocs && !isLoading) {
-            Toast.makeText(context, "No documents found", Toast.LENGTH_SHORT).show()
+    // Update when loading completes, but only after MPIN is verified
+    LaunchedEffect(isLoading, showMpinPrompt) {
+        if (!isLoading && !hasInitialLoadCompleted && !showMpinPrompt) {
+            hasInitialLoadCompleted = true
         }
     }
+
+    // Remove the automatic "No documents found" toast as it's not user-friendly
+    // Users can see from the UI that no documents are uploaded and can upload them
+    // The toast was appearing too frequently and causing confusion
 
     Box(
         modifier = Modifier
@@ -694,51 +700,10 @@ fun DocumentCard(
     context: Context,
     uploadManager: DocumentUploadManager
 ) {
-    // State to show the upload options menu
-    var showUploadOptions by remember { mutableStateOf(false) }
-
-    // Camera permission state
-    var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-        )
-    }
-
-    // Launcher for camera capture
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        bitmap?.let {
-            uploadManager.uploadDocumentFromBitmap(name, it) { response ->
-                // Handle success - UI will be updated via the uploadSuccess LiveData observer
-            }
-        }
-    }
-
-    // Permission launcher
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasCameraPermission = isGranted
-        if (isGranted) {
-            cameraLauncher.launch(null)
-        } else {
-            Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
-        }
-    }
+    // Simplified upload - directly launch file picker for PDF documents
 
     // Launcher for file selection
     val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) {
-            uploadManager.uploadDocumentFromUri(name, uri) { response ->
-                // Handle success - UI will be updated via the uploadSuccess LiveData observer
-            }
-        }
-    }
-
-    // Launcher for image picker
-    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             uploadManager.uploadDocumentFromUri(name, uri) { response ->
                 // Handle success - UI will be updated via the uploadSuccess LiveData observer
@@ -778,7 +743,7 @@ fun DocumentCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(
-                    onClick = { showUploadOptions = true },
+                    onClick = { fileLauncher.launch("application/pdf") },
                     modifier = Modifier.size(36.dp)
                 ) {
                     Box(
@@ -812,110 +777,5 @@ fun DocumentCard(
                 }
             }
         }
-    }
-
-    if (showUploadOptions) {
-        AlertDialog(
-            onDismissRequest = { showUploadOptions = false },
-            title = {
-                Text(
-                    text = "Upload Document",
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "Choose an option to upload your document:",
-                        fontSize = 12.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    // Camera Button
-                    Button(
-                        onClick = {
-                            showUploadOptions = false
-                            if (hasCameraPermission) {
-                                cameraLauncher.launch(null)
-                            } else {
-                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_camera),
-                            contentDescription = "Camera",
-                            tint = Color.White,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text("Camera", color = Color.White, fontSize = 14.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Gallery Button
-                    Button(
-                        onClick = {
-                            showUploadOptions = false
-                            imagePickerLauncher.launch("image/*")
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_gallery),
-                            contentDescription = "Gallery",
-                            tint = Color.White,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text("Gallery", color = Color.White, fontSize = 14.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Files Button
-                    Button(
-                        onClick = {
-                            showUploadOptions = false
-                            fileLauncher.launch("application/pdf")
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_file),
-                            contentDescription = "Files",
-                            tint = Color.White,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text("Files", color = Color.White, fontSize = 14.sp)
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {},
-            containerColor = Color.White
-        )
     }
 }
