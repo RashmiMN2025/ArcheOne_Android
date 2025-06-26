@@ -37,12 +37,6 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.model.SecurityQuestion
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import android.widget.Toast
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -339,6 +333,7 @@ fun MpinScreen(
                                         activity?.let {
                                             val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java)
                                             intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                            intent.putExtra("forceDifferentUserMode", true)
                                             context.startActivity(intent)
                                             activity.finish()
                                         }

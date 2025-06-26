@@ -55,16 +55,6 @@ import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -75,7 +65,8 @@ import androidx.compose.ui.unit.Dp
 fun ResponsiveLoginScreen(
     controller: LoginController,
     navigator: Navigator,
-    forceOriginalLogin: Boolean = false
+    forceOriginalLogin: Boolean = false,
+    forceDifferentUserMode: Boolean = false
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
@@ -90,6 +81,7 @@ fun ResponsiveLoginScreen(
         controller = controller,
         navigator = navigator,
         forceOriginalLogin = forceOriginalLogin,
+        forceDifferentUserMode = forceDifferentUserMode,
         contentPadding = contentPadding
     )
 }
@@ -99,6 +91,7 @@ fun LoginScreen(
     controller: LoginController, 
     navigator: Navigator, 
     forceOriginalLogin: Boolean = false,
+    forceDifferentUserMode: Boolean = false,
     contentPadding: Dp = 16.dp // <-- Add this parameter
 ) {
     val context = LocalContext.current
@@ -136,7 +129,7 @@ fun LoginScreen(
     var isVerifyingMpin by remember { mutableStateOf(false) }
 
     var showOtpButton by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
-    var isDifferentUserMode by remember { mutableStateOf(false) }
+    var isDifferentUserMode by remember { mutableStateOf(forceDifferentUserMode) }
 
     var termsAccepted by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }

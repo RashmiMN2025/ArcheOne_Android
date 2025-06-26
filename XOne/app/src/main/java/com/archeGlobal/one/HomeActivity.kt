@@ -38,7 +38,6 @@ import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
-import com.archeGlobal.one.navigation.AndroidNavigator
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController

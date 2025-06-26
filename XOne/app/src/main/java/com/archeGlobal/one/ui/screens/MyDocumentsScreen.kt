@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -348,7 +349,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                     .background(Color.Black.copy(alpha = 0.50f))
                     .blur(6.dp)
                     .zIndex(10f)
-                    .pointerInput(Unit) {}
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures { change, dragAmount ->
+                            if (dragAmount > 60) { // right swipe
+                                onBackPressed()
+                            }
+                        }
+                    }
             )
 
             // Loader if verifying

@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ResponsiveLoginScreen
@@ -18,6 +17,7 @@ class LoginActivity : AppCompatActivity() {
 
         // Check if we should force original login form
         val forceOriginalLogin = intent.getBooleanExtra("forceOriginalLogin", false)
+        val forceDifferentUserMode = intent.getBooleanExtra("forceDifferentUserMode", false)
 
         // Handle back press in login screen - exit app instead of going back
         onBackPressedDispatcher.addCallback(
@@ -35,7 +35,8 @@ class LoginActivity : AppCompatActivity() {
                 ResponsiveLoginScreen(
                     controller = loginController, 
                     navigator = navigator,
-                    forceOriginalLogin = forceOriginalLogin
+                    forceOriginalLogin = forceOriginalLogin,
+                    forceDifferentUserMode = forceDifferentUserMode
                 )
             }
         }
