@@ -3,7 +3,6 @@ package com.archeGlobal.one.controller
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.model.SosBlogModel

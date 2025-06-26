@@ -1,7 +1,6 @@
 package com.archeGlobal.one.utils
 
 import android.content.Context
-import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
@@ -27,7 +26,9 @@ class BiometricHelper(private val context: Context) {
     ) {
         val executor = ContextCompat.getMainExecutor(context)
 
-        val biometricPrompt = BiometricPrompt(activity, executor,
+        val biometricPrompt = BiometricPrompt(
+            activity,
+            executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
@@ -38,7 +39,8 @@ class BiometricHelper(private val context: Context) {
                     super.onAuthenticationError(errorCode, errString)
                     onError(errString.toString())
                 }
-            })
+            }
+        )
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
@@ -73,4 +75,4 @@ class BiometricHelper(private val context: Context) {
     fun clearBiometricData() {
         preferencesManager.clearBiometricData()
     }
-} 
+}

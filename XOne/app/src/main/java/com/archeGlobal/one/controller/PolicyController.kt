@@ -2,25 +2,17 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import com.archeGlobal.one.BusinessCardActivity
 import com.archeGlobal.one.PolicyActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.RetrofitClient
 import kotlinx.coroutines.*
 import okhttp3.*
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import com.archeGlobal.one.network.ApiService
-import com.archeGlobal.one.network.RetrofitClient
-import com.archeGlobal.one.controller.OtpVerificationController
 
 class PolicyController(
     private val context: Context,
@@ -32,16 +24,16 @@ class PolicyController(
     // Use State for model so Compose will recompose when policies change
     private val _model = mutableStateOf(PolicyModel())
     val model: State<PolicyModel> = _model
-    
+
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    
+
     init {
         loadPolicies()
     }
-    
+
     private fun loadPolicies() {
         _isLoading.value = true
-        
+
         coroutineScope.launch {
             try {
                 // First try to get from API
@@ -105,7 +97,7 @@ class PolicyController(
     fun onBackClick() {
         (context as? PolicyActivity)?.finishWithAnimation()
     }
-    
+
     // Clean up resources when no longer needed
     fun onCleared() {
         coroutineScope.cancel()

@@ -8,7 +8,7 @@ import com.archeGlobal.one.WebViewActivity
 class WebLinksController(private val context: Context) {
     companion object {
         private const val TAG = "WebLinksController"
-        
+
         // URLs for different services
         private const val FINANCE_URL = "https://ess.azatecon.com/login"
         private const val MEDICAL_URL = "https://ilhc.icicilombard.com/Customer/iCard"
@@ -50,4 +50,4 @@ class WebLinksController(private val context: Context) {
             Log.e(TAG, "Error opening $title portal: ${e.message}")
         }
     }
-} 
+}

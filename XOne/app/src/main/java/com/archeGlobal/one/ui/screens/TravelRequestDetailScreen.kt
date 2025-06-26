@@ -23,9 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
-import com.archeGlobal.one.model.TravelStatus
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
@@ -41,9 +39,9 @@ fun TravelRequestDetailScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,    // Light Beige/Grey
+                        WelcomeBackgroundTop, // Light Beige/Grey
                         WelcomeBackgroundMiddle, // Light Grey
-                        WelcomeBackgroundBottom  // Dark Grey
+                        WelcomeBackgroundBottom // Dark Grey
                     )
                 )
             )
@@ -51,9 +49,9 @@ fun TravelRequestDetailScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             // Add space at the top to push everything down
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             TopAppBar(
-                title = { 
+                title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -79,7 +77,7 @@ fun TravelRequestDetailScreen(
                     Spacer(modifier = Modifier.width(48.dp))
                 }
             )
-            
+
             // Main content
             val scrollState = rememberScrollState()
             Column(
@@ -96,7 +94,7 @@ fun TravelRequestDetailScreen(
                     DetailRow(label = "Email:", value = controller.employeeEmail)
                     DetailRow(label = "Mobile:", value = controller.mobileNumber)
                 }
-                
+
                 // Travel Details Card
                 DetailCard(title = "Travel Details") {
                     DetailRow(label = "Destination:", value = travelRequest.destination)
@@ -111,11 +109,13 @@ fun TravelRequestDetailScreen(
                         if (date != null) {
                             java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
                                 .format(date)
-                        } else "N/A"
+                        } else {
+                            "N/A"
+                        }
                     } catch (e: Exception) {
                         "N/A"
                     }
-                    
+
                     // Format arrival date in the format: day Month year (e.g., 17 Jul 2025)
                     val formattedArrivalDate = try {
                         val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
@@ -123,11 +123,13 @@ fun TravelRequestDetailScreen(
                         if (date != null) {
                             java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
                                 .format(date)
-                        } else "N/A"
+                        } else {
+                            "N/A"
+                        }
                     } catch (e: Exception) {
                         "N/A"
                     }
-                    
+
                     DetailRow(label = "Departure Date:", value = formattedDepartureDate)
                     DetailRow(label = "Arrival Date:", value = formattedArrivalDate)
                     DetailRow(label = "Stay Required:", value = travelRequest.stayRequired ?: "N/A")
@@ -136,7 +138,7 @@ fun TravelRequestDetailScreen(
                     DetailRow(label = "Flight Time:", value = travelRequest.flightTime ?: "None")
                     DetailRow(label = "Frequent\nFlyer Number:", value = travelRequest.frequentFlyerNumber ?: "None")
                 }
-                
+
                 // Approval Details Card
                 DetailCard(title = "Approval Details") {
                     DetailRow(
@@ -146,7 +148,7 @@ fun TravelRequestDetailScreen(
                     )
                     DetailRow(label = "Reporting Manager:", value = controller.reportingManagerName)
                     DetailRow(label = "Manager Email:", value = controller.reportingManagerEmail)
-                    
+
                     // Format the created date for display in the format: yyyy-MM-dd HH:mm:ss
                     val formattedCreatedAt = try {
                         java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
@@ -184,7 +186,7 @@ fun DetailCard(
                 fontFamily = GraphikFontFamily,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
+
             content()
         }
     }
@@ -203,14 +205,14 @@ fun DetailRow(
     ) {
         Text(
             text = label,
-            fontSize = 14.sp,  // Smaller font size
+            fontSize = 14.sp, // Smaller font size
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
             modifier = Modifier.width(140.dp) // Fixed width for alignment
         )
         Text(
             text = value,
-            fontSize = 14.sp,  // Smaller font size
+            fontSize = 14.sp, // Smaller font size
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal, // Normal font weight
             color = valueColor

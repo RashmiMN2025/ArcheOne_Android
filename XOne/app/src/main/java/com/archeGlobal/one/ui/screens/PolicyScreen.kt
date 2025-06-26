@@ -13,33 +13,31 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.PolicyModel
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import com.archeGlobal.one.ui.components.UniversalLoader
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -47,7 +45,6 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 // Cache for PDF bitmaps to avoid re-rendering
 private val pdfThumbnailCache = ConcurrentHashMap<String, Bitmap?>()
@@ -64,8 +61,8 @@ fun PolicyScreen(
 
     // Filter policies based on the search query
     val filteredPolicies = model.policies.filter { policy ->
-    policy.policyName.contains(searchQuery, ignoreCase = true)
-}
+        policy.policyName.contains(searchQuery, ignoreCase = true)
+    }
 
     Box(
         modifier = Modifier
@@ -290,21 +287,21 @@ private fun PolicyCard(
             }
         }
 
-            Text(
-                text = policy.policyName,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                color = Color.Black,
-                fontSize = 12.sp,
-                maxLines = 2,
-                lineHeight = 16.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            )
-        }
+        Text(
+            text = policy.policyName,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            color = Color.Black,
+            fontSize = 12.sp,
+            maxLines = 2,
+            lineHeight = 16.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+        )
     }
+}
 
 /**
  * Downloads a PDF from a URL and generates a thumbnail from its first page
@@ -346,23 +343,23 @@ private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? =
     try {
         val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
         val outputFile = File(context.cacheDir, fileName)
-        
+
         val url = URL(pdfUrl)
         connection = url.openConnection() as HttpURLConnection
         connection.connectTimeout = 15000
         connection.readTimeout = 15000
-        
+
         if (connection.responseCode != HttpURLConnection.HTTP_OK) {
             Log.e("PolicyThumbnail", "HTTP error code: ${connection.responseCode}")
             return@withContext null
         }
-        
+
         connection.inputStream.use { input ->
             FileOutputStream(outputFile).use { output ->
                 input.copyTo(output)
             }
         }
-        
+
         if (outputFile.exists() && outputFile.length() > 0) {
             Log.d("PolicyThumbnail", "PDF downloaded successfully to ${outputFile.absolutePath}")
             return@withContext outputFile
@@ -399,7 +396,7 @@ private fun renderPdfThumbnail(context: Context, pdfFile: File): Bitmap? {
         var pageHeight = page?.height ?: 0
         if (pageWidth <= 0 || pageHeight <= 0) {
             Log.w("PolicyThumbnail", "Page reported zero width/height. Using fallback dimensions.")
-            pageWidth = 595  // A4 width in points at 72 dpi
+            pageWidth = 595 // A4 width in points at 72 dpi
             pageHeight = 842 // A4 height in points at 72 dpi
         }
         // Create a scaled bitmap (fixed thumbnail width for consistency)

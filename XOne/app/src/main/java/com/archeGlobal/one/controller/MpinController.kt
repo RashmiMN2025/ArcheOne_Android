@@ -22,9 +22,9 @@ class MpinController(private val context: Context) {
     fun validateSecurityAnswers(enteredQuestions: List<SecurityQuestion>): Boolean {
         val savedQuestions = MpinManager.getSecurityQuestions(context)
         return enteredQuestions.size == savedQuestions.size &&
-                enteredQuestions.zip(savedQuestions).all { (entered, saved) ->
-                    entered.question == saved.question && entered.answer == saved.answer
-                }
+            enteredQuestions.zip(savedQuestions).all { (entered, saved) ->
+                entered.question == saved.question && entered.answer == saved.answer
+            }
     }
 
     /** Check if MPIN is set */

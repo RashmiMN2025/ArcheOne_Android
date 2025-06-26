@@ -3,18 +3,14 @@ package com.archeGlobal.one.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -24,30 +20,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.EmergencyContactController
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.foundation.Image
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmergencyContactScreen(
     controller: EmergencyContactController,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,    // Light Beige/Grey
+                        WelcomeBackgroundTop, // Light Beige/Grey
                         WelcomeBackgroundMiddle, // Light Grey
-                        WelcomeBackgroundBottom  // Dark Grey
+                        WelcomeBackgroundBottom // Dark Grey
                     )
                 )
             )
@@ -69,7 +63,7 @@ fun EmergencyContactScreen(
                     navigationIconContentColor = Color.Black
                 )
             )
-            
+
             // Content
             Column(
                 modifier = Modifier
@@ -117,7 +111,7 @@ fun EmergencyContactScreen(
                                 color = Color.Black
                             )
                         }
-                        
+
                         // Contact Details
                         Column(
                             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -129,13 +123,13 @@ fun EmergencyContactScreen(
                                 label = "Name",
                                 value = controller.model.name.ifEmpty { "-" }
                             )
-                            
+
                             // Relationship
                             LabeledValue(
                                 label = "Relationship",
                                 value = controller.model.relationship.ifEmpty { "-" }
                             )
-                            
+
                             // Phone Number (with underline)
                             Column {
                                 Text(
@@ -151,18 +145,21 @@ fun EmergencyContactScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    textDecoration = if (controller.model.phoneNumber.isNotEmpty()) 
-                                        TextDecoration.Underline else TextDecoration.None,
+                                    textDecoration = if (controller.model.phoneNumber.isNotEmpty()) {
+                                        TextDecoration.Underline
+                                    } else {
+                                        TextDecoration.None
+                                    }
                                 )
                             }
                         }
-                        
+
                         Divider(
                             color = Color(0xFFEEEEEE),
                             thickness = 1.5.dp,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
-                        
+
                         // Important Note Section
                         Column(
                             modifier = Modifier
@@ -230,4 +227,4 @@ fun LabeledValue(
             color = Color.Black
         )
     }
-} 
+}

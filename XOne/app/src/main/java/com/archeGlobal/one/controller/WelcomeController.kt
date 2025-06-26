@@ -7,4 +7,4 @@ open class WelcomeController(private val navigator: Navigator) {
     open fun onXOneClick() {
         navigator.navigateToLoginScreen()
     }
-} 
+}

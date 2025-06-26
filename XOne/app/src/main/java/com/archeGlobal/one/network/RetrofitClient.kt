@@ -15,16 +15,15 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
         val token = PreferencesManager(context).getAuthToken()
-        
+
         // Skip adding token for auth endpoints
-        val skipAuth = original.url.toString().contains("send-otp") || 
-                       original.url.toString().contains("otpVerify")
-        
+        val skipAuth = original.url.toString().contains("send-otp") || original.url.toString().contains("otpVerify")
+
         return if (token != null && !skipAuth) {
             // If we have a token and it's not an auth endpoint, add it to the request
             val requestBuilder = original.newBuilder()
                 .header("Authorization", token)
-            
+
             chain.proceed(requestBuilder.build())
         } else {
             // Otherwise proceed with the original request
@@ -36,13 +35,13 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 object RetrofitClient {
     const val BASE_URL = "https://pulse.netcon.in:7000/"
     private var retrofit: Retrofit? = null
-    
+
     // Initialize with context to get the token
     fun initialize(context: Context) {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
-        
+
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(AuthInterceptor(context))
@@ -50,7 +49,7 @@ object RetrofitClient {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
-            
+
         retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)

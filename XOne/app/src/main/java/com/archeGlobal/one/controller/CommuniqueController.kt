@@ -20,19 +20,19 @@ class CommuniqueController(
     val isLoading: State<Boolean> = _isLoading
 
     private val _communiques = mutableStateOf<List<CommuniqueModel.Communique>>(emptyList())
-    
+
     val model: CommuniqueModel
         get() = CommuniqueModel(communiques = _communiques.value)
-    
+
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    
+
     init {
         loadCommuniques()
     }
-    
+
     private fun loadCommuniques() {
         _isLoading.value = true
-        
+
         coroutineScope.launch {
             try {
                 // Get communiques data from user data (already loaded during login)
@@ -70,9 +70,9 @@ class CommuniqueController(
     fun onBackPressed() {
         (context as? CommuniqueActivity)?.finishWithAnimation()
     }
-    
+
     // Clean up resources when no longer needed
     fun onCleared() {
         coroutineScope.cancel()
     }
-} 
+}

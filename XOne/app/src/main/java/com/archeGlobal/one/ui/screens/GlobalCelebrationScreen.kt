@@ -1,12 +1,15 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -22,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.activity.compose.BackHandler
 import coil.compose.AsyncImage
 import com.archeGlobal.one.controller.GlobalCelebrationController
 import com.archeGlobal.one.model.GreetingSubcategory
@@ -30,8 +32,6 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.border
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +41,7 @@ fun GlobalCelebrationScreen(
 ) {
     // Status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
-    
+
     // Handle back button press
     BackHandler {
         controller.onBackPressed()
@@ -64,7 +64,7 @@ fun GlobalCelebrationScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
-            
+
             // Top App Bar with Back Button and Title
             Box(
                 modifier = Modifier
@@ -84,7 +84,7 @@ fun GlobalCelebrationScreen(
                             tint = Color.Black
                         )
                     }
-                    
+
                     Box(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
@@ -98,11 +98,11 @@ fun GlobalCelebrationScreen(
                             color = Color.Black
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.width(48.dp))
                 }
             }
-            
+
             // Search Bar (updated logic: local state, update controller on change)
             var searchQuery by remember { mutableStateOf("") }
             LaunchedEffect(controller.model.searchQuery) {
@@ -170,7 +170,7 @@ fun GlobalCelebrationScreen(
                     }
                 }
             }
-            
+
             // Filter subcategories locally using searchQuery
             val filteredSubcategories = remember(searchQuery) {
                 controller.model.subcategories.filter {

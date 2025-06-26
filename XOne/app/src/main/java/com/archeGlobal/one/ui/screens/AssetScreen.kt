@@ -1,6 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -19,14 +22,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AssetController
-import com.archeGlobal.one.model.AssetModel
-import com.archeGlobal.one.ui.theme.PrimaryRed
-import com.archeGlobal.one.ui.components.UniversalLoader
-import androidx.compose.foundation.clickable
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.model.AssetDetails
+import com.archeGlobal.one.model.AssetModel
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.PrimaryRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,7 +35,7 @@ fun AssetScreen(
     controller: AssetController
 ) {
     var showIssueDialog by remember { mutableStateOf(false) }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,13 +44,13 @@ fun AssetScreen(
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
+                        Color(0xFF474749) // Dark Gray
                     )
                 )
             )
     ) {
         TopAppBar(
-            title = { 
+            title = {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
@@ -121,13 +121,13 @@ fun AssetScreen(
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
-                            
+
                             InfoRow("Name:", model.name)
                             InfoRow("Employee ID:", model.employeeId)
                             InfoRow("Mobile No:", model.mobile)
                             InfoRow("Email:", model.email)
                             InfoRow("Location:", model.location)
-                            
+
                             Divider(
                                 modifier = Modifier.padding(vertical = 16.dp),
                                 color = Color.LightGray
@@ -142,7 +142,7 @@ fun AssetScreen(
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
-                            
+
                             // Iterate over the asset details array
                             model.assetDetails?.forEachIndexed { index, asset ->
                                 AssetDetailCard(asset)
@@ -192,7 +192,7 @@ fun AssetScreen(
                                     )
                                 }
                             }
-                            
+
                             // Raise an Issue Button
                             Button(
                                 onClick = { showIssueDialog = true },
@@ -219,7 +219,7 @@ fun AssetScreen(
             }
         }
     }
-    
+
     // Issue Dialog
     if (showIssueDialog) {
         IssueDialog(
@@ -240,7 +240,7 @@ fun IssueDialog(
 ) {
     var issueText by remember { mutableStateOf("") }
     val context = LocalContext.current
-    
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -263,7 +263,7 @@ fun IssueDialog(
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
-                
+
                 // Issue input field with rounded corners
                 OutlinedTextField(
                     value = issueText,
@@ -287,10 +287,10 @@ fun IssueDialog(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
-                
+
                 // Submit button
                 Button(
-                    onClick = { 
+                    onClick = {
                         if (issueText.isBlank()) {
                             Toast.makeText(context, "Please describe your issue", Toast.LENGTH_SHORT).show()
                         } else {
@@ -313,7 +313,7 @@ fun IssueDialog(
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 // Close text
                 Text(
                     text = "Close",

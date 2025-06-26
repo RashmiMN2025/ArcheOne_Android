@@ -43,9 +43,9 @@ class ImageViewerActivity : ComponentActivity() {
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0xFFE0DCD1),  // Light Grey/Beige
-                                    Color(0xFFC8C8CA),  // Medium Grey
-                                    Color(0xFF474749)   // Dark Grey
+                                    Color(0xFFE0DCD1), // Light Grey/Beige
+                                    Color(0xFFC8C8CA), // Medium Grey
+                                    Color(0xFF474749) // Dark Grey
                                 )
                             )
                         )
@@ -55,7 +55,7 @@ class ImageViewerActivity : ComponentActivity() {
                     ) {
                         // Top app bar
                         TopAppBar(
-                            title = { 
+                            title = {
                                 Text(
                                     text = title,
                                     fontSize = 18.sp,
@@ -92,7 +92,6 @@ class ImageViewerActivity : ComponentActivity() {
                             Column(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -106,11 +105,11 @@ class ImageViewerActivity : ComponentActivity() {
                                                 detectTransformGestures { centroid, pan, zoom, _ ->
                                                     // Calculate new scale
                                                     val newScale = (scale * zoom).coerceIn(1f, 3f)
-                                                    
+
                                                     // Only update if we're zooming in or if we're already zoomed in
                                                     if (newScale > 1f || scale > 1f) {
                                                         scale = newScale
-                                                        
+
                                                         // If we're zooming out completely, reset the offset
                                                         if (scale <= 1f) {
                                                             offset = androidx.compose.ui.geometry.Offset.Zero
@@ -154,4 +153,4 @@ class ImageViewerActivity : ComponentActivity() {
 
         this.setTheme(R.style.Theme_XOne)
     }
-} 
+}

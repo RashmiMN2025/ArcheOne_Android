@@ -11,13 +11,13 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 class TodoActivity : ComponentActivity() {
     private lateinit var controller: TodoController
     private lateinit var navigator: AndroidNavigator
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         navigator = AndroidNavigator(this)
         controller = TodoController(navigator, this)
-        
+
         setContent {
             XOneTheme {
                 TodoScreen(

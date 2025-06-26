@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,8 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,23 +47,24 @@ fun ServiceNotAvailableScreen(
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(
             Color(0xFFE6E6E2), // Light gray at top
-            Color(0xFF9E9E9E)  // Darker gray at bottom
+            Color(0xFF9E9E9E) // Darker gray at bottom
         )
     )
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = gradientBackground)
-    ) {        Column(
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ) {            // Add less weight at the top to move content up
+        ) { // Add less weight at the top to move content up
             Spacer(modifier = Modifier.weight(0.3f))
-            
+
             // Red warning triangle icon
             Image(
                 painter = painterResource(id = R.drawable.warning),
@@ -75,9 +73,9 @@ fun ServiceNotAvailableScreen(
                 contentScale = ContentScale.Fit,
                 colorFilter = ColorFilter.tint(Color(0xFFE84C3D)) // Red tint
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // Title - large bold text
             Text(
                 text = "Service Not Available",
@@ -88,9 +86,9 @@ fun ServiceNotAvailableScreen(
                 color = Color.Black,
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Description text
             Text(
                 text = "This service is currently under development or\nnot available.",
@@ -99,37 +97,36 @@ fun ServiceNotAvailableScreen(
                 color = Color.Black,
                 modifier = Modifier.fillMaxWidth()
             )
-            
-            Spacer(modifier = Modifier.height(24.dp))            // Website link text - single row with colored link
+
+            Spacer(modifier = Modifier.height(24.dp)) // Website link text - single row with colored link
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
-            ) {                
+            ) {
                 Text(
                     "Meanwhile, you can ",
                     fontSize = 14.sp,
                     color = Color.DarkGray,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.SemiBold
                 )
-                
+
                 Text(
                     "explore our website",
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFFE84C3D),
-                    modifier = Modifier.clickable { 
-                        // Open the website in browser
+                    modifier = Modifier.clickable { // Open the website in browser
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/"))
                         navController.context.startActivity(intent)
                     }
                 )
             }
-            
+
             // More weight at the bottom to push content up and button down
             Spacer(modifier = Modifier.weight(1.4f))
-            
+
             // Red rounded Go Back button
             Button(
                 onClick = { navController.popBackStack() },

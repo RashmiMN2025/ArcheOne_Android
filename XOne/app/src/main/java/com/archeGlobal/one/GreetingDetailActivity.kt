@@ -2,12 +2,19 @@ package com.archeGlobal.one
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.util.Base64
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import coil.ImageLoader
+import coil.request.ImageRequest
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.GreetingDetailScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
@@ -16,16 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.util.Log
-import android.graphics.drawable.BitmapDrawable
-import android.util.Base64
 import java.io.ByteArrayOutputStream
-import androidx.core.content.ContextCompat
-import android.graphics.BitmapFactory
-import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
-import androidx.core.content.FileProvider
 
 class GreetingDetailActivity : ComponentActivity() {
     private lateinit var navigator: AndroidNavigator
@@ -165,7 +163,11 @@ class GreetingDetailActivity : ComponentActivity() {
 
                 // Build HTML email with image URL (width 300px) and signature
                 val htmlEmailContent = createHtmlEmailWithImageUrl(
-                    message, imageUrl, userName, userDesignation, userMobile
+                    message,
+                    imageUrl,
+                    userName,
+                    userDesignation,
+                    userMobile
                 )
 
                 withContext(Dispatchers.Main) {
@@ -247,9 +249,9 @@ class GreetingDetailActivity : ComponentActivity() {
             </div>
         </body>
         </html>
-    """.trimIndent()
+        """.trimIndent()
     }
-    
+
     private fun saveBitmapToCache(bitmap: Bitmap?): android.net.Uri? {
         if (bitmap == null) return null
         try {
@@ -260,7 +262,7 @@ class GreetingDetailActivity : ComponentActivity() {
             }
             return FileProvider.getUriForFile(
                 this,
-                "${packageName}.provider",
+                "$packageName.provider",
                 file
             )
         } catch (e: Exception) {

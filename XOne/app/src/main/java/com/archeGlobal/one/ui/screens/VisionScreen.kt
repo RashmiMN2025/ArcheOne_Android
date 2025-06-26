@@ -1,35 +1,31 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
-import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.ui.text.TextStyle
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
@@ -41,9 +37,9 @@ fun ScopeSection(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(480.dp)  // Adjusted to match iOS card width
+            .height(480.dp) // Adjusted to match iOS card width
             .padding(horizontal = 10.dp),
-        contentAlignment = Alignment.Center  // Center the Scope Section
+        contentAlignment = Alignment.Center // Center the Scope Section
     ) {
         // Background image
         Box(
@@ -53,7 +49,7 @@ fun ScopeSection(
                 .align(Alignment.Center) // Align the image to the center
         ) {
             Image(
-                painter = when(title) {
+                painter = when (title) {
                     "Scope1: Operational Efficiency" -> painterResource(id = R.drawable.scope1)
                     "Scope2: Sustainable Workspaces" -> painterResource(id = R.drawable.scope2)
                     else -> painterResource(id = R.drawable.scope3)
@@ -61,7 +57,7 @@ fun ScopeSection(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(20.dp)),  // Matching iOS corner radius
+                    .clip(RoundedCornerShape(20.dp)), // Matching iOS corner radius
                 contentScale = ContentScale.Crop
             )
         }
@@ -70,7 +66,7 @@ fun ScopeSection(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp),  // Matching iOS padding
+                .padding(20.dp), // Matching iOS padding
             contentAlignment = Alignment.Center
         ) {
             // Glass effect card
@@ -78,11 +74,11 @@ fun ScopeSection(
                 modifier = Modifier
                     .fillMaxWidth(0.9f),
                 color = Color.Black.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(20.dp)  // Matching iOS corner radius
+                shape = RoundedCornerShape(20.dp) // Matching iOS corner radius
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(20.dp)  // Matching iOS padding
+                        .padding(20.dp) // Matching iOS padding
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -90,14 +86,14 @@ fun ScopeSection(
                     Text(
                         text = title,
                         color = Color.White,
-                        fontSize = 22.sp,  // Increased for better readability
+                        fontSize = 22.sp, // Increased for better readability
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         lineHeight = 22.sp
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     items.forEach { item ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -135,21 +131,21 @@ fun InitiativeCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(280.dp),  // Matching the iOS card height
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),  // Matching iOS card background color
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),  // Matching iOS shadow
-        shape = RoundedCornerShape(20.dp)  // Matching iOS corner radius
+        modifier = modifier.height(280.dp), // Matching the iOS card height
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)), // Matching iOS card background color
+        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp), // Matching iOS shadow
+        shape = RoundedCornerShape(20.dp) // Matching iOS corner radius
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(18.dp),  // Matching iOS padding
+                .padding(18.dp), // Matching iOS padding
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)  // Matching iOS icon size
+                    .size(40.dp) // Matching iOS icon size
                     .background(Color(0xFF00A651).copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -163,7 +159,7 @@ fun InitiativeCard(
 
             Text(
                 text = text,
-                fontSize = 14.sp,  // Matching iOS font size
+                fontSize = 14.sp, // Matching iOS font size
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp,
@@ -295,13 +291,13 @@ fun VisionScreen(onBackPressed: () -> Unit) {
                         "Improved HVAC systems",
                         "Transition to electric vehicles (EVs) for company fleets"
                     )
-                    
+
                     val scope2Items = listOf(
                         "Sustainable office spaces",
                         "Rating existing offices for efficiency",
                         "Expanding renewable energy sources"
                     )
-                    
+
                     val scope3Items = listOf(
                         "Advocating hybrid working",
                         "Encouraging EV adoption",
@@ -354,11 +350,11 @@ fun VisionScreen(onBackPressed: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)  // Reduced from 280.dp to 200.dp
+                        .height(220.dp) // Reduced from 280.dp to 200.dp
                 ) {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)  // Reduced spacing from 16.dp to 12.dp
+                        horizontalArrangement = Arrangement.spacedBy(12.dp) // Reduced spacing from 16.dp to 12.dp
                     ) {
                         item {
                             InitiativeCard(
@@ -368,7 +364,7 @@ fun VisionScreen(onBackPressed: () -> Unit) {
                                     .width(200.dp)
                             )
                         }
-                        
+
                         item {
                             InitiativeCard(
                                 icon = R.drawable.ic_eco_leaf,
@@ -376,7 +372,7 @@ fun VisionScreen(onBackPressed: () -> Unit) {
                                 modifier = Modifier.width(200.dp)
                             )
                         }
-                        
+
                         item {
                             InitiativeCard(
                                 icon = R.drawable.ic_eco_recycle,
@@ -457,12 +453,12 @@ fun VisionScreen(onBackPressed: () -> Unit) {
                             painter = painterResource(id = R.drawable.ceo),
                             contentDescription = "CEO Image",
                             modifier = Modifier
-                                .size(52.dp)  // Increased from 48.dp to 52.dp
+                                .size(52.dp) // Increased from 48.dp to 52.dp
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
 
-                        Spacer(modifier = Modifier.width(12.dp))  // Add spacing between image and text
+                        Spacer(modifier = Modifier.width(12.dp)) // Add spacing between image and text
 
                         Column {
                             Text(
@@ -483,7 +479,6 @@ fun VisionScreen(onBackPressed: () -> Unit) {
                     }
                 }
             }
-
         }
 
         // Fixed Header

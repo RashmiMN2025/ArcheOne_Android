@@ -22,9 +22,9 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 class NoDocumentFoundActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         val documentName = intent.getStringExtra("documentName") ?: "Document"
-        
+
         setContent {
             XOneTheme {
                 NoDocumentFoundScreen(
@@ -49,7 +49,7 @@ fun NoDocumentFoundScreen(
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
+                        Color(0xFF474749) // Dark Gray
                     )
                 )
             )
@@ -73,7 +73,7 @@ fun NoDocumentFoundScreen(
                         tint = Color.Black
                     )
                 }
-                
+
                 // Centered Title
                 Box(
                     modifier = Modifier.weight(1f),
@@ -90,7 +90,7 @@ fun NoDocumentFoundScreen(
                 // Empty box for symmetry
                 Box(modifier = Modifier.width(48.dp))
             }
-            
+
             // Center the message
             Box(
                 modifier = Modifier
@@ -109,4 +109,4 @@ fun NoDocumentFoundScreen(
             }
         }
     }
-} 
+}

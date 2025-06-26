@@ -15,14 +15,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.ui.theme.XOneTheme
-import androidx.compose.ui.tooling.preview.Preview
 import com.archeGlobal.one.R
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun WelcomeScreen(
-    onXOneClick: () -> Unit,
+    onXOneClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -45,7 +43,6 @@ fun WelcomeScreen(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.height(4.dp))
             // Middle Logo
             Image(

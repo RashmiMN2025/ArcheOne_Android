@@ -1,60 +1,52 @@
 package com.archeGlobal.one.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DisplayMode
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.PrimaryRed
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -66,7 +58,7 @@ fun TravelScreen(
     // State for date picker dialogs
     var showDepartureDatePicker by remember { mutableStateOf(false) }
     var showArrivalDatePicker by remember { mutableStateOf(false) }
-    
+
     // Date format for display
     val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     Box(
@@ -75,9 +67,9 @@ fun TravelScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,    // Light Beige/Grey
+                        WelcomeBackgroundTop, // Light Beige/Grey
                         WelcomeBackgroundMiddle, // Light Grey
-                        WelcomeBackgroundBottom  // Dark Grey
+                        WelcomeBackgroundBottom // Dark Grey
                     )
                 )
             )
@@ -85,9 +77,9 @@ fun TravelScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             // Add space at the top to push everything down
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             TopAppBar(
-                title = { 
+                title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -133,7 +125,7 @@ fun TravelScreen(
                     }
                 }
             )
-            
+
             // Main content
             Card(
                 modifier = Modifier
@@ -165,12 +157,12 @@ fun TravelScreen(
                             fontWeight = FontWeight.Bold,
                             fontFamily = GraphikFontFamily
                         )
-                        
+
                         // Load travel approvals when the screen is shown to get the latest count
                         LaunchedEffect(Unit) {
                             controller.loadTravelApprovals()
                         }
-                        
+
                         Box(
                             modifier = Modifier
                                 .background(
@@ -191,7 +183,7 @@ fun TravelScreen(
                                     fontWeight = FontWeight.Medium,
                                     fontFamily = GraphikFontFamily
                                 )
-                                
+
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.Notifications,
@@ -199,7 +191,7 @@ fun TravelScreen(
                                         tint = Color.White,
                                         modifier = Modifier.size(14.dp)
                                     )
-                                    
+
                                     val count = controller.pendingApprovalCount
                                     if (count > 0) {
                                         Spacer(modifier = Modifier.width(2.dp))
@@ -215,7 +207,7 @@ fun TravelScreen(
                             }
                         }
                     }
-                    
+
                     // Employee Details with proper alignment
                     EmployeeDetailRow(label = "Name:", value = controller.employeeName)
                     EmployeeDetailRow(label = "Employee ID:", value = controller.employeeId)
@@ -223,7 +215,7 @@ fun TravelScreen(
                     EmployeeDetailRow(label = "Employee Grade:", value = controller.employeeGrade)
                     EmployeeDetailRow(label = "Date of Birth:", value = controller.dateOfBirth)
                     EmployeeDetailRow(label = "Aadhar Number:", value = controller.aadharNumber)
-                    
+
                     Divider(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -231,7 +223,7 @@ fun TravelScreen(
                         color = Color.LightGray,
                         thickness = 1.dp
                     )
-                    
+
                     // Travel Details Section
                     Text(
                         text = "Travel Details",
@@ -240,52 +232,56 @@ fun TravelScreen(
                         fontFamily = GraphikFontFamily,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
-                    
+
                     // Travel Destination
                     OutlinedTextField(
                         value = controller.destination,
                         onValueChange = { controller.updateDestination(it) },
-                        label = { Text("Travel Destination") },
+                        placeholder = { Text("Travel Destination", color = Color.Gray, fontWeight = FontWeight.Medium) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray,
                             focusedBorderColor = Color.Gray,
-                            cursorColor = Color.Transparent,
+                            cursorColor = Color.Black,
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
-                    
+
                     // Project Name
                     OutlinedTextField(
                         value = controller.projectName,
                         onValueChange = { controller.updateProjectName(it) },
-                        label = { Text("Project Name") },
+                        placeholder = { Text("Project Name", color = Color.Gray, fontWeight = FontWeight.Medium) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray,
                             focusedBorderColor = Color.Gray,
-                            cursorColor = Color.Transparent,
+                            cursorColor = Color.Black,
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
-                    
+
                     // Business Justification
                     OutlinedTextField(
                         value = controller.businessJustification,
                         onValueChange = { controller.updateBusinessJustification(it) },
-                        label = { Text("Business Justification") },
+                        placeholder = { Text("Business Justification", color = Color.Gray, fontWeight = FontWeight.Medium) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)
@@ -293,21 +289,23 @@ fun TravelScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray,
                             focusedBorderColor = Color.Gray,
-                            cursorColor = Color.Transparent,
+                            cursorColor = Color.Black,
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
-                    
+
                     // Mode of Transport
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = controller.modeOfTransport,
                             onValueChange = { },
-                            label = { Text("Mode of Transport") },
+                            placeholder = { Text("Mode of Transport", color = Color.Gray, fontWeight = FontWeight.Medium) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp)
@@ -315,7 +313,7 @@ fun TravelScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = Color.LightGray,
                                 focusedBorderColor = Color.Gray,
-                                cursorColor = Color.Transparent,
+                                cursorColor = Color.Black,
                                 unfocusedContainerColor = Color(0xFFF5F5F5),
                                 focusedContainerColor = Color.White,
                                 unfocusedTextColor = Color.Black,
@@ -332,7 +330,7 @@ fun TravelScreen(
                             },
                             readOnly = true
                         )
-                        
+
                         DropdownMenu(
                             expanded = controller.isTransportDropdownExpanded,
                             onDismissRequest = { controller.dismissTransportDropdown() },
@@ -348,7 +346,7 @@ fun TravelScreen(
                             }
                         }
                     }
-                    
+
                     // Date Selection Row
                     Row(
                         modifier = Modifier
@@ -368,7 +366,7 @@ fun TravelScreen(
                                 modifier = Modifier.padding(bottom = 4.dp),
                                 fontWeight = FontWeight.Medium
                             )
-                            
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -381,7 +379,7 @@ fun TravelScreen(
                                     colors = OutlinedTextFieldDefaults.colors(
                                         unfocusedBorderColor = Color.LightGray,
                                         focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Transparent,
+                                        cursorColor = Color.Black,
                                         unfocusedContainerColor = Color.White,
                                         focusedContainerColor = Color.White,
                                         unfocusedTextColor = Color.Black,
@@ -396,7 +394,7 @@ fun TravelScreen(
                                         fontSize = 15.sp
                                     )
                                 )
-                                
+
                                 // Add invisible clickable overlay
                                 Box(
                                     modifier = Modifier
@@ -405,12 +403,13 @@ fun TravelScreen(
                                         .background(Color.Transparent)
                                 )
                             }
-                            
+
                             // Departure Date Picker Dialog
                             if (showDepartureDatePicker) {
                                 val datePickerState = rememberDatePickerState(
                                     initialDisplayMode = DisplayMode.Picker,
-                                    initialSelectedDateMillis = System.currentTimeMillis())
+                                    initialSelectedDateMillis = System.currentTimeMillis()
+                                )
                                 DatePickerDialog(
                                     onDismissRequest = { showDepartureDatePicker = false },
                                     confirmButton = {
@@ -434,7 +433,7 @@ fun TravelScreen(
                                 }
                             }
                         }
-                        
+
                         // Arrival Date
                         Column(
                             modifier = Modifier.weight(1f)
@@ -447,7 +446,7 @@ fun TravelScreen(
                                 modifier = Modifier.padding(bottom = 4.dp),
                                 fontWeight = FontWeight.Medium
                             )
-                            
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -460,7 +459,7 @@ fun TravelScreen(
                                     colors = OutlinedTextFieldDefaults.colors(
                                         unfocusedBorderColor = Color.LightGray,
                                         focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Transparent,
+                                        cursorColor = Color.Black,
                                         unfocusedContainerColor = Color.White,
                                         focusedContainerColor = Color.White,
                                         unfocusedTextColor = Color.Black,
@@ -475,7 +474,7 @@ fun TravelScreen(
                                         fontSize = 15.sp
                                     )
                                 )
-                                
+
                                 // Add invisible clickable overlay
                                 Box(
                                     modifier = Modifier
@@ -484,12 +483,13 @@ fun TravelScreen(
                                         .background(Color.Transparent)
                                 )
                             }
-                            
+
                             // Arrival Date Picker Dialog
                             if (showArrivalDatePicker) {
                                 val datePickerState = rememberDatePickerState(
                                     initialDisplayMode = DisplayMode.Picker,
-                                    initialSelectedDateMillis = System.currentTimeMillis())
+                                    initialSelectedDateMillis = System.currentTimeMillis()
+                                )
                                 DatePickerDialog(
                                     onDismissRequest = { showArrivalDatePicker = false },
                                     confirmButton = {
@@ -514,7 +514,7 @@ fun TravelScreen(
                             }
                         }
                     }
-                    
+
                     // Flight Time Preference - only show if mode of transport is Flight
                     if (controller.modeOfTransport == "Flight") {
                         // Note about flight booking
@@ -525,7 +525,7 @@ fun TravelScreen(
                             color = PrimaryRed,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        
+
                         // Flight Time Preference Dropdown
                         Box(modifier = Modifier.fillMaxWidth()) {
                             OutlinedTextField(
@@ -539,11 +539,13 @@ fun TravelScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.Gray,
-                                    cursorColor = Color.Transparent,
+                                    cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black
+                                    focusedTextColor = Color.Black,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 trailingIcon = {
@@ -556,7 +558,7 @@ fun TravelScreen(
                                 },
                                 readOnly = true
                             )
-                            
+
                             DropdownMenu(
                                 expanded = controller.isFlightTimeDropdownExpanded,
                                 onDismissRequest = { controller.dismissFlightTimeDropdown() },
@@ -572,7 +574,7 @@ fun TravelScreen(
                                 }
                             }
                         }
-                        
+
                         // Seat Preference Dropdown
                         Box(modifier = Modifier.fillMaxWidth()) {
                             OutlinedTextField(
@@ -586,11 +588,13 @@ fun TravelScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.Gray,
-                                    cursorColor = Color.Transparent,
+                                    cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black
+                                    focusedTextColor = Color.Black,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 trailingIcon = {
@@ -603,7 +607,7 @@ fun TravelScreen(
                                 },
                                 readOnly = true
                             )
-                            
+
                             DropdownMenu(
                                 expanded = controller.isSeatPrefDropdownExpanded,
                                 onDismissRequest = { controller.dismissSeatPrefDropdown() },
@@ -619,7 +623,7 @@ fun TravelScreen(
                                 }
                             }
                         }
-                        
+
                         // Frequent Flyer Number Button
                         Button(
                             onClick = { controller.showFrequentFlyerNumberDialog() },
@@ -641,7 +645,7 @@ fun TravelScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                        
+
                         // Frequent Flyer Number Dialog
                         if (controller.showFrequentFlyerDialog) {
                             androidx.compose.material.AlertDialog(
@@ -656,11 +660,13 @@ fun TravelScreen(
                                         colors = OutlinedTextFieldDefaults.colors(
                                             unfocusedBorderColor = Color.LightGray,
                                             focusedBorderColor = Color.Gray,
-                                            cursorColor = Color.Transparent,
+                                            cursorColor = Color.Black,
                                             unfocusedContainerColor = Color(0xFFF5F5F5),
                                             focusedContainerColor = Color.White,
                                             unfocusedTextColor = Color.Black,
-                                            focusedTextColor = Color.Black
+                                            focusedTextColor = Color.Black,
+                                            unfocusedLabelColor = Color.Gray,
+                                            focusedLabelColor = Color.Gray
                                         ),
                                         shape = RoundedCornerShape(8.dp)
                                     )
@@ -678,7 +684,7 @@ fun TravelScreen(
                             )
                         }
                     }
-                    
+
                     // Meal Preference Toggle and Dropdown
                     Row(
                         modifier = Modifier
@@ -693,7 +699,7 @@ fun TravelScreen(
                             fontFamily = GraphikFontFamily,
                             color = Color.Black
                         )
-                        
+
                         // Toggle switch
                         androidx.compose.material.Switch(
                             checked = controller.mealPreferenceEnabled,
@@ -706,7 +712,7 @@ fun TravelScreen(
                             )
                         )
                     }
-                    
+
                     // Show meal preference dropdown if enabled
                     if (controller.mealPreferenceEnabled) {
                         Box(modifier = Modifier.fillMaxWidth()) {
@@ -721,11 +727,13 @@ fun TravelScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.Gray,
-                                    cursorColor = Color.Transparent,
+                                    cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
                                     focusedContainerColor = Color.White,
                                     unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black
+                                    focusedTextColor = Color.Black,
+                                    unfocusedLabelColor = Color.Gray,
+                                    focusedLabelColor = Color.Gray
                                 ),
                                 shape = RoundedCornerShape(8.dp),
                                 trailingIcon = {
@@ -738,7 +746,7 @@ fun TravelScreen(
                                 },
                                 readOnly = true
                             )
-                            
+
                             DropdownMenu(
                                 expanded = controller.isMealPrefDropdownExpanded,
                                 onDismissRequest = { controller.dismissMealPrefDropdown() },
@@ -755,7 +763,7 @@ fun TravelScreen(
                             }
                         }
                     }
-                    
+
                     // Stay Required Toggle
                     Row(
                         modifier = Modifier
@@ -770,7 +778,7 @@ fun TravelScreen(
                             fontFamily = GraphikFontFamily,
                             color = Color.Black
                         )
-                        
+
                         // Toggle switch
                         androidx.compose.material.Switch(
                             checked = controller.stayRequired,
@@ -783,7 +791,7 @@ fun TravelScreen(
                             )
                         )
                     }
-                    
+
                     // Approval Chain
                     Text(
                         text = "Approval Chain",
@@ -793,12 +801,12 @@ fun TravelScreen(
                         modifier = Modifier.padding(bottom = 8.dp),
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     // Reporting Manager - using the same EmployeeDetailRow component for consistent alignment
                     EmployeeDetailRow(label = "Reporting Manager:", value = controller.reportingManagerName)
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Error message if submission failed
                     controller.submissionError?.let { error ->
                         Text(
@@ -809,7 +817,7 @@ fun TravelScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    
+
                     // Submit Button
                     Button(
                         onClick = { controller.submitTravelRequest() },
@@ -838,7 +846,7 @@ fun TravelScreen(
                             )
                         }
                     }
-                    
+
                     // Spacer at the bottom for better padding
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -863,7 +871,7 @@ fun EmployeeDetailRow(label: String, value: String) {
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            modifier = Modifier.width(140.dp)  // Increased fixed width for alignment
+            modifier = Modifier.width(140.dp) // Increased fixed width for alignment
         )
         Text(
             text = value,

@@ -2,9 +2,9 @@ name: MegaLinter Kotlin
 
 on:
   push:
-    branches: [ Development ]
+    branches: [ Linting ]
   pull_request:
-    branches: [ Development ]
+    branches: [ Linting ]
 
 jobs:
   mega-linter:

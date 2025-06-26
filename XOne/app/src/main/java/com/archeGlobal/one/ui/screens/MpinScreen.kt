@@ -1,16 +1,15 @@
 package com.archeGlobal.one.ui.screens
 
-import androidx.compose.foundation.Image
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,24 +22,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.SecurityQuestion
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import android.widget.Toast
-import androidx.compose.foundation.text.ClickableText
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 
 private val securityQuestionsList = listOf(
     "What is the name of your first school?",
@@ -66,8 +62,11 @@ fun MpinScreen(
 
     // For reset: get the two questions set previously
     val savedQuestions = remember {
-        if (isReset) com.archeGlobal.one.utils.MpinManager.getSecurityQuestions(context)
-        else emptyList()
+        if (isReset) {
+            com.archeGlobal.one.utils.MpinManager.getSecurityQuestions(context)
+        } else {
+            emptyList()
+        }
     }
 
     // For reset: only allow selection from saved questions
@@ -140,14 +139,17 @@ fun MpinScreen(
                 )
             }
 
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(32.dp, 20.dp, 32.dp, 32.dp)
             ) {
                 Text(
-                    text = if (isReset) "Verify your identity to reset your MPIN"
-                    else "Set security questions and a 4-digit PIN for secure access",
+                    text = if (isReset) {
+                        "Verify your identity to reset your MPIN"
+                    } else {
+                        "Set security questions and a 4-digit PIN for secure access"
+                    },
                     fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
@@ -160,7 +162,6 @@ fun MpinScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-           
             if (isReset) {
                 // --- RESET FLOW ---
                 if (!resetVerified) {
@@ -225,7 +226,7 @@ fun MpinScreen(
                                         id = if (showAnswer.getOrNull(0) == true) R.drawable.ic_visibility else R.drawable.ic_visibility_off
                                     ),
                                     contentDescription = if (showAnswer.getOrNull(0) == true) "Hide" else "Show",
-                                    tint = Color.Gray,
+                                    tint = Color.Gray
                                 )
                             }
                         }
@@ -322,7 +323,7 @@ fun MpinScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         for (i in 0 until 4) {
                             OutlinedTextField(
@@ -396,7 +397,7 @@ fun MpinScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         for (i in 0 until 4) {
                             OutlinedTextField(
@@ -495,7 +496,7 @@ fun MpinScreen(
                 if (step == 0) {
                     // Security Questions Step
                     Text(
-                        text ="Select Security Questions",
+                        text = "Select Security Questions",
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
@@ -538,7 +539,8 @@ fun MpinScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Gray
-                                ) },
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth(0.97f)
                                 .padding(bottom = if (i == 0) 8.dp else 16.dp),
@@ -571,14 +573,14 @@ fun MpinScreen(
                                             id = if (showAnswer.getOrNull(i) == true) R.drawable.ic_visibility else R.drawable.ic_visibility_off
                                         ),
                                         contentDescription = if (showAnswer.getOrNull(i) == true) "Hide" else "Show",
-                                        tint = Color.Gray,
+                                        tint = Color.Gray
                                     )
                                 }
                             }
                         )
                         Spacer(modifier = Modifier.height(if (i == 0) 8.dp else 14.dp))
                     }
-                    
+
                     // Info message with red icon
                     Row(
                         modifier = Modifier
@@ -604,9 +606,9 @@ fun MpinScreen(
                             lineHeight = 16.sp
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
+
                     Button(
                         onClick = {
                             if (selectedQuestions.any { it.isBlank() } || answers.any { it.isBlank() }) {
@@ -624,7 +626,7 @@ fun MpinScreen(
                             .padding(top = 8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                            disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                         ),
                         shape = MaterialTheme.shapes.medium
                     ) {
@@ -651,7 +653,7 @@ fun MpinScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         for (i in 0 until 4) {
                             OutlinedTextField(
@@ -725,7 +727,7 @@ fun MpinScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         for (i in 0 until 4) {
                             OutlinedTextField(
@@ -796,10 +798,13 @@ fun MpinScreen(
                                 error = "MPINs do not match!"
                             } else {
                                 error = null
-                                onMpinSet(mpin, listOf(
-                                    SecurityQuestion(selectedQuestions[0], answers[0]),
-                                    SecurityQuestion(selectedQuestions[1], answers[1])
-                                ))
+                                onMpinSet(
+                                    mpin,
+                                    listOf(
+                                        SecurityQuestion(selectedQuestions[0], answers[0]),
+                                        SecurityQuestion(selectedQuestions[1], answers[1])
+                                    )
+                                )
                             }
                         },
                         modifier = Modifier
@@ -808,7 +813,7 @@ fun MpinScreen(
                             .padding(top = 16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                            disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                         ),
                         shape = MaterialTheme.shapes.medium
                     ) {
@@ -821,7 +826,7 @@ fun MpinScreen(
                         )
                     }
                 }
-           }
+            }
         }
     }
 }
@@ -834,7 +839,7 @@ fun OutlinedDropdownField(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedText = if (selectedIndex in options.indices) options[selectedIndex] else ""
-    
+
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -845,11 +850,12 @@ fun OutlinedDropdownField(
             readOnly = true,
             placeholder = {
                 Text(
-                "Select a question",
+                    "Select a question",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray
-                ) },
+                )
+            },
             trailingIcon = {
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown, // your down arrow icon
@@ -919,4 +925,3 @@ fun OutlinedDropdownField(
         }
     }
 }
-

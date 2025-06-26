@@ -1,7 +1,6 @@
 package com.archeGlobal.one.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -59,7 +58,7 @@ fun EventPopup(
                 ) {
                     val painter = rememberAsyncImagePainter(event.image)
                     val state = painter.state
-                    
+
                     Image(
                         painter = painter,
                         contentDescription = event.title,
@@ -68,7 +67,7 @@ fun EventPopup(
                             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                         contentScale = ContentScale.Fit
                     )
-                    
+
                     // Log image loading state
                     when (state) {
                         is coil.compose.AsyncImagePainter.State.Loading -> {
@@ -85,9 +84,8 @@ fun EventPopup(
                             android.util.Log.d("EventPopup", "Image in unknown state: ${event.image}")
                         }
                     }
-                    
                 }
-                
+
                 // Title
                 Text(
                     text = event.title ?: "",
@@ -100,7 +98,7 @@ fun EventPopup(
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
-                
+
                 // Date
                 Text(
                     text = event.date ?: "",
@@ -113,7 +111,7 @@ fun EventPopup(
                     color = Color.Gray,
                     textAlign = TextAlign.Center
                 )
-                
+
                 // Description
                 Text(
                     text = event.description ?: "",
@@ -126,7 +124,7 @@ fun EventPopup(
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
-                
+
                 // Close button
                 Button(
                     onClick = onDismiss,

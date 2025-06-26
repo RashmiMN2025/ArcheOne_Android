@@ -1,5 +1,14 @@
 package com.archeGlobal.one.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,23 +16,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,30 +37,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.ProfileController
-import com.archeGlobal.one.model.ProfileMenuItem
-import com.archeGlobal.one.ui.preview.PreviewNavigator
-import androidx.compose.ui.layout.ContentScale
 import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.model.ProfileMenuItem
 import com.archeGlobal.one.ui.components.FooterScaffold
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import androidx.activity.compose.BackHandler
-import android.net.Uri
-import android.util.Log
-import com.archeGlobal.one.utils.ImageCache
-import androidx.compose.runtime.collectAsState
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
-import coil.compose.AsyncImage
-import android.widget.Toast
-import android.graphics.Bitmap
+import com.archeGlobal.one.ui.preview.PreviewNavigator
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.ImageCache
 
 @Composable
 fun ProfileScreen(
@@ -76,7 +66,6 @@ fun ProfileScreen(
     // Disable back swipe gesture
     BackHandler(enabled = true) {
         // Handle back press manually
-
     }
 
     // Camera permission state
@@ -134,9 +123,9 @@ fun ProfileScreen(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFE0DCD1),  // Light Beige/Grey
-                            Color(0xFFC8C8CA),  // Light Grey
-                            Color(0xFF474749)   // Dark Grey
+                            Color(0xFFE0DCD1), // Light Beige/Grey
+                            Color(0xFFC8C8CA), // Light Grey
+                            Color(0xFF474749) // Dark Grey
                         )
                     )
                 )
@@ -204,7 +193,7 @@ fun ProfileScreen(
                                 color = Color.White.copy(alpha = 0.8f),
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
+                                fontWeight = FontWeight.Normal
                             )
                         }
                     }
@@ -213,13 +202,11 @@ fun ProfileScreen(
                 // Logout confirmation dialog
                 if (showLogoutDialog) {
                     LogoutConfirmationDialog(
-                        onConfirm = { 
-                            showLogoutDialog = false 
+                        onConfirm = {
+                            showLogoutDialog = false
                             controller.onLogoutClick()
                         },
-                        onDismiss = { 
-                            showLogoutDialog = false 
-                        }
+                        onDismiss = { showLogoutDialog = false }
                     )
                 }
 
@@ -249,7 +236,7 @@ fun ProfileScreen(
                                         .padding(bottom = 4.dp),
                                     textAlign = TextAlign.Center
                                 )
-                                
+
                                 Text(
                                     "Choose a method to upload your profile picture",
                                     fontSize = 14.sp,
@@ -338,9 +325,9 @@ private fun LogoutConfirmationDialog(
                     tint = Color(0xFFDD3825),
                     modifier = Modifier.size(32.dp)
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Title
                 Text(
                     text = "Log Out",
@@ -349,9 +336,9 @@ private fun LogoutConfirmationDialog(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Message
                 Text(
                     text = "Are you sure you want to log out of\nyour account?",
@@ -362,9 +349,9 @@ private fun LogoutConfirmationDialog(
                     textAlign = TextAlign.Center,
                     lineHeight = 16.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Buttons in a row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -389,7 +376,7 @@ private fun LogoutConfirmationDialog(
                             fontSize = 14.sp
                         )
                     }
-                    
+
                     // Cancel button
                     Button(
                         onClick = onDismiss,
@@ -517,12 +504,12 @@ private fun ProfileHeader(
                                         .padding(8.dp)
                                         .align(Alignment.Center)
                                 )
-                                
+
                                 // Load the actual profile image on top
                                 Image(
                                     painter = rememberAsyncImagePainter(
                                         ImageCache.createProfileImageRequest(
-                                            context = LocalContext.current, 
+                                            context = LocalContext.current,
                                             url = profilePicture
                                         ),
                                         onSuccess = { Log.d("ProfileHeader", "Profile image loaded successfully: $profilePicture") }
@@ -543,7 +530,7 @@ private fun ProfileHeader(
                         )
                     }
                 }
-                
+
                 // Camera icon overlay for changing profile picture
                 if (onProfilePictureClick != null) {
                     Surface(
@@ -610,7 +597,7 @@ private fun ProfileHeader(
                             .padding(bottom = 4.dp),
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Text(
                         "Choose a method to upload your profile picture",
                         fontSize = 14.sp,
@@ -759,6 +746,6 @@ fun ProfileScreenPreview() {
         context = LocalContext.current,
         navigator = PreviewNavigator()
     )
-    
+
     ProfileScreen(controller = previewController)
 }

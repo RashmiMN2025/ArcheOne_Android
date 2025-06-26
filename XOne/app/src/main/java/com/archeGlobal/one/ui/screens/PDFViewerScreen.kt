@@ -12,6 +12,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -28,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -43,9 +45,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.asPaddingValues
 
 @Composable
 private fun CustomTopAppBar(
@@ -55,7 +54,7 @@ private fun CustomTopAppBar(
     context: Context
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
-    
+
     Column {
         Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
         Row(
@@ -100,25 +99,22 @@ private fun CustomTopAppBar(
             ) {
                 if (showSosButton) {
                     IconButton(
-                        onClick = { 
-                            // Create intent for SOSActivity with special flags
+                        onClick = { // Create intent for SOSActivity with special flags
                             val intent = android.content.Intent(context, com.archeGlobal.one.SOSActivity::class.java).apply {
                                 flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                       android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or 
-                                       android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
                                 putExtra("fromPdfViewer", true)
                                 putExtra("preventWhiteBar", true)
                                 putExtra("showHeader", false)
                             }
-                            
+
                             // Force current activity to have proper display settings
                             (context as? androidx.activity.ComponentActivity)?.let { activity ->
                                 activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
                                 androidx.core.view.WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-                                activity.window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
-                                                                              android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                activity.window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                             }
-                            
+
                             // Start activity with no animation
                             context.startActivity(intent)
                             (context as? androidx.activity.ComponentActivity)?.overridePendingTransition(0, 0)
@@ -155,22 +151,22 @@ fun PDFViewerScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
-    
+
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("Failed to load PDF") }
     var pdfPages by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
     var pageCount by remember { mutableStateOf(0) }
     var currentPage by remember { mutableStateOf(0) }
-    
+
     // State for tooltip visibility
     var showTooltip by remember { mutableStateOf(true) }
-    
+
     // Load the PDF
     LaunchedEffect(pdfUrl) {
         try {
             Log.d("PDFViewerScreen", "Attempting to load PDF from URL: $pdfUrl")
-            
+
             if (pdfUrl.isBlank()) {
                 Log.e("PDFViewerScreen", "Empty PDF URL provided")
                 loadError = true
@@ -178,25 +174,25 @@ fun PDFViewerScreen(
                 isLoading = false
                 return@LaunchedEffect
             }
-            
+
             scope.launch {
                 try {
                     val file = downloadPdf(context, pdfUrl)
                     Log.d("PDFViewerScreen", "Successfully downloaded PDF to: ${file.absolutePath}, size: ${file.length()} bytes")
-                    
+
                     if (!file.exists() || file.length() == 0L) {
                         throw IllegalArgumentException("PDF file does not exist or is empty after download")
                     }
-                    
+
                     try {
                         pdfPages = renderPdfPages(context, file)
                         pageCount = pdfPages.size
                         Log.d("PDFViewerScreen", "Rendered PDF with ${pdfPages.size} pages")
-                        
+
                         if (pdfPages.isEmpty()) {
                             throw IllegalArgumentException("No pages could be rendered from the PDF")
                         }
-                        
+
                         isLoading = false
                     } catch (e: Exception) {
                         Log.e("PDFViewerScreen", "Error rendering PDF: ${e.message}", e)
@@ -218,7 +214,7 @@ fun PDFViewerScreen(
             isLoading = false
         }
     }
-    
+
     // Track current page based on scroll position
     LaunchedEffect(lazyListState) {
         snapshotFlow { lazyListState.firstVisibleItemIndex }
@@ -228,13 +224,13 @@ fun PDFViewerScreen(
                 }
             }
     }
-    
+
     // Auto-hide tooltip after 5 seconds
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(5000)
         showTooltip = false
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -248,11 +244,10 @@ fun PDFViewerScreen(
             CustomTopAppBar(
                 title = title,
                 onBackClick = onBackClick,
-                showSosButton = title.contains("Anti Bribery", ignoreCase = true) || 
-                              title.contains("POSH", ignoreCase = true),
+                showSosButton = title.contains("Anti Bribery", ignoreCase = true) || title.contains("POSH", ignoreCase = true),
                 context = context
             )
-            
+
             // Main content container
             Card(
                 modifier = Modifier
@@ -267,7 +262,7 @@ fun PDFViewerScreen(
                         lazyListState = lazyListState
                     )
                 }
-                
+
                 // Error message
                 if (loadError) {
                     Box(
@@ -287,10 +282,10 @@ fun PDFViewerScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
-                                onClick = { 
+                                onClick = {
                                     isLoading = true
                                     loadError = false
-                                    
+
                                     scope.launch {
                                         try {
                                             val file = downloadPdf(context, pdfUrl)
@@ -325,7 +320,7 @@ fun PDFViewerScreen(
                 }
             }
         }
-        
+
         // Display the universal loader while loading
         UniversalLoader(isLoading = isLoading)
 
@@ -361,15 +356,15 @@ private fun PdfPagesView(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .zIndex(0f)  // Lowest layer
+                .zIndex(0f) // Lowest layer
         )
-        
+
         // Scrollable content
         LazyColumn(
             state = lazyListState,
             modifier = Modifier
                 .fillMaxSize()
-                .zIndex(1f),  // Middle layer
+                .zIndex(1f), // Middle layer
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(pdfPages) { page ->
@@ -381,7 +376,7 @@ private fun PdfPagesView(
                 ) {
                     PdfPageWithZoom(page = page)
                 }
-                
+
                 // Add spacing between pages
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -396,19 +391,19 @@ private fun PdfPageWithZoom(page: Bitmap) {
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
     var containerSize by remember { mutableStateOf(Size.Zero) }
-    
+
     // Create a transformable state for handling zoom and pan
     val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
         // Handle zoom
         if (zoomChange != 1f) {
             scale = (scale * zoomChange).coerceIn(1f, 3f)
         }
-        
+
         // Handle pan when zoomed in
         if (scale > 1f) {
             offsetX += panChange.x
             offsetY += panChange.y
-            
+
             // Constrain pan within bounds
             val maxX = (containerSize.width * (scale - 1f)) / 2f
             val maxY = (containerSize.height * (scale - 1f)) / 2f
@@ -420,7 +415,7 @@ private fun PdfPageWithZoom(page: Bitmap) {
             offsetY = 0f
         }
     }
-    
+
     // Handle double-tap to zoom
     val doubleTapModifier = Modifier.pointerInput(Unit) {
         detectTapGestures(
@@ -433,7 +428,7 @@ private fun PdfPageWithZoom(page: Bitmap) {
             }
         )
     }
-    
+
     // Main container for the PDF page
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -462,7 +457,7 @@ private fun PdfPageWithZoom(page: Bitmap) {
                     }
             )
         }
-        
+
         // Transparent overlay only for zoom gestures
         // We place it over the Surface to capture pinch/zoom without blocking scrolling
         Box(
@@ -481,22 +476,22 @@ private fun PdfPageWithZoom(page: Bitmap) {
 private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withContext(Dispatchers.IO) {
     val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
     val outputFile = File(context.cacheDir, fileName)
-    
+
     try {
         Log.d("PDFViewerScreen", "Downloading PDF from URL: $pdfUrl")
-        
+
         // Handle content:// URIs (FileProvider)
         if (pdfUrl.startsWith("content://")) {
             try {
                 val uri = Uri.parse(pdfUrl)
                 Log.d("PDFViewerScreen", "Handling content URI: $uri")
-                
+
                 context.contentResolver.openInputStream(uri)?.use { input ->
                     outputFile.outputStream().use { output ->
                         input.copyTo(output)
                     }
                 }
-                
+
                 if (outputFile.exists() && outputFile.length() > 0) {
                     Log.d("PDFViewerScreen", "Successfully copied content URI to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
                     return@withContext outputFile
@@ -509,14 +504,14 @@ private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withCo
                 throw e
             }
         }
-        
+
         // Handle local file URI
         if (pdfUrl.startsWith("file://")) {
             try {
                 // Parse the URI properly
                 val uri = Uri.parse(pdfUrl)
                 Log.d("PDFViewerScreen", "URI path: ${uri.path}")
-                
+
                 val sourceFile = File(uri.path ?: "")
                 if (sourceFile.exists() && sourceFile.canRead()) {
                     Log.d("PDFViewerScreen", "Local file exists and is readable: ${sourceFile.absolutePath}")
@@ -525,18 +520,18 @@ private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withCo
                             input.copyTo(output)
                         }
                     }
-                    
+
                     if (outputFile.exists() && outputFile.length() > 0) {
                         Log.d("PDFViewerScreen", "Successfully copied file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
                     } else {
                         Log.e("PDFViewerScreen", "File copy failed or file is empty: ${outputFile.absolutePath}")
                     }
-                    
+
                     return@withContext outputFile
                 } else {
                     Log.e("PDFViewerScreen", "Local file doesn't exist or can't be read: ${sourceFile.absolutePath}")
                     Log.e("PDFViewerScreen", "File exists: ${sourceFile.exists()}, Can read: ${sourceFile.canRead()}")
-                    
+
                     // If we can't access the original file, try to use it directly if it's in our cache
                     if (sourceFile.absolutePath.contains(context.cacheDir.absolutePath)) {
                         Log.d("PDFViewerScreen", "File is in our cache, using it directly")
@@ -544,7 +539,7 @@ private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withCo
                             return@withContext sourceFile
                         }
                     }
-                    
+
                     throw IllegalArgumentException("Cannot access local file: ${sourceFile.absolutePath}")
                 }
             } catch (e: Exception) {
@@ -552,32 +547,32 @@ private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withCo
                 throw e
             }
         }
-        
+
         // URL handling for remote files
         try {
             val url = URL(pdfUrl)
             val connection = url.openConnection()
             connection.connect()
-            
+
             val input = connection.getInputStream()
             val output = FileOutputStream(outputFile)
-            
+
             val buffer = ByteArray(4 * 1024) // 4K buffer
             var read: Int
             while (input.read(buffer).also { read = it } != -1) {
                 output.write(buffer, 0, read)
             }
-            
+
             output.flush()
             output.close()
             input.close()
-            
+
             if (outputFile.exists() && outputFile.length() > 0) {
                 Log.d("PDFViewerScreen", "Successfully downloaded file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
             } else {
                 Log.e("PDFViewerScreen", "File download failed or file is empty: ${outputFile.absolutePath}")
             }
-            
+
             return@withContext outputFile
         } catch (e: Exception) {
             Log.e("PDFViewerScreen", "Error downloading remote PDF: ${e.message}", e)
@@ -591,71 +586,71 @@ private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withCo
 
 private suspend fun renderPdfPages(context: Context, pdfFile: File): List<Bitmap> = withContext(Dispatchers.IO) {
     val renderedPages = mutableListOf<Bitmap>()
-    
+
     try {
         Log.d("PDFViewerScreen", "Starting to render PDF: ${pdfFile.absolutePath}, size: ${pdfFile.length()} bytes")
-        
+
         if (!pdfFile.exists() || pdfFile.length() == 0L) {
             Log.e("PDFViewerScreen", "PDF file does not exist or is empty: ${pdfFile.absolutePath}")
             throw IllegalArgumentException("PDF file does not exist or is empty")
         }
-        
+
         try {
             val fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
             val pdfRenderer = PdfRenderer(fileDescriptor)
-            
+
             val pageCount = pdfRenderer.pageCount
             Log.d("PDFViewerScreen", "PDF has $pageCount pages")
-            
+
             if (pageCount == 0) {
                 Log.e("PDFViewerScreen", "PDF has no pages")
                 throw IllegalArgumentException("PDF has no pages")
             }
-            
+
             for (i in 0 until pageCount) {
                 val page = pdfRenderer.openPage(i)
-                
+
                 // Create bitmap with appropriate dimensions for screen width
                 val displayMetrics = context.resources.displayMetrics
                 val screenWidth = displayMetrics.widthPixels
-                
+
                 // Calculate height to maintain aspect ratio
                 val pageRatio = page.height.toFloat() / page.width.toFloat()
                 val targetHeight = (screenWidth * pageRatio).toInt()
-                
+
                 val bitmap = Bitmap.createBitmap(screenWidth, targetHeight, Bitmap.Config.ARGB_8888)
-                
+
                 // Render the page onto the bitmap
                 page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                 renderedPages.add(bitmap)
-                
+
                 page.close()
-                
-                Log.d("PDFViewerScreen", "Rendered page ${i+1} of $pageCount")
+
+                Log.d("PDFViewerScreen", "Rendered page ${i + 1} of $pageCount")
             }
-            
+
             pdfRenderer.close()
             fileDescriptor.close()
-            
+
             Log.d("PDFViewerScreen", "Successfully rendered all $pageCount pages")
         } catch (e: Exception) {
             // Handle specific PDF rendering errors
             Log.e("PDFViewerScreen", "Error rendering PDF (first attempt): ${e.message}", e)
-            
+
             // Try alternate rendering approach for problematic PDFs
             try {
                 Log.d("PDFViewerScreen", "Trying alternate rendering approach...")
-                
+
                 // Create a simple placeholder bitmap for documents that can't be rendered
                 val displayMetrics = context.resources.displayMetrics
                 val screenWidth = displayMetrics.widthPixels
                 val placeholderHeight = (screenWidth * 1.4f).toInt() // Standard page ratio
-                
+
                 val placeholderBitmap = Bitmap.createBitmap(screenWidth, placeholderHeight, Bitmap.Config.ARGB_8888)
                 renderedPages.add(placeholderBitmap)
-                
+
                 Log.d("PDFViewerScreen", "Added placeholder bitmap for document")
-                
+
                 // At this point, we have at least one page (placeholder) so the viewer will show something
                 return@withContext renderedPages
             } catch (innerE: Exception) {
@@ -667,6 +662,6 @@ private suspend fun renderPdfPages(context: Context, pdfFile: File): List<Bitmap
         Log.e("PDFViewerScreen", "Error rendering PDF: ${e.message}", e)
         throw e
     }
-    
+
     return@withContext renderedPages
 }

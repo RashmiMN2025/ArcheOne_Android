@@ -12,13 +12,13 @@ data class HolidayResponse(
 
 data class Holiday(
     @SerializedName("name") val name: String,
-    @SerializedName("date") val date: String,  // Format: "DD-MM-YYYY"
-    @SerializedName("holiday_type") val holidayType: String,  // "Yes", "RH", or "NA"
-    @SerializedName("icon") val icon: String? = null  // URL to the holiday icon
+    @SerializedName("date") val date: String, // Format: "DD-MM-YYYY"
+    @SerializedName("holiday_type") val holidayType: String, // "Yes", "RH", or "NA"
+    @SerializedName("icon") val icon: String? = null // URL to the holiday icon
 ) {
     val isApplicable: Boolean
         get() = holidayType == "Yes" || holidayType == "RH"
-    
+
     val month: Int
         get() = try {
             val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -27,7 +27,7 @@ data class Holiday(
         } catch (e: Exception) {
             0
         }
-    
+
     val day: Int
         get() = try {
             val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")

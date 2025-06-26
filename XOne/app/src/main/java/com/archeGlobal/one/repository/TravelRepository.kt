@@ -23,14 +23,14 @@ class TravelRepository {
             // } else {
             //     throw Exception("Failed to fetch travel history")
             // }
-            
+
             // For now, emit mock data
             emit(getMockTravelHistory())
         } catch (e: Exception) {
             throw e
         }
     }.flowOn(Dispatchers.IO)
-    
+
     /**
      * Mock data for development purposes
      */

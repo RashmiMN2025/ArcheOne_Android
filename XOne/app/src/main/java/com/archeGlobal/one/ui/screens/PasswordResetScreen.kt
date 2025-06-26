@@ -37,7 +37,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 fun PasswordResetScreen(navigator: Navigator) {
     val context = LocalContext.current
     val controller = remember { PasswordResetController(navigator, context) }
-    
+
     var email by remember { mutableStateOf("") }
     var employeeId by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
@@ -45,7 +45,7 @@ fun PasswordResetScreen(navigator: Navigator) {
     var passwordResetResponse by remember { mutableStateOf<PasswordResetResponse?>(null) }
     var showPasswordBox by remember { mutableStateOf(false) }
     var timeRemaining by remember { mutableStateOf(120) } // 2 minutes in seconds
-    
+
     // Set up countdown timer when password is shown
     val countDownTimer = remember(passwordResetResponse) {
         object : CountDownTimer(120000, 1000) { // 2 minutes, update every second
@@ -85,7 +85,7 @@ fun PasswordResetScreen(navigator: Navigator) {
                     colors = listOf(
                         Color(0xFFE0DCD1), // Light Beige
                         Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
+                        Color(0xFF474749) // Dark Gray
                     )
                 )
             )
@@ -165,7 +165,7 @@ fun PasswordResetScreen(navigator: Navigator) {
                         errorMessage = "Please fill all the fields"
                         return@Button
                     }
-                    
+
                     isLoading = true
                     controller.resetPassword(email, employeeId) { response, error ->
                         isLoading = false
@@ -189,7 +189,7 @@ fun PasswordResetScreen(navigator: Navigator) {
                     .padding(top = 10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFDD3825),
-                    disabledContainerColor = Color(0xFFDD3825)  // Keep same color when disabled
+                    disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                 ),
                 shape = MaterialTheme.shapes.medium,
                 enabled = !isLoading
@@ -233,18 +233,18 @@ fun PasswordResetScreen(navigator: Navigator) {
                         fontFamily = GraphikFontFamily,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
+
                     Text(
                         text = "This is your temporary password",
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(10.dp))
-                    
+
                     // Password Display
                     Surface(
                         modifier = Modifier
@@ -275,18 +275,18 @@ fun PasswordResetScreen(navigator: Navigator) {
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(10.dp))
-                    
+
                     // Timer
                     Text(
                         text = "Time remaining: ${String.format("%02d:%02d", timeRemaining / 60, timeRemaining % 60)}",
                         fontSize = 13.sp,
                         fontFamily = GraphikFontFamily
                     )
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
+
                     // Progress bar
                     LinearProgressIndicator(
                         progress = { timeRemaining / 120f },
@@ -295,9 +295,9 @@ fun PasswordResetScreen(navigator: Navigator) {
                             .height(3.dp),
                         color = Color(0xFFDD3825) // Red color
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Info message
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -327,7 +327,7 @@ fun PasswordResetScreen(navigator: Navigator) {
             UniversalLoader(isLoading = true)
         }
     }
-    
+
     // Cleanup timer when the composable is disposed
     DisposableEffect(Unit) {
         onDispose {

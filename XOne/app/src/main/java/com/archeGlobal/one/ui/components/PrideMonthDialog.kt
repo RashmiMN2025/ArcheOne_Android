@@ -1,7 +1,6 @@
 package com.archeGlobal.one.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -9,16 +8,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -68,9 +60,9 @@ fun PrideMonthDialog(
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // App Icons Row
                 Row(
                     modifier = Modifier
@@ -86,7 +78,7 @@ fun PrideMonthDialog(
                         Card(
                             modifier = Modifier
                                 .size(64.dp),
-                                
+
                             shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = Color.Black
@@ -105,14 +97,14 @@ fun PrideMonthDialog(
                                     contentDescription = "App Icon",
                                     modifier = Modifier
                                         .size(48.dp),
-                                        
+
                                     contentScale = ContentScale.Fit
                                 )
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        
+
                         Text(
                             text = "App Icon",
                             fontSize = 14.sp,
@@ -121,10 +113,10 @@ fun PrideMonthDialog(
                             color = Color.Black
                         )
                     }
-                    
+
                     // Rotating loader between icons
                     RotatingLoader(spin = isSpinning)
-                    
+
                     // Pride App Icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -132,7 +124,7 @@ fun PrideMonthDialog(
                         Card(
                             modifier = Modifier
                                 .size(64.dp),
-                                
+
                             shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = Color.Black
@@ -147,14 +139,14 @@ fun PrideMonthDialog(
                                     contentDescription = "Pride App Icon",
                                     modifier = Modifier
                                         .fillMaxSize(),
-                                        
+
                                     contentScale = ContentScale.Fit
                                 )
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(4.dp))
-                        
+
                         Text(
                             text = "Event Icon",
                             fontSize = 14.sp,
@@ -164,9 +156,9 @@ fun PrideMonthDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Change Icon Button
                 Button(
                     onClick = {
@@ -191,7 +183,7 @@ fun PrideMonthDialog(
                         color = if (isUsingPrideIcon) Color(0xFFDD3825) else Color.White
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

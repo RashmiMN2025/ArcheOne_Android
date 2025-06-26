@@ -5,50 +5,47 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import android.util.Log
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import com.archeGlobal.one.controller.MyDocumentsController
-import com.archeGlobal.one.controller.DocumentUploadManager
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
-import com.archeGlobal.one.R
-import com.archeGlobal.one.ui.components.UniversalLoader
-import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.text.font.FontFamily
-import androidx.core.content.ContextCompat
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.controller.MpinController
-import com.archeGlobal.one.utils.UserDataManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat
+import com.archeGlobal.one.R
+import com.archeGlobal.one.controller.DocumentUploadManager
+import com.archeGlobal.one.controller.MpinController
+import com.archeGlobal.one.controller.MyDocumentsController
+import com.archeGlobal.one.ui.components.UniversalLoader
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -150,408 +147,417 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         }
     }
 
+    // Check if there are no documents and show toast
+    LaunchedEffect(personalDocs, professionalDocs) {
+        val hasPersonalDocs = personalDocs.isNotEmpty()
+        val hasProfessionalDocs = professionalDocs.isNotEmpty()
+
+        if (!hasPersonalDocs && !hasProfessionalDocs && !isLoading) {
+            Toast.makeText(context, "No documents found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Box(
         modifier = Modifier
-        .fillMaxSize()
+            .fillMaxSize()
     ) {
         Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige
-                        Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749)  // Dark Gray
-                    )
-                )
-            )
-            .then(if (showMpinPrompt) Modifier.blur(8.dp) else Modifier)
-    ) {
-        Column(
             modifier = Modifier
                 .fillMaxSize()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(bottom = 10.dp)
-            ) {
-                IconButton(onClick = onBackPressed) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFE0DCD1), // Light Beige
+                            Color(0xFFC8C8CA), // Light Gray
+                            Color(0xFF474749) // Dark Gray
+                        )
                     )
-                }
-
-                Spacer(modifier = Modifier.weight(1f)) // Pushes text to center
-
-                Text(
-                    text = "My Documents",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.weight(1.5f)) // Balances right side
-            }
-
-            // Scrollable Content
-            LazyColumn(
+                .then(if (showMpinPrompt) Modifier.blur(8.dp) else Modifier)
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
-                    ) {
-                        Column(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(bottom = 10.dp)
+                ) {
+                    IconButton(onClick = onBackPressed) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f)) // Pushes text to center
+
+                    Text(
+                        text = "My Documents",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.weight(1.5f)) // Balances right side
+                }
+
+                // Scrollable Content
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    item {
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
+                                .padding(bottom = 16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
                         ) {
-                            Text(
-                                text = "Upload or view your personal and professional documents here",
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 32.dp),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-
-                            Text(
-                                text = "Personal Documents",
-                                fontSize = 17.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 24.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                listOf("Aadhar Card", "Passport", "PAN Card").forEach { item ->
-                                    DocumentCard(
-                                        name = item,
-                                        filePath = personalDocs[item],
-                                        isUploaded = uploadStatus[item] ?: false,
-                                        controller = controller,
-                                        context = context,
-                                        uploadManager = uploadManager
-                                    )
-                                }
-                            }
-
-                            Text(
-                                text = "Professional Documents",
-                                fontSize = 17.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                listOf("Offer Letter", "Certificate", "Experience Letter").forEach { item ->
-                                    DocumentCard(
-                                        name = item,
-                                        filePath = professionalDocs[item],
-                                        isUploaded = uploadStatus[item] ?: false,
-                                        controller = controller,
-                                        context = context,
-                                        uploadManager = uploadManager
-                                    )
-                                }
-                            }
-
-                            // Note about file size limit
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 20.dp)
+                                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
                             ) {
                                 Text(
-                                    text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
-                                    fontSize = 12.sp,
+                                    text = "Upload or view your personal and professional documents here",
+                                    fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    color = Color.Gray,
-                                    modifier = Modifier.fillMaxWidth(),
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 32.dp),
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
+
+                                Text(
+                                    text = "Personal Documents",
+                                    fontSize = 17.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 24.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    listOf("Aadhar Card", "Passport", "PAN Card").forEach { item ->
+                                        DocumentCard(
+                                            name = item,
+                                            filePath = personalDocs[item],
+                                            isUploaded = uploadStatus[item] ?: false,
+                                            controller = controller,
+                                            context = context,
+                                            uploadManager = uploadManager
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = "Professional Documents",
+                                    fontSize = 17.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    listOf("Offer Letter", "Certificate", "Experience Letter").forEach { item ->
+                                        DocumentCard(
+                                            name = item,
+                                            filePath = professionalDocs[item],
+                                            isUploaded = uploadStatus[item] ?: false,
+                                            controller = controller,
+                                            context = context,
+                                            uploadManager = uploadManager
+                                        )
+                                    }
+                                }
+
+                                // Note about file size limit
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 20.dp)
+                                ) {
+                                    Text(
+                                        text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
+                                        fontSize = 12.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Gray,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+
+            // Show loader using UniversalLoader
+            if (isLoading) {
+                UniversalLoader(isLoading = true)
+            }
+
+            // Upload Dialog
+            if (showUploadDialog) {
+                UploadDialog(
+                    onDismiss = { showUploadDialog = false },
+                    onCameraClick = {
+                        if (hasCameraPermission) {
+                            cameraLauncher.launch(null)
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
+                    onGalleryClick = { galleryLauncher.launch("image/*") },
+                    onFilesClick = { galleryLauncher.launch("application/pdf") }
+                )
+            }
         }
 
-        // Show loader using UniversalLoader
-        if (isLoading) {
-            UniversalLoader(isLoading = true)
-        }
-
-        // Upload Dialog
-        if (showUploadDialog) {
-            UploadDialog(
-                onDismiss = { showUploadDialog = false },
-                onCameraClick = {
-                    if (hasCameraPermission) {
-                        cameraLauncher.launch(null)
-                    } else {
-                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
-                },
-                onGalleryClick = { galleryLauncher.launch("image/*") },
-                onFilesClick = { galleryLauncher.launch("application/pdf") }
-            )
-        }
-    }
-
-    if (showMpinPrompt) {
-        // Blur and block background
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.50f))
-                .blur(6.dp)
-                .zIndex(10f)
-                .pointerInput(Unit) {}
-        )
-
-        // Loader if verifying
-        if (isVerifyingMpin) {
-            UniversalLoader(isLoading = true)
-        }
-
-        // Centered MPIN prompt box
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(101f),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = Color(0xFFFEF7F2),
-                shadowElevation = 24.dp,
-                tonalElevation = 2.dp,
+        if (showMpinPrompt) {
+            // Blur and block background
+            Box(
                 modifier = Modifier
-                    .widthIn(min = 340.dp, max = 420.dp)
-                    .padding(horizontal = 16.dp)
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.50f))
+                    .blur(6.dp)
+                    .zIndex(10f)
+                    .pointerInput(Unit) {}
+            )
+
+            // Loader if verifying
+            if (isVerifyingMpin) {
+                UniversalLoader(isLoading = true)
+            }
+
+            // Centered MPIN prompt box
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(101f),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color(0xFFFEF7F2),
+                    shadowElevation = 24.dp,
+                    tonalElevation = 2.dp,
                     modifier = Modifier
-                        .padding(horizontal = 20.dp, vertical = 28.dp)
-                        .widthIn(min = 340.dp, max = 420.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .widthIn(min = 340.dp, max = 420.dp)
+                        .padding(horizontal = 16.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = com.archeGlobal.one.R.drawable.ic_lock),
-                        contentDescription = "Lock",
-                        tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Text(
-                        "Enter Your MPIN",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 26.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        "Please enter your 4-digit MPIN to access your documents",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 16.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 18.sp
-                    )
-                    Spacer(modifier = Modifier.height(28.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp, vertical = 28.dp)
+                            .widthIn(min = 340.dp, max = 420.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Icon(
+                            painter = painterResource(id = com.archeGlobal.one.R.drawable.ic_lock),
+                            contentDescription = "Lock",
+                            tint = Color(0xFFDD3825),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(18.dp))
                         Text(
-                            "Enter MPIN",
+                            "Enter Your MPIN",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 26.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            "Please enter your 4-digit MPIN to access your documents",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 16.sp,
-                            color = Color(0xFF7B7B7B),
-                            modifier = Modifier.padding(start = 4.dp)
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp
                         )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        for (i in 0 until 4) {
-                            val hasDigit = enteredMpin.getOrNull(i)?.isDigit() == true
-                            OutlinedTextField(
-                                value = enteredMpin.getOrNull(i)?.toString() ?: "",
-                                onValueChange = { value ->
-                                    if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        val chars = enteredMpin.padEnd(4).toCharArray()
-                                        chars[i] = value.firstOrNull() ?: ' '
-                                        enteredMpin = String(chars).replace(" ", "")
-                                        if (value.isNotEmpty() && i < 3) {
-                                            focusRequesters[i + 1].requestFocus()
-                                        }
-                                    }
-                                    if (value.isEmpty() && i > 0) {
-                                        val chars = enteredMpin.padEnd(4).toCharArray()
-                                        chars[i] = ' '
-                                        enteredMpin = String(chars).replace(" ", "")
-                                        focusRequesters[i - 1].requestFocus()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .width(65.dp)
-                                    .height(65.dp)
-                                    .focusRequester(focusRequesters[i])
-                                    .padding(horizontal = 4.dp)
-                                    .onFocusChanged { focusState ->
-                                        if (focusState.isFocused) focusedIndex = i
-                                    }
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
-                                        shape = MaterialTheme.shapes.medium
-                                    ),
-                                textStyle = TextStyle(
-                                    fontSize = 28.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center
-                                ),
-                                singleLine = true,
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                shape = MaterialTheme.shapes.medium,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    disabledContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    disabledTextColor = Color.Black,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent
-                                ),
-                                isError = mpinError != null && enteredMpin.length == 4
+                        Spacer(modifier = Modifier.height(28.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Enter MPIN",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 16.sp,
+                                color = Color(0xFF7B7B7B),
+                                modifier = Modifier.padding(start = 4.dp)
                             )
-                            if (i < 3) Spacer(modifier = Modifier.width(8.dp))
                         }
-                    }
-                    Spacer(modifier = Modifier.height(26.dp))
-                    Button(
-                        onClick = {
-                            if (enteredMpin.length == 4) {
-                                isVerifyingMpin = true
-                                mpinError = null
-                                // Simulate async verification
-                                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                                    kotlinx.coroutines.delay(700)
-                                    if (mpinController.validateMpin(enteredMpin)) {
-                                        mpinError = null
-                                        enteredMpin = ""
-                                        showMpinPrompt = false
-                                        Toast.makeText(context, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        mpinError = "Invalid MPIN. Please try again."
-                                        enteredMpin = ""
-                                        Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
-                                    }
-                                    isVerifyingMpin = false
-                                }
-                            } else {
-                                mpinError = "Please enter 4 digits."
-                                Toast.makeText(context, "Please enter 4 digits.", Toast.LENGTH_SHORT).show()
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            for (i in 0 until 4) {
+                                val hasDigit = enteredMpin.getOrNull(i)?.isDigit() == true
+                                OutlinedTextField(
+                                    value = enteredMpin.getOrNull(i)?.toString() ?: "",
+                                    onValueChange = { value ->
+                                        if (value.length <= 1 && value.all { it.isDigit() }) {
+                                            val chars = enteredMpin.padEnd(4).toCharArray()
+                                            chars[i] = value.firstOrNull() ?: ' '
+                                            enteredMpin = String(chars).replace(" ", "")
+                                            if (value.isNotEmpty() && i < 3) {
+                                                focusRequesters[i + 1].requestFocus()
+                                            }
+                                        }
+                                        if (value.isEmpty() && i > 0) {
+                                            val chars = enteredMpin.padEnd(4).toCharArray()
+                                            chars[i] = ' '
+                                            enteredMpin = String(chars).replace(" ", "")
+                                            focusRequesters[i - 1].requestFocus()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .width(65.dp)
+                                        .height(65.dp)
+                                        .focusRequester(focusRequesters[i])
+                                        .padding(horizontal = 4.dp)
+                                        .onFocusChanged { focusState ->
+                                            if (focusState.isFocused) focusedIndex = i
+                                        }
+                                        .border(
+                                            width = 1.5.dp,
+                                            color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
+                                            shape = MaterialTheme.shapes.medium
+                                        ),
+                                    textStyle = TextStyle(
+                                        fontSize = 28.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center
+                                    ),
+                                    singleLine = true,
+                                    visualTransformation = PasswordVisualTransformation(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        disabledContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        disabledTextColor = Color.Black,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent
+                                    ),
+                                    isError = mpinError != null && enteredMpin.length == 4
+                                )
+                                if (i < 3) Spacer(modifier = Modifier.width(8.dp))
                             }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            contentColor = Color.White
-                        ),
-                        enabled = !isVerifyingMpin
-                    ) {
-                        Text(
-                            "Unlock",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 20.sp
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    // Reset MPIN button
-                    OutlinedButton(
-                        onClick = {
-                            val intent = android.content.Intent(context, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
-                            intent.putExtra("resetMpin", true)
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier
-                            .width(140.dp)
-                            .height(38.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE0B4AA),
-                            contentColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFE0B4AA),
-                            disabledContentColor = Color(0xFFDD3825)
-                        ),
-                        border = BorderStroke(1.dp, Color(0xFFDD3825)),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text(
-                            "Reset MPIN",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp
-                        )
+                        }
+                        Spacer(modifier = Modifier.height(26.dp))
+                        Button(
+                            onClick = {
+                                if (enteredMpin.length == 4) {
+                                    isVerifyingMpin = true
+                                    mpinError = null
+                                    // Simulate async verification
+                                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                        kotlinx.coroutines.delay(700)
+                                        if (mpinController.validateMpin(enteredMpin)) {
+                                            mpinError = null
+                                            enteredMpin = ""
+                                            showMpinPrompt = false
+                                            Toast.makeText(context, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            mpinError = "Invalid MPIN. Please try again."
+                                            enteredMpin = ""
+                                            Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
+                                        }
+                                        isVerifyingMpin = false
+                                    }
+                                } else {
+                                    mpinError = "Please enter 4 digits."
+                                    Toast.makeText(context, "Please enter 4 digits.", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(54.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                contentColor = Color.White
+                            ),
+                            enabled = !isVerifyingMpin
+                        ) {
+                            Text(
+                                "Unlock",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 20.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        // Reset MPIN button
+                        OutlinedButton(
+                            onClick = {
+                                val intent = android.content.Intent(context, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
+                                intent.putExtra("resetMpin", true)
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier
+                                .width(140.dp)
+                                .height(38.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFE0B4AA),
+                                contentColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFE0B4AA),
+                                disabledContentColor = Color(0xFFDD3825)
+                            ),
+                            border = BorderStroke(1.dp, Color(0xFFDD3825)),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text(
+                                "Reset MPIN",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
                 }
             }
+            return // Block rest of the screen until MPIN is entered
         }
-        return // Block rest of the screen until MPIN is entered
     }
-    }
-
 }
 
 @Composable
@@ -636,7 +642,8 @@ private fun UploadDialog(
                         contentDescription = "Gallery",
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text("Gallery",
+                    Text(
+                        "Gallery",
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold
@@ -659,7 +666,8 @@ private fun UploadDialog(
                         contentDescription = "Files",
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text("Files",
+                    Text(
+                        "Files",
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold

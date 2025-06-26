@@ -29,10 +29,13 @@ fun RotatingLoader(spin: Boolean) {
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 1000, easing = LinearEasing),
                 repeatMode = RepeatMode.Restart
-            ), label = "angle"
+            ),
+            label = "angle"
         )
         rot
-    } else 0f
+    } else {
+        0f
+    }
 
     Box(
         modifier = Modifier

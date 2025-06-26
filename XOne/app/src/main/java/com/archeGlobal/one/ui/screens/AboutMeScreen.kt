@@ -20,12 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AboutMeController
-import com.archeGlobal.one.model.FooterNavigationModel
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,16 +32,16 @@ fun AboutMeScreen(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,    // Light Beige/Grey (0xFFE0DCD1)
+                        WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
                         WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                        WelcomeBackgroundBottom  // Dark Grey (0xFF474749)
+                        WelcomeBackgroundBottom // Dark Grey (0xFF474749)
                     )
                 )
             )
@@ -65,7 +63,7 @@ fun AboutMeScreen(
                     navigationIconContentColor = Color.Black
                 )
             )
-            
+
             // Content
             Column(
                 modifier = Modifier
@@ -97,9 +95,9 @@ fun AboutMeScreen(
                                 LabeledInfo("Blood Group", controller.model.bloodGroup)
                             )
                         )
-                        
+
                         Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
-                        
+
                         // Reporting Structure Section
                         SectionContent(
                             icon = R.drawable.reporting,
@@ -117,9 +115,9 @@ fun AboutMeScreen(
                                 )
                             )
                         )
-                        
+
                         Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
-                        
+
                         // Work Information Section
                         SectionContent(
                             icon = R.drawable.building1,
@@ -141,7 +139,7 @@ data class LabeledInfo(
     val label: String,
     val value: String,
     val showPersonIcon: Boolean = false,
-    val icon: Int? = null 
+    val icon: Int? = null
 )
 
 @Composable
@@ -174,7 +172,7 @@ fun SectionContent(
                 color = Color.Black
             )
         }
-        
+
         // Section Content
         Column(
             verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -222,4 +220,4 @@ fun SectionContent(
             }
         }
     }
-} 
+}

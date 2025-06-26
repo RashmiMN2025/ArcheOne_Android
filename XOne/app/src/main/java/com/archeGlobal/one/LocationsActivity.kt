@@ -3,10 +3,10 @@ package com.archeGlobal.one
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.navigation.compose.rememberNavController
 import com.archeGlobal.one.controller.LocationsController
 import com.archeGlobal.one.ui.screens.LocationsScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
-import androidx.navigation.compose.rememberNavController
 
 class LocationsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

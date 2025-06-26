@@ -1,54 +1,43 @@
 package com.archeGlobal.one
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.navigation.NavType
-import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.*
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
-import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.XOneTheme
-import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.BiometricHelper
+import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
-import android.content.DialogInterface
-import androidx.compose.ui.platform.LocalContext
-import com.archeGlobal.one.navigation.AndroidNavigator
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -109,6 +98,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("ViewModelConstructorInComposable")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         userDataManager = UserDataManager.getInstance(this)
@@ -116,7 +106,7 @@ class HomeActivity : AppCompatActivity() {
 
         // Check if we're coming from login
         val fromLogin = intent.getBooleanExtra("fromLogin", false)
-        
+
         // If MPIN is not set and we're NOT coming from login, redirect to MPIN setup
         // Users coming from login should not be forced to set up MPIN
         if (!com.archeGlobal.one.utils.MpinManager.checkMpinExists(this) && !fromLogin) {
@@ -131,7 +121,7 @@ class HomeActivity : AppCompatActivity() {
             finish()
             return
         }
-        
+
         // Set the class-level variable
         isFromLogin = fromLogin
 
@@ -145,6 +135,8 @@ class HomeActivity : AppCompatActivity() {
         // If coming from login or MPIN setup, don't show MPIN prompt on home screen
         if (fromLogin || fromMpin) {
             userDataManager.preferencesManager.setAppLockState(false)
+            // Mark authentication session as active when coming from login/MPIN
+            XOneApplication.getInstance().getAppLifecycleObserver().setAuthenticationSessionActive(true)
         } else {
             // If not coming from login/MPIN setup and MPIN exists, set lock state to true
             // This ensures MPIN prompt shows when app is reopened
@@ -180,17 +172,20 @@ class HomeActivity : AppCompatActivity() {
         }
 
         // Disable back navigation to login
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                val navController = navigator.navController ?: return
-                if (navController.currentDestination?.route == "greetings") {
-                    navigator.navigateToHome()
-                } else {
-                    // Either exit the app or show a toast
-                    Toast.makeText(this@HomeActivity, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    val navController = navigator.navController ?: return
+                    if (navController.currentDestination?.route == "greetings") {
+                        navigator.navigateToHome()
+                    } else {
+                        // Either exit the app or show a toast
+                        Toast.makeText(this@HomeActivity, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
-        })
+        )
 
         // Initialize controllers that need context
         otpVerificationController = OtpVerificationController(
@@ -202,29 +197,29 @@ class HomeActivity : AppCompatActivity() {
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
-        val fromOtp = intent.getBooleanExtra("FROM_OTP", false)        // Print the intent extras for debugging
+        val fromOtp = intent.getBooleanExtra("FROM_OTP", false) // Print the intent extras for debugging
         Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, isEmergencyContact=$isEmergencyContact")
         Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
-        
+
         setContent {
             XOneTheme {
                 val navController = rememberNavController()
-                
+
                 // Use the class-level navigator instead of creating a new one
                 navigator.setNavController(navController)
-                
+
                 // Initialize controllers with correct parameter order
                 controller = HomeController(navigator, this@HomeActivity)
-                
+
                 // Initialize controllers that need context
                 holidayCalendarController = HolidayCalendarController(
                     RetrofitClient.apiService,
                     UserRepository(this@HomeActivity)
                 )
-                
+
                 // Initialize holiday options controller
                 holidayOptionsController = HolidayOptionsController(this@HomeActivity, navigator)
-                
+
                 // Initialize greetings controller
                 greetingsController = GreetingsController(this@HomeActivity, navigator)
                 ideaVaultController = IdeaVaultController(navigator)
@@ -304,14 +299,14 @@ class HomeActivity : AppCompatActivity() {
                         val eventData = controller.eventData.collectAsState().value
                         val showEventPopup = controller.showEventPopup.collectAsState().value
                         var showBiometricPrompt by remember { mutableStateOf(fromMpin) }
-                        
+
                         Log.d("HomeActivity", "Event data present: ${eventData != null}, showEventPopup: $showEventPopup")
                         if (eventData != null) {
                             Log.d("HomeActivity", "Event details - Title: ${eventData.title}, Image: ${eventData.image}")
                         } else {
                             Log.d("HomeActivity", "No event data available to display")
                         }
-                        
+
                         HomeScreen(
                             model = controller.model,
                             employeeData = controller.employeeData,
@@ -333,7 +328,6 @@ class HomeActivity : AppCompatActivity() {
                             showEventPopup = showEventPopup,
                             onDismissEventPopup = controller::dismissEventPopup
                         )
-
                     }
 
                     // Add chat screen composable
@@ -356,7 +350,7 @@ class HomeActivity : AppCompatActivity() {
                         LaunchedEffect(Unit) {
                             chatController.onChatScreenEnter()
                         }
-                        
+
                         ChatScreen(
                             viewModel = chatController.viewModel,
                             navController = navController,
@@ -437,7 +431,8 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }                        ) {
+                        }
+                    ) {
                         IdeaVaultScreen(
                             onBackPressed = { navController.popBackStack() },
                             controller = ideaVaultController, // Pass the initialized controller
@@ -505,7 +500,8 @@ class HomeActivity : AppCompatActivity() {
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
                         }
-                    ) {                        AssetScreen(
+                    ) {
+                        AssetScreen(
                             model = assetController.model,
                             controller = assetController
                         )
@@ -845,7 +841,7 @@ class HomeActivity : AppCompatActivity() {
                         }
                     ) {
                         val globalCelebrationController = GlobalCelebrationController(
-                            this@HomeActivity, 
+                            this@HomeActivity,
                             navigator,
                             greetingsController
                         )
@@ -920,7 +916,7 @@ class HomeActivity : AppCompatActivity() {
                             controller = travelController
                         )
                     }
-                    
+
                     // Add the travel_request_detail route
                     composable(
                         route = "travel_request_detail",
@@ -950,7 +946,7 @@ class HomeActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    
+
                     // Add the travel_approvals route
                     composable(
                         route = "travel_approvals",
@@ -971,7 +967,7 @@ class HomeActivity : AppCompatActivity() {
                             controller = travelController
                         )
                     }
-                    
+
                     // Add the travel_approval_detail route
                     composable(
                         route = "travel_approval_detail",
@@ -1013,7 +1009,7 @@ class HomeActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    
+
                     // Add the travel_approval_confirm route
                     composable(
                         route = "travel_approval_confirm",
@@ -1055,7 +1051,7 @@ class HomeActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    
+
                     // Add the travel_approve route
                     composable(
                         route = "travel_approve",
@@ -1097,7 +1093,7 @@ class HomeActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    
+
                     // Add the travel_reject route
                     composable(
                         route = "travel_reject",
@@ -1139,7 +1135,7 @@ class HomeActivity : AppCompatActivity() {
                             }
                         }
                     }
-                    
+
                     // Add the travel_approval_details route
                     composable(
                         route = "travel_approval_details",
@@ -1193,7 +1189,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        
+
         // Clean up controllers that need to clear resources
         if (::policyController.isInitialized) {
             policyController.onCleared()
@@ -1205,24 +1201,36 @@ class HomeActivity : AppCompatActivity() {
         val biometricHelper = BiometricHelper(this)
         val isLoggedIn = userDataManager.isLoggedIn()
         val isLocked = userDataManager.preferencesManager.getAppLockState()
+        val appLifecycleObserver = XOneApplication.getInstance().getAppLifecycleObserver()
 
-        // Only show biometric if user is logged in, biometric is enabled, and app is locked
-        if (isLoggedIn && biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() && userDataManager.preferencesManager.getAppLockState()) {
+        // Only show biometric if:
+        // 1. User is logged in
+        // 2. Biometric is available and enabled
+        // 3. App is locked (this is set by AppLifecycleObserver when app goes to background)
+        // 4. Haven't already authenticated in this session
+        // 5. Not already showing authentication
+        if (isLoggedIn &&
+            biometricHelper.canUseBiometric() &&
+            biometricHelper.isBiometricEnabled() &&
+            isLocked &&
+            !appLifecycleObserver.isAuthenticationSessionActive() &&
+            !isAuthenticating.value
+        ) {
             isAuthenticating.value = true
             biometricHelper.showBiometricPrompt(
                 activity = this,
                 onSuccess = {
                     isAuthenticating.value = false
+                    appLifecycleObserver.setAuthenticationSessionActive(true)
                     userDataManager.preferencesManager.setAppLockState(false) // Unlock the app
                 },
                 onError = { error ->
                     isAuthenticating.value = false
                 }
             )
-            return
         }
     }
-    
+
     /**
      * Provides access to the ChatController for other components
      * Used by AndroidNavigator to clear chat history when navigating

@@ -1,30 +1,30 @@
 package com.archeGlobal.one.controller
 
-import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
-import androidx.core.content.FileProvider
-import com.archeGlobal.one.R
-import com.archeGlobal.one.model.BusinessCardModel
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.Environment
-import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
-import android.Manifest
-import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.archeGlobal.one.BusinessCardActivity
+import com.archeGlobal.one.R
+import com.archeGlobal.one.model.BusinessCardModel
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.utils.QRCodeGenerator
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 interface BusinessCardController {
     val showEditCardDialog: MutableState<Boolean>
@@ -138,7 +138,7 @@ class BusinessCardControllerImpl(
         } else {
             true
         }
-    }    // Change _businessCard to MutableState
+    } // Change _businessCard to MutableState
     private val _businessCard = mutableStateOf(
         OtpVerificationController.getUserData()?.let { userData ->
             // Process the location - if it's N/A, replace with Bangalore
@@ -147,7 +147,7 @@ class BusinessCardControllerImpl(
             } else {
                 userData.location
             }
-            
+
             val card = BusinessCardModel(
                 companyLogo = R.drawable.arche,
                 name = userData.name,
@@ -158,7 +158,7 @@ class BusinessCardControllerImpl(
                 location = locationValue, // Updated location with Bangalore fallback
                 website = "www.arche.global"
             )
-            
+
             // Generate QR code for the card
             generateQRCodeForCard(card)
         } ?: BusinessCardModel(
@@ -170,10 +170,10 @@ class BusinessCardControllerImpl(
             email = "",
             phone = "",
             location = "",
-            website = "",
+            website = ""
         )
     )
-    
+
     // Generate QR code for a business card and return a new card with QR code
     private fun generateQRCodeForCard(card: BusinessCardModel, isPortrait: Boolean = true): BusinessCardModel {
         val qrCode = QRCodeGenerator.generateQRCode(
@@ -182,11 +182,14 @@ class BusinessCardControllerImpl(
             email = card.email,
             phone = card.phone,
             location = card.location,
-            layoutType = if (isPortrait) QRCodeGenerator.QRLayoutType.VERTICAL 
-                         else QRCodeGenerator.QRLayoutType.HORIZONTAL,
+            layoutType = if (isPortrait) {
+                QRCodeGenerator.QRLayoutType.VERTICAL
+            } else {
+                QRCodeGenerator.QRLayoutType.HORIZONTAL
+            },
             size = if (isPortrait) 240 else 140 // Changed from 100 to 140 to match 70dp on screen size
         )
-        
+
         return card.copy(qrCode = qrCode)
     }
 
@@ -246,7 +249,6 @@ class BusinessCardControllerImpl(
                 "Business card saved to Downloads/BusinessCards",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
-
         } catch (e: IOException) {
             e.printStackTrace()
             android.widget.Toast.makeText(
@@ -282,7 +284,6 @@ class BusinessCardControllerImpl(
             }
 
             context.startActivity(Intent.createChooser(shareIntent, "Share Business Card"))
-
         } catch (e: IOException) {
             e.printStackTrace()
             android.widget.Toast.makeText(

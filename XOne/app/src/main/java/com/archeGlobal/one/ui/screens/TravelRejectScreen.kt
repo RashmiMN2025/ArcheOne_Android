@@ -1,6 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -18,8 +20,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.activity.ComponentActivity
-import androidx.compose.foundation.clickable
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -42,10 +42,10 @@ fun TravelRejectScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
-    
+
     // Observe the approval action state from the controller
     val approvalActionState = controller.approvalActionState
-    
+
     // Handle approval action state changes
     LaunchedEffect(approvalActionState) {
         when (approvalActionState) {
@@ -73,16 +73,16 @@ fun TravelRejectScreen(
             }
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,    // Light Beige/Grey
+                        WelcomeBackgroundTop, // Light Beige/Grey
                         WelcomeBackgroundMiddle, // Light Grey
-                        WelcomeBackgroundBottom  // Dark Grey
+                        WelcomeBackgroundBottom // Dark Grey
                     )
                 )
             )
@@ -103,17 +103,17 @@ fun TravelRejectScreen(
                 }
             }
         }
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
         ) {
             // Add space at the top to push everything down
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             // Top App Bar
             TopAppBar(
-                title = { 
+                title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -130,7 +130,7 @@ fun TravelRejectScreen(
                 },
                 navigationIcon = {
                     val context = LocalContext.current
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         (context as? ComponentActivity)?.finish()
                     }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -139,7 +139,7 @@ fun TravelRejectScreen(
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp
             )
-            
+
             // Main content
             Column(
                 modifier = Modifier
@@ -172,9 +172,9 @@ fun TravelRejectScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
-                            
+
                             val statusColor = Color(0xFFFFC107) // Amber/Yellow for pending
-                            
+
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(16.dp))
@@ -190,7 +190,7 @@ fun TravelRejectScreen(
                                 )
                             }
                         }
-                        
+
                         Divider(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -198,7 +198,7 @@ fun TravelRejectScreen(
                             thickness = 1.dp,
                             color = Color.LightGray
                         )
-                        
+
                         // Request details
                         DetailRow("Employee", selectedRequest.approver)
                         DetailRow("Mobile", "7838971194") // Using a placeholder value
@@ -208,9 +208,9 @@ fun TravelRejectScreen(
                         DetailRow("Date of Departure", selectedRequest.departureDate ?: "N/A")
                         DetailRow("Date of Arrival", selectedRequest.arrivalDate ?: "N/A")
                         DetailRow("Mode of Transport", selectedRequest.modeOfTransport ?: "N/A")
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Remarks input field - required for rejection
                         OutlinedTextField(
                             value = remarks,
@@ -226,9 +226,9 @@ fun TravelRejectScreen(
                             ),
                             isError = remarks.isEmpty() && errorMessage != null
                         )
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Error message display
                         errorMessage?.let {
                             Text(
@@ -237,7 +237,7 @@ fun TravelRejectScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                        
+
                         // Success message display
                         successMessage?.let {
                             Text(
@@ -246,7 +246,7 @@ fun TravelRejectScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                        
+
                         // Submit Rejection button (styled same as Reject button in travel approvals page)
                         Box(
                             modifier = Modifier
@@ -254,7 +254,7 @@ fun TravelRejectScreen(
                                 .clip(RoundedCornerShape(24.dp))
                                 .background(color = PrimaryRed) // Red color matching reject button
                                 .padding(vertical = 12.dp)
-                                .clickable(enabled = !isLoading) { 
+                                .clickable(enabled = !isLoading) {
                                     if (!isLoading) {
                                         if (remarks.isBlank()) {
                                             errorMessage = "Please provide a reason for rejection"

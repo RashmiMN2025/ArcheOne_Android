@@ -13,7 +13,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.utils.AppFontScaleAdjustment
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 
@@ -88,10 +87,10 @@ fun XOneTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-    
+
     // Get device-specific font adjustment
     val fontAdjustment = getDeviceSpecificFontAdjustment(context)
-    
+
     // Wrap content with our font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         MaterialTheme(

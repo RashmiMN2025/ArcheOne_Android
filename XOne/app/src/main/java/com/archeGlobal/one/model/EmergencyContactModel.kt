@@ -4,4 +4,4 @@ data class EmergencyContactModel(
     val name: String = "",
     val relationship: String = "",
     val phoneNumber: String = ""
-) 
+)

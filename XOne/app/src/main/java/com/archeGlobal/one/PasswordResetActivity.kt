@@ -13,9 +13,9 @@ class PasswordResetActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         navigator = AndroidNavigator(this)
-        
+
         setContent {
             XOneTheme {
                 PasswordResetContent(navigator)

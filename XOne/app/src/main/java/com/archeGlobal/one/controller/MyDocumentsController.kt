@@ -28,26 +28,27 @@ class MyDocumentsController(private val context: Context) {
     val professionalDocs = MutableLiveData<MutableMap<String, String>>(mutableMapOf())
 
     // Store uploaded documents for enabling/disabling buttons dynamically
-    val uploadStatus = MutableLiveData<MutableMap<String, Boolean>>(mutableMapOf(
-        "Aadhar Card" to false,
-        "PAN Card" to false,
-        "Passport" to false,
-        "Offer Letter" to false,
-        "Certificate" to false,
-        "Experience Letter" to false
-    ))
+    val uploadStatus = MutableLiveData<MutableMap<String, Boolean>>(
+        mutableMapOf(
+            "Aadhar Card" to false,
+            "PAN Card" to false,
+            "Passport" to false,
+            "Offer Letter" to false,
+            "Certificate" to false,
+            "Experience Letter" to false
+        )
+    )
 
     // We're no longer using these since functionality moved to DocumentUploadManager
     // Keeping them here for UI updates only
     val isLoading = MutableLiveData(false)
     val errorMessage = MutableLiveData<String?>(null)
 
-
     // This method is only used for the UI state now,
     // actual document processing has been moved to DocumentUploadManager
     fun updateDocumentsFromResponse(response: DocumentListResponse) {
         Log.d("MyDocumentsController", "Processing document response with ${response.personalDoc?.size ?: 0} personal docs and ${response.professionalDoc?.size ?: 0} professional docs")
-        
+
         val newPersonalDocs = mutableMapOf<String, String>()
         val newProfessionalDocs = mutableMapOf<String, String>()
         val newUploadStatus = uploadStatus.value ?: mutableMapOf()
@@ -55,13 +56,13 @@ class MyDocumentsController(private val context: Context) {
         // Update file paths and upload status from response
         response.personalDoc?.forEachIndexed { index, doc ->
             Log.d("MyDocumentsController", "Processing personal doc[$index]: docName=${doc.docName}, doc_type=${doc.doc_type}, filePath=${doc.filePath}")
-            
+
             // Prioritize filePath over doc_data since the API primarily uses filePath
             val docData = doc.filePath ?: doc.doc_data
             if (!docData.isNullOrEmpty()) {
                 // Simpler display name resolution strategy - prefer docName from API directly
                 val displayName = doc.docName ?: personalDocTypes[doc.doc_type] ?: "Unknown Document"
-                
+
                 // Only add if we have a valid display name
                 if (displayName.isNotEmpty()) {
                     newPersonalDocs[displayName] = docData
@@ -82,13 +83,13 @@ class MyDocumentsController(private val context: Context) {
 
         response.professionalDoc?.forEachIndexed { index, doc ->
             Log.d("MyDocumentsController", "Processing professional doc[$index]: docName=${doc.docName}, doc_type=${doc.doc_type}, filePath=${doc.filePath}")
-            
+
             // Prioritize filePath over doc_data since the API primarily uses filePath
             val docData = doc.filePath ?: doc.doc_data
             if (!docData.isNullOrEmpty()) {
                 // Simpler display name resolution strategy - prefer docName from API directly
                 val displayName = doc.docName ?: professionalDocTypes[doc.doc_type] ?: "Unknown Document"
-                
+
                 // Only add if we have a valid display name
                 if (displayName.isNotEmpty()) {
                     newProfessionalDocs[displayName] = docData
@@ -111,7 +112,7 @@ class MyDocumentsController(private val context: Context) {
         personalDocs.postValue(newPersonalDocs)
         professionalDocs.postValue(newProfessionalDocs)
         uploadStatus.postValue(newUploadStatus)
-        
+
         // Log the document maps for debugging
         Log.d("MyDocumentsController", "Personal docs after update: ${newPersonalDocs.keys}")
         Log.d("MyDocumentsController", "Professional docs after update: ${newProfessionalDocs.keys}")
@@ -149,13 +150,13 @@ class MyDocumentsController(private val context: Context) {
         Log.d("MyDocumentsController", "onViewClick: Looking for document: $documentName")
         Log.d("MyDocumentsController", "Current personal docs: ${personalDocs.value?.keys?.joinToString() ?: "empty"}")
         Log.d("MyDocumentsController", "Current professional docs: ${professionalDocs.value?.keys?.joinToString() ?: "empty"}")
-        
+
         // Check both personal and professional documents
         var rawFilePath = personalDocs.value?.get(documentName)
         if (!rawFilePath.isNullOrEmpty()) {
             Log.d("MyDocumentsController", "Found in personal docs: $documentName -> $rawFilePath")
         }
-        
+
         // If not found in personal docs, check professional docs
         if (rawFilePath.isNullOrEmpty()) {
             rawFilePath = professionalDocs.value?.get(documentName)
@@ -165,6 +166,8 @@ class MyDocumentsController(private val context: Context) {
         }
 
         if (rawFilePath.isNullOrEmpty()) {
+            // Show toast message when no document is found
+            android.widget.Toast.makeText(context, "No document found for $documentName. Please upload document for the same.", android.widget.Toast.LENGTH_SHORT).show()
             errorMessage.postValue("No document found for $documentName. Please upload document first.")
             Log.w("MyDocumentsController", "onViewClick: No file path found for document: $documentName")
             return
@@ -182,9 +185,9 @@ class MyDocumentsController(private val context: Context) {
         // Determine if the file is an image (and not a PDF)
         val isImage = !isPdf && (
             formattedUrl.endsWith(".jpg", ignoreCase = true) ||
-            formattedUrl.endsWith(".jpeg", ignoreCase = true) ||
-            formattedUrl.endsWith(".png", ignoreCase = true) ||
-            formattedUrl.endsWith(".webp", ignoreCase = true)
+                formattedUrl.endsWith(".jpeg", ignoreCase = true) ||
+                formattedUrl.endsWith(".png", ignoreCase = true) ||
+                formattedUrl.endsWith(".webp", ignoreCase = true)
             )
 
         Log.d("MyDocumentsController", "onViewClick: Document '$documentName' - Formatted URL: '$formattedUrl', isPdf: $isPdf, isImage: $isImage")

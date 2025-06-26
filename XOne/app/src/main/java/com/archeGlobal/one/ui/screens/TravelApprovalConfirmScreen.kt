@@ -34,10 +34,10 @@ fun TravelApprovalConfirmScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
-    
+
     // Observe the approval action state from the controller
     val approvalActionState = controller.approvalActionState
-    
+
     // Handle approval action state changes
     LaunchedEffect(approvalActionState) {
         when (approvalActionState) {
@@ -69,7 +69,7 @@ fun TravelApprovalConfirmScreen(
             }
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -91,7 +91,7 @@ fun TravelApprovalConfirmScreen(
                 }
             }
         }
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -112,9 +112,9 @@ fun TravelApprovalConfirmScreen(
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Travel request details card
             Card(
                 modifier = Modifier
@@ -139,12 +139,12 @@ fun TravelApprovalConfirmScreen(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
-                        
+
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(
-                                    when(selectedRequest.status) {
+                                    when (selectedRequest.status) {
                                         com.archeGlobal.one.model.TravelStatus.PENDING -> Color(0xFFFFD700) // Yellow for pending
                                         com.archeGlobal.one.model.TravelStatus.APPROVED -> Color(0xFF4CD964) // Green for approved
                                         com.archeGlobal.one.model.TravelStatus.REJECTED -> Color(0xFFFF3B30) // Red for rejected
@@ -160,9 +160,9 @@ fun TravelApprovalConfirmScreen(
                             )
                         }
                     }
-                    
+
                     Divider(modifier = Modifier.padding(vertical = 12.dp))
-                    
+
                     // Employee details
                     DetailRow("Approver", selectedRequest.approver)
                     DetailRow("Destination", selectedRequest.destination)
@@ -171,9 +171,9 @@ fun TravelApprovalConfirmScreen(
                     DetailRow("Date of Departure", selectedRequest.departureDate ?: "Not provided")
                     DetailRow("Date of Arrival", selectedRequest.arrivalDate ?: "Not provided")
                     DetailRow("Mode of Transport", selectedRequest.modeOfTransport ?: "Not provided")
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Remarks input field
                     OutlinedTextField(
                         value = remarks,
@@ -187,9 +187,9 @@ fun TravelApprovalConfirmScreen(
                             unfocusedBorderColor = Color.LightGray
                         )
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Success message
                     if (successMessage != null) {
                         Text(
@@ -201,7 +201,7 @@ fun TravelApprovalConfirmScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
+
                     // Error message
                     if (errorMessage != null) {
                         Text(
@@ -213,10 +213,10 @@ fun TravelApprovalConfirmScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-                    
+
                     // Submit Approval button
                     Button(
-                        onClick = { 
+                        onClick = {
                             controller.approveTravelRequest(selectedRequest.id, remarks)
                         },
                         modifier = Modifier

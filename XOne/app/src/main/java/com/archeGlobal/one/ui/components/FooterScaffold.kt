@@ -20,8 +20,8 @@ fun FooterScaffold(
     content: @Composable () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val sharedPref = context.getSharedPreferences("PRIDE_PREF", android.content.Context.MODE_PRIVATE)
-    val globalPride = sharedPref.getBoolean("USING_PRIDE_ICON", false)
+    val sharedPref = context.getSharedPreferences("event_preferences", android.content.Context.MODE_PRIVATE)
+    val globalPride = sharedPref.getBoolean("using_pride_icon", false)
     val prideFlag = isUsingPrideIcon || globalPride
 
     Scaffold(
@@ -45,4 +45,4 @@ fun FooterScaffold(
             content()
         }
     }
-} 
+}

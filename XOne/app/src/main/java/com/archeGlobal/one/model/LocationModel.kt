@@ -29,4 +29,4 @@ data class LocationScreenState(
     val showingStateList: Boolean = false,
     val showingFloorMap: Boolean = false,
     val showingContactInfo: Boolean = false
-) 
+)

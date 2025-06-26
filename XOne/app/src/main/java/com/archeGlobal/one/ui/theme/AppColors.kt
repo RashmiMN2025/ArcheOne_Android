@@ -32,4 +32,4 @@ fun getColorForApp(title: String): Color {
         "SAP" -> Color(0xFF0000CD)
         else -> Color(0xFF091857)
     }
-} 
+}

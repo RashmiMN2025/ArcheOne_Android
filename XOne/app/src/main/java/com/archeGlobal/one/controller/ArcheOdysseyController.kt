@@ -8,7 +8,7 @@ class ArcheOdysseyController(
     fun onBackPressed() {
         navigator.navigateToHome()
     }
-    
+
     fun onCommuniqueClick() {
         navigator.navigateToCommunique()
     }

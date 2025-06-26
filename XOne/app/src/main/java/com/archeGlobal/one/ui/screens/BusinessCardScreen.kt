@@ -3,65 +3,59 @@ package com.archeGlobal.one.ui.screens
 import android.graphics.*
 import android.util.TypedValue
 import android.view.View
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupProperties
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.BusinessCardController
+import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.model.BusinessCardModel
-import androidx.compose.foundation.lazy.LazyColumn
+import com.archeGlobal.one.model.LocationInfo
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.TextPrimary
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.ui.platform.LocalDensity
-import com.archeGlobal.one.model.LocationInfo
-import com.archeGlobal.one.controller.OtpVerificationController
-import com.archeGlobal.one.network.Office
-import com.archeGlobal.one.network.RegionalOffice
-import android.widget.Toast
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MenuDefaults
-import androidx.compose.ui.window.PopupProperties
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.Font
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 // Composable to display a QR code bitmap using Canvas
 @Composable
@@ -166,9 +160,7 @@ fun BusinessCardScreen(
         val userLocation = businessCard.location.trim()
 
         // First check if there's an office with a matching country name
-        val matchingOffice = offices?.find { office -> 
-            office.country.equals(userLocation, ignoreCase = true) 
-        }
+        val matchingOffice = offices?.find { office -> office.country.equals(userLocation, ignoreCase = true) }
 
         if (matchingOffice != null) {
             // Found a direct match with country
@@ -181,12 +173,8 @@ fun BusinessCardScreen(
             )
         } else {
             // Check if it's an Indian regional office
-            val indiaOffice = offices?.find { office -> 
-                office.country.equals("India", ignoreCase = true) 
-            }
-            val regionalOffice = indiaOffice?.regionaloffice?.find { office -> 
-                office.region.contains(userLocation, ignoreCase = true) 
-            }
+            val indiaOffice = offices?.find { office -> office.country.equals("India", ignoreCase = true) }
+            val regionalOffice = indiaOffice?.regionaloffice?.find { office -> office.region.contains(userLocation, ignoreCase = true) }
 
             if (regionalOffice != null) {
                 // Found a matching regional office
@@ -223,154 +211,154 @@ fun BusinessCardScreen(
                 )
             )
     ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            CustomTopAppBar(
-                onBackPressed = { controller.onBackPressed() },
-                onShareClick = {
-                    scope.launch {
-                        cardBounds.value?.let { bounds ->
-                            val combinedBitmap = captureBothSides(view, bounds, showFrontSide) { newShowFrontSide ->
-                                showFrontSide = newShowFrontSide
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item {
+                CustomTopAppBar(
+                    onBackPressed = { controller.onBackPressed() },
+                    onShareClick = {
+                        scope.launch {
+                            cardBounds.value?.let { bounds ->
+                                val combinedBitmap = captureBothSides(view, bounds, showFrontSide) { newShowFrontSide ->
+                                    showFrontSide = newShowFrontSide
+                                }
+                                controller.onShareCard(combinedBitmap)
                             }
-                            controller.onShareCard(combinedBitmap)
                         }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        item {
+            item {
                 // Business Card
-            Card(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .width(280.dp)
-                    .height(450.dp)
-                    .onGloballyPositioned { coordinates ->
-                        val bounds = coordinates.boundsInRoot()
-                        cardBounds.value = android.graphics.Rect(
-                            bounds.left.toInt(),
-                            bounds.top.toInt(),
-                            bounds.right.toInt(),
-                            bounds.bottom.toInt()
-                        )
+                Card(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .width(280.dp)
+                        .height(450.dp)
+                        .onGloballyPositioned { coordinates ->
+                            val bounds = coordinates.boundsInRoot()
+                            cardBounds.value = android.graphics.Rect(
+                                bounds.left.toInt(),
+                                bounds.top.toInt(),
+                                bounds.right.toInt(),
+                                bounds.bottom.toInt()
+                            )
                         }
                         .pointerInput(Unit) {
                             detectHorizontalDragGestures { _, dragAmount ->
                                 when {
                                     dragAmount < -50 && showFrontSide -> showFrontSide = false // Swipe left
-                                    dragAmount > 50 && !showFrontSide -> showFrontSide = true  // Swipe right
+                                    dragAmount > 50 && !showFrontSide -> showFrontSide = true // Swipe right
                                 }
                             }
-                    },
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(16.dp)
-            ) {
+                        },
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
                     if (showFrontSide) {
                         // Front side
-                Column(
-                    modifier = Modifier
+                        Column(
+                            modifier = Modifier
                                 .fillMaxSize()
                                 .padding(20.dp),
                             horizontalAlignment = Alignment.Start
                         ) {
                             // Logo
-                    // Logo
-                    Image(
-                        painter = painterResource(id = R.drawable.arche_black),
-                        contentDescription = "Arche Logo",
-                        modifier = Modifier
-                            .size(40.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(90.dp))
-                    
-                    // Name and Designation section
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Name
-                        Text(
-                            text = businessCard.name,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 18.sp,
-                            color = Color.Black
-                        )
-                        
-                        // Designation
-                        Text(
-                            text = businessCard.designation,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 15.sp,
-                            color = Color.Gray
-                        )
-                    }
-                    
-                    // Add spacing between designation and contact info
-                    Spacer(modifier = Modifier.height(25.dp))
-
-                    // Contact information section
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Email
-                        Text(
-                            text = businessCard.email,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 15.sp,
-                            color = Color.Black
-                        )
-                        
-                        // Phone
-                        Text(
-                            text = businessCard.phone,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 15.sp,
-                            color = Color.Black
-                        )
-                        
-                        // Location
-                        Text(
-                            text = controller.businessCard.location,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 15.sp,
-                            color = Color.Black
-                        )
-                    }
-                    
-                    // Push content to bottom of card
-                    Spacer(modifier = Modifier.weight(1f))
-                            
-                    // Bottom row with arche text and QR code
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        // Arche text at bottom left
-                        Text(
-                            text = "arche",
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black,
-                            modifier = Modifier.offset(y = (-10).dp) // Move up slightly while keeping in the row
-                        )
-                        
-                        // QR Code at bottom right
-                        businessCard.qrCode?.let { qrBitmap ->
-                            ComposeQRCodeImage(
-                                bitmap = qrBitmap,
-                                contentDescription = "QR Code",
-                                modifier = Modifier.size(60.dp)
+                            // Logo
+                            Image(
+                                painter = painterResource(id = R.drawable.arche_black),
+                                contentDescription = "Arche Logo",
+                                modifier = Modifier
+                                    .size(40.dp)
                             )
-                        }
-                    }
+
+                            Spacer(modifier = Modifier.height(90.dp))
+
+                            // Name and Designation section
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                // Name
+                                Text(
+                                    text = businessCard.name,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 18.sp,
+                                    color = Color.Black
+                                )
+
+                                // Designation
+                                Text(
+                                    text = businessCard.designation,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 15.sp,
+                                    color = Color.Gray
+                                )
+                            }
+
+                            // Add spacing between designation and contact info
+                            Spacer(modifier = Modifier.height(25.dp))
+
+                            // Contact information section
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                // Email
+                                Text(
+                                    text = businessCard.email,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 15.sp,
+                                    color = Color.Black
+                                )
+
+                                // Phone
+                                Text(
+                                    text = businessCard.phone,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 15.sp,
+                                    color = Color.Black
+                                )
+
+                                // Location
+                                Text(
+                                    text = controller.businessCard.location,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 15.sp,
+                                    color = Color.Black
+                                )
+                            }
+
+                            // Push content to bottom of card
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            // Bottom row with arche text and QR code
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                // Arche text at bottom left
+                                Text(
+                                    text = "arche",
+                                    fontSize = 25.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier.offset(y = (-10).dp) // Move up slightly while keeping in the row
+                                )
+
+                                // QR Code at bottom right
+                                businessCard.qrCode?.let { qrBitmap ->
+                                    ComposeQRCodeImage(
+                                        bitmap = qrBitmap,
+                                        contentDescription = "QR Code",
+                                        modifier = Modifier.size(60.dp)
+                                    )
+                                }
+                            }
                         }
                     } else {
                         // Back side
@@ -384,26 +372,26 @@ fun BusinessCardScreen(
                             // Top quote
                             Text(
                                 text = "This could be the start of something great.",
-                                fontSize = 14.sp,
+                                fontSize = 12.5.sp,
                                 fontFamily = FontFamily(Font(R.font.canela_regular)),
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
                                 maxLines = 1,
                                 modifier = Modifier
-                                    .padding(horizontal = 16.dp)
+                                    .padding(horizontal = 0.dp)
                                     .padding(top = 20.dp)
                             )
-                            
+
                             // Logo in the middle
                             Image(
                                 painter = painterResource(id = R.drawable.arche_black),
                                 contentDescription = "Arche Logo",
                                 modifier = Modifier
                                     .size(90.dp)
-                                    .aspectRatio(9f/8f)
+                                    .aspectRatio(9f / 8f)
                             )
-                            
+
                             // Bottom section with company name, address, and website
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
@@ -414,10 +402,10 @@ fun BusinessCardScreen(
                                     color = Color.Black,
                                     modifier = Modifier.padding(bottom = 10.dp)
                                 )
-                                
+
                                 // Use the location data already resolved in the front side
                                 val officeAddress = location.address
-                                
+
                                 Text(
                                     text = officeAddress,
                                     fontSize = 9.sp,
@@ -430,7 +418,7 @@ fun BusinessCardScreen(
                                         .padding(horizontal = 16.dp)
                                         .padding(bottom = 20.dp)
                                 )
-                                
+
                                 Text(
                                     text = "www.arche.global",
                                     fontSize = 15.sp,
@@ -440,94 +428,94 @@ fun BusinessCardScreen(
                                     modifier = Modifier.padding(bottom = 10.dp)
                                 )
                             }
-                }
-            }
-        }
-        }
-
-        item {
-            Text(
-                    text = if (showFrontSide) "Swipe to flip -->" else "<-- Swipe to flip",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary,
-                modifier = Modifier.padding(vertical = 8.dp),
-                fontWeight = FontWeight.Bold
-
-            )
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            cardBounds.value?.let { bounds ->
-                                // Capture both sides of the card and combine them
-                                val combinedBitmap = captureBothSides(view, bounds, showFrontSide) { newShowFrontSide ->
-                                    showFrontSide = newShowFrontSide
-                                }
-                                controller.onDownloadCard(combinedBitmap)
-                            }
                         }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                    shape = RoundedCornerShape(27.dp)
-                ) {
-                    Text(
-                        "Download Card",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Button(
-                    onClick = { controller.onEditCard() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(1.dp, Color.Black)
-                ) {
-                    Text(
-                        "Edit Card",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    }
                 }
             }
-        }
 
-        item { Spacer(modifier = Modifier.height(16.dp)) }
+            item {
+                Text(
+                    text = if (showFrontSide) "Swipe to flip -->" else "<-- Swipe to flip",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    fontWeight = FontWeight.Bold
+
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                cardBounds.value?.let { bounds ->
+                                    // Capture both sides of the card and combine them
+                                    val combinedBitmap = captureBothSides(view, bounds, showFrontSide) { newShowFrontSide ->
+                                        showFrontSide = newShowFrontSide
+                                    }
+                                    controller.onDownloadCard(combinedBitmap)
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                        shape = RoundedCornerShape(27.dp)
+                    ) {
+                        Text(
+                            "Download Card",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Button(
+                        onClick = { controller.onEditCard() },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color.Black
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        border = BorderStroke(1.dp, Color.Black)
+                    ) {
+                        Text(
+                            "Edit Card",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 
     // Show Edit Card Dialog
     if (controller.showEditCardDialog.value) {
         var newPhone by remember(businessCard.phone) { mutableStateOf(businessCard.phone) }
-        
+
         // Define keywords for designation check
         val keywords = listOf("sales", "lead", "practice", "head", "ceo", "managing", "director", "management", "manager", "senior")
-        
+
         // Check if user has permission to edit phone number based on designation
         val canEditPhone = businessCard.designation.lowercase().split(" ").any { word ->
             keywords.any { keyword -> word.contains(keyword) }
         }
-        
+
         AlertDialog(
             onDismissRequest = { controller.showEditCardDialog.value = false },
             containerColor = Color(0xFFF5F5F5),
@@ -545,7 +533,7 @@ fun BusinessCardScreen(
                     val offices = OtpVerificationController.getOfficesData()
                     var expanded by remember { mutableStateOf(false) }
                     var selectedLocation by remember { mutableStateOf(businessCard.location) }
-                    
+
                     // Get all available locations
                     val locations = mutableListOf<String>()
                     offices?.forEach { office ->
@@ -554,10 +542,10 @@ fun BusinessCardScreen(
                             locations.add(regional.region)
                         }
                     }
-                    
+
                     // Add "Other" option
                     locations.add("Other")
-                    
+
                     Text(
                         text = "Location",
                         fontSize = 14.sp,
@@ -565,11 +553,11 @@ fun BusinessCardScreen(
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    
+
                     Box {
                         OutlinedTextField(
                             value = selectedLocation,
-                            onValueChange = { 
+                            onValueChange = {
                                 selectedLocation = it
                                 newLocation = it
                             },
@@ -577,8 +565,11 @@ fun BusinessCardScreen(
                             trailingIcon = {
                                 IconButton(onClick = { expanded = !expanded }) {
                                     Icon(
-                                        imageVector = if (expanded) androidx.compose.material.icons.Icons.Default.KeyboardArrowUp 
-                                                     else androidx.compose.material.icons.Icons.Default.KeyboardArrowDown,
+                                        imageVector = if (expanded) {
+                                            androidx.compose.material.icons.Icons.Default.KeyboardArrowUp
+                                        } else {
+                                            androidx.compose.material.icons.Icons.Default.KeyboardArrowDown
+                                        },
                                         contentDescription = if (expanded) "Collapse" else "Expand"
                                     )
                                 }
@@ -597,7 +588,7 @@ fun BusinessCardScreen(
                             ),
                             singleLine = true
                         )
-                        
+
                         DropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
@@ -610,13 +601,13 @@ fun BusinessCardScreen(
                         ) {
                             locations.forEach { location ->
                                 DropdownMenuItem(
-                                    text = { 
+                                    text = {
                                         Text(
-                                            text = location, 
+                                            text = location,
                                             color = Color.White,
                                             fontSize = 14.sp,
                                             modifier = Modifier.padding(vertical = 0.dp)
-                                        ) 
+                                        )
                                     },
                                     onClick = {
                                         if (location == "Other") {
@@ -646,11 +637,11 @@ fun BusinessCardScreen(
                             }
                         }
                     }
-                    
+
                     // Only show phone number field if user has permission
                     if (canEditPhone) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Phone number field
                         Text(
                             text = "Phone Number",
@@ -659,7 +650,7 @@ fun BusinessCardScreen(
                             color = Color.Black,
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
-                        
+
                         OutlinedTextField(
                             value = newPhone,
                             onValueChange = { newPhone = it },
@@ -763,8 +754,8 @@ private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitm
 }
 
 private suspend fun captureBothSides(
-    view: View, 
-    cardBounds: android.graphics.Rect, 
+    view: View,
+    cardBounds: android.graphics.Rect,
     currentShowFrontSide: Boolean,
     updateShowFrontSide: (Boolean) -> Unit
 ): Bitmap {
@@ -787,13 +778,13 @@ private suspend fun captureBothSides(
     // Define much larger spacing between cards for complete separation
     val spacingHeight = 180 // Much larger gap between cards
     val shadowSize = 15f // Shadow size for cards
-    
+
     // Calculate dimensions for the combined bitmap with extra space for shadows
     val cardWidth = frontBitmap.width
     val cardHeight = frontBitmap.height
     val combinedHeight = (cardHeight * 2) + spacingHeight + (shadowSize * 4).toInt()
     val combinedWidth = cardWidth + (shadowSize * 4).toInt()
-    
+
     // Create the combined bitmap with white background
     val combinedBitmap = Bitmap.createBitmap(
         combinedWidth,
@@ -802,14 +793,14 @@ private suspend fun captureBothSides(
     )
     val canvas = android.graphics.Canvas(combinedBitmap)
     canvas.drawColor(android.graphics.Color.WHITE)
-    
+
     // Calculate corner radius in pixels
     val cornerRadius = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         16f,
         view.resources.displayMetrics
     )
-    
+
     // Create a function to draw a card with shadow
     fun drawCardWithShadow(bitmap: Bitmap, x: Float, y: Float) {
         // Draw shadow first
@@ -819,7 +810,7 @@ private suspend fun captureBothSides(
             style = android.graphics.Paint.Style.FILL
             setShadowLayer(shadowSize, 0f, 6f, android.graphics.Color.argb(80, 0, 0, 0))
         }
-        
+
         // Create rectangle for card with shadow
         val cardRect = android.graphics.RectF(
             x + shadowSize,
@@ -827,10 +818,10 @@ private suspend fun captureBothSides(
             x + cardWidth - shadowSize,
             y + cardHeight - shadowSize
         )
-        
+
         // Draw shadow with rounded corners
         canvas.drawRoundRect(cardRect, cornerRadius, cornerRadius, shadowPaint)
-        
+
         // Create rectangle for the actual card
         val cardRealRect = android.graphics.RectF(
             x + shadowSize,
@@ -838,7 +829,7 @@ private suspend fun captureBothSides(
             x + cardWidth - shadowSize,
             y + cardHeight - shadowSize
         )
-        
+
         // Draw card background
         val cardPaint = android.graphics.Paint().apply {
             isAntiAlias = true
@@ -846,15 +837,15 @@ private suspend fun captureBothSides(
             style = android.graphics.Paint.Style.FILL
         }
         canvas.drawRoundRect(cardRealRect, cornerRadius, cornerRadius, cardPaint)
-        
+
         // Create a clip path for the card content
         val clipPath = android.graphics.Path()
         clipPath.addRoundRect(cardRealRect, cornerRadius, cornerRadius, android.graphics.Path.Direction.CW)
-        
+
         // Save canvas state and apply clip
         canvas.save()
         canvas.clipPath(clipPath)
-        
+
         // Draw the actual card bitmap
         canvas.drawBitmap(
             bitmap,
@@ -862,16 +853,16 @@ private suspend fun captureBothSides(
             y + shadowSize,
             null
         )
-        
+
         // Restore canvas state
         canvas.restore()
     }
-    
+
     // Draw front card at the top with shadow
     drawCardWithShadow(frontBitmap, shadowSize * 2, shadowSize * 2)
-    
+
     // Draw back card below with shadow
     drawCardWithShadow(backBitmap, shadowSize * 2, (cardHeight + spacingHeight).toFloat())
-    
+
     return combinedBitmap
 }

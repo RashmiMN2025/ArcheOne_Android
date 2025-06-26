@@ -1,15 +1,14 @@
 package com.archeGlobal.one.ui.screens
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,24 +16,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import com.archeGlobal.one.R
-import com.archeGlobal.one.controller.SOSController
-import com.archeGlobal.one.model.SosBlogModel
-import com.archeGlobal.one.model.FooterNavigationModel
-import com.archeGlobal.one.ui.components.FooterScaffold
-import com.google.accompanist.pager.*
-import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import androidx.activity.compose.BackHandler
+import com.archeGlobal.one.R
+import com.archeGlobal.one.controller.SOSController
+import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.google.accompanist.pager.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun SOSScreen(
@@ -85,7 +83,6 @@ fun SOSScreen(
                         )
                     )
             ) {
-
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -105,7 +102,6 @@ fun SOSScreen(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-
                             Spacer(modifier = Modifier.height(5.dp))
                             // SOS Assistance
                             Text(
@@ -117,7 +113,7 @@ fun SOSScreen(
                                 modifier = Modifier.padding(bottom = 20.dp)
                             )
 
-                            SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("7397768656")})
+                            SOSButton(text = "SOS Call", onClick = { controller.makeSOSCall("7397768656") })
                             SOSButton(text = "Raise a Concern", onClick = { onNavigateToRaiseConcern() })
                             SOSButton(
                                 text = "View Emergency Contact",
@@ -179,7 +175,7 @@ fun SOSScreen(
                 }
             }
         }
-    }else {
+    } else {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -189,7 +185,6 @@ fun SOSScreen(
                     )
                 )
         ) {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -198,39 +193,39 @@ fun SOSScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header with back button
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                ) {
+                    IconButton(
+                        onClick = onBackPressed,
+                        modifier = Modifier.align(Alignment.CenterStart)
                     ) {
-                        IconButton(
-                            onClick = onBackPressed,
-                            modifier = Modifier.align(Alignment.CenterStart)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_back),
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
-                        }
-
-                        Text(
-                            text = "SOS",
-                            color = Color.Black,
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.Center),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-
-                        // Add an invisible spacer with same size as back button for balance
-                        Spacer(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .align(Alignment.CenterEnd)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
                         )
                     }
+
+                    Text(
+                        text = "SOS",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+
+                    // Add an invisible spacer with same size as back button for balance
+                    Spacer(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterEnd)
+                    )
+                }
 
                 // White Box for SOS Assistance & SOS Information
                 Box(
@@ -244,7 +239,6 @@ fun SOSScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
                         Spacer(modifier = Modifier.height(5.dp))
                         // SOS Assistance
                         Text(
@@ -318,7 +312,6 @@ fun SOSScreen(
             }
         }
     }
-
 }
 
 @Composable
@@ -345,7 +338,7 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
                 .height(200.dp)
                 .clip(RoundedCornerShape(16.dp)), // <-- Rounded corners added here,
             error = painterResource(id = R.drawable.ic_image_placeholder),
-            placeholder = painterResource(id = R.drawable.ic_image_placeholder),
+            placeholder = painterResource(id = R.drawable.ic_image_placeholder)
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -360,13 +353,13 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = blog.description,
-            fontSize = 12.sp,  // Increased readability
+            fontSize = 12.sp, // Increased readability
             color = Color.Gray,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
             lineHeight = 18.sp,
-            maxLines = 3,  // Restrict to 2 lines
-            overflow = TextOverflow.Visible,  // Show "..." if text is too long
+            maxLines = 3, // Restrict to 2 lines
+            overflow = TextOverflow.Visible, // Show "..." if text is too long
             modifier = Modifier
                 .padding(horizontal = 12.dp) // Add horizontal padding for alignment
                 .height(60.dp), // Fixed height for consistent alignment across pages
@@ -374,7 +367,6 @@ fun SOSBlogItem(blog: SosBlogModel, onClick: () -> Unit) {
         )
     }
 }
-
 
 @Composable
 fun SOSButton(text: String, onClick: () -> Unit) {
@@ -391,7 +383,7 @@ fun SOSButton(text: String, onClick: () -> Unit) {
             color = Color.White,
             fontSize = 16.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Medium
         )
     }
 }

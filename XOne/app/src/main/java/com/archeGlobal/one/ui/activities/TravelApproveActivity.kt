@@ -9,23 +9,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
+import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.TravelApproveScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
-import com.archeGlobal.one.navigation.AndroidNavigator
 import com.google.gson.Gson
 
 class TravelApproveActivity : ComponentActivity() {
-    
+
     // Create controller instance
     private lateinit var travelController: TravelController
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Initialize navigator and controller
         val navigator = AndroidNavigator(this)
         travelController = TravelController(navigator, this)
-        
+
         // Get travel request from intent
         val travelRequestJson = intent.getStringExtra("travel_request")
         val travelRequest = if (travelRequestJson != null) {
@@ -38,12 +38,12 @@ class TravelApproveActivity : ComponentActivity() {
         } else {
             null
         }
-        
+
         travelRequest?.let {
             // Register this request in the controller so approveTravelRequest can locate it
             travelController.selectTravelRequest(it)
         }
-        
+
         setContent {
             XOneTheme {
                 Surface(

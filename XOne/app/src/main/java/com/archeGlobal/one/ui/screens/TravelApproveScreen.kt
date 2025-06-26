@@ -1,6 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -18,14 +20,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.activity.ComponentActivity
-import androidx.compose.foundation.clickable
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import kotlinx.coroutines.delay
 
 /**
@@ -41,10 +41,10 @@ fun TravelApproveScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
-    
+
     // Observe the approval action state from the controller
     val approvalActionState = controller.approvalActionState
-    
+
     // Handle approval action state changes
     LaunchedEffect(approvalActionState) {
         when (approvalActionState) {
@@ -72,7 +72,7 @@ fun TravelApproveScreen(
             }
         }
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -102,17 +102,17 @@ fun TravelApproveScreen(
                 }
             }
         }
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
         ) {
             // Add space at the top to push everything down
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             // Top App Bar
             TopAppBar(
-                title = { 
+                title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -129,7 +129,7 @@ fun TravelApproveScreen(
                 },
                 navigationIcon = {
                     val context = LocalContext.current
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         (context as? ComponentActivity)?.finish()
                     }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -138,7 +138,7 @@ fun TravelApproveScreen(
                 backgroundColor = Color.Transparent,
                 elevation = 0.dp
             )
-            
+
             // Main content
             Column(
                 modifier = Modifier
@@ -171,9 +171,9 @@ fun TravelApproveScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
-                            
+
                             val statusColor = Color(0xFFFFC107) // Amber/Yellow for pending
-                            
+
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(16.dp))
@@ -189,7 +189,7 @@ fun TravelApproveScreen(
                                 )
                             }
                         }
-                        
+
                         Divider(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -197,7 +197,7 @@ fun TravelApproveScreen(
                             thickness = 1.dp,
                             color = Color.LightGray
                         )
-                        
+
                         // Request details
                         DetailRow("Employee", selectedRequest.approver)
                         DetailRow("Mobile", "7838971194") // Using a placeholder value
@@ -207,9 +207,9 @@ fun TravelApproveScreen(
                         DetailRow("Date of Departure", selectedRequest.departureDate ?: "N/A")
                         DetailRow("Date of Arrival", selectedRequest.arrivalDate ?: "N/A")
                         DetailRow("Mode of Transport", selectedRequest.modeOfTransport ?: "N/A")
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Remarks input field
                         OutlinedTextField(
                             value = remarks,
@@ -224,9 +224,9 @@ fun TravelApproveScreen(
                                 unfocusedBorderColor = Color.LightGray
                             )
                         )
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Error message display
                         errorMessage?.let {
                             Text(
@@ -235,7 +235,7 @@ fun TravelApproveScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                        
+
                         // Success message display
                         successMessage?.let {
                             Text(
@@ -244,7 +244,7 @@ fun TravelApproveScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-                        
+
                         // Submit Approval button (styled same as Approve button in travel approvals page)
                         Box(
                             modifier = Modifier
@@ -252,7 +252,7 @@ fun TravelApproveScreen(
                                 .clip(RoundedCornerShape(24.dp))
                                 .background(color = Color(0xFF4CAF50)) // Green color matching approval button
                                 .padding(vertical = 12.dp)
-                                .clickable(enabled = !isLoading) { 
+                                .clickable(enabled = !isLoading) {
                                     if (!isLoading) {
                                         controller.approveTravelRequest(selectedRequest.id, remarks)
                                     }

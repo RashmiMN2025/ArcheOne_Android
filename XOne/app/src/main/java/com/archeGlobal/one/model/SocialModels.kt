@@ -38,4 +38,4 @@ data class BlogPost(
     @SerializedName("Image") val Image: String = "",
     @SerializedName("Description") val Description: String = "",
     @SerializedName("Content") val Content: String? = null
-) 
+)

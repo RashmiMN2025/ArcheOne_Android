@@ -19,29 +19,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.AddressController
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
-import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddressDetailsScreen(
     controller: AddressController,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        WelcomeBackgroundTop,    // Light Beige/Grey (0xFFE0DCD1)
+                        WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
                         WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                        WelcomeBackgroundBottom  // Dark Grey (0xFF474749)
+                        WelcomeBackgroundBottom // Dark Grey (0xFF474749)
                     )
                 )
             )
@@ -63,7 +62,7 @@ fun AddressDetailsScreen(
                     navigationIconContentColor = Color.Black
                 )
             )
-            
+
             // Content
             Column(
                 modifier = Modifier
@@ -90,9 +89,9 @@ fun AddressDetailsScreen(
                             title = "Present Address",
                             addressText = controller.model.presentAddress.ifEmpty { "-" }
                         )
-                        
+
                         Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
-                        
+
                         // Permanent Address Section
                         AddressSection(
                             icon = R.drawable.ic_home1,
@@ -139,7 +138,7 @@ fun AddressSection(
                 color = Color.Black
             )
         }
-        
+
         // Address Text
         Text(
             text = addressText,
@@ -150,4 +149,4 @@ fun AddressSection(
             lineHeight = 20.sp
         )
     }
-} 
+}
