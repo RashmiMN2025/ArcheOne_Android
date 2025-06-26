@@ -55,12 +55,51 @@ import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.unit.Dp
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun LoginScreen(
+fun ResponsiveLoginScreen(
     controller: LoginController,
     navigator: Navigator,
     forceOriginalLogin: Boolean = false
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val contentPadding = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 16.dp   // Phone
+        WindowWidthSizeClass.Medium -> 48.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 120.dp // Tablet
+        else -> 16.dp
+    }
+    LoginScreen(
+        controller = controller,
+        navigator = navigator,
+        forceOriginalLogin = forceOriginalLogin,
+        contentPadding = contentPadding
+    )
+}
+
+@Composable
+fun LoginScreen(
+    controller: LoginController, 
+    navigator: Navigator, 
+    forceOriginalLogin: Boolean = false,
+    contentPadding: Dp = 16.dp // <-- Add this parameter
 ) {
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
@@ -153,14 +192,14 @@ fun LoginScreen(
                     )
                 )
             )
-            .padding(bottom = 32.dp),
+            .padding(bottom = 32.dp, start = contentPadding, end = contentPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(top = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

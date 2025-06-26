@@ -87,7 +87,7 @@ fun TodoScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Checkmate",
+                            text = "ZenTask",
                             color = Color.Black,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Bold,

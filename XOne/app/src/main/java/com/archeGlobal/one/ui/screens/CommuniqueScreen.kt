@@ -49,11 +49,51 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.size.Size
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 private const val THUMBNAIL_WIDTH = 300 // unified thumbnail width for both remote and PDF
 
 // Cache for PDF bitmaps to avoid re-rendering
 private val communiqueThumbnailCache = ConcurrentHashMap<String, Bitmap?>()
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ResponsiveCommuniqueScreen(
+    model: CommuniqueModel,
+    onCommuniqueClick: (CommuniqueModel.Communique) -> Unit,
+    onBackPressed: () -> Unit,
+    isLoading: Boolean = false
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val (columns, contentPadding) = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 2 to 16.dp   // Phone
+        WindowWidthSizeClass.Medium -> 3 to 32.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 4 to 64.dp  // Tablet
+        else -> 2 to 16.dp
+    }
+    CommuniqueScreen(
+        model = model,
+        onCommuniqueClick = onCommuniqueClick,
+        onBackPressed = onBackPressed,
+        isLoading = isLoading,
+        columns = columns,
+        contentPadding = contentPadding
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +101,9 @@ fun CommuniqueScreen(
     model: CommuniqueModel,
     onCommuniqueClick: (CommuniqueModel.Communique) -> Unit,
     onBackPressed: () -> Unit,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    columns: Int = 2,
+    contentPadding: Dp = 16.dp
 ) {
     val context = LocalContext.current
 
@@ -109,6 +151,7 @@ fun CommuniqueScreen(
                     )
                 )
             )
+            .padding(horizontal = contentPadding)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
@@ -198,7 +241,7 @@ fun CommuniqueScreen(
                     }
                 } else {
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+                        columns = GridCells.Fixed(columns),
                         contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),

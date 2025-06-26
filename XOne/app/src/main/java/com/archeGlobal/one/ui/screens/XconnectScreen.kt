@@ -37,6 +37,49 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.SocialController
 import com.archeGlobal.one.model.SocialArticle
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ResponsiveArticleGrid(
+    articles: List<SocialArticle>,
+    type: String,
+    socialController: SocialController,
+    showArticleDetail: (SocialArticle, String) -> Unit
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val columns = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 2 // Phone: single column
+        WindowWidthSizeClass.Medium -> 3  // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 4 // Tablet: 3 columns
+        else -> 2
+    }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(columns),
+        contentPadding = PaddingValues(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(articles) { article ->
+            ArticleCard(
+                article = article,
+                type = type,
+                socialController = socialController,
+                showArticleDetail = showArticleDetail
+            )
+        }
+    }
+}
 
 @Composable
 fun XConnectScreen(
@@ -81,7 +124,6 @@ fun XConnectScreen(
                     )
                 )
             )
-            .verticalScroll(rememberScrollState()) // Make the whole screen scrollable
     ) {
         Column(
             modifier = Modifier
@@ -547,45 +589,20 @@ fun CaseStudiesContent(
         }
     } else {
         Spacer(modifier = Modifier.height(16.dp))
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = "Case Studies",
-                fontSize = 20.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            for (i in caseStudies.indices step 2) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between cards
-                ) {
-                    Box(modifier = Modifier.weight(1f)) { // Apply weight here
-                        ArticleCard(
-                            article = caseStudies[i],
-                            type = "Case Studies",
-                            socialController = socialController,
-                            showArticleDetail = showArticleDetail
-                        )
-                    }
-                    if (i + 1 < caseStudies.size) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ArticleCard(
-                                article = caseStudies[i + 1],
-                                type = "Case Studies",
-                                socialController = socialController,
-                                showArticleDetail = showArticleDetail
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
+        Text(
+            text = "Case Studies",
+            fontSize = 20.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        ResponsiveArticleGrid(
+            articles = caseStudies,
+            type = "Case Studies",
+            socialController = socialController,
+            showArticleDetail = showArticleDetail
+        )
     }
 }
 
@@ -615,46 +632,20 @@ fun BlogsContent(
         }
     } else {
         Spacer(modifier = Modifier.height(16.dp))
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = "Blogs",
-                fontSize = 20.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            for (i in blogs.indices step 2) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between cards
-                ) {
-                    Box(modifier = Modifier.weight(1f)) { // Apply weight here
-                        ArticleCard(
-                            article = blogs[i],
-                            type = "Blogs",
-                            socialController = socialController,
-                            showArticleDetail = showArticleDetail
-                        )
-                    }
-                    if (i + 1 < blogs.size) {
-                        Box(modifier = Modifier.weight(1f)) { // Apply weight here
-                            ArticleCard(
-                                article = blogs[i + 1],
-                                type = "Blogs",
-                                socialController = socialController,
-                                showArticleDetail = showArticleDetail
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f)) // Add a spacer for alignment
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
+        Text(
+            text = "Blogs",
+            fontSize = 20.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        ResponsiveArticleGrid(
+            articles = blogs,
+            type = "Blogs",
+            socialController = socialController,
+            showArticleDetail = showArticleDetail
+        )
     }
 }
 

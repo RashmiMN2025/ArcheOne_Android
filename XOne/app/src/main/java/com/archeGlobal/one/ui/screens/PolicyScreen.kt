@@ -45,9 +45,43 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 // Cache for PDF bitmaps to avoid re-rendering
 private val pdfThumbnailCache = ConcurrentHashMap<String, Bitmap?>()
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ResponsivePolicyScreen(
+    model: PolicyModel,
+    onPolicyClick: (PolicyModel.Policy) -> Unit,
+    onBackClick: () -> Unit,
+    isLoading: Boolean = false
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val (columns, cardWidth) = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 2 to 160.dp   // Phone
+        WindowWidthSizeClass.Medium -> 3 to 180.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 4 to 220.dp  // Tablet
+        else -> 2 to 160.dp
+    }
+    PolicyScreen(
+        model = model,
+        onPolicyClick = onPolicyClick,
+        onBackClick = onBackClick,
+        isLoading = isLoading,
+        columns = columns,
+        cardWidth = cardWidth
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +89,9 @@ fun PolicyScreen(
     model: PolicyModel,
     onPolicyClick: (PolicyModel.Policy) -> Unit,
     onBackClick: () -> Unit,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    columns: Int = 2,
+    cardWidth: Dp = 160.dp
 ) {
     var searchQuery by remember { mutableStateOf("") } // State for search query
 
@@ -187,7 +223,7 @@ fun PolicyScreen(
                     }
                 } else {
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+                        columns = GridCells.Fixed(columns),
                         contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -209,7 +245,8 @@ fun PolicyScreen(
 @Composable
 private fun PolicyCard(
     policy: PolicyModel.Policy,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    cardWidth: Dp = 160.dp
 ) {
     val context = LocalContext.current
     var thumbnail by remember { mutableStateOf<Bitmap?>(null) }
@@ -224,12 +261,12 @@ private fun PolicyCard(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .width(160.dp)
+            .width(cardWidth)
             .padding(8.dp) // Add padding around the card
     ) {
         Box(
             modifier = Modifier
-                .width(160.dp)
+                .width(cardWidth)
                 .aspectRatio(0.7f) // Adjust aspect ratio for the card
         ) {
             Card(

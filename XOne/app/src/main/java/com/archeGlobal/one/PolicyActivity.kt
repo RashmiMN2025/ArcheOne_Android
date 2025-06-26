@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.PolicyController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.PolicyScreen
+import com.archeGlobal.one.ui.screens.ResponsivePolicyScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 class PolicyActivity : ComponentActivity() {
@@ -16,7 +17,7 @@ class PolicyActivity : ComponentActivity() {
         controller = PolicyController(this, AndroidNavigator(this))
         setContent {
             XOneTheme {
-                PolicyScreen(
+                ResponsivePolicyScreen(
                     model = controller.model.value,
                     onPolicyClick = controller::onPolicyClick,
                     onBackClick = controller::onBackClick,

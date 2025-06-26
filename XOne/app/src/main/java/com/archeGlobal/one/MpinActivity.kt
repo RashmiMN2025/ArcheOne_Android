@@ -15,7 +15,7 @@ class MpinActivity : ComponentActivity() {
         val token = intent.getStringExtra("token") ?: ""
         setContent {
             XOneTheme {
-                MpinScreen(
+                ResponsiveMpinScreen(
                     isReset = isReset,
                     onMpinSet = { mpin, questions ->
                         com.archeGlobal.one.utils.MpinManager.saveMpin(this, mpin)

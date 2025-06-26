@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.GlobalCelebrationController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.GlobalCelebrationScreen
+import com.archeGlobal.one.ui.screens.ResponsiveGlobalCelebrationScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 class GlobalCelebrationActivity : ComponentActivity() {
@@ -16,7 +17,7 @@ class GlobalCelebrationActivity : ComponentActivity() {
         controller = GlobalCelebrationController(this, AndroidNavigator(this))
         setContent {
             XOneTheme {
-                GlobalCelebrationScreen(
+                ResponsiveGlobalCelebrationScreen(
                     controller = controller,
                     onBackPressed = { finish() }
                 )

@@ -38,6 +38,7 @@ import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
+import com.archeGlobal.one.navigation.AndroidNavigator
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -307,7 +308,7 @@ class HomeActivity : AppCompatActivity() {
                             Log.d("HomeActivity", "No event data available to display")
                         }
 
-                        HomeScreen(
+                        ResponsiveHomeScreen(
                             model = controller.model,
                             employeeData = controller.employeeData,
                             onItemClick = controller::onItemClick,
@@ -327,6 +328,8 @@ class HomeActivity : AppCompatActivity() {
                             eventData = eventData,
                             showEventPopup = showEventPopup,
                             onDismissEventPopup = controller::dismissEventPopup
+
+
                         )
                     }
 

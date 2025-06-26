@@ -31,10 +31,57 @@ import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.foundation.border
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ResponsiveOtpVerificationScreen(
+    controller: OtpVerificationController,
+    email: String,
+    mobile: String,
+    employeeId: String
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val contentPadding = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 16.dp   // Phone
+        WindowWidthSizeClass.Medium -> 48.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 120.dp // Tablet
+        else -> 16.dp
+    }
+    OtpVerificationScreen(
+        controller = controller,
+        email = email,
+        mobile = mobile,
+        employeeId = employeeId,
+        contentPadding = contentPadding
+    )
+}
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun OtpVerificationScreen(controller: OtpVerificationController, email: String, mobile: String, employeeId: String) {
+fun OtpVerificationScreen(
+    controller: OtpVerificationController,
+    email: String,
+    mobile: String,
+    employeeId: String,
+    contentPadding: Dp = 16.dp
+) {
     val otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
     val focusRequesters = List(6) { remember { FocusRequester() } }
     val focusManager = LocalFocusManager.current
@@ -77,6 +124,7 @@ fun OtpVerificationScreen(controller: OtpVerificationController, email: String, 
                     )
                 )
             )
+            .padding(horizontal = contentPadding)
     ) {
         Column(
             modifier = Modifier

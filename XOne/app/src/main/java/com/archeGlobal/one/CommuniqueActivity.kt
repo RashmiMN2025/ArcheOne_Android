@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.archeGlobal.one.controller.CommuniqueController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.CommuniqueScreen
+import com.archeGlobal.one.ui.screens.ResponsiveCommuniqueScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 class CommuniqueActivity : ComponentActivity() {
@@ -16,7 +17,7 @@ class CommuniqueActivity : ComponentActivity() {
         controller = CommuniqueController(this, AndroidNavigator(this))
         setContent {
             XOneTheme {
-                CommuniqueScreen(
+                ResponsiveCommuniqueScreen(
                     model = controller.model,
                     onCommuniqueClick = controller::onCommuniqueClick,
                     onBackPressed = controller::onBackPressed,

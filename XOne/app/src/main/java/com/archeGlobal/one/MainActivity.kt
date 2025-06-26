@@ -136,7 +136,7 @@ class MainActivity : ComponentActivity() {
                                 Log.d("MainActivity", "Event data: $eventData")
                                 Log.d("MainActivity", "Show event popup: $showEventPopup")
 
-                                HomeScreen(
+                                ResponsiveHomeScreen(
                                     model = homeController.model,
                                     employeeData = homeController.employeeData, // <-- Add this line
                                     onItemClick = homeController::onItemClick,

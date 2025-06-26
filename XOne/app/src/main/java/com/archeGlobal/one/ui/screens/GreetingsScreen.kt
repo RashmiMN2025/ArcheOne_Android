@@ -37,22 +37,55 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ResponsiveGreetingsScreen(
+    controller: GreetingsController,
+    onBackPressed: () -> Unit
+) {
+    val context = LocalContext.current
+    val activity = context as? android.app.Activity
+    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
+    val (columns, cardWidth) = when (windowSizeClass?.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 2 to 160.dp   // Phone
+        WindowWidthSizeClass.Medium -> 3 to 180.dp    // Large phone/small tablet
+        WindowWidthSizeClass.Expanded -> 4 to 220.dp  // Tablet
+        else -> 2 to 160.dp
+    }
+    GreetingsScreen(
+        controller = controller,
+        onBackPressed = onBackPressed,
+        columns = columns,
+        cardWidth = cardWidth
+    )
+}
 
 @Composable
 fun GreetingCategoryCard(
     category: String,
     imageUrl: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    cardWidth: Dp = 160.dp
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .width(160.dp)
+            .width(cardWidth)
             .padding(8.dp)
     ) {
         Box(
             modifier = Modifier
-                .width(160.dp)
+                .width(cardWidth)
                 .aspectRatio(0.8f)
         ) {
             Card(
@@ -144,8 +177,11 @@ fun GreetingThumbnailCard(
 @Composable
 fun GreetingsScreen(
     controller: GreetingsController,
-    onBackPressed: () -> Unit
-) { // Get the status bar padding to avoid overlapping with front camera
+    onBackPressed: () -> Unit,
+    columns: Int = 2,
+    cardWidth: Dp = 160.dp
+) {    
+    // Get the status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
     // Get current model state
@@ -315,7 +351,7 @@ fun GreetingsScreen(
                         controller.model.categories.keys.filter { it.contains(searchQuery.orEmpty(), ignoreCase = true) }
                     }
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+                        columns = GridCells.Fixed(columns),
                         contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -326,7 +362,8 @@ fun GreetingsScreen(
                                 imageUrl = controller.getCategoryThumbnail(category),
                                 onClick = {
                                     controller.onCategoryClick(category)
-                                }
+                                },
+                                cardWidth = cardWidth
                             )
                         }
                     }
@@ -334,7 +371,7 @@ fun GreetingsScreen(
                 else -> {
                     // Show greetings for selected category or subcategory
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+                        columns = GridCells.Fixed(columns),
                         contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -352,7 +389,8 @@ fun GreetingsScreen(
                                 onClick = {
                                     selectedGreeting = greetingUrl
                                     controller.onGreetingSelected(greetingUrl)
-                                }
+                                },
+                                cardWidth = cardWidth
                             )
                         }
                     }
@@ -366,19 +404,20 @@ fun GreetingsScreen(
 fun GreetingCard(
     imageUrl: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    cardWidth: Dp = 160.dp
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .width(160.dp)
+            .width(cardWidth)
             .padding(8.dp)
             .clickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier
-                .width(160.dp)
+                .width(cardWidth)
                 .aspectRatio(0.8f)
         ) {
             Card(
