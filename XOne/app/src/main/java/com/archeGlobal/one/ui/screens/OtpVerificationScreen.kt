@@ -189,7 +189,7 @@ fun OtpVerificationScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.Center
             ) {
                 for (i in 0 until 6) {
                     OutlinedTextField(
@@ -246,6 +246,9 @@ fun OtpVerificationScreen(
                             disabledIndicatorColor = Color.Transparent
                         )
                     )
+                    if (i != 5) {
+                        Spacer(modifier = Modifier.width(12.dp)) // Add space between OTP boxes
+                    }
                 }
             }
 

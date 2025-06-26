@@ -59,6 +59,8 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.ui.unit.Dp
+import android.content.Intent
+import android.net.Uri
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -968,9 +970,8 @@ fun LoginScreen(
                 modifier = Modifier
                     .padding(top = 16.dp)
                     .clickable {
-                        policyUrl = "https://arche.global/arche-one-privacy-policy"
-                        policyTitle = "Privacy Policy"
-                        showPolicyWebView = true
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/arche-one-privacy-policy"))
+                        context.startActivity(intent)
                     },
                 textDecoration = TextDecoration.Underline
             )
@@ -991,9 +992,8 @@ fun LoginScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
-                            policyUrl = "https://arche.global/anti-bribery-and-anti-corruption-policy"
-                            policyTitle = "Anti-Bribery Policy"
-                            showPolicyWebView = true
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/anti-bribery-and-anti-corruption-policy"))
+                            context.startActivity(intent)
                         }
                         .padding(end = 8.dp),
                     textDecoration = TextDecoration.Underline,
@@ -1018,9 +1018,8 @@ fun LoginScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
-                            policyUrl = "https://arche.global/employee-code-of-conduct"
-                            policyTitle = "Employee Code of Conduct"
-                            showPolicyWebView = true
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/employee-code-of-conduct"))
+                            context.startActivity(intent)
                         }
                         .padding(start = 10.dp),
                     textDecoration = TextDecoration.Underline,
