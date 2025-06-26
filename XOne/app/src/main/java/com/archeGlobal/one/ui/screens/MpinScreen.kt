@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
@@ -138,6 +140,7 @@ fun MpinScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -218,7 +221,7 @@ fun MpinScreen(
                     Spacer(modifier = Modifier.height(11.dp))
                     OutlinedTextField(
                         value = resetAnswer,
-                        onValueChange = { resetAnswer = it },
+                        onValueChange = { if (it.length <= 20) resetAnswer = it },
                         placeholder = {
                             Text(
                                 "Answer",
@@ -562,7 +565,9 @@ fun MpinScreen(
                         OutlinedTextField(
                             value = answers[i],
                             onValueChange = { newValue ->
-                                answers = answers.toMutableList().also { it[i] = newValue }
+                                if (newValue.length <= 20) {
+                                    answers = answers.toMutableList().also { it[i] = newValue }
+                                }
                             },
                             placeholder = {
                                 Text(
