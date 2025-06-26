@@ -73,6 +73,7 @@ import com.archeGlobal.one.controller.ChatViewModel
 import com.archeGlobal.one.model.ChatBottomNavigationBar
 import com.archeGlobal.one.model.Message
 import com.archeGlobal.one.ui.components.TypingIndicator
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.ChatData
 import java.io.File
 import java.text.SimpleDateFormat
@@ -136,6 +137,7 @@ fun ChatScreen(
                         ) {
                             Text(
                                 "Chat Support",
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
@@ -548,6 +550,7 @@ fun WelcomeMessage() {
                 Text(
                     text = "\uD83D\uDC4B Welcome to ArcheOne Assistant!\n\nI'm your personal support guide, ready to help you navigate through ArcheOne's features and services.",
                     fontWeight = FontWeight.Bold,
+                    fontFamily = GraphikFontFamily,
                     fontSize = 18.sp,
                     color = Color.Black
                 )
@@ -587,6 +590,7 @@ fun FAQQuestionRow(question: String, onClick: () -> Unit) {
             Text(
                 text = question,
                 fontSize = 16.sp,
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black,
                 modifier = Modifier.weight(1f)
@@ -654,6 +658,7 @@ fun ClickableEmailText(
         style = androidx.compose.ui.text.TextStyle(
             fontSize = fontSize,
             lineHeight = lineHeight,
+            fontFamily = GraphikFontFamily,
             fontWeight = fontWeight,
             color = color
         )
@@ -718,6 +723,7 @@ fun ReportMessageDialog(
         title = {
             Text(
                 text = "Report Message",
+                fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
@@ -726,6 +732,8 @@ fun ReportMessageDialog(
             Column {
                 Text(
                     text = "Why are you reporting this message?",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
                     color = Color.Black,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -745,7 +753,9 @@ fun ReportMessageDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = reason,
-                            color = Color.Black
+                            color = Color.Black,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 }
@@ -795,12 +805,22 @@ fun ReportMessageDialog(
                     containerColor = Color(0xFFDD3825)
                 )
             ) {
-                Text("Report", color = Color.White)
+                Text(
+                    "Report",
+                    color = Color.White,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color(0xFFDD3825))
+                Text(
+                    "Cancel",
+                    color = Color(0xFFDD3825),
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    )
             }
         },
         containerColor = Color.White

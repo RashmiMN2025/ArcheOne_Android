@@ -36,40 +36,13 @@ import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Composable
-fun ResponsiveOtpVerificationScreen(
-    controller: OtpVerificationController,
-    email: String,
-    mobile: String,
-    employeeId: String
-) {
-    val context = LocalContext.current
-    val activity = context as? android.app.Activity
-    val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
-    val contentPadding = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 16.dp // Phone
-        WindowWidthSizeClass.Medium -> 48.dp // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 120.dp // Tablet
-        else -> 16.dp
-    }
-    OtpVerificationScreen(
-        controller = controller,
-        email = email,
-        mobile = mobile,
-        employeeId = employeeId,
-        contentPadding = contentPadding
-    )
-}
-
 @SuppressLint("DefaultLocale")
 @Composable
 fun OtpVerificationScreen(
     controller: OtpVerificationController,
     email: String,
     mobile: String,
-    employeeId: String,
-    contentPadding: Dp = 16.dp
+    employeeId: String
 ) {
     val otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
     val focusRequesters = List(6) { remember { FocusRequester() } }
@@ -113,7 +86,6 @@ fun OtpVerificationScreen(
                     )
                 )
             )
-            .padding(horizontal = contentPadding)
     ) {
         Column(
             modifier = Modifier
@@ -188,7 +160,7 @@ fun OtpVerificationScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 for (i in 0 until 6) {
                     OutlinedTextField(
@@ -245,9 +217,6 @@ fun OtpVerificationScreen(
                             disabledIndicatorColor = Color.Transparent
                         )
                     )
-                    if (i != 5) {
-                        Spacer(modifier = Modifier.width(12.dp)) // Add space between OTP boxes
-                    }
                 }
             }
 
