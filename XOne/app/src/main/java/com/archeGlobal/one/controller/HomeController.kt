@@ -164,6 +164,24 @@ class HomeController(
         }
     }
 
+    // Helper function to check if event response is empty
+    private fun isEventResponseEmpty(event: com.archeGlobal.one.model.EventResponse?): Boolean {
+        if (event == null) return true
+        
+        // Check if all important fields are null or empty
+        val hasTitle = !event.title.isNullOrBlank()
+        val hasDescription = !event.description.isNullOrBlank()
+        val hasImage = !event.image.isNullOrBlank()
+        val hasDate = !event.date.isNullOrBlank()
+        
+        // Event is considered empty if it has no meaningful content
+        val isEmpty = !hasTitle && !hasDescription && !hasImage && !hasDate
+        
+        Log.d("EventController", "Event emptiness check - hasTitle: $hasTitle, hasDescription: $hasDescription, hasImage: $hasImage, hasDate: $hasDate, isEmpty: $isEmpty")
+        
+        return isEmpty
+    }
+
     private fun checkIfShouldShowEvent() {
         // If it's Pride Month, don't show regular events and don't auto-show Pride Month dialog
         if (_isPrideMonth.value) {
@@ -171,10 +189,10 @@ class HomeController(
             return
         }
 
-        // Only show the event if we have event data
+        // Only show the event if we have event data and it's not empty
         val currentEventData = _eventData.value
-        if (currentEventData == null) {
-            Log.d("EventController", "Event data is null, not showing popup")
+        if (currentEventData == null || isEventResponseEmpty(currentEventData)) {
+            Log.d("EventController", "Event data is null or empty, not showing popup")
             _showEventPopup.value = false
             return
         }
