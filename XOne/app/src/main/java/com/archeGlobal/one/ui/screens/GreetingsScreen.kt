@@ -176,7 +176,8 @@ fun GreetingsScreen(
     onBackPressed: () -> Unit,
     columns: Int = 2,
     cardWidth: Dp = 160.dp
-) { // Get the status bar padding to avoid overlapping with front camera
+) {
+    // Get the status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
     // Get current model state
@@ -197,196 +198,213 @@ fun GreetingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
                     )
                 )
-            )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(Color.Transparent)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
+                Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
+
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .height(56.dp)
+                        .background(Color.Transparent)
                 ) {
-                    IconButton(
-                        onClick = {
-                            if (currentSelectedSubcategory != null) {
-                                controller.clearSelectedSubcategory()
-                            } else if (currentSelectedCategory != null) {
-                                controller.onBackPressed()
-                            } else {
-                                onBackPressed()
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = when {
-                                currentSelectedSubcategory != null -> currentSelectedSubcategory.name
-                                currentSelectedCategory != null -> currentSelectedCategory
-                                else -> "Greetings"
-                            },
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            color = Color.Black
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(48.dp))
-                }
-            }
-
-            // Move searchQuery state to the top of the Composable
-            var searchQuery by remember { mutableStateOf("") }
-            LaunchedEffect(controller.model.searchQuery) {
-                if (controller.model.searchQuery != searchQuery) {
-                    searchQuery = controller.model.searchQuery
-                }
-            }
-            // Only show search bar when not in a category or subcategory
-            if (currentSelectedCategory == null && currentSelectedSubcategory == null) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = Color.Transparent
-                ) {
-                    Box(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White)
-                            .border(width = 1.dp, color = Color.LightGray.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp))
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        IconButton(
+                            onClick = {
+                                if (currentSelectedSubcategory != null) {
+                                    controller.clearSelectedSubcategory()
+                                } else if (currentSelectedCategory != null) {
+                                    controller.onBackPressed()
+                                } else {
+                                    onBackPressed()
+                                }
+                            }
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
                             )
-                            BasicTextField(
-                                value = searchQuery,
-                                onValueChange = { value ->
-                                    searchQuery = value
-                                    controller.updateSearchQuery(value)
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = when {
+                                    currentSelectedSubcategory != null -> currentSelectedSubcategory.name
+                                    currentSelectedCategory != null -> currentSelectedCategory
+                                    else -> "Greetings"
                                 },
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                color = Color.Black
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(48.dp))
+                    }
+                }
+
+                // Move searchQuery state to the top of the Composable
+                var searchQuery by remember { mutableStateOf("") }
+                LaunchedEffect(controller.model.searchQuery) {
+                    if (controller.model.searchQuery != searchQuery) {
+                        searchQuery = controller.model.searchQuery
+                    }
+                }
+                // Only show search bar when not in a category or subcategory
+                if (currentSelectedCategory == null && currentSelectedSubcategory == null) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        color = Color.Transparent
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.LightGray.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                        ) {
+                            Row(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 8.dp),
-                                singleLine = true,
-                                textStyle = androidx.compose.ui.text.TextStyle(
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                ),
-                                decorationBox = { innerTextField ->
-                                    Box {
-                                        if (searchQuery.isEmpty()) {
-                                            Text(
-                                                text = "Search greetings...",
-                                                color = Color.Gray.copy(alpha = 0.6f),
-                                                fontSize = 16.sp,
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Normal
-                                            )
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = Color.Gray,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                BasicTextField(
+                                    value = searchQuery,
+                                    onValueChange = { value ->
+                                        searchQuery = value
+                                        controller.updateSearchQuery(value)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 8.dp),
+                                    singleLine = true,
+                                    textStyle = androidx.compose.ui.text.TextStyle(
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black
+                                    ),
+                                    decorationBox = { innerTextField ->
+                                        Box {
+                                            if (searchQuery.isEmpty()) {
+                                                Text(
+                                                    text = "Search greetings...",
+                                                    color = Color.Gray.copy(alpha = 0.6f),
+                                                    fontSize = 16.sp,
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Normal
+                                                )
+                                            }
+                                            innerTextField()
                                         }
-                                        innerTextField()
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            // Place this at the top of your Composable (inside GreetingsScreen)
-            var selectedGreeting by remember { mutableStateOf<String?>(null) }
+                // Place this at the top of your Composable (inside GreetingsScreen)
+                var selectedGreeting by remember { mutableStateOf<String?>(null) }
 
-            // In the main categories grid, filter categories by local searchQuery
-            when {
-                currentSelectedCategory == null && currentSelectedSubcategory == null -> {
-                    val filteredCategories = remember(searchQuery) {
-                        controller.model.categories.keys.filter { it.contains(searchQuery.orEmpty(), ignoreCase = true) }
-                    }
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(columns),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(filteredCategories) { category ->
-                            GreetingCategoryCard(
-                                category = category,
-                                imageUrl = controller.getCategoryThumbnail(category),
-                                onClick = {
-                                    controller.onCategoryClick(category)
-                                },
-                                cardWidth = cardWidth
-                            )
+                // In the main categories grid, filter categories by local searchQuery
+                when {
+                    currentSelectedCategory == null && currentSelectedSubcategory == null -> {
+                        val filteredCategories = remember(searchQuery) {
+                            controller.model.categories.keys.filter {
+                                it.contains(
+                                    searchQuery.orEmpty(),
+                                    ignoreCase = true
+                                )
+                            }
+                        }
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(columns),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(filteredCategories) { category ->
+                                GreetingCategoryCard(
+                                    category = category,
+                                    imageUrl = controller.getCategoryThumbnail(category),
+                                    onClick = {
+                                        controller.onCategoryClick(category)
+                                    },
+                                    cardWidth = cardWidth
+                                )
+                            }
                         }
                     }
-                }
-                else -> {
-                    // Show greetings for selected category or subcategory
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(columns),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        val greetings = if (currentSelectedSubcategory != null) {
-                            controller.getGreetingsForSubcategory(currentSelectedSubcategory)
-                        } else {
-                            controller.getGreetingsForCategory(currentSelectedCategory.toString())
-                        }
 
-                        items(greetings) { greetingUrl ->
-                            GreetingCard(
-                                imageUrl = greetingUrl,
-                                isSelected = selectedGreeting == greetingUrl,
-                                onClick = {
-                                    selectedGreeting = greetingUrl
-                                    controller.onGreetingSelected(greetingUrl)
-                                },
-                                cardWidth = cardWidth
-                            )
+                    else -> {
+                        // Show greetings for selected category or subcategory
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(columns),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            val greetings = if (currentSelectedSubcategory != null) {
+                                controller.getGreetingsForSubcategory(currentSelectedSubcategory)
+                            } else {
+                                controller.getGreetingsForCategory(currentSelectedCategory.toString())
+                            }
+
+                            items(greetings) { greetingUrl ->
+                                GreetingCard(
+                                    imageUrl = greetingUrl,
+                                    isSelected = selectedGreeting == greetingUrl,
+                                    onClick = {
+                                        selectedGreeting = greetingUrl
+                                        controller.onGreetingSelected(greetingUrl)
+                                    },
+                                    cardWidth = cardWidth
+                                )
+                            }
                         }
                     }
                 }

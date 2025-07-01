@@ -38,67 +38,73 @@ fun HolidayOptionsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(4.dp, 12.dp, 4.dp, 0.dp) // Minimized horizontal padding
-        ) {
-            // Top App Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-            ) {
-                // Back button aligned to start
-                IconButton(
-                    onClick = { controller.onBackPressed() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.Black
-                    )
-                }
-                // Title centered
-                Text(
-                    text = "Calendar",
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
-
-        // Two option cards side by side
         Box(
             modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) { // Holiday Calendar Option
-            OptionCard(
-                title = "Holiday Calendar", // Added line break to display on two lines
-                subtitle = "Company Holidays",
-                iconResId = R.drawable.holiday2,
-                onClick = { controller.navigateToHolidayCalendar() },
+                .fillMaxSize()
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
+                    )
+                )
+        ) {
+            Column(
                 modifier = Modifier
-                    .width(200.dp)
-                    .padding(top = 125.dp)
-            )
+                    .fillMaxSize()
+                    .padding(4.dp, 12.dp, 4.dp, 0.dp) // Minimized horizontal padding
+            ) {
+                // Top App Bar
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                ) {
+                    // Back button aligned to start
+                    IconButton(
+                        onClick = { controller.onBackPressed() },
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+                    // Title centered
+                    Text(
+                        text = "Calendar",
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
 
-            // Kudos Option
+            // Two option cards side by side
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
+            ) { // Holiday Calendar Option
+                OptionCard(
+                    title = "Holiday Calendar", // Added line break to display on two lines
+                    subtitle = "Company Holidays",
+                    iconResId = R.drawable.holiday2,
+                    onClick = { controller.navigateToHolidayCalendar() },
+                    modifier = Modifier
+                        .width(200.dp)
+                        .padding(top = 125.dp)
+                )
+
+                // Kudos Option
 //                OptionCard(
 //                    title = "Kudos",
 //                    subtitle = "Celebrate Peers",
@@ -106,6 +112,7 @@ fun HolidayOptionsScreen(
 //                    onClick = { controller.navigateToKudos() },
 //                    modifier = Modifier.weight(1f)
 //                )
+            }
         }
     }
 }

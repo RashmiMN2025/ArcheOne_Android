@@ -3,11 +3,17 @@ package com.archeGlobal.one.ui.screens
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 class MpinActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        enableEdgeToEdge()
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
         val isReset = intent.getBooleanExtra("resetMpin", false)
         val email = intent.getStringExtra("email") ?: ""
         val mobile = intent.getStringExtra("mobile") ?: ""

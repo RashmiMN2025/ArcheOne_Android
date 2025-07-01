@@ -160,7 +160,8 @@ fun BusinessCardScreen(
         val userLocation = businessCard.location.trim()
 
         // First check if there's an office with a matching country name
-        val matchingOffice = offices?.find { office -> office.country.equals(userLocation, ignoreCase = true) }
+        val matchingOffice =
+            offices?.find { office -> office.country.equals(userLocation, ignoreCase = true) }
 
         if (matchingOffice != null) {
             // Found a direct match with country
@@ -173,8 +174,14 @@ fun BusinessCardScreen(
             )
         } else {
             // Check if it's an Indian regional office
-            val indiaOffice = offices?.find { office -> office.country.equals("India", ignoreCase = true) }
-            val regionalOffice = indiaOffice?.regionaloffice?.find { office -> office.region.contains(userLocation, ignoreCase = true) }
+            val indiaOffice =
+                offices?.find { office -> office.country.equals("India", ignoreCase = true) }
+            val regionalOffice = indiaOffice?.regionaloffice?.find { office ->
+                office.region.contains(
+                    userLocation,
+                    ignoreCase = true
+                )
+            }
 
             if (regionalOffice != null) {
                 // Found a matching regional office
@@ -201,499 +208,532 @@ fun BusinessCardScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
                     )
                 )
-            )
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                CustomTopAppBar(
-                    onBackPressed = { controller.onBackPressed() },
-                    onShareClick = {
-                        scope.launch {
-                            cardBounds.value?.let { bounds ->
-                                val combinedBitmap = captureBothSides(view, bounds, showFrontSide) { newShowFrontSide ->
-                                    showFrontSide = newShowFrontSide
-                                }
-                                controller.onShareCard(combinedBitmap)
-                            }
-                        }
-                    }
-                )
-            }
-
-            item {
-                // Business Card
-                Card(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .width(280.dp)
-                        .height(450.dp)
-                        .onGloballyPositioned { coordinates ->
-                            val bounds = coordinates.boundsInRoot()
-                            cardBounds.value = android.graphics.Rect(
-                                bounds.left.toInt(),
-                                bounds.top.toInt(),
-                                bounds.right.toInt(),
-                                bounds.bottom.toInt()
-                            )
-                        }
-                        .pointerInput(Unit) {
-                            detectHorizontalDragGestures { _, dragAmount ->
-                                when {
-                                    dragAmount < -50 && showFrontSide -> showFrontSide = false // Swipe left
-                                    dragAmount > 50 && !showFrontSide -> showFrontSide = true // Swipe right
-                                }
-                            }
-                        },
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    if (showFrontSide) {
-                        // Front side
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp),
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            // Logo
-                            // Logo
-                            Image(
-                                painter = painterResource(id = R.drawable.arche_black),
-                                contentDescription = "Arche Logo",
-                                modifier = Modifier
-                                    .size(40.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(90.dp))
-
-                            // Name and Designation section
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                // Name
-                                Text(
-                                    text = businessCard.name,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 18.sp,
-                                    color = Color.Black
-                                )
-
-                                // Designation
-                                Text(
-                                    text = businessCard.designation,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 15.sp,
-                                    color = Color.Gray
-                                )
-                            }
-
-                            // Add spacing between designation and contact info
-                            Spacer(modifier = Modifier.height(25.dp))
-
-                            // Contact information section
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                // Email
-                                Text(
-                                    text = businessCard.email,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 15.sp,
-                                    color = Color.Black
-                                )
-
-                                // Phone
-                                Text(
-                                    text = businessCard.phone,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 15.sp,
-                                    color = Color.Black
-                                )
-
-                                // Location
-                                Text(
-                                    text = controller.businessCard.location,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 15.sp,
-                                    color = Color.Black
-                                )
-                            }
-
-                            // Push content to bottom of card
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            // Bottom row with arche text and QR code
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                // Arche text at bottom left
-                                Text(
-                                    text = "arche",
-                                    fontSize = 25.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black,
-                                    modifier = Modifier.offset(y = (-10).dp) // Move up slightly while keeping in the row
-                                )
-
-                                // QR Code at bottom right
-                                businessCard.qrCode?.let { qrBitmap ->
-                                    ComposeQRCodeImage(
-                                        bitmap = qrBitmap,
-                                        contentDescription = "QR Code",
-                                        modifier = Modifier.size(60.dp)
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        // Back side
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            // Top quote
-                            Text(
-                                text = "This could be the start of something great.",
-                                fontSize = 12.5.sp,
-                                fontFamily = FontFamily(Font(R.font.canela_regular)),
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                modifier = Modifier
-                                    .padding(horizontal = 0.dp)
-                                    .padding(top = 20.dp)
-                            )
-
-                            // Logo in the middle
-                            Image(
-                                painter = painterResource(id = R.drawable.arche_black),
-                                contentDescription = "Arche Logo",
-                                modifier = Modifier
-                                    .size(90.dp)
-                                    .aspectRatio(9f / 8f)
-                            )
-
-                            // Bottom section with company name, address, and website
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "Arche Global Private Limited",
-                                    fontSize = 15.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 10.dp)
-                                )
-
-                                // Use the location data already resolved in the front side
-                                val officeAddress = location.address
-
-                                Text(
-                                    text = officeAddress,
-                                    fontSize = 9.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = 11.sp,
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp)
-                                        .padding(bottom = 20.dp)
-                                )
-
-                                Text(
-                                    text = "www.arche.global",
-                                    fontSize = 15.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 10.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
-                Text(
-                    text = if (showFrontSide) "Swipe to flip -->" else "<-- Swipe to flip",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextPrimary,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    fontWeight = FontWeight.Bold
-
-                )
-            }
-
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                item {
+                    CustomTopAppBar(
+                        onBackPressed = { controller.onBackPressed() },
+                        onShareClick = {
                             scope.launch {
                                 cardBounds.value?.let { bounds ->
-                                    // Capture both sides of the card and combine them
-                                    val combinedBitmap = captureBothSides(view, bounds, showFrontSide) { newShowFrontSide ->
+                                    val combinedBitmap = captureBothSides(
+                                        view,
+                                        bounds,
+                                        showFrontSide
+                                    ) { newShowFrontSide ->
                                         showFrontSide = newShowFrontSide
                                     }
-                                    controller.onDownloadCard(combinedBitmap)
+                                    controller.onShareCard(combinedBitmap)
                                 }
                             }
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                        shape = RoundedCornerShape(27.dp)
-                    ) {
-                        Text(
-                            "Download Card",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Button(
-                        onClick = { controller.onEditCard() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color.Black
-                        ),
-                        shape = RoundedCornerShape(24.dp),
-                        border = BorderStroke(1.dp, Color.Black)
-                    ) {
-                        Text(
-                            "Edit Card",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-        }
-    }
-
-    // Show Edit Card Dialog
-    if (controller.showEditCardDialog.value) {
-        var newPhone by remember(businessCard.phone) { mutableStateOf(businessCard.phone) }
-
-        // Define keywords for designation check
-        val keywords = listOf("sales", "lead", "practice", "head", "ceo", "managing", "director", "management", "manager", "senior")
-
-        // Check if user has permission to edit phone number based on designation
-        val canEditPhone = businessCard.designation.lowercase().split(" ").any { word ->
-            keywords.any { keyword -> word.contains(keyword) }
-        }
-
-        AlertDialog(
-            onDismissRequest = { controller.showEditCardDialog.value = false },
-            containerColor = Color(0xFFF5F5F5),
-            title = {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "Edit Card", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                }
-            },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    // Location field with dropdown
-                    val offices = OtpVerificationController.getOfficesData()
-                    var expanded by remember { mutableStateOf(false) }
-                    var selectedLocation by remember { mutableStateOf(businessCard.location) }
-
-                    // Get all available locations
-                    val locations = mutableListOf<String>()
-                    offices?.forEach { office ->
-                        locations.add(office.country)
-                        office.regionaloffice?.forEach { regional ->
-                            locations.add(regional.region)
                         }
-                    }
-
-                    // Add "Other" option
-                    locations.add("Other")
-
-                    Text(
-                        text = "Location",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 4.dp)
                     )
+                }
 
-                    Box {
-                        OutlinedTextField(
-                            value = selectedLocation,
-                            onValueChange = {
-                                selectedLocation = it
-                                newLocation = it
-                            },
-                            readOnly = expanded,
-                            trailingIcon = {
-                                IconButton(onClick = { expanded = !expanded }) {
-                                    Icon(
-                                        imageVector = if (expanded) {
-                                            androidx.compose.material.icons.Icons.Default.KeyboardArrowUp
-                                        } else {
-                                            androidx.compose.material.icons.Icons.Default.KeyboardArrowDown
-                                        },
-                                        contentDescription = if (expanded) "Collapse" else "Expand"
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { expanded = true },
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                cursorColor = Color.Black,
-                                focusedIndicatorColor = Color.Black,
-                                unfocusedIndicatorColor = Color.Black
-                            ),
-                            singleLine = true
-                        )
-
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier
-                                .width(240.dp)
-                                .heightIn(max = 350.dp),
-                            // Override the container color to make it transparent black
-                            properties = PopupProperties(focusable = true),
-                            containerColor = Color(0xCC000000) // 80% transparent black
-                        ) {
-                            locations.forEach { location ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = location,
-                                            color = Color.White,
-                                            fontSize = 14.sp,
-                                            modifier = Modifier.padding(vertical = 0.dp)
-                                        )
-                                    },
-                                    onClick = {
-                                        if (location == "Other") {
-                                            selectedLocation = "Bangalore"
-                                            newLocation = "Bangalore"
-                                            Toast.makeText(
-                                                context,
-                                                "Using default location: Bangalore",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        } else {
-                                            selectedLocation = location
-                                            newLocation = location
-                                        }
-                                        expanded = false
-                                    },
-                                    colors = MenuDefaults.itemColors(
-                                        textColor = Color.White,
-                                        leadingIconColor = Color.White,
-                                        trailingIconColor = Color.White,
-                                        disabledTextColor = Color.White.copy(alpha = 0.5f),
-                                        disabledLeadingIconColor = Color.White.copy(alpha = 0.5f),
-                                        disabledTrailingIconColor = Color.White.copy(alpha = 0.5f)
-                                    ),
-                                    modifier = Modifier.height(30.dp)
+                item {
+                    // Business Card
+                    Card(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .width(280.dp)
+                            .height(450.dp)
+                            .onGloballyPositioned { coordinates ->
+                                val bounds = coordinates.boundsInRoot()
+                                cardBounds.value = android.graphics.Rect(
+                                    bounds.left.toInt(),
+                                    bounds.top.toInt(),
+                                    bounds.right.toInt(),
+                                    bounds.bottom.toInt()
                                 )
                             }
+                            .pointerInput(Unit) {
+                                detectHorizontalDragGestures { _, dragAmount ->
+                                    when {
+                                        dragAmount < -50 && showFrontSide -> showFrontSide =
+                                            false // Swipe left
+                                        dragAmount > 50 && !showFrontSide -> showFrontSide =
+                                            true // Swipe right
+                                    }
+                                }
+                            },
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (showFrontSide) {
+                            // Front side
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(20.dp),
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                // Logo
+                                // Logo
+                                Image(
+                                    painter = painterResource(id = R.drawable.arche_black),
+                                    contentDescription = "Arche Logo",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(90.dp))
+
+                                // Name and Designation section
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    // Name
+                                    Text(
+                                        text = businessCard.name,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 18.sp,
+                                        color = Color.Black
+                                    )
+
+                                    // Designation
+                                    Text(
+                                        text = businessCard.designation,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 15.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+
+                                // Add spacing between designation and contact info
+                                Spacer(modifier = Modifier.height(25.dp))
+
+                                // Contact information section
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    // Email
+                                    Text(
+                                        text = businessCard.email,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 15.sp,
+                                        color = Color.Black
+                                    )
+
+                                    // Phone
+                                    Text(
+                                        text = businessCard.phone,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 15.sp,
+                                        color = Color.Black
+                                    )
+
+                                    // Location
+                                    Text(
+                                        text = controller.businessCard.location,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 15.sp,
+                                        color = Color.Black
+                                    )
+                                }
+
+                                // Push content to bottom of card
+                                Spacer(modifier = Modifier.weight(1f))
+
+                                // Bottom row with arche text and QR code
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.Bottom
+                                ) {
+                                    // Arche text at bottom left
+                                    Text(
+                                        text = "arche",
+                                        fontSize = 25.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black,
+                                        modifier = Modifier.offset(y = (-10).dp) // Move up slightly while keeping in the row
+                                    )
+
+                                    // QR Code at bottom right
+                                    businessCard.qrCode?.let { qrBitmap ->
+                                        ComposeQRCodeImage(
+                                            bitmap = qrBitmap,
+                                            contentDescription = "QR Code",
+                                            modifier = Modifier.size(60.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            // Back side
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Top quote
+                                Text(
+                                    text = "This could be the start of something great.",
+                                    fontSize = 12.5.sp,
+                                    fontFamily = FontFamily(Font(R.font.canela_regular)),
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    modifier = Modifier
+                                        .padding(horizontal = 0.dp)
+                                        .padding(top = 20.dp)
+                                )
+
+                                // Logo in the middle
+                                Image(
+                                    painter = painterResource(id = R.drawable.arche_black),
+                                    contentDescription = "Arche Logo",
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .aspectRatio(9f / 8f)
+                                )
+
+                                // Bottom section with company name, address, and website
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "Arche Global Private Limited",
+                                        fontSize = 15.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(bottom = 10.dp)
+                                    )
+
+                                    // Use the location data already resolved in the front side
+                                    val officeAddress = location.address
+
+                                    Text(
+                                        text = officeAddress,
+                                        fontSize = 9.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 11.sp,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .padding(bottom = 20.dp)
+                                    )
+
+                                    Text(
+                                        text = "www.arche.global",
+                                        fontSize = 15.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(bottom = 10.dp)
+                                    )
+                                }
+                            }
                         }
                     }
+                }
 
-                    // Only show phone number field if user has permission
-                    if (canEditPhone) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                item {
+                    Text(
+                        text = if (showFrontSide) "Swipe to flip -->" else "<-- Swipe to flip",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextPrimary,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        fontWeight = FontWeight.Bold
 
-                        // Phone number field
+                    )
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    cardBounds.value?.let { bounds ->
+                                        // Capture both sides of the card and combine them
+                                        val combinedBitmap = captureBothSides(
+                                            view,
+                                            bounds,
+                                            showFrontSide
+                                        ) { newShowFrontSide ->
+                                            showFrontSide = newShowFrontSide
+                                        }
+                                        controller.onDownloadCard(combinedBitmap)
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                            shape = RoundedCornerShape(27.dp)
+                        ) {
+                            Text(
+                                "Download Card",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Button(
+                            onClick = { controller.onEditCard() },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(1.dp, Color.Black)
+                        ) {
+                            Text(
+                                "Edit Card",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+            }
+        }
+
+        // Show Edit Card Dialog
+        if (controller.showEditCardDialog.value) {
+            var newPhone by remember(businessCard.phone) { mutableStateOf(businessCard.phone) }
+
+            // Define keywords for designation check
+            val keywords = listOf(
+                "sales",
+                "lead",
+                "practice",
+                "head",
+                "ceo",
+                "managing",
+                "director",
+                "management",
+                "manager",
+                "senior"
+            )
+
+            // Check if user has permission to edit phone number based on designation
+            val canEditPhone = businessCard.designation.lowercase().split(" ").any { word ->
+                keywords.any { keyword -> word.contains(keyword) }
+            }
+
+            AlertDialog(
+                onDismissRequest = { controller.showEditCardDialog.value = false },
+                containerColor = Color(0xFFF5F5F5),
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "Phone Number",
+                            text = "Edit Card",
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+                },
+                text = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // Location field with dropdown
+                        val offices = OtpVerificationController.getOfficesData()
+                        var expanded by remember { mutableStateOf(false) }
+                        var selectedLocation by remember { mutableStateOf(businessCard.location) }
+
+                        // Get all available locations
+                        val locations = mutableListOf<String>()
+                        offices?.forEach { office ->
+                            locations.add(office.country)
+                            office.regionaloffice?.forEach { regional ->
+                                locations.add(regional.region)
+                            }
+                        }
+
+                        // Add "Other" option
+                        locations.add("Other")
+
+                        Text(
+                            text = "Location",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black,
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
 
-                        OutlinedTextField(
-                            value = newPhone,
-                            onValueChange = { newPhone = it },
-                            placeholder = { Text("Enter phone number") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                cursorColor = Color.Black,
-                                focusedIndicatorColor = Color.Black,
-                                unfocusedIndicatorColor = Color.Black,
-                                focusedPlaceholderColor = Color.Gray,
-                                unfocusedPlaceholderColor = Color.Gray
+                        Box {
+                            OutlinedTextField(
+                                value = selectedLocation,
+                                onValueChange = {
+                                    selectedLocation = it
+                                    newLocation = it
+                                },
+                                readOnly = expanded,
+                                trailingIcon = {
+                                    IconButton(onClick = { expanded = !expanded }) {
+                                        Icon(
+                                            imageVector = if (expanded) {
+                                                androidx.compose.material.icons.Icons.Default.KeyboardArrowUp
+                                            } else {
+                                                androidx.compose.material.icons.Icons.Default.KeyboardArrowDown
+                                            },
+                                            contentDescription = if (expanded) "Collapse" else "Expand"
+                                        )
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expanded = true },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    cursorColor = Color.Black,
+                                    focusedIndicatorColor = Color.Black,
+                                    unfocusedIndicatorColor = Color.Black
+                                ),
+                                singleLine = true
                             )
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // If user can't edit phone, pass the existing phone number
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier
+                                    .width(240.dp)
+                                    .heightIn(max = 350.dp),
+                                // Override the container color to make it transparent black
+                                properties = PopupProperties(focusable = true),
+                                containerColor = Color(0xCC000000) // 80% transparent black
+                            ) {
+                                locations.forEach { location ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = location,
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                modifier = Modifier.padding(vertical = 0.dp)
+                                            )
+                                        },
+                                        onClick = {
+                                            if (location == "Other") {
+                                                selectedLocation = "Bangalore"
+                                                newLocation = "Bangalore"
+                                                Toast.makeText(
+                                                    context,
+                                                    "Using default location: Bangalore",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                selectedLocation = location
+                                                newLocation = location
+                                            }
+                                            expanded = false
+                                        },
+                                        colors = MenuDefaults.itemColors(
+                                            textColor = Color.White,
+                                            leadingIconColor = Color.White,
+                                            trailingIconColor = Color.White,
+                                            disabledTextColor = Color.White.copy(alpha = 0.5f),
+                                            disabledLeadingIconColor = Color.White.copy(alpha = 0.5f),
+                                            disabledTrailingIconColor = Color.White.copy(alpha = 0.5f)
+                                        ),
+                                        modifier = Modifier.height(30.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Only show phone number field if user has permission
                         if (canEditPhone) {
-                            controller.onCardUpdated(newLocation, newPhone)
-                        } else {
-                            controller.onCardUpdated(newLocation, businessCard.phone)
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Phone number field
+                            Text(
+                                text = "Phone Number",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+
+                            OutlinedTextField(
+                                value = newPhone,
+                                onValueChange = { newPhone = it },
+                                placeholder = { Text("Enter phone number") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    cursorColor = Color.Black,
+                                    focusedIndicatorColor = Color.Black,
+                                    unfocusedIndicatorColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Gray,
+                                    unfocusedPlaceholderColor = Color.Gray
+                                )
+                            )
                         }
                     }
-                ) {
-                    Text("Save", color = Color(0xFFDD3825))
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            // If user can't edit phone, pass the existing phone number
+                            if (canEditPhone) {
+                                controller.onCardUpdated(newLocation, newPhone)
+                            } else {
+                                controller.onCardUpdated(newLocation, businessCard.phone)
+                            }
+                        }
+                    ) {
+                        Text("Save", color = Color(0xFFDD3825))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { controller.showEditCardDialog.value = false }
+                    ) {
+                        Text("Cancel", color = Color.Gray)
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { controller.showEditCardDialog.value = false }
-                ) {
-                    Text("Cancel", color = Color.Gray)
-                }
-            }
-        )
+            )
+        }
     }
 }
 

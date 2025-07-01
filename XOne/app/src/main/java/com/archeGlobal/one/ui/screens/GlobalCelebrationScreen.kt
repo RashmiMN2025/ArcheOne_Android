@@ -80,141 +80,152 @@ fun GlobalCelebrationScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
                     )
                 )
-            )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
-
-            // Top App Bar with Back Button and Title
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBackPressed) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    }
+                Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
 
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Global Celebration",
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            color = Color.Black
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(48.dp))
-                }
-            }
-
-            // Search Bar (updated logic: local state, update controller on change)
-            var searchQuery by remember { mutableStateOf("") }
-            LaunchedEffect(controller.model.searchQuery) {
-                if (controller.model.searchQuery != searchQuery) {
-                    searchQuery = controller.model.searchQuery
-                }
-            }
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                color = Color.Transparent
-            ) {
+                // Top App Bar with Back Button and Title
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                        .height(56.dp)
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = { value ->
-                                searchQuery = value
-                                controller.updateSearchQuery(value)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp),
-                            singleLine = true,
-                            textStyle = androidx.compose.ui.text.TextStyle(
-                                fontSize = 16.sp,
+                        IconButton(onClick = onBackPressed) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Global Celebration",
+                                fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
                                 color = Color.Black
-                            ),
-                            decorationBox = { innerTextField ->
-                                Box {
-                                    if (searchQuery.isEmpty()) {
-                                        Text(
-                                            text = "Search celebration...",
-                                            color = Color.Gray.copy(alpha = 0.6f),
-                                            fontSize = 16.sp,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal
-                                        )
-                                    }
-                                    innerTextField()
-                                }
-                            }
-                        )
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(48.dp))
                     }
                 }
-            }
 
-            // Filter subcategories locally using searchQuery
-            val filteredSubcategories = remember(searchQuery) {
-                controller.model.subcategories.filter {
-                    it.name.contains(searchQuery.orEmpty(), ignoreCase = true)
+                // Search Bar (updated logic: local state, update controller on change)
+                var searchQuery by remember { mutableStateOf("") }
+                LaunchedEffect(controller.model.searchQuery) {
+                    if (controller.model.searchQuery != searchQuery) {
+                        searchQuery = controller.model.searchQuery
+                    }
                 }
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = Color.Transparent
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .border(
+                                1.dp,
+                                Color.LightGray.copy(alpha = 0.5f),
+                                RoundedCornerShape(12.dp)
+                            )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = Color.Gray,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            BasicTextField(
+                                value = searchQuery,
+                                onValueChange = { value ->
+                                    searchQuery = value
+                                    controller.updateSearchQuery(value)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp),
+                                singleLine = true,
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                ),
+                                decorationBox = { innerTextField ->
+                                    Box {
+                                        if (searchQuery.isEmpty()) {
+                                            Text(
+                                                text = "Search celebration...",
+                                                color = Color.Gray.copy(alpha = 0.6f),
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Filter subcategories locally using searchQuery
+                val filteredSubcategories = remember(searchQuery) {
+                    controller.model.subcategories.filter {
+                        it.name.contains(searchQuery.orEmpty(), ignoreCase = true)
+                    }
+                }
+                GlobalCelebrationSubcategoriesGrid(
+                    subcategories = filteredSubcategories,
+                    onSubcategoryClick = { subcategory ->
+                        controller.onSubcategorySelected(subcategory)
+                    },
+                    columns = columns,
+                    cardWidth = cardWidth
+                )
             }
-            GlobalCelebrationSubcategoriesGrid(
-                subcategories = filteredSubcategories,
-                onSubcategoryClick = { subcategory ->
-                    controller.onSubcategorySelected(subcategory)
-                },
-                columns = columns,
-                cardWidth = cardWidth
-            )
         }
     }
 }

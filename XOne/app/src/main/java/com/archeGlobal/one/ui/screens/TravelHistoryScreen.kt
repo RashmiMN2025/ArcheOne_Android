@@ -44,91 +44,104 @@ fun TravelHistoryScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
-                        WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                        WelcomeBackgroundBottom // Dark Grey (0xFF474749)
+            .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
+                            WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
+                            WelcomeBackgroundBottom // Dark Grey (0xFF474749)
+                        )
                     )
                 )
-            )
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Add space at the top to push everything down
-            Spacer(modifier = Modifier.height(48.dp))
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Add space at the top to push everything down
+                Spacer(modifier = Modifier.height(48.dp))
 
-            TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Travel History",
-                            color = Color.Black,
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { controller.onBackPressed() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
-                    }
-                },
-                backgroundColor = Color.Transparent,
-                elevation = 0.dp,
-                actions = {
-                    Spacer(modifier = Modifier.width(48.dp))
-                }
-            )
-
-            // Add more space after the TopAppBar
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-            ) {
-                // Render UI based on current travel history state
-                when (val currentState = state) {
-                    is TravelHistoryState.Loading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
-                    is TravelHistoryState.Success -> {
-                        if (currentState.historyItems.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "No travel history found")
-                            }
-                        } else {
-                            TravelHistoryList(
-                                travelRequests = currentState.historyItems,
-                                onTravelRequestClick = { requestId ->
-                                    controller.navigateToTravelDetails(requestId)
-                                }
+                TopAppBar(
+                    title = {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Travel History",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
                             )
                         }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { controller.onBackPressed() }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    backgroundColor = Color.Transparent,
+                    elevation = 0.dp,
+                    actions = {
+                        Spacer(modifier = Modifier.width(48.dp))
                     }
-                    is TravelHistoryState.Error -> {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = currentState.message)
-                            Button(
-                                onClick = { controller.loadCombinedTravelHistory() },
-                                modifier = Modifier.padding(top = 8.dp)
+                )
+
+                // Add more space after the TopAppBar
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    // Render UI based on current travel history state
+                    when (val currentState = state) {
+                        is TravelHistoryState.Loading -> {
+                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                        }
+
+                        is TravelHistoryState.Success -> {
+                            if (currentState.historyItems.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "No travel history found")
+                                }
+                            } else {
+                                TravelHistoryList(
+                                    travelRequests = currentState.historyItems,
+                                    onTravelRequestClick = { requestId ->
+                                        controller.navigateToTravelDetails(requestId)
+                                    }
+                                )
+                            }
+                        }
+
+                        is TravelHistoryState.Error -> {
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Retry")
+                                Text(text = currentState.message)
+                                Button(
+                                    onClick = { controller.loadCombinedTravelHistory() },
+                                    modifier = Modifier.padding(top = 8.dp)
+                                ) {
+                                    Text("Retry")
+                                }
                             }
                         }
                     }
@@ -138,46 +151,6 @@ fun TravelHistoryScreen(
     }
 }
 
-// Removed TabbedTravelHistory - Approval tab no longer required
-/*
-    orderHistory: List<TravelRequest>,
-    approvalHistory: List<TravelRequest>,
-    onTravelRequestClick: (String) -> Unit
-) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Order History", "Approval History")
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Tab Row
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            backgroundColor = Color.Transparent,
-            contentColor = Color.Black
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    text = { Text(title) },
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index }
-                )
-            }
-        }
-
-        // Tab Content
-        when (selectedTabIndex) {
-            0 -> TravelHistoryList(
-                travelRequests = orderHistory,
-                onTravelRequestClick = onTravelRequestClick
-            )
-            1 -> TravelHistoryList(
-                travelRequests = approvalHistory,
-                onTravelRequestClick = onTravelRequestClick
-            )
-        }
-    }
-}
-
-*/
 @Composable
 fun TravelHistoryList(
     travelRequests: List<TravelRequest>,

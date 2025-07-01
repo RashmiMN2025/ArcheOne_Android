@@ -94,6 +94,12 @@ fun LoginScreen(
     forceDifferentUserMode: Boolean = false,
     contentPadding: Dp = 16.dp // <-- Add this parameter
 ) {
+      Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
@@ -1258,4 +1264,5 @@ fun LoginScreen(
             }
         }
     }
+}
 }

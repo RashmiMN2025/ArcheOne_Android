@@ -72,149 +72,156 @@ fun TodoScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Color(0xFFE0DCD1) // Light Beige
-            )
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Top AppBar
-            TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "ZenTask",
-                            color = Color.Black,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBackPressed
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_back),
-                            contentDescription = "Back",
-                            tint = Color.Black
-                        )
-                    }
-                },
-                actions = {
-                    Spacer(modifier = Modifier.width(50.dp))
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Color(0xFFE0DCD1) // Light Beige
                 )
-            )
-
-            // Day selector row
-            DaySelector(
-                selectedDay = controller.model.selectedDay,
-                onDaySelected = controller::selectDay
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Tasks List
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth() // Stretch to full width
-                    .weight(0.85f) // Increase height as needed
-                    .background(Color(0xFFF8F8F0)), // Beige color
-                contentAlignment = Alignment.TopCenter
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Empty State or Task List
-                if (tasksForSelectedDay.isEmpty() && currentNewTask != null && currentNewTask.dayOfWeek == controller.model.selectedDay) {
-                    EmptyTasksMessage(
-                        newTask = currentNewTask,
-                        onTaskClick = { /* ... */ },
-                        onEditClick = controller::startEditTask,
-                        onDeleteClick = {
-                            controller.deleteTask(it)
-                            newTask = null
-                        },
-                        onToggleCompleted = controller::toggleTaskCompleted,
-                        formatTimeRange = controller::formatTimeRange,
-                        formatCreationDate = controller::formatCreationDate
+                // Top AppBar
+                TopAppBar(
+                    title = {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "ZenTask",
+                                color = Color.Black,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBackPressed
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_back),
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    actions = {
+                        Spacer(modifier = Modifier.width(50.dp))
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
                     )
-                } else if (tasksForSelectedDay.isEmpty()) {
-                    // Show the empty state if there are no tasks at all for this day
-                    EmptyTasksMessage()
-                } else {
-                    TaskList(
-                        tasks = tasksForSelectedDay,
-                        onTaskClick = { /* Do nothing when task is clicked */ },
-                        onEditClick = controller::startEditTask, // Directly go to edit mode
-                        onDeleteClick = controller::deleteTask, // Directly delete the task
-                        onToggleCompleted = controller::toggleTaskCompleted, // <-- Pass controller function here
-                        formatTimeRange = controller::formatTimeRange,
-                        formatCreationDate = controller::formatCreationDate
+                )
+
+                // Day selector row
+                DaySelector(
+                    selectedDay = controller.model.selectedDay,
+                    onDaySelected = controller::selectDay
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Tasks List
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth() // Stretch to full width
+                        .weight(0.85f) // Increase height as needed
+                        .background(Color(0xFFF8F8F0)), // Beige color
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    // Empty State or Task List
+                    if (tasksForSelectedDay.isEmpty() && currentNewTask != null && currentNewTask.dayOfWeek == controller.model.selectedDay) {
+                        EmptyTasksMessage(
+                            newTask = currentNewTask,
+                            onTaskClick = { /* ... */ },
+                            onEditClick = controller::startEditTask,
+                            onDeleteClick = {
+                                controller.deleteTask(it)
+                                newTask = null
+                            },
+                            onToggleCompleted = controller::toggleTaskCompleted,
+                            formatTimeRange = controller::formatTimeRange,
+                            formatCreationDate = controller::formatCreationDate
+                        )
+                    } else if (tasksForSelectedDay.isEmpty()) {
+                        // Show the empty state if there are no tasks at all for this day
+                        EmptyTasksMessage()
+                    } else {
+                        TaskList(
+                            tasks = tasksForSelectedDay,
+                            onTaskClick = { /* Do nothing when task is clicked */ },
+                            onEditClick = controller::startEditTask, // Directly go to edit mode
+                            onDeleteClick = controller::deleteTask, // Directly delete the task
+                            onToggleCompleted = controller::toggleTaskCompleted, // <-- Pass controller function here
+                            formatTimeRange = controller::formatTimeRange,
+                            formatCreationDate = controller::formatCreationDate
+                        )
+                    }
+                }
+
+                // Add Task Button at bottom
+                Button(
+                    onClick = controller::startAddTask,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE83A25) // Red color from image
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Add Task",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
             }
 
-            // Add Task Button at bottom
-            Button(
-                onClick = controller::startAddTask,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE83A25) // Red color from image
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = "Add Task",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(vertical = 8.dp)
+            // Task Detail Dialog
+            if (controller.model.showTaskDetail && controller.model.selectedTask != null) {
+                TaskDetailDialog(
+                    task = controller.model.selectedTask!!,
+                    onDismiss = controller::closeTaskDetail,
+                    onEdit = controller::startEditTask,
+                    onDelete = controller::deleteTask,
+                    formatTimeRange = controller::formatTimeRange
                 )
             }
-        }
 
-        // Task Detail Dialog
-        if (controller.model.showTaskDetail && controller.model.selectedTask != null) {
-            TaskDetailDialog(
-                task = controller.model.selectedTask!!,
-                onDismiss = controller::closeTaskDetail,
-                onEdit = controller::startEditTask,
-                onDelete = controller::deleteTask,
-                formatTimeRange = controller::formatTimeRange
-            )
-        }
+            // Add Task Dialog
+            if (controller.model.isAddingTask) {
+                TaskFormDialog(
+                    isEditing = false,
+                    initialTask = null,
+                    onSave = { title, priority, startTime, endTime ->
+                        val task = controller.addTask(title, priority, startTime, endTime)
+                        newTask = task
+                    },
+                    onCancel = controller::cancelAddTask
+                )
+            }
 
-        // Add Task Dialog
-        if (controller.model.isAddingTask) {
-            TaskFormDialog(
-                isEditing = false,
-                initialTask = null,
-                onSave = { title, priority, startTime, endTime ->
-                    val task = controller.addTask(title, priority, startTime, endTime)
-                    newTask = task
-                },
-                onCancel = controller::cancelAddTask
-            )
-        }
-
-        // Edit Task Dialog
-        if (controller.model.isEditingTask && controller.model.selectedTask != null) {
-            TaskFormDialog(
-                isEditing = true,
-                initialTask = controller.model.selectedTask,
-                onSave = controller::updateTask,
-                onCancel = controller::cancelEditTask
-            )
+            // Edit Task Dialog
+            if (controller.model.isEditingTask && controller.model.selectedTask != null) {
+                TaskFormDialog(
+                    isEditing = true,
+                    initialTask = controller.model.selectedTask,
+                    onSave = controller::updateTask,
+                    onCancel = controller::cancelEditTask
+                )
+            }
         }
     }
 }

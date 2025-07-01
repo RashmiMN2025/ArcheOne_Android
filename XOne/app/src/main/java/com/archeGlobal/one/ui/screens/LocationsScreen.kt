@@ -81,14 +81,20 @@ fun LocationsScreen(
     }
 
     LaunchedEffect(Unit) {
-        Log.d("LocationsScreen", "Screen initialized with isEmergencyContact=$isEmergencyContactActual")
+        Log.d(
+            "LocationsScreen",
+            "Screen initialized with isEmergencyContact=$isEmergencyContactActual"
+        )
         locationController.resetState()
 
         // Set the value in the controller
         locationController.setEmergencyContactMode(isEmergencyContactActual)
 
         // Set the value in the saved state handle
-        navController.currentBackStackEntry?.savedStateHandle?.set("isEmergencyContact", isEmergencyContactActual)
+        navController.currentBackStackEntry?.savedStateHandle?.set(
+            "isEmergencyContact",
+            isEmergencyContactActual
+        )
 
         // Only auto-navigate to India location if in emergency contact mode
         if (isEmergencyContactActual) {
@@ -109,155 +115,174 @@ fun LocationsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige/Grey
-                        Color(0xFFC8C8CA), // Light Grey
-                        Color(0xFF474749) // Dark Grey
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFE0DCD1), // Light Beige/Grey
+                            Color(0xFFC8C8CA), // Light Grey
+                            Color(0xFF474749) // Dark Grey
+                        )
                     )
                 )
-            )
-    ) {
-        val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
+        ) {
+            val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent,
-            topBar = {
-                Column {
-                    Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .background(Color.Transparent),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Navigation icon
-                        Box(
-                            modifier = Modifier.width(48.dp),
-                            contentAlignment = Alignment.Center
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                containerColor = Color.Transparent,
+                topBar = {
+                    Column {
+                        Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .background(Color.Transparent),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconButton(
-                                onClick = {
-                                    if (locationController.isInEmergencyContactMode()) {
-                                        val stayInCurrentScreen = locationController.onEmergencyBackPressed()
-                                        if (!stayInCurrentScreen) {
-                                            navController.navigate("sos?showHeader=$showHeader") {
-                                                popUpTo("sos") { inclusive = true }
+                            // Navigation icon
+                            Box(
+                                modifier = Modifier.width(48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        if (locationController.isInEmergencyContactMode()) {
+                                            val stayInCurrentScreen =
+                                                locationController.onEmergencyBackPressed()
+                                            if (!stayInCurrentScreen) {
+                                                navController.navigate("sos?showHeader=$showHeader") {
+                                                    popUpTo("sos") { inclusive = true }
+                                                }
+                                            }
+                                        } else {
+                                            val state = locationController.getState()
+                                            val atTopLevel =
+                                                !state.showingStateList && !state.showingDetails
+                                            if (atTopLevel) {
+                                                onBackToHome()
+                                            } else {
+                                                if (!locationController.onBackPressed()) {
+                                                    navController.popBackStack()
+                                                }
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = "Back",
+                                        tint = Color.Black
+                                    )
+                                }
+                            }
+
+                            // Title
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = when {
+                                        locationController.isInEmergencyContactMode() -> "Emergency Contact"
+                                        state.showingStateList -> "Regional Offices"
+                                        state.showingDetails -> {
+                                            state.selectedLocation?.name ?: "Locations"
+                                        }
+
+                                        else -> "Locations"
+                                    },
+                                    fontSize = 20.sp,
+                                    color = Color.Black,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+
+                            // Right spacer
+                            Box(
+                                modifier = Modifier.width(48.dp)
+                            ) {
+                                Spacer(modifier = Modifier.fillMaxWidth())
+                            }
+                        }
+                    }
+                }
+            ) { padding ->
+                when {
+                    state.showingStateList && state.selectedState?.name == "Tamil Nadu" -> {
+                        // Show Tamil Nadu locations list
+                        LazyColumn(
+                            modifier = Modifier.padding(padding),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(state.selectedState.locations) { location ->
+                                val context = LocalContext.current
+                                LocationCard(
+                                    location = location,
+                                    onClick = { locationController.selectLocation(location) },
+                                    onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
+                                        {
+                                            location.mapFileName?.let { mapFile ->
+                                                locationController.showFloorMap(
+                                                    mapFile
+                                                )
                                             }
                                         }
                                     } else {
-                                        val state = locationController.getState()
-                                        val atTopLevel = !state.showingStateList && !state.showingDetails
-                                        if (atTopLevel) {
-                                            onBackToHome()
-                                        } else {
-                                            if (!locationController.onBackPressed()) {
-                                                navController.popBackStack()
-                                            }
-                                        }
+                                        null
                                     }
-                                }
-                            ) {
-                                Icon(
-                                    Icons.Default.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = Color.Black
                                 )
                             }
                         }
+                    }
 
-                        // Title
-                        Box(
-                            modifier = Modifier
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = when {
-                                    locationController.isInEmergencyContactMode() -> "Emergency Contact"
-                                    state.showingStateList -> "Regional Offices"
-                                    state.showingDetails -> {
-                                        state.selectedLocation?.name ?: "Locations"
+                    state.showingStateList -> {
+                        StateList(
+                            states = state.selectedLocation?.states ?: emptyList(),
+                            onStateClick = { state ->
+                                locationController.selectStateLocation(state)
+                            },
+                            modifier = Modifier.padding(padding),
+                            controller = locationController
+                        )
+                    }
+
+                    state.showingDetails -> {
+                        val selectedLocation = state.selectedLocation
+                        if (selectedLocation != null) {
+                            LocationDetails(
+                                location = selectedLocation,
+                                onShowFloorMap = {
+                                    selectedLocation.mapFileName?.let { mapFile ->
+                                        locationController.showFloorMap(mapFile)
                                     }
-                                    else -> "Locations"
                                 },
-                                fontSize = 20.sp,
-                                color = Color.Black,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
+                                modifier = Modifier.padding(padding)
                             )
                         }
+                    }
 
-                        // Right spacer
-                        Box(
-                            modifier = Modifier.width(48.dp)
-                        ) {
-                            Spacer(modifier = Modifier.fillMaxWidth())
-                        }
-                    }
-                }
-            }
-        ) { padding ->
-            when {
-                state.showingStateList && state.selectedState?.name == "Tamil Nadu" -> {
-                    // Show Tamil Nadu locations list
-                    LazyColumn(
-                        modifier = Modifier.padding(padding),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(state.selectedState.locations) { location ->
-                            val context = LocalContext.current
-                            LocationCard(
-                                location = location,
-                                onClick = { locationController.selectLocation(location) },
-                                onFloorMapClick = if (location.hasFloorMap && location.mapFileName != null) {
-                                    { location.mapFileName?.let { mapFile -> locationController.showFloorMap(mapFile) } }
-                                } else {
-                                    null
-                                }
-                            )
-                        }
-                    }
-                }
-                state.showingStateList -> {
-                    StateList(
-                        states = state.selectedLocation?.states ?: emptyList(),
-                        onStateClick = { state ->
-                            locationController.selectStateLocation(state)
-                        },
-                        modifier = Modifier.padding(padding),
-                        controller = locationController
-                    )
-                }
-                state.showingDetails -> {
-                    val selectedLocation = state.selectedLocation
-                    if (selectedLocation != null) {
-                        LocationDetails(
-                            location = selectedLocation,
-                            onShowFloorMap = {
-                                selectedLocation.mapFileName?.let { mapFile ->
-                                    locationController.showFloorMap(mapFile)
-                                }
+                    else -> {
+                        LocationList(
+                            locations = locationController.getLocations(),
+                            onLocationClick = locationController::selectLocation,
+                            onShowFloorMap = { mapFile ->
+                                locationController.showFloorMap(mapFile)
                             },
                             modifier = Modifier.padding(padding)
                         )
                     }
-                }
-                else -> {
-                    LocationList(
-                        locations = locationController.getLocations(),
-                        onLocationClick = locationController::selectLocation,
-                        onShowFloorMap = { mapFile ->
-                            locationController.showFloorMap(mapFile)
-                        },
-                        modifier = Modifier.padding(padding)
-                    )
                 }
             }
         }

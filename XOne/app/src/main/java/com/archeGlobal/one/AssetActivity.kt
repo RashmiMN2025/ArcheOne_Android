@@ -7,10 +7,16 @@ import com.archeGlobal.one.controller.AssetController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.AssetScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
+import androidx.activity.enableEdgeToEdge
 
 class AssetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        enableEdgeToEdge()
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        
         val controller = AssetController(this, AndroidNavigator(this))
         setContent {
             XOneTheme {

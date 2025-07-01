@@ -113,153 +113,165 @@ fun XConnectScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige
-                        Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749) // Dark Gray
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFE0DCD1), // Light Beige
+                            Color(0xFFC8C8CA), // Light Gray
+                            Color(0xFF474749) // Dark Gray
+                        )
+                    )
+                )
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(bottom = 10.dp)
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                // Back button at the left edge
-                IconButton(
-                    onClick = onBackPressed,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
-                    )
-                }
-
-                // Centered Title taking full width
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Blogs & Case Studies",
-                        color = Color.Black,
-                        fontSize = 20.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Empty spacer for balance (same width as back button)
-                Spacer(modifier = Modifier.size(48.dp))
-            }
-
-            // Tabs Row (Scrollable)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center // Center align the tabs
-            ) {
-                tabs.forEach { tab ->
-                    TabItem(
-                        text = tab,
-                        isSelected = selectedTab == tab,
-                        onTabSelected = { selectedTab = tab }
-                    )
-                }
-            }
-
-            // Search Bar
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                color = Color.Transparent
-            ) {
-                Box(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .border(
-                            width = 1.dp,
-                            color = Color.LightGray.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(12.dp)
-                        )
+                        .statusBarsPadding()
+                        .padding(bottom = 10.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    // Back button at the left edge
+                    IconButton(
+                        onClick = onBackPressed,
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
                         )
+                    }
 
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 8.dp),
-                            singleLine = true,
-                            textStyle = TextStyle( // Added textStyle for innerTextField
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Search
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onSearch = {
-                                    keyboardController?.hide()
-                                }
-                            ),
-                            decorationBox = { innerTextField ->
-                                Box {
-                                    if (searchQuery.isEmpty()) {
-                                        Text(
-                                            text = "Search...",
-                                            color = Color.Gray.copy(alpha = 0.6f),
-                                            fontSize = 16.sp,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal
-                                        )
-                                    }
-                                    innerTextField()
-                                }
-                            }
+                    // Centered Title taking full width
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Blogs & Case Studies",
+                            color = Color.Black,
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Empty spacer for balance (same width as back button)
+                    Spacer(modifier = Modifier.size(48.dp))
+                }
+
+                // Tabs Row (Scrollable)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Center // Center align the tabs
+                ) {
+                    tabs.forEach { tab ->
+                        TabItem(
+                            text = tab,
+                            isSelected = selectedTab == tab,
+                            onTabSelected = { selectedTab = tab }
                         )
                     }
                 }
-            }
 
-            // Content based on selected tab and search query
-            when (selectedTab) {
-                "All Posts" -> AllPostsContent(socialController, searchQuery, showArticleDetail)
-                "Case Studies" -> CaseStudiesContent(socialController, searchQuery, showArticleDetail)
-                "Blogs" -> BlogsContent(socialController, searchQuery, showArticleDetail)
+                // Search Bar
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    color = Color.Transparent
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .border(
+                                width = 1.dp,
+                                color = Color.LightGray.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = Color.Gray,
+                                modifier = Modifier.size(24.dp)
+                            )
+
+                            BasicTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp),
+                                singleLine = true,
+                                textStyle = TextStyle( // Added textStyle for innerTextField
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Search
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onSearch = {
+                                        keyboardController?.hide()
+                                    }
+                                ),
+                                decorationBox = { innerTextField ->
+                                    Box {
+                                        if (searchQuery.isEmpty()) {
+                                            Text(
+                                                text = "Search...",
+                                                color = Color.Gray.copy(alpha = 0.6f),
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Content based on selected tab and search query
+                when (selectedTab) {
+                    "All Posts" -> AllPostsContent(socialController, searchQuery, showArticleDetail)
+                    "Case Studies" -> CaseStudiesContent(
+                        socialController,
+                        searchQuery,
+                        showArticleDetail
+                    )
+
+                    "Blogs" -> BlogsContent(socialController, searchQuery, showArticleDetail)
+                }
             }
         }
     }

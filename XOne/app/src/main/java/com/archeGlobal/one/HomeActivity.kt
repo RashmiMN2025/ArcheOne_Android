@@ -38,6 +38,7 @@ import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
+import androidx.activity.enableEdgeToEdge
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -101,6 +102,11 @@ class HomeActivity : AppCompatActivity() {
     @SuppressLint("ViewModelConstructorInComposable")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        enableEdgeToEdge()
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        
         userDataManager = UserDataManager.getInstance(this)
         navigator = AndroidNavigator(this)
 

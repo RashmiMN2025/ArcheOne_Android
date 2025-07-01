@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +48,7 @@ fun TravelApprovalConfirmScreen(
                 errorMessage = null
                 successMessage = null
             }
+
             is TravelController.TravelApprovalActionState.Success -> {
                 // Show success and navigate back after a delay
                 isLoading = false
@@ -55,12 +57,14 @@ fun TravelApprovalConfirmScreen(
                 delay(1500) // Give user time to see the success state
                 controller.navigateBack()
             }
+
             is TravelController.TravelApprovalActionState.Error -> {
                 // Show error message
                 isLoading = false
                 errorMessage = approvalActionState.message
                 successMessage = null
             }
+
             else -> {
                 // Reset state
                 isLoading = false
@@ -73,176 +77,198 @@ fun TravelApprovalConfirmScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        // Show loading overlay when API call is in progress
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x80FFFFFF))
-                    .zIndex(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Processing request...")
-                }
-            }
-        }
-
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .background(Color(0xFFF5F5F5))
         ) {
-            // Top bar with back button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { controller.navigateBack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            // Show loading overlay when API call is in progress
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0x80FFFFFF))
+                        .zIndex(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Processing request...")
+                    }
                 }
-                Text(
-                    "Approve Travel Request",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Travel request details card
-            Card(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                elevation = 4.dp,
-                shape = RoundedCornerShape(12.dp)
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Column(
+                // Top bar with back button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { controller.navigateBack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                    Text(
+                        "Approve Travel Request",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Travel request details card
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(vertical = 8.dp),
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    // Request ID with status
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
                     ) {
-                        Text(
-                            "ID: ${selectedRequest.id}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    when (selectedRequest.status) {
-                                        com.archeGlobal.one.model.TravelStatus.PENDING -> Color(0xFFFFD700) // Yellow for pending
-                                        com.archeGlobal.one.model.TravelStatus.APPROVED -> Color(0xFF4CD964) // Green for approved
-                                        com.archeGlobal.one.model.TravelStatus.REJECTED -> Color(0xFFFF3B30) // Red for rejected
-                                    }
-                                )
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                        // Request ID with status
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                selectedRequest.status.name,
-                                color = Color.Black,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    Divider(modifier = Modifier.padding(vertical = 12.dp))
-
-                    // Employee details
-                    DetailRow("Approver", selectedRequest.approver)
-                    DetailRow("Destination", selectedRequest.destination)
-                    DetailRow("Project", selectedRequest.project)
-                    DetailRow("Business Justification", selectedRequest.businessJustification ?: "Not provided")
-                    DetailRow("Date of Departure", selectedRequest.departureDate ?: "Not provided")
-                    DetailRow("Date of Arrival", selectedRequest.arrivalDate ?: "Not provided")
-                    DetailRow("Mode of Transport", selectedRequest.modeOfTransport ?: "Not provided")
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Remarks input field
-                    OutlinedTextField(
-                        value = remarks,
-                        onValueChange = { remarks = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        placeholder = { Text("Enter remark (optional)") },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.LightGray
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Success message
-                    if (successMessage != null) {
-                        Text(
-                            successMessage!!,
-                            color = Color(0xFF4CD964),
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    // Error message
-                    if (errorMessage != null) {
-                        Text(
-                            errorMessage!!,
-                            color = Color.Red,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    // Submit Approval button
-                    Button(
-                        onClick = {
-                            controller.approveTravelRequest(selectedRequest.id, remarks)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color(0xFF4CD964),
-                            disabledBackgroundColor = Color.Gray
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        enabled = !isLoading
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                "Submit Approval",
-                                color = Color.White,
-                                fontFamily = GraphikFontFamily,
+                                "ID: ${selectedRequest.id}",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        when (selectedRequest.status) {
+                                            com.archeGlobal.one.model.TravelStatus.PENDING -> Color(
+                                                0xFFFFD700
+                                            ) // Yellow for pending
+                                            com.archeGlobal.one.model.TravelStatus.APPROVED -> Color(
+                                                0xFF4CD964
+                                            ) // Green for approved
+                                            com.archeGlobal.one.model.TravelStatus.REJECTED -> Color(
+                                                0xFFFF3B30
+                                            ) // Red for rejected
+                                        }
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    selectedRequest.status.name,
+                                    color = Color.Black,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        Divider(modifier = Modifier.padding(vertical = 12.dp))
+
+                        // Employee details
+                        DetailRow("Approver", selectedRequest.approver)
+                        DetailRow("Destination", selectedRequest.destination)
+                        DetailRow("Project", selectedRequest.project)
+                        DetailRow(
+                            "Business Justification",
+                            selectedRequest.businessJustification ?: "Not provided"
+                        )
+                        DetailRow(
+                            "Date of Departure",
+                            selectedRequest.departureDate ?: "Not provided"
+                        )
+                        DetailRow("Date of Arrival", selectedRequest.arrivalDate ?: "Not provided")
+                        DetailRow(
+                            "Mode of Transport",
+                            selectedRequest.modeOfTransport ?: "Not provided"
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Remarks input field
+                        OutlinedTextField(
+                            value = remarks,
+                            onValueChange = { remarks = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
+                            placeholder = { Text("Enter remark (optional)") },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                focusedBorderColor = Color.Gray,
+                                unfocusedBorderColor = Color.LightGray
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Success message
+                        if (successMessage != null) {
+                            Text(
+                                successMessage!!,
+                                color = Color(0xFF4CD964),
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        // Error message
+                        if (errorMessage != null) {
+                            Text(
+                                errorMessage!!,
+                                color = Color.Red,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        // Submit Approval button
+                        Button(
+                            onClick = {
+                                controller.approveTravelRequest(selectedRequest.id, remarks)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = Color(0xFF4CD964),
+                                disabledBackgroundColor = Color.Gray
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            enabled = !isLoading
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    "Submit Approval",
+                                    color = Color.White,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
                     }
                 }

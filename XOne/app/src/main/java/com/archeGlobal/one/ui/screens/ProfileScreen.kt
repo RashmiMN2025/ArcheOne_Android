@@ -96,7 +96,11 @@ fun ProfileScreen(
         if (isGranted) {
             cameraLauncher.launch(null)
         } else {
-            Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Camera permission is required to use camera",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -110,185 +114,201 @@ fun ProfileScreen(
         }
     }
 
-    FooterScaffold(
-        footerNavigation = footerNavigation,
-        onFooterHomeClick = onFooterHomeClick,
-        onFooterChatClick = onFooterChatClick,
-        onFooterSOSClick = onFooterSOSClick,
-        onFooterProfileClick = onFooterProfileClick
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige/Grey
-                            Color(0xFFC8C8CA), // Light Grey
-                            Color(0xFF474749) // Dark Grey
+        FooterScaffold(
+            footerNavigation = footerNavigation,
+            onFooterHomeClick = onFooterHomeClick,
+            onFooterChatClick = onFooterChatClick,
+            onFooterSOSClick = onFooterSOSClick,
+            onFooterProfileClick = onFooterProfileClick
+        ) {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFFE0DCD1), // Light Beige/Grey
+                                Color(0xFFC8C8CA), // Light Grey
+                                Color(0xFF474749) // Dark Grey
+                            )
                         )
                     )
-                )
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile Header
-                ProfileHeader(
-                    name = controller.model.name,
-                    email = controller.model.email,
-                    profilePicture = controller.model.profilePicture,
-                    onProfilePictureClick = { uri ->
-                        controller.onProfilePictureClick(uri)
-                    },
-                    onCameraCapture = { bitmap ->
-                        controller.uploadProfilePhoto(bitmap)
-                    }
-                )
-
-                // Rest of the content with padding
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Menu Items
-                    MenuItems(
-                        items = controller.model.menuItems,
-                        onItemClick = { title ->
-                            when (title) {
-                                "About Me" -> controller.onAboutMeClick()
-                                "Address/Coordinates" -> controller.onAddressClick()
-                                "Emergency Contact" -> controller.onEmergencyContactClick()
-                                "Documents" -> controller.onDocumentsClick()
-                                "Log out" -> showLogoutDialog = true // Show logout dialog instead of direct action
-                            }
+                    // Profile Header
+                    ProfileHeader(
+                        name = controller.model.name,
+                        email = controller.model.email,
+                        profilePicture = controller.model.profilePicture,
+                        onProfilePictureClick = { uri ->
+                            controller.onProfilePictureClick(uri)
+                        },
+                        onCameraCapture = { bitmap ->
+                            controller.uploadProfilePhoto(bitmap)
                         }
                     )
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Version and Last Login
+                    // Rest of the content with padding
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = controller.model.version,
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            textDecoration = TextDecoration.Underline
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Menu Items
+                        MenuItems(
+                            items = controller.model.menuItems,
+                            onItemClick = { title ->
+                                when (title) {
+                                    "About Me" -> controller.onAboutMeClick()
+                                    "Address/Coordinates" -> controller.onAddressClick()
+                                    "Emergency Contact" -> controller.onEmergencyContactClick()
+                                    "Documents" -> controller.onDocumentsClick()
+                                    "Log out" -> showLogoutDialog =
+                                        true // Show logout dialog instead of direct action
+                                }
+                            }
                         )
 
-                        if (controller.model.lastLoginTime.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        // Version and Last Login
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        ) {
                             Text(
-                                text = "Last Login: ${controller.model.lastLoginTime}",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 14.sp,
+                                text = controller.model.version,
+                                color = Color.White,
+                                fontSize = 18.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal
+                                fontWeight = FontWeight.SemiBold,
+                                textDecoration = TextDecoration.Underline
                             )
+
+                            if (controller.model.lastLoginTime.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Last Login: ${controller.model.lastLoginTime}",
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            }
                         }
                     }
-                }
 
-                // Logout confirmation dialog
-                if (showLogoutDialog) {
-                    LogoutConfirmationDialog(
-                        onConfirm = {
-                            showLogoutDialog = false
-                            controller.onLogoutClick()
-                        },
-                        onDismiss = { showLogoutDialog = false }
-                    )
-                }
+                    // Logout confirmation dialog
+                    if (showLogoutDialog) {
+                        LogoutConfirmationDialog(
+                            onConfirm = {
+                                showLogoutDialog = false
+                                controller.onLogoutClick()
+                            },
+                            onDismiss = { showLogoutDialog = false }
+                        )
+                    }
 
-                // Upload Dialog
-                if (showUploadDialog) {
-                    Dialog(onDismissRequest = { showUploadDialog = false }) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth(0.92f)
-                                .padding(16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Column(
+                    // Upload Dialog
+                    if (showUploadDialog) {
+                        Dialog(onDismissRequest = { showUploadDialog = false }) {
+                            Card(
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .fillMaxWidth(0.92f)
                                     .padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
                             ) {
-                                Text(
-                                    "Upload Profile Photo",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(bottom = 4.dp),
-                                    textAlign = TextAlign.Center
-                                )
-
-                                Text(
-                                    "Choose a method to upload your profile picture",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 24.dp),
-                                    textAlign = TextAlign.Center
-                                )
-
-                                // Camera Button
-                                Button(
-                                    onClick = {
-                                        if (hasCameraPermission) {
-                                            cameraLauncher.launch(null)
-                                        } else {
-                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(56.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                                        .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_camera),
-                                        contentDescription = "Camera",
-                                        modifier = Modifier.padding(end = 8.dp),
-                                        tint = Color.White
+                                    Text(
+                                        "Upload Profile Photo",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 4.dp),
+                                        textAlign = TextAlign.Center
                                     )
-                                    Text("Camera", fontSize = 16.sp, color = Color.White)
-                                }
 
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                // Gallery Button
-                                Button(
-                                    onClick = { galleryLauncher.launch("image/*") },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(56.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_gallery),
-                                        contentDescription = "Gallery",
-                                        modifier = Modifier.padding(end = 8.dp),
-                                        tint = Color.White
+                                    Text(
+                                        "Choose a method to upload your profile picture",
+                                        fontSize = 14.sp,
+                                        color = Color.Gray,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 24.dp),
+                                        textAlign = TextAlign.Center
                                     )
-                                    Text("Gallery", fontSize = 16.sp, color = Color.White)
+
+                                    // Camera Button
+                                    Button(
+                                        onClick = {
+                                            if (hasCameraPermission) {
+                                                cameraLauncher.launch(null)
+                                            } else {
+                                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(56.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(
+                                                0xFFDD3825
+                                            )
+                                        )
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_camera),
+                                            contentDescription = "Camera",
+                                            modifier = Modifier.padding(end = 8.dp),
+                                            tint = Color.White
+                                        )
+                                        Text("Camera", fontSize = 16.sp, color = Color.White)
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Gallery Button
+                                    Button(
+                                        onClick = { galleryLauncher.launch("image/*") },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(56.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(
+                                                0xFFDD3825
+                                            )
+                                        )
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_gallery),
+                                            contentDescription = "Gallery",
+                                            modifier = Modifier.padding(end = 8.dp),
+                                            tint = Color.White
+                                        )
+                                        Text("Gallery", fontSize = 16.sp, color = Color.White)
+                                    }
                                 }
                             }
                         }

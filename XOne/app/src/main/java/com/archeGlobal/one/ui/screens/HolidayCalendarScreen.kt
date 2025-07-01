@@ -59,144 +59,163 @@ fun HolidayCalendarScreen(
                     pdfUrl.value = calendarResponse.holidaysFile
                 }
             }
+
             is NetworkResult.Error -> {
                 holidays.value = controller.getDefaultHolidays()
                 globalEvents.value = emptyList()
             }
-            is NetworkResult.Loading, null -> { /* Show loading */ }
+
+            is NetworkResult.Loading, null -> { /* Show loading */
+            }
         }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(6.dp, 12.dp, 6.dp, 0.dp) // Minimized horizontal padding
-        ) {
-            // Top Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(bottom = 10.dp)
-            ) {
-                IconButton(
-                    onClick = onBackPressed,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
                     )
-                }
-
-                Text(
-                    text = "Holiday Calendar",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Year heading and Holiday List Button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(6.dp, 12.dp, 6.dp, 0.dp) // Minimized horizontal padding
             ) {
-                Text(
-                    text = "Year 2025",
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-
-                Button(
-                    onClick = {
-                        pdfUrl.value?.let { url ->
-                            controller.onViewClick(context = context, documentName = "Holiday List 2025", filePath = url)
-                            // onHolidayListClick(url)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(24.dp)
+                // Top Bar
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(bottom = 10.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    IconButton(
+                        onClick = onBackPressed,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterStart)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.List,
-                            contentDescription = "Holiday List",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            "Holiday List",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
                         )
                     }
+
+                    Text(
+                        text = "Holiday Calendar",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp)) // Legend for holiday types
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, bottom = 4.dp),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                LegendItem(color = Color(0xFFDD3825), text = "Holidays")
-                Spacer(modifier = Modifier.width(11.dp))
-                LegendItem(color = Color(0xFF2196F3), text = "RH")
-                Spacer(modifier = Modifier.width(11.dp))
-                LegendItem(color = Color(0xFF4CAF50), text = "Global Event")
-            }
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(2.dp)) // Responsive Calendar Grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3), // Changed to 3 columns to match the image
-                verticalArrangement = Arrangement.spacedBy(20.dp), // Adjusted vertical spacing
-                horizontalArrangement = Arrangement.spacedBy(4.dp), // Further reduced horizontal spacing
-                contentPadding = PaddingValues(start = 2.dp, top = 8.dp, end = 2.dp, bottom = 100.dp), // Minimized side padding
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(12) { monthIndex ->
-                    val currentMonth = monthIndex + 1
-                    MonthCard(
-                        month = currentMonth,
-                        holidays = holidays.value.filter { it.month == currentMonth && it.isApplicable },
-                        globalEvents = globalEvents.value.filter {
-                            try {
-                                val parts = it.date.split("-")
-                                parts.size == 3 && parts[1].toInt() == currentMonth
-                            } catch (e: Exception) {
-                                false
+                // Year heading and Holiday List Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Year 2025",
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    Button(
+                        onClick = {
+                            pdfUrl.value?.let { url ->
+                                controller.onViewClick(
+                                    context = context,
+                                    documentName = "Holiday List 2025",
+                                    filePath = url
+                                )
+                                // onHolidayListClick(url)
                             }
                         },
-                        onMonthClick = onMonthClick
-                    )
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(24.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = "Holiday List",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                "Holiday List",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp)) // Legend for holiday types
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LegendItem(color = Color(0xFFDD3825), text = "Holidays")
+                    Spacer(modifier = Modifier.width(11.dp))
+                    LegendItem(color = Color(0xFF2196F3), text = "RH")
+                    Spacer(modifier = Modifier.width(11.dp))
+                    LegendItem(color = Color(0xFF4CAF50), text = "Global Event")
+                }
+
+                Spacer(modifier = Modifier.height(2.dp)) // Responsive Calendar Grid
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3), // Changed to 3 columns to match the image
+                    verticalArrangement = Arrangement.spacedBy(20.dp), // Adjusted vertical spacing
+                    horizontalArrangement = Arrangement.spacedBy(4.dp), // Further reduced horizontal spacing
+                    contentPadding = PaddingValues(
+                        start = 2.dp,
+                        top = 8.dp,
+                        end = 2.dp,
+                        bottom = 100.dp
+                    ), // Minimized side padding
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(12) { monthIndex ->
+                        val currentMonth = monthIndex + 1
+                        MonthCard(
+                            month = currentMonth,
+                            holidays = holidays.value.filter { it.month == currentMonth && it.isApplicable },
+                            globalEvents = globalEvents.value.filter {
+                                try {
+                                    val parts = it.date.split("-")
+                                    parts.size == 3 && parts[1].toInt() == currentMonth
+                                } catch (e: Exception) {
+                                    false
+                                }
+                            },
+                            onMonthClick = onMonthClick
+                        )
+                    }
                 }
             }
         }
@@ -354,141 +373,148 @@ fun PreviewHolidayCalendarScreen() {
         Holiday("Christmas", "25-12-2025", "Yes")
     )
 
-    // Create a custom composable for preview instead of using the actual screen
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Column(
+        // Create a custom composable for preview instead of using the actual screen
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
+                    )
+                )
         ) {
-            // Top Bar with back button and title
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                IconButton(
-                    onClick = { },
+                // Top Bar with back button and title
+                Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.CenterStart)
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
+                    IconButton(
+                        onClick = { },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+
+                    Text(
+                        text = "Holiday Calendar",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                Text(
-                    text = "Holiday Calendar",
-                    color = Color.Black,
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Year 2025",
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-
-                Button(
-                    onClick = { },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.List,
-                            contentDescription = "Holiday List",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            "Holiday List",
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Calendar grid - only show if API level allows
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // Legend for holiday types
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    LegendItem(color = Color(0xFFDD3825), text = "Holidays")
-                    Spacer(modifier = Modifier.width(16.dp))
-                    LegendItem(color = Color(0xFF2196F3), text = "RH")
+                    Text(
+                        text = "Year 2025",
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    Button(
+                        onClick = { },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(24.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = "Holiday List",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                "Holiday List",
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
                 }
 
-                // Calendar grid
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    for (row in 0 until 4) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            for (col in 0 until 3) {
-                                val monthIndex = row * 3 + col + 1
-                                if (monthIndex <= 12) {
-                                    Box(
-                                        modifier = Modifier.padding(horizontal = 4.dp)
-                                    ) {
-                                        MonthCard(
-                                            month = monthIndex,
-                                            holidays = previewHolidays.filter { it.month == monthIndex },
-                                            onMonthClick = { /* Handle month click */ }
-                                        )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Calendar grid - only show if API level allows
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    // Legend for holiday types
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, bottom = 8.dp),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        LegendItem(color = Color(0xFFDD3825), text = "Holidays")
+                        Spacer(modifier = Modifier.width(16.dp))
+                        LegendItem(color = Color(0xFF2196F3), text = "RH")
+                    }
+
+                    // Calendar grid
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        for (row in 0 until 4) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                for (col in 0 until 3) {
+                                    val monthIndex = row * 3 + col + 1
+                                    if (monthIndex <= 12) {
+                                        Box(
+                                            modifier = Modifier.padding(horizontal = 4.dp)
+                                        ) {
+                                            MonthCard(
+                                                month = monthIndex,
+                                                holidays = previewHolidays.filter { it.month == monthIndex },
+                                                onMonthClick = { /* Handle month click */ }
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                } else {
+                    // Show a message for older API levels
+                    Text(
+                        text = "Calendar preview requires API level 26 or higher",
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Black
+                    )
                 }
-            } else {
-                // Show a message for older API levels
-                Text(
-                    text = "Calendar preview requires API level 26 or higher",
-                    modifier = Modifier.padding(16.dp),
-                    color = Color.Black
-                )
             }
         }
     }

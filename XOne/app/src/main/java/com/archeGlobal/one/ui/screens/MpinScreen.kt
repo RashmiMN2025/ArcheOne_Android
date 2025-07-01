@@ -140,60 +140,59 @@ fun MpinScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(50.dp))
 
-            CompanyLogo(modifier = Modifier.height(120.dp))
+                CompanyLogo(modifier = Modifier.height(120.dp))
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_lock),
-                    contentDescription = "Security",
-                    tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = if (isReset) "Reset Your MPIN" else "Set Your MPIN",
-                    fontSize = 22.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
-                )
-            }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_lock),
+                        contentDescription = "Security",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = if (isReset) "Reset Your MPIN" else "Set Your MPIN",
+                        fontSize = 22.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp, 20.dp, 32.dp, 32.dp)
-            ) {
-                Text(
-                    text = if (isReset) {
-                        "Verify your identity to reset your MPIN"
-                    } else {
-                        "Set security questions and a 4-digit PIN for secure access"
-                    },
-                    fontSize = 16.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp
-                )
-            }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp, 20.dp, 32.dp, 32.dp)
+                ) {
+                    Text(
+                        text = if (isReset) {
+                            "Verify your identity to reset your MPIN"
+                        } else {
+                            "Set security questions and a 4-digit PIN for secure access"
+                        },
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 18.sp
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
             if (isReset) {
                 // --- RESET FLOW ---
@@ -221,7 +220,7 @@ fun MpinScreen(
                     Spacer(modifier = Modifier.height(11.dp))
                     OutlinedTextField(
                         value = resetAnswer,
-                        onValueChange = { if (it.length <= 20) resetAnswer = it },
+                        onValueChange = { resetAnswer = it },
                         placeholder = {
                             Text(
                                 "Answer",
@@ -565,9 +564,7 @@ fun MpinScreen(
                         OutlinedTextField(
                             value = answers[i],
                             onValueChange = { newValue ->
-                                if (newValue.length <= 20) {
-                                    answers = answers.toMutableList().also { it[i] = newValue }
-                                }
+                                answers = answers.toMutableList().also { it[i] = newValue }
                             },
                             placeholder = {
                                 Text(
@@ -617,249 +614,254 @@ fun MpinScreen(
                         Spacer(modifier = Modifier.height(if (i == 0) 8.dp else 14.dp))
                     }
 
-                    // Info message with red icon
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_info),
-                            contentDescription = "Info",
-                            tint = Color(0xFFDD3825),
+                        // Info message with red icon
+                        Row(
                             modifier = Modifier
-                                .size(16.dp)
-                                .padding(top = 2.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_info),
+                                contentDescription = "Info",
+                                tint = Color(0xFFDD3825),
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .padding(top = 2.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                lineHeight = 16.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Button(
+                            onClick = {
+                                if (selectedQuestions.any { it.isBlank() } || answers.any { it.isBlank() }) {
+                                    error = "Please select and answer both security questions!"
+                                } else if (selectedQuestions[0] == selectedQuestions[1]) {
+                                    error = "Please select different security questions!"
+                                } else {
+                                    error = null
+                                    step = 1
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth(0.97f)
+                                .height(65.dp)
+                                .padding(top = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text(
+                                "Continue",
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White
+                            )
+                        }
+                    } else {
+                        // MPIN Step
                         Text(
-                            text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
-                            fontSize = 12.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
+                            "Enter MPIN",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
                             color = Color.Black,
-                            lineHeight = 16.sp
+                            modifier = Modifier
+                                .align(Alignment.Start)
+                                .padding(start = 24.dp)
                         )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Button(
-                        onClick = {
-                            if (selectedQuestions.any { it.isBlank() } || answers.any { it.isBlank() }) {
-                                error = "Please select and answer both security questions!"
-                            } else if (selectedQuestions[0] == selectedQuestions[1]) {
-                                error = "Please select different security questions!"
-                            } else {
-                                error = null
-                                step = 1
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .height(65.dp)
-                            .padding(top = 8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                        ),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text(
-                            "Continue",
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White
-                        )
-                    }
-                } else {
-                    // MPIN Step
-                    Text(
-                        "Enter MPIN",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier = Modifier
-                            .align(Alignment.Start)
-                            .padding(start = 24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        for (i in 0 until 4) {
-                            OutlinedTextField(
-                                value = mpinDigits[i],
-                                onValueChange = { value ->
-                                    if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        mpinDigits = mpinDigits.toMutableList().also { it[i] = value }
-                                        if (value.isNotEmpty() && i < 3) {
-                                            focusRequesters[i + 1].requestFocus()
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            for (i in 0 until 4) {
+                                OutlinedTextField(
+                                    value = mpinDigits[i],
+                                    onValueChange = { value ->
+                                        if (value.length <= 1 && value.all { it.isDigit() }) {
+                                            mpinDigits =
+                                                mpinDigits.toMutableList().also { it[i] = value }
+                                            if (value.isNotEmpty() && i < 3) {
+                                                focusRequesters[i + 1].requestFocus()
+                                            }
                                         }
-                                    }
-                                    if (value.isEmpty() && i > 0) {
-                                        mpinDigits = mpinDigits.toMutableList().also { it[i] = "" }
-                                        focusRequesters[i - 1].requestFocus()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .width(60.dp)
-                                    .height(60.dp)
-                                    .focusRequester(focusRequesters[i])
-                                    .onFocusChanged { focusState ->
-                                        if (focusState.isFocused) {
-                                            focusedMpinIndex = i
+                                        if (value.isEmpty() && i > 0) {
+                                            mpinDigits =
+                                                mpinDigits.toMutableList().also { it[i] = "" }
+                                            focusRequesters[i - 1].requestFocus()
                                         }
-                                    }
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = if (focusedMpinIndex == i) Color(0xFFDD3825) else Color.White,
-                                        shape = MaterialTheme.shapes.medium
+                                    },
+                                    modifier = Modifier
+                                        .width(60.dp)
+                                        .height(60.dp)
+                                        .focusRequester(focusRequesters[i])
+                                        .onFocusChanged { focusState ->
+                                            if (focusState.isFocused) {
+                                                focusedMpinIndex = i
+                                            }
+                                        }
+                                        .border(
+                                            width = 1.5.dp,
+                                            color = if (focusedMpinIndex == i) Color(0xFFDD3825) else Color.White,
+                                            shape = MaterialTheme.shapes.medium
+                                        ),
+                                    textStyle = TextStyle(
+                                        fontSize = 20.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center
                                     ),
-                                textStyle = TextStyle(
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center
-                                ),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Number,
-                                    imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
-                                ),
-                                shape = MaterialTheme.shapes.medium,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    disabledContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    disabledTextColor = Color.Black,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent
-                                ),
-                                visualTransformation = PasswordVisualTransformation()
-                            )
-                            if (i < 3) Spacer(modifier = Modifier.width(16.dp))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Text(
-                        "Confirm MPIN",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        modifier = Modifier
-                            .align(Alignment.Start)
-                            .padding(start = 24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        for (i in 0 until 4) {
-                            OutlinedTextField(
-                                value = confirmMpinDigits[i],
-                                onValueChange = { value ->
-                                    if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        confirmMpinDigits = confirmMpinDigits.toMutableList().also { it[i] = value }
-                                        if (value.isNotEmpty() && i < 3) {
-                                            confirmFocusRequesters[i + 1].requestFocus()
-                                        }
-                                    }
-                                    if (value.isEmpty() && i > 0) {
-                                        confirmMpinDigits = confirmMpinDigits.toMutableList().also { it[i] = "" }
-                                        confirmFocusRequesters[i - 1].requestFocus()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .width(60.dp)
-                                    .height(60.dp)
-                                    .focusRequester(confirmFocusRequesters[i])
-                                    .onFocusChanged { focusState ->
-                                        if (focusState.isFocused) {
-                                            focusedConfirmIndex = i
-                                        }
-                                    }
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = if (focusedConfirmIndex == i) Color(0xFFDD3825) else Color.White,
-                                        shape = MaterialTheme.shapes.medium
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Number,
+                                        imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
                                     ),
-                                textStyle = TextStyle(
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center
-                                ),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Number,
-                                    imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
-                                ),
-                                shape = MaterialTheme.shapes.medium,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    disabledContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    disabledTextColor = Color.Black,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent
-                                ),
-                                visualTransformation = PasswordVisualTransformation()
-                            )
-                            if (i < 3) Spacer(modifier = Modifier.width(16.dp))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(28.dp))
-                    Button(
-                        onClick = {
-                            val mpin = mpinDigits.joinToString("")
-                            val confirmMpin = confirmMpinDigits.joinToString("")
-                            if (mpin.length != 4 || confirmMpin.length != 4) {
-                                error = "MPIN must be 4 digits!"
-                            } else if (mpin != confirmMpin) {
-                                error = "MPINs do not match!"
-                            } else {
-                                error = null
-                                onMpinSet(
-                                    mpin,
-                                    listOf(
-                                        SecurityQuestion(selectedQuestions[0], answers[0]),
-                                        SecurityQuestion(selectedQuestions[1], answers[1])
-                                    )
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        disabledContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        disabledTextColor = Color.Black,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent
+                                    ),
+                                    visualTransformation = PasswordVisualTransformation()
                                 )
+                                if (i < 3) Spacer(modifier = Modifier.width(16.dp))
                             }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .height(65.dp)
-                            .padding(top = 16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                        ),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
+                        }
+                        Spacer(modifier = Modifier.height(18.dp))
                         Text(
-                            "Set MPIN",
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
+                            "Confirm MPIN",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color.White
+                            color = Color.Black,
+                            modifier = Modifier
+                                .align(Alignment.Start)
+                                .padding(start = 24.dp)
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            for (i in 0 until 4) {
+                                OutlinedTextField(
+                                    value = confirmMpinDigits[i],
+                                    onValueChange = { value ->
+                                        if (value.length <= 1 && value.all { it.isDigit() }) {
+                                            confirmMpinDigits = confirmMpinDigits.toMutableList()
+                                                .also { it[i] = value }
+                                            if (value.isNotEmpty() && i < 3) {
+                                                confirmFocusRequesters[i + 1].requestFocus()
+                                            }
+                                        }
+                                        if (value.isEmpty() && i > 0) {
+                                            confirmMpinDigits = confirmMpinDigits.toMutableList()
+                                                .also { it[i] = "" }
+                                            confirmFocusRequesters[i - 1].requestFocus()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .width(60.dp)
+                                        .height(60.dp)
+                                        .focusRequester(confirmFocusRequesters[i])
+                                        .onFocusChanged { focusState ->
+                                            if (focusState.isFocused) {
+                                                focusedConfirmIndex = i
+                                            }
+                                        }
+                                        .border(
+                                            width = 1.5.dp,
+                                            color = if (focusedConfirmIndex == i) Color(0xFFDD3825) else Color.White,
+                                            shape = MaterialTheme.shapes.medium
+                                        ),
+                                    textStyle = TextStyle(
+                                        fontSize = 20.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center
+                                    ),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Number,
+                                        imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
+                                    ),
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        disabledContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        disabledTextColor = Color.Black,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent
+                                    ),
+                                    visualTransformation = PasswordVisualTransformation()
+                                )
+                                if (i < 3) Spacer(modifier = Modifier.width(16.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(28.dp))
+                        Button(
+                            onClick = {
+                                val mpin = mpinDigits.joinToString("")
+                                val confirmMpin = confirmMpinDigits.joinToString("")
+                                if (mpin.length != 4 || confirmMpin.length != 4) {
+                                    error = "MPIN must be 4 digits!"
+                                } else if (mpin != confirmMpin) {
+                                    error = "MPINs do not match!"
+                                } else {
+                                    error = null
+                                    onMpinSet(
+                                        mpin,
+                                        listOf(
+                                            SecurityQuestion(selectedQuestions[0], answers[0]),
+                                            SecurityQuestion(selectedQuestions[1], answers[1])
+                                        )
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth(0.97f)
+                                .height(65.dp)
+                                .padding(top = 16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text(
+                                "Set MPIN",
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }

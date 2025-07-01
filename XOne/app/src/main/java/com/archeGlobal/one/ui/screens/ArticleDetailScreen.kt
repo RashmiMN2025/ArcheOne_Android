@@ -45,103 +45,110 @@ fun ArticleDetailScreen(
         else -> 250.dp
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFEEEEEE))
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        // Top app bar with back button
-        CenterAlignedTopAppBar(
-            title = {
-                Text(
-                    text = type,
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = onBackPressed) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.Black,
-                navigationIconContentColor = Color.Black
-            )
-        )
-
-        // Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFEEEEEE))
-                .verticalScroll(rememberScrollState())
         ) {
-            // Image
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(article.imageUrl)
-                    .crossfade(true)
-                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .build(),
-                contentDescription = article.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(imageHeight),
-                contentScale = ContentScale.Crop,
-                alignment = Alignment.TopCenter,
-                error = painterResource(id = R.drawable.ic_image_placeholder),
-                placeholder = painterResource(id = R.drawable.ic_image_placeholder)
+            // Top app bar with back button
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = type,
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackPressed) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
+                )
             )
 
             // Content
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                    .fillMaxSize()
+                    .background(Color(0xFFEEEEEE))
+                    .verticalScroll(rememberScrollState())
             ) {
-                Text(
-                    text = article.title,
-                    fontSize = 26.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Text(
-                    text = article.description,
-                    fontSize = 18.sp,
-                    color = Color.Gray,
-                    lineHeight = 24.sp
-                )
-
-                Spacer(modifier = Modifier.height(5.dp))
-
-                // Read More button aligned to the right
-                Row(
+                // Image
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(article.imageUrl)
+                        .crossfade(true)
+                        .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .build(),
+                    contentDescription = article.title,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.End
+                        .height(imageHeight),
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.TopCenter,
+                    error = painterResource(id = R.drawable.ic_image_placeholder),
+                    placeholder = painterResource(id = R.drawable.ic_image_placeholder)
+                )
+
+                // Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
                     Text(
-                        text = "Read More....",
-                        color = Color(0xFFDD3825),
+                        text = article.title,
+                        fontSize = 26.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable(onClick = onReadMore)
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
-                }
 
-                // Add some space at the bottom for better scrolling experience
-                Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = article.description,
+                        fontSize = 18.sp,
+                        color = Color.Gray,
+                        lineHeight = 24.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    // Read More button aligned to the right
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Text(
+                            text = "Read More....",
+                            color = Color(0xFFDD3825),
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable(onClick = onReadMore)
+                        )
+                    }
+
+                    // Add some space at the bottom for better scrolling experience
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
         }
     }

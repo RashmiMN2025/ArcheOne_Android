@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -54,99 +56,107 @@ fun ServiceNotAvailableScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(brush = gradientBackground)
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) { // Add less weight at the top to move content up
-            Spacer(modifier = Modifier.weight(0.3f))
-
-            // Red warning triangle icon
-            Image(
-                painter = painterResource(id = R.drawable.warning),
-                contentDescription = "Service Unavailable",
-                modifier = Modifier.size(70.dp).align(Alignment.CenterHorizontally),
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(Color(0xFFE84C3D)) // Red tint
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Title - large bold text
-            Text(
-                text = "Service Not Available",
-                fontSize = 24.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                color = Color.Black,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Description text
-            Text(
-                text = "This service is currently under development or\nnot available.",
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center,
-                color = Color.Black,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(24.dp)) // Website link text - single row with colored link
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Meanwhile, you can ",
-                    fontSize = 14.sp,
-                    color = Color.DarkGray,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Text(
-                    "explore our website",
-                    fontSize = 14.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFE84C3D),
-                    modifier = Modifier.clickable { // Open the website in browser
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/"))
-                        navController.context.startActivity(intent)
-                    }
-                )
-            }
-
-            // More weight at the bottom to push content up and button down
-            Spacer(modifier = Modifier.weight(1.4f))
-
-            // Red rounded Go Back button
-            Button(
-                onClick = { navController.popBackStack() },
+                .background(brush = gradientBackground)
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .padding(bottom = 48.dp)
-                    .align(Alignment.CenterHorizontally),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE84C3D) // Red button color
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) { // Add less weight at the top to move content up
+                Spacer(modifier = Modifier.weight(0.3f))
+
+                // Red warning triangle icon
+                Image(
+                    painter = painterResource(id = R.drawable.warning),
+                    contentDescription = "Service Unavailable",
+                    modifier = Modifier.size(70.dp).align(Alignment.CenterHorizontally),
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(Color(0xFFE84C3D)) // Red tint
                 )
-            ) {
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Title - large bold text
                 Text(
-                    text = "Go Back",
-                    fontSize = 18.sp,
+                    text = "Service Not Available",
+                    fontSize = 24.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    color = Color.White
+                    textAlign = TextAlign.Center,
+                    color = Color.Black,
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Description text
+                Text(
+                    text = "This service is currently under development or\nnot available.",
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp)) // Website link text - single row with colored link
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Meanwhile, you can ",
+                        fontSize = 14.sp,
+                        color = Color.DarkGray,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Text(
+                        "explore our website",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFE84C3D),
+                        modifier = Modifier.clickable { // Open the website in browser
+                            val intent =
+                                Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/"))
+                            navController.context.startActivity(intent)
+                        }
+                    )
+                }
+
+                // More weight at the bottom to push content up and button down
+                Spacer(modifier = Modifier.weight(1.4f))
+
+                // Red rounded Go Back button
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .padding(bottom = 48.dp)
+                        .align(Alignment.CenterHorizontally),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE84C3D) // Red button color
+                    )
+                ) {
+                    Text(
+                        text = "Go Back",
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = Color.White
+                    )
+                }
             }
         }
     }

@@ -12,6 +12,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,84 +42,110 @@ fun TravelApprovalDetailsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop,
-                        WelcomeBackgroundMiddle,
-                        WelcomeBackgroundBottom
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
                     )
                 )
-            )
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Spacer to account for status bar
-            Spacer(modifier = Modifier.height(48.dp))
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Spacer to account for status bar
+                Spacer(modifier = Modifier.height(48.dp))
 
-            TopAppBar(
-                title = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "Travel Request Details",
-                            color = Color.Black,
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { controller.navigateBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.Black)
-                    }
-                },
-                backgroundColor = Color.Transparent,
-                elevation = 0.dp,
-                actions = { Spacer(modifier = Modifier.width(48.dp)) }
-            )
-
-            val scrollState = rememberScrollState()
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Card containing all details
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = 2.dp,
-                    backgroundColor = Color.White
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        // Header row – ID and status badge
-                        Row(
+                TopAppBar(
+                    title = {
+                        Box(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "ID: ${travelRequest.id}",
-                                fontSize = 18.sp,
+                                text = "Travel Request Details",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                fontFamily = GraphikFontFamily
+                                textAlign = TextAlign.Center
                             )
-                            StatusBadge(status = travelRequest.status)
                         }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { controller.navigateBack() }) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    backgroundColor = Color.Transparent,
+                    elevation = 0.dp,
+                    actions = { Spacer(modifier = Modifier.width(48.dp)) }
+                )
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                val scrollState = rememberScrollState()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Card containing all details
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = 2.dp,
+                        backgroundColor = Color.White
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            // Header row – ID and status badge
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "ID: ${travelRequest.id}",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = GraphikFontFamily
+                                )
+                                StatusBadge(status = travelRequest.status)
+                            }
 
-                        DetailRow(label = "Employee", value = travelRequest.approver)
-                        DetailRow(label = "Mobile", value = controller.mobileNumber)
-                        DetailRow(label = "Destination", value = travelRequest.destination)
-                        DetailRow(label = "Project", value = travelRequest.project)
-                        DetailRow(label = "Business Justification", value = travelRequest.businessJustification ?: "N/A")
-                        DetailRow(label = "Date of Departure", value = travelRequest.departureDate ?: "N/A")
-                        DetailRow(label = "Date of Arrival", value = travelRequest.arrivalDate ?: "N/A")
-                        DetailRow(label = "Mode of Transport", value = travelRequest.modeOfTransport ?: "N/A")
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            DetailRow(label = "Employee", value = travelRequest.approver)
+                            DetailRow(label = "Mobile", value = controller.mobileNumber)
+                            DetailRow(label = "Destination", value = travelRequest.destination)
+                            DetailRow(label = "Project", value = travelRequest.project)
+                            DetailRow(
+                                label = "Business Justification",
+                                value = travelRequest.businessJustification ?: "N/A"
+                            )
+                            DetailRow(
+                                label = "Date of Departure",
+                                value = travelRequest.departureDate ?: "N/A"
+                            )
+                            DetailRow(
+                                label = "Date of Arrival",
+                                value = travelRequest.arrivalDate ?: "N/A"
+                            )
+                            DetailRow(
+                                label = "Mode of Transport",
+                                value = travelRequest.modeOfTransport ?: "N/A"
+                            )
+                        }
                     }
                 }
             }

@@ -167,6 +167,8 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
             modifier = Modifier

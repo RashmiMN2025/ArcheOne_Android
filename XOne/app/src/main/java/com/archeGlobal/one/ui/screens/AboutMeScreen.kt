@@ -34,100 +34,114 @@ fun AboutMeScreen(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
-                        WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                        WelcomeBackgroundBottom // Dark Grey (0xFF474749)
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
+                            WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
+                            WelcomeBackgroundBottom // Dark Grey (0xFF474749)
+                        )
                     )
                 )
-            )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
         ) {
-            // Top AppBar
-            CenterAlignedTopAppBar(
-                title = { Text("About Me", fontSize = 20.sp, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { controller.onBackPressed() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black
-                )
-            )
-
-            // Content
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(scrollState)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Single Card containing all sections
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.White,
-                    shadowElevation = 2.dp
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        // Personal Details Section
-                        SectionContent(
-                            icon = R.drawable.personaldetails,
-                            title = "Personal Details",
-                            items = listOf(
-                                LabeledInfo("Aadhar Number", controller.model.aadharNumber),
-                                LabeledInfo("PAN Number", controller.model.panNumber),
-                                LabeledInfo("UAN Number", controller.model.uanNumber),
-                                LabeledInfo("Blood Group", controller.model.bloodGroup)
-                            )
+                // Top AppBar
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            "About Me",
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold
                         )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { controller.onBackPressed() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black
+                    )
+                )
 
-                        Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
-
-                        // Reporting Structure Section
-                        SectionContent(
-                            icon = R.drawable.reporting,
-                            title = "Reporting Structure",
-                            items = listOf(
-                                LabeledInfo(
-                                    label = "Reporting Manager",
-                                    value = controller.model.reportingManager,
-                                    icon = R.drawable.profile // Custom icon for Reporting Manager
-                                ),
-                                LabeledInfo(
-                                    label = "Divisional Head",
-                                    value = controller.model.divisionalHead,
-                                    icon = R.drawable.account // Custom icon for Divisional Head
+                // Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(scrollState)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Single Card containing all sections
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color.White,
+                        shadowElevation = 2.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            // Personal Details Section
+                            SectionContent(
+                                icon = R.drawable.personaldetails,
+                                title = "Personal Details",
+                                items = listOf(
+                                    LabeledInfo("Aadhar Number", controller.model.aadharNumber),
+                                    LabeledInfo("PAN Number", controller.model.panNumber),
+                                    LabeledInfo("UAN Number", controller.model.uanNumber),
+                                    LabeledInfo("Blood Group", controller.model.bloodGroup)
                                 )
                             )
-                        )
 
-                        Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
+                            Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
 
-                        // Work Information Section
-                        SectionContent(
-                            icon = R.drawable.building1,
-                            title = "Work Information",
-                            items = listOf(
-                                LabeledInfo("Department", controller.model.department),
-                                LabeledInfo("Designation", controller.model.designation),
-                                LabeledInfo("Location", controller.model.location)
+                            // Reporting Structure Section
+                            SectionContent(
+                                icon = R.drawable.reporting,
+                                title = "Reporting Structure",
+                                items = listOf(
+                                    LabeledInfo(
+                                        label = "Reporting Manager",
+                                        value = controller.model.reportingManager,
+                                        icon = R.drawable.profile // Custom icon for Reporting Manager
+                                    ),
+                                    LabeledInfo(
+                                        label = "Divisional Head",
+                                        value = controller.model.divisionalHead,
+                                        icon = R.drawable.account // Custom icon for Divisional Head
+                                    )
+                                )
                             )
-                        )
+
+                            Divider(color = Color(0xFFEEEEEE), thickness = 1.5.dp)
+
+                            // Work Information Section
+                            SectionContent(
+                                icon = R.drawable.building1,
+                                title = "Work Information",
+                                items = listOf(
+                                    LabeledInfo("Department", controller.model.department),
+                                    LabeledInfo("Designation", controller.model.designation),
+                                    LabeledInfo("Location", controller.model.location)
+                                )
+                            )
+                        }
                     }
                 }
             }

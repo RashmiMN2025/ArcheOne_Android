@@ -28,6 +28,10 @@ class SOSActivity : ComponentActivity() {
             setTheme(R.style.Theme_XOne)
         }
 
+        enableEdgeToEdge()
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
         super.onCreate(savedInstanceState)
 
         // Aggressive handling to prevent any white bars by making everything edge-to-edge

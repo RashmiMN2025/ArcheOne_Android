@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -109,177 +111,187 @@ fun ChatScreen(
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light grey at top
-                            Color(0xFFC8C8CA), // Medium grey in middle
-                            Color(0xFF474749) // Dark grey at bottom
-                        )
-                    )
-                )
+        Surface(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFFE0DCD1), // Light grey at top
+                                Color(0xFFC8C8CA), // Medium grey in middle
+                                Color(0xFF474749) // Dark grey at bottom
+                            )
+                        )
+                    )
             ) {
-                // Top Bar
-                TopAppBar(
-                    title = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Chat Support",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
-                )
-
-                // Chat messages
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
-                    state = listState
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    items(messages) { message ->
-                        MessageBubble(
-                            message = message,
-                            viewModel = viewModel,
-                            chatData = ChatData.shared,
-                            onReportMessage = { msg ->
-                                messageToReport = msg
-                                showReportDialog = true
+                    // Top Bar
+                    TopAppBar(
+                        title = {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "Chat Support",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
+                                )
                             }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
                         )
-                    }
-
-                    if (isTyping) {
-                        item {
-                            Row(modifier = Modifier.padding(vertical = 8.dp)) {
-                                TypingIndicator()
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                    }
-                }
-
-                // Input area
-                Column {
-                    // Instructional note
-                    Text(
-                        text = "Long press any message to report",
-                        fontSize = 11.sp,
-                        color = Color.White,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 0.dp),
-                        textAlign = TextAlign.Center
                     )
-                    Divider()
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFFEEEEEE)) // Light grey background
-                            .padding(horizontal = 16.dp, vertical = 12.dp), // Reduced vertical padding
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = inputText,
-                            onValueChange = { viewModel.inputText.value = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 8.dp),
-                            placeholder = { Text("Type your question...") },
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                            keyboardActions = KeyboardActions(
-                                onSend = {
-                                    if (inputText.isNotBlank()) {
-                                        viewModel.sendMessage(inputText)
-                                        focusManager.clearFocus()
-                                    }
-                                }
-                            ),
-                            colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                focusedTextColor = Color.Black,
-                                cursorColor = Color(0xFFDD3825),
-                                unfocusedContainerColor = Color.White,
-                                focusedContainerColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            maxLines = 1,
-                            singleLine = true
-                        )
 
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clickable {
-                                    if (inputText.isNotBlank()) {
-                                        viewModel.sendMessage(inputText)
-                                        focusManager.clearFocus()
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.send),
-                                contentDescription = "Send",
-                                tint = Color(0xFFDD3825),
-                                modifier = Modifier.size(28.dp)
+                    // Chat messages
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        state = listState
+                    ) {
+                        items(messages) { message ->
+                            MessageBubble(
+                                message = message,
+                                viewModel = viewModel,
+                                chatData = ChatData.shared,
+                                onReportMessage = { msg ->
+                                    messageToReport = msg
+                                    showReportDialog = true
+                                }
                             )
                         }
+
+                        if (isTyping) {
+                            item {
+                                Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                                    TypingIndicator()
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
                     }
-                }
 
-                // Bottom navigation
-                if (showBottomBar) {
-                    val context = LocalContext.current
-                    val sharedPref = context.getSharedPreferences("event_preferences", Context.MODE_PRIVATE)
-                    val isUsingPrideIcon = sharedPref.getBoolean("using_pride_icon", false)
+                    // Input area
+                    Column {
+                        // Instructional note
+                        Text(
+                            text = "Long press any message to report",
+                            fontSize = 11.sp,
+                            color = Color.White,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 0.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        Divider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFFEEEEEE)) // Light grey background
+                                .padding(
+                                    horizontal = 16.dp,
+                                    vertical = 12.dp
+                                ), // Reduced vertical padding
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = inputText,
+                                onValueChange = { viewModel.inputText.value = it },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp),
+                                placeholder = { Text("Type your question...") },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                                keyboardActions = KeyboardActions(
+                                    onSend = {
+                                        if (inputText.isNotBlank()) {
+                                            viewModel.sendMessage(inputText)
+                                            focusManager.clearFocus()
+                                        }
+                                    }
+                                ),
+                                colors = TextFieldDefaults.colors(
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    focusedTextColor = Color.Black,
+                                    cursorColor = Color(0xFFDD3825),
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                maxLines = 1,
+                                singleLine = true
+                            )
 
-                    ChatBottomNavigationBar(
-                        onHomeClick = { navController.navigate("home") },
-                        onChatClick = { /* Already on Chat screen */ },
-                        onSOSClick = { navController.navigate("sos") },
-                        onProfileClick = { navController.navigate("profile") },
-                        isUsingPrideIcon = isUsingPrideIcon
-                    )
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clickable {
+                                        if (inputText.isNotBlank()) {
+                                            viewModel.sendMessage(inputText)
+                                            focusManager.clearFocus()
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.send),
+                                    contentDescription = "Send",
+                                    tint = Color(0xFFDD3825),
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Bottom navigation
+                    if (showBottomBar) {
+                        val context = LocalContext.current
+                        val sharedPref =
+                            context.getSharedPreferences("event_preferences", Context.MODE_PRIVATE)
+                        val isUsingPrideIcon = sharedPref.getBoolean("using_pride_icon", false)
+
+                        ChatBottomNavigationBar(
+                            onHomeClick = { navController.navigate("home") },
+                            onChatClick = { /* Already on Chat screen */ },
+                            onSOSClick = { navController.navigate("sos") },
+                            onProfileClick = { navController.navigate("profile") },
+                            isUsingPrideIcon = isUsingPrideIcon
+                        )
+                    }
                 }
             }
         }
-    }
 
-    // Report Dialog
-    if (showReportDialog && messageToReport != null) {
-        val context = LocalContext.current
-        ReportMessageDialog(
-            message = messageToReport!!,
-            onDismiss = {
-                showReportDialog = false
-                messageToReport = null
-            },
-            onReport = { message, reason ->
-                reportMessage(context, message, reason)
-                showReportDialog = false
-                messageToReport = null
-            }
-        )
+        // Report Dialog
+        if (showReportDialog && messageToReport != null) {
+            val context = LocalContext.current
+            ReportMessageDialog(
+                message = messageToReport!!,
+                onDismiss = {
+                    showReportDialog = false
+                    messageToReport = null
+                },
+                onReport = { message, reason ->
+                    reportMessage(context, message, reason)
+                    showReportDialog = false
+                    messageToReport = null
+                }
+            )
+        }
     }
 }
 

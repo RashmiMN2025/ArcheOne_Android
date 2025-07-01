@@ -1,4 +1,5 @@
 package com.archeGlobal.one.ui.screens
+
 import android.app.Activity
 import android.util.Log
 import android.widget.Toast
@@ -296,6 +297,12 @@ fun HomeScreenContent(
     onDismissEventPopup: () -> Unit = {},
     columns: Int = 3 // Default to 3 for phones
 ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
     // Get the user data manager to access preferences
     val userDataManager = UserDataManager.getInstance(LocalContext.current)
     // Observe the locked state
@@ -1190,6 +1197,7 @@ fun HomeScreenContent(
             }
         }
     }
+}
 }
 
 // Update this helper function to better format long titles

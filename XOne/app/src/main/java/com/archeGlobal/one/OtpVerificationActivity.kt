@@ -10,6 +10,7 @@ import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.OtpVerificationScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
+import androidx.activity.enableEdgeToEdge
 
 class OtpVerificationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,6 +22,10 @@ class OtpVerificationActivity : AppCompatActivity() {
         val navigator = AndroidNavigator(this)
         val loginController = LoginController(this, navigator)
         val controller = OtpVerificationController(navigator, this)
+
+        enableEdgeToEdge()
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         // Handle back press to go back to original login screen
         onBackPressedDispatcher.addCallback(

@@ -34,6 +34,12 @@ fun AssetScreen(
     model: AssetModel,
     controller: AssetController
 ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
     var showIssueDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -231,6 +237,7 @@ fun AssetScreen(
             }
         )
     }
+}
 }
 
 @Composable

@@ -74,6 +74,13 @@ fun OtpVerificationScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
             .background(
                 Brush.linearGradient(
                     colors = listOf(
@@ -320,4 +327,5 @@ fun OtpVerificationScreen(
         // Replace the existing loading indicator with UniversalLoader
         UniversalLoader(isLoading = isLoading)
     }
+}
 }
