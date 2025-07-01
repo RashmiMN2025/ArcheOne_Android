@@ -14,20 +14,11 @@ android {
         applicationId = "com.archeGlobal.one"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
+        versionCode = 8
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters += listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-        }
-    }
-
-    signingConfigs {
-        create("release") {
-            storeFile = file("/Keystore.jks")
-            storePassword = "Android@12345"
-            keyAlias = "key0"
-            keyPassword = "Android@12345"
         }
     }
 
@@ -41,7 +32,6 @@ android {
             )
             isCrunchPngs = true
             proguardFiles += file("proguard-rules-r8.pro")
-            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
