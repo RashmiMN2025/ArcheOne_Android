@@ -32,6 +32,7 @@ android {
             )
             isCrunchPngs = true
             proguardFiles += file("proguard-rules-r8.pro")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

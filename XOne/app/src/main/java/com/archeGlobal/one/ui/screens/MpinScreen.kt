@@ -78,6 +78,101 @@ private val securityQuestionsList = listOf(
 )
 
 @Composable
+fun OutlinedDropdownField(
+    options: List<String>,
+    selectedIndex: Int,
+    onSelected: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedText = if (selectedIndex in options.indices) options[selectedIndex] else ""
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        OutlinedTextField(
+            value = selectedText,
+            onValueChange = {},
+            readOnly = true,
+            placeholder = {
+                Text(
+                    "Select a question",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Gray
+                )
+            },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown, // your down arrow icon
+                    contentDescription = "Dropdown",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth(0.97f)
+                .clickable { expanded = true },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                disabledContainerColor = Color.White,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                disabledTextColor = Color.Black,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent
+            ),
+            textStyle = TextStyle(
+                color = if (selectedText.isEmpty()) Color.DarkGray else Color.Black,
+                fontSize = 18.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal
+            ),
+            shape = MaterialTheme.shapes.medium,
+            enabled = false // disables keyboard
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .background(Color.White)
+        ) {
+            options.forEachIndexed { idx, option ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onSelected(idx)
+                            expanded = false
+                        }
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = option,
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black,
+                        lineHeight = 18.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (idx != options.lastIndex) {
+                        Divider(
+                            color = Color(0xFFE0E0E0),
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun MpinScreen(
     isReset: Boolean,
     onMpinSet: (String, List<SecurityQuestion>) -> Unit,
@@ -324,13 +419,21 @@ fun MpinScreen(
                             ),
                             modifier = Modifier.align(Alignment.CenterHorizontally),
                             onClick = { offset ->
-                                annotatedText.getStringAnnotations(tag = "login_again", start = offset, end = offset)
+                                annotatedText.getStringAnnotations(
+                                    tag = "login_again",
+                                    start = offset,
+                                    end = offset
+                                )
                                     .firstOrNull()?.let {
                                         // Navigate to LoginActivity
                                         val activity = context as? android.app.Activity
                                         activity?.let {
-                                            val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java)
-                                            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                            val intent = android.content.Intent(
+                                                context,
+                                                com.archeGlobal.one.LoginActivity::class.java
+                                            )
+                                            intent.flags =
+                                                android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
                                             intent.putExtra("forceDifferentUserMode", true)
                                             context.startActivity(intent)
                                             activity.finish()
@@ -361,7 +464,8 @@ fun MpinScreen(
                                 value = mpinDigits[i],
                                 onValueChange = { value ->
                                     if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        mpinDigits = mpinDigits.toMutableList().also { it[i] = value }
+                                        mpinDigits =
+                                            mpinDigits.toMutableList().also { it[i] = value }
                                         if (value.isNotEmpty() && i < 3) {
                                             focusRequesters[i + 1].requestFocus()
                                         }
@@ -435,13 +539,15 @@ fun MpinScreen(
                                 value = confirmMpinDigits[i],
                                 onValueChange = { value ->
                                     if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        confirmMpinDigits = confirmMpinDigits.toMutableList().also { it[i] = value }
+                                        confirmMpinDigits =
+                                            confirmMpinDigits.toMutableList().also { it[i] = value }
                                         if (value.isNotEmpty() && i < 3) {
                                             confirmFocusRequesters[i + 1].requestFocus()
                                         }
                                     }
                                     if (value.isEmpty() && i > 0) {
-                                        confirmMpinDigits = confirmMpinDigits.toMutableList().also { it[i] = "" }
+                                        confirmMpinDigits =
+                                            confirmMpinDigits.toMutableList().also { it[i] = "" }
                                         confirmFocusRequesters[i - 1].requestFocus()
                                     }
                                 },
@@ -500,7 +606,11 @@ fun MpinScreen(
                             } else {
                                 error = null
                                 com.archeGlobal.one.utils.MpinManager.saveMpin(context, mpin)
-                                Toast.makeText(context, "MPIN reset successfully!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "MPIN reset successfully!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 onMpinSet(mpin, savedQuestions)
                             }
                         },
@@ -552,9 +662,13 @@ fun MpinScreen(
                                 options = filteredQuestions,
                                 selectedIndex = selectedIdxInFiltered,
                                 onSelected = { filteredIdx ->
-                                    val originalIdx = securityQuestionsList.indexOf(filteredQuestions[filteredIdx])
-                                    selectedQuestionIndices = selectedQuestionIndices.toMutableList().also { it[i] = originalIdx }
-                                    selectedQuestions = selectedQuestions.toMutableList().also { it[i] = securityQuestionsList[originalIdx] }
+                                    val originalIdx =
+                                        securityQuestionsList.indexOf(filteredQuestions[filteredIdx])
+                                    selectedQuestionIndices =
+                                        selectedQuestionIndices.toMutableList()
+                                            .also { it[i] = originalIdx }
+                                    selectedQuestions = selectedQuestions.toMutableList()
+                                        .also { it[i] = securityQuestionsList[originalIdx] }
                                 }
                             )
                         }
@@ -858,100 +972,6 @@ fun MpinScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             color = Color.White
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-@Composable
-fun OutlinedDropdownField(
-    options: List<String>,
-    selectedIndex: Int,
-    onSelected: (Int) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val selectedText = if (selectedIndex in options.indices) options[selectedIndex] else ""
-
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        OutlinedTextField(
-            value = selectedText,
-            onValueChange = {},
-            readOnly = true,
-            placeholder = {
-                Text(
-                    "Select a question",
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray
-                )
-            },
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown, // your down arrow icon
-                    contentDescription = "Dropdown",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth(0.97f)
-                .clickable { expanded = true },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                disabledContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                disabledTextColor = Color.Black,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            ),
-            textStyle = TextStyle(
-                color = if (selectedText.isEmpty()) Color.DarkGray else Color.Black,
-                fontSize = 18.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Normal
-            ),
-            shape = MaterialTheme.shapes.medium,
-            enabled = false // disables keyboard
-        )
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .background(Color.White)
-        ) {
-            options.forEachIndexed { idx, option ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onSelected(idx)
-                            expanded = false
-                        }
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                ) {
-                    Text(
-                        text = option,
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black,
-                        lineHeight = 18.sp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (idx != options.lastIndex) {
-                        Divider(
-                            color = Color(0xFFE0E0E0),
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(top = 8.dp)
                         )
                     }
                 }
