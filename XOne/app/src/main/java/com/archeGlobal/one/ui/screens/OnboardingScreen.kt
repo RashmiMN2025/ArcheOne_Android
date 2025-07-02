@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -72,70 +73,80 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        // Pager for onboarding screens
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-            userScrollEnabled = false // Disable swipe gesture
-        ) { page ->
-            OnboardingPage(
-                page = pages[page],
-                isLastPage = page == pages.size - 1,
-                onGetStartedClick = onGetStartedClick
-            )
-        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            // Pager for onboarding screens
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                userScrollEnabled = false // Disable swipe gesture
+            ) { page ->
+                OnboardingPage(
+                    page = pages[page],
+                    isLastPage = page == pages.size - 1,
+                    onGetStartedClick = onGetStartedClick
+                )
+            }
 
-        // Page indicator - only show on first 2 screens, hide on third screen with Get Started button
-        if (currentPage < 2) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 60.dp), // Increased from 32dp to move indicators up
-                horizontalArrangement = Arrangement.Center
-            ) {
-                repeat(pages.size) { iteration ->
-                    val color = if (pagerState.currentPage == iteration) Color.White else Color.Gray.copy(alpha = 0.5f)
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(if (pagerState.currentPage == iteration) 10.dp else 8.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                    )
+            // Page indicator - only show on first 2 screens, hide on third screen with Get Started button
+            if (currentPage < 2) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 60.dp), // Increased from 32dp to move indicators up
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(pages.size) { iteration ->
+                        val color =
+                            if (pagerState.currentPage == iteration) Color.White else Color.Gray.copy(
+                                alpha = 0.5f
+                            )
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .size(if (pagerState.currentPage == iteration) 10.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                        )
+                    }
                 }
             }
-        }
 
-        // Next button - adjusted position
-        AnimatedVisibility(
-            visible = currentPage < pages.size - 1,
-            enter = fadeIn(animationSpec = tween(300)),
-            exit = fadeOut(animationSpec = tween(300)),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 24.dp, bottom = 50.dp) // Moved down slightly from dots
-        ) {
-            // Custom implementation with white circle and arrow
-            Box(
-                contentAlignment = Alignment.Center,
+            // Next button - adjusted position
+            AnimatedVisibility(
+                visible = currentPage < pages.size - 1,
+                enter = fadeIn(animationSpec = tween(300)),
+                exit = fadeOut(animationSpec = tween(300)),
                 modifier = Modifier
-                    .size(32.dp) // Further increased circle size
-                    .clip(CircleShape)
-                    .background(Color.White)
-                    .clickable {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(currentPage + 1)
-                        }
-                    }
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 50.dp) // Moved down slightly from dots
             ) {
-                Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.ArrowForward,
-                    contentDescription = "Next",
-                    tint = Color.Black,
-                    modifier = Modifier.size(22.dp) // Further increased arrow size
-                )
+                // Custom implementation with white circle and arrow
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp) // Further increased circle size
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .clickable {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(currentPage + 1)
+                            }
+                        }
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.ArrowForward,
+                        contentDescription = "Next",
+                        tint = Color.Black,
+                        modifier = Modifier.size(22.dp) // Further increased arrow size
+                    )
+                }
             }
         }
     }
@@ -147,6 +158,12 @@ fun OnboardingPage(
     isLastPage: Boolean = false,
     onGetStartedClick: () -> Unit
 ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+    ) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -238,6 +255,7 @@ fun OnboardingPage(
         }
     }
 }
+    }
 
 data class OnboardingPage(
     val image: Int,

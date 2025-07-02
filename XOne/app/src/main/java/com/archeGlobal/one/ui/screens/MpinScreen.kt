@@ -867,7 +867,6 @@ fun MpinScreen(
             }
         }
     }
-}
 
 @Composable
 fun OutlinedDropdownField(

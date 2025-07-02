@@ -198,16 +198,6 @@ fun TravelScreen(
                                         )
 
                                         val count = controller.pendingApprovalCount
-                                        Spacer(modifier = Modifier.width(2.dp))
-                                        Text(
-                                            text = if (count > 99) "99+" else count.toString(),
-                                            color = Color.White,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            fontFamily = GraphikFontFamily
-                                        )
-
-                                        val count = controller.pendingApprovalCount
                                         if (count > 0) {
                                             Spacer(modifier = Modifier.width(2.dp))
                                             Text(
