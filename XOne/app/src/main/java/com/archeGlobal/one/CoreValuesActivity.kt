@@ -22,6 +22,6 @@ class CoreValuesActivity : AppCompatActivity() {
                     onBackPressed = { finish() }
                 ) // Replace with your actual Composable function
             }
-            }
+        }
     }
 }

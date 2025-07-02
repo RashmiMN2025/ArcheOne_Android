@@ -234,8 +234,8 @@ fun PasswordResetScreen(navigator: Navigator) {
                     ) {
                         Text(
                             text = "Hi ${
-                                passwordResetResponse?.name?.split(' ')
-                                    ?.firstOrNull() ?: "WebTestUser"
+                            passwordResetResponse?.name?.split(' ')
+                                ?.firstOrNull() ?: "WebTestUser"
                             }",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
@@ -290,11 +290,11 @@ fun PasswordResetScreen(navigator: Navigator) {
                         // Timer
                         Text(
                             text = "Time remaining: ${
-                                String.format(
-                                    "%02d:%02d",
-                                    timeRemaining / 60,
-                                    timeRemaining % 60
-                                )
+                            String.format(
+                                "%02d:%02d",
+                                timeRemaining / 60,
+                                timeRemaining % 60
+                            )
                             }",
                             fontSize = 13.sp,
                             fontFamily = GraphikFontFamily
@@ -350,5 +350,4 @@ fun PasswordResetScreen(navigator: Navigator) {
             countDownTimer.cancel()
         }
     }
-
 }

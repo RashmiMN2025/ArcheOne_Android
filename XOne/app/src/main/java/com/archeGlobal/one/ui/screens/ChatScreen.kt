@@ -767,7 +767,7 @@ fun ReportMessageDialog(
                             text = reason,
                             color = Color.Black,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -821,8 +821,8 @@ fun ReportMessageDialog(
                     "Report",
                     color = Color.White,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    )
+                    fontWeight = FontWeight.Medium
+                )
             }
         },
         dismissButton = {
@@ -831,8 +831,8 @@ fun ReportMessageDialog(
                     "Cancel",
                     color = Color(0xFFDD3825),
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    )
+                    fontWeight = FontWeight.Medium
+                )
             }
         },
         containerColor = Color.White

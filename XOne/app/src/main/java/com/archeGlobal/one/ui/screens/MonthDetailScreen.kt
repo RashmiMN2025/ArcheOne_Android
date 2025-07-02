@@ -164,9 +164,9 @@ fun MonthDetailScreen(
                                     Log.d(
                                         "MonthDetailScreen",
                                         "Comparing milestone ${milestone.poDate} " +
-                                                "(day=$milestoneDay, month=$milestoneMonth) with " +
-                                                "selected date $selectedDate (day=$dayFromSelection, month=$monthFromSelection) " +
-                                                "= $isMatch"
+                                            "(day=$milestoneDay, month=$milestoneMonth) with " +
+                                            "selected date $selectedDate (day=$dayFromSelection, month=$monthFromSelection) " +
+                                            "= $isMatch"
                                     )
 
                                     isMatch

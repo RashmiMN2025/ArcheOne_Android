@@ -175,8 +175,9 @@ fun ProfileScreen(
                                     "Address/Coordinates" -> controller.onAddressClick()
                                     "Emergency Contact" -> controller.onEmergencyContactClick()
                                     "Documents" -> controller.onDocumentsClick()
-                                    "Log out" -> showLogoutDialog =
-                                        true // Show logout dialog instead of direct action
+                                    "Log out" ->
+                                        showLogoutDialog =
+                                            true // Show logout dialog instead of direct action
                                 }
                             }
                         )

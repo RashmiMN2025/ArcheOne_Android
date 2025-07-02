@@ -167,18 +167,18 @@ class HomeController(
     // Helper function to check if event response is empty
     private fun isEventResponseEmpty(event: com.archeGlobal.one.model.EventResponse?): Boolean {
         if (event == null) return true
-        
+
         // Check if all important fields are null or empty
         val hasTitle = !event.title.isNullOrBlank()
         val hasDescription = !event.description.isNullOrBlank()
         val hasImage = !event.image.isNullOrBlank()
         val hasDate = !event.date.isNullOrBlank()
-        
+
         // Event is considered empty if it has no meaningful content
         val isEmpty = !hasTitle && !hasDescription && !hasImage && !hasDate
-        
+
         Log.d("EventController", "Event emptiness check - hasTitle: $hasTitle, hasDescription: $hasDescription, hasImage: $hasImage, hasDate: $hasDate, isEmpty: $isEmpty")
-        
+
         return isEmpty
     }
 
