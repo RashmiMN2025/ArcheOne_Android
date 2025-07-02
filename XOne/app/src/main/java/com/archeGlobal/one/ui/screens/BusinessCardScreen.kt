@@ -267,10 +267,12 @@ fun BusinessCardScreen(
                             .pointerInput(Unit) {
                                 detectHorizontalDragGestures { _, dragAmount ->
                                     when {
-                                        dragAmount < -50 && showFrontSide -> showFrontSide =
-                                            false // Swipe left
-                                        dragAmount > 50 && !showFrontSide -> showFrontSide =
-                                            true // Swipe right
+                                        dragAmount < -50 && showFrontSide ->
+                                            showFrontSide =
+                                                false // Swipe left
+                                        dragAmount > 50 && !showFrontSide ->
+                                            showFrontSide =
+                                                true // Swipe right
                                     }
                                 }
                             },

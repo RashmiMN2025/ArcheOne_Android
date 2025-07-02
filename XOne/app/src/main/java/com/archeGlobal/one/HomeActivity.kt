@@ -8,6 +8,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -38,7 +39,6 @@ import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
-import androidx.activity.enableEdgeToEdge
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -106,7 +106,7 @@ class HomeActivity : AppCompatActivity() {
         enableEdgeToEdge()
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        
+
         userDataManager = UserDataManager.getInstance(this)
         navigator = AndroidNavigator(this)
 

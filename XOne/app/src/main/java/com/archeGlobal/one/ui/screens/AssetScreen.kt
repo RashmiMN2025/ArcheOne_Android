@@ -40,204 +40,204 @@ fun AssetScreen(
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-    var showIssueDialog by remember { mutableStateOf(false) }
+        var showIssueDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige
-                        Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749) // Dark Gray
-                    )
-                )
-            )
-    ) {
-        TopAppBar(
-            title = {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Asset Information",
-                        color = Color.Black,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
-            },
-            navigationIcon = {
-                IconButton(onClick = { controller.onBackPressed() }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color.Black
-                    )
-                }
-            },
-            actions = {
-                Spacer(modifier = Modifier.width(50.dp))
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent
-            )
-        )
-
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 15.dp)
-        ) {
-            when {
-                model.isLoading -> {
-                    UniversalLoader(isLoading = model.isLoading)
-                }
-                model.error != null -> {
-                    Text(
-                        text = model.error,
-                        color = Color.Red,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                else -> {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFE0DCD1), // Light Beige
+                            Color(0xFFC8C8CA), // Light Gray
+                            Color(0xFF474749) // Dark Gray
                         )
+                    )
+                )
+        ) {
+            TopAppBar(
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp)
-                                .verticalScroll(rememberScrollState())
+                        Text(
+                            text = "Asset Information",
+                            color = Color.Black,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { controller.onBackPressed() }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+                },
+                actions = {
+                    Spacer(modifier = Modifier.width(50.dp))
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 15.dp)
+            ) {
+                when {
+                    model.isLoading -> {
+                        UniversalLoader(isLoading = model.isLoading)
+                    }
+                    model.error != null -> {
+                        Text(
+                            text = model.error,
+                            color = Color.Red,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                    else -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            )
                         ) {
-                            // User Information Section
-                            Text(
-                                "User Information",
-                                fontSize = 20.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-
-                            InfoRow("Name:", model.name)
-                            InfoRow("Employee ID:", model.employeeId)
-                            InfoRow("Mobile No:", model.mobile)
-                            InfoRow("Email:", model.email)
-                            InfoRow("Location:", model.location)
-
-                            Divider(
-                                modifier = Modifier.padding(vertical = 16.dp),
-                                color = Color.LightGray
-                            )
-
-                            // Asset Details Section
-                            Text(
-                                "Asset Details",
-                                fontSize = 20.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-
-                            // Iterate over the asset details array
-                            model.assetDetails?.forEachIndexed { index, asset ->
-                                AssetDetailCard(asset)
-                                if (index < model.assetDetails.size - 1) { // Add a divider except after the last item
-                                    Divider(
-                                        modifier = Modifier.padding(vertical = 8.dp),
-                                        color = Color.LightGray,
-                                        thickness = 1.dp
-                                    )
-                                }
-                            }
-
-                            Divider(
-                                modifier = Modifier.padding(vertical = 16.dp),
-                                color = Color.LightGray
-                            )
-
-                            // Information Notice
-                            Card(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 16.dp, start = 0.dp, end = 0.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFC8C8CA).copy(alpha = 0.5f)
-                                ),
-                                shape = RoundedCornerShape(8.dp)
+                                    .padding(24.dp)
+                                    .verticalScroll(rememberScrollState())
                             ) {
-                                Row(
+                                // User Information Section
+                                Text(
+                                    "User Information",
+                                    fontSize = 20.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                InfoRow("Name:", model.name)
+                                InfoRow("Employee ID:", model.employeeId)
+                                InfoRow("Mobile No:", model.mobile)
+                                InfoRow("Email:", model.email)
+                                InfoRow("Location:", model.location)
+
+                                Divider(
+                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    color = Color.LightGray
+                                )
+
+                                // Asset Details Section
+                                Text(
+                                    "Asset Details",
+                                    fontSize = 20.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                // Iterate over the asset details array
+                                model.assetDetails?.forEachIndexed { index, asset ->
+                                    AssetDetailCard(asset)
+                                    if (index < model.assetDetails.size - 1) { // Add a divider except after the last item
+                                        Divider(
+                                            modifier = Modifier.padding(vertical = 8.dp),
+                                            color = Color.LightGray,
+                                            thickness = 1.dp
+                                        )
+                                    }
+                                }
+
+                                Divider(
+                                    modifier = Modifier.padding(vertical = 16.dp),
+                                    color = Color.LightGray
+                                )
+
+                                // Information Notice
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .padding(top = 16.dp, start = 0.dp, end = 0.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFFC8C8CA).copy(alpha = 0.5f)
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.info),
-                                        contentDescription = "Information",
-                                        tint = Color(0xFFE94235),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.info),
+                                            contentDescription = "Information",
+                                            tint = Color(0xFFE94235),
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text(
+                                            text = "Report any issues you may have with your assigned asset using \"Raise an issue\" bar below.",
+                                            color = Color.Black,
+                                            fontSize = 16.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    }
+                                }
+
+                                // Raise an Issue Button
+                                Button(
+                                    onClick = { showIssueDialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 24.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = PrimaryRed
+                                    ),
+                                    shape = RoundedCornerShape(25.dp)
+                                ) {
                                     Text(
-                                        text = "Report any issues you may have with your assigned asset using \"Raise an issue\" bar below.",
-                                        color = Color.Black,
-                                        fontSize = 16.sp,
+                                        "Raise an Issue",
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        color = Color.White,
+                                        fontSize = 18.sp,
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal
+                                        fontWeight = FontWeight.Medium
                                     )
                                 }
-                            }
-
-                            // Raise an Issue Button
-                            Button(
-                                onClick = { showIssueDialog = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 24.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = PrimaryRed
-                                ),
-                                shape = RoundedCornerShape(25.dp)
-                            ) {
-                                Text(
-                                    "Raise an Issue",
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    color = Color.White,
-                                    fontSize = 18.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
-                                )
                             }
                         }
                     }
                 }
             }
         }
-    }
 
-    // Issue Dialog
-    if (showIssueDialog) {
-        IssueDialog(
-            onDismiss = { showIssueDialog = false },
-            onSubmit = { issueText ->
-                controller.onIssueDescriptionChange(issueText)
-                controller.onSubmitIssue()
-                showIssueDialog = false
-            }
-        )
+        // Issue Dialog
+        if (showIssueDialog) {
+            IssueDialog(
+                onDismiss = { showIssueDialog = false },
+                onSubmit = { issueText ->
+                    controller.onIssueDescriptionChange(issueText)
+                    controller.onSubmitIssue()
+                    showIssueDialog = false
+                }
+            )
+        }
     }
-}
 }
 
 @Composable

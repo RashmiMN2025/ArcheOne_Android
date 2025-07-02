@@ -25,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.OtpVerificationController
@@ -77,255 +76,254 @@ fun OtpVerificationScreen(
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige
-                        Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749) // Dark Gray
-                    )
-                )
-            )
-    ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(50.dp))
-
-            // Company Logo
-            CompanyLogo(modifier = Modifier.height(120.dp))
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Row with email icon and "Enter OTP" text
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Email,
-                    contentDescription = "Email Icon",
-                    tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Enter OTP",
-                    fontSize = 22.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp, 16.dp, 32.dp, 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Enter the 6-digit OTP sent to your registered email",
-                    fontSize = 16.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.DarkGray,
-                    lineHeight = 18.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // OTP code label (left aligned)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, bottom = 4.dp)
-            ) {
-                Text(
-                    text = "OTP code",
-                    fontSize = 16.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                )
-            }
-
-            // 6-digit OTP input boxes
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                for (i in 0 until 6) {
-                    OutlinedTextField(
-                        value = otpDigits[i],
-                        onValueChange = { value ->
-                            if (value.length <= 1 && value.all { it.isDigit() }) {
-                                otpDigits[i] = value
-                                if (value.isNotEmpty() && i < 5) {
-                                    focusRequesters[i + 1].requestFocus()
-                                }
-                            }
-                            if (value.isEmpty() && i > 0) {
-                                otpDigits[i] = ""
-                                focusRequesters[i - 1].requestFocus()
-                            }
-                        },
-                        modifier = Modifier
-                            .width(50.dp)
-                            .height(50.dp)
-                            .focusRequester(focusRequesters[i])
-                            .onFocusChanged { focusState ->
-                                if (focusState.isFocused) {
-                                    focusedIndex = i
-                                }
-                            }
-                            .border(
-                                width = 1.5.dp,
-                                color = if (focusedIndex == i) Color(0xFFDD3825) else Color.White,
-                                shape = MaterialTheme.shapes.medium
-                            ),
-                        textStyle = TextStyle(
-                            fontSize = 20.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center
-                        ),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = if (i == 5) ImeAction.Done else ImeAction.Next
-                        ),
-                        enabled = !isLoading,
-                        shape = MaterialTheme.shapes.medium,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            disabledContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            disabledTextColor = Color.Black,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFE0DCD1), // Light Beige
+                            Color(0xFFC8C8CA), // Light Gray
+                            Color(0xFF474749) // Dark Gray
                         )
                     )
-                }
-            }
-
-            val otp = otpDigits.joinToString("")
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Timer and Resend OTP Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Resend OTP in $formattedTime",
-                    fontSize = 14.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Start
                 )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(50.dp))
 
-                // Resend OTP button (enabled only when timer is 0)
+                // Company Logo
+                CompanyLogo(modifier = Modifier.height(120.dp))
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Row with email icon and "Enter OTP" text
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = "Email Icon",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Enter OTP",
+                        fontSize = 22.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp, 16.dp, 32.dp, 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Enter the 6-digit OTP sent to your registered email",
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.DarkGray,
+                        lineHeight = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // OTP code label (left aligned)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, bottom = 4.dp)
+                ) {
+                    Text(
+                        text = "OTP code",
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    )
+                }
+
+                // 6-digit OTP input boxes
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    for (i in 0 until 6) {
+                        OutlinedTextField(
+                            value = otpDigits[i],
+                            onValueChange = { value ->
+                                if (value.length <= 1 && value.all { it.isDigit() }) {
+                                    otpDigits[i] = value
+                                    if (value.isNotEmpty() && i < 5) {
+                                        focusRequesters[i + 1].requestFocus()
+                                    }
+                                }
+                                if (value.isEmpty() && i > 0) {
+                                    otpDigits[i] = ""
+                                    focusRequesters[i - 1].requestFocus()
+                                }
+                            },
+                            modifier = Modifier
+                                .width(50.dp)
+                                .height(50.dp)
+                                .focusRequester(focusRequesters[i])
+                                .onFocusChanged { focusState ->
+                                    if (focusState.isFocused) {
+                                        focusedIndex = i
+                                    }
+                                }
+                                .border(
+                                    width = 1.5.dp,
+                                    color = if (focusedIndex == i) Color(0xFFDD3825) else Color.White,
+                                    shape = MaterialTheme.shapes.medium
+                                ),
+                            textStyle = TextStyle(
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            ),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = if (i == 5) ImeAction.Done else ImeAction.Next
+                            ),
+                            enabled = !isLoading,
+                            shape = MaterialTheme.shapes.medium,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                disabledContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                disabledTextColor = Color.Black,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
+
+                val otp = otpDigits.joinToString("")
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Timer and Resend OTP Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Resend OTP in $formattedTime",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Start
+                    )
+
+                    // Resend OTP button (enabled only when timer is 0)
+                    Button(
+                        onClick = {
+                            if (timeLeft == 0) {
+                                controller.resendOtp(email, mobile, employeeId) { message ->
+                                    if (message.contains("success", ignoreCase = true)) {
+                                        timeLeft = 60 // Restart timer
+                                        Toast.makeText(context, "OTP sent successfully", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        errorMessage = message
+                                    }
+                                }
+                            }
+                        },
+                        enabled = timeLeft == 0,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .height(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE0B4AA),
+                            contentColor = Color(0xFFDD3825),
+                            disabledContainerColor = Color(0xFFE0B4AA),
+                            disabledContentColor = Color(0xFFDD3825)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFFDD3825)),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Text(
+                            text = "Resend OTP",
+                            color = Color(0xFFDD3825),
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Verify OTP Button
                 Button(
                     onClick = {
-                        if (timeLeft == 0) {
-                            controller.resendOtp(email, mobile, employeeId) { message ->
-                                if (message.contains("success", ignoreCase = true)) {
-                                    timeLeft = 60 // Restart timer
-                                    Toast.makeText(context, "OTP sent successfully", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    errorMessage = message
-                                }
+                        isLoading = true
+                        errorMessage = null
+                        if (otp.length != 6) {
+                            Toast.makeText(context, "Please enter a valid 6-digit OTP", Toast.LENGTH_SHORT).show()
+                            isLoading = false
+                            return@Button
+                        }
+                        controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
+                            isLoading = false
+                            if (isError) {
+                                errorMessage = message // This will trigger the Toast via LaunchedEffect
                             }
                         }
                     },
-                    enabled = timeLeft == 0,
                     modifier = Modifier
-                        .padding(start = 8.dp)
-                        .height(36.dp),
+                        .fillMaxWidth(0.97f)
+                        .height(65.dp)
+                        .padding(top = 16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE0B4AA),
-                        contentColor = Color(0xFFDD3825),
-                        disabledContainerColor = Color(0xFFE0B4AA),
-                        disabledContentColor = Color(0xFFDD3825)
+                        containerColor = Color(0xFFDD3825),
+                        disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                     ),
-                    border = BorderStroke(1.dp, Color(0xFFDD3825)),
-                    shape = MaterialTheme.shapes.medium
+                    shape = MaterialTheme.shapes.medium,
+                    enabled = !isLoading && otp.length == 6
                 ) {
                     Text(
-                        text = "Resend OTP",
-                        color = Color(0xFFDD3825),
-                        fontSize = 14.sp,
+                        "Verify OTP",
+                        color = Color.White,
+                        fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium
                     )
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Verify OTP Button
-            Button(
-                onClick = {
-                    isLoading = true
-                    errorMessage = null
-                    if (otp.length != 6) {
-                        Toast.makeText(context, "Please enter a valid 6-digit OTP", Toast.LENGTH_SHORT).show()
-                        isLoading = false
-                        return@Button
-                    }
-                    controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
-                        isLoading = false
-                        if (isError) {
-                            errorMessage = message // This will trigger the Toast via LaunchedEffect
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth(0.97f)
-                    .height(65.dp)
-                    .padding(top = 16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFDD3825),
-                    disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                ),
-                shape = MaterialTheme.shapes.medium,
-                enabled = !isLoading && otp.length == 6
-            ) {
-                Text(
-                    "Verify OTP",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            // Replace the existing loading indicator with UniversalLoader
+            UniversalLoader(isLoading = isLoading)
         }
-        // Replace the existing loading indicator with UniversalLoader
-        UniversalLoader(isLoading = isLoading)
     }
-}
 }

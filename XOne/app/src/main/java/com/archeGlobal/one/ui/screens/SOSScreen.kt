@@ -125,10 +125,12 @@ fun SOSScreen(
 
                                 SOSButton(
                                     text = "SOS Call",
-                                    onClick = { controller.makeSOSCall("7397768656") })
+                                    onClick = { controller.makeSOSCall("7397768656") }
+                                )
                                 SOSButton(
                                     text = "Raise a Concern",
-                                    onClick = { onNavigateToRaiseConcern() })
+                                    onClick = { onNavigateToRaiseConcern() }
+                                )
                                 SOSButton(
                                     text = "View Emergency Contact",
                                     onClick = {
@@ -159,7 +161,8 @@ fun SOSScreen(
                                 ) { page ->
                                     SOSBlogItem(
                                         sosBlogs[page],
-                                        onClick = { onSOSBlogClick(sosBlogs[page]) })
+                                        onClick = { onSOSBlogClick(sosBlogs[page]) }
+                                    )
                                 }
 
                                 // Pagination Dots
@@ -175,9 +178,13 @@ fun SOSScreen(
                                                 .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
                                                 .padding(4.dp)
                                                 .background(
-                                                    color = if (index == pagerState.currentPage) Color(
-                                                        0xFFDD3825
-                                                    ) else Color.LightGray,
+                                                    color = if (index == pagerState.currentPage) {
+                                                        Color(
+                                                            0xFFDD3825
+                                                        )
+                                                    } else {
+                                                        Color.LightGray
+                                                    },
                                                     shape = CircleShape
                                                 )
                                                 .clickable {
@@ -270,10 +277,12 @@ fun SOSScreen(
 
                             SOSButton(
                                 text = "SOS Call",
-                                onClick = { controller.makeSOSCall("7397768656") })
+                                onClick = { controller.makeSOSCall("7397768656") }
+                            )
                             SOSButton(
                                 text = "Raise a Concern",
-                                onClick = { onNavigateToRaiseConcern() })
+                                onClick = { onNavigateToRaiseConcern() }
+                            )
                             SOSButton(
                                 text = "View Emergency Contact",
                                 onClick = {
@@ -304,7 +313,8 @@ fun SOSScreen(
                             ) { page ->
                                 SOSBlogItem(
                                     sosBlogs[page],
-                                    onClick = { onSOSBlogClick(sosBlogs[page]) })
+                                    onClick = { onSOSBlogClick(sosBlogs[page]) }
+                                )
                             }
 
                             // Pagination Dots
@@ -320,9 +330,13 @@ fun SOSScreen(
                                             .size(if (index == pagerState.currentPage) 15.dp else 15.dp) // Active dot is bigger
                                             .padding(4.dp)
                                             .background(
-                                                color = if (index == pagerState.currentPage) Color(
-                                                    0xFFDD3825
-                                                ) else Color.LightGray,
+                                                color = if (index == pagerState.currentPage) {
+                                                    Color(
+                                                        0xFFDD3825
+                                                    )
+                                                } else {
+                                                    Color.LightGray
+                                                },
                                                 shape = CircleShape
                                             )
                                             .clickable {

@@ -4,13 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.OtpVerificationScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
-import androidx.activity.enableEdgeToEdge
 
 class OtpVerificationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
