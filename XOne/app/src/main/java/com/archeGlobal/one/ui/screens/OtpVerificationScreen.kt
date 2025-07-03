@@ -31,6 +31,8 @@ import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -47,7 +49,6 @@ fun OtpVerificationScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var timeLeft by remember { mutableStateOf(60) }
-    var timerStarted by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
     // Timer logic: Decrease `timeLeft` every second
@@ -75,6 +76,11 @@ fun OtpVerificationScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            }
     ) {
         Box(
             modifier = Modifier

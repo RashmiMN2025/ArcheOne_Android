@@ -59,6 +59,9 @@ import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.gestures.detectTapGestures
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -94,94 +97,102 @@ fun LoginScreen(
     forceDifferentUserMode: Boolean = false,
     contentPadding: Dp = 16.dp // <-- Add this parameter
 ) {
+    val context = LocalContext.current
+    var email by remember { mutableStateOf("") }
+    var mobile by remember { mutableStateOf("") }
+    var employeeId by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var mobileVisible by remember { mutableStateOf(false) }
+    var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
+    var showWebView by remember { mutableStateOf(false) }
+    var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
+    var showMfaTermsDialog by remember { mutableStateOf(false) }
+
+    val lastEmployeeName = UserDataManager.getInstance(context).getLastUsername()
+    val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn()
+    val hasLoggedIn = UserDataManager.getInstance(context).hasUserLoggedIn()
+    val biometricHelper = remember { BiometricHelper(context) }
+    val showBiometricButton = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
+    var showFingerprint by remember { mutableStateOf(showBiometricButton && !firstTimeLogin) }
+
+    var showPolicyWebView by remember { mutableStateOf(false) }
+    var policyUrl by remember { mutableStateOf("") }
+    var policyTitle by remember { mutableStateOf("") }
+
+    val mpinController = remember { com.archeGlobal.one.controller.MpinController(context) }
+    // Make hasMpin reactive to changes - don't use remember so it re-evaluates
+    val hasMpin = mpinController.isMpinSet()
+    var selectedLoginMethod by remember { mutableStateOf("OTP") }
+    var showOtpFields by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
+    var enteredMpin by remember { mutableStateOf("") }
+    var mpinError by remember { mutableStateOf<String?>(null) }
+    val focusRequesters = List(4) { remember { androidx.compose.ui.focus.FocusRequester() } }
+    var focusedIndex by remember { mutableStateOf(-1) }
+    var isVerifyingMpin by remember { mutableStateOf(false) }
+
+    var showOtpButton by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
+    var isDifferentUserMode by remember { mutableStateOf(forceDifferentUserMode) }
+
+    var termsAccepted by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
+
+    val focusManager = LocalFocusManager.current
+
+    // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
+    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode) {
+        // If forceOriginalLogin is true, always show original login form
+        if (forceOriginalLogin) {
+            showOtpButton = true
+            selectedLoginMethod = "OTP"
+            showOtpFields = true
+            isDifferentUserMode = false
+        } else {
+            // Show OTP button only for first-time users or different users
+            showOtpButton = firstTimeLogin || isDifferentUserMode
+
+            if (firstTimeLogin || isDifferentUserMode) {
+                selectedLoginMethod = "OTP"
+                showOtpFields = true
+            } else if (hasMpin) {
+                // For existing users, default to MPIN if available
+                selectedLoginMethod = "MPIN"
+                showOtpFields = false
+            } else if (showBiometricButton) {
+                // If biometric is available, default to Fingerprint
+                selectedLoginMethod = "Fingerprint"
+                showOtpFields = false
+            } else {
+                // Default to MFA for existing users without MPIN or biometric
+                selectedLoginMethod = "MFA"
+                showOtpFields = false
+            }
+        }
+    }
+
+    // Show Toast message for errors
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            errorMessage = null
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            }
     ) {
-        val context = LocalContext.current
-        var email by remember { mutableStateOf("") }
-        var mobile by remember { mutableStateOf("") }
-        var employeeId by remember { mutableStateOf("") }
-        var isLoading by remember { mutableStateOf(false) }
-        var errorMessage by remember { mutableStateOf<String?>(null) }
-        var mobileVisible by remember { mutableStateOf(false) }
-        var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
-        var showWebView by remember { mutableStateOf(false) }
-        var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
-        var showMfaTermsDialog by remember { mutableStateOf(false) }
-
-        val lastEmployeeName = UserDataManager.getInstance(context).getLastUsername()
-        val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn()
-        val hasLoggedIn = UserDataManager.getInstance(context).hasUserLoggedIn()
-        val biometricHelper = remember { BiometricHelper(context) }
-        val showBiometricButton = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
-        var showFingerprint by remember { mutableStateOf(showBiometricButton && !firstTimeLogin) }
-
-        var showPolicyWebView by remember { mutableStateOf(false) }
-        var policyUrl by remember { mutableStateOf("") }
-        var policyTitle by remember { mutableStateOf("") }
-
-        val mpinController = remember { com.archeGlobal.one.controller.MpinController(context) }
-        // Make hasMpin reactive to changes - don't use remember so it re-evaluates
-        val hasMpin = mpinController.isMpinSet()
-        var selectedLoginMethod by remember { mutableStateOf("OTP") }
-        var showOtpFields by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
-        var enteredMpin by remember { mutableStateOf("") }
-        var mpinError by remember { mutableStateOf<String?>(null) }
-        val focusRequesters = List(4) { remember { androidx.compose.ui.focus.FocusRequester() } }
-        var focusedIndex by remember { mutableStateOf(-1) }
-        var isVerifyingMpin by remember { mutableStateOf(false) }
-
-        var showOtpButton by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
-        var isDifferentUserMode by remember { mutableStateOf(forceDifferentUserMode) }
-
-        var termsAccepted by remember { mutableStateOf(false) }
-        var showTermsDialog by remember { mutableStateOf(false) }
-
-        // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-        LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode) {
-            // If forceOriginalLogin is true, always show original login form
-            if (forceOriginalLogin) {
-                showOtpButton = true
-                selectedLoginMethod = "OTP"
-                showOtpFields = true
-                isDifferentUserMode = false
-            } else {
-                // Show OTP button only for first-time users or different users
-                showOtpButton = firstTimeLogin || isDifferentUserMode
-
-                if (firstTimeLogin || isDifferentUserMode) {
-                    selectedLoginMethod = "OTP"
-                    showOtpFields = true
-                } else if (hasMpin) {
-                    // For existing users, default to MPIN if available
-                    selectedLoginMethod = "MPIN"
-                    showOtpFields = false
-                } else if (showBiometricButton) {
-                    // If biometric is available, default to Fingerprint
-                    selectedLoginMethod = "Fingerprint"
-                    showOtpFields = false
-                } else {
-                    // Default to MFA for existing users without MPIN or biometric
-                    selectedLoginMethod = "MFA"
-                    showOtpFields = false
-                }
-            }
-        }
-
-        // Show Toast message for errors
-        LaunchedEffect(errorMessage) {
-            errorMessage?.let {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-                errorMessage = null
-            }
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
@@ -429,7 +440,11 @@ fun LoginScreen(
                     // Mobile Number Field
                     OutlinedTextField(
                         value = mobile,
-                        onValueChange = { mobile = it },
+                        onValueChange = {
+                            if (it.all { char -> char.isDigit() }) {
+                                mobile = it
+                            }
+                        },
                         placeholder = { Text("Mobile No") },
                         modifier = Modifier
                             .fillMaxWidth(0.97f)
@@ -448,7 +463,10 @@ fun LoginScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal
                         ),
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Number
+                        ),
                         keyboardActions = KeyboardActions.Default,
                         shape = MaterialTheme.shapes.medium,
                         visualTransformation = if (mobileVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -617,7 +635,6 @@ fun LoginScreen(
                     }
                 }
 
-                // Biometric login button (only if selected)
                 if (selectedLoginMethod == "Fingerprint" && showBiometricButton && !firstTimeLogin) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
@@ -985,7 +1002,8 @@ fun LoginScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(0.97f)
-                        .padding(top = 10.dp),
+                        .padding(top = 10.dp)
+                        .padding(bottom = 15.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
