@@ -1,6 +1,7 @@
 package com.archeGlobal.one
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -33,6 +34,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.XOneTheme
 import org.json.JSONObject
+import android.net.http.SslError
+import android.webkit.SslErrorHandler
 
 class WebViewActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -320,9 +323,33 @@ class WebViewActivity : ComponentActivity() {
                                                     return false
                                                 }
 
-                                                override fun onReceivedSslError(view: WebView, handler: android.webkit.SslErrorHandler, error: android.net.http.SslError) {
-                                                    Log.d("WebViewActivity", "SSL Error: ${error.primaryError}")
-                                                    handler.proceed()
+                                                override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+                                                    Log.e("WebViewActivity", "SSL Error: ${error.primaryError} on URL: ${error.url}")
+
+                                                    // Create an alert dialog to inform the user
+                                                    val builder = AlertDialog.Builder(context)
+                                                    builder.setTitle("SSL Certificate Error")
+
+                                                    // Customize message based on the type of SSL error
+                                                    val errorMessage = when (error.primaryError) {
+                                                        SslError.SSL_NOTYETVALID -> "The certificate is not yet valid."
+                                                        SslError.SSL_EXPIRED -> "The certificate has expired."
+                                                        SslError.SSL_IDMISMATCH -> "The certificate hostname does not match."
+                                                        SslError.SSL_UNTRUSTED -> "The certificate authority is not trusted."
+                                                        SslError.SSL_DATE_INVALID -> "The certificate date is invalid."
+                                                        else -> "An unknown SSL error occurred."
+                                                    }
+
+                                                    builder.setMessage("A security issue was detected with the website's SSL certificate: $errorMessage\n\nDo you want to proceed anyway? (Not recommended)")
+                                                    builder.setPositiveButton("Proceed") { _, _ ->
+                                                        handler.proceed() // Allow the user to proceed (use with caution)
+                                                    }
+                                                    builder.setNegativeButton("Cancel") { _, _ ->
+                                                        handler.cancel() // Cancel the request
+                                                        Toast.makeText(context, "Connection aborted due to SSL error.", Toast.LENGTH_LONG).show()
+                                                    }
+                                                    builder.setCancelable(false) // Prevent dismissing the dialog without a choice
+                                                    builder.show()
                                                 }
 
                                                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
@@ -475,7 +502,7 @@ class WebViewActivity : ComponentActivity() {
                                                                                 <body>
                                                                                     <div class="container">
                                                                                         <div class="header">Document Response</div>
-                                                                                        <div class="content">${htmlErrorContent.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")}</div>
+                                                                                        <div class="content">${htmlErrorContent.replace("<", "<").replace(">", ">").replace("\n", "<br>")}</div>
                                                                                         <div class="message">
                                                                                             ⚠️ No document found for $documentTitle<br>
                                                                                             Please upload the document to view it here.
