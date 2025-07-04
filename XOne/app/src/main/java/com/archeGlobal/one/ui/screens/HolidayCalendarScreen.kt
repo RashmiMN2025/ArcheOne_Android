@@ -153,18 +153,18 @@ fun HolidayCalendarScreen(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.List,
+                                painter = painterResource(R.drawable.holiday_list) ,
                                 contentDescription = "Holiday List",
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                             Text(
                                 "Holiday List",
                                 color = Color.White,
-                                fontSize = 14.sp,
+                                fontSize = 15.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal
                             )

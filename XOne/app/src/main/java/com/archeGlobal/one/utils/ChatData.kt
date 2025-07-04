@@ -60,19 +60,17 @@ class ChatData private constructor() {
         FAQItem(
             title = "Travel requests",
             question = "How do I raise a Travel request?",
-            answer = """
-                 Navigate to the Home screen and select 'Travel' under MyApps. You should then be able to view the request submission form.
-                 
-                 Things to note:
-                 
-                 1. Travel requests must be submitted at least two weeks before the departure date.
-                 2. The approval email is sent to your Line Manager.
-                 3. A valid project name and business justification must be provided.
-                 
-                 In case of an urgent travel request or for other queries, please reach out to traveldesk@arche.global.
-                 
-                 You can also check out the Revised Travel Reimbursement Policy under the Policy Service.
-                 """
+            answer = """Navigate to the Home screen and select 'Travel' under MyApps. You should then be able to view the request submission form.
+
+Things to note:
+
+1. Travel requests must be submitted at least two weeks before the departure date.
+2. The approval email is sent to your Line Manager.
+3. A valid project name and business justification must be provided.
+
+In case of an urgent travel request or for other queries, please reach out to traveldesk@arche.global.
+
+You can also check out the Revised Travel Reimbursement Policy under the Policy Service."""
         ),
 
         FAQItem(
@@ -118,42 +116,36 @@ class ChatData private constructor() {
             FAQItem(
                 title = "",
                 question = "How do I stay updated with company news and announcements?",
-                answer = """
-                To access company-related content through the application, please follow these steps:
-                1. Click 'Connect': Find this in the app's main menu.
-                2. Access Content: Navigate to case studies, blogs, and company posts.
-                3. Stay Updated: Explore and engage with the latest updates and insights.
-                """
+                answer = """To access company-related content through the application, please follow these steps:
+1. Click 'Connect': Find this in the app's main menu.
+2. Access Content: Navigate to case studies, blogs, and company posts.
+3. Stay Updated: Explore and engage with the latest updates and insights."""
             )
         ),
         "feedback, anonymous,sos" to listOf(
             FAQItem(
                 title = "",
                 question = "How can I provide anonymous feedback?",
-                answer = """
-                To provide anonymous feedback through the application, please follow these steps:
-                1. Go to 'SOS': Click the 'SOS' option in the app menu.
-                2. Raise a Concern: Select 'Raise a Concern' under 'SOS.'
-                3. Pick a Category: Choose a category for your concern.
-                4. Describe: Provide a detailed issue description.
-                5. Submit Anonymously: Use the anonymous submission option if preferred.
-                """
+                answer = """To provide anonymous feedback through the application, please follow these steps:
+1. Go to 'SOS': Click the 'SOS' option in the app menu.
+2. Raise a Concern: Select 'Raise a Concern' under 'SOS.'
+3. Pick a Category: Choose a category for your concern.
+4. Describe: Provide a detailed issue description.
+5. Submit Anonymously: Use the anonymous submission option if preferred."""
             )
         ),
         "issues, concerns" to listOf(
             FAQItem(
                 title = "",
                 question = "What is the process for reporting workplace issues or concerns?",
-                answer = """
-                To report an issue through the application, please follow these steps:
-                1. Go to 'SOS': Click on 'SOS' in the app menu.
-                2. Raise a Concern: Choose 'Raise a Concern.'
-                3. Pick a Category: Select a relevant category.
-                4. Describe: Provide details about your issue or feedback.
-                Submit:
-                - With Name: Skip the anonymous option to include your details.
-                - Anonymously: Choose 'Submit Anonymously' to stay anonymous.
-                """
+                answer = """To report an issue through the application, please follow these steps:
+1. Go to 'SOS': Click on 'SOS' in the app menu.
+2. Raise a Concern: Choose 'Raise a Concern.'
+3. Pick a Category: Select a relevant category.
+4. Describe: Provide details about your issue or feedback.
+Submit:
+- With Name: Skip the anonymous option to include your details.
+- Anonymously: Choose 'Submit Anonymously' to stay anonymous."""
             )
         ),
         "schedule, work" to listOf(

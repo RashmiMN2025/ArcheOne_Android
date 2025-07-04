@@ -1221,7 +1221,7 @@ fun MilestoneDetailsBox(
                         modifier = Modifier.padding(start = 12.dp)
                     ) {
                         Text(
-                            text = "Original Date: ",
+                            text = "Milestone Date: ",
                             color = Color.Gray,
                             fontSize = 12.sp
                         )
