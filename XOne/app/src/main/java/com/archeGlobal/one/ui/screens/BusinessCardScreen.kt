@@ -193,12 +193,16 @@ fun BusinessCardScreen(
                     hasMultipleLocations = false
                 )
             } else {
-                // Fallback to the original location string if no match found
+                // Custom location - use Bangalore as fallback address for the back side
+                val bangaloreOffice = indiaOffice?.regionaloffice?.find { office ->
+                    office.region.contains("Bangalore", ignoreCase = true)
+                }
+                
                 LocationInfo(
-                    name = "",
-                    companyName = "",
-                    address = businessCard.location,
-                    email = "",
+                    name = userLocation, // Keep custom location name for front side
+                    companyName = bangaloreOffice?.companyName ?: "Arche Global Pvt Ltd",
+                    address = bangaloreOffice?.address ?: "Bangalore", // Use Bangalore address for back side
+                    email = bangaloreOffice?.email ?: indiaOffice?.email ?: "",
                     hasMultipleLocations = false
                 )
             }
@@ -564,7 +568,7 @@ fun BusinessCardScreen(
                     ) {
                         Text(
                             text = "Edit Card",
-                            fontSize = 25.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
@@ -575,8 +579,7 @@ fun BusinessCardScreen(
                         // Location field with dropdown
                         val offices = OtpVerificationController.getOfficesData()
                         var expanded by remember { mutableStateOf(false) }
-                        var selectedLocation by remember { mutableStateOf(businessCard.location) }
-
+                        
                         // Get all available locations
                         val locations = mutableListOf<String>()
                         offices?.forEach { office ->
@@ -588,23 +591,30 @@ fun BusinessCardScreen(
 
                         // Add "Other" option
                         locations.add("Other")
-
-                        Text(
-                            text = "Location",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
+                        
+                        // Check if current location is a custom location (not in predefined list)
+                        val isCurrentLocationCustom = !locations.contains(businessCard.location)
+                        
+                        var selectedLocation by remember { mutableStateOf(
+                            if (isCurrentLocationCustom) "Other" else businessCard.location
+                        ) }
+                        var isOtherSelected by remember { mutableStateOf(isCurrentLocationCustom) }
+                        
+                        // Initialize custom location with current location if it's custom
+                        var customLocation by remember { mutableStateOf(
+                            if (isCurrentLocationCustom) businessCard.location else ""
+                        ) }
 
                         Box {
                             OutlinedTextField(
                                 value = selectedLocation,
                                 onValueChange = {
                                     selectedLocation = it
-                                    newLocation = it
+                                    if (!isOtherSelected) {
+                                        newLocation = it
+                                    }
                                 },
-                                readOnly = expanded,
+                                readOnly = true,
                                 trailingIcon = {
                                     IconButton(onClick = { expanded = !expanded }) {
                                         Icon(
@@ -653,16 +663,11 @@ fun BusinessCardScreen(
                                             )
                                         },
                                         onClick = {
+                                            selectedLocation = location
                                             if (location == "Other") {
-                                                selectedLocation = "Bangalore"
-                                                newLocation = "Bangalore"
-                                                Toast.makeText(
-                                                    context,
-                                                    "Using default location: Bangalore",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                                isOtherSelected = true
                                             } else {
-                                                selectedLocation = location
+                                                isOtherSelected = false
                                                 newLocation = location
                                             }
                                             expanded = false
@@ -681,19 +686,38 @@ fun BusinessCardScreen(
                             }
                         }
 
+                        // Show custom location field when "Other" is selected
+                        if (isOtherSelected) {
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            OutlinedTextField(
+                                value = customLocation,
+                                onValueChange = { 
+                                    customLocation = it
+                                    newLocation = it
+                                },
+                                placeholder = { Text("Enter custom location", color = Color.Gray) },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    cursorColor = Color.Black,
+                                    focusedIndicatorColor = Color.Black,
+                                    unfocusedIndicatorColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Gray,
+                                    unfocusedPlaceholderColor = Color.Gray
+                                )
+                            )
+                        }
+
                         // Only show phone number field if user has permission
                         if (canEditPhone) {
                             Spacer(modifier = Modifier.height(16.dp))
 
                             // Phone number field
-                            Text(
-                                text = "Phone Number",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-
                             OutlinedTextField(
                                 value = newPhone,
                                 onValueChange = { newPhone = it },
@@ -716,26 +740,55 @@ fun BusinessCardScreen(
                     }
                 },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            // If user can't edit phone, pass the existing phone number
-                            if (canEditPhone) {
-                                controller.onCardUpdated(newLocation, newPhone)
-                            } else {
-                                controller.onCardUpdated(newLocation, businessCard.phone)
-                            }
-                        }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Save", color = Color(0xFFDD3825))
+                        Button(
+                            onClick = { controller.showEditCardDialog.value = false },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF9E9E9E),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(24.dp)
+                        ) {
+                            Text(
+                                "Cancel",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                // If user can't edit phone, pass the existing phone number
+                                if (canEditPhone) {
+                                    controller.onCardUpdated(newLocation, newPhone)
+                                } else {
+                                    controller.onCardUpdated(newLocation, businessCard.phone)
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(24.dp)
+                        ) {
+                            Text(
+                                "Save",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 },
-                dismissButton = {
-                    TextButton(
-                        onClick = { controller.showEditCardDialog.value = false }
-                    ) {
-                        Text("Cancel", color = Color.Gray)
-                    }
-                }
+                dismissButton = null
             )
         }
     }

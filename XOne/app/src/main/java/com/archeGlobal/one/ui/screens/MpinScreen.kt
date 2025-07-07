@@ -325,7 +325,11 @@ fun MpinScreen(
                         Spacer(modifier = Modifier.height(11.dp))
                         OutlinedTextField(
                             value = resetAnswer,
-                            onValueChange = { resetAnswer = it },
+                            onValueChange = { newValue ->
+                                if (newValue.length <= 20 && !newValue.contains('\n')) {
+                                    resetAnswer = newValue
+                                }
+                            },
                             placeholder = {
                                 Text(
                                     "Answer",
@@ -351,7 +355,10 @@ fun MpinScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal
                             ),
-                            keyboardOptions = KeyboardOptions.Default,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                            ),
                             shape = MaterialTheme.shapes.medium,
                             visualTransformation = if (showAnswer.getOrNull(0) == true) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
@@ -692,7 +699,9 @@ fun MpinScreen(
                             OutlinedTextField(
                                 value = answers[i],
                                 onValueChange = { newValue ->
-                                    answers = answers.toMutableList().also { it[i] = newValue }
+                                    if (newValue.length <= 20 && !newValue.contains('\n')) {
+                                        answers = answers.toMutableList().also { it[i] = newValue }
+                                    }
                                 },
                                 placeholder = {
                                     Text(
@@ -719,7 +728,10 @@ fun MpinScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal
                                 ),
-                                keyboardOptions = KeyboardOptions.Default,
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                                ),
                                 shape = MaterialTheme.shapes.medium,
                                 visualTransformation = if (showAnswer.getOrNull(i) == true) VisualTransformation.None else PasswordVisualTransformation(),
                                 trailingIcon = {
