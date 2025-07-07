@@ -22,8 +22,10 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Controller for the Travel screens following MVC architecture
@@ -59,9 +61,13 @@ class TravelController(private val navigator: Navigator, private val context: Co
         data class Error(val message: String) : TravelApprovalActionState()
     }
 
-    // Date formatters
-    private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    // Date formatters - Using IST timezone to match Indian Standard Time
+    private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+    }
+    private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+    }
 
     // UI state
     var travelHistoryState by mutableStateOf<TravelHistoryState>(TravelHistoryState.Loading)
@@ -132,8 +138,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
     var isTransportDropdownExpanded by mutableStateOf(false)
         private set
 
-    // Initialize with current date
-    private val currentDateFormatter = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
+    // Initialize with current date - Using consistent format and IST timezone
+    private val currentDateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+    }
     private val currentDate = currentDateFormatter.format(Date())
 
     var departureDate by mutableStateOf(currentDate)
@@ -756,6 +764,20 @@ class TravelController(private val navigator: Navigator, private val context: Co
     }
 
     /**
+     * Update departure date from date picker millis to avoid timezone issues
+     */
+    fun updateDepartureDateFromMillis(millis: Long) {
+        departureDate = convertMillisToDisplayDateFormat(millis)
+    }
+
+    /**
+     * Update arrival date from date picker millis to avoid timezone issues
+     */
+    fun updateArrivalDateFromMillis(millis: Long) {
+        arrivalDate = convertMillisToDisplayDateFormat(millis)
+    }
+
+    /**
      * Update flight time preference field
      */
     fun updateFlightTimePreference(value: String) {
@@ -869,14 +891,57 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
     /**
      * Convert display date format (dd MMM yyyy) to API date format (yyyy-MM-dd)
+     * Add one day to compensate for the API's timezone conversion bug
      */
     private fun convertToApiDateFormat(displayDate: String): String {
         return try {
             val date = displayDateFormat.parse(displayDate)
-            date?.let { apiDateFormat.format(it) } ?: displayDate
+            if (date != null) {
+                // Add one day to compensate for API timezone bug
+                val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"))
+                calendar.time = date
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+                
+                val apiDate = apiDateFormat.format(calendar.time)
+                Log.d("TravelController", "Converting display date '$displayDate' to API date: '$apiDate' (added 1 day to compensate for API timezone bug)")
+                apiDate
+            } else {
+                displayDate
+            }
         } catch (e: Exception) {
             Log.e("TravelController", "Error converting date format", e)
             displayDate // Return original if parsing fails
+        }
+    }
+
+    /**
+     * Convert millis directly to API date format to avoid timezone issues
+     * This method fixes the 1-day shift bug by avoiding string parsing and using IST timezone
+     */
+    private fun convertMillisToApiDateFormat(millis: Long): String {
+        return try {
+            val date = Date(millis)
+            apiDateFormat.format(date)
+        } catch (e: Exception) {
+            Log.e("TravelController", "Error converting millis to API date format", e)
+            // Fallback to current date
+            apiDateFormat.format(Date())
+        }
+    }
+
+    /**
+     * Convert millis directly to display date format
+     */
+    private fun convertMillisToDisplayDateFormat(millis: Long): String {
+        return try {
+            val date = Date(millis)
+            val formattedDate = displayDateFormat.format(date)
+            Log.d("TravelController", "Converting millis $millis to display date: $formattedDate")
+            formattedDate
+        } catch (e: Exception) {
+            Log.e("TravelController", "Error converting millis to display date format", e)
+            // Fallback to current date
+            displayDateFormat.format(Date())
         }
     }
 
@@ -897,6 +962,17 @@ class TravelController(private val navigator: Navigator, private val context: Co
             else -> flightTimePreference
         }
 
+        // Convert dates to API format
+        val apiDepartureDate = convertToApiDateFormat(departureDate)
+        val apiArrivalDate = convertToApiDateFormat(arrivalDate)
+        
+        // Log the final dates being sent to API
+        Log.d("TravelController", "Submitting travel request with:")
+        Log.d("TravelController", "  Display departure date: $departureDate")
+        Log.d("TravelController", "  API departure date: $apiDepartureDate")
+        Log.d("TravelController", "  Display arrival date: $arrivalDate")
+        Log.d("TravelController", "  API arrival date: $apiArrivalDate")
+
         // Create travel request submission object
         val travelRequest = TravelRequestSubmission(
             employeeId = employeeId,
@@ -907,8 +983,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
             projectName = projectName,
             businessJustification = businessJustification,
             modeOfTransport = modeOfTransport,
-            departureDate = convertToApiDateFormat(departureDate),
-            arrivalDate = convertToApiDateFormat(arrivalDate),
+            departureDate = apiDepartureDate,
+            arrivalDate = apiArrivalDate,
             reportingManagerName = reportingManagerName,
             reportingManagerEmail = reportingManagerEmail,
             grade = employeeGrade,

@@ -119,14 +119,22 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 // Go back after successful submission
                 onBackPressed()
             } else {
+                // Show user-friendly error message for failed submissions
                 Toast.makeText(
                     context,
-                    "Error: ${response.message() ?: "Unknown error"}",
+                    "Unable to submit your concern. Please try again.",
                     Toast.LENGTH_SHORT
                 ).show()
+                Log.e("RaiseConcern", "Server error: ${response.message()}")
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            // Show user-friendly error message for network/other errors
+            Toast.makeText(
+                context, 
+                "Unable to submit your concern. Please check your internet connection and try again.",
+                Toast.LENGTH_SHORT
+            ).show()
+            Log.e("RaiseConcern", "Exception during submission: ${e.message}")
         } finally {
             isSubmitting = false
         }

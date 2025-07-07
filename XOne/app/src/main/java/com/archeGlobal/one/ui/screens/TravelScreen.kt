@@ -60,8 +60,10 @@ fun TravelScreen(
     var showDepartureDatePicker by remember { mutableStateOf(false) }
     var showArrivalDatePicker by remember { mutableStateOf(false) }
 
-    // Date format for display
-    val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    // Date format for display - Using IST timezone to match Indian Standard Time
+    val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -447,12 +449,7 @@ fun TravelScreen(
                                         confirmButton = {
                                             TextButton(onClick = {
                                                 datePickerState.selectedDateMillis?.let { millis ->
-                                                    val date = Date(millis)
-                                                    controller.updateDepartureDate(
-                                                        dateFormatter.format(
-                                                            date
-                                                        )
-                                                    )
+                                                    controller.updateDepartureDateFromMillis(millis)
                                                 }
                                                 showDepartureDatePicker = false
                                             }) {
@@ -533,12 +530,7 @@ fun TravelScreen(
                                         confirmButton = {
                                             TextButton(onClick = {
                                                 datePickerState.selectedDateMillis?.let { millis ->
-                                                    val date = Date(millis)
-                                                    controller.updateArrivalDate(
-                                                        dateFormatter.format(
-                                                            date
-                                                        )
-                                                    )
+                                                    controller.updateArrivalDateFromMillis(millis)
                                                 }
                                                 showArrivalDatePicker = false
                                             }) {
