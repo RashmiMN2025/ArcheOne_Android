@@ -50,6 +50,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -442,7 +443,19 @@ fun TravelScreen(
                                 if (showDepartureDatePicker) {
                                     val datePickerState = rememberDatePickerState(
                                         initialDisplayMode = DisplayMode.Picker,
-                                        initialSelectedDateMillis = System.currentTimeMillis()
+                                        initialSelectedDateMillis = System.currentTimeMillis(),
+                                        selectableDates = object : androidx.compose.material3.SelectableDates {
+                                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                                // Only allow dates from today onwards
+                                                val today = Calendar.getInstance().apply {
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.timeInMillis
+                                                return utcTimeMillis >= today
+                                            }
+                                        }
                                     )
                                     DatePickerDialog(
                                         onDismissRequest = { showDepartureDatePicker = false },
@@ -523,7 +536,19 @@ fun TravelScreen(
                                 if (showArrivalDatePicker) {
                                     val datePickerState = rememberDatePickerState(
                                         initialDisplayMode = DisplayMode.Picker,
-                                        initialSelectedDateMillis = System.currentTimeMillis()
+                                        initialSelectedDateMillis = System.currentTimeMillis(),
+                                        selectableDates = object : androidx.compose.material3.SelectableDates {
+                                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                                // Only allow dates from today onwards
+                                                val today = Calendar.getInstance().apply {
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.timeInMillis
+                                                return utcTimeMillis >= today
+                                            }
+                                        }
                                     )
                                     DatePickerDialog(
                                         onDismissRequest = { showArrivalDatePicker = false },
