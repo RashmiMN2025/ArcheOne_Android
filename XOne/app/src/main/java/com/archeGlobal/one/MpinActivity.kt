@@ -28,18 +28,35 @@ class MpinActivity : ComponentActivity() {
                         if (!isReset) {
                             com.archeGlobal.one.utils.MpinManager.saveSecurityQuestions(this, questions)
                         }
-                        // Pass all data to HomeActivity
-                        val intent = android.content.Intent(this, com.archeGlobal.one.HomeActivity::class.java).apply {
-                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            putExtra("email", email)
-                            putExtra("mobile", mobile)
-                            putExtra("employeeId", employeeId)
-                            putExtra("token", token)
-                            putExtra("mpin", mpin)
-                            putExtra("fromMpin", true)
+                        val token = intent.getStringExtra("token") ?: ""
+                        val email = intent.getStringExtra("email") ?: ""
+                        val mobile = intent.getStringExtra("mobile") ?: ""
+                        val employeeId = intent.getStringExtra("employeeId") ?: ""
+
+                        // Fetch user data using the token and save it
+                        val loginController = com.archeGlobal.one.controller.LoginController(this, com.archeGlobal.one.navigation.AndroidNavigator(this))
+                        loginController.loginWithToken(token, email, mobile, employeeId) { msg, isError ->
+                            if (!isError) {
+                                // Only after successful login, save user data and set login state
+                                val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(this)
+                                userDataManager.setIsLoggedIn(true)
+                                userDataManager.setHasLoggedIn(true)
+                                com.archeGlobal.one.utils.setFirstTimeLogin(this, false)
+                                // userDataManager.saveUserDataFromResponse(...) // If not already done in LoginController
+                            }
+                            // Pass all data to HomeActivity
+                            val intent = android.content.Intent(this, com.archeGlobal.one.HomeActivity::class.java).apply {
+                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                putExtra("email", email)
+                                putExtra("mobile", mobile)
+                                putExtra("employeeId", employeeId)
+                                putExtra("token", token)
+                                putExtra("mpin", mpin)
+                                putExtra("fromMpin", true)
+                            }
+                            startActivity(intent)
+                            finish()
                         }
-                        startActivity(intent)
-                        finish()
                     },
                     onForgotMpin = {
                         finish()

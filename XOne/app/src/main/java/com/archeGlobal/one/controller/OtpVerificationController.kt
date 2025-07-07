@@ -46,7 +46,20 @@ class OtpVerificationController(
                             if (!isError) {
                                 // Instead of navigating to Home, go to MPIN setup
                                 if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                    navigator.navigateToMpinSetup(email, mobile, employeeId, token)
+                                    val mpinController = com.archeGlobal.one.controller.MpinController(context)
+                                    if (mpinController.isMpinSet()) {
+                                        // MPIN already set, go directly to Home and set fromLogin=true
+                                        navigator.navigateToHome(
+                                            true,    // fromOtp (set to true to indicate login just happened)
+                                            true, // <-- this extra is important for fingerprint prompt
+                                            email = email,
+                                            mobile = mobile,
+                                            employeeId = employeeId
+                                        )
+                                    } else {
+                                        // MPIN not set, go to MPIN setup
+                                        navigator.navigateToMpinSetup(email, mobile, employeeId, token)
+                                    }
                                 }
                             }
                             callback(msg, isError)
@@ -128,33 +141,15 @@ class OtpVerificationController(
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && responseBody != null && responseBody.status == 200) {
-                        // Log event data presence in the response
-                        Log.d("LoginProcess", "Login successful, event data present: ${responseBody.eventData != null}")
-                        if (responseBody.eventData != null) {
-                            Log.d("LoginProcess", "Event data details: Name=${responseBody.eventData?.title}, Image=${responseBody.eventData?.image}")
-                        }
-
-                        // Save all user data through the centralized UserDataManager
-                        userDataManager.saveUserDataFromResponse(responseBody, token)
-
-                        // --- ADD THESE LINES: ---
-                        userDataManager.setIsLoggedIn(true)
-                        userDataManager.setHasLoggedIn(true)
-
-                        // Only set firstTimeLogin to false when user actually successfully logs in
-                        com.archeGlobal.one.utils.setFirstTimeLogin(context, false)
-
-                        Log.d("LoginProcess", "Login successful")
-                        callback("Login successful", false)
-
+                        // Just pass the token forward
                         if (!fromHome && shouldNavigateToHome) {
-                            // Pass biometric setup flag to HomeActivity
                             if (fromOtp) {
                                 navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
                             } else {
                                 navigator.navigateToHome(fromOtp)
                             }
                         }
+                        callback("Login successful", false)
                     } else {
                         val errorBody = response.errorBody()?.string() ?: "Unknown error"
                         Log.e("LoginProcess", "Login failed: $errorBody")

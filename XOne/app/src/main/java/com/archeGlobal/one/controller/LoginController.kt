@@ -93,10 +93,6 @@ class LoginController(
                 withContext(Dispatchers.Main) {
                     when {
                         response.isSuccessful && responseBody != null -> {
-                            // Save user data here!
-                            UserDataManager.getInstance(context).saveUserDataFromResponse(responseBody, token)
-                            UserDataManager.getInstance(context).setIsLoggedIn(true)
-                            UserDataManager.getInstance(context).setHasLoggedIn(true)
 
                             // Check if MPIN is already set up before navigating
                             val mpinController = com.archeGlobal.one.controller.MpinController(context)
@@ -108,7 +104,10 @@ class LoginController(
                                     navigator.navigateToMpinSetup(email, mobile, employeeId, token)
                                 } else {
                                     // MPIN already set, go directly to home
-                                    navigator.navigateToHome(false)
+                                    UserDataManager.getInstance(context).saveUserDataFromResponse(responseBody, token)
+                                    UserDataManager.getInstance(context).setIsLoggedIn(true)
+                                    UserDataManager.getInstance(context).setHasLoggedIn(true)
+                                    navigator.navigateToHome(true, true, email, mobile, employeeId)
                                 }
                             }
                             callback("Login successful", false)

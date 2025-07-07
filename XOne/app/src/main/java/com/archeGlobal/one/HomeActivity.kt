@@ -115,15 +115,10 @@ class HomeActivity : AppCompatActivity() {
 
         // If MPIN is not set and we're NOT coming from login, redirect to MPIN setup
         // Users coming from login should not be forced to set up MPIN
-        if (!com.archeGlobal.one.utils.MpinManager.checkMpinExists(this) && !fromLogin) {
-            val email = intent.getStringExtra("email") ?: userDataManager.getUserData()?.email ?: ""
-            val mobile = intent.getStringExtra("mobile") ?: userDataManager.getUserData()?.mobile ?: ""
-            val employeeId = intent.getStringExtra("employeeId") ?: userDataManager.getUserData()?.employeeId ?: ""
-            val mpinIntent = android.content.Intent(this, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
-            mpinIntent.putExtra("email", email)
-            mpinIntent.putExtra("mobile", mobile)
-            mpinIntent.putExtra("employeeId", employeeId)
-            startActivity(mpinIntent)
+        if (!com.archeGlobal.one.utils.MpinManager.checkMpinExists(this)) {
+            val loginIntent = android.content.Intent(this, com.archeGlobal.one.LoginActivity::class.java)
+            loginIntent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(loginIntent)
             finish()
             return
         }
@@ -151,7 +146,7 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        if (fromMpin && !biometricPromptShown) {
+        if ((fromMpin || fromLogin) && !biometricPromptShown) {
             biometricPromptShown = true
             val biometricHelper = com.archeGlobal.one.utils.BiometricHelper(this)
             if (biometricHelper.canUseBiometric() && !biometricHelper.isBiometricEnabled()) {
