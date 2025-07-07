@@ -125,7 +125,7 @@ fun SOSScreen(
 
                                 SOSButton(
                                     text = "SOS Call",
-                                    onClick = { controller.makeSOSCall("7397768656") }
+                                    onClick = { controller.makeSOSCall() }
                                 )
                                 SOSButton(
                                     text = "Raise a Concern",
@@ -277,7 +277,7 @@ fun SOSScreen(
 
                             SOSButton(
                                 text = "SOS Call",
-                                onClick = { controller.makeSOSCall("7397768656") }
+                                onClick = { controller.makeSOSCall() }
                             )
                             SOSButton(
                                 text = "Raise a Concern",
