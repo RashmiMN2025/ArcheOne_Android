@@ -338,6 +338,9 @@ class ProfileController(
         // Only clear login state, not all user data
         userDataManager.setIsLoggedIn(false)
         userDataManager.setHasLoggedIn(true)
+        // Remove token from preferences
+        userDataManager.preferencesManager.clearAuthToken()
+        // Navigate to login screen WITHOUT token
         navigator.navigateToLoginScreen()
     }
 

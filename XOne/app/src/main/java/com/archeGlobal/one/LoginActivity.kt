@@ -25,6 +25,11 @@ class LoginActivity : AppCompatActivity() {
         val forceOriginalLogin = intent.getBooleanExtra("forceOriginalLogin", false)
         val forceDifferentUserMode = intent.getBooleanExtra("forceDifferentUserMode", false)
 
+        val mpinController = com.archeGlobal.one.controller.MpinController(this)
+        val hasMpin = mpinController.isMpinSet()
+
+        val forceOriginalLoginFinal = !hasMpin || forceOriginalLogin
+
         // Handle back press in login screen - exit app instead of going back
         onBackPressedDispatcher.addCallback(
             this,
@@ -41,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
                 ResponsiveLoginScreen(
                     controller = loginController,
                     navigator = navigator,
-                    forceOriginalLogin = forceOriginalLogin,
+                    forceOriginalLogin = forceOriginalLoginFinal,
                     forceDifferentUserMode = forceDifferentUserMode
                 )
             }
