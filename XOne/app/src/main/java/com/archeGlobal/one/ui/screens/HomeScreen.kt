@@ -1,6 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -1089,7 +1091,45 @@ fun HomeScreenContent(
                                             tint = Color(0xFFFFD700),
                                             modifier = Modifier
                                                 .size(45.dp)
-                                                .clickable { rating = i }
+                                                .clickable { 
+                                                    rating = i
+                                                    // If 4 or 5 stars selected, redirect to Play Store immediately
+                                                    if (i >= 4) {
+                                                        // Submit feedback first
+                                                        val feedbackRequest = FeedbackRequest(
+                                                            name = employeeData.name,
+                                                            email = employeeData.email,
+                                                            category = "App rating",
+                                                            feedback = null,
+                                                            rating = i,
+                                                            platform = "Android",
+                                                            deviceName = android.os.Build.MODEL,
+                                                            version = android.os.Build.VERSION.RELEASE
+                                                        )
+                                                        
+                                                        // Submit feedback in background
+                                                        CoroutineScope(Dispatchers.IO).launch {
+                                                            try {
+                                                                apiService.submitFeedback(feedbackRequest)
+                                                            } catch (e: Exception) {
+                                                                // Log error but don't show to user
+                                                            }
+                                                        }
+                                                        
+                                                        // Redirect to Play Store immediately
+                                                        try {
+                                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.archeGlobal.one"))
+                                                            context.startActivity(intent)
+                                                        } catch (e: Exception) {
+                                                            Toast.makeText(context, "Unable to open Play Store", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                        
+                                                        // Close dialog
+                                                        showRatingDialog = false
+                                                        rating = 0
+                                                        feedbackText = ""
+                                                    }
+                                                }
                                                 .padding(4.dp)
                                         )
                                     }
@@ -1136,12 +1176,12 @@ fun HomeScreenContent(
                                         }
                                         isSubmitting = true
 
-                                        // Prepare request
+                                        // Prepare request (only for 1-3 star ratings, 4-5 stars are handled on selection)
                                         val feedbackRequest = FeedbackRequest(
                                             name = employeeData.name,
                                             email = employeeData.email,
                                             category = "App rating",
-                                            feedback = if (rating >= 4) null else feedbackText,
+                                            feedback = feedbackText,
                                             rating = rating,
                                             platform = "Android",
                                             deviceName = android.os.Build.MODEL,
