@@ -292,8 +292,9 @@ class WebViewActivity : ComponentActivity() {
                                                 builtInZoomControls = true
                                                 displayZoomControls = false
 
-                                                // Force width to match screen
-                                                layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
+                                                // Force width to match screen and improve text scaling
+                                                layoutAlgorithm = WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING
+                                                textZoom = 100 // Ensure text is readable but not too large
 
                                                 // Additional settings for better rendering
                                                 @SuppressLint("SetJavaScriptEnabled")
@@ -388,6 +389,62 @@ class WebViewActivity : ComponentActivity() {
                                                 override fun onPageFinished(view: WebView?, url: String?) {
                                                     super.onPageFinished(view, url)
                                                     pageLoaded = true
+                                                    isLoading = false
+
+                                                    // Check if this is a blog or case study from arche.global and inject responsive CSS
+                                                    if (url != null && url.contains("arche.global") && (url.contains("/blog/") || url.contains("/case-studies/"))) {
+                                                        view?.evaluateJavascript("""
+                                                            (function() {
+                                                                // Check if viewport meta tag already exists
+                                                                var existingViewport = document.querySelector('meta[name="viewport"]');
+                                                                if (!existingViewport) {
+                                                                    // Create and add viewport meta tag
+                                                                    var meta = document.createElement('meta');
+                                                                    meta.name = 'viewport';
+                                                                    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes';
+                                                                    document.getElementsByTagName('head')[0].appendChild(meta);
+                                                                } else {
+                                                                    // Update existing viewport to be more mobile-friendly
+                                                                    existingViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes';
+                                                                }
+                                                                
+                                                                // Add responsive CSS to ensure content fits screen
+                                                                var style = document.createElement('style');
+                                                                style.innerHTML = `
+                                                                    body {
+                                                                        max-width: 100% !important;
+                                                                        overflow-x: hidden !important;
+                                                                        word-wrap: break-word !important;
+                                                                    }
+                                                                    img {
+                                                                        max-width: 100% !important;
+                                                                        height: auto !important;
+                                                                    }
+                                                                    .container, .content, .main, .wrapper {
+                                                                        max-width: 100% !important;
+                                                                        padding-left: 10px !important;
+                                                                        padding-right: 10px !important;
+                                                                    }
+                                                                    table {
+                                                                        max-width: 100% !important;
+                                                                        table-layout: fixed !important;
+                                                                    }
+                                                                    td, th {
+                                                                        word-wrap: break-word !important;
+                                                                    }
+                                                                    pre {
+                                                                        white-space: pre-wrap !important;
+                                                                        word-wrap: break-word !important;
+                                                                    }
+                                                                    iframe, embed, object {
+                                                                        max-width: 100% !important;
+                                                                    }
+                                                                `;
+                                                                document.getElementsByTagName('head')[0].appendChild(style);
+                                                            })();
+                                                        """, null)
+                                                        Log.d("WebViewActivity", "Injected responsive CSS for blog/case study: $url")
+                                                    }
 
                                                     // Check if this is a UserDocuments screen and if the page contains HTML error content
                                                     val isPersonal = intent.getBooleanExtra("isPersonal", false)

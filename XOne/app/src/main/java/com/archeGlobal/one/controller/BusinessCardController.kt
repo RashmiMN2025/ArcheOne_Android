@@ -86,12 +86,50 @@ class BusinessCardControllerImpl(
     }
 
     private fun formatPhoneNumber(phone: String): String {
-        val cleanPhone = phone.trim()
+        val cleanPhone = phone.trim().replace(" ", "").replace("-", "")
+        
+        if (cleanPhone.isEmpty()) return ""
+        
+        // Remove any non-digit characters except + at the beginning
+        val digitsOnly = if (cleanPhone.startsWith("+")) {
+            "+" + cleanPhone.substring(1).filter { it.isDigit() }
+        } else {
+            cleanPhone.filter { it.isDigit() }
+        }
+        
         return when {
-            cleanPhone.isEmpty() -> ""
-            cleanPhone.startsWith("+91") -> cleanPhone
-            cleanPhone.startsWith("91") -> "+$cleanPhone"
-            else -> "+91$cleanPhone"
+            // Already has +91 prefix
+            digitsOnly.startsWith("+91") -> {
+                val numberPart = digitsOnly.substring(3)
+                when {
+                    numberPart.length == 10 -> digitsOnly // Perfect: +91 + 10 digits = 12 total
+                    numberPart.length < 10 -> "+91" + numberPart.padEnd(10, '0') // Pad with zeros if needed
+                    else -> "+91" + numberPart.take(10) // Truncate if too long
+                }
+            }
+            // Starts with 91 and has exactly 12 digits total (treat 91 as country code)
+            digitsOnly.startsWith("91") && digitsOnly.length == 12 -> {
+                "+$digitsOnly"
+            }
+            // Has exactly 10 digits (complete Indian mobile number)
+            digitsOnly.length == 10 -> {
+                "+91$digitsOnly"
+            }
+            // Starts with 91 but not 12 digits total (91 might be part of the number)
+            digitsOnly.startsWith("91") -> {
+                when {
+                    digitsOnly.length < 10 -> "+91" + digitsOnly.padEnd(10, '0') // Pad with zeros if needed
+                    digitsOnly.length > 10 && digitsOnly.length != 12 -> "+91" + digitsOnly.take(10) // Truncate if too long but not 12 digits
+                    else -> "+91$digitsOnly" // Fallback
+                }
+            }
+            // Any other case
+            else -> {
+                when {
+                    digitsOnly.length < 10 -> "+91" + digitsOnly.padEnd(10, '0') // Pad with zeros if needed
+                    else -> "+91" + digitsOnly.take(10) // Truncate if too long
+                }
+            }
         }
     }
 

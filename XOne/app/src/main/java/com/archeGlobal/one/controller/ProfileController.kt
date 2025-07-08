@@ -1,6 +1,7 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
@@ -37,11 +38,23 @@ class ProfileController(
         Log.d("ProfileController", "Profile picture URL: ${userData?.profilePic}")
     }
 
+    // Function to get the app version dynamically
+    private fun getAppVersion(): String {
+        return try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            "Version ${packageInfo.versionName}"
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.e("ProfileController", "Error getting app version", e)
+            "Version 1.0" // Fallback version
+        }
+    }
+
     var model by mutableStateOf(
         ProfileModel(
             name = userData?.name ?: "",
             email = userData?.email ?: "",
             profilePicture = userData?.profilePic,
+            version = getAppVersion(),
             lastLoginTime = userDataManager.getLastLoginTime()?.let { formatLastLoginTime(it) } ?: ""
         )
     )

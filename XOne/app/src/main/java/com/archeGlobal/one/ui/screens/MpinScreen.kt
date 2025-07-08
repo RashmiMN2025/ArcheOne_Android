@@ -5,8 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
@@ -185,6 +187,7 @@ fun MpinScreen(
     val context = LocalContext.current
     var step by remember { mutableStateOf(0) } // 0: security, 1: mpin
     var error by remember { mutableStateOf<String?>(null) }
+    val scrollState = rememberScrollState()
 
     // For reset: get the two questions set previously
     val savedQuestions = remember {
@@ -245,7 +248,8 @@ fun MpinScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -326,7 +330,13 @@ fun MpinScreen(
                         OutlinedTextField(
                             value = resetAnswer,
                             onValueChange = { newValue ->
-                                if (newValue.length <= 20 && !newValue.contains('\n')) {
+                                // Check validation rules
+                                val hasLeadingSpace = newValue.startsWith(" ")
+                                val hasMoreThan2ConsecutiveSpaces = newValue.contains("   ") // 3 or more spaces
+                                val nonSpaceLength = newValue.replace(" ", "").length
+                                
+                                if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && 
+                                    nonSpaceLength <= 20 && !newValue.contains('\n')) {
                                     resetAnswer = newValue
                                 }
                             },
@@ -699,7 +709,13 @@ fun MpinScreen(
                             OutlinedTextField(
                                 value = answers[i],
                                 onValueChange = { newValue ->
-                                    if (newValue.length <= 20 && !newValue.contains('\n')) {
+                                    // Check validation rules
+                                    val hasLeadingSpace = newValue.startsWith(" ")
+                                    val hasMoreThan2ConsecutiveSpaces = newValue.contains("   ") // 3 or more spaces
+                                    val nonSpaceLength = newValue.replace(" ", "").length
+                                    
+                                    if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && 
+                                        nonSpaceLength <= 20 && !newValue.contains('\n')) {
                                         answers = answers.toMutableList().also { it[i] = newValue }
                                     }
                                 },
@@ -771,7 +787,7 @@ fun MpinScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
+                                text = "Answer must be up to 20 characters (excluding spaces), can include letters or numbers, and is case sensitive. No leading spaces and maximum 2 consecutive spaces allowed.",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -1004,6 +1020,9 @@ fun MpinScreen(
                         }
                     }
                 }
+                
+                // Bottom spacer to ensure content doesn't get cut off
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

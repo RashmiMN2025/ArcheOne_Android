@@ -4,7 +4,7 @@ data class ProfileModel(
     val name: String,
     val email: String,
     val profilePicture: String? = null,
-    val version: String = "Version 1.0",
+    val version: String = "Version 1.0", // This will be dynamically set by the controller
     val lastLoginTime: String = "", // Added last login time
     val menuItems: List<ProfileMenuItem> = listOf(
         ProfileMenuItem("About Me", "person"),
