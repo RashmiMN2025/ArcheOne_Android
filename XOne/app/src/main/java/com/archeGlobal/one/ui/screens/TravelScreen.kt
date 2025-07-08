@@ -466,14 +466,14 @@ fun TravelScreen(
                                                 }
                                                 showDepartureDatePicker = false
                                             }) {
-                                                Text("OK")
+                                                Text("OK", color = Color.White)
                                             }
                                         },
                                         dismissButton = {
                                             TextButton(onClick = {
                                                 showDepartureDatePicker = false
                                             }) {
-                                                Text("Cancel")
+                                                Text("Cancel", color = Color.White)
                                             }
                                         }
                                     ) {
@@ -559,14 +559,14 @@ fun TravelScreen(
                                                 }
                                                 showArrivalDatePicker = false
                                             }) {
-                                                Text("OK")
+                                                Text("OK", color = Color.White)
                                             }
                                         },
                                         dismissButton = {
                                             TextButton(onClick = {
                                                 showArrivalDatePicker = false
                                             }) {
-                                                Text("Cancel")
+                                                Text("Cancel", color = Color.White)
                                             }
                                         }
                                     ) {
