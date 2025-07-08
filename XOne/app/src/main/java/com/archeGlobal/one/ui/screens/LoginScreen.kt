@@ -139,6 +139,17 @@ fun LoginScreen(
 
     val focusManager = LocalFocusManager.current
 
+    var enteredMpinDigits by remember { mutableStateOf(List(4) { "" }) }
+
+    val userData = UserDataManager.getInstance(context).getUserData()
+    LaunchedEffect(Unit) {
+        if (userData != null) {
+            if (email.isEmpty()) email = userData.email ?: ""
+            if (mobile.isEmpty()) mobile = userData.mobile ?: ""
+            if (employeeId.isEmpty()) employeeId = userData.employeeId ?: ""
+        }
+    }
+
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
     LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode) {
         // If forceOriginalLogin is true, always show original login form
@@ -644,28 +655,52 @@ fun LoginScreen(
                                 biometricHelper.showBiometricPrompt(
                                     activity = activity,
                                     onSuccess = {
-                                        biometricHelper.getStoredCredentialsWithToken()?.let { (savedEmail, savedMobile, savedEmployeeId, savedToken) ->
-                                            isLoading = true
-                                            controller.loginWithToken(
-                                                token = savedToken,
-                                                email = savedEmail,
-                                                mobile = savedMobile,
-                                                employeeId = savedEmployeeId
-                                            ) { message, isError ->
-                                                isLoading = false
-                                                if (!isError) {
-                                                    UserDataManager.getInstance(context).setHasLoggedIn(true)
-                                                    setFirstTimeLogin(context, false)
-                                                    firstTimeLogin = false
-                                                    // Navigation is now handled by LoginController.loginWithToken()
+                                        // Get credentials from PreferencesManager
+                                        val prefs = com.archeGlobal.one.utils.PreferencesManager(context)
+                                        val email = prefs.getString("biometric_email", "") ?: ""
+                                        val mobile = prefs.getString("biometric_mobile", "") ?: ""
+                                        val employeeId = prefs.getString("biometric_employee_id", "") ?: ""
+
+                                        if (email.isBlank() || mobile.isBlank() || employeeId.isBlank()) {
+                                            Toast.makeText(context, "Biometric credentials not found. Please login with MPIN or OTP.", Toast.LENGTH_SHORT).show()
+                                            return@showBiometricPrompt
+                                        }
+
+                                        // Call OTP verify with isBiometric = true and empty OTP
+                                        val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+                                            navigator = navigator,
+                                            context = context
+                                        )
+                                        otpController.verifyOtp(
+                                            email = email,
+                                            mobile = mobile,
+                                            employeeId = employeeId,
+                                            otpFromUser = "", // Empty OTP
+                                            isBiometric = true
+                                        ) { message, isError ->
+                                            if (isError) {
+                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                // On success, get the new token and call loginWithToken
+                                                val token = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getAuthToken() ?: ""
+                                                otpController.loginWithToken(
+                                                    token = token,
+                                                    email = email,
+                                                    mobile = mobile,
+                                                    employeeId = employeeId,
+                                                    fromHome = false,
+                                                    fromOtp = false,
+                                                    shouldNavigateToHome = true
+                                                ) { loginMsg, loginError ->
+                                                    if (loginError) {
+                                                        Toast.makeText(context, loginMsg, Toast.LENGTH_SHORT).show()
+                                                    }
                                                 }
                                             }
-                                        } ?: run {
-                                            errorMessage = "No biometric credentials found"
                                         }
                                     },
                                     onError = { error ->
-                                        errorMessage = error
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
                                     }
                                 )
                             }
@@ -721,18 +756,16 @@ fun LoginScreen(
                     ) {
                         for (i in 0 until 4) {
                             OutlinedTextField(
-                                value = enteredMpin.getOrNull(i)?.toString() ?: "",
+                                value = enteredMpinDigits[i],
                                 onValueChange = { value ->
                                     if (value.length <= 1 && value.all { it.isDigit() }) {
-                                        val chars = enteredMpin.padEnd(4).toCharArray()
-                                        chars[i] = value.firstOrNull() ?: ' '
-                                        enteredMpin = String(chars).replace(" ", "")
-                                        if (value.isNotEmpty() && i < 3) focusRequesters[i + 1].requestFocus()
+                                        enteredMpinDigits = enteredMpinDigits.toMutableList().also { it[i] = value }
+                                        if (value.isNotEmpty() && i < 3) {
+                                            focusRequesters[i + 1].requestFocus()
+                                        }
                                     }
                                     if (value.isEmpty() && i > 0) {
-                                        val chars = enteredMpin.padEnd(4).toCharArray()
-                                        chars[i] = ' '
-                                        enteredMpin = String(chars).replace(" ", "")
+                                        enteredMpinDigits = enteredMpinDigits.toMutableList().also { it[i] = "" }
                                         focusRequesters[i - 1].requestFocus()
                                     }
                                 },
@@ -757,8 +790,11 @@ fun LoginScreen(
                                     textAlign = TextAlign.Center
                                 ),
                                 singleLine = true,
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
+                                ),
+                                enabled = !isVerifyingMpin,
                                 shape = MaterialTheme.shapes.medium,
                                 colors = TextFieldDefaults.colors(
                                     focusedContainerColor = Color.White,
@@ -771,7 +807,7 @@ fun LoginScreen(
                                     unfocusedIndicatorColor = Color.Transparent,
                                     disabledIndicatorColor = Color.Transparent
                                 ),
-                                isError = mpinError != null && enteredMpin.length == 4
+                                visualTransformation = PasswordVisualTransformation()
                             )
                             if (i < 3) Spacer(modifier = Modifier.width(8.dp))
                         }
@@ -781,16 +817,47 @@ fun LoginScreen(
                         onClick = {
                             isVerifyingMpin = true
                             mpinError = null
-                            if (enteredMpin.length == 4 && mpinController.validateMpin(enteredMpin)) {
-                                mpinError = null
-                                enteredMpin = ""
+                            val enteredMpin = enteredMpinDigits.joinToString("")
+                            val mpinController = com.archeGlobal.one.controller.MpinController(context)
+                            if (!mpinController.validateMpin(enteredMpin)) {
+                                mpinError = "Invalid MPIN"
                                 isVerifyingMpin = false
-                                // Navigate to HomeActivity using navigator to ensure proper flags are set
-                                navigator.navigateToHome(false)
-                            } else {
-                                enteredMpin = ""
+                                return@Button
+                            }
+                            // Call OTP verify with isBiometric = true and empty OTP
+                            val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+                                navigator = navigator,
+                                context = context
+                            )
+                            otpController.verifyOtp(
+                                email = email,
+                                mobile = mobile,
+                                employeeId = employeeId,
+                                otpFromUser = "", // Empty OTP
+                                isBiometric = true
+                            ) { message, isError ->
                                 isVerifyingMpin = false
-                                Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
+                                if (isError) {
+                                    mpinError = message
+                                } else {
+                                    // On success, get the new token and call loginWithToken
+                                    val token = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getAuthToken() ?: ""
+                                    otpController.loginWithToken(
+                                        token = token,
+                                        email = email,
+                                        mobile = mobile,
+                                        employeeId = employeeId,
+                                        fromHome = false,
+                                        fromOtp = false,
+                                        shouldNavigateToHome = true
+                                    ) { loginMsg, loginError ->
+                                        if (loginError) {
+                                            mpinError = loginMsg
+                                        } else {
+                                            // Success: Home navigation handled in controller
+                                        }
+                                    }
+                                }
                             }
                         },
                         modifier = Modifier
@@ -798,7 +865,7 @@ fun LoginScreen(
                             .height(65.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFDD3825),
-                            contentColor = Color.White
+                            disabledContainerColor = Color(0xFFDD3825)
                         ),
                         shape = MaterialTheme.shapes.medium,
                         enabled = !isVerifyingMpin
