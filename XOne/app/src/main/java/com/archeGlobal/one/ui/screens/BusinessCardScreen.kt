@@ -503,7 +503,7 @@ fun BusinessCardScreen(
                             Text(
                                 "Download Card",
                                 color = Color.White,
-                                fontSize = 14.sp,
+                                fontSize = 12.5.sp,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -524,7 +524,7 @@ fun BusinessCardScreen(
                             Text(
                                 "Edit Card",
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 14.sp,
+                                fontSize = 12.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }

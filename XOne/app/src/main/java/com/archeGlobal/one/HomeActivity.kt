@@ -85,7 +85,10 @@ class HomeActivity : AppCompatActivity() {
                 fromHome = true
             ) { message, isError ->
                 if (isError) {
-                    if (message.contains("Invalid Token")) {
+                    if (message.contains("Invalid Token", ignoreCase = true) ||
+                        message.contains("Token Expired", ignoreCase = true) ||
+                        message.contains("401", ignoreCase = true)
+                    ) {
                         Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
                         userDataManager.clearUserData()
                         navigator.navigateToLoginScreen()
@@ -1204,6 +1207,10 @@ class HomeActivity : AppCompatActivity() {
         val isLoggedIn = userDataManager.isLoggedIn()
         val isLocked = userDataManager.preferencesManager.getAppLockState()
         val appLifecycleObserver = XOneApplication.getInstance().getAppLifecycleObserver()
+
+        if (isLoggedIn) {
+            refreshHomeData()
+        }
 
         // Only show biometric if:
         // 1. User is logged in

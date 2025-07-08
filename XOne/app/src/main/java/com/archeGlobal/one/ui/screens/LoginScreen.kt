@@ -680,22 +680,6 @@ fun LoginScreen(
                                         ) { message, isError ->
                                             if (isError) {
                                                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                // On success, get the new token and call loginWithToken
-                                                val token = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getAuthToken() ?: ""
-                                                otpController.loginWithToken(
-                                                    token = token,
-                                                    email = email,
-                                                    mobile = mobile,
-                                                    employeeId = employeeId,
-                                                    fromHome = false,
-                                                    fromOtp = false,
-                                                    shouldNavigateToHome = true
-                                                ) { loginMsg, loginError ->
-                                                    if (loginError) {
-                                                        Toast.makeText(context, loginMsg, Toast.LENGTH_SHORT).show()
-                                                    }
-                                                }
                                             }
                                         }
                                     },

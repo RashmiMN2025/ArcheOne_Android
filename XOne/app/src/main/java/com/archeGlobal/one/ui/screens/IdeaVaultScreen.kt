@@ -219,6 +219,7 @@ fun IdeaVaultScreen(
                                     "Features",
                                     "Bug Report",
                                     "Suggestions",
+                                    "Share an Idea",
                                     "Other"
                                 )
 

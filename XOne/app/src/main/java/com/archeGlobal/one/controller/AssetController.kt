@@ -157,7 +157,7 @@ class AssetController(
             name = name,
             email = email,
             mobile = mobile,
-            category = "Other", // Using "Other" category as requested
+            category = "Technical Issue", // Using "Other" category as requested
             query = description,
             description = "" // Add missing parameter with empty string as default
         )
