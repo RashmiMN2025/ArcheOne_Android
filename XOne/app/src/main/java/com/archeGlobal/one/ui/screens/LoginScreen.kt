@@ -947,7 +947,7 @@ fun LoginScreen(
                                 .fillMaxHeight() // Almost full screen, adjust as needed
                         ) {
                             MicrosoftLoginWebView(
-                                url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Fpulse.netcon.in%3A7000%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
+                                url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Fdev.arche.global%3A7000%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
                                 onReceiveAuth = { response ->
                                     authResponse = response
                                     isLoading = true

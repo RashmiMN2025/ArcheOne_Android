@@ -279,6 +279,20 @@
             android:theme="@style/Theme.XOne" />
 
         <activity
+            android:name=".DeskCartActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Stationary Order"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".AdminDashboardActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Admin Dashboard"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
             android:name=".HolidayCalendarActivity"
             android:exported="true"
             android:screenOrientation="portrait"

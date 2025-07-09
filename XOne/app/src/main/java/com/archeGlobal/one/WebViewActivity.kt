@@ -362,7 +362,7 @@ class WebViewActivity : ComponentActivity() {
 
                                                         // Check if the URL pattern suggests it might return HTML error content
                                                         val url = request.url.toString()
-                                                        if (url.contains("download_doc") && url.contains("pulse.netcon.in")) {
+                                                        if (url.contains("download_doc") && url.contains("dev.arche.global")) {
                                                             Log.d("WebViewActivity", "Detected potential document download URL: $url")
                                                         }
                                                     }

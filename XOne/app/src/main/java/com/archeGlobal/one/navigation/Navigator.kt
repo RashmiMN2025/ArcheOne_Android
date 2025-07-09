@@ -14,6 +14,7 @@ interface Navigator {
     fun getHomeIntent(): android.content.Intent
     fun navigateToID()
     fun navigateToAsset()
+    fun navigateToDeskCart()
     fun navigateToTimesheet()
     fun navigateToLeave()
     fun navigateToMyDocuments()
@@ -66,6 +67,7 @@ interface Navigator {
     fun navigateToAboutUs()
     fun navigateToTodo()
     fun navigateToIdeaVault()
+    fun navigateToAdminDashboard()
 
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

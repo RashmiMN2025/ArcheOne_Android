@@ -41,14 +41,22 @@ class LoginController(
             }
         }
 
-        Log.d("LoginController", "Sending OTP request for email: $email")
+        Log.d("LoginController", "Sending OTP request for email: $email, mobile: $mobile, employeeId: $employeeId")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val request = SendOtpRequest(email, mobile, employeeId)
+                Log.d("LoginController", "Request payload: email=$email, mobile=$mobile, employeeId=$employeeId")
+                Log.d("LoginController", "Making request to: ${RetrofitClient.BASE_URL}send-otp")
+                
                 val response = RetrofitClient.apiService.sendOtp(request).execute()
                 val responseBody = response.body()
                 val errorBody = response.errorBody()?.string()
+                
+                Log.d("LoginController", "Response code: ${response.code()}")
+                Log.d("LoginController", "Response message: ${response.message()}")
+                Log.d("LoginController", "Response body: $responseBody")
+                Log.d("LoginController", "Error body: $errorBody")
 
                 withContext(Dispatchers.Main) {
                     when {

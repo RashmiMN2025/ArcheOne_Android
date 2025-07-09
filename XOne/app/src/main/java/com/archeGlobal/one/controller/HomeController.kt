@@ -123,8 +123,8 @@ class HomeController(
 
         // Ensure the URL is properly formatted (starts with http:// or https://)
         val formattedImageUrl = if (!originalImageUrl.startsWith("http://") && !originalImageUrl.startsWith("https://")) {
-            // Assuming pulse.netcon.in is the base for relative paths
-            "https://pulse.netcon.in:7000/$originalImageUrl".trim()
+            // Assuming dev.arche.global is the base for relative paths
+            "https://dev.arche.global:7000/$originalImageUrl".trim()
         } else {
             originalImageUrl.trim()
         }
@@ -412,6 +412,10 @@ class HomeController(
                 "asset" -> {
                     val intent = Intent(context, AssetActivity::class.java)
                     context.startActivity(intent)
+                }
+                "deskcart" -> {
+                    Log.d("HomeController", "Navigating to DeskCart")
+                    navigator.navigateToDeskCart()
                 }
                 "calendar" -> {
                     val intent = Intent(context, HolidayCalendarActivity::class.java)

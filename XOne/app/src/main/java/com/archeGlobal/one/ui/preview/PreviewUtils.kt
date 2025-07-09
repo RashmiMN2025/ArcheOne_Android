@@ -21,6 +21,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToHome(fromOtp: Boolean, showBiometricSetup: Boolean, email: String, mobile: String, employeeId: String) {}
     override fun navigateToID() {}
     override fun navigateToAsset() {}
+    override fun navigateToDeskCart() {}
     override fun navigateToTimesheet() {}
     override fun navigateToLeave() {}
     override fun navigateToMyDocuments() {}
@@ -73,6 +74,8 @@ class PreviewNavigator : Navigator {
     override fun navigateToTodo() {}
 
     override fun navigateToIdeaVault() {}
+
+    override fun navigateToAdminDashboard() {}
 
     override fun navigateToGlobalCelebration() {}
 

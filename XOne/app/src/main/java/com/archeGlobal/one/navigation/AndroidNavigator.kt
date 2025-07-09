@@ -55,7 +55,7 @@ class AndroidNavigator(
 
     override fun openPulseLogin() {
         val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://pulse.netcon.in/onboarding")
+            putExtra("fileUrl", "https://dev.arche.global/onboarding")
             putExtra("title", "Pulse")
         }
         startActivity(intent)
@@ -182,6 +182,10 @@ class AndroidNavigator(
         navigate("asset")
     }
 
+    override fun navigateToDeskCart() {
+        startActivity(Intent(activity, DeskCartActivity::class.java))
+    }
+
     override fun navigateToID() {
         // Implementation not provided
     }
@@ -281,6 +285,11 @@ class AndroidNavigator(
 
     override fun navigateToIdeaVault() {
         val intent = Intent(activity, IdeaVaultActivity::class.java)
+        activity.startActivity(intent)
+    }
+
+    override fun navigateToAdminDashboard() {
+        val intent = Intent(activity, AdminDashboardActivity::class.java)
         activity.startActivity(intent)
     }
 
