@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Configuration for pulse.netcon.in -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">pulse.netcon.in</domain>
+    </domain-config>
+    
+    <!-- Configuration for arche.global with SSL pinning -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">arche.global</domain>
+        <trust-anchors>
+            <certificates src="@raw/star_arche_global"/>
+        </trust-anchors>
     </domain-config>
 </network-security-config>
