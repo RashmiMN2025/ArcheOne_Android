@@ -60,6 +60,7 @@ fun PrideMonthTestScreen() {
             override fun getHomeIntent(): android.content.Intent = android.content.Intent()
             override fun navigateToID() {}
             override fun navigateToAsset() {}
+            override fun navigateToDeskCart() {}
             override fun navigateToTimesheet() {}
             override fun navigateToLeave() {}
             override fun navigateToMyDocuments() {}
@@ -113,6 +114,8 @@ fun PrideMonthTestScreen() {
             override fun navigateToAboutUs() {}
             override fun navigateToTodo() {}
             override fun navigateToIdeaVault() {}
+            override fun navigateToAdminDashboard() {}
+            override fun navigateToInventory() {}
             override fun getCurrentRoute(): String? = null
             override fun refreshCurrentScreen() {}
             override fun popBackStack() {}

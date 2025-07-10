@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.activities.TravelApproveActivity
@@ -39,6 +40,10 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.google.gson.Gson
+import com.archeGlobal.one.utils.FontScaleAdjusted
+import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun TravelApprovalsScreen(
@@ -113,173 +118,179 @@ fun TravelApprovalsScreen(
         )
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
-    ) {
+    // Get context and font adjustment for consistent font scaling
+    val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
+
+    // Wrap entire content with font scale adjustment
+    FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop, // Light Beige/Grey
-                            WelcomeBackgroundMiddle, // Light Grey
-                            WelcomeBackgroundBottom // Dark Grey
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop, // Light Beige/Grey
+                                WelcomeBackgroundMiddle, // Light Grey
+                                WelcomeBackgroundBottom // Dark Grey
+                            )
                         )
                     )
-                )
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Add space at the top to push everything down
-                Spacer(modifier = Modifier.height(48.dp))
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Add space at the top to push everything down
+                    Spacer(modifier = Modifier.height(48.dp))
 
-                TopAppBar(
-                    title = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Travel Approvals",
-                                color = Color.Black,
-                                fontSize = 20.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
+                    TopAppBar(
+                        title = {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Travel Approvals",
+                                    color = Color.Black,
+                                    fontSize = 20.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { controller.onBackPressed() }) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.Black
+                                )
+                            }
+                        },
+                        backgroundColor = Color.Transparent,
+                        elevation = 0.dp,
+                        actions = {
+                            Spacer(modifier = Modifier.width(48.dp))
                         }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { controller.onBackPressed() }) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
-                        }
-                    },
-                    backgroundColor = Color.Transparent,
-                    elevation = 0.dp,
-                    actions = {
-                        Spacer(modifier = Modifier.width(48.dp))
-                    }
-                )
+                    )
 
-                // Trigger loading of travel approval requests when the screen is shown
-                LaunchedEffect(Unit) {
-                    controller.loadTravelApprovals()
-                }
-
-                // Main content based on state
-                when (val state = controller.travelApprovalsState) {
-                    is TravelController.TravelApprovalsState.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = PrimaryRed)
-                        }
+                    // Trigger loading of travel approval requests when the screen is shown
+                    LaunchedEffect(Unit) {
+                        controller.loadTravelApprovals()
                     }
 
-                    is TravelController.TravelApprovalsState.Success -> {
-                        if (state.approvalRequests.isEmpty()) {
-                            // Empty state
+                    // Main content based on state
+                    when (val state = controller.travelApprovalsState) {
+                        is TravelController.TravelApprovalsState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = PrimaryRed)
+                            }
+                        }
+
+                        is TravelController.TravelApprovalsState.Success -> {
+                            if (state.approvalRequests.isEmpty()) {
+                                // Empty state
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No travel requests to approve",
+                                        color = Color.Gray,
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            } else {
+                                // Show list of approval requests
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    items(state.approvalRequests) { request ->
+                                        ApprovalRequestCard(
+                                            request = request,
+                                            onApprove = { // Navigate to dedicated approval screen instead of calling API directly
+                                                val intent = Intent(
+                                                    context,
+                                                    TravelApproveActivity::class.java
+                                                ).apply {
+                                                    putExtra("travel_request", Gson().toJson(request))
+                                                }
+                                                context.startActivity(intent)
+                                            },
+                                            onReject = { // Navigate to dedicated rejection screen instead of direct API call
+                                                val intent = Intent(
+                                                    context,
+                                                    TravelRejectActivity::class.java
+                                                ).apply {
+                                                    putExtra("travel_request", Gson().toJson(request))
+                                                }
+                                                context.startActivity(intent)
+                                            },
+                                            onClick = {
+                                                // Only navigate to detail screen for non-pending requests
+                                                if (request.status != com.archeGlobal.one.model.TravelStatus.PENDING) {
+                                                    controller.navigateToTravelApprovalDetail(request)
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        is TravelController.TravelApprovalsState.Error -> {
+                            // Error state
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "No travel requests to approve",
-                                    color = Color.Gray,
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        } else {
-                            // Show list of approval requests
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(state.approvalRequests) { request ->
-                                    ApprovalRequestCard(
-                                        request = request,
-                                        onApprove = { // Navigate to dedicated approval screen instead of calling API directly
-                                            val intent = Intent(
-                                                context,
-                                                TravelApproveActivity::class.java
-                                            ).apply {
-                                                putExtra("travel_request", Gson().toJson(request))
-                                            }
-                                            context.startActivity(intent)
-                                        },
-                                        onReject = { // Navigate to dedicated rejection screen instead of direct API call
-                                            val intent = Intent(
-                                                context,
-                                                TravelRejectActivity::class.java
-                                            ).apply {
-                                                putExtra("travel_request", Gson().toJson(request))
-                                            }
-                                            context.startActivity(intent)
-                                        },
-                                        onClick = {
-                                            // Only navigate to detail screen for non-pending requests
-                                            if (request.status != com.archeGlobal.one.model.TravelStatus.PENDING) {
-                                                controller.navigateToTravelApprovalDetail(request)
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    is TravelController.TravelApprovalsState.Error -> {
-                        // Error state
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "Error loading travel approvals",
-                                    color = Color.Red,
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = state.message,
-                                    color = Color.Gray,
-                                    fontSize = 14.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(PrimaryRed)
-                                        .clickable { controller.loadTravelApprovals() }
-                                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                                ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        text = "Retry",
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontFamily = GraphikFontFamily
+                                        text = "Error loading travel approvals",
+                                        color = Color.Red,
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        textAlign = TextAlign.Center
                                     )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = state.message,
+                                        color = Color.Gray,
+                                        fontSize = 14.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(PrimaryRed)
+                                            .clickable { controller.loadTravelApprovals() }
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = "Retry",
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontFamily = GraphikFontFamily
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -287,7 +298,7 @@ fun TravelApprovalsScreen(
                 }
             }
         }
-    }
+    } // Close FontScaleAdjusted block
 }
 
 @Composable

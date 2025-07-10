@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +49,8 @@ import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.utils.FontScaleAdjusted
+import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Calendar
@@ -57,6 +60,10 @@ import java.util.Calendar
 fun TravelScreen(
     controller: TravelController
 ) {
+    // Get context and font adjustment for consistent font scaling
+    val context = LocalContext.current
+    val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
+
     // State for date picker dialogs
     var showDepartureDatePicker by remember { mutableStateOf(false) }
     var showArrivalDatePicker by remember { mutableStateOf(false) }
@@ -65,7 +72,10 @@ fun TravelScreen(
     val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("Asia/Kolkata")
     }
-    Box(
+
+    // Wrap entire content with font scale adjustment
+    FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
+        Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
@@ -157,59 +167,66 @@ fun TravelScreen(
                             .verticalScroll(scrollState)
                             .padding(16.dp)
                     ) {
-                        Text(
-                            text = "Employee Details",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = GraphikFontFamily
-                        )
-
                         // Load travel approvals when the screen is shown to get the latest count
                         LaunchedEffect(Unit) {
                             controller.loadTravelApprovals()
                         }
 
-                        // Show approval button only if there is approval history
-                        if (controller.hasApprovalHistory()) {
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        color = if (controller.hasPendingApprovals()) PrimaryRed else Color(0xFF4CAF50),
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
-                                    .clickable { controller.navigateToTravelApprovals() }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = "Approval",
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        fontFamily = GraphikFontFamily
-                                    )
+                        // Header row with Employee Details and Approval button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Employee Details",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily
+                            )
 
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Notifications,
-                                            contentDescription = "Pending approvals",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(14.dp)
+                            // Show approval button only if there is approval history
+                            if (controller.hasApprovalHistory()) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color =  Color(0xFF4CAF50),
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .clickable { controller.navigateToTravelApprovals() }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Approval",
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = GraphikFontFamily
                                         )
 
-                                        val count = controller.pendingApprovalCount
-                                        if (count > 0) {
-                                            Spacer(modifier = Modifier.width(2.dp))
-                                            Text(
-                                                text = if (count > 99) "99+" else count.toString(),
-                                                color = Color.White,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = GraphikFontFamily
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Notifications,
+                                                contentDescription = "Pending approvals",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(14.dp)
                                             )
+
+                                            val count = controller.pendingApprovalCount
+                                            if (count > 0) {
+                                                Spacer(modifier = Modifier.width(2.dp))
+                                                Text(
+                                                    text = if (count > 99) "99+" else count.toString(),
+                                                    color = Color.White,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -252,7 +269,8 @@ fun TravelScreen(
                                 Text(
                                     "Travel Destination",
                                     color = Color.Gray,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily
                                 )
                             },
                             modifier = Modifier
@@ -280,7 +298,8 @@ fun TravelScreen(
                                 Text(
                                     "Project Name",
                                     color = Color.Gray,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily
                                 )
                             },
                             modifier = Modifier
@@ -308,7 +327,8 @@ fun TravelScreen(
                                 Text(
                                     "Business Justification",
                                     color = Color.Gray,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily
                                 )
                             },
                             modifier = Modifier
@@ -338,7 +358,8 @@ fun TravelScreen(
                                     Text(
                                         "Mode of Transport",
                                         color = Color.Gray,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = GraphikFontFamily
                                     )
                                 },
                                 modifier = Modifier
@@ -375,7 +396,7 @@ fun TravelScreen(
                             ) {
                                 controller.transportOptions.forEach { option ->
                                     DropdownMenuItem(
-                                        text = { Text(text = option) },
+                                        text = { Text(text = option, fontFamily = GraphikFontFamily) },
                                         onClick = { controller.updateModeOfTransport(option) }
                                     )
                                 }
@@ -426,7 +447,8 @@ fun TravelScreen(
                                         textStyle = TextStyle(
                                             background = Color(0xFFEEEEEE),
                                             color = Color.Black,
-                                            fontSize = 15.sp
+                                            fontSize = 15.sp,
+                                            fontFamily = GraphikFontFamily
                                         )
                                     )
 
@@ -466,14 +488,14 @@ fun TravelScreen(
                                                 }
                                                 showDepartureDatePicker = false
                                             }) {
-                                                Text("OK", color = Color.White)
+                                                Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
                                             }
                                         },
                                         dismissButton = {
                                             TextButton(onClick = {
                                                 showDepartureDatePicker = false
                                             }) {
-                                                Text("Cancel", color = Color.White)
+                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
                                             }
                                         }
                                     ) {
@@ -519,7 +541,8 @@ fun TravelScreen(
                                         textStyle = TextStyle(
                                             background = Color(0xFFEEEEEE),
                                             color = Color.Black,
-                                            fontSize = 15.sp
+                                            fontSize = 15.sp,
+                                            fontFamily = GraphikFontFamily
                                         )
                                     )
 
@@ -559,14 +582,14 @@ fun TravelScreen(
                                                 }
                                                 showArrivalDatePicker = false
                                             }) {
-                                                Text("OK", color = Color.White)
+                                                Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
                                             }
                                         },
                                         dismissButton = {
                                             TextButton(onClick = {
                                                 showArrivalDatePicker = false
                                             }) {
-                                                Text("Cancel", color = Color.White)
+                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
                                             }
                                         }
                                     ) {
@@ -592,7 +615,7 @@ fun TravelScreen(
                                 OutlinedTextField(
                                     value = controller.flightTimePreference,
                                     onValueChange = { },
-                                    label = { Text("Flight Time Preference") },
+                                    label = { Text("Flight Time Preference", fontFamily = GraphikFontFamily) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp)
@@ -629,7 +652,7 @@ fun TravelScreen(
                                 ) {
                                     controller.flightTimeOptions.forEach { option ->
                                         DropdownMenuItem(
-                                            text = { Text(text = option, color = Color.White) },
+                                            text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
                                             onClick = { controller.updateFlightTimePreference(option) }
                                         )
                                     }
@@ -641,7 +664,7 @@ fun TravelScreen(
                                 OutlinedTextField(
                                     value = controller.seatPreference,
                                     onValueChange = { },
-                                    label = { Text("Seat Preference") },
+                                    label = { Text("Seat Preference", fontFamily = GraphikFontFamily) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp)
@@ -678,7 +701,7 @@ fun TravelScreen(
                                 ) {
                                     controller.seatPreferenceOptions.forEach { option ->
                                         DropdownMenuItem(
-                                            text = { Text(text = option, color = Color.White) },
+                                            text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
                                             onClick = { controller.updateSeatPreference(option) }
                                         )
                                     }
@@ -711,7 +734,7 @@ fun TravelScreen(
                             if (controller.showFrequentFlyerDialog) {
                                 androidx.compose.material.AlertDialog(
                                     onDismissRequest = { controller.dismissFrequentFlyerNumberDialog() },
-                                    title = { Text(text = "Enter Frequent Flyer Number") },
+                                    title = { Text(text = "Enter Frequent Flyer Number", fontFamily = GraphikFontFamily) },
                                     text = {
                                         OutlinedTextField(
                                             value = controller.frequentFlyerNumber,
@@ -720,7 +743,7 @@ fun TravelScreen(
                                                     it
                                                 )
                                             },
-                                            label = { Text("Frequent Flyer Number") },
+                                            label = { Text("Frequent Flyer Number", fontFamily = GraphikFontFamily) },
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 unfocusedBorderColor = Color.LightGray,
@@ -741,7 +764,7 @@ fun TravelScreen(
                                             onClick = { controller.dismissFrequentFlyerNumberDialog() },
                                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
                                         ) {
-                                            Text("Submit")
+                                            Text("Submit", fontFamily = GraphikFontFamily)
                                         }
                                     },
                                     backgroundColor = Color.White,
@@ -784,7 +807,7 @@ fun TravelScreen(
                                 OutlinedTextField(
                                     value = controller.mealPreference,
                                     onValueChange = { },
-                                    label = { Text("Meal Preference") },
+                                    label = { Text("Meal Preference", fontFamily = GraphikFontFamily) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp)
@@ -821,7 +844,7 @@ fun TravelScreen(
                                 ) {
                                     controller.mealPreferenceOptions.forEach { option ->
                                         DropdownMenuItem(
-                                            text = { Text(text = option) },
+                                            text = { Text(text = option, fontFamily = GraphikFontFamily) },
                                             onClick = { controller.updateMealPreference(option) }
                                         )
                                     }
@@ -922,6 +945,7 @@ fun TravelScreen(
             }
         }
     }
+    } // Close FontScaleAdjusted block
 }
 
 /**

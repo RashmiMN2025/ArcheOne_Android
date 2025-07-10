@@ -12,12 +12,14 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +34,8 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.utils.FontScaleAdjusted
+import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,9 +43,15 @@ import java.util.*
 fun TravelHistoryScreen(
     controller: TravelController
 ) {
+    // Get context and font adjustment for consistent font scaling
+    val context = LocalContext.current
+    val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
+
     val state = controller.travelHistoryState
 
-    Box(
+    // Wrap entire content with font scale adjustment
+    FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
+        Box(
         modifier = Modifier
             .fillMaxSize()
             .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
@@ -116,7 +126,7 @@ fun TravelHistoryScreen(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(text = "No travel history found")
+                                    Text(text = "No travel history found", fontFamily = GraphikFontFamily)
                                 }
                             } else {
                                 TravelHistoryList(
@@ -135,12 +145,12 @@ fun TravelHistoryScreen(
                                     .padding(16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(text = currentState.message)
+                                Text(text = currentState.message, fontFamily = GraphikFontFamily)
                                 Button(
                                     onClick = { controller.loadCombinedTravelHistory() },
                                     modifier = Modifier.padding(top = 8.dp)
                                 ) {
-                                    Text("Retry")
+                                    Text("Retry", fontFamily = GraphikFontFamily)
                                 }
                             }
                         }
@@ -149,6 +159,7 @@ fun TravelHistoryScreen(
             }
         }
     }
+    } // Close FontScaleAdjusted block
 }
 
 @Composable
@@ -161,7 +172,7 @@ fun TravelHistoryList(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "No items found")
+            Text(text = "No items found", fontFamily = GraphikFontFamily)
         }
     } else {
         LazyColumn(
@@ -205,8 +216,9 @@ fun TravelRequestCard(
             ) {
                 Text(
                     text = "ID: ${travelRequest.id}",
-                    style = MaterialTheme.typography.subtitle1,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = GraphikFontFamily
                 )
 
                 StatusTag(status = travelRequest.status)
@@ -265,8 +277,9 @@ fun StatusTag(status: TravelStatus) {
         Text(
             text = text,
             color = textColor,
-            style = MaterialTheme.typography.caption,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
+            fontFamily = GraphikFontFamily,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
         )
     }
@@ -295,16 +308,18 @@ fun DetailItem(
 
         Text(
             text = label,
-            style = MaterialTheme.typography.body2,
-            color = Color.Gray
+            fontSize = 14.sp,
+            color = Color.Gray,
+            fontFamily = GraphikFontFamily
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
             text = value,
-            style = MaterialTheme.typography.body2,
-            fontWeight = FontWeight.Medium
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = GraphikFontFamily
         )
     }
 }
@@ -332,16 +347,18 @@ fun DetailItem(
 
         Text(
             text = label,
-            style = MaterialTheme.typography.body2,
-            color = Color.Gray
+            fontSize = 14.sp,
+            color = Color.Gray,
+            fontFamily = GraphikFontFamily
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
             text = value,
-            style = MaterialTheme.typography.body2,
-            fontWeight = FontWeight.Medium
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = GraphikFontFamily
         )
     }
 }

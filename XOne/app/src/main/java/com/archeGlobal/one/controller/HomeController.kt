@@ -413,6 +413,10 @@ class HomeController(
                     val intent = Intent(context, AssetActivity::class.java)
                     context.startActivity(intent)
                 }
+                "deskcart" -> {
+                    Log.d("HomeController", "Navigating to DeskCart")
+                    navigator.navigateToDeskCart()
+                }
                 "calendar" -> {
                     val intent = Intent(context, HolidayCalendarActivity::class.java)
                     context.startActivity(intent)

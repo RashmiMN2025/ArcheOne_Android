@@ -136,8 +136,8 @@ class UserDocumentsController(private val context: Context) {
             if (url.contains("download", ignoreCase = true) || url.endsWith(".pdf", ignoreCase = true)) {
                 return true
             }
-            // For pulse.netcon.in URLs specifically, check if it follows the expected pattern
-            if (url.contains("pulse.netcon.in", ignoreCase = true) && url.contains("download_doc", ignoreCase = true)) {
+                    // For pulse.netcon.in URLs specifically, check if it follows the expected pattern
+        if (url.contains("pulse.netcon.in", ignoreCase = true) && url.contains("download_doc", ignoreCase = true)) {
                 return true
             }
         }
