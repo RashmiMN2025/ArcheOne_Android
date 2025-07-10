@@ -11,8 +11,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.ProfileModel
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.LogoutRequest
+import com.archeGlobal.one.network.LogoutResponse
 import com.archeGlobal.one.network.ProfilePictureResponse
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -345,10 +348,52 @@ class ProfileController(
 
     fun onLogoutClick() {
         val userData = userDataManager.getUserData()
+        val email = userData?.email
+        
+        if (email.isNullOrEmpty()) {
+            Log.e("ProfileController", "Email not found, proceeding with local logout")
+            proceedWithLocalLogout(userData)
+            return
+        }
+
         val employeeName = userData?.name ?: userData?.email ?: ""
         userDataManager.setLastUsername(employeeName) // Save for welcome text
 
-        // Only clear login state, not all user data
+        // Call logout API
+        val logoutRequest = LogoutRequest(email)
+        Log.d("ProfileController", "Calling logout API with email: $email")
+
+        RetrofitClient.apiService.logout(logoutRequest)
+            .enqueue(object : retrofit2.Callback<LogoutResponse> {
+                override fun onResponse(
+                    call: retrofit2.Call<LogoutResponse>, 
+                    response: retrofit2.Response<LogoutResponse>
+                ) {
+                    Log.d("ProfileController", "Logout API response: ${response.code()}")
+                    if (response.isSuccessful) {
+                        val logoutResponse = response.body()
+                        Log.d("ProfileController", "Logout API success: ${logoutResponse?.message}")
+                        proceedWithLocalLogout(userData)
+                    } else {
+                        Log.e("ProfileController", "Logout API failed with code: ${response.code()}")
+                        // Even if API fails, proceed with local logout for user experience
+                        proceedWithLocalLogout(userData)
+                    }
+                }
+
+                override fun onFailure(
+                    call: retrofit2.Call<LogoutResponse>, 
+                    t: Throwable
+                ) {
+                    Log.e("ProfileController", "Logout API call failed: ${t.message}", t)
+                    // Even if API call fails, proceed with local logout for user experience
+                    proceedWithLocalLogout(userData)
+                }
+            })
+    }
+
+    private fun proceedWithLocalLogout(userData: UserData?) {
+        // Clear login state and local data
         userDataManager.setIsLoggedIn(false)
         userDataManager.setHasLoggedIn(true)
         // Remove token from preferences

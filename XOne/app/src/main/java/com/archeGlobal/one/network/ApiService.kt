@@ -147,7 +147,7 @@ data class PolicyResponse(
 )
 
 data class LogoutRequest(
-    val employeeId: String
+    val email: String
 )
 
 data class MyDocRequest(
