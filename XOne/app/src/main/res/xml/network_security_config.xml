@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Configuration for pulse.netcon.in -->
-    <domain-config cleartextTrafficPermitted="true">
+    <!-- Configuration for pulse.netcon.in with SSL pinning -->
+    <!-- TODO: Add pulse.netcon.in certificate to res/raw/pulse_netcon_certificate.crt -->
+    <!--
+    <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">pulse.netcon.in</domain>
+        <trust-anchors>
+            <certificates src="@raw/pulse_netcon_certificate"/>
+        </trust-anchors>
     </domain-config>
+    -->
     
     <!-- Configuration for arche.global with SSL pinning -->
     <domain-config cleartextTrafficPermitted="false">
@@ -12,4 +18,15 @@
             <certificates src="@raw/star_arche_global"/>
         </trust-anchors>
     </domain-config>
+    
+    <!-- Configuration for archaeglobal.com with SSL pinning -->
+    <!-- TODO: Add archaeglobal.com certificate to res/raw/archaeglobal_certificate.crt -->
+    <!--
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">archaeglobal.com</domain>
+        <trust-anchors>
+            <certificates src="@raw/archaeglobal_certificate"/>
+        </trust-anchors>
+    </domain-config>
+    -->
 </network-security-config>
