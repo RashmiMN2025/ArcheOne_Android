@@ -157,59 +157,66 @@ fun TravelScreen(
                             .verticalScroll(scrollState)
                             .padding(16.dp)
                     ) {
-                        Text(
-                            text = "Employee Details",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = GraphikFontFamily
-                        )
-
                         // Load travel approvals when the screen is shown to get the latest count
                         LaunchedEffect(Unit) {
                             controller.loadTravelApprovals()
                         }
 
-                        // Show approval button only if there is approval history
-                        if (controller.hasApprovalHistory()) {
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        color = if (controller.hasPendingApprovals()) PrimaryRed else Color(0xFF4CAF50),
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
-                                    .clickable { controller.navigateToTravelApprovals() }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = "Approval",
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        fontFamily = GraphikFontFamily
-                                    )
+                        // Header row with Employee Details and Approval button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Employee Details",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily
+                            )
 
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Notifications,
-                                            contentDescription = "Pending approvals",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(14.dp)
+                            // Show approval button only if there is approval history
+                            if (controller.hasApprovalHistory()) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = if (controller.hasPendingApprovals()) PrimaryRed else Color(0xFF4CAF50),
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .clickable { controller.navigateToTravelApprovals() }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Approval",
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = GraphikFontFamily
                                         )
 
-                                        val count = controller.pendingApprovalCount
-                                        if (count > 0) {
-                                            Spacer(modifier = Modifier.width(2.dp))
-                                            Text(
-                                                text = if (count > 99) "99+" else count.toString(),
-                                                color = Color.White,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = GraphikFontFamily
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Notifications,
+                                                contentDescription = "Pending approvals",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(14.dp)
                                             )
+
+                                            val count = controller.pendingApprovalCount
+                                            if (count > 0) {
+                                                Spacer(modifier = Modifier.width(2.dp))
+                                                Text(
+                                                    text = if (count > 99) "99+" else count.toString(),
+                                                    color = Color.White,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            }
                                         }
                                     }
                                 }

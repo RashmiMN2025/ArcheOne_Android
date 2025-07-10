@@ -330,7 +330,7 @@ fun BusinessCardScreen(
                                 Spacer(modifier = Modifier.height(25.dp))
 
                                 // Contact information section
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column {
                                     // Email
                                     Text(
                                         text = businessCard.email,
@@ -340,6 +340,9 @@ fun BusinessCardScreen(
                                         color = Color.Black
                                     )
 
+                                    // Reduced spacing between email and phone
+                                    Spacer(modifier = Modifier.height(2.dp))
+
                                     // Phone
                                     Text(
                                         text = businessCard.phone,
@@ -348,6 +351,9 @@ fun BusinessCardScreen(
                                         fontSize = 15.sp,
                                         color = Color.Black
                                     )
+
+                                    // Normal spacing between phone and location
+                                    Spacer(modifier = Modifier.height(2.dp))
 
                                     // Location
                                     Text(
@@ -382,7 +388,7 @@ fun BusinessCardScreen(
                                         ComposeQRCodeImage(
                                             bitmap = qrBitmap,
                                             contentDescription = "QR Code",
-                                            modifier = Modifier.size(60.dp)
+                                            modifier = Modifier.size(75.dp)
                                         )
                                     }
                                 }

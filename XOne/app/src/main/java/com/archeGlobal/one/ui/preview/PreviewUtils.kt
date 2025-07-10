@@ -77,6 +77,8 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToAdminDashboard() {}
 
+    override fun navigateToInventory() {}
+
     override fun navigateToGlobalCelebration() {}
 
     override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {

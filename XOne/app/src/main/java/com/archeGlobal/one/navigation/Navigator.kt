@@ -68,6 +68,7 @@ interface Navigator {
     fun navigateToTodo()
     fun navigateToIdeaVault()
     fun navigateToAdminDashboard()
+    fun navigateToInventory()
 
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

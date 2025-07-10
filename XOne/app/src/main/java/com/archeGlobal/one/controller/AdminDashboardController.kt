@@ -64,8 +64,7 @@ class AdminDashboardController(
 
     private fun handleInventoryClick() {
         Log.d("AdminDashboardController", "Inventory clicked")
-        Toast.makeText(context, "Inventory management feature coming soon", Toast.LENGTH_SHORT).show()
-        // TODO: Navigate to inventory management screen
+        navigator.navigateToInventory()
     }
 
     private fun handleOrderReceivedClick() {

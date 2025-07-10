@@ -115,6 +115,7 @@ fun PrideMonthTestScreen() {
             override fun navigateToTodo() {}
             override fun navigateToIdeaVault() {}
             override fun navigateToAdminDashboard() {}
+            override fun navigateToInventory() {}
             override fun getCurrentRoute(): String? = null
             override fun refreshCurrentScreen() {}
             override fun popBackStack() {}

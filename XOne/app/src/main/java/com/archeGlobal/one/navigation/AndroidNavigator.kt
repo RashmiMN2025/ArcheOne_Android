@@ -293,6 +293,11 @@ class AndroidNavigator(
         activity.startActivity(intent)
     }
 
+    override fun navigateToInventory() {
+        val intent = Intent(activity, InventoryActivity::class.java)
+        activity.startActivity(intent)
+    }
+
     override fun navigateToXConnect(initialTab: String) {
         startActivity(
             Intent(activity, XConnectActivity::class.java).apply {

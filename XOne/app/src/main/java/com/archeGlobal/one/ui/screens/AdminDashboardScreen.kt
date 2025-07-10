@@ -155,8 +155,8 @@ fun AdminDashboardCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
+            .fillMaxWidth(0.9f)
+            .height(135.dp)
             .clickable(enabled = item.isEnabled) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
