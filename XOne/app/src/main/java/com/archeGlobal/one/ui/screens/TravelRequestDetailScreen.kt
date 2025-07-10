@@ -28,193 +28,204 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import androidx.compose.ui.platform.LocalContext
+import com.archeGlobal.one.utils.FontScaleAdjusted
+import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
+import androidx.compose.runtime.remember
 
 @Composable
 fun TravelRequestDetailScreen(
     controller: TravelController,
     travelRequest: TravelRequest
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
-    ) {
+    // Get context and font adjustment for consistent font scaling
+    val context = LocalContext.current
+    val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
+
+    // Wrap entire content with font scale adjustment
+    FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop, // Light Beige/Grey
-                            WelcomeBackgroundMiddle, // Light Grey
-                            WelcomeBackgroundBottom // Dark Grey
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop, // Light Beige/Grey
+                                WelcomeBackgroundMiddle, // Light Grey
+                                WelcomeBackgroundBottom // Dark Grey
+                            )
                         )
                     )
-                )
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Add space at the top to push everything down
-                Spacer(modifier = Modifier.height(48.dp))
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Add space at the top to push everything down
+                    Spacer(modifier = Modifier.height(48.dp))
 
-                TopAppBar(
-                    title = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Request Details",
-                                color = Color.Black,
-                                fontSize = 20.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
+                    TopAppBar(
+                        title = {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Request Details",
+                                    color = Color.Black,
+                                    fontSize = 20.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { controller.onBackPressed(fromTravelDetail = true) }) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.Black
+                                )
+                            }
+                        },
+                        backgroundColor = Color.Transparent,
+                        elevation = 0.dp,
+                        actions = {
+                            Spacer(modifier = Modifier.width(48.dp))
                         }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { controller.onBackPressed(fromTravelDetail = true) }) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
+                    )
+
+                    // Main content
+                    val scrollState = rememberScrollState()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Employee Details Card
+                        DetailCard(title = "Employee Details") {
+                            DetailRow(label = "Name:", value = controller.employeeName)
+                            DetailRow(label = "Employee ID:", value = controller.employeeId)
+                            DetailRow(label = "Email:", value = controller.employeeEmail)
+                            DetailRow(label = "Mobile:", value = controller.mobileNumber)
                         }
-                    },
-                    backgroundColor = Color.Transparent,
-                    elevation = 0.dp,
-                    actions = {
-                        Spacer(modifier = Modifier.width(48.dp))
-                    }
-                )
 
-                // Main content
-                val scrollState = rememberScrollState()
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Employee Details Card
-                    DetailCard(title = "Employee Details") {
-                        DetailRow(label = "Name:", value = controller.employeeName)
-                        DetailRow(label = "Employee ID:", value = controller.employeeId)
-                        DetailRow(label = "Email:", value = controller.employeeEmail)
-                        DetailRow(label = "Mobile:", value = controller.mobileNumber)
-                    }
-
-                    // Travel Details Card
-                    DetailCard(title = "Travel Details") {
-                        DetailRow(label = "Destination:", value = travelRequest.destination)
-                        DetailRow(label = "Project Name:", value = travelRequest.project)
-                        // Use fields from the TravelRequest model
-                        DetailRow(
-                            label = "Business Justification:",
-                            value = travelRequest.businessJustification ?: "N/A"
-                        )
-                        DetailRow(
-                            label = "Mode of Transport:",
-                            value = travelRequest.modeOfTransport ?: "N/A"
-                        )
-                        // Format departure date in the format: day Month year (e.g., 3 Jul 2025)
-                        val formattedDepartureDate = try {
-                            val date = java.text.SimpleDateFormat(
-                                "yyyy-MM-dd",
-                                java.util.Locale.getDefault()
+                        // Travel Details Card
+                        DetailCard(title = "Travel Details") {
+                            DetailRow(label = "Destination:", value = travelRequest.destination)
+                            DetailRow(label = "Project Name:", value = travelRequest.project)
+                            // Use fields from the TravelRequest model
+                            DetailRow(
+                                label = "Business Justification:",
+                                value = travelRequest.businessJustification ?: "N/A"
                             )
-                                .parse(travelRequest.departureDate ?: "")
-                            if (date != null) {
-                                java.text.SimpleDateFormat(
-                                    "d MMM yyyy",
+                            DetailRow(
+                                label = "Mode of Transport:",
+                                value = travelRequest.modeOfTransport ?: "N/A"
+                            )
+                            // Format departure date in the format: day Month year (e.g., 3 Jul 2025)
+                            val formattedDepartureDate = try {
+                                val date = java.text.SimpleDateFormat(
+                                    "yyyy-MM-dd",
                                     java.util.Locale.getDefault()
                                 )
-                                    .format(date)
-                            } else {
+                                    .parse(travelRequest.departureDate ?: "")
+                                if (date != null) {
+                                    java.text.SimpleDateFormat(
+                                        "d MMM yyyy",
+                                        java.util.Locale.getDefault()
+                                    )
+                                        .format(date)
+                                } else {
+                                    "N/A"
+                                }
+                            } catch (e: Exception) {
                                 "N/A"
                             }
-                        } catch (e: Exception) {
-                            "N/A"
-                        }
 
-                        // Format arrival date in the format: day Month year (e.g., 17 Jul 2025)
-                        val formattedArrivalDate = try {
-                            val date = java.text.SimpleDateFormat(
-                                "yyyy-MM-dd",
-                                java.util.Locale.getDefault()
-                            )
-                                .parse(travelRequest.arrivalDate ?: "")
-                            if (date != null) {
-                                java.text.SimpleDateFormat(
-                                    "d MMM yyyy",
+                            // Format arrival date in the format: day Month year (e.g., 17 Jul 2025)
+                            val formattedArrivalDate = try {
+                                val date = java.text.SimpleDateFormat(
+                                    "yyyy-MM-dd",
                                     java.util.Locale.getDefault()
                                 )
-                                    .format(date)
-                            } else {
+                                    .parse(travelRequest.arrivalDate ?: "")
+                                if (date != null) {
+                                    java.text.SimpleDateFormat(
+                                        "d MMM yyyy",
+                                        java.util.Locale.getDefault()
+                                    )
+                                        .format(date)
+                                } else {
+                                    "N/A"
+                                }
+                            } catch (e: Exception) {
                                 "N/A"
                             }
-                        } catch (e: Exception) {
-                            "N/A"
-                        }
 
-                        DetailRow(label = "Departure Date:", value = formattedDepartureDate)
-                        DetailRow(label = "Arrival Date:", value = formattedArrivalDate)
-                        DetailRow(
-                            label = "Stay Required:",
-                            value = travelRequest.stayRequired ?: "N/A"
-                        )
-                        DetailRow(
-                            label = "Meal Preference:",
-                            value = travelRequest.mealPreference ?: "None"
-                        )
-                        DetailRow(
-                            label = "Seat Preference:",
-                            value = travelRequest.seatPreference ?: "None"
-                        )
-                        DetailRow(
-                            label = "Flight Time:",
-                            value = travelRequest.flightTime ?: "None"
-                        )
-                        DetailRow(
-                            label = "Frequent\nFlyer Number:",
-                            value = travelRequest.frequentFlyerNumber ?: "None"
-                        )
-                    }
-
-                    // Approval Details Card
-                    DetailCard(title = "Approval Details") {
-                        DetailRow(
-                            label = "Status:",
-                            value = travelRequest.status.name.capitalize(),
-                            valueColor = Color.Black // All status colors set to black
-                        )
-                        DetailRow(
-                            label = "Reporting Manager:",
-                            value = controller.reportingManagerName
-                        )
-                        DetailRow(
-                            label = "Manager Email:",
-                            value = controller.reportingManagerEmail
-                        )
-
-                        // Format the created date for display in the format: yyyy-MM-dd HH:mm:ss
-                        val formattedCreatedAt = try {
-                            java.text.SimpleDateFormat(
-                                "yyyy-MM-dd HH:mm:ss",
-                                java.util.Locale.getDefault()
+                            DetailRow(label = "Departure Date:", value = formattedDepartureDate)
+                            DetailRow(label = "Arrival Date:", value = formattedArrivalDate)
+                            DetailRow(
+                                label = "Stay Required:",
+                                value = travelRequest.stayRequired ?: "N/A"
                             )
-                                .format(travelRequest.createdDate)
-                        } catch (e: Exception) {
-                            "N/A"
+                            DetailRow(
+                                label = "Meal Preference:",
+                                value = travelRequest.mealPreference ?: "None"
+                            )
+                            DetailRow(
+                                label = "Seat Preference:",
+                                value = travelRequest.seatPreference ?: "None"
+                            )
+                            DetailRow(
+                                label = "Flight Time:",
+                                value = travelRequest.flightTime ?: "None"
+                            )
+                            DetailRow(
+                                label = "Frequent\nFlyer Number:",
+                                value = travelRequest.frequentFlyerNumber ?: "None"
+                            )
                         }
-                        DetailRow(label = "Created At:", value = formattedCreatedAt)
+
+                        // Approval Details Card
+                        DetailCard(title = "Approval Details") {
+                            DetailRow(
+                                label = "Status:",
+                                value = travelRequest.status.name.capitalize(),
+                                valueColor = Color.Black // All status colors set to black
+                            )
+                            DetailRow(
+                                label = "Reporting Manager:",
+                                value = controller.reportingManagerName
+                            )
+                            DetailRow(
+                                label = "Manager Email:",
+                                value = controller.reportingManagerEmail
+                            )
+
+                            // Format the created date for display in the format: yyyy-MM-dd HH:mm:ss
+                            val formattedCreatedAt = try {
+                                java.text.SimpleDateFormat(
+                                    "yyyy-MM-dd HH:mm:ss",
+                                    java.util.Locale.getDefault()
+                                )
+                                    .format(travelRequest.createdDate)
+                            } catch (e: Exception) {
+                                "N/A"
+                            }
+                            DetailRow(label = "Created At:", value = formattedCreatedAt)
+                        }
                     }
                 }
             }
         }
-    }
+    } // Close FontScaleAdjusted block
 }
 
 @Composable

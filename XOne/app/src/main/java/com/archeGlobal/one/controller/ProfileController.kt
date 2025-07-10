@@ -245,7 +245,7 @@ class ProfileController(
 
                                     if (!email.isNullOrEmpty()) {
                                         // Construct a URL similar to the expected format based on the API documentation
-                                        val fallbackUrl = "https://dev.arche.global:7000/download_doc/$email?fileName=${employeeId ?: ""}-profile_pic.jpg"
+                                        val fallbackUrl = "https://pulse.netcon.in:7000/download_doc/$email?fileName=${employeeId ?: ""}-profile_pic.jpg"
                                         Log.d("ProfileController", "Generated fallback URL: $fallbackUrl")
 
                                         // Store this URL for next app start

@@ -26,13 +26,15 @@ import androidx.compose.ui.zIndex
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelStatus
-import com.archeGlobal.one.ui.activities.TravelApproveActivity
-import com.archeGlobal.one.ui.activities.TravelRejectActivity
 import com.archeGlobal.one.ui.theme.*
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.google.gson.Gson
 import kotlinx.coroutines.delay
+import com.archeGlobal.one.utils.FontScaleAdjusted
+import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Screen for approving or rejecting a travel request with detailed view
@@ -42,322 +44,150 @@ fun TravelApprovalDetailScreen(
     controller: TravelController,
     travelRequest: TravelRequest
 ) {
-    val selectedRequest = travelRequest
-    val context = LocalContext.current // moved here for reuse without composable call in lambdas
-    var remarks by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var successMessage by remember { mutableStateOf<String?>(null) }
+    // Get context and font adjustment for consistent font scaling
+    val context = LocalContext.current
+    val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
 
-    // State for showing approval or rejection UI inline
-    var showApprovalUI by remember { mutableStateOf(false) }
-    var showRejectionUI by remember { mutableStateOf(false) }
-
-    // Observe the approval action state from the controller
-    val approvalActionState = controller.approvalActionState
-
-    // Handle approval action state changes
-    LaunchedEffect(approvalActionState) {
-        when (approvalActionState) {
-            is TravelController.TravelApprovalActionState.Loading -> {
-                // Show loading state
-                isLoading = true
-                errorMessage = null
-                successMessage = null
-            }
-
-            is TravelController.TravelApprovalActionState.Success -> {
-                // Show success and navigate back after a delay
-                isLoading = false
-                errorMessage = null
-                successMessage = approvalActionState.message
-                delay(1500) // Give user time to see the success state
-                controller.navigateBack()
-            }
-
-            is TravelController.TravelApprovalActionState.Error -> {
-                // Show error message
-                isLoading = false
-                errorMessage = approvalActionState.message
-                successMessage = null
-            }
-
-            else -> {
-                // Reset state
-                isLoading = false
-                errorMessage = null
-                successMessage = null
-            }
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
-    ) {
+    // Wrap entire content with font scale adjustment
+    FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop,
+                                WelcomeBackgroundMiddle,
+                                WelcomeBackgroundBottom
+                            )
                         )
                     )
-                )
-        ) {
-            // Loading overlay
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0x80FFFFFF))
-                        .zIndex(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Processing request...")
-                    }
-                }
-            }
-            Column(
-                modifier = Modifier.fillMaxSize()
             ) {
-                // Top App Bar
-                TopAppBar(
-                    title = {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = "Approve Travel Request",
-                                fontFamily = GraphikFontFamily,
-                                modifier = Modifier.align(Alignment.Center),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { controller.navigateBack() }) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    backgroundColor = Color.White,
-                    actions = {
-                        // Empty action to balance the navigation icon
-                        IconButton(onClick = {}) {
-                            Box(modifier = Modifier.size(24.dp))
-                        }
-                    }
-                )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Spacer(modifier = Modifier.height(48.dp))
 
-                // Main content
-                if (selectedRequest != null) {
-                    Column(
+                    TopAppBar(
+                        title = {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Travel Approval Details",
+                                    color = Color.Black,
+                                    fontSize = 20.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { controller.onBackPressed() }) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.Black
+                                )
+                            }
+                        },
+                        backgroundColor = Color.Transparent,
+                        elevation = 0.dp,
+                        actions = {
+                            Spacer(modifier = Modifier.width(48.dp))
+                        }
+                    )
+
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = 1.dp,
+                        backgroundColor = Color(0xFFF6F4EE)
                     ) {
-                        // Request card
-                        Card(
+                        val scrollState = rememberScrollState()
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            elevation = 4.dp,
-                            shape = RoundedCornerShape(12.dp)
+                                .verticalScroll(scrollState)
+                                .padding(16.dp)
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                            ) {
-                                // Request ID and Status
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "ID: ${selectedRequest.id}",
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp
-                                    )
-
-                                    StatusBadge(status = selectedRequest.status)
-                                }
-
-                                Divider(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 12.dp),
-                                    thickness = 1.dp,
-                                    color = Color.LightGray
-                                )
-
-                                // Request details
-                                DetailRow("Employee", selectedRequest.approver)
-                                DetailRow(
-                                    "Mobile",
-                                    selectedRequest.businessJustification ?: "N/A"
-                                ) // Using justification as mobile for demo
-                                DetailRow("Destination", selectedRequest.destination)
-                                DetailRow("Project", selectedRequest.project)
-                                DetailRow(
-                                    "Business Justification",
-                                    selectedRequest.businessJustification ?: "N/A"
-                                )
-                                DetailRow(
-                                    "Date of Departure",
-                                    formatDate(selectedRequest.departureDate)
-                                )
-                                DetailRow(
-                                    "Date of Arrival",
-                                    formatDate(selectedRequest.arrivalDate)
-                                )
-                                DetailRow(
-                                    "Mode of Transport",
-                                    selectedRequest.modeOfTransport ?: "N/A"
-                                )
-                            }
-                        }
-
-                        // Remarks input field
-                        if (selectedRequest.status == TravelStatus.PENDING) {
-                            OutlinedTextField(
-                                value = remarks,
-                                onValueChange = { remarks = it },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp)
-                                    .padding(bottom = 16.dp),
-                                label = { Text("Enter remark (optional)") },
-                                placeholder = { Text("Enter remark (optional)") }
+                            // Title
+                            Text(
+                                text = "Approval Details",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily,
+                                modifier = Modifier.padding(bottom = 16.dp)
                             )
 
-                            // Error message display
-                            errorMessage?.let {
-                                Text(
-                                    text = it,
-                                    color = PrimaryRed,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
+                            // Request details
+                            DetailRow(label = "Request ID:", value = travelRequest.id)
+                            DetailRow(label = "Employee:", value = travelRequest.approver)
+                            DetailRow(label = "Destination:", value = travelRequest.destination)
+                            DetailRow(label = "Project:", value = travelRequest.project)
+                            DetailRow(label = "Business Justification:", value = travelRequest.businessJustification ?: "N/A")
+                            DetailRow(label = "Departure Date:", value = travelRequest.departureDate ?: "N/A")
+                            DetailRow(label = "Return Date:", value = travelRequest.arrivalDate ?: "N/A")
+                            DetailRow(label = "Transport Mode:", value = travelRequest.modeOfTransport ?: "N/A")
+                            DetailRow(label = "Status:", value = travelRequest.status.name)
+                            DetailRow(label = "Created Date:", value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(travelRequest.createdDate))
 
-                            // Success message display
-                            successMessage?.let {
-                                Text(
-                                    text = it,
-                                    color = Color(0xFF4CD964), // Green color
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
+                            Spacer(modifier = Modifier.height(24.dp))
 
-                            // Approve button
-                            Button(
-                                onClick = {
-                                    // Navigate to the dedicated approval screen instead of calling the API
-                                    val intent =
-                                        Intent(context, TravelApproveActivity::class.java).apply {
-                                            putExtra("travel_request", Gson().toJson(travelRequest))
-                                        }
-                                    context.startActivity(intent)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = Color(0xFF4CD964), // Green color as shown in the image
-                                    disabledBackgroundColor = Color.Gray
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                enabled = !isLoading
-                            ) {
-                                if (isLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = Color.White,
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Text(
-                                        "Submit Approval",
-                                        color = Color.White,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                }
-                            }
+                            // Action buttons
+                            if (travelRequest.status == TravelStatus.PENDING) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Button(
+                                        onClick = { controller.navigateToTravelApprove(travelRequest) },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            backgroundColor = Color(0xFF4CAF50)
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "Approve",
+                                            color = Color.White,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
 
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Reject button
-                            OutlinedButton(
-                                onClick = {
-                                    // Navigate to the dedicated rejection screen instead of calling the API
-                                    val intent =
-                                        Intent(context, TravelRejectActivity::class.java).apply {
-                                            putExtra("travel_request", Gson().toJson(travelRequest))
-                                        }
-                                    context.startActivity(intent)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    backgroundColor = Color.White,
-                                    disabledContentColor = Color.Gray
-                                ),
-                                border = ButtonDefaults.outlinedBorder.copy(
-                                    brush = SolidColor(if (isLoading) Color.Gray else PrimaryRed)
-                                ),
-                                enabled = !isLoading
-                            ) {
-                                if (isLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = PrimaryRed,
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Text(
-                                        "Reject Request",
-                                        color = PrimaryRed,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
+                                    Button(
+                                        onClick = { controller.navigateToTravelReject(travelRequest) },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            backgroundColor = PrimaryRed
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "Reject",
+                                            color = Color.White,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                } else {
-                    // No selected request
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No travel request selected",
-                            fontFamily = GraphikFontFamily,
-                            fontSize = 18.sp,
-                            textAlign = TextAlign.Center
-                        )
                     }
                 }
             }
         }
-    }
+    } // Close FontScaleAdjusted block
 }
 
 @Composable
@@ -391,22 +221,21 @@ private fun DetailRow(label: String, value: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            fontSize = 14.sp,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.width(140.dp)
         )
         Text(
             text = value,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Normal,
+            color = Color.Black
         )
     }
 }
