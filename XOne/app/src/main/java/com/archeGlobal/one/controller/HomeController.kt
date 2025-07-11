@@ -15,11 +15,13 @@ import com.archeGlobal.one.HolidayCalendarActivity
 import com.archeGlobal.one.LocationsActivity
 import com.archeGlobal.one.PolicyActivity
 import com.archeGlobal.one.model.AboutMeModel
+import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.HomeItem
 import com.archeGlobal.one.model.HomeModel
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
@@ -60,6 +62,13 @@ class HomeController(
     private val _showPrideMonthDialog = MutableStateFlow(false)
     val showPrideMonthDialog: StateFlow<Boolean> = _showPrideMonthDialog.asStateFlow()
 
+    // Celebration state
+    private val _celebrationData = MutableStateFlow<CelebrationResponse?>(null)
+    val celebrationData: StateFlow<CelebrationResponse?> = _celebrationData.asStateFlow()
+
+    private val _showCelebrationDialog = MutableStateFlow(false)
+    val showCelebrationDialog: StateFlow<Boolean> = _showCelebrationDialog.asStateFlow()
+
     // Companion object and other class members follow
     companion object {
         private const val PREF_NAME = "event_preferences"
@@ -84,6 +93,9 @@ class HomeController(
             // If not Pride Month, fetch the regular daily event
             fetchEventFromLoginData()
         }
+        
+        // Fetch celebration data
+        fetchCelebrationData()
     }
 
     private val preferencesManager = PreferencesManager(context)
@@ -351,6 +363,92 @@ class HomeController(
     fun isUsingPrideIcon(): Boolean {
         val sharedPref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return sharedPref.getBoolean(KEY_USING_PRIDE_ICON, false)
+    }
+
+    // Celebration methods
+    private fun fetchCelebrationData() {
+        Log.d("CelebrationController", "Fetching celebration data")
+        val scope = CoroutineScope(Dispatchers.IO)
+        
+        scope.launch {
+            try {
+                val response = RetrofitClient.apiService.getEmployeeCelebration()
+                if (response.isSuccessful) {
+                    val celebrationData = response.body()
+                    Log.d("CelebrationController", "Celebration data fetched successfully")
+                    _celebrationData.value = celebrationData
+                } else {
+                    Log.e("CelebrationController", "Failed to fetch celebration data: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                Log.e("CelebrationController", "Exception while fetching celebration data: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun showCelebrationDialog() {
+        Log.d("CelebrationController", "Showing celebration dialog")
+        _showCelebrationDialog.value = true
+    }
+
+    fun dismissCelebrationDialog() {
+        Log.d("CelebrationController", "Dismissing celebration dialog")
+        _showCelebrationDialog.value = false
+    }
+
+    fun onCelebrationWishesClick(email: String, employeeName: String, celebrationType: String) {
+        Log.d("CelebrationController", "Wishes clicked for email: $email, name: $employeeName, type: $celebrationType")
+        
+        // Get greetings data from UserDataManager
+        val userDataManager = UserDataManager.getInstance(context)
+        val greetingsData = userDataManager.getGreetingsData()
+        val categoryMessages = userDataManager.getGreetingCategoriesData()
+        
+        // Find the appropriate category based on celebration type
+        val categoryName = when (celebrationType.lowercase()) {
+            "birthday" -> "Birthday"
+            "work anniversary" -> "Career Milestone"
+            else -> celebrationType
+        }
+        
+        // Get greetings for the category
+        val categoryGreetings = greetingsData?.get(categoryName) ?: emptyList()
+        val firstGreeting = categoryGreetings.firstOrNull() ?: ""
+        
+        // Get default message for the category and pre-fill with employee name
+        val defaultMessage = categoryMessages?.find { it.name == categoryName }?.message ?: ""
+        val personalizedMessage = if (defaultMessage.isNotEmpty()) {
+            // Replace any generic greetings with the actual employee name
+            defaultMessage
+                .replace("Dear colleague", "Dear $employeeName", ignoreCase = true)
+                .replace("Dear team member", "Dear $employeeName", ignoreCase = true)
+                .replace("Dear employee", "Dear $employeeName", ignoreCase = true)
+                .replace("Dear friend", "Dear $employeeName", ignoreCase = true)
+                .replace("Dear one", "Dear $employeeName", ignoreCase = true)
+                .let { message ->
+                    // If the message doesn't start with "Dear [name]", prepend it
+                    if (!message.trimStart().startsWith("Dear $employeeName", ignoreCase = true)) {
+                        "Dear $employeeName,\n\n$message"
+                    } else {
+                        message
+                    }
+                }
+        } else {
+            "Dear $employeeName,\n\nCongratulations on your special day!"
+        }
+        
+        // Navigate directly to GreetingDetailActivity
+        val intent = Intent(context, com.archeGlobal.one.GreetingDetailActivity::class.java)
+        intent.putExtra("imageUrl", firstGreeting)
+        intent.putExtra("category", categoryName)
+        intent.putExtra("message", personalizedMessage)
+        intent.putExtra("recipientEmail", email)
+        intent.putExtra("recipientName", employeeName)
+        intent.putStringArrayListExtra("allGreetings", ArrayList(categoryGreetings))
+        
+        context.startActivity(intent)
+        dismissCelebrationDialog()
     }
 
     var model by mutableStateOf(
