@@ -1,7 +1,9 @@
 package com.archeGlobal.one.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -102,6 +105,7 @@ fun CelebrationDialog(
     celebrationData: CelebrationResponse?,
     onDismiss: () -> Unit,
     onWishesClick: (String, String, String) -> Unit,
+    onViewAllClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf("Today") }
@@ -113,7 +117,21 @@ fun CelebrationDialog(
         Card(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = { /* Handle drag end */ },
+                        onHorizontalDrag = { _, dragAmount ->
+                            if (dragAmount > 50) {
+                                // Swiped from left to right - go to Today
+                                selectedTab = "Today"
+                            } else if (dragAmount < -50) {
+                                // Swiped from right to left - go to Tomorrow
+                                selectedTab = "Tomorrow"
+                            }
+                        }
+                    )
+                },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
@@ -128,11 +146,16 @@ fun CelebrationDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Empty space for balance
+                    Spacer(modifier = Modifier.width(48.dp))
+                    
                     Text(
                         text = "Cheers For Peers!",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
                     )
                     
                     IconButton(onClick = onDismiss) {
@@ -166,15 +189,19 @@ fun CelebrationDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
+                // Get items for current tab
+                val allItemsForTab = if (selectedTab == "Today") {
+                    celebrationData?.today ?: emptyList()
+                } else {
+                    celebrationData?.tomorrow ?: emptyList()
+                }
+                
                 // Content
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 300.dp)
                 ) {
-                    val itemsToShow = if (selectedTab == "Today") {
-                        celebrationData?.today ?: emptyList()
-                    } else {
-                        celebrationData?.tomorrow ?: emptyList()
-                    }
+                    // Show only first 3 items
+                    val itemsToShow = allItemsForTab.take(3)
                     
                     items(itemsToShow) { item ->
                         CelebrationItem(
@@ -182,6 +209,34 @@ fun CelebrationDialog(
                             onWishesClick = { onWishesClick(item.email, item.employeeName, item.celebrationType) },
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // View All button - only show if current tab has more than 3 items
+                if (allItemsForTab.size > 3) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        OutlinedButton(
+                            onClick = onViewAllClick,
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFFDD3825),
+                                containerColor = Color.Transparent
+                            ),
+                            border = BorderStroke(1.dp, Color(0xFFDD3825)),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Text(
+                                text = "View All",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFFDD3825)
+                            )
+                        }
                     }
                 }
                 
@@ -244,7 +299,7 @@ private fun TabButton(
 }
 
 @Composable
-private fun CelebrationItem(
+fun CelebrationItem(
     item: CelebrationItem,
     onWishesClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -312,7 +367,7 @@ private fun CelebrationItem(
                 Column {
                     Text(
                         text = item.employeeName,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
@@ -320,7 +375,7 @@ private fun CelebrationItem(
                     Text(
                         text = item.celebrationType,
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = Color(0xFF007AFF)
                     )
                 }
             }

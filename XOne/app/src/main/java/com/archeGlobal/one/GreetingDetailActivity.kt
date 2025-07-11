@@ -51,6 +51,8 @@ class GreetingDetailActivity : ComponentActivity() {
         val imageUrl = intent.getStringExtra("imageUrl") ?: ""
         val message = intent.getStringExtra("message") ?: ""
         val category = intent.getStringExtra("category") ?: "Greeting"
+        val recipientEmail = intent.getStringExtra("recipientEmail") ?: ""
+        val recipientName = intent.getStringExtra("recipientName") ?: ""
         val greetingsList = intent.getStringArrayListExtra("allGreetings")
         allGreetings = greetingsList ?: listOf(imageUrl)
         selectedGreetingUrl = imageUrl
@@ -80,19 +82,19 @@ class GreetingDetailActivity : ComponentActivity() {
                     onMessageChanged = { newMessage -> editableMessage = newMessage },
                     onGreetingSelected = { newGreetingUrl -> selectedGreetingUrl = newGreetingUrl },
                     onBackPressed = { finish() },
-                    onSendGreeting = { sendGreeting(selectedGreetingUrl, editableMessage, category) },
-                    onSendInOutlook = { greetingUrl, msg -> sendGreetingInOutlook(greetingUrl, msg, category) }
+                    onSendGreeting = { sendGreeting(selectedGreetingUrl, editableMessage, category, recipientEmail) },
+                    onSendInOutlook = { greetingUrl, msg -> sendGreetingInOutlook(greetingUrl, msg, category, recipientEmail) }
                 )
             }
         }
     }
 
-    private fun sendGreeting(imageUrl: String, message: String, category: String) {
+    private fun sendGreeting(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
         android.widget.Toast.makeText(this, "Preparing greeting to send...", android.widget.Toast.LENGTH_SHORT).show()
-        downloadImageAndShare(imageUrl, message, category)
+        downloadImageAndShare(imageUrl, message, category, recipientEmail)
     }
 
-    private fun shareLinkOnly(imageUrl: String, message: String, category: String) {
+    private fun shareLinkOnly(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_SUBJECT, category)
@@ -102,11 +104,15 @@ class GreetingDetailActivity : ComponentActivity() {
                 imageUrl
             }
             putExtra(Intent.EXTRA_TEXT, shareText)
+            // Pre-fill recipient email if available
+            if (recipientEmail.isNotEmpty()) {
+                putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
+            }
         }
         startActivity(Intent.createChooser(intent, "Send Greeting"))
     }
 
-    private fun downloadImageAndShare(imageUrl: String, message: String, category: String) {
+    private fun downloadImageAndShare(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val imageLoader = ImageLoader(this@GreetingDetailActivity)
@@ -139,24 +145,28 @@ class GreetingDetailActivity : ComponentActivity() {
                             if (message.isNotEmpty()) {
                                 putExtra(Intent.EXTRA_TEXT, message)
                             }
+                            // Pre-fill recipient email if available
+                            if (recipientEmail.isNotEmpty()) {
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
+                            }
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
                         startActivity(Intent.createChooser(intent, "Send Greeting"))
                     } else {
-                        shareLinkOnly(imageUrl, message, category)
+                        shareLinkOnly(imageUrl, message, category, recipientEmail)
                     }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("GreetingDetailActivity", "Error downloading image: ", e)
                 withContext(Dispatchers.Main) {
-                    shareLinkOnly(imageUrl, message, category)
+                    shareLinkOnly(imageUrl, message, category, recipientEmail)
                 }
             }
         }
     }
 
     // --- Send via Outlook with image URL and small display in body ---
-    private fun sendGreetingInOutlook(imageUrl: String, message: String, category: String) {
+    private fun sendGreetingInOutlook(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Get user data for signature
@@ -182,18 +192,22 @@ class GreetingDetailActivity : ComponentActivity() {
                         putExtra(Intent.EXTRA_SUBJECT, category)
                         putExtra(Intent.EXTRA_HTML_TEXT, htmlEmailContent)
                         putExtra(Intent.EXTRA_TEXT, message)
+                        // Pre-fill recipient email if available
+                        if (recipientEmail.isNotEmpty()) {
+                            putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
+                        }
                     }
                     try {
                         startActivity(emailIntent)
                     } catch (e: Exception) {
                         Log.e("GreetingDetailActivity", "Outlook HTML intent failed: ${e.message}")
-                        shareLinkOnly(imageUrl, message, category)
+                        shareLinkOnly(imageUrl, message, category, recipientEmail)
                     }
                 }
             } catch (e: Exception) {
                 Log.e("GreetingDetailActivity", "Error in sendGreetingInOutlook: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    shareLinkOnly(imageUrl, message, category)
+                    shareLinkOnly(imageUrl, message, category, recipientEmail)
                 }
             }
         }

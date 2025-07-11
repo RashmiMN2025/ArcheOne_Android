@@ -342,6 +342,13 @@
             android:theme="@style/Theme.XOne" />
 
         <activity
+            android:name=".AllCelebrationActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="All Celebrations"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
             android:name=".LocationsActivity"
             android:exported="true"
             android:screenOrientation="portrait"

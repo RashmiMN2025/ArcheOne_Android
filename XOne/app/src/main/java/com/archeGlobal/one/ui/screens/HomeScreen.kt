@@ -618,7 +618,13 @@ fun HomeScreenContent(
             CelebrationDialog(
                 celebrationData = celebrationData,
                 onDismiss = { controller.dismissCelebrationDialog() },
-                onWishesClick = { email, name, type -> controller.onCelebrationWishesClick(email, name, type) }
+                onWishesClick = { email, name, type -> controller.onCelebrationWishesClick(email, name, type) },
+                onViewAllClick = { 
+                    controller.dismissCelebrationDialog()
+                    // Navigate to AllCelebrationActivity
+                    val intent = android.content.Intent(context, com.archeGlobal.one.AllCelebrationActivity::class.java)
+                    context.startActivity(intent)
+                }
             )
         }
 
