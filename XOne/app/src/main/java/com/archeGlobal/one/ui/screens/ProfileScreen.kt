@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
@@ -47,6 +49,8 @@ import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.preview.PreviewNavigator
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.ImageCache
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.composed
 
 @Composable
 fun ProfileScreen(
@@ -58,17 +62,14 @@ fun ProfileScreen(
     onFooterSOSClick: () -> Unit = {},
     onFooterProfileClick: () -> Unit = {}
 ) {
-    // State to control the visibility of the logout confirmation dialog
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Disable back swipe gesture
     BackHandler(enabled = true) {
         // Handle back press manually
     }
 
-    // Camera permission state
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -78,7 +79,6 @@ fun ProfileScreen(
         )
     }
 
-    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -88,7 +88,6 @@ fun ProfileScreen(
         }
     }
 
-    // Permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -104,7 +103,6 @@ fun ProfileScreen(
         }
     }
 
-    // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -118,7 +116,7 @@ fun ProfileScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+            .systemBarsPadding()
     ) {
         FooterScaffold(
             footerNavigation = footerNavigation,
@@ -133,9 +131,9 @@ fun ProfileScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFFE0DCD1), // Light Beige/Grey
-                                Color(0xFFC8C8CA), // Light Grey
-                                Color(0xFF474749) // Dark Grey
+                                Color(0xFFE0DCD1),
+                                Color(0xFFC8C8CA),
+                                Color(0xFF474749)
                             )
                         )
                     )
@@ -144,7 +142,6 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Profile Header
                     ProfileHeader(
                         name = controller.model.name,
                         email = controller.model.email,
@@ -154,10 +151,13 @@ fun ProfileScreen(
                         },
                         onCameraCapture = { bitmap ->
                             controller.uploadProfilePhoto(bitmap)
+                        },
+                        onDeleteProfilePhoto = {
+                            controller.deleteProfilePhoto()
+                            ImageCache.invalidateProfileImageCache() // Invalidate cache
                         }
                     )
 
-                    // Rest of the content with padding
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -166,7 +166,6 @@ fun ProfileScreen(
                     ) {
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Menu Items
                         MenuItems(
                             items = controller.model.menuItems,
                             onItemClick = { title ->
@@ -175,16 +174,13 @@ fun ProfileScreen(
                                     "Address/Coordinates" -> controller.onAddressClick()
                                     "Emergency Contact" -> controller.onEmergencyContactClick()
                                     "Documents" -> controller.onDocumentsClick()
-                                    "Log out" ->
-                                        showLogoutDialog =
-                                            true // Show logout dialog instead of direct action
+                                    "Log out" -> showLogoutDialog = true
                                 }
                             }
                         )
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        // Version and Last Login
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.padding(bottom = 16.dp)
@@ -211,7 +207,6 @@ fun ProfileScreen(
                         }
                     }
 
-                    // Logout confirmation dialog
                     if (showLogoutDialog) {
                         LogoutConfirmationDialog(
                             onConfirm = {
@@ -221,99 +216,26 @@ fun ProfileScreen(
                             onDismiss = { showLogoutDialog = false }
                         )
                     }
+                }
 
-                    // Upload Dialog
-                    if (showUploadDialog) {
-                        Dialog(onDismissRequest = { showUploadDialog = false }) {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.92f)
-                                    .padding(16.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        "Upload Profile Photo",
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 4.dp),
-                                        textAlign = TextAlign.Center
-                                    )
-
-                                    Text(
-                                        "Choose a method to upload your profile picture",
-                                        fontSize = 14.sp,
-                                        color = Color.Gray,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 24.dp),
-                                        textAlign = TextAlign.Center
-                                    )
-
-                                    // Camera Button
-                                    Button(
-                                        onClick = {
-                                            if (hasCameraPermission) {
-                                                cameraLauncher.launch(null)
-                                            } else {
-                                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(56.dp),
-                                        shape = RoundedCornerShape(8.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(
-                                                0xFFDD3825
-                                            )
-                                        )
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_camera),
-                                            contentDescription = "Camera",
-                                            modifier = Modifier.padding(end = 8.dp),
-                                            tint = Color.White
-                                        )
-                                        Text("Camera", fontSize = 16.sp, color = Color.White)
-                                    }
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    // Gallery Button
-                                    Button(
-                                        onClick = { galleryLauncher.launch("image/*") },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(56.dp),
-                                        shape = RoundedCornerShape(8.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(
-                                                0xFFDD3825
-                                            )
-                                        )
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_gallery),
-                                            contentDescription = "Gallery",
-                                            modifier = Modifier.padding(end = 8.dp),
-                                            tint = Color.White
-                                        )
-                                        Text("Gallery", fontSize = 16.sp, color = Color.White)
-                                    }
-                                }
+                if (showUploadDialog) {
+                    ProfilePictureUploadDialog(
+                        profilePicture = controller.model.profilePicture,
+                        onCameraClick = {
+                            if (hasCameraPermission) {
+                                cameraLauncher.launch(null)
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                             }
-                        }
-                    }
+                        },
+                        onGalleryClick = { galleryLauncher.launch("image/*") },
+                        onDeleteClick = {
+                            controller.deleteProfilePhoto()
+                            ImageCache.invalidateProfileImageCache() // Invalidate cache
+                            showUploadDialog = false
+                        },
+                        onDismiss = { showUploadDialog = false }
+                    )
                 }
             }
         }
@@ -339,7 +261,6 @@ private fun LogoutConfirmationDialog(
                     .padding(horizontal = 16.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Icon
                 Icon(
                     painter = painterResource(id = R.drawable.ic_logout1),
                     contentDescription = "Logout",
@@ -349,7 +270,6 @@ private fun LogoutConfirmationDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Title
                 Text(
                     text = "Log Out",
                     fontSize = 20.sp,
@@ -360,7 +280,6 @@ private fun LogoutConfirmationDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Message
                 Text(
                     text = "Are you sure you want to log out of\nyour account?",
                     fontSize = 14.sp,
@@ -373,12 +292,10 @@ private fun LogoutConfirmationDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Buttons in a row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Log Out button
                     Button(
                         onClick = onConfirm,
                         modifier = Modifier
@@ -398,14 +315,13 @@ private fun LogoutConfirmationDialog(
                         )
                     }
 
-                    // Cancel button
                     Button(
                         onClick = onDismiss,
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFABABAB) // Lighter gray color
+                            containerColor = Color(0xFFABABAB)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -429,12 +345,12 @@ private fun ProfileHeader(
     email: String,
     profilePicture: String? = null,
     onProfilePictureClick: ((Uri) -> Unit)? = null,
-    onCameraCapture: ((Bitmap) -> Unit)? = null
+    onCameraCapture: ((Bitmap) -> Unit)? = null,
+    onDeleteProfilePhoto: (() -> Unit)? = null
 ) {
     var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Camera permission state
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -444,7 +360,6 @@ private fun ProfileHeader(
         )
     }
 
-    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -454,7 +369,6 @@ private fun ProfileHeader(
         }
     }
 
-    // Permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -466,7 +380,6 @@ private fun ProfileHeader(
         }
     }
 
-    // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -482,7 +395,6 @@ private fun ProfileHeader(
             .height(240.dp)
             .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp))
     ) {
-        // Background image
         Image(
             painter = painterResource(id = R.drawable.header_home),
             contentDescription = "Header Background",
@@ -490,69 +402,52 @@ private fun ProfileHeader(
             contentScale = ContentScale.Crop
         )
 
-        // Content overlay
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 32.dp)
         ) {
-            // Profile picture with camera icon overlay
             Box(
                 modifier = Modifier
                     .padding(top = 24.dp)
                     .size(90.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Profile picture or default icon
                 Surface(
                     modifier = Modifier.size(90.dp),
                     shape = CircleShape,
                     color = Color.LightGray
                 ) {
-                    if (profilePicture != null) {
-                        // Display the profile picture using Coil with proper caching
-                        val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
-                        key(profilePicture, cacheVersion) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                // Always show the person icon first as a placeholder
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = Color.DarkGray,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(8.dp)
-                                        .align(Alignment.Center)
-                                )
-
-                                // Load the actual profile image on top
-                                Image(
-                                    painter = rememberAsyncImagePainter(
-                                        ImageCache.createProfileImageRequest(
-                                            context = LocalContext.current,
-                                            url = profilePicture
-                                        ),
-                                        onSuccess = { Log.d("ProfileHeader", "Profile image loaded successfully: $profilePicture") }
-                                    ),
-                                    contentDescription = "Profile Picture",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                        }
-                    } else {
-                        // Default profile icon
+                    if (profilePicture.isNullOrEmpty()) {
                         Icon(
                             imageVector = Icons.Default.Person,
-                            contentDescription = null,
+                            contentDescription = "Profile Picture",
                             tint = Color.DarkGray,
-                            modifier = Modifier.fillMaxSize().padding(8.dp)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
                         )
+                    } else {
+                        val cacheVersion = ImageCache.profileImageVersion.value
+                        key(profilePicture, cacheVersion) {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    model = ImageCache.createProfileImageRequest(
+                                        context = LocalContext.current,
+                                        url = profilePicture
+                                    ),
+                                    onSuccess = { Log.d("ProfileHeader", "Profile image loaded successfully: $profilePicture") },
+                                    onError = { Log.e("ProfileHeader", "Failed to load profile image: $profilePicture") }
+                                ),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     }
                 }
 
-                // Camera icon overlay for changing profile picture
                 if (onProfilePictureClick != null) {
                     Surface(
                         modifier = Modifier
@@ -592,15 +487,55 @@ private fun ProfileHeader(
         }
     }
 
-    // Upload Dialog
     if (showUploadDialog) {
-        Dialog(onDismissRequest = { showUploadDialog = false }) {
+        ProfilePictureUploadDialog(
+            profilePicture = profilePicture,
+            onCameraClick = {
+                if (hasCameraPermission) {
+                    cameraLauncher.launch(null)
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
+            },
+            onGalleryClick = { galleryLauncher.launch("image/*") },
+            onDeleteClick = {
+                onDeleteProfilePhoto?.invoke()
+                ImageCache.invalidateProfileImageCache() // Invalidate cache
+                showUploadDialog = false
+            },
+            onDismiss = { showUploadDialog = false }
+        )
+    }
+}
+
+@Composable
+fun ProfilePictureUploadDialog(
+    profilePicture: String?,
+    onCameraClick: () -> Unit,
+    onGalleryClick: () -> Unit,
+    onDeleteClick: (() -> Unit)?,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(horizontal = 10.dp)
+        ) {
             Card(
                 modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .padding(16.dp),
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(8.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -609,73 +544,169 @@ private fun ProfileHeader(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "Upload Profile Photo",
+                        text = if (!profilePicture.isNullOrEmpty()) "Edit Profile Photo" else "Upload Profile Photo",
                         fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 4.dp),
+                            .padding(bottom = 8.dp),
                         textAlign = TextAlign.Center
                     )
 
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(8.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (profilePicture.isNullOrEmpty()) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile Picture",
+                                tint = Color.DarkGray,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    model = ImageCache.createProfileImageRequest(
+                                        context = LocalContext.current,
+                                        url = profilePicture
+                                    ),
+                                    onSuccess = { Log.d("ProfilePictureUploadDialog", "Profile image loaded successfully: $profilePicture") },
+                                    onError = { Log.e("ProfilePictureUploadDialog", "Failed to load profile image: $profilePicture") }
+                                ),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+
                     Text(
-                        "Choose a method to upload your profile picture",
-                        fontSize = 14.sp,
+                        text = if (!profilePicture.isNullOrEmpty()) "Choose a method to edit your profile picture" else "Choose a method to upload your profile picture",
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
                         color = Color.Gray,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 24.dp),
-                        textAlign = TextAlign.Center
+                            .padding(bottom = 16.dp),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 16.sp
                     )
 
-                    // Camera Button
-                    Button(
-                        onClick = {
-                            if (hasCameraPermission) {
-                                cameraLauncher.launch(null)
-                            } else {
-                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                            }
-                        },
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_camera),
-                            contentDescription = "Camera",
-                            modifier = Modifier.padding(end = 8.dp),
-                            tint = Color.White
-                        )
-                        Text("Camera", fontSize = 16.sp, color = Color.White)
+                        Button(
+                            onClick = onCameraClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_camera),
+                                contentDescription = "Camera",
+                                modifier = Modifier.padding(end = 8.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                text = "Camera",
+                                fontSize = 14.sp,
+                                color = Color.White,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Button(
+                            onClick = onGalleryClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_gallery),
+                                contentDescription = "Gallery",
+                                modifier = Modifier.padding(end = 8.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                text = "Gallery",
+                                fontSize = 14.sp,
+                                color = Color.White,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Gallery Button
-                    Button(
-                        onClick = { galleryLauncher.launch("image/*") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_gallery),
-                            contentDescription = "Gallery",
-                            modifier = Modifier.padding(end = 8.dp),
-                            tint = Color.White
-                        )
-                        Text("Gallery", fontSize = 16.sp, color = Color.White)
+                    if (!profilePicture.isNullOrEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Button(
+                                onClick = { onDeleteClick?.invoke() },
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(40.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFE0B4AA),
+                                    contentColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFE0B4AA),
+                                    disabledContentColor = Color(0xFFDD3825)
+                                ),
+                                border = BorderStroke(1.dp, Color(0xFFDD3825)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "Delete",
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFFDD3825)
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
+}
+
+fun Modifier.noRippleClickable(
+    enabled: Boolean = true,
+    onClick: () -> Unit
+): Modifier = composed {
+    this.then(
+        Modifier.clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() },
+            enabled = enabled,
+            onClick = onClick
+        )
+    )
 }
 
 @Composable
@@ -724,7 +755,7 @@ private fun MenuItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    painter = painterResource(id = icon), // Use painterResource to load drawable
+                    painter = painterResource(id = icon),
                     contentDescription = title,
                     tint = Color.Black,
                     modifier = Modifier.size(25.dp)
@@ -751,7 +782,7 @@ private fun MenuItem(
 
 fun getIconForMenuItem(icon: String): Int {
     return when (icon) {
-        "person" -> R.drawable.ic_user
+        "person" -> R.drawable.profile
         "home" -> R.drawable.ic_home1
         "phone" -> R.drawable.ic_call
         "document" -> R.drawable.ic_doc

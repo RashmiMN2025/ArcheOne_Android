@@ -26,7 +26,9 @@ import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -46,11 +48,11 @@ interface ApiService {
     @POST("/sos")
     suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
 
-    @POST("/sos")
-    fun createSOSRequest(@Body request: SOSRequest): Call<SOSResponse>
-
     @POST("/logout")
     fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
+
+    @HTTP(method = "DELETE", path = "/delete_doc", hasBody = true)
+    fun deleteDoc(@Body params: Map<String, String>): Call<ProfilePictureResponse>
 
     // Document API - List Files
     @Multipart
@@ -84,9 +86,6 @@ interface ApiService {
     @POST("calendar")
     suspend fun getCalendar(@Body request: CalendarRequest): Response<CalendarResponse>
 
-    @GET("calendar")
-    fun getHolidays(): Call<CalendarResponse>
-
     @GET("policies")
     suspend fun getPolicies(): Response<List<PolicyResponse>>
 
@@ -110,9 +109,6 @@ interface ApiService {
 
     @POST("travel-request/combined-history")
     fun getTravelCombinedHistory(@Body request: TravelHistoryRequest): Call<TravelCombinedHistoryResponse>
-
-    @POST("travel-request/approval-history")
-    fun getTravelApprovalHistory(@Body request: TravelApprovalRequest): Call<TravelApprovalResponse>
 
     @POST("travel-request/approve")
     fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
@@ -150,12 +146,6 @@ data class LogoutRequest(
     val email: String
 )
 
-data class MyDocRequest(
-    val employeeId: String,
-    val email: String,
-    val documentType: String? = null
-)
-
 data class LogoutResponse(
     val status: Int,
     val message: String
@@ -166,11 +156,6 @@ data class DocumentListResponse(
     val message: Any, // Can be a string message or list of files
     val personalDoc: List<Document>? = emptyList(),
     val professionalDoc: List<Document>? = emptyList()
-)
-
-data class DocumentFile(
-    val fileName: String,
-    val url: String
 )
 
 data class Document(
