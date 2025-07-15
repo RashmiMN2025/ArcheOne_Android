@@ -2,11 +2,10 @@ package com.archeGlobal.one.utils
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Utility class to manage profile image caching and invalidation
@@ -15,10 +14,10 @@ object ImageCache {
     private const val TAG = "ImageCache"
 
     // Version key to invalidate all images
-    private var _profileImageVersion = MutableStateFlow(System.currentTimeMillis())
-    val profileImageVersion: StateFlow<Long> = _profileImageVersion.asStateFlow()
+    private var _profileImageVersion = mutableStateOf(0)
+    val profileImageVersion: State<Int> = _profileImageVersion
 
-    // Cache timeout in milliseconds (5 minutes)
+    // Cache timeout is not used directly but kept for reference
     private const val CACHE_TIMEOUT = 5 * 60 * 1000L
 
     /**
@@ -26,9 +25,8 @@ object ImageCache {
      */
     fun invalidateProfileImageCache() {
         try {
-            val newVersion = System.currentTimeMillis()
-            _profileImageVersion.value = newVersion
-            Log.d(TAG, "Profile image cache invalidated with version: $newVersion")
+            _profileImageVersion.value += 1
+            Log.d(TAG, "Profile image cache invalidated with version: ${_profileImageVersion.value}")
         } catch (e: Exception) {
             Log.e(TAG, "Error invalidating profile image cache", e)
         }
@@ -39,15 +37,16 @@ object ImageCache {
      */
     fun createProfileImageRequest(
         context: Context,
-        url: String,
+        url: String?,
         forceRefresh: Boolean = false
     ): ImageRequest {
         try {
-            val cacheKey = getCacheKey(url)
+            val safeUrl = url ?: ""
+            val cacheKey = getCacheKey(safeUrl)
             Log.d(TAG, "Creating profile image request for: $url with cache key: $cacheKey")
 
             return ImageRequest.Builder(context)
-                .data(url)
+                .data(safeUrl)
                 .crossfade(true)
                 .placeholder(com.archeGlobal.one.R.drawable.ic_person)
                 .error(com.archeGlobal.one.R.drawable.ic_person)
@@ -59,9 +58,9 @@ object ImageCache {
         } catch (e: Exception) {
             Log.e(TAG, "Error creating profile image request", e)
 
-            // Fallback to basic request in case of error
+            // Fallback to basic request with placeholder
             return ImageRequest.Builder(context)
-                .data(url)
+                .data("")
                 .placeholder(com.archeGlobal.one.R.drawable.ic_person)
                 .error(com.archeGlobal.one.R.drawable.ic_person)
                 .build()

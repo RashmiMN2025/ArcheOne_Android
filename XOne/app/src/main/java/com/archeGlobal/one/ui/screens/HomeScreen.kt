@@ -143,7 +143,7 @@ fun ProfileHeader(
 
                         // Use ImageCache version for recomposition
                         val context = LocalContext.current
-                        val cacheVersion = ImageCache.profileImageVersion.collectAsState().value
+                        val cacheVersion = ImageCache.profileImageVersion.value
                         key(model.profilePicture, cacheVersion) {
                             Box(modifier = Modifier.fillMaxSize()) {
                                 // Always show the person icon first as a placeholder

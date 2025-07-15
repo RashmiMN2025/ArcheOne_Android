@@ -787,7 +787,7 @@ fun MpinScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Answer must be up to 20 characters (excluding spaces), can include letters or numbers, and is case sensitive. No leading spaces and maximum 2 consecutive spaces allowed.",
+                                text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,

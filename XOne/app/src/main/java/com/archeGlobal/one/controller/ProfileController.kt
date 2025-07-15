@@ -304,6 +304,38 @@ class ProfileController(
         }
     }
 
+    fun deleteProfilePhoto(onSuccess: () -> Unit = {}) {
+        val email = userData?.email ?: ""
+        val employeeId = userData?.employeeId ?: ""
+        if (email.isEmpty() || employeeId.isEmpty()) {
+            Toast.makeText(context, "User data not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val params = mapOf(
+            "email" to email,
+            "employeeId" to employeeId,
+            "documentType" to "profile_pic"
+        )
+        // Assuming you have a deleteDoc endpoint in your ApiService:
+        RetrofitClient.apiService.deleteDoc(params).enqueue(object : Callback<ProfilePictureResponse> {
+            override fun onResponse(call: Call<ProfilePictureResponse>, response: Response<ProfilePictureResponse>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "Profile photo deleted", Toast.LENGTH_SHORT).show()
+                    // Remove from model and UserDataManager
+                    model = model.copy(profilePicture = null)
+                    userDataManager.updateProfilePicture(null)
+                    com.archeGlobal.one.utils.ImageCache.invalidateProfileImageCache()
+                    onSuccess()
+                } else {
+                    Toast.makeText(context, "Failed to delete photo", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<ProfilePictureResponse>, t: Throwable) {
+                Toast.makeText(context, "Failed to delete photo", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
     private fun getFileFromUri(context: Context, uri: Uri): File? {
         return try {
             val contentResolver = context.contentResolver

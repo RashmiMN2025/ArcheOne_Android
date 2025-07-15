@@ -33,7 +33,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 }
 
 object RetrofitClient {
-    const val BASE_URL = "https://pulse.netcon.in:7000/"
+    const val BASE_URL = "https://dev.arche.global:7000/"
     private var retrofit: Retrofit? = null
 
     // Initialize with context to get the token
