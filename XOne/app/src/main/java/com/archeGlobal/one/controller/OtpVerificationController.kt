@@ -10,6 +10,8 @@ import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
 import com.archeGlobal.one.utils.UserDataManager
+import com.archeGlobal.one.utils.EncryptedAPIHelper
+import com.archeGlobal.one.utils.handleError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,6 +22,7 @@ class OtpVerificationController(
     private val context: Context
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
+    private val encryptedAPIHelper = EncryptedAPIHelper(context)
 
     fun verifyOtp(
         email: String,
@@ -30,71 +33,54 @@ class OtpVerificationController(
         callback: (String, Boolean) -> Unit
     ) {
         val request = VerifyOtpRequest(email, mobile, employeeId, otpFromUser, isBiometric)
-        Log.d("OtpVerification", "Sending OTP verification request: $request")
+        Log.d("OtpVerification", "Sending encrypted OTP verification request: $request")
 
-        RetrofitClient.apiService.verifyOtp(request).enqueue(object : retrofit2.Callback<OtpVerifyResponse> {
-            override fun onResponse(call: retrofit2.Call<OtpVerifyResponse>, response: retrofit2.Response<OtpVerifyResponse>) {
-                Log.d("OtpVerification", "OTP Response Code: ${response.code()}")
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "otpVerify",
+            method = "POST",
+            request = request,
+            responseClass = OtpVerifyResponse::class.java,
+            withAuthHeader = false
+        ) { response, error ->
+            if (error != null) {
+                Log.e("OtpVerification", "OTP verification failed: ${error.errorMessage}")
+                error.handleError(callback)
+            } else if (response != null && response.status == 200) {
+                val token = response.token
+                Log.d("OtpVerification", "Token received: $token")
 
-                if (response.isSuccessful && response.body()?.status == 200) {
-                    val token = response.body()?.token ?: ""
-                    Log.d("OtpVerification", "Token received: $token")
-
-                    if (token.isNotEmpty()) {
-                        // Save the token for future use
-                        loginWithToken(token, email, mobile, employeeId, false, true, false) { msg, isError ->
-                            if (!isError) {
-                                // Instead of navigating to Home, go to MPIN setup
-                                if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                    val mpinController = com.archeGlobal.one.controller.MpinController(context)
-                                    if (mpinController.isMpinSet()) {
-                                        // MPIN already set, go directly to Home and set fromLogin=true
-                                        navigator.navigateToHome(
-                                            true,    // fromOtp (set to true to indicate login just happened)
-                                            true, // <-- this extra is important for fingerprint prompt
-                                            email = email,
-                                            mobile = mobile,
-                                            employeeId = employeeId
-                                        )
-                                    } else {
-                                        // MPIN not set, go to MPIN setup
-                                        navigator.navigateToMpinSetup(email, mobile, employeeId, token)
-                                    }
+                if (token.isNotEmpty()) {
+                    // Save the token for future use
+                    loginWithToken(token, email, mobile, employeeId, false, true, false) { msg, isError ->
+                        if (!isError) {
+                            // Instead of navigating to Home, go to MPIN setup
+                            if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                val mpinController = com.archeGlobal.one.controller.MpinController(context)
+                                if (mpinController.isMpinSet()) {
+                                    // MPIN already set, go directly to Home and set fromLogin=true
+                                    navigator.navigateToHome(
+                                        true,    // fromOtp (set to true to indicate login just happened)
+                                        true, // <-- this extra is important for fingerprint prompt
+                                        email = email,
+                                        mobile = mobile,
+                                        employeeId = employeeId
+                                    )
+                                } else {
+                                    // MPIN not set, go to MPIN setup
+                                    navigator.navigateToMpinSetup(email, mobile, employeeId, token)
                                 }
                             }
-                            callback(msg, isError)
                         }
-                    } else {
-                        callback("OTP verified, but no token received!", true)
+                        callback(msg, isError)
                     }
                 } else {
-                    val errorMessage = try {
-                        val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                        // Parse JSON to extract just the message
-                        try {
-                            val jsonObject = org.json.JSONObject(errorBody)
-                            if (jsonObject.has("message")) {
-                                jsonObject.getString("message")
-                            } else {
-                                errorBody
-                            }
-                        } catch (e: Exception) {
-                            // If JSON parsing fails, return the original error message
-                            errorBody
-                        }
-                    } catch (e: Exception) {
-                        "Error parsing response"
-                    }
-                    Log.e("OtpVerification", "OTP verification failed: $errorMessage")
-                    callback(errorMessage, true)
+                    callback("OTP verified, but no token received!", true)
                 }
+            } else {
+                Log.e("OtpVerification", "OTP verification failed: Invalid response")
+                callback("OTP verification failed", true)
             }
-
-            override fun onFailure(call: retrofit2.Call<OtpVerifyResponse>, t: Throwable) {
-                Log.e("OtpVerification", "Network error: ${t.message}")
-                callback("Network error: ${t.message}", true)
-            }
-        })
+        }
     }
 
     fun verifyWithBiometric(
@@ -118,86 +104,68 @@ class OtpVerificationController(
         shouldNavigateToHome: Boolean = true,
         callback: (String, Boolean) -> Unit
     ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val request = LoginRequest(email, mobile, employeeId)
-                Log.d("LoginProcess", "Sending login request with token: Bearer $token")
+        val request = LoginRequest(email, mobile, employeeId)
+        Log.d("LoginProcess", "Sending encrypted login request with token: Bearer $token")
 
-                val response = RetrofitClient.apiService.login(token, request).execute()
-                val responseBody = response.body()
+        // Store the token temporarily for the encrypted request
+        val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
+        preferencesManager.saveAuthToken(token)
 
-                // Detailed logging before conditional check
-                Log.d("LoginProcess", "Response received. isSuccessful: ${response.isSuccessful}, code: ${response.code()}, message: ${response.message()}")
-                Log.d("LoginProcess", "ResponseBody is null: ${responseBody == null}")
-                if (responseBody != null) {
-                    Log.d("LoginProcess", "ResponseBody status: ${responseBody.status}")
-                    Log.d("LoginProcess", "ResponseBody eventData is null: ${responseBody.eventData == null}")
-                    if (responseBody.eventData != null) {
-                        Log.d("LoginProcess", "ResponseBody eventData content: Name=${responseBody.eventData?.title}, Image=${responseBody.eventData?.image}")
-                    }
-                } else {
-                    Log.d("LoginProcess", "ResponseBody is null, errorBody: ${response.errorBody()?.string()}")
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "login",
+            method = "POST",
+            request = request,
+            responseClass = VerifyOtpResponse::class.java,
+            withAuthHeader = true // This will use the token we just saved
+        ) { response, error ->
+            if (error != null) {
+                Log.e("LoginProcess", "Login failed: ${error.errorMessage}")
+                error.handleError { message, isError ->
+                    callback("Login failed: $message", isError)
                 }
-
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && responseBody != null && responseBody.status == 200) {
-                        // Just pass the token forward
-                        if (!fromHome && shouldNavigateToHome) {
-                            if (fromOtp) {
-                                navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
-                            } else {
-                                navigator.navigateToHome(fromOtp)
-                            }
-                        }
-                        callback("Login successful", false)
+            } else if (response != null && response.status == 200) {
+                Log.d("LoginProcess", "Login successful")
+                
+                // Save user data from the response
+                userDataManager.saveUserDataFromResponse(response, token)
+                userDataManager.setIsLoggedIn(true)
+                userDataManager.setHasLoggedIn(true)
+                
+                // Navigate if needed
+                if (!fromHome && shouldNavigateToHome) {
+                    if (fromOtp) {
+                        navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
                     } else {
-                        val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                        Log.e("LoginProcess", "Login failed: $errorBody")
-                        callback("Login failed: $errorBody", true)
+                        navigator.navigateToHome(fromOtp)
                     }
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e("LoginProcess", "Network error: ${e.message}")
-                    callback("Network error: ${e.message}", true)
-                }
+                callback("Login successful", false)
+            } else {
+                Log.e("LoginProcess", "Login failed: Invalid response")
+                callback("Login failed: Invalid response", true)
             }
         }
     }
 
     fun resendOtp(email: String, mobile: String, employeeId: String, callback: (String) -> Unit) {
-        val request = SendOtpRequest(email, mobile, employeeId) // Assuming your request requires only an email
+        val request = SendOtpRequest(email, mobile, employeeId)
 
-        RetrofitClient.apiService.sendOtp(request).enqueue(object : retrofit2.Callback<SendOtpResponse> {
-            override fun onResponse(call: retrofit2.Call<SendOtpResponse>, response: retrofit2.Response<SendOtpResponse>) {
-                if (response.isSuccessful && response.body()?.status == 200) {
-                    callback("OTP sent successfully.")
-                } else {
-                    val errorMessage = try {
-                        val errorBody = response.errorBody()?.string() ?: "Failed to resend OTP"
-                        // Parse JSON to extract just the message
-                        try {
-                            val jsonObject = org.json.JSONObject(errorBody)
-                            if (jsonObject.has("message")) {
-                                jsonObject.getString("message")
-                            } else {
-                                errorBody
-                            }
-                        } catch (e: Exception) {
-                            // If JSON parsing fails, return the original error message
-                            errorBody
-                        }
-                    } catch (e: Exception) {
-                        "Failed to resend OTP"
-                    }
-                    callback(errorMessage)
-                }
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "send-otp",
+            method = "POST",
+            request = request,
+            responseClass = SendOtpResponse::class.java,
+            withAuthHeader = false
+        ) { response, error ->
+            if (error != null) {
+                Log.e("OtpVerification", "Resend OTP failed: ${error.errorMessage}")
+                callback("Failed to resend OTP: ${error.errorMessage}")
+            } else if (response != null && response.status == 200) {
+                callback("OTP sent successfully.")
+            } else {
+                callback("Failed to resend OTP")
             }
-
-            override fun onFailure(call: retrofit2.Call<SendOtpResponse>, t: Throwable) {
-                callback("Network error: ${t.message}")
-            }
-        })
+        }
     }
 
     companion object {

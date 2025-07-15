@@ -74,6 +74,8 @@ import com.archeGlobal.one.model.HomeModel
 import com.archeGlobal.one.model.WelcomeBackgroundModel
 import com.archeGlobal.one.network.FeedbackRequest
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.ui.components.CelebrationBanner
+import com.archeGlobal.one.ui.components.CelebrationDialog
 import com.archeGlobal.one.ui.components.EmptyFavorites
 import com.archeGlobal.one.ui.components.EventPopup
 import com.archeGlobal.one.ui.components.FooterScaffold
@@ -609,6 +611,23 @@ fun HomeScreenContent(
             }
         }
 
+        // Show celebration dialog
+        val showCelebrationDialog = controller.showCelebrationDialog.collectAsState().value
+        val celebrationData = controller.celebrationData.collectAsState().value
+        if (showCelebrationDialog) {
+            CelebrationDialog(
+                celebrationData = celebrationData,
+                onDismiss = { controller.dismissCelebrationDialog() },
+                onWishesClick = { email, name, type -> controller.onCelebrationWishesClick(email, name, type) },
+                onViewAllClick = { 
+                    controller.dismissCelebrationDialog()
+                    // Navigate to AllCelebrationActivity
+                    val intent = android.content.Intent(context, com.archeGlobal.one.AllCelebrationActivity::class.java)
+                    context.startActivity(intent)
+                }
+            )
+        }
+
         // Wrap with FooterScaffold for bottom navigation
         FooterScaffold(
             footerNavigation = model.footerNavigation,
@@ -666,6 +685,13 @@ fun HomeScreenContent(
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
+
+                        // Celebration banner
+                        val celebrationData = controller.celebrationData.collectAsState().value
+                        CelebrationBanner(
+                            celebrationData = celebrationData,
+                            onClick = { controller.showCelebrationDialog() }
+                        )
 
                         // Pride banner with pins - click to open change icon dialog
                         if (isPrideMonth) {

@@ -55,7 +55,7 @@ class AndroidNavigator(
 
     override fun openPulseLogin() {
         val intent = Intent(activity, WebViewActivity::class.java).apply {
-            putExtra("fileUrl", "https://pulse.netcon.in/onboarding")
+            putExtra("fileUrl", "https://dev.arche.global/onboarding")
             putExtra("title", "Pulse")
         }
         startActivity(intent)

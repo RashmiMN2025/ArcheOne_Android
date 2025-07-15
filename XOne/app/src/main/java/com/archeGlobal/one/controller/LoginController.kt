@@ -5,6 +5,8 @@ import android.util.Log
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
 import com.archeGlobal.one.utils.UserDataManager
+import com.archeGlobal.one.utils.EncryptedAPIHelper
+import com.archeGlobal.one.utils.handleError
 import kotlinx.coroutines.*
 import org.json.JSONObject
 
@@ -12,6 +14,7 @@ class LoginController(
     private val context: Context,
     private val navigator: Navigator
 ) {
+    private val encryptedAPIHelper = EncryptedAPIHelper(context)
     // Step 1: Send OTP
     fun sendOtp(
         email: String,
@@ -43,42 +46,25 @@ class LoginController(
 
         Log.d("LoginController", "Sending OTP request for email: $email, mobile: $mobile, employeeId: $employeeId")
 
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val request = SendOtpRequest(email, mobile, employeeId)
-                Log.d("LoginController", "Request payload: email=$email, mobile=$mobile, employeeId=$employeeId")
-                Log.d("LoginController", "Making request to: ${RetrofitClient.BASE_URL}send-otp")
-                
-                val response = RetrofitClient.apiService.sendOtp(request).execute()
-                val responseBody = response.body()
-                val errorBody = response.errorBody()?.string()
-                
-                Log.d("LoginController", "Response code: ${response.code()}")
-                Log.d("LoginController", "Response message: ${response.message()}")
-                Log.d("LoginController", "Response body: $responseBody")
-                Log.d("LoginController", "Error body: $errorBody")
-
-                withContext(Dispatchers.Main) {
-                    when {
-                        response.isSuccessful && responseBody != null -> {
-                            callback(responseBody.message, responseBody.status != 200)
-                        }
-
-                        errorBody != null -> {
-                            val errorMessage =
-                                JSONObject(errorBody).optString("message", "Server error occurred")
-                            callback(errorMessage, true)
-                        }
-
-                        else -> {
-                            callback("Server error occurred", true)
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    callback("Network error: ${e.message}", true)
-                }
+        val request = SendOtpRequest(email, mobile, employeeId)
+        Log.d("LoginController", "Request payload: email=$email, mobile=$mobile, employeeId=$employeeId")
+        Log.d("LoginController", "Making encrypted request to: ${RetrofitClient.BASE_URL}send-otp")
+        
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "send-otp",
+            method = "POST",
+            request = request,
+            responseClass = SendOtpResponse::class.java,
+            withAuthHeader = false
+        ) { response, error ->
+            if (error != null) {
+                Log.e("LoginController", "Send OTP failed: ${error.errorMessage}")
+                error.handleError(callback)
+            } else if (response != null) {
+                Log.d("LoginController", "Send OTP successful: ${response.message}")
+                callback(response.message, response.status != 200)
+            } else {
+                callback("Unknown error occurred", true)
             }
         }
     }

@@ -2,6 +2,7 @@ package com.archeGlobal.one.network
 
 import com.archeGlobal.one.model.ApiGreetingCategory
 import com.archeGlobal.one.model.CalendarResponse
+import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PasswordResetRequest
@@ -115,6 +116,9 @@ interface ApiService {
 
     @POST("travel-request/reject")
     fun rejectTravelRequest(@Body request: TravelRejectActionRequest): Call<TravelApprovalActionResponse>
+
+    @GET("employee-celebration")
+    suspend fun getEmployeeCelebration(): Response<CelebrationResponse>
 }
 
 data class FeedbackRequest(
