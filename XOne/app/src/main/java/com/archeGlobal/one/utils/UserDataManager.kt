@@ -287,6 +287,15 @@ class UserDataManager private constructor(context: Context) {
 
     fun getGreetingCategoriesData(): List<ApiGreetingCategory>? = greetingCategoriesData
 
+    /**
+     * Get service URL by service name
+     */
+    fun getServiceUrl(serviceName: String): String? {
+        return userData?.services?.find { 
+            it.service.equals(serviceName, ignoreCase = true) 
+        }?.url
+    }
+
     fun getEventData(): EventResponse? {
         val localEventData = eventData // Use local variable to avoid smart cast issue
         if (localEventData != null) {

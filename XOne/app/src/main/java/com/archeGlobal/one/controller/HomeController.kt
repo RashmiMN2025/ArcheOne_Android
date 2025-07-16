@@ -498,6 +498,7 @@ class HomeController(
         handleNavigation {
             // ...existing navigation logic...
             Log.d("HomeController", "onItemClick: ${item.title}")
+            Log.d("HomeController", "onItemClick lowercase: ${item.title.lowercase()}")
             when (item.title.lowercase()) {
                 "locations" -> {
                     val intent = Intent(context, LocationsActivity::class.java)
@@ -564,11 +565,35 @@ class HomeController(
                     Log.d("HomeController", "Navigating to Service Not Available screen for Goal Setting/KPI")
                     navigate("service_not_available?serviceName=Goal Setting/KPI")
                 }
-                "medical" -> navigator.navigateToMedical()
-                "mypay" -> navigator.navigateToMyPay()
+                "medical" -> {
+                    val url = UserDataManager.getInstance(context).getServiceUrl("medical")
+                    if (url != null) {
+                        Log.d("HomeController", "Navigating to Medical with URL: $url")
+                        navigator.navigateToMedicalWithUrl(url)
+                    } else {
+                        Log.d("HomeController", "Medical URL not found in API response")
+                        navigate("service_not_available?serviceName=Medical")
+                    }
+                }
+                "mypay" -> {
+                    val url = UserDataManager.getInstance(context).getServiceUrl("mypay")
+                    if (url != null) {
+                        Log.d("HomeController", "Navigating to MyPay with URL: $url")
+                        navigator.navigateToMyPayWithUrl(url)
+                    } else {
+                        Log.d("HomeController", "MyPay URL not found in API response")
+                        navigate("service_not_available?serviceName=MyPay")
+                    }
+                }
                 "zinghr" -> {
-                    Log.d("HomeController", "Navigating to ZingHR")
-                    navigator.navigateToZingHR()
+                    val url = UserDataManager.getInstance(context).getServiceUrl("zinghr")
+                    if (url != null) {
+                        Log.d("HomeController", "Navigating to ZingHR with URL: $url")
+                        navigator.navigateToZingHRWithUrl(url)
+                    } else {
+                        Log.d("HomeController", "ZingHR URL not found in API response")
+                        navigate("service_not_available?serviceName=ZingHR")
+                    }
                 }
                 "admin" -> {
                     Log.d("HomeController", "Navigating to Service Not Available screen for Admin")
@@ -607,15 +632,39 @@ class HomeController(
                     Log.d("SOS", "Navigating to SOS")
                     navigator.navigateToSOS(false)
                 }
-                "travel" -> {
+                "travel", "traveldesk", "travel desk" -> {
                     Log.d("HomeController", "Navigating to Travel Screen")
                     navigator.navigateToTravel()
                 }
-                "sap" -> navigator.navigateToSAP()
-                "ample" -> navigator.navigateToAmple()
+                "sap" -> {
+                    val url = UserDataManager.getInstance(context).getServiceUrl("sap")
+                    if (url != null) {
+                        Log.d("HomeController", "Navigating to SAP with URL: $url")
+                        navigator.navigateToSAPWithUrl(url)
+                    } else {
+                        Log.d("HomeController", "SAP URL not found in API response")
+                        navigate("service_not_available?serviceName=SAP")
+                    }
+                }
+                "ample" -> {
+                    val url = UserDataManager.getInstance(context).getServiceUrl("ample")
+                    if (url != null) {
+                        Log.d("HomeController", "Navigating to Ample with URL: $url")
+                        navigator.navigateToAmpleWithUrl(url)
+                    } else {
+                        Log.d("HomeController", "Ample URL not found in API response")
+                        navigate("service_not_available?serviceName=Ample")
+                    }
+                }
                 "about us", "aboutus" -> {
-                    Log.d("HomeController", "Navigating to About Us")
-                    navigator.navigateToAboutUs()
+                    val url = UserDataManager.getInstance(context).getServiceUrl("About Us")
+                    if (url != null) {
+                        Log.d("HomeController", "Navigating to About Us with URL: $url")
+                        navigator.navigateToAboutUsWithUrl(url)
+                    } else {
+                        Log.d("HomeController", "About Us URL not found in API response")
+                        navigate("service_not_available?serviceName=About Us")
+                    }
                 }
                 "corevalues", "core values" -> {
                     Log.d("HomeController", "Navigating to Core Values")
@@ -638,8 +687,14 @@ class HomeController(
                     navigator.navigateToArcheOdyssey()
                 }
                 "pulse" -> {
-                    Log.d("HomeController", "Navigating to Pulse")
-                    navigator.openPulseLogin()
+                    val url = UserDataManager.getInstance(context).getServiceUrl("pulse")
+                    if (url != null) {
+                        Log.d("HomeController", "Navigating to Pulse with URL: $url")
+                        navigator.openPulseLoginWithUrl(url)
+                    } else {
+                        Log.d("HomeController", "Pulse URL not found in API response")
+                        navigate("service_not_available?serviceName=Pulse")
+                    }
                 }
                 "ideavault", "idea vault" -> {
                     Log.d("HomeController", "Navigating to Idea Vault")

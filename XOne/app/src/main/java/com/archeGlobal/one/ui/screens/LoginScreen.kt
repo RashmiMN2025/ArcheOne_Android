@@ -956,8 +956,10 @@ fun LoginScreen(
                                 .fillMaxHeight() // Almost full screen, adjust as needed
                         ) {
                             MicrosoftLoginWebView(
-                                url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Fdev.arche.global%3A7000%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
+                                url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
                                 onReceiveAuth = { response ->
+                                    android.util.Log.d("LoginScreen", "MFA onReceiveAuth called with token: ${response.token}")
+                                    android.util.Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}")
                                     authResponse = response
                                     isLoading = true
                                     controller.loginWithToken(
@@ -966,6 +968,7 @@ fun LoginScreen(
                                         mobile = response.mobilePhone,
                                         employeeId = response.employeeId
                                     ) { message, isError ->
+                                        android.util.Log.d("LoginScreen", "loginWithToken callback: message=$message, isError=$isError")
                                         isLoading = false
                                         if (!isError) {
                                             UserDataManager.getInstance(context).setHasLoggedIn(true)

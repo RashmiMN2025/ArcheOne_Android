@@ -84,4 +84,14 @@ interface Navigator {
     )
     fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory)
     fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String)
+    fun showUpdateDialog()
+    
+    // Methods for services with dynamic URLs
+    fun navigateToSAPWithUrl(url: String)
+    fun navigateToAmpleWithUrl(url: String)
+    fun navigateToZingHRWithUrl(url: String)
+    fun navigateToMyPayWithUrl(url: String)
+    fun navigateToMedicalWithUrl(url: String)
+    fun navigateToAboutUsWithUrl(url: String)
+    fun openPulseLoginWithUrl(url: String)
 }

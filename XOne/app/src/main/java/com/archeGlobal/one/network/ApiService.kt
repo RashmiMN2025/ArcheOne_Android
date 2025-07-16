@@ -266,7 +266,8 @@ data class Service(
     val service: String,
     val favourite: Boolean = false,
     val category: String,
-    val icon: String? = null
+    val icon: String? = null,
+    val url: String? = null
 )
 
 data class Office(
