@@ -1,4 +1,3 @@
-
 package com.archeGlobal.one.ui.screens
 
 import android.Manifest
@@ -17,6 +16,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -74,8 +75,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
     var focusedIndex by remember { mutableStateOf(-1) }
     var isVerifyingMpin by remember { mutableStateOf(false) }
 
-    // We no longer need to explicitly get the email as it's retrieved from user data
-
     // Camera permission state
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -86,14 +85,18 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         )
     }
 
-    // Camera launcher - Moved before its usage
+    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
         bitmap?.let {
             Toast.makeText(context, "Image captured successfully", Toast.LENGTH_SHORT).show()
             showUploadDialog = false
-            // TODO: Handle the bitmap - save/upload it
+            selectedDocument?.let { docName ->
+                uploadManager.uploadDocumentFromBitmap(docName, it) { response ->
+                    controller.updateDocumentsFromResponse(response)
+                }
+            }
         }
     }
 
@@ -116,7 +119,24 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         uri?.let {
             Toast.makeText(context, "File selected successfully", Toast.LENGTH_SHORT).show()
             showUploadDialog = false
-            // TODO: Handle the file - save/upload it
+            selectedDocument?.let { docName ->
+                uploadManager.uploadDocumentFromUri(docName, uri) { response ->
+                    controller.updateDocumentsFromResponse(response)
+                }
+            }
+        }
+    }
+
+    // File launcher for PDFs
+    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            Toast.makeText(context, "File selected successfully", Toast.LENGTH_SHORT).show()
+            showUploadDialog = false
+            selectedDocument?.let { docName ->
+                uploadManager.uploadDocumentFromUri(docName, uri) { response ->
+                    controller.updateDocumentsFromResponse(response)
+                }
+            }
         }
     }
 
@@ -132,7 +152,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         if (uploadSuccess) {
             // Refresh document list
             uploadManager.listDocuments { response ->
-                // Use the controller to process the response
                 Log.d("MyDocumentsScreen", "Refreshing documents after successful upload")
                 controller.updateDocumentsFromResponse(response)
             }
@@ -144,7 +163,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         if (!showMpinPrompt) {
             Log.d("MyDocumentsScreen", "MPIN verified, loading documents")
             uploadManager.listDocuments { response ->
-                // Use the controller to process the response
                 controller.updateDocumentsFromResponse(response)
             }
         }
@@ -160,15 +178,11 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         }
     }
 
-    // Remove the automatic "No documents found" toast as it's not user-friendly
-    // Users can see from the UI that no documents are uploaded and can upload them
-    // The toast was appearing too frequently and causing confusion
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+            .systemBarsPadding()
     ) {
         Box(
             modifier = Modifier
@@ -203,7 +217,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f)) // Pushes text to center
+                    Spacer(modifier = Modifier.weight(1f))
 
                     Text(
                         text = "My Documents",
@@ -214,7 +228,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.weight(1.5f)) // Balances right side
+                    Spacer(modifier = Modifier.weight(1.5f))
                 }
 
                 // Scrollable Content
@@ -246,7 +260,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 32.dp),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    textAlign = TextAlign.Center
                                 )
 
                                 Text(
@@ -272,7 +286,9 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                             isUploaded = uploadStatus[item] ?: false,
                                             controller = controller,
                                             context = context,
-                                            uploadManager = uploadManager
+                                            uploadManager = uploadManager,
+                                            fileLauncher = fileLauncher,
+                                            setSelectedDocument = { selectedDocument = it }
                                         )
                                     }
                                 }
@@ -300,7 +316,9 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                             isUploaded = uploadStatus[item] ?: false,
                                             controller = controller,
                                             context = context,
-                                            uploadManager = uploadManager
+                                            uploadManager = uploadManager,
+                                            fileLauncher = fileLauncher,
+                                            setSelectedDocument = { selectedDocument = it }
                                         )
                                     }
                                 }
@@ -318,7 +336,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                         fontWeight = FontWeight.Normal,
                                         color = Color.Gray,
                                         modifier = Modifier.fillMaxWidth(),
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        textAlign = TextAlign.Center
                                     )
                                 }
                             }
@@ -344,7 +362,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         }
                     },
                     onGalleryClick = { galleryLauncher.launch("image/*") },
-                    onFilesClick = { galleryLauncher.launch("application/pdf") }
+                    onFilesClick = { fileLauncher.launch("application/pdf") }
                 )
             }
         }
@@ -700,19 +718,10 @@ fun DocumentCard(
     isUploaded: Boolean,
     controller: MyDocumentsController,
     context: Context,
-    uploadManager: DocumentUploadManager
+    uploadManager: DocumentUploadManager,
+    fileLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Uri?>,
+    setSelectedDocument: (String?) -> Unit
 ) {
-    // Simplified upload - directly launch file picker for PDF documents
-
-    // Launcher for file selection
-    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) {
-            uploadManager.uploadDocumentFromUri(name, uri) { response ->
-                // Handle success - UI will be updated via the uploadSuccess LiveData observer
-            }
-        }
-    }
-
     Card(
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
@@ -745,24 +754,53 @@ fun DocumentCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(
-                    onClick = { fileLauncher.launch("application/pdf") },
+                    onClick = {
+                        if (isUploaded) {
+                            // Delete document
+                            val documentType = controller.personalDocTypes.entries
+                                .find { it.value == name }?.key
+                                ?: controller.professionalDocTypes.entries
+                                    .find { it.value == name }?.key
+                            if (documentType != null) {
+                                uploadManager.deleteDocument(name, documentType) { response ->
+                                    controller.updateDocumentsFromResponse(response)
+                                    Toast.makeText(context, "Document deleted successfully", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                Toast.makeText(context, "Error: Unknown document type", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            // Set the selected document and launch file picker
+                            setSelectedDocument(name)
+                            fileLauncher.launch("application/pdf")
+                        }
+                    },
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(
-                                color = Color(0xFFDD3825),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    if (isUploaded) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_upload_circle),
-                            contentDescription = "Upload",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color(0xFFDD3825),
+                            modifier = Modifier.size(24.dp)
                         )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(
+                                    color = Color(0xFFDD3825),
+                                    shape = androidx.compose.foundation.shape.CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_upload_circle),
+                                contentDescription = "Upload",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
 

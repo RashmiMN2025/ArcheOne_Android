@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -17,7 +19,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
@@ -34,27 +35,29 @@ fun UserDocumentsScreen(
 ) {
     // Get documents from the controller
     val documents by controller.userDocuments.observeAsState(emptyList())
+    val uploadStatus by controller.uploadStatus.observeAsState(emptyMap())
 
     // Observe loading state
     val isLoading by controller.isLoading.observeAsState(false)
-
-    // Refresh documents data when screen becomes visible
-    // This ensures we always have the latest data
-    DisposableEffect(Unit) {
-        // Refresh documents when the composable enters the composition
-        controller.refreshDocuments()
-
-        onDispose {
-            // This block is called when the composable leaves the composition
-            // No cleanup needed for this use case
-        }
-    }
 
     // Observe error messages
     val errorMessage by controller.errorMessage.observeAsState(null)
 
     // Observe upload success
     val uploadSuccess by controller.uploadSuccess.observeAsState(false)
+
+    // Refresh documents data when screen becomes visible
+    DisposableEffect(Unit) {
+        controller.refreshDocuments()
+        onDispose {}
+    }
+
+    // Handle upload success to refresh document list
+    LaunchedEffect(uploadSuccess) {
+        if (uploadSuccess) {
+            controller.refreshDocuments()
+        }
+    }
 
     // State to track the currently selected document for upload
     var selectedDocument by remember { mutableStateOf<String?>(null) }
@@ -66,7 +69,6 @@ fun UserDocumentsScreen(
         uri?.let { selectedUri ->
             selectedDocument?.let { docName ->
                 controller.uploadDocument(docName, selectedUri) { _ ->
-                    // Reset selected document after upload
                     selectedDocument = null
                 }
             }
@@ -105,8 +107,6 @@ fun UserDocumentsScreen(
                         tint = Color.Black
                     )
                 }
-
-                // Centered Title
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
@@ -119,7 +119,6 @@ fun UserDocumentsScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                // Empty box for symmetry
                 Box(modifier = Modifier.width(48.dp))
             }
 
@@ -132,9 +131,7 @@ fun UserDocumentsScreen(
                     .padding(horizontal = 8.dp, vertical = 8.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 2.dp
-                )
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -142,7 +139,6 @@ fun UserDocumentsScreen(
                         .padding(vertical = 8.dp, horizontal = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Show loading indicator if needed
                     if (isLoading) {
                         Box(
                             modifier = Modifier
@@ -154,7 +150,6 @@ fun UserDocumentsScreen(
                         }
                     }
 
-                    // Show error message if any
                     errorMessage?.let { error ->
                         Text(
                             text = error,
@@ -165,32 +160,33 @@ fun UserDocumentsScreen(
                         )
                     }
 
-                    // Always show all three document types
                     val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance Card")
-
-                    // Create a map of existing documents by name
                     val docMap = documents.associateBy { it.document_name }
-
-                    // Create the final list of documents to show
                     val docsToShow = requiredDocs.map { docName ->
-                        // Use existing document if available, otherwise create placeholder
                         docMap[docName] ?: UserDocument(docName, "")
                     }
 
-                    // Display each document
                     docsToShow.forEach { document ->
                         DocumentItem(
                             document = document,
+                            isUploaded = uploadStatus[document.document_name] ?: false,
                             onViewClick = { controller.viewDocument(document) },
                             onUploadClick = {
                                 selectedDocument = document.document_name
-                                // Explicitly specify PDF MIME type to only allow PDF files
                                 filePickerLauncher.launch("application/pdf")
                                 Toast.makeText(context, "Please select a PDF file", Toast.LENGTH_SHORT).show()
+                            },
+                            onDeleteClick = {
+                                controller.deleteDocument(document) { success ->
+                                    if (success) {
+                                        Toast.makeText(context, "${document.document_name} deleted successfully", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Failed to delete ${document.document_name}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             }
                         )
 
-                        // Add divider except after the last item
                         if (document != docsToShow.last()) {
                             Divider(
                                 modifier = Modifier
@@ -210,14 +206,13 @@ fun UserDocumentsScreen(
                         thickness = 1.5.dp
                     )
 
-                    // Important Note Section
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(5.dp)
                     ) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically, // Align icon and text in one line
+                            verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -244,46 +239,41 @@ fun UserDocumentsScreen(
 @Composable
 fun DocumentItem(
     document: UserDocument,
+    isUploaded: Boolean,
     onViewClick: () -> Unit,
-    onUploadClick: () -> Unit
+    onUploadClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(20.dp)
     ) {
-        // Document row with icon and name
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Document icon (PDF)
             Icon(
                 painter = painterResource(id = R.drawable.ic_pdf_document),
                 contentDescription = null,
                 tint = Color(0xFFDD3825),
                 modifier = Modifier.size(24.dp)
             )
-
-            // Document name
             Text(
                 text = document.document_name,
-                modifier = Modifier
-                    .padding(start = 12.dp),
+                modifier = Modifier.padding(start = 12.dp),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
         }
 
-        // Action buttons row
         Row(
             modifier = Modifier
                 .padding(top = 12.dp)
                 .padding(start = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // View button with text
             Card(
                 modifier = Modifier.padding(end = 32.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -299,7 +289,6 @@ fun DocumentItem(
                         tint = Color(0xFFDD3825),
                         modifier = Modifier.size(20.dp)
                     )
-
                     Text(
                         text = "View",
                         modifier = Modifier.padding(start = 8.dp),
@@ -310,30 +299,55 @@ fun DocumentItem(
                     )
                 }
             }
-            // Upload button with text
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                onClick = onUploadClick
+                onClick = if (isUploaded) onDeleteClick else onUploadClick
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.share),
-                        contentDescription = "Upload",
-                        tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(20.dp)
-                    )
-
-                    Text(
-                        text = "Upload",
-                        modifier = Modifier.padding(start = 8.dp),
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
-                    )
+                    if (isUploaded) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = Color(0xFFDD3825),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Delete",
+                            modifier = Modifier.padding(start = 8.dp),
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .background(
+                                    color = Color(0xFFDD3825),
+                                    shape = androidx.compose.foundation.shape.CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_upload_circle),
+                                contentDescription = "Upload",
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                        Text(
+                            text = "Upload",
+                            modifier = Modifier.padding(start = 8.dp),
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
+                    }
                 }
             }
         }

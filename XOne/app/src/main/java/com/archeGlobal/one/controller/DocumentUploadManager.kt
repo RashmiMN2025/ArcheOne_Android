@@ -8,6 +8,7 @@ import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import com.archeGlobal.one.network.DocumentListResponse
+import com.archeGlobal.one.network.ProfilePictureResponse
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -165,7 +166,7 @@ class DocumentUploadManager(private val context: Context) {
                             Log.d(
                                 TAG,
                                 "Document: ${doc.document_name}, type: ${doc.documentType}, " +
-                                    "has data: ${!doc.doc_data.isNullOrBlank()}"
+                                        "has data: ${!doc.doc_data.isNullOrBlank()}"
                             )
                         }
 
@@ -185,6 +186,75 @@ class DocumentUploadManager(private val context: Context) {
             })
         } catch (e: Exception) {
             Log.e(TAG, "Exception preparing list documents request", e)
+            isLoading.postValue(false)
+            errorMessage.postValue("Error: ${e.message}")
+        }
+    }
+
+    /**
+     * Delete a document
+     */
+    fun deleteDocument(documentName: String, documentType: String, onSuccess: (DocumentListResponse) -> Unit) {
+        // Get employee ID from user data
+        val employeeId = getEmployeeId()
+        if (employeeId == null) {
+            return // Error message already set in getEmployeeId()
+        }
+
+        // Get email from user data
+        val email = getUserEmail()
+        if (email == null) {
+            return // Error message already set in getUserEmail()
+        }
+
+        isLoading.postValue(true)
+        errorMessage.postValue(null)
+
+        try {
+            val params = mapOf(
+                "email" to email,
+                "employeeId" to employeeId,
+                "documentType" to documentType
+            )
+
+            Log.d(TAG, "Deleting document: $documentName, type: $documentType, email: $email, employeeId: $employeeId")
+
+            val call = RetrofitClient.apiService.deleteDoc(params)
+            Log.d(TAG, "Delete document request URL: ${call.request().url}")
+
+            call.enqueue(object : Callback<ProfilePictureResponse> {
+                override fun onResponse(
+                    call: Call<ProfilePictureResponse>,
+                    response: Response<ProfilePictureResponse>
+                ) {
+                    isLoading.postValue(false)
+
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseBody = response.body()!!
+                        Log.d(TAG, "Delete document success, status: ${responseBody.status}")
+
+                        if (responseBody.status == 200) {
+                            Toast.makeText(context, "Document deleted successfully", Toast.LENGTH_SHORT).show()
+                            // Refresh document list
+                            listDocuments { listResponse ->
+                                onSuccess(listResponse)
+                            }
+                        } else {
+                            val errorMsg = responseBody.message ?: "Failed to delete document"
+                            errorMessage.postValue(errorMsg)
+                            Log.e(TAG, "Delete document error: $errorMsg")
+                        }
+                    } else {
+                        handleApiError(response)
+                    }
+                }
+
+                override fun onFailure(call: Call<ProfilePictureResponse>, t: Throwable) {
+                    handleNetworkError(call, t)
+                }
+            })
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception preparing delete document request", e)
             isLoading.postValue(false)
             errorMessage.postValue("Error: ${e.message}")
         }
@@ -401,7 +471,7 @@ class DocumentUploadManager(private val context: Context) {
     /**
      * Handle API error response
      */
-    private fun handleApiError(response: Response<DocumentListResponse>) {
+    private fun handleApiError(response: Response<*>) {
         try {
             val errorBody = response.errorBody()?.string()
             Log.e("DocumentUploadManager", "API error ${response.code()}: $errorBody")
@@ -415,7 +485,7 @@ class DocumentUploadManager(private val context: Context) {
     /**
      * Handle network error
      */
-    private fun handleNetworkError(call: Call<DocumentListResponse>, t: Throwable) {
+    private fun handleNetworkError(call: Call<*>, t: Throwable) {
         isLoading.postValue(false)
         val errorMsg = "Network error: ${t.message}"
         errorMessage.postValue(errorMsg)
@@ -428,8 +498,6 @@ class DocumentUploadManager(private val context: Context) {
             Log.e(TAG, "Error logging request details", e)
         }
     }
-
-    // The listDocuments method is already defined above
 
     /**
      * Get filename from URI

@@ -13,6 +13,7 @@ import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.DocumentListResponse
+import com.archeGlobal.one.network.ProfilePictureResponse
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.UserDocument
 import com.archeGlobal.one.utils.UserDataManager
@@ -39,6 +40,16 @@ class UserDocumentsController(private val context: Context) {
     private val _userDocuments = MutableLiveData<List<UserDocument>>(emptyList())
     val userDocuments: LiveData<List<UserDocument>> = _userDocuments
 
+    // LiveData for upload status, mirroring MyDocumentsController
+    private val _uploadStatus = MutableLiveData<MutableMap<String, Boolean>>(
+        mutableMapOf(
+            "PAN Card" to false,
+            "ID Card" to false,
+            "Medical Insurance Card" to false
+        )
+    )
+    val uploadStatus: LiveData<MutableMap<String, Boolean>> = _uploadStatus
+
     // Expose DocumentUploadManager states
     val isLoading = documentUploadManager.isLoading
     val errorMessage = documentUploadManager.errorMessage
@@ -51,10 +62,6 @@ class UserDocumentsController(private val context: Context) {
         fetchDocumentsFromApi()
     }
 
-    /**
-     * Public method to refresh documents data when returning to the screen
-     * Call this method in onResume or when the screen becomes visible again
-     */
     fun refreshDocuments() {
         Log.d(TAG, "Refreshing documents data")
         fetchDocumentsFromApi()
@@ -64,6 +71,7 @@ class UserDocumentsController(private val context: Context) {
         val userData = userDataManager.getUserData()
         val documents = userData?.userDetails?.documents ?: emptyList()
         _userDocuments.value = documents
+        updateUploadStatus(documents)
         Log.d(TAG, "Loaded ${documents.size} documents from user data")
     }
 
@@ -77,51 +85,48 @@ class UserDocumentsController(private val context: Context) {
     }
 
     private fun processApiResponse(response: DocumentListResponse) {
-        // Process personal documents from the API response
         val personalDocs = response.personalDoc?.map { doc ->
-            // Use the document_name from the API response directly if available
-            // Otherwise, map from documentType
             val docName = doc.document_name ?: when (doc.documentType) {
                 "id" -> "ID Card"
                 "pan" -> "PAN Card"
-                "medical" -> "Medical Insurance"
+                "medical" -> "Medical Insurance Card"
                 else -> "Unknown Document"
             }
-
             UserDocument(
                 document_name = docName,
-                doc_data = doc.doc_data ?: ""
+                doc_data = doc.doc_data ?: "",
+                documentType = doc.documentType ?: ""
             )
+        } ?: emptyList()
+        personalDocs.forEach { doc ->
+            Log.d(TAG, "Processed document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) "empty" else "has data"}, type: ${doc.documentType}")
         }
-
-        // Log the documents for debugging
-        personalDocs?.forEach { doc ->
-            Log.d(TAG, "Processed document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) "empty" else "has data"}")
-        }
-
-        // Update the LiveData with the new documents
-        _userDocuments.postValue(personalDocs ?: emptyList())
-        Log.d(TAG, "Updated documents from API: ${personalDocs?.size ?: 0} documents")
+        _userDocuments.postValue(personalDocs)
+        updateUploadStatus(personalDocs)
+        Log.d(TAG, "Updated documents from API: ${personalDocs.size} documents")
     }
 
-    /**
-     * Check if the URL points to a valid PDF or an HTML error page
-     */
-    private fun isValidPdfUrl(url: String): Boolean {
-        // Check if URL is empty or blank
-        if (url.isBlank()) return false
+    private fun updateUploadStatus(documents: List<UserDocument>) {
+        val newUploadStatus = mutableMapOf(
+            "PAN Card" to false,
+            "ID Card" to false,
+            "Medical Insurance Card" to false
+        )
+        documents.forEach { doc ->
+            val docName = doc.document_name
+            if (docName in newUploadStatus && !doc.doc_data.isNullOrBlank()) {
+                newUploadStatus[docName] = true
+            }
+        }
+        _uploadStatus.postValue(newUploadStatus)
+        Log.d(TAG, "Updated uploadStatus: $newUploadStatus")
+    }
 
-        // Check if URL contains HTML content indicators (in case HTML is returned directly)
-        if (url.contains("<html>", ignoreCase = true) || url.contains("<!DOCTYPE", ignoreCase = true) ||
-            url.contains("<body>", ignoreCase = true) ||
-            url.contains("text/html", ignoreCase = true) ||
-            url.contains("<title>", ignoreCase = true) ||
-            url.contains("</html>", ignoreCase = true)
-        ) {
+    private fun isValidPdfUrl(url: String): Boolean {
+        if (url.isBlank()) return false
+        if (url.contains("text/html", ignoreCase = true)) {
             return false
         }
-
-        // Check for common error messages in the URL content
         if (url.contains("error", ignoreCase = true) ||
             url.contains("not found", ignoreCase = true) ||
             url.contains("404", ignoreCase = true) ||
@@ -129,20 +134,14 @@ class UserDocumentsController(private val context: Context) {
         ) {
             return false
         }
-
-        // Check if it's a valid HTTP/HTTPS URL
         if (url.startsWith("http://", ignoreCase = true) || url.startsWith("https://", ignoreCase = true)) {
-            // Additional check: if it's a download URL, it should contain certain patterns
             if (url.contains("download", ignoreCase = true) || url.endsWith(".pdf", ignoreCase = true)) {
                 return true
             }
-                    // For dev.arche.global URLs specifically, check if it follows the expected pattern
-        if (url.contains("dev.arche.global", ignoreCase = true) && url.contains("download_doc", ignoreCase = true)) {
+            if (url.contains("dev.arche.global", ignoreCase = true) && url.contains("download_doc", ignoreCase = true)) {
                 return true
             }
         }
-
-        // If it doesn't match any valid patterns, consider it invalid
         return false
     }
 
@@ -175,70 +174,49 @@ class UserDocumentsController(private val context: Context) {
     fun viewDocument(document: UserDocument) {
         try {
             Log.d(TAG, "Requesting document for viewing: ${document.document_name}, type: ${document.documentType}")
-
-            // Show loading indicator
             isLoading.postValue(true)
-
-            // Get user credentials
             val email = userDataManager.getUserData()?.email ?: ""
             val employeeId = userDataManager.getUserData()?.employeeId ?: ""
-
             if (email.isEmpty() || employeeId.isEmpty()) {
                 Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
                 isLoading.postValue(false)
                 return
             }
-
-            // Make an API call to get the latest document URL
             val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
-
-            // Make the document listing API call to get latest URLs - isPersonal is required for UserDocuments
             RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart).enqueue(object : Callback<DocumentListResponse> {
                 override fun onResponse(
                     call: Call<DocumentListResponse>,
                     response: Response<DocumentListResponse>
                 ) {
                     isLoading.postValue(false)
-
                     if (response.isSuccessful && response.body() != null) {
                         val body = response.body()!!
-
-                        // Log the entire response for debugging
                         Log.d(TAG, "API response status: ${body.status}, message: ${body.message}")
                         Log.d(TAG, "Personal docs count: ${body.personalDoc?.size ?: 0}")
-
-                        // Log all documents in response for debugging
                         body.personalDoc?.forEach { doc ->
                             Log.d(
                                 TAG,
                                 "Document in response: name=${doc.document_name}, type=${doc.documentType}, " +
-                                    "has data: ${!doc.doc_data.isNullOrBlank()}"
+                                        "has data: ${!doc.doc_data.isNullOrBlank()}"
                             )
                             if (!doc.doc_data.isNullOrBlank()) {
                                 Log.d(TAG, "Doc data starts with: ${doc.doc_data?.take(30)}...")
                             }
                         }
-
-                        // Try finding by document name first
                         var matchingDoc = body.personalDoc?.find { it.document_name == document.document_name }
-
-                        // If not found by name, try by document type
                         if (matchingDoc == null && document.documentType.isNotBlank()) {
                             matchingDoc = body.personalDoc?.find { it.documentType == document.documentType }
                             Log.d(TAG, "Searching by document type: ${document.documentType}")
                         }
-
                         Log.d(TAG, "Looking for document: ${document.document_name}, type: ${document.documentType}")
-
                         if (matchingDoc != null) {
                             Log.d(
                                 TAG,
                                 "Found matching document: ${matchingDoc.document_name}, " +
-                                    "type: ${matchingDoc.documentType}, has data: ${!matchingDoc.doc_data.isNullOrBlank()}"
+                                        "type: ${matchingDoc.documentType}, has data: ${!matchingDoc.doc_data.isNullOrBlank()}"
                             )
-
                             if (!matchingDoc.doc_data.isNullOrBlank()) {
                                 val filePath = matchingDoc.doc_data!!
                                 Log.d(TAG, "Found document URL: $filePath - performing content check")
@@ -253,44 +231,10 @@ class UserDocumentsController(private val context: Context) {
                                         context.startActivity(intent)
                                     } else {
                                         val displayHtml = """
-                                            <!DOCTYPE html>
                                             <html>
-                                            <head>
-                                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                                <style>
-                                                    body {
-                                                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                                        margin: 0;
-                                                        padding: 0;
-                                                        background: linear-gradient(to bottom, #E0DCD1, #C8C8CA, #474749);
-                                                        min-height: 100vh;
-                                                        display: flex;
-                                                        align-items: center;
-                                                        justify-content: center;
-                                                        padding-top: 200px;
-                                                    }
-                                                    .container {
-                                                        text-align: center;
-                                                        max-width: 400px;
-                                                        width: 100%;
-                                                        padding: 20px;
-                                                    }
-                                                    .message {
-                                                        color: #333;
-                                                        font-size: 14px;
-                                                        font-weight: bold;
-                                                        line-height: 1.4;
-                                                        margin: 0;
-                                                    }
-                                                </style>
-                                            </head>
                                             <body>
-                                                <div class="container">
-                                                    <div class="message">
-                                                        No document found for ${matchingDoc.document_name}.<br>
-                                                        Please upload the document.
-                                                    </div>
-                                                </div>
+                                            <h2>No document found for ${matchingDoc.document_name}.</h2>
+                                            <p>Please upload the document.</p>
                                             </body>
                                             </html>
                                         """.trimIndent()
@@ -304,21 +248,18 @@ class UserDocumentsController(private val context: Context) {
                                     }
                                 }
                             } else {
-                                // Document found but no URL available - show NoDocumentFoundActivity
                                 val intent = Intent(context, NoDocumentFoundActivity::class.java)
                                 intent.putExtra("documentName", document.document_name)
                                 context.startActivity(intent)
                                 Log.d(TAG, "Document found but no URL in doc_data for ${document.document_name}")
                             }
                         } else {
-                            // No matching document found - show NoDocumentFoundActivity
                             val intent = Intent(context, NoDocumentFoundActivity::class.java)
                             intent.putExtra("documentName", document.document_name)
                             context.startActivity(intent)
                             Log.d(TAG, "No matching document found for ${document.document_name} in response")
                         }
                     } else {
-                        // API call failed
                         Toast.makeText(context, "Failed to get document data", Toast.LENGTH_SHORT).show()
                         Log.e(TAG, "API call failed: ${response.code()} ${response.message()}")
                     }
@@ -338,19 +279,84 @@ class UserDocumentsController(private val context: Context) {
     }
 
     fun uploadDocument(documentName: String, uri: Uri, onSuccess: (DocumentListResponse) -> Unit) {
-        // DocumentUploadManager will handle determining document type from documentName
-
-        // Use DocumentUploadManager to handle the upload
         documentUploadManager.uploadDocumentFromUri(documentName, uri) { response ->
             if (response.status == 200) {
                 Toast.makeText(context, "$documentName uploaded successfully", Toast.LENGTH_SHORT).show()
-                // Process the response and update the documents list
                 processApiResponse(response)
                 onSuccess(response)
+                // Explicitly refresh documents to ensure UI updates
+                fetchDocumentsFromApi()
             } else {
                 val errorMsg = if (response.message.toString().isNotBlank()) response.message.toString() else "Upload failed"
                 Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                errorMessage.postValue(errorMsg)
             }
+        }
+    }
+
+    fun deleteDocument(document: UserDocument, onComplete: (Boolean) -> Unit) {
+        try {
+            Log.d(TAG, "Requesting deletion of document: ${document.document_name}, type: ${document.documentType}")
+            isLoading.postValue(true)
+            val email = userDataManager.getUserData()?.email ?: ""
+            val employeeId = userDataManager.getUserData()?.employeeId ?: ""
+            // Map document_name to documentType if documentType is empty
+            val documentType = when {
+                document.documentType.isNotBlank() -> document.documentType
+                document.document_name == "PAN Card" -> "pan"
+                document.document_name == "ID Card" -> "id"
+                document.document_name == "Medical Insurance Card" -> "medical"
+                else -> {
+                    isLoading.postValue(false)
+                    Toast.makeText(context, "Unknown document type for ${document.document_name}", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "Unknown document type for ${document.document_name}")
+                    onComplete(false)
+                    return
+                }
+            }
+            if (email.isEmpty() || employeeId.isEmpty()) {
+                isLoading.postValue(false)
+                Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "Missing required data: email=$email, employeeId=$employeeId")
+                onComplete(false)
+                return
+            }
+            val params = mapOf(
+                "email" to email,
+                "employeeId" to employeeId,
+                "documentType" to documentType
+            )
+            RetrofitClient.apiService.deleteDoc(params).enqueue(object : Callback<ProfilePictureResponse> {
+                override fun onResponse(
+                    call: Call<ProfilePictureResponse>,
+                    response: Response<ProfilePictureResponse>
+                ) {
+                    isLoading.postValue(false)
+                    if (response.isSuccessful && response.body()?.status == 200) {
+                        Log.d(TAG, "Document deleted successfully: ${document.document_name}")
+                        fetchDocumentsFromApi() // Refresh document list
+                        onComplete(true)
+                    } else {
+                        val errorMsg = response.body()?.message ?: "Failed to delete document"
+                        Log.e(TAG, "Delete API failed: ${response.code()} $errorMsg")
+                        errorMessage.postValue(errorMsg)
+                        onComplete(false)
+                    }
+                }
+
+                override fun onFailure(call: Call<ProfilePictureResponse>, t: Throwable) {
+                    isLoading.postValue(false)
+                    val errorMsg = "Network error: ${t.message}"
+                    Log.e(TAG, errorMsg)
+                    errorMessage.postValue(errorMsg)
+                    onComplete(false)
+                }
+            })
+        } catch (e: Exception) {
+            isLoading.postValue(false)
+            Log.e(TAG, "Error deleting document: ${e.message}")
+            errorMessage.postValue("Error deleting document: ${e.message}")
+            onComplete(false)
         }
     }
 }
