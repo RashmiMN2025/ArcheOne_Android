@@ -90,6 +90,8 @@ class HomeActivity : AppCompatActivity() {
                         message.contains("401", ignoreCase = true)
                     ) {
                         Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                        // Preserve that this is not a first-time user for session expiry
+                        com.archeGlobal.one.utils.setFirstTimeLogin(this@HomeActivity, false)
                         userDataManager.clearUserData()
                         navigator.navigateToLoginScreen()
                     } else {
@@ -255,6 +257,8 @@ class HomeActivity : AppCompatActivity() {
                             if (isError) {
                                 if (message.contains("Invalid Token")) {
                                     Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                                    // Preserve that this is not a first-time user for session expiry
+                                    com.archeGlobal.one.utils.setFirstTimeLogin(this@HomeActivity, false)
                                     // Clear all user data
                                     userDataManager.clearUserData()
                                     navigator.navigateToLoginScreen()
