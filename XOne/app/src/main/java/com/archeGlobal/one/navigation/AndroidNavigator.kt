@@ -557,8 +557,22 @@ class AndroidNavigator(
     }
 
     override fun showUpdateDialog() {
-        if (activity is com.archeGlobal.one.LoginActivity) {
-            (activity as com.archeGlobal.one.LoginActivity).showUpdateDialog()
+        when (activity) {
+            is com.archeGlobal.one.LoginActivity -> {
+                (activity as com.archeGlobal.one.LoginActivity).showUpdateDialog()
+            }
+            is com.archeGlobal.one.OtpVerificationActivity -> {
+                (activity as com.archeGlobal.one.OtpVerificationActivity).showUpdateDialog()
+            }
+            else -> {
+                // For other activities, navigate to LoginActivity and show update dialog
+                val intent = Intent(activity, com.archeGlobal.one.LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    putExtra("showUpdateDialog", true)
+                }
+                activity.startActivity(intent)
+                activity.finish()
+            }
         }
     }
     

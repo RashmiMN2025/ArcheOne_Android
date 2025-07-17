@@ -203,7 +203,39 @@ class PreferencesManager(context: Context) {
             remove(KEY_ASSET_DETAILS)
             remove(KEY_COMMUNIQUE_DATA)
             remove(KEY_EVENT_DATA)
+            remove(KEY_APP_LOCKED) // Clear app lock state when session expires
+            remove(KEY_BIOMETRIC_ENABLED) // Clear biometric settings
+            remove(KEY_BIOMETRIC_EMAIL)
+            remove(KEY_BIOMETRIC_MOBILE)
+            remove(KEY_BIOMETRIC_EMPLOYEE_ID)
         }.apply()
+        
+        // Update the locked state flow
+        _lockedState.value = false
+    }
+    
+    // Clear only session data but preserve MPIN and biometric data for re-authentication
+    fun clearSessionData() {
+        sharedPreferences.edit().apply {
+            remove(KEY_AUTH_TOKEN)
+            remove(KEY_USER_DATA)
+            remove(KEY_OFFICES_DATA)
+            remove(KEY_POLICIES_DATA)
+            remove(KEY_SOS_BLOGS_DATA)
+            remove(KEY_ASSET_DETAILS)
+            remove(KEY_COMMUNIQUE_DATA)
+            remove(KEY_EVENT_DATA)
+            remove(KEY_APP_LOCKED) // Clear app lock state when session expires
+            // Keep MPIN and biometric data for re-authentication
+            // remove(KEY_BIOMETRIC_ENABLED) - Keep this
+            // remove("biometric_email") - Keep this
+            // remove("biometric_mobile") - Keep this
+            // remove("biometric_employee_id") - Keep this
+            // remove("biometric_token") - Keep this temporarily for re-auth
+        }.apply()
+        
+        // Update the locked state flow
+        _lockedState.value = false
     }
 
     // Locked state management with MutableStateFlow for better reactivity

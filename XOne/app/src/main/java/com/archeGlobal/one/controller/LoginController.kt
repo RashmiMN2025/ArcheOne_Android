@@ -15,6 +15,7 @@ class LoginController(
     private val navigator: Navigator
 ) {
     private val encryptedAPIHelper = EncryptedAPIHelper(context)
+    
     // Step 1: Send OTP
     fun sendOtp(
         email: String,

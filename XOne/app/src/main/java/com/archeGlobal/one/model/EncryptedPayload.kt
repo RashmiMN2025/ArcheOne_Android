@@ -41,6 +41,8 @@ sealed class APIError(
     
     class Unauthorized(message: String) : APIError(401, message)
     
+    class Forbidden(message: String) : APIError(403, message)
+    
     class ServerError(message: String) : APIError(500, message)
     
     object DecodingError : APIError(400, "Failed to decode response.")

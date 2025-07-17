@@ -27,6 +27,7 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ResponsiveLoginScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.PreferencesManager
 
 class LoginActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
@@ -44,11 +45,18 @@ class LoginActivity : AppCompatActivity() {
         // Check if we should force original login form
         val forceOriginalLogin = intent.getBooleanExtra("forceOriginalLogin", false)
         val forceDifferentUserMode = intent.getBooleanExtra("forceDifferentUserMode", false)
+        val shouldShowUpdateDialog = intent.getBooleanExtra("showUpdateDialog", false)
+        val sessionExpired = intent.getBooleanExtra("session_expired", false)
 
         val mpinController = com.archeGlobal.one.controller.MpinController(this)
         val hasMpin = mpinController.isMpinSet()
 
-        val forceOriginalLoginFinal = !hasMpin || forceOriginalLogin
+        // For session expiry, show quick login options if MPIN/biometric are available
+        val forceOriginalLoginFinal = if (sessionExpired) {
+            !hasMpin && !PreferencesManager(this).isBiometricEnabled() // Only force original login if no quick auth methods available
+        } else {
+            !hasMpin || forceOriginalLogin
+        }
 
         // Handle back press in login screen - exit app instead of going back
         onBackPressedDispatcher.addCallback(
@@ -60,6 +68,16 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         )
+
+        // If launched with intent to show update dialog, show it immediately
+        if (shouldShowUpdateDialog) {
+            showUpdateDialog = true
+        }
+        
+        // Show session expired message if needed
+        if (sessionExpired) {
+            android.widget.Toast.makeText(this, "Session expired. Please log in again.", android.widget.Toast.LENGTH_LONG).show()
+        }
 
         setContent {
             XOneTheme {
