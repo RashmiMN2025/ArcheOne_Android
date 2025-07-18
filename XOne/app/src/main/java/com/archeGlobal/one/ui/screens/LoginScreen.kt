@@ -105,6 +105,12 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
     var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
+    
+    // Update firstTimeLogin when the screen is recreated after logout
+    LaunchedEffect(Unit) {
+        firstTimeLogin = forceOriginalLogin || isFirstTimeLogin(context)
+        android.util.Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}")
+    }
     var showWebView by remember { mutableStateOf(false) }
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
     var showMfaTermsDialog by remember { mutableStateOf(false) }
@@ -113,8 +119,25 @@ fun LoginScreen(
     val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn()
     val hasLoggedIn = UserDataManager.getInstance(context).hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
-    val showBiometricButton = remember { biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled() }
-    var showFingerprint by remember { mutableStateOf(showBiometricButton && !firstTimeLogin) }
+    var isDifferentUserMode by remember { mutableStateOf(forceDifferentUserMode) }
+    
+    // Make biometric button state reactive - don't use remember so it re-evaluates
+    val showBiometricButton = biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()
+    var showFingerprint by remember { mutableStateOf(false) }
+    
+    // Update showFingerprint when relevant conditions change
+    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode) {
+        showFingerprint = showBiometricButton && !firstTimeLogin
+        // Reset isDifferentUserMode after normal logout (when it's not forced)
+        if (!forceDifferentUserMode && !firstTimeLogin) {
+            isDifferentUserMode = false
+        }
+        
+        // Debug logging
+        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode")
+        android.util.Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
+        android.util.Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
+    }
 
     var showPolicyWebView by remember { mutableStateOf(false) }
     var policyUrl by remember { mutableStateOf("") }
@@ -132,7 +155,6 @@ fun LoginScreen(
     var isVerifyingMpin by remember { mutableStateOf(false) }
 
     var showOtpButton by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
-    var isDifferentUserMode by remember { mutableStateOf(forceDifferentUserMode) }
 
     var termsAccepted by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
@@ -151,7 +173,7 @@ fun LoginScreen(
     }
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode) {
+    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton) {
         // If forceOriginalLogin is true, always show original login form
         if (forceOriginalLogin) {
             showOtpButton = true
@@ -339,6 +361,9 @@ fun LoginScreen(
                         )
                     }
 
+                    // Debug logging for fingerprint button condition
+                    android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode")
+                    
                     if (showBiometricButton && !firstTimeLogin && !isDifferentUserMode) {
                         Button(
                             onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
@@ -931,8 +956,10 @@ fun LoginScreen(
                                 .fillMaxHeight() // Almost full screen, adjust as needed
                         ) {
                             MicrosoftLoginWebView(
-                                url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Fdev.arche.global%3A7000%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
+                                url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
                                 onReceiveAuth = { response ->
+                                    android.util.Log.d("LoginScreen", "MFA onReceiveAuth called with token: ${response.token}")
+                                    android.util.Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}")
                                     authResponse = response
                                     isLoading = true
                                     controller.loginWithToken(
@@ -941,6 +968,7 @@ fun LoginScreen(
                                         mobile = response.mobilePhone,
                                         employeeId = response.employeeId
                                     ) { message, isError ->
+                                        android.util.Log.d("LoginScreen", "loginWithToken callback: message=$message, isError=$isError")
                                         isLoading = false
                                         if (!isError) {
                                             UserDataManager.getInstance(context).setHasLoggedIn(true)

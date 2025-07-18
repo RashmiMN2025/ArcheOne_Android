@@ -108,6 +108,16 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String) {}
     override fun navigateToTravelApprovalDetails() {}
+    override fun showUpdateDialog() {}
+    
+    // Methods for services with dynamic URLs
+    override fun navigateToSAPWithUrl(url: String) {}
+    override fun navigateToAmpleWithUrl(url: String) {}
+    override fun navigateToZingHRWithUrl(url: String) {}
+    override fun navigateToMyPayWithUrl(url: String) {}
+    override fun navigateToMedicalWithUrl(url: String) {}
+    override fun navigateToAboutUsWithUrl(url: String) {}
+    override fun openPulseLoginWithUrl(url: String) {}
 
     override fun popBackStack() {
         // No-op for preview purposes

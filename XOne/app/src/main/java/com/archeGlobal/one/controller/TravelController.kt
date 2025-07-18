@@ -112,12 +112,26 @@ class TravelController(private val navigator: Navigator, private val context: Co
     // UserDataManager instance
     private val userDataManager = UserDataManager.getInstance(context)
 
+    // Data class for individual destination
+    data class Destination(
+        val id: String = java.util.UUID.randomUUID().toString(),
+        val destination: String = "",
+        val departureDate: String = "",
+        val returnDate: String = ""
+    )
+
     // Travel form fields
     var destination by mutableStateOf("")
         private set
     var projectName by mutableStateOf("")
         private set
     var businessJustification by mutableStateOf("")
+        private set
+
+    // Multi-destination support
+    var isMultiDestination by mutableStateOf(false)
+        private set
+    var destinations by mutableStateOf(listOf<Destination>())
         private set
 
     // Mode of transport options based on employee grade
@@ -190,6 +204,14 @@ class TravelController(private val navigator: Navigator, private val context: Co
     init {
         loadEmployeeDetails()
         loadCombinedTravelHistory()
+        // Initialize with one destination for multi-destination mode
+        destinations = listOf(
+            Destination(
+                destination = "",
+                departureDate = currentDate,
+                returnDate = currentDate
+            )
+        )
     }
 
     /**
@@ -1033,6 +1055,97 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 Log.e("TravelController", "Network error submitting travel request", t)
             }
         })
+    }
+
+    // Multi-destination functions
+    /**
+     * Toggle between single and multi-destination mode
+     */
+    fun toggleDestinationMode(isMulti: Boolean) {
+        isMultiDestination = isMulti
+        if (isMulti && destinations.isEmpty()) {
+            // Initialize with one destination
+            destinations = listOf(
+                Destination(
+                    destination = "",
+                    departureDate = currentDate,
+                    returnDate = currentDate
+                )
+            )
+        }
+    }
+
+    /**
+     * Add a new destination to the list
+     */
+    fun addDestination() {
+        destinations = destinations + Destination(
+            destination = "",
+            departureDate = currentDate,
+            returnDate = currentDate
+        )
+    }
+
+    /**
+     * Remove a destination by ID
+     */
+    fun removeDestination(destinationId: String) {
+        destinations = destinations.filter { it.id != destinationId }
+    }
+
+    /**
+     * Update destination field for a specific destination
+     */
+    fun updateDestinationField(destinationId: String, value: String) {
+        destinations = destinations.map { destination ->
+            if (destination.id == destinationId) {
+                destination.copy(destination = value)
+            } else {
+                destination
+            }
+        }
+    }
+
+    /**
+     * Update departure date for a specific destination
+     */
+    fun updateDestinationDepartureDate(destinationId: String, value: String) {
+        destinations = destinations.map { destination ->
+            if (destination.id == destinationId) {
+                destination.copy(departureDate = value)
+            } else {
+                destination
+            }
+        }
+    }
+
+    /**
+     * Update departure date from millis for a specific destination
+     */
+    fun updateDestinationDepartureDateFromMillis(destinationId: String, millis: Long) {
+        val formattedDate = convertMillisToDisplayDateFormat(millis)
+        updateDestinationDepartureDate(destinationId, formattedDate)
+    }
+
+    /**
+     * Update return date for a specific destination
+     */
+    fun updateDestinationReturnDate(destinationId: String, value: String) {
+        destinations = destinations.map { destination ->
+            if (destination.id == destinationId) {
+                destination.copy(returnDate = value)
+            } else {
+                destination
+            }
+        }
+    }
+
+    /**
+     * Update return date from millis for a specific destination
+     */
+    fun updateDestinationReturnDateFromMillis(destinationId: String, millis: Long) {
+        val formattedDate = convertMillisToDisplayDateFormat(millis)
+        updateDestinationReturnDate(destinationId, formattedDate)
     }
 
     /**

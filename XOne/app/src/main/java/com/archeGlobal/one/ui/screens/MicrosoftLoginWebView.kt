@@ -23,7 +23,7 @@ fun MicrosoftLoginWebView(
                         val uri = request?.url ?: return false
                         val urlString = uri.toString()
                         Log.d("MicrosoftLoginWebView", "Intercepted URL: $urlString")
-                        if (urlString.startsWith("https://dev.arche.global:7000/mfaCallback")) {
+                        if (urlString.startsWith("https://archeone.arche.global/mfaCallback")) {
                             val params = uri.queryParameterNames.associateWith { uri.getQueryParameter(it) ?: "" }
                             if (
                                 params["message"] == "Authenticated" &&

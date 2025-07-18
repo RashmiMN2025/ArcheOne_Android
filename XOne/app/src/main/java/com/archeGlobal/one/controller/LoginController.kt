@@ -15,6 +15,7 @@ class LoginController(
     private val navigator: Navigator
 ) {
     private val encryptedAPIHelper = EncryptedAPIHelper(context)
+    
     // Step 1: Send OTP
     fun sendOtp(
         email: String,
@@ -93,11 +94,14 @@ class LoginController(
                             val hasMpinSet = mpinController.isMpinSet()
 
                             if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                Log.d("LoginController", "MFA Login - MPIN set: $hasMpinSet, Email: $email")
                                 if (!hasMpinSet) {
                                     // MPIN not set, go to MPIN setup
+                                    Log.d("LoginController", "Navigating to MPIN setup")
                                     navigator.navigateToMpinSetup(email, mobile, employeeId, token)
                                 } else {
                                     // MPIN already set, go directly to home
+                                    Log.d("LoginController", "Navigating to home screen")
                                     UserDataManager.getInstance(context).saveUserDataFromResponse(responseBody, token)
                                     UserDataManager.getInstance(context).setIsLoggedIn(true)
                                     UserDataManager.getInstance(context).setHasLoggedIn(true)
@@ -107,9 +111,21 @@ class LoginController(
                             callback("Login successful", false)
                         }
                         errorBody != null -> {
-                            val errorMessage =
-                                JSONObject(errorBody).optString("message", "Server error occurred")
-                            callback(errorMessage, true)
+                            Log.e("LoginController", "API Error Response: $errorBody")
+                            Log.e("LoginController", "Response Code: ${response.code()}")
+                            
+                            // Check if it's a 403 (Forbidden) - app update required
+                            if (response.code() == 403) {
+                                // Show update dialog
+                                if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                    navigator.showUpdateDialog()
+                                }
+                                callback("App update required", true)
+                            } else {
+                                val errorMessage =
+                                    JSONObject(errorBody).optString("message", "Server error occurred")
+                                callback(errorMessage, true)
+                            }
                         }
                         else -> {
                             callback("Server error occurred", true)

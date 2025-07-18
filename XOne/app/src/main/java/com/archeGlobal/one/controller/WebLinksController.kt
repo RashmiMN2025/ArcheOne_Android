@@ -8,33 +8,26 @@ import com.archeGlobal.one.WebViewActivity
 class WebLinksController(private val context: Context) {
     companion object {
         private const val TAG = "WebLinksController"
-
-        // URLs for different services
-        private const val FINANCE_URL = "https://ess.azatecon.com/login"
-        private const val MEDICAL_URL = "https://ilhc.icicilombard.com/Customer/iCard"
-        private const val TRAVEL_URL = "https://ithsmart.travelhouseindia.in/travel/travel_web.xhtml"
-        private const val SAP_URL = "https://my422539.businessbydesign.cloud.sap/sap/public/ap/ui/repository/SAP_UI/HTMLOBERON5/client.html?app.component=/SAP_UI_CT/Main/root.uiccwoc&rootWindow=X&redirectUrl=/sap/public/byd/runtime"
-        private const val ZINGHR_URL = "https://portal.zinghr.com/2015/pages/authentication/zing.aspx?ccode=netcongrp"
     }
 
-    fun openFinancePortal() {
-        openWebView(FINANCE_URL, "Finance")
+    fun openFinancePortal(url: String) {
+        openWebView(url, "Finance")
     }
 
-    fun openMedicalPortal() {
-        openWebView(MEDICAL_URL, "Medical")
+    fun openMedicalPortal(url: String) {
+        openWebView(url, "Medical")
     }
 
-    fun openTravelPortal() {
-        openWebView(TRAVEL_URL, "Travel & Expenses")
+    fun openTravelPortal(url: String) {
+        openWebView(url, "Travel & Expenses")
     }
 
-    fun openSAPPortal() {
-        openWebView(SAP_URL, "SAP")
+    fun openSAPPortal(url: String) {
+        openWebView(url, "SAP")
     }
 
-    fun openZingHRPortal() {
-        openWebView(ZINGHR_URL, "ZingHR")
+    fun openZingHRPortal(url: String) {
+        openWebView(url, "ZingHR")
     }
 
     private fun openWebView(url: String, title: String) {

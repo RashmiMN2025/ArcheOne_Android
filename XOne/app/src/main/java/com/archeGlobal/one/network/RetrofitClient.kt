@@ -1,7 +1,11 @@
 package com.archeGlobal.one.network
 
 import android.content.Context
+import android.content.Intent
+import android.util.Log
+import com.archeGlobal.one.LoginActivity
 import com.archeGlobal.one.utils.PreferencesManager
+import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -10,16 +14,17 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-// Interceptor to add authorization token to requests
+// Interceptor to add authorization token to requests and handle token expiration
 class AuthInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
-        val token = PreferencesManager(context).getAuthToken()
+        val preferencesManager = PreferencesManager(context)
+        val token = preferencesManager.getAuthToken()
 
         // Skip adding token for auth endpoints
         val skipAuth = original.url.toString().contains("send-otp") || original.url.toString().contains("otpVerify")
 
-        return if (token != null && !skipAuth) {
+        val response = if (token != null && !skipAuth) {
             // If we have a token and it's not an auth endpoint, add it to the request
             val requestBuilder = original.newBuilder()
                 .header("Authorization", token)
@@ -29,11 +34,35 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             // Otherwise proceed with the original request
             chain.proceed(original)
         }
+
+        // Check if the response indicates token expiration (401 Unauthorized)
+        if (response.code == 401 && !skipAuth) {
+            Log.w("AuthInterceptor", "Received 401 Unauthorized - Token expired")
+            handleTokenExpiration(context, preferencesManager)
+        }
+
+        return response
+    }
+
+    private fun handleTokenExpiration(context: Context, preferencesManager: PreferencesManager) {
+        // Clear session data but preserve MPIN and biometric data for re-authentication
+        preferencesManager.clearSessionData()
+        val userDataManager = UserDataManager.getInstance(context)
+        userDataManager.clearSessionData()
+        
+        // Navigate to login screen
+        val intent = Intent(context, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("session_expired", true)
+        }
+        context.startActivity(intent)
+        
+        Log.i("AuthInterceptor", "Redirected to login due to token expiration")
     }
 }
 
 object RetrofitClient {
-    const val BASE_URL = "https://archeone.arche.global"
+    const val BASE_URL = "https://archeone.arche.global/"
     private var retrofit: Retrofit? = null
 
     // Initialize with context to get the token

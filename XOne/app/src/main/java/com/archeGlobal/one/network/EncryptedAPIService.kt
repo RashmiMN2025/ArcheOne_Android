@@ -221,6 +221,10 @@ class EncryptedAPIService private constructor(private val context: Context) {
                 val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
                 throw APIError.Unauthorized(errorResponse.message)
             }
+            403 -> {
+                val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
+                throw APIError.Forbidden(errorResponse.message)
+            }
             500 -> {
                 val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
                 throw APIError.ServerError(errorResponse.message)
@@ -253,6 +257,10 @@ class EncryptedAPIService private constructor(private val context: Context) {
             401 -> {
                 val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
                 throw APIError.Unauthorized(errorResponse.message)
+            }
+            403 -> {
+                val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
+                throw APIError.Forbidden(errorResponse.message)
             }
             500 -> {
                 val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)

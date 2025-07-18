@@ -47,6 +47,17 @@ class EncryptedAPIHelper(private val context: Context) {
             } catch (e: APIError) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Encrypted API call failed: ${e.errorMessage}", e)
+                    
+                    // Handle token expiration automatically
+                    if (e is APIError.Unauthorized) {
+                        handleTokenExpiration(context)
+                    }
+                    
+                    // Handle app update required (403 Forbidden)
+                    if (e is APIError.Forbidden) {
+                        handleAppUpdateRequired(context)
+                    }
+                    
                     callback(null, e)
                 }
             } catch (e: Exception) {
@@ -85,6 +96,17 @@ class EncryptedAPIHelper(private val context: Context) {
             } catch (e: APIError) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Regular API call failed: ${e.errorMessage}", e)
+                    
+                    // Handle token expiration automatically
+                    if (e is APIError.Unauthorized) {
+                        handleTokenExpiration(context)
+                    }
+                    
+                    // Handle app update required (403 Forbidden)
+                    if (e is APIError.Forbidden) {
+                        handleAppUpdateRequired(context)
+                    }
+                    
                     callback(null, e)
                 }
             } catch (e: Exception) {
@@ -146,4 +168,60 @@ fun APIError.handleError(callback: (String, Boolean) -> Unit) {
         is APIError.UnknownError -> callback(this.errorMessage, true)
         else -> callback(this.errorMessage, true)
     }
+}
+
+/**
+ * Enhanced extension function to handle APIError with context for token expiration
+ */
+fun APIError.handleErrorWithContext(context: Context, callback: (String, Boolean) -> Unit) {
+    when (this) {
+        is APIError.BadRequest -> callback(this.errorMessage, true)
+        is APIError.Unauthorized -> {
+            // Handle token expiration by redirecting to login
+            handleTokenExpiration(context)
+            callback("Session expired. Please log in again.", true)
+        }
+        is APIError.Forbidden -> {
+            // Handle app update required
+            handleAppUpdateRequired(context)
+            callback("App update required. Please update to continue.", true)
+        }
+        is APIError.ServerError -> callback(this.errorMessage, true)
+        is APIError.UnknownError -> callback(this.errorMessage, true)
+        else -> callback(this.errorMessage, true)
+    }
+}
+
+/**
+ * Helper function to handle token expiration
+ */
+internal fun handleTokenExpiration(context: Context) {
+    android.util.Log.w("APIError", "Token expired - redirecting to login")
+    
+    // Clear session data but preserve MPIN and biometric data for re-authentication
+    val preferencesManager = PreferencesManager(context)
+    preferencesManager.clearSessionData()
+    val userDataManager = UserDataManager.getInstance(context)
+    userDataManager.clearSessionData()
+    
+    // Navigate to login screen
+    val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {
+        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+        putExtra("session_expired", true)
+    }
+    context.startActivity(intent)
+}
+
+/**
+ * Helper function to handle app update required (403 Forbidden)
+ */
+internal fun handleAppUpdateRequired(context: Context) {
+    android.util.Log.w("APIError", "App update required - showing update dialog")
+    
+    // Navigate to login screen with update dialog flag
+    val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {
+        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+        putExtra("showUpdateDialog", true)
+    }
+    context.startActivity(intent)
 } 

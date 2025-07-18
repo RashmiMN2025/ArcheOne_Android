@@ -14,7 +14,9 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
@@ -261,34 +263,94 @@ fun TravelScreen(
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                        // Travel Destination
-                        OutlinedTextField(
-                            value = controller.destination,
-                            onValueChange = { controller.updateDestination(it) },
-                            placeholder = {
-                                Text(
-                                    "Travel Destination",
-                                    color = Color.Gray,
-                                    fontWeight = FontWeight.Medium,
-                                    fontFamily = GraphikFontFamily
-                                )
-                            },
+                        // Tab buttons for Single/Multiple destinations
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Color.Gray,
-                                cursorColor = Color.Black,
-                                unfocusedContainerColor = Color(0xFFF5F5F5),
-                                focusedContainerColor = Color.White,
-                                unfocusedTextColor = Color.Black,
-                                focusedTextColor = Color.Black,
-                                unfocusedPlaceholderColor = Color(0xFFF6F4EE),
-                                focusedPlaceholderColor = Color(0xFFF6F4EE)
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        )
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Single Destination Tab
+                            Button(
+                                onClick = { controller.toggleDestinationMode(false) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (!controller.isMultiDestination) PrimaryRed else Color.White,
+                                    contentColor = if (!controller.isMultiDestination) Color.White else Color.Black
+                                ),
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.weight(1f),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = if (!controller.isMultiDestination) PrimaryRed else Color.LightGray
+                                )
+                            ) {
+                                Text(
+                                    text = "Single Destination",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (!controller.isMultiDestination) Color.White else Color.Black
+                                )
+                            }
+
+                            // Multiple Destinations Tab
+                            Button(
+                                onClick = { controller.toggleDestinationMode(true) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (controller.isMultiDestination) PrimaryRed else Color.White,
+                                    contentColor = if (controller.isMultiDestination) Color.White else Color.Black
+                                ),
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.weight(1f),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = if (controller.isMultiDestination) PrimaryRed else Color.LightGray
+                                )
+                            ) {
+                                Text(
+                                    text = "Multiple Destinations",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (controller.isMultiDestination) Color.White else Color.Black
+                                )
+                            }
+                        }
+
+                        // Show destination fields based on mode
+                        if (!controller.isMultiDestination) {
+                            // Single Destination
+                            OutlinedTextField(
+                                value = controller.destination,
+                                onValueChange = { controller.updateDestination(it) },
+                                placeholder = {
+                                    Text(
+                                        "Travel Destination",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = GraphikFontFamily
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Black,
+                                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                    focusedPlaceholderColor = Color(0xFFF6F4EE)
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                        } else {
+                            // Multiple Destinations
+                            MultiDestinationSection(controller)
+                        }
 
                         // Project Name
                         OutlinedTextField(
@@ -403,13 +465,14 @@ fun TravelScreen(
                             }
                         }
 
-                        // Date Selection Row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                        // Date Selection Row (only for single destination)
+                        if (!controller.isMultiDestination) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                             // Departure Date
                             Column(
                                 modifier = Modifier.weight(1f)
@@ -597,6 +660,7 @@ fun TravelScreen(
                                     }
                                 }
                             }
+                        }
                         }
 
                         // Flight Time Preference - only show if mode of transport is Flight
@@ -973,5 +1037,335 @@ fun EmployeeDetailRow(label: String, value: String) {
             fontWeight = FontWeight.Normal,
             color = Color.Black
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MultiDestinationSection(controller: TravelController) {
+    // State for date picker dialogs
+    val datePickerStates = remember { mutableStateMapOf<String, Boolean>() }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Destinations header with Add button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Destinations",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black
+            )
+            
+            Button(
+                onClick = { controller.addDestination() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2196F3),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.height(40.dp)
+            ) {
+                Text(
+                    text = "Add Destination",
+                    fontSize = 12.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+
+                )
+            }
+        }
+        
+        // List of destinations
+        controller.destinations.forEachIndexed { index, destination ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(8.dp),
+                elevation = 2.dp,
+                backgroundColor = Color.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    // Destination header with delete button
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Destination ${index + 1}",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black
+                        )
+                        
+                        // Delete button (only show if there's more than one destination)
+                        if (controller.destinations.size > 1) {
+                            IconButton(
+                                onClick = { controller.removeDestination(destination.id) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Destination",
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Destination field
+                    OutlinedTextField(
+                        value = destination.destination,
+                        onValueChange = { controller.updateDestinationField(destination.id, it) },
+                        placeholder = {
+                            Text(
+                                "Travel Destination",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            cursorColor = Color.Black,
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedContainerColor = Color.White,
+                            unfocusedTextColor = Color.Black,
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                            focusedPlaceholderColor = Color(0xFFF6F4EE)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Date Selection Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Departure Date
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Departure Date",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 4.dp),
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 8.dp)
+                            ) {
+                                val showDepartureDatePicker = datePickerStates["departure_${destination.id}"] ?: false
+                                
+                                OutlinedTextField(
+                                    value = destination.departureDate,
+                                    onValueChange = { },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.Gray,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    readOnly = true,
+                                    enabled = true,
+                                    textStyle = TextStyle(
+                                        background = Color(0xFFEEEEEE),
+                                        color = Color.Black,
+                                        fontSize = 15.sp,
+                                        fontFamily = GraphikFontFamily
+                                    )
+                                )
+
+                                // Add invisible clickable overlay
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { 
+                                            datePickerStates["departure_${destination.id}"] = true
+                                        }
+                                        .background(Color.Transparent)
+                                )
+                                
+                                // Departure Date Picker Dialog
+                                if (showDepartureDatePicker) {
+                                    val datePickerState = rememberDatePickerState(
+                                        initialDisplayMode = DisplayMode.Picker,
+                                        initialSelectedDateMillis = System.currentTimeMillis(),
+                                        selectableDates = object : androidx.compose.material3.SelectableDates {
+                                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                                val today = Calendar.getInstance().apply {
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.timeInMillis
+                                                return utcTimeMillis >= today
+                                            }
+                                        }
+                                    )
+                                    DatePickerDialog(
+                                        onDismissRequest = { 
+                                            datePickerStates["departure_${destination.id}"] = false 
+                                        },
+                                        confirmButton = {
+                                            TextButton(onClick = {
+                                                datePickerState.selectedDateMillis?.let { millis ->
+                                                    controller.updateDestinationDepartureDateFromMillis(destination.id, millis)
+                                                }
+                                                datePickerStates["departure_${destination.id}"] = false
+                                            }) {
+                                                Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = {
+                                                datePickerStates["departure_${destination.id}"] = false
+                                            }) {
+                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        }
+                                    ) {
+                                        DatePicker(state = datePickerState)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Return Date
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Return Date",
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 4.dp),
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp)
+                            ) {
+                                val showReturnDatePicker = datePickerStates["return_${destination.id}"] ?: false
+                                
+                                OutlinedTextField(
+                                    value = destination.returnDate,
+                                    onValueChange = { },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.Gray,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    readOnly = true,
+                                    enabled = true,
+                                    textStyle = TextStyle(
+                                        background = Color(0xFFEEEEEE),
+                                        color = Color.Black,
+                                        fontSize = 15.sp,
+                                        fontFamily = GraphikFontFamily
+                                    )
+                                )
+
+                                // Add invisible clickable overlay
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { 
+                                            datePickerStates["return_${destination.id}"] = true
+                                        }
+                                        .background(Color.Transparent)
+                                )
+                                
+                                // Return Date Picker Dialog
+                                if (showReturnDatePicker) {
+                                    val datePickerState = rememberDatePickerState(
+                                        initialDisplayMode = DisplayMode.Picker,
+                                        initialSelectedDateMillis = System.currentTimeMillis(),
+                                        selectableDates = object : androidx.compose.material3.SelectableDates {
+                                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                                val today = Calendar.getInstance().apply {
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.timeInMillis
+                                                return utcTimeMillis >= today
+                                            }
+                                        }
+                                    )
+                                    DatePickerDialog(
+                                        onDismissRequest = { 
+                                            datePickerStates["return_${destination.id}"] = false 
+                                        },
+                                        confirmButton = {
+                                            TextButton(onClick = {
+                                                datePickerState.selectedDateMillis?.let { millis ->
+                                                    controller.updateDestinationReturnDateFromMillis(destination.id, millis)
+                                                }
+                                                datePickerStates["return_${destination.id}"] = false
+                                            }) {
+                                                Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = {
+                                                datePickerStates["return_${destination.id}"] = false
+                                            }) {
+                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        }
+                                    ) {
+                                        DatePicker(state = datePickerState)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

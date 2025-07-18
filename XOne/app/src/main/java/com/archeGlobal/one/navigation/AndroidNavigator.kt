@@ -223,7 +223,8 @@ class AndroidNavigator(
     }
 
     override fun navigateToMedical() {
-        openWebView("https://ilhc.icicilombard.com/Customer/iCard", "Medical")
+        // URL should be fetched from login API
+        // openWebView(url, "Medical")
     }
 
     override fun navigateToFinance() {
@@ -231,7 +232,8 @@ class AndroidNavigator(
     }
 
     override fun navigateToMyPay() {
-        openWebView("https://ess.azatecon.com/login", "MyPay")
+        // URL should be fetched from login API
+        // openWebView(url, "MyPay")
     }
 
     override fun navigateToAdmin() {
@@ -425,19 +427,23 @@ class AndroidNavigator(
     }
 
     override fun navigateToSAP() {
-        openWebView("https://my422539.businessbydesign.cloud.sap", "SAP")
+        // URL should be fetched from login API
+        // openWebView(url, "SAP")
     }
 
     override fun navigateToAmple() {
-        openWebView("https://amplenetcon.com", "Ample")
+        // URL should be fetched from login API
+        // openWebView(url, "Ample")
     }
 
     override fun navigateToAboutUs() {
-        openWebView("https://arche.global/arche-one-aboutus", "AboutUs")
+        // URL should be fetched from login API
+        // openWebView(url, "AboutUs")
     }
 
     override fun navigateToZingHR() {
-        openWebView("https://portal.zinghr.com/2015/pages/authentication/zing.aspx?ccode=netcongrp", "ZingHR")
+        // URL should be fetched from login API
+        // openWebView(url, "ZingHR")
     }
 
     override fun navigateToChat() {
@@ -548,5 +554,54 @@ class AndroidNavigator(
         }
         activity.startActivity(intent)
         activity.finish()
+    }
+
+    override fun showUpdateDialog() {
+        when (activity) {
+            is com.archeGlobal.one.LoginActivity -> {
+                (activity as com.archeGlobal.one.LoginActivity).showUpdateDialog()
+            }
+            is com.archeGlobal.one.OtpVerificationActivity -> {
+                (activity as com.archeGlobal.one.OtpVerificationActivity).showUpdateDialog()
+            }
+            else -> {
+                // For other activities, navigate to LoginActivity and show update dialog
+                val intent = Intent(activity, com.archeGlobal.one.LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    putExtra("showUpdateDialog", true)
+                }
+                activity.startActivity(intent)
+                activity.finish()
+            }
+        }
+    }
+    
+    // Methods for services with dynamic URLs
+    override fun navigateToSAPWithUrl(url: String) {
+        openWebView(url, "SAP")
+    }
+    
+    override fun navigateToAmpleWithUrl(url: String) {
+        openWebView(url, "Ample")
+    }
+    
+    override fun navigateToZingHRWithUrl(url: String) {
+        openWebView(url, "ZingHR")
+    }
+    
+    override fun navigateToMyPayWithUrl(url: String) {
+        openWebView(url, "MyPay")
+    }
+    
+    override fun navigateToMedicalWithUrl(url: String) {
+        openWebView(url, "Medical")
+    }
+    
+    override fun navigateToAboutUsWithUrl(url: String) {
+        openWebView(url, "About Us")
+    }
+    
+    override fun openPulseLoginWithUrl(url: String) {
+        openWebView(url, "Pulse")
     }
 }

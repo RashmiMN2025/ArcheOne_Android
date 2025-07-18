@@ -428,6 +428,8 @@ class ProfileController(
         // Clear login state and local data
         userDataManager.setIsLoggedIn(false)
         userDataManager.setHasLoggedIn(true)
+        // Preserve that this is not a first-time user (important for showing fingerprint option)
+        com.archeGlobal.one.utils.setFirstTimeLogin(context, false)
         // Remove token from preferences
         userDataManager.preferencesManager.clearAuthToken()
         // Navigate to login screen WITHOUT token

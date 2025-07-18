@@ -252,7 +252,26 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.clearAllUserData()
         preferencesManager.setString("lastUsername", "")
         preferencesManager.clearBiometricCredentials()
-        Log.d(TAG, "User data cleared from both memory and preferences")
+    }
+    
+    // Clear only session data but preserve MPIN and biometric data for re-authentication
+    fun clearSessionData() {
+        // Clear in-memory cache
+        userData = null
+        officesData = null
+        policiesData = null
+        sosBlogsData = null
+        assetDetails = null
+        communiqueData = null
+        greetingsData = null
+        greetingCategoriesData = null
+        
+        // Clear session data but preserve MPIN and biometric data
+        preferencesManager.clearSessionData()
+        // Set logged in state to false but preserve hasLoggedIn to true
+        setIsLoggedIn(false)
+        // Don't clear lastUsername, MPIN, or biometric credentials
+        Log.d(TAG, "Session data cleared from both memory and preferences, preserving MPIN and biometric credentials")
     }
 
     fun updateProfilePicture(profilePicUrl: String?) {
@@ -286,6 +305,15 @@ class UserDataManager private constructor(context: Context) {
     fun getGreetings(): Map<String, List<String>>? = greetingsData
 
     fun getGreetingCategoriesData(): List<ApiGreetingCategory>? = greetingCategoriesData
+
+    /**
+     * Get service URL by service name
+     */
+    fun getServiceUrl(serviceName: String): String? {
+        return userData?.services?.find { 
+            it.service.equals(serviceName, ignoreCase = true) 
+        }?.url
+    }
 
     fun getEventData(): EventResponse? {
         val localEventData = eventData // Use local variable to avoid smart cast issue

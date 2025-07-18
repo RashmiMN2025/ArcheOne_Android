@@ -248,12 +248,27 @@ class HolidayCalendarController(
             try {
                 // Create the request with the state parameter
                 val request = CalendarRequest(state = userState)
+                Log.d("HolidayCalendarController", "Making calendar API request with state: $userState")
 
                 // Use the POST method with state parameter
                 val response = apiService.getCalendar(request)
+                Log.d("HolidayCalendarController", "Calendar API response code: ${response.code()}")
+                
+                // Log raw response body for debugging
+                if (!response.isSuccessful) {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("HolidayCalendarController", "Calendar API error: $errorBody")
+                }
 
                 if (response.isSuccessful && response.body() != null) {
                     val calendarResponse = response.body()!!
+                    
+                    // Log the raw response for debugging
+                    Log.d("HolidayCalendarController", "Calendar API Response Status: ${calendarResponse.status}")
+                    Log.d("HolidayCalendarController", "Holidays count: ${calendarResponse.holidays.size}")
+                    Log.d("HolidayCalendarController", "Milestones count: ${calendarResponse.milestones.size}")
+                    Log.d("HolidayCalendarController", "Global events count: ${calendarResponse.globalEvents.size}")
+                    
                     if (calendarResponse.status == 200) {
                         _holidays.value = NetworkResult.Success(calendarResponse)
 
@@ -273,6 +288,11 @@ class HolidayCalendarController(
                         // Update milestones and log count
                         _milestones.value = calendarResponse.milestones
                         Log.d("HolidayCalendarController", "Loaded ${calendarResponse.milestones.size} milestones")
+                        
+                        // Debug each milestone
+                        calendarResponse.milestones.forEach { milestone ->
+                            Log.d("HolidayCalendarController", "Milestone loaded: ${milestone.event}, date: ${milestone.poDate}")
+                        }
 
                         // Update global events and log count
                         _globalEvents.value = calendarResponse.globalEvents
@@ -281,6 +301,11 @@ class HolidayCalendarController(
                         // Debug each global event
                         calendarResponse.globalEvents.forEach { event ->
                             Log.d("HolidayCalendarController", "Global event loaded: ${event.name}, date: ${event.date}")
+                        }
+                        
+                        // Debug holidays and their types
+                        calendarResponse.holidays.forEach { holiday ->
+                            Log.d("HolidayCalendarController", "Holiday loaded: ${holiday.name}, date: ${holiday.date}, type: ${holiday.holidayType}")
                         }
                     } else {
                         _holidays.value = NetworkResult.Error("Server returned error status: ${calendarResponse.status}")
