@@ -245,7 +245,7 @@ fun HolidayItem(holiday: Holiday) {
                         color = Color.Black
                     )
                     Text(
-                        text = formatDate(holiday.date),
+                        text = formatHolidayDate(holiday.date),
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
@@ -274,7 +274,7 @@ fun HolidayItem(holiday: Holiday) {
     }
 }
 
-private fun formatDate(dateStr: String): String {
+private fun formatHolidayDate(dateStr: String): String {
     return try {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
         val date = LocalDate.parse(dateStr, formatter)

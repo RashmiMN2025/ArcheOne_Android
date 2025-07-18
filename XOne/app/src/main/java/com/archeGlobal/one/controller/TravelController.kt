@@ -7,14 +7,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.model.TravelApprovalHistoryItem
+import com.archeGlobal.one.model.TravelApprovalItem
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
+import com.archeGlobal.one.model.TravelHistoryItem
 import com.archeGlobal.one.model.TravelHistoryRequest
 import com.archeGlobal.one.model.TravelHistoryResponse
+import com.archeGlobal.one.model.TravelOrderHistoryItem
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
 import com.archeGlobal.one.model.TravelStatus
+import com.archeGlobal.one.model.createMultiDestinationRequest
+import com.archeGlobal.one.model.createSingleDestinationRequest
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
@@ -291,20 +297,32 @@ class TravelController(private val navigator: Navigator, private val context: Co
             employeeEmail = employeeEmail
         )
 
-        // Make API call to get combined travel history
+        // Make API call to get combined travel history with Travel Details field
         RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(object : Callback<TravelCombinedHistoryResponse> {
             override fun onResponse(call: Call<TravelCombinedHistoryResponse>, response: Response<TravelCombinedHistoryResponse>) {
                 if (response.isSuccessful && response.body() != null) {
-                    val orderHistoryItems = response.body()!!.orderHistory.map { it.toTravelRequest() }
-                    val approvalHistoryItems = response.body()!!.approvalHistory.map { it.toTravelRequest() }
-
-                    // Update state with both order history and approval history
+                    val orderHistoryItems = response.body()!!.orderHistory
+                    val approvalHistoryItems = response.body()!!.approvalHistory
+                    Log.d("TravelController", "Loaded ${orderHistoryItems.size} order history items and ${approvalHistoryItems.size} approval history items")
+                    
+                    // Convert to TravelRequest objects using the proper toTravelRequest method
+                    // which now includes the Travel Details field
+                    val historyItems = orderHistoryItems.map { item ->
+                        Log.d("TravelController", "Processing order ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}")
+                        item.toTravelRequest()
+                    }
+                    
+                    val approvalItems = approvalHistoryItems.map { item ->
+                        Log.d("TravelController", "Processing approval ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}")
+                        item.toTravelRequest()
+                    }
+                    
                     travelHistoryState = TravelHistoryState.Success(
-                        historyItems = orderHistoryItems,
-                        approvalItems = approvalHistoryItems
+                        historyItems = historyItems,
+                        approvalItems = approvalItems
                     )
 
-                    Log.d("TravelController", "Loaded combined history: ${orderHistoryItems.size} orders, ${approvalHistoryItems.size} approvals")
+                    Log.d("TravelController", "Loaded combined history: ${historyItems.size} order requests, ${approvalItems.size} approval requests")
                 } else {
                     try {
                         val errorBody = response.errorBody()?.string()
@@ -984,40 +1002,73 @@ class TravelController(private val navigator: Navigator, private val context: Co
             else -> flightTimePreference
         }
 
-        // Convert dates to API format
-        val apiDepartureDate = convertToApiDateFormat(departureDate)
-        val apiArrivalDate = convertToApiDateFormat(arrivalDate)
-        
-        // Log the final dates being sent to API
-        Log.d("TravelController", "Submitting travel request with:")
-        Log.d("TravelController", "  Display departure date: $departureDate")
-        Log.d("TravelController", "  API departure date: $apiDepartureDate")
-        Log.d("TravelController", "  Display arrival date: $arrivalDate")
-        Log.d("TravelController", "  API arrival date: $apiArrivalDate")
-
         // Create travel request submission object
-        val travelRequest = TravelRequestSubmission(
-            employeeId = employeeId,
-            employeeName = employeeName,
-            employeeEmail = employeeEmail,
-            mobile = mobileNumber,
-            travelDestination = destination,
-            projectName = projectName,
-            businessJustification = businessJustification,
-            modeOfTransport = modeOfTransport,
-            departureDate = apiDepartureDate,
-            arrivalDate = apiArrivalDate,
-            reportingManagerName = reportingManagerName,
-            reportingManagerEmail = reportingManagerEmail,
-            grade = employeeGrade,
-            aadharNumber = aadharNumber,
-            dateOfBirth = dateOfBirth,
-            flightTime = flightTimeValue,
-            seatPreference = seatPreference,
-            mealPreference = if (mealPreferenceEnabled) mealPreference else "",
-            stayRequired = stayRequired,
-            frequentFlyerNumber = frequentFlyerNumber
-        )
+        val travelRequest = if (isMultiDestination) {
+            // Multi-destination request
+            val travelDestinations = destinations.map { dest ->
+                com.archeGlobal.one.model.TravelDestination(
+                    travelDestination = dest.destination,
+                    departureDate = convertToApiDateFormat(dest.departureDate),
+                    arrivalDate = convertToApiDateFormat(dest.returnDate),
+                    flightTimePreference = flightTimeValue
+                )
+            }
+            
+            Log.d("TravelController", "Submitting multi-destination travel request with ${travelDestinations.size} destinations")
+            
+            createMultiDestinationRequest(
+                employeeId = employeeId,
+                employeeName = employeeName,
+                employeeEmail = employeeEmail,
+                mobile = mobileNumber,
+                projectName = projectName,
+                businessJustification = businessJustification,
+                modeOfTransport = modeOfTransport,
+                reportingManagerName = reportingManagerName,
+                reportingManagerEmail = reportingManagerEmail,
+                stayRequired = stayRequired,
+                grade = employeeGrade,
+                aadharNumber = aadharNumber,
+                dateOfBirth = dateOfBirth,
+                frequentFlyerNumber = frequentFlyerNumber,
+                mealPreference = if (mealPreferenceEnabled) mealPreference else "",
+                seatPreference = seatPreference,
+                destinations = travelDestinations
+            )
+        } else {
+            // Single destination request
+            val apiDepartureDate = convertToApiDateFormat(departureDate)
+            val apiArrivalDate = convertToApiDateFormat(arrivalDate)
+            
+            Log.d("TravelController", "Submitting single-destination travel request:")
+            Log.d("TravelController", "  Display departure date: $departureDate")
+            Log.d("TravelController", "  API departure date: $apiDepartureDate")
+            Log.d("TravelController", "  Display arrival date: $arrivalDate")
+            Log.d("TravelController", "  API arrival date: $apiArrivalDate")
+
+            createSingleDestinationRequest(
+                employeeId = employeeId,
+                employeeName = employeeName,
+                employeeEmail = employeeEmail,
+                mobile = mobileNumber,
+                travelDestination = destination,
+                projectName = projectName,
+                businessJustification = businessJustification,
+                modeOfTransport = modeOfTransport,
+                departureDate = apiDepartureDate,
+                arrivalDate = apiArrivalDate,
+                reportingManagerName = reportingManagerName,
+                reportingManagerEmail = reportingManagerEmail,
+                stayRequired = stayRequired,
+                grade = employeeGrade,
+                aadharNumber = aadharNumber,
+                dateOfBirth = dateOfBirth,
+                frequentFlyerNumber = frequentFlyerNumber,
+                mealPreference = if (mealPreferenceEnabled) mealPreference else "",
+                seatPreference = seatPreference,
+                flightTime = flightTimeValue
+            )
+        }
 
         // Make API call
         RetrofitClient.apiService.submitTravelRequest(travelRequest).enqueue(object : Callback<TravelRequestResponse> {
@@ -1026,9 +1077,22 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
                 if (response.isSuccessful && response.body() != null) {
                     val responseBody = response.body()!!
-                    if (responseBody.success) {
+                    if (responseBody.status == 200) {
                         // Request was successful
-                        Log.d("TravelController", "Travel request submitted successfully: ${responseBody.requestId}")
+                        Log.d("TravelController", "Travel request submitted successfully")
+                        Log.d("TravelController", "Response message: ${responseBody.message}")
+                        
+                        // Log multi-destination details if available
+                        responseBody.orderHistory?.firstOrNull()?.let { order ->
+                            Log.d("TravelController", "Request ID: ${order.requestId}")
+                            order.travelDetails?.let { details ->
+                                Log.d("TravelController", "Travel details: ${details.size} destinations")
+                                details.forEach { dest ->
+                                    Log.d("TravelController", "  - ${dest.travelDestination}: ${dest.departureDate} to ${dest.arrivalDate}")
+                                }
+                            }
+                        }
+                        
                         // Navigate back to home
                         navigator.navigateToHome()
                     } else {

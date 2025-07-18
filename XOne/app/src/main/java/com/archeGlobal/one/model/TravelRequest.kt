@@ -8,7 +8,7 @@ import java.util.Date
 data class TravelRequest(
     val id: String, // Format: TRV001, TRV002, etc.
     val project: String, // Project name
-    val destination: String, // Travel destination
+    val destination: String, // Travel destination (formatted for display)
     val approver: String, // Name of the approver
     val createdDate: Date, // Date when the request was created
     val status: TravelStatus, // Status of the request
@@ -22,8 +22,23 @@ data class TravelRequest(
     val mealPreference: String? = null, // Meal preference
     val seatPreference: String? = null, // Seat preference
     val flightTime: String? = null, // Preferred flight time
-    val frequentFlyerNumber: String? = null // Frequent flyer number if applicable
-)
+    val frequentFlyerNumber: String? = null, // Frequent flyer number if applicable
+    val travelDestinations: List<TravelDestination>? = null // Multi-destination support
+) {
+    /**
+     * Check if this is a multi-destination travel request
+     */
+    fun isMultiDestination(): Boolean {
+        return travelDestinations != null && travelDestinations.size > 1
+    }
+
+    /**
+     * Get all destinations for multi-destination travel
+     */
+    fun getAllDestinations(): List<TravelDestination> {
+        return travelDestinations ?: emptyList()
+    }
+}
 
 /**
  * Represents the possible statuses of a travel request

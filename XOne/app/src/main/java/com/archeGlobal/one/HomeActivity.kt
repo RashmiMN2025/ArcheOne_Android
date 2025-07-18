@@ -220,7 +220,8 @@ class HomeActivity : AppCompatActivity() {
                 // Initialize controllers that need context
                 holidayCalendarController = HolidayCalendarController(
                     RetrofitClient.apiService,
-                    UserRepository(this@HomeActivity)
+                    UserRepository(this@HomeActivity),
+                    this@HomeActivity
                 )
 
                 // Initialize holiday options controller

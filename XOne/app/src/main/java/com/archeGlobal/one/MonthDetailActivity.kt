@@ -21,7 +21,7 @@ class MonthDetailActivity : ComponentActivity() {
         val month = intent.getIntExtra("month", 1)
         val apiService = RetrofitClient.apiService
         val userRepository = UserRepository(this)
-        val controller = HolidayCalendarController(apiService, userRepository)
+        val controller = HolidayCalendarController(apiService, userRepository, this)
         setContent {
             XOneTheme {
                 MonthDetailScreen(

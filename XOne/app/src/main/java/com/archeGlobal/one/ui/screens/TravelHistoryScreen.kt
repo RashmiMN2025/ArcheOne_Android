@@ -233,12 +233,52 @@ fun TravelRequestCard(
                 value = travelRequest.project
             )
 
-            // Destination
-            DetailItem(
-                icon = R.drawable.ic_location,
-                label = "Destination",
-                value = travelRequest.destination
-            )
+            // Handle single vs multi-destination display
+            val destinations = travelRequest.getAllDestinations()
+            
+            if (destinations.isEmpty() || destinations.size == 1) {
+                // Single destination - show as before
+                DetailItem(
+                    icon = R.drawable.ic_location,
+                    label = "Destination",
+                    value = travelRequest.destination
+                )
+                
+                // Show travel dates for single destination
+                if (!travelRequest.departureDate.isNullOrEmpty() && !travelRequest.arrivalDate.isNullOrEmpty()) {
+                    DetailItem(
+                        icon = R.drawable.ic_calendar,
+                        label = "Travel Dates",
+                        value = "${travelRequest.departureDate} - ${travelRequest.arrivalDate}"
+                    )
+                }
+            } else {
+                // Multi-destination - show Trip 1, Trip 2, etc.
+                destinations.forEachIndexed { index, destination ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Trip ${index + 1}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    DetailItem(
+                        icon = R.drawable.ic_location,
+                        label = "Destination",
+                        value = destination.travelDestination
+                    )
+                    
+                    DetailItem(
+                        icon = R.drawable.ic_calendar,
+                        label = "Travel Dates",
+                        value = "${destination.departureDate} - ${destination.arrivalDate}"
+                    )
+                }
+            }
 
             // Approver
             DetailItem(

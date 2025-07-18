@@ -63,7 +63,25 @@ data class TravelApprovalItem(
     val actionToken: String,
 
     @SerializedName("remarks")
-    val remarks: String
+    val remarks: String,
+
+    @SerializedName("stay_required")
+    val stayRequired: Int? = null,
+
+    @SerializedName("meal_pref")
+    val mealPreference: String? = null,
+
+    @SerializedName("seat_pref")
+    val seatPreference: String? = null,
+
+    @SerializedName("flight_time")
+    val flightTime: String? = null,
+
+    @SerializedName("frequent_flyer_num")
+    val frequentFlyerNumber: String? = null,
+
+    @SerializedName("Travel Details")
+    val travelDetails: List<TravelDestination>? = null
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -76,10 +94,23 @@ data class TravelApprovalItem(
             else -> TravelStatus.PENDING
         }
 
+        // Handle multi-destination display
+        val destinationDisplay = if (travelDetails != null && travelDetails.isNotEmpty()) {
+            // Multi-destination: show count and first destination
+            if (travelDetails.size == 1) {
+                travelDetails.first().travelDestination
+            } else {
+                "${travelDetails.first().travelDestination} (+${travelDetails.size - 1} more)"
+            }
+        } else {
+            // Single destination
+            travelDestination
+        }
+
         return TravelRequest(
             id = requestId,
             project = projectName,
-            destination = travelDestination,
+            destination = destinationDisplay,
             approver = employeeName,
             createdDate = parseDate(createdAt),
             status = travelStatus,
@@ -87,8 +118,23 @@ data class TravelApprovalItem(
             modeOfTransport = modeOfTransport,
             departureDate = departureDate,
             arrivalDate = arrivalDate,
-            actionToken = actionToken
+            actionToken = actionToken,
+            travelDestinations = travelDetails
         )
+    }
+
+    /**
+     * Check if this is a multi-destination travel request
+     */
+    fun isMultiDestination(): Boolean {
+        return travelDetails != null && travelDetails.size > 1
+    }
+
+    /**
+     * Get all destinations for multi-destination travel
+     */
+    fun getAllDestinations(): List<TravelDestination> {
+        return travelDetails ?: emptyList()
     }
 
     private fun parseDate(dateString: String): Date {

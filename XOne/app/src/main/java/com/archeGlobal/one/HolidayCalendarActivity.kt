@@ -21,7 +21,7 @@ class HolidayCalendarActivity : ComponentActivity() {
 
         val apiService = RetrofitClient.apiService
         val userRepository = UserRepository(this)
-        val controller = HolidayCalendarController(apiService, userRepository)
+        val controller = HolidayCalendarController(apiService, userRepository, this)
         setContent {
             XOneTheme {
                 HolidayCalendarScreen(

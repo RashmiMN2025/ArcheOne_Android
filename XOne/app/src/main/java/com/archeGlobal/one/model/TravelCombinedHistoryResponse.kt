@@ -90,7 +90,10 @@ data class TravelOrderHistoryItem(
     val flightTime: String?,
 
     @SerializedName("frequent_flyer_num")
-    val frequentFlyerNumber: String?
+    val frequentFlyerNumber: String?,
+
+    @SerializedName("Travel Details")
+    val travelDetails: List<TravelDestination>? = null
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -126,7 +129,8 @@ data class TravelOrderHistoryItem(
             mealPreference = mealPreference,
             seatPreference = seatPreference,
             flightTime = flightTime,
-            frequentFlyerNumber = frequentFlyerNumber
+            frequentFlyerNumber = frequentFlyerNumber,
+            travelDestinations = travelDetails
         )
     }
 }
@@ -193,7 +197,10 @@ data class TravelApprovalHistoryItem(
     val flightTime: String?,
 
     @SerializedName("frequent_flyer_num")
-    val frequentFlyerNumber: String?
+    val frequentFlyerNumber: String?,
+
+    @SerializedName("Travel Details")
+    val travelDetails: List<TravelDestination>? = null
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -231,7 +238,8 @@ data class TravelApprovalHistoryItem(
             mealPreference = mealPreference,
             seatPreference = seatPreference,
             flightTime = flightTime,
-            frequentFlyerNumber = frequentFlyerNumber
+            frequentFlyerNumber = frequentFlyerNumber,
+            travelDestinations = travelDetails
         )
     }
 }

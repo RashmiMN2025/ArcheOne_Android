@@ -72,7 +72,25 @@ data class TravelHistoryItem(
     val createdAt: String,
 
     @SerializedName("updated_at")
-    val updatedAt: String
+    val updatedAt: String,
+
+    @SerializedName("stay_required")
+    val stayRequired: Int? = null,
+
+    @SerializedName("meal_pref")
+    val mealPreference: String? = null,
+
+    @SerializedName("seat_pref")
+    val seatPreference: String? = null,
+
+    @SerializedName("flight_time")
+    val flightTime: String? = null,
+
+    @SerializedName("frequent_flyer_num")
+    val frequentFlyerNumber: String? = null,
+
+    @SerializedName("Travel Details")
+    val travelDetails: List<TravelDestination>? = null
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -93,17 +111,45 @@ data class TravelHistoryItem(
             else -> TravelStatus.PENDING
         }
 
+        // Handle multi-destination display
+        val destinationDisplay = if (travelDetails != null && travelDetails.isNotEmpty()) {
+            // Multi-destination: show count and first destination
+            if (travelDetails.size == 1) {
+                travelDetails.first().travelDestination
+            } else {
+                "${travelDetails.first().travelDestination} (+${travelDetails.size - 1} more)"
+            }
+        } else {
+            // Single destination
+            travelDestination
+        }
+
         return TravelRequest(
             id = requestId,
             project = projectName,
-            destination = travelDestination,
+            destination = destinationDisplay,
             approver = reportingManagerName,
             createdDate = createdDate ?: Date(),
             status = travelStatus,
             businessJustification = businessJustification,
             modeOfTransport = modeOfTransport,
             departureDate = departureDate,
-            arrivalDate = arrivalDate
+            arrivalDate = arrivalDate,
+            travelDestinations = travelDetails
         )
+    }
+
+    /**
+     * Check if this is a multi-destination travel request
+     */
+    fun isMultiDestination(): Boolean {
+        return travelDetails != null && travelDetails.size > 1
+    }
+
+    /**
+     * Get all destinations for multi-destination travel
+     */
+    fun getAllDestinations(): List<TravelDestination> {
+        return travelDetails ?: emptyList()
     }
 }

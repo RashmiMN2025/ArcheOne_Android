@@ -391,37 +391,31 @@ class ProfileController(
         val employeeName = userData?.name ?: userData?.email ?: ""
         userDataManager.setLastUsername(employeeName) // Save for welcome text
 
-        // Call logout API
+        // Call logout API with encryption
         val logoutRequest = LogoutRequest(email)
-        Log.d("ProfileController", "Calling logout API with email: $email")
+        Log.d("ProfileController", "Calling encrypted logout API with email: $email")
 
-        RetrofitClient.apiService.logout(logoutRequest)
-            .enqueue(object : retrofit2.Callback<LogoutResponse> {
-                override fun onResponse(
-                    call: retrofit2.Call<LogoutResponse>, 
-                    response: retrofit2.Response<LogoutResponse>
-                ) {
-                    Log.d("ProfileController", "Logout API response: ${response.code()}")
-                    if (response.isSuccessful) {
-                        val logoutResponse = response.body()
-                        Log.d("ProfileController", "Logout API success: ${logoutResponse?.message}")
-                        proceedWithLocalLogout(userData)
-                    } else {
-                        Log.e("ProfileController", "Logout API failed with code: ${response.code()}")
-                        // Even if API fails, proceed with local logout for user experience
-                        proceedWithLocalLogout(userData)
-                    }
-                }
-
-                override fun onFailure(
-                    call: retrofit2.Call<LogoutResponse>, 
-                    t: Throwable
-                ) {
-                    Log.e("ProfileController", "Logout API call failed: ${t.message}", t)
-                    // Even if API call fails, proceed with local logout for user experience
-                    proceedWithLocalLogout(userData)
-                }
-            })
+        val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "logout",
+            method = "POST",
+            request = logoutRequest,
+            responseClass = LogoutResponse::class.java,
+            withAuthHeader = true
+        ) { response, error ->
+            if (error != null) {
+                Log.e("ProfileController", "Logout API error: ${error.errorMessage}")
+                // Even if API fails, proceed with local logout for user experience
+                proceedWithLocalLogout(userData)
+            } else if (response != null) {
+                Log.d("ProfileController", "Logout API success: ${response.message}")
+                proceedWithLocalLogout(userData)
+            } else {
+                Log.e("ProfileController", "Logout API failed: No response received")
+                // Even if API fails, proceed with local logout for user experience
+                proceedWithLocalLogout(userData)
+            }
+        }
     }
 
     private fun proceedWithLocalLogout(userData: UserData?) {

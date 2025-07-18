@@ -74,7 +74,7 @@ fun TravelRequestDetailScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Request Details",
+                                    text = "Travel Request Details",
                                     color = Color.Black,
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,
@@ -116,65 +116,156 @@ fun TravelRequestDetailScreen(
                             DetailRow(label = "Mobile:", value = controller.mobileNumber)
                         }
 
-                        // Travel Details Card
-                        DetailCard(title = "Travel Details") {
-                            DetailRow(label = "Destination:", value = travelRequest.destination)
-                            DetailRow(label = "Project Name:", value = travelRequest.project)
-                            // Use fields from the TravelRequest model
-                            DetailRow(
-                                label = "Business Justification:",
-                                value = travelRequest.businessJustification ?: "N/A"
-                            )
-                            DetailRow(
-                                label = "Mode of Transport:",
-                                value = travelRequest.modeOfTransport ?: "N/A"
-                            )
-                            // Format departure date in the format: day Month year (e.g., 3 Jul 2025)
-                            val formattedDepartureDate = try {
-                                val date = java.text.SimpleDateFormat(
-                                    "yyyy-MM-dd",
-                                    java.util.Locale.getDefault()
-                                )
-                                    .parse(travelRequest.departureDate ?: "")
-                                if (date != null) {
-                                    java.text.SimpleDateFormat(
-                                        "d MMM yyyy",
+                        // Travel Details Card - Handle multi-destination vs single destination
+                        val destinations = travelRequest.getAllDestinations()
+                        
+                        if (destinations.isEmpty() || destinations.size == 1) {
+                            // Single destination - keep original format
+                            DetailCard(title = "Travel Details") {
+                                DetailRow(label = "Destination:", value = travelRequest.destination)
+                                
+                                // Format departure date in the format: day Month year (e.g., 3 Jul 2025)
+                                val formattedDepartureDate = try {
+                                    val date = java.text.SimpleDateFormat(
+                                        "yyyy-MM-dd",
                                         java.util.Locale.getDefault()
                                     )
-                                        .format(date)
-                                } else {
+                                        .parse(travelRequest.departureDate ?: "")
+                                    if (date != null) {
+                                        java.text.SimpleDateFormat(
+                                            "d MMM yyyy",
+                                            java.util.Locale.getDefault()
+                                        )
+                                            .format(date)
+                                    } else {
+                                        "N/A"
+                                    }
+                                } catch (e: Exception) {
                                     "N/A"
                                 }
-                            } catch (e: Exception) {
-                                "N/A"
-                            }
 
-                            // Format arrival date in the format: day Month year (e.g., 17 Jul 2025)
-                            val formattedArrivalDate = try {
-                                val date = java.text.SimpleDateFormat(
-                                    "yyyy-MM-dd",
-                                    java.util.Locale.getDefault()
-                                )
-                                    .parse(travelRequest.arrivalDate ?: "")
-                                if (date != null) {
-                                    java.text.SimpleDateFormat(
-                                        "d MMM yyyy",
+                                // Format arrival date in the format: day Month year (e.g., 17 Jul 2025)
+                                val formattedArrivalDate = try {
+                                    val date = java.text.SimpleDateFormat(
+                                        "yyyy-MM-dd",
                                         java.util.Locale.getDefault()
                                     )
-                                        .format(date)
-                                } else {
+                                        .parse(travelRequest.arrivalDate ?: "")
+                                    if (date != null) {
+                                        java.text.SimpleDateFormat(
+                                            "d MMM yyyy",
+                                            java.util.Locale.getDefault()
+                                        )
+                                            .format(date)
+                                    } else {
+                                        "N/A"
+                                    }
+                                } catch (e: Exception) {
                                     "N/A"
                                 }
-                            } catch (e: Exception) {
-                                "N/A"
-                            }
 
-                            DetailRow(label = "Departure Date:", value = formattedDepartureDate)
-                            DetailRow(label = "Arrival Date:", value = formattedArrivalDate)
-                            DetailRow(
-                                label = "Stay Required:",
-                                value = travelRequest.stayRequired ?: "N/A"
-                            )
+                                DetailRow(label = "Departure Date:", value = formattedDepartureDate)
+                                DetailRow(label = "Return Date:", value = formattedArrivalDate)
+                                
+                                // Add other details for single destination too
+                                DetailRow(label = "Project Name:", value = travelRequest.project)
+                                DetailRow(
+                                    label = "Business Justification:",
+                                    value = travelRequest.businessJustification ?: "N/A"
+                                )
+                                DetailRow(
+                                    label = "Mode of Transport:",
+                                    value = travelRequest.modeOfTransport ?: "N/A"
+                                )
+                                DetailRow(
+                                    label = "Stay Required:",
+                                    value = travelRequest.stayRequired ?: "N/A"
+                                )
+                            }
+                        } else {
+                            // Multi-destination - show Trip 1, Trip 2, etc.
+                            DetailCard(title = "Travel Details") {
+                                destinations.forEachIndexed { index, destination ->
+                                    // Add section header for each trip
+                                    if (index > 0) {
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+                                    
+                                    Text(
+                                        text = "Trip ${index + 1}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                    
+                                    DetailRow(label = "Destination:", value = destination.travelDestination)
+                                    
+                                    // Format departure date
+                                    val formattedDepartureDate = try {
+                                        val date = java.text.SimpleDateFormat(
+                                            "yyyy-MM-dd",
+                                            java.util.Locale.getDefault()
+                                        )
+                                            .parse(destination.departureDate)
+                                        if (date != null) {
+                                            java.text.SimpleDateFormat(
+                                                "d MMM yyyy",
+                                                java.util.Locale.getDefault()
+                                            )
+                                                .format(date)
+                                        } else {
+                                            "N/A"
+                                        }
+                                    } catch (e: Exception) {
+                                        "N/A"
+                                    }
+                                    
+                                    // Format arrival date
+                                    val formattedArrivalDate = try {
+                                        val date = java.text.SimpleDateFormat(
+                                            "yyyy-MM-dd",
+                                            java.util.Locale.getDefault()
+                                        )
+                                            .parse(destination.arrivalDate)
+                                        if (date != null) {
+                                            java.text.SimpleDateFormat(
+                                                "d MMM yyyy",
+                                                java.util.Locale.getDefault()
+                                            )
+                                                .format(date)
+                                        } else {
+                                            "N/A"
+                                        }
+                                    } catch (e: Exception) {
+                                        "N/A"
+                                    }
+                                    
+                                    DetailRow(label = "Departure Date:", value = formattedDepartureDate)
+                                    DetailRow(label = "Return Date:", value = formattedArrivalDate)
+                                }
+                                
+                                // Add other details after the trip sections (matching the image layout)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                DetailRow(label = "Project Name:", value = travelRequest.project)
+                                DetailRow(
+                                    label = "Business Justification:",
+                                    value = travelRequest.businessJustification ?: "N/A"
+                                )
+                                DetailRow(
+                                    label = "Mode of Transport:",
+                                    value = travelRequest.modeOfTransport ?: "N/A"
+                                )
+                                DetailRow(
+                                    label = "Stay Required:",
+                                    value = travelRequest.stayRequired ?: "N/A"
+                                )
+                            }
+                        }
+                        
+                        // Additional Details Card - for preferences
+                        DetailCard(title = "Additional Details") {
                             DetailRow(
                                 label = "Meal Preference:",
                                 value = travelRequest.mealPreference ?: "None"

@@ -962,11 +962,19 @@ fun LoginScreen(
                                     android.util.Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}")
                                     authResponse = response
                                     isLoading = true
-                                    controller.loginWithToken(
+                                    // Use encrypted API call like OTP flow
+                                    val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+                                        navigator = navigator,
+                                        context = context
+                                    )
+                                    otpController.loginWithToken(
                                         token = response.token,
                                         email = response.email,
                                         mobile = response.mobilePhone,
-                                        employeeId = response.employeeId
+                                        employeeId = response.employeeId,
+                                        fromHome = false,
+                                        fromOtp = false,
+                                        shouldNavigateToHome = false // Don't auto-navigate
                                     ) { message, isError ->
                                         android.util.Log.d("LoginScreen", "loginWithToken callback: message=$message, isError=$isError")
                                         isLoading = false
@@ -974,7 +982,18 @@ fun LoginScreen(
                                             UserDataManager.getInstance(context).setHasLoggedIn(true)
                                             setFirstTimeLogin(context, false)
                                             firstTimeLogin = false
-                                            // Navigation is now handled by LoginController.loginWithToken()
+                                            
+                                            // Handle MPIN setup navigation like OTP flow
+                                            val mpinController = com.archeGlobal.one.controller.MpinController(context)
+                                            if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                                if (mpinController.isMpinSet()) {
+                                                    // MPIN already set, go directly to Home
+                                                    navigator.navigateToHome(true, true, response.email, response.mobilePhone, response.employeeId)
+                                                } else {
+                                                    // MPIN not set, go to MPIN setup
+                                                    navigator.navigateToMpinSetup(response.email, response.mobilePhone, response.employeeId, response.token)
+                                                }
+                                            }
                                         }
                                     }
                                 },

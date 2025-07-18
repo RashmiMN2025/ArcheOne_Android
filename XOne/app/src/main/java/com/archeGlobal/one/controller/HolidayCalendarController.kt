@@ -27,7 +27,8 @@ import java.util.Locale
 
 class HolidayCalendarController(
     private val apiService: ApiService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val context: Context
 ) : ViewModel() {
 
     // LiveData for holidays
@@ -243,78 +244,79 @@ class HolidayCalendarController(
         // Get user's state (defaulting to Karnataka if not available)
         val userState = userRepository.getUserState() ?: "Karnataka"
 
-        // Use viewModelScope to launch coroutine
-        viewModelScope.launch {
-            try {
-                // Create the request with the state parameter
-                val request = CalendarRequest(state = userState)
-                Log.d("HolidayCalendarController", "Making calendar API request with state: $userState")
+        // Create the request with the state parameter
+        val request = CalendarRequest(state = userState)
+        Log.d("HolidayCalendarController", "Making calendar API request with state: $userState")
 
-                // Use the POST method with state parameter
-                val response = apiService.getCalendar(request)
-                Log.d("HolidayCalendarController", "Calendar API response code: ${response.code()}")
-                
-                // Log raw response body for debugging
-                if (!response.isSuccessful) {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e("HolidayCalendarController", "Calendar API error: $errorBody")
-                }
+        // Use encrypted API call with state parameter
+        val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)
+        
+        encryptedAPIHelper.makeEncryptedCall(
+            endpoint = "calendar",
+            method = "POST",
+            request = request,
+            responseClass = CalendarResponse::class.java,
+            withAuthHeader = true
+        ) { response, error ->
+            if (error != null) {
+                Log.e("HolidayCalendarController", "Calendar API error: ${error.errorMessage}")
+                _holidays.value = NetworkResult.Error("Network error: ${error.errorMessage}")
+                return@makeEncryptedCall
+            }
+            
+            if (response == null) {
+                _holidays.value = NetworkResult.Error("No response received")
+                return@makeEncryptedCall
+            }
+            
+            val calendarResponse = response as CalendarResponse
+            
+            // Log the raw response for debugging
+            Log.d("HolidayCalendarController", "Calendar API Response Status: ${calendarResponse.status}")
+            Log.d("HolidayCalendarController", "Holidays count: ${calendarResponse.holidays.size}")
+            Log.d("HolidayCalendarController", "Milestones count: ${calendarResponse.milestones.size}")
+            Log.d("HolidayCalendarController", "Global events count: ${calendarResponse.globalEvents.size}")
+            
+            if (calendarResponse.status == 200) {
+                _holidays.value = NetworkResult.Success(calendarResponse)
 
-                if (response.isSuccessful && response.body() != null) {
-                    val calendarResponse = response.body()!!
-                    
-                    // Log the raw response for debugging
-                    Log.d("HolidayCalendarController", "Calendar API Response Status: ${calendarResponse.status}")
-                    Log.d("HolidayCalendarController", "Holidays count: ${calendarResponse.holidays.size}")
-                    Log.d("HolidayCalendarController", "Milestones count: ${calendarResponse.milestones.size}")
-                    Log.d("HolidayCalendarController", "Global events count: ${calendarResponse.globalEvents.size}")
-                    
-                    if (calendarResponse.status == 200) {
-                        _holidays.value = NetworkResult.Success(calendarResponse)
+                // Set and log the holidays file URL
+                val holidayFileUrl = calendarResponse.holidaysFile
 
-                        // Set and log the holidays file URL
-                        val holidayFileUrl = calendarResponse.holidaysFile
-
-                        if (!holidayFileUrl.isNullOrBlank()) {
-                            _holidayFileUrl.value = holidayFileUrl
-                            Log.d("HolidayCalendarController", "Holiday PDF URL: $holidayFileUrl")
-                        } else {
-                            // Set a default PDF URL if none is provided
-                            val defaultUrl = "https://archaeglobal.com/holidays_2025.pdf"
-                            _holidayFileUrl.value = defaultUrl
-                            Log.w("HolidayCalendarController", "Using default holiday PDF URL: $defaultUrl")
-                        }
-
-                        // Update milestones and log count
-                        _milestones.value = calendarResponse.milestones
-                        Log.d("HolidayCalendarController", "Loaded ${calendarResponse.milestones.size} milestones")
-                        
-                        // Debug each milestone
-                        calendarResponse.milestones.forEach { milestone ->
-                            Log.d("HolidayCalendarController", "Milestone loaded: ${milestone.event}, date: ${milestone.poDate}")
-                        }
-
-                        // Update global events and log count
-                        _globalEvents.value = calendarResponse.globalEvents
-                        Log.d("HolidayCalendarController", "Loaded ${calendarResponse.globalEvents.size} global events")
-
-                        // Debug each global event
-                        calendarResponse.globalEvents.forEach { event ->
-                            Log.d("HolidayCalendarController", "Global event loaded: ${event.name}, date: ${event.date}")
-                        }
-                        
-                        // Debug holidays and their types
-                        calendarResponse.holidays.forEach { holiday ->
-                            Log.d("HolidayCalendarController", "Holiday loaded: ${holiday.name}, date: ${holiday.date}, type: ${holiday.holidayType}")
-                        }
-                    } else {
-                        _holidays.value = NetworkResult.Error("Server returned error status: ${calendarResponse.status}")
-                    }
+                if (!holidayFileUrl.isNullOrBlank()) {
+                    _holidayFileUrl.value = holidayFileUrl
+                    Log.d("HolidayCalendarController", "Holiday PDF URL: $holidayFileUrl")
                 } else {
-                    _holidays.value = NetworkResult.Error("Failed to fetch holidays: ${response.message()}")
+                    // Set a default PDF URL if none is provided
+                    val defaultUrl = "https://archaeglobal.com/holidays_2025.pdf"
+                    _holidayFileUrl.value = defaultUrl
+                    Log.w("HolidayCalendarController", "Using default holiday PDF URL: $defaultUrl")
                 }
-            } catch (e: Exception) {
-                _holidays.value = NetworkResult.Error("Network error: ${e.message}")
+
+                // Update milestones and log count
+                _milestones.value = calendarResponse.milestones
+                Log.d("HolidayCalendarController", "Loaded ${calendarResponse.milestones.size} milestones")
+                
+                // Debug each milestone
+                calendarResponse.milestones.forEach { milestone ->
+                    Log.d("HolidayCalendarController", "Milestone loaded: ${milestone.event}, date: ${milestone.poDate}")
+                }
+
+                // Update global events and log count
+                _globalEvents.value = calendarResponse.globalEvents
+                Log.d("HolidayCalendarController", "Loaded ${calendarResponse.globalEvents.size} global events")
+
+                // Debug each global event
+                calendarResponse.globalEvents.forEach { event ->
+                    Log.d("HolidayCalendarController", "Global event loaded: ${event.name}, date: ${event.date}")
+                }
+                
+                // Debug holidays and their types
+                calendarResponse.holidays.forEach { holiday ->
+                    Log.d("HolidayCalendarController", "Holiday loaded: ${holiday.name}, date: ${holiday.date}, type: ${holiday.holidayType}")
+                }
+            } else {
+                _holidays.value = NetworkResult.Error("Server returned error status: ${calendarResponse.status}")
             }
         }
     }
