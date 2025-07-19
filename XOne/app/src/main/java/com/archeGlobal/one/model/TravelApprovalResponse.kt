@@ -66,7 +66,7 @@ data class TravelApprovalItem(
     val remarks: String,
 
     @SerializedName("stay_required")
-    val stayRequired: Int? = null,
+    val stayRequired: Boolean? = null,
 
     @SerializedName("meal_pref")
     val mealPreference: String? = null,

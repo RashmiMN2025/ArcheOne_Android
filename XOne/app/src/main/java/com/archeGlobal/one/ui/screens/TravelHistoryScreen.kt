@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -239,7 +238,7 @@ fun TravelRequestCard(
             if (destinations.isEmpty() || destinations.size == 1) {
                 // Single destination - show as before
                 DetailItem(
-                    icon = R.drawable.ic_location,
+                    icon = R.drawable.mappin_and_ellipse,
                     label = "Destination",
                     value = travelRequest.destination
                 )
@@ -267,7 +266,7 @@ fun TravelRequestCard(
                     )
 
                     DetailItem(
-                        icon = R.drawable.ic_location,
+                        icon = R.drawable.mappin_and_ellipse,
                         label = "Destination",
                         value = destination.travelDestination
                     )

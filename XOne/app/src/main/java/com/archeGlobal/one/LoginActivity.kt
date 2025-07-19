@@ -26,7 +26,6 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ResponsiveLoginScreen
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
-import com.archeGlobal.one.utils.PreferencesManager
 
 class LoginActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
@@ -52,7 +51,8 @@ class LoginActivity : AppCompatActivity() {
 
         // For session expiry, show quick login options if MPIN/biometric are available
         val forceOriginalLoginFinal = if (sessionExpired) {
-            !hasMpin && !PreferencesManager(this).isBiometricEnabled() // Only force original login if no quick auth methods available
+            // For session expiry, never force original login - always allow quick auth methods
+            false
         } else {
             !hasMpin || forceOriginalLogin
         }

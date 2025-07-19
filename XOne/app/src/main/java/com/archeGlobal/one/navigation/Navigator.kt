@@ -42,6 +42,7 @@ interface Navigator {
     fun navigateToPolicy()
     fun navigateToSOS(showHeader: Boolean = true)
     fun navigateToTravel()
+    fun navigateToTravelHistory()
     fun navigateToTravelExpenses()
     fun navigateToTravelRequestDetail()
     fun navigateToTravelHistoryDetail()

@@ -7,11 +7,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.AssetActivity
+import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.AssetDetails
 import com.archeGlobal.one.model.AssetModel
+import com.archeGlobal.one.model.EncryptedSOSResponse
 import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.model.SOSResponse
 import com.archeGlobal.one.navigation.Navigator
-import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.network.EncryptedAPIService
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +27,8 @@ class AssetController(
 ) {
     var model by mutableStateOf(AssetModel(isLoading = true))
         private set
+
+    private val encryptedApiService = EncryptedAPIService.getInstance(context)
 
     init {
         // Get user data and asset details from UserDataManager instead of making API call
@@ -118,10 +123,9 @@ class AssetController(
 
     fun onSubmitIssue() {
         Log.d("AssetController", "==========================================")
-        Log.d("AssetController", "SUBMIT ISSUE CALLED")
+        Log.d("AssetController", "SUBMIT ENCRYPTED ASSET ISSUE CALLED")
         Log.d("AssetController", "Current issue description: '${model.issueDescription}'")
         Log.d("AssetController", "Description length: ${model.issueDescription.length}")
-        Log.d("AssetController", "Description chars: ${model.issueDescription.toCharArray().joinToString { "'$it' (${it.code})" }}")
         Log.d("AssetController", "==========================================")
 
         // Check if the description is blank after trimming whitespace
@@ -141,57 +145,78 @@ class AssetController(
         }
 
         // Get email and mobile from userData
-        val email = userData.email
-        val mobile = userData.mobile
-        val name = userData.name
-        val description = trimmedDescription // Trim any whitespace
+        val email = userData.email ?: ""
+        val mobile = userData.mobile ?: ""
+        val name = userData.name ?: ""
+        val description = trimmedDescription
 
-        Log.d("AssetController", "Preparing to submit issue:")
+        Log.d("AssetController", "Preparing to submit encrypted asset issue:")
         Log.d("AssetController", "- Name: $name")
         Log.d("AssetController", "- Email: $email")
         Log.d("AssetController", "- Mobile: $mobile")
         Log.d("AssetController", "- Description: '$description'")
 
-        // Create SOS request with "Other" category like in the RaiseConcernScreen
+        // Create SOS request with "Technical Issue" category for asset issues
         val request = SOSRequest(
             name = name,
             email = email,
             mobile = mobile,
-            category = "Technical Issue", // Using "Other" category as requested
+            category = "Technical Issue",
             query = description,
-            description = "" // Add missing parameter with empty string as default
+            description = "",
+            anonymous = false // Asset issues are not anonymous since they're tied to specific assets
         )
 
-        Log.d("AssetController", "Created SOS request: $request")
+        Log.d("AssetController", "Created encrypted SOS request: $request")
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                Log.d("AssetController", "Sending SOS request")
-                // Use submitSOS like in RaiseConcernScreen instead of createSOSRequest
-                val response = RetrofitClient.apiService.submitSOS(request)
+                Log.d("AssetController", "Sending encrypted asset issue request")
+
+                // Use encrypted API service similar to SOSController
+                val response = encryptedApiService.encryptedRequest(
+                    endpoint = "sos",
+                    method = "POST",
+                    body = request,
+                    responseClass = EncryptedSOSResponse::class.java,
+                    withAuthHeader = true
+                )
+
+                // Convert EncryptedSOSResponse to SOSResponse
+                val sosResponse = SOSResponse(
+                    status = response.status == 200,
+                    message = response.message
+                )
 
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        val responseBody = response.body()
-                        if (responseBody != null) {
-                            Log.d("AssetController", "SOS request successful: $responseBody")
-                            Toast.makeText(context, responseBody.message, Toast.LENGTH_SHORT).show()
-                        } else {
-                            Log.d("AssetController", "SOS request successful but no response body")
-                            Toast.makeText(context, "Issue reported successfully", Toast.LENGTH_SHORT).show()
-                        }
+                    if (sosResponse.status) {
+                        Log.d("AssetController", "Encrypted asset issue submitted successfully")
+                        Toast.makeText(context, "Asset issue reported successfully with encryption", Toast.LENGTH_SHORT).show()
                         // Clear description after successful submission
                         model = model.copy(issueDescription = "")
                     } else {
-                        val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
-                        Log.d("AssetController", "SOS request failed: $errorMessage")
-                        Toast.makeText(context, "Failed to report issue: $errorMessage", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Unable to submit asset issue: ${sosResponse.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("AssetController", "Exception during SOS request", e)
+            } catch (e: APIError) {
+                Log.e("AssetController", "API Error submitting encrypted asset issue: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    val errorMessage = when (e) {
+                        is APIError.Unauthorized -> "Authentication error. Please login again."
+                        is APIError.BadRequest -> "Invalid request. Please check your information."
+                        is APIError.ServerError -> "Server error. Please try again later."
+                        is APIError.EncryptionFailed -> "Security error. Please try again."
+                        is APIError.DecryptionFailed -> "Security error. Please try again."
+                        is APIError.SSLPinningFailed -> "Network security error. Please try again."
+                        is APIError.DecodingError -> "Response processing error. Please try again."
+                        else -> "Unable to submit asset issue. Please try again."
+                    }
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("AssetController", "Exception during encrypted asset issue submission", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Unable to submit asset issue. Please check your internet connection and try again.", Toast.LENGTH_SHORT).show()
                 }
             }
         }

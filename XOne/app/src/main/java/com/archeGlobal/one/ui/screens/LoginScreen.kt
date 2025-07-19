@@ -125,16 +125,21 @@ fun LoginScreen(
     val showBiometricButton = biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()
     var showFingerprint by remember { mutableStateOf(false) }
 
+    // Get session expired status from intent
+    val activity = context as? android.app.Activity
+    val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
+
     // Update showFingerprint when relevant conditions change
-    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode) {
-        showFingerprint = showBiometricButton && !firstTimeLogin
+    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired) {
+        // Show fingerprint for returning users (including session expired) if biometric is available
+        showFingerprint = showBiometricButton && (!firstTimeLogin || sessionExpired)
         // Reset isDifferentUserMode after normal logout (when it's not forced)
         if (!forceDifferentUserMode && !firstTimeLogin) {
             isDifferentUserMode = false
         }
 
         // Debug logging
-        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode")
+        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
         android.util.Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
         android.util.Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
     }
@@ -173,7 +178,7 @@ fun LoginScreen(
     }
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton) {
+    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, sessionExpired) {
         // If forceOriginalLogin is true, always show original login form
         if (forceOriginalLogin) {
             showOtpButton = true
@@ -181,14 +186,14 @@ fun LoginScreen(
             showOtpFields = true
             isDifferentUserMode = false
         } else {
-            // Show OTP button only for first-time users or different users
-            showOtpButton = firstTimeLogin || isDifferentUserMode
+            // Show OTP button only for first-time users or different users (but not for session expired)
+            showOtpButton = (firstTimeLogin && !sessionExpired) || isDifferentUserMode
 
-            if (firstTimeLogin || isDifferentUserMode) {
+            if ((firstTimeLogin && !sessionExpired) || isDifferentUserMode) {
                 selectedLoginMethod = "OTP"
                 showOtpFields = true
             } else if (hasMpin) {
-                // For existing users, default to MPIN if available
+                // For existing users (including session expired), default to MPIN if available
                 selectedLoginMethod = "MPIN"
                 showOtpFields = false
             } else if (showBiometricButton) {
@@ -288,7 +293,8 @@ fun LoginScreen(
                         .height(52.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    if (!isDifferentUserMode && hasMpin && !firstTimeLogin) {
+                    // Show MPIN button for returning users (including session expired) who have MPIN set
+                    if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired)) {
                         Button(
                             onClick = { selectedLoginMethod = "MPIN" },
                             modifier = Modifier
@@ -364,7 +370,8 @@ fun LoginScreen(
                     // Debug logging for fingerprint button condition
                     android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode")
 
-                    if (showBiometricButton && !firstTimeLogin && !isDifferentUserMode) {
+                    // Show fingerprint button for returning users (including session expired) when biometric is available
+                    if (showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode) {
                         Button(
                             onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
                             modifier = Modifier
@@ -671,7 +678,8 @@ fun LoginScreen(
                     }
                 }
 
-                if (selectedLoginMethod == "Fingerprint" && showBiometricButton && !firstTimeLogin) {
+                // Show fingerprint authentication for returning users (including session expired)
+                if (selectedLoginMethod == "Fingerprint" && showBiometricButton && (!firstTimeLogin || sessionExpired)) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
                         onClick = {
@@ -680,13 +688,25 @@ fun LoginScreen(
                                 biometricHelper.showBiometricPrompt(
                                     activity = activity,
                                     onSuccess = {
-                                        // Get credentials from PreferencesManager
+                                        // Get credentials - for session expired users, prefer stored user data
                                         val prefs = com.archeGlobal.one.utils.PreferencesManager(context)
-                                        val email = prefs.getString("biometric_email", "") ?: ""
-                                        val mobile = prefs.getString("biometric_mobile", "") ?: ""
-                                        val employeeId = prefs.getString("biometric_employee_id", "") ?: ""
+                                        val bioEmail = if (sessionExpired && userData != null) {
+                                            userData.email ?: prefs.getString("biometric_email", "") ?: ""
+                                        } else {
+                                            prefs.getString("biometric_email", "") ?: ""
+                                        }
+                                        val bioMobile = if (sessionExpired && userData != null) {
+                                            userData.mobile ?: prefs.getString("biometric_mobile", "") ?: ""
+                                        } else {
+                                            prefs.getString("biometric_mobile", "") ?: ""
+                                        }
+                                        val bioEmployeeId = if (sessionExpired && userData != null) {
+                                            userData.employeeId ?: prefs.getString("biometric_employee_id", "") ?: ""
+                                        } else {
+                                            prefs.getString("biometric_employee_id", "") ?: ""
+                                        }
 
-                                        if (email.isBlank() || mobile.isBlank() || employeeId.isBlank()) {
+                                        if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
                                             Toast.makeText(context, "Biometric credentials not found. Please login with MPIN or OTP.", Toast.LENGTH_SHORT).show()
                                             return@showBiometricPrompt
                                         }
@@ -697,9 +717,9 @@ fun LoginScreen(
                                             context = context
                                         )
                                         otpController.verifyOtp(
-                                            email = email,
-                                            mobile = mobile,
-                                            employeeId = employeeId,
+                                            email = bioEmail,
+                                            mobile = bioMobile,
+                                            employeeId = bioEmployeeId,
                                             otpFromUser = "", // Empty OTP
                                             isBiometric = true
                                         ) { message, isError ->
@@ -709,7 +729,13 @@ fun LoginScreen(
                                         }
                                     },
                                     onError = { error ->
+                                        // Show error and prevent app bypass by staying on login screen
                                         Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                        // Reset login method selection if needed
+                                        if (error.contains("cancelled", ignoreCase = true)) {
+                                            // User cancelled - they can try again or use another method
+                                            android.util.Log.d("LoginScreen", "Biometric authentication cancelled by user")
+                                        }
                                     }
                                 )
                             }
@@ -838,10 +864,15 @@ fun LoginScreen(
                                 navigator = navigator,
                                 context = context
                             )
+                            // For session expired users, use stored credentials, otherwise use form data
+                            val useEmail = if (sessionExpired && userData != null) userData.email ?: email else email
+                            val useMobile = if (sessionExpired && userData != null) userData.mobile ?: mobile else mobile
+                            val useEmployeeId = if (sessionExpired && userData != null) userData.employeeId ?: employeeId else employeeId
+
                             otpController.verifyOtp(
-                                email = email,
-                                mobile = mobile,
-                                employeeId = employeeId,
+                                email = useEmail,
+                                mobile = useMobile,
+                                employeeId = useEmployeeId,
                                 otpFromUser = "", // Empty OTP
                                 isBiometric = true
                             ) { message, isError ->
@@ -853,9 +884,9 @@ fun LoginScreen(
                                     val token = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getAuthToken() ?: ""
                                     otpController.loginWithToken(
                                         token = token,
-                                        email = email,
-                                        mobile = mobile,
-                                        employeeId = employeeId,
+                                        email = useEmail,
+                                        mobile = useMobile,
+                                        employeeId = useEmployeeId,
                                         fromHome = false,
                                         fromOtp = false,
                                         shouldNavigateToHome = true

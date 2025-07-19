@@ -1270,6 +1270,16 @@ class HomeActivity : AppCompatActivity() {
                 },
                 onError = { error ->
                     isAuthenticating.value = false
+                    Log.w("HomeActivity", "Biometric authentication failed: $error")
+
+                    // On authentication error/cancellation, navigate to login with session expired
+                    // This allows users to use MPIN or other auth methods as fallback
+                    val intent = Intent(this@HomeActivity, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        putExtra("session_expired", true)
+                    }
+                    startActivity(intent)
+                    finish()
                 }
             )
         }

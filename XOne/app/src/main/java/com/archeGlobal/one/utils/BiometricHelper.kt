@@ -37,7 +37,18 @@ class BiometricHelper(private val context: Context) {
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    onError(errString.toString())
+                    // Handle user cancellation vs system errors differently
+                    when (errorCode) {
+                        BiometricPrompt.ERROR_USER_CANCELED,
+                        BiometricPrompt.ERROR_NEGATIVE_BUTTON -> {
+                            // User deliberately cancelled - don't bypass, just show error
+                            onError("Authentication cancelled")
+                        }
+                        else -> {
+                            // System error - show the actual error message
+                            onError(errString.toString())
+                        }
+                    }
                 }
             }
         )

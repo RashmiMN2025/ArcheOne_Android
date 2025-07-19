@@ -12,8 +12,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.ui.res.painterResource
-import com.archeGlobal.one.R
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -23,10 +21,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -146,7 +146,7 @@ fun TravelRequestDetailScreen(
                                 value = controller.employeeName
                             )
                             DetailRowWithDrawableIcon(
-                                iconRes = R.drawable.person_3x,
+                                iconRes = R.drawable.person_badge_clock,
                                 label = "Employee ID",
                                 value = controller.employeeId
                             )
@@ -178,7 +178,7 @@ fun TravelRequestDetailScreen(
                                 )
 
                                 DetailRowWithDrawableIcon(
-                                    iconRes = R.drawable.ic_location,
+                                    iconRes = R.drawable.mappin_and_ellipse,
                                     label = "Destination",
                                     value = travelRequest.destination
                                 )
@@ -215,7 +215,7 @@ fun TravelRequestDetailScreen(
                                     )
 
                                     DetailRowWithDrawableIcon(
-                                        iconRes = R.drawable.ic_location,
+                                        iconRes = R.drawable.mappin_and_ellipse,
                                         label = "Destination",
                                         value = destination.travelDestination
                                     )

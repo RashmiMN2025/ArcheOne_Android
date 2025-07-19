@@ -3,19 +3,37 @@ package com.archeGlobal.one.model
 import com.google.gson.annotations.SerializedName
 
 /**
- * Data class representing a single travel destination
+ * Data class representing a single travel destination for API responses
+ * Uses snake_case format from API responses
  */
 data class TravelDestination(
     @SerializedName("travel_destination")
     val travelDestination: String,
 
-    @SerializedName("departure_date")
-    val departureDate: String,
+    @SerializedName("departure_date") val departureDate: String,
 
     @SerializedName("arrival_date")
     val arrivalDate: String,
 
     @SerializedName("flight_time")
+    val flightTimePreference: String = ""
+)
+
+/**
+ * Data class representing a single travel destination for API requests
+ * Uses camelCase format for API requests
+ */
+data class TravelDestinationRequest(
+    @SerializedName("travelDestination")
+    val travelDestination: String,
+
+    @SerializedName("departureDate")
+    val departureDate: String,
+
+    @SerializedName("arrivalDate")
+    val arrivalDate: String,
+
+    @SerializedName("flightTimePreference")
     val flightTimePreference: String = ""
 )
 
@@ -74,7 +92,7 @@ data class TravelRequestSubmission(
 
     // Multi-destination support
     @SerializedName("destinations")
-    val destinations: List<TravelDestination>,
+    val destinations: List<TravelDestinationRequest>,
 
     // Legacy fields for backward compatibility (single destination)
     @SerializedName("travelDestination")
@@ -92,6 +110,7 @@ data class TravelRequestSubmission(
 
 /**
  * Response model for travel request submission
+ * Updated to handle both camelCase and snake_case responses
  */
 data class TravelRequestResponse(
     @SerializedName("status")
@@ -100,9 +119,18 @@ data class TravelRequestResponse(
     @SerializedName("message")
     val message: String,
 
+    // Support both camelCase and snake_case for order_history
+    @SerializedName("orderHistory")
+    val orderHistory: List<TravelHistoryItem>? = null,
+
     @SerializedName("order_history")
-    val orderHistory: List<TravelHistoryItem>? = null
-)
+    val orderHistorySnakeCase: List<TravelHistoryItem>? = null
+) {
+    // Helper function to get order history regardless of format
+    fun getAllOrderHistory(): List<TravelHistoryItem>? {
+        return orderHistory ?: orderHistorySnakeCase
+    }
+}
 
 /**
  * Helper function to create single destination travel request
@@ -129,7 +157,7 @@ fun createSingleDestinationRequest(
     seatPreference: String,
     flightTime: String
 ): TravelRequestSubmission {
-    val destination = TravelDestination(
+    val destination = TravelDestinationRequest(
         travelDestination = travelDestination,
         departureDate = departureDate,
         arrivalDate = arrivalDate,
@@ -182,7 +210,7 @@ fun createMultiDestinationRequest(
     frequentFlyerNumber: String,
     mealPreference: String,
     seatPreference: String,
-    destinations: List<TravelDestination>
+    destinations: List<TravelDestinationRequest>
 ): TravelRequestSubmission {
     return TravelRequestSubmission(
         employeeId = employeeId,
@@ -201,6 +229,11 @@ fun createMultiDestinationRequest(
         frequentFlyerNumber = frequentFlyerNumber,
         mealPreference = mealPreference,
         seatPreference = seatPreference,
-        destinations = destinations
+        destinations = destinations,
+        // Don't include legacy fields for multi-destination
+        travelDestination = null,
+        departureDate = null,
+        arrivalDate = null,
+        flightTime = null
     )
 }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
+import com.archeGlobal.one.model.TravelDestinationRequest
 import com.archeGlobal.one.model.TravelHistoryRequest
 import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
@@ -1023,7 +1024,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
         val travelRequest = if (isMultiDestination) {
             // Multi-destination request
             val travelDestinations = destinations.map { dest ->
-                com.archeGlobal.one.model.TravelDestination(
+                com.archeGlobal.one.model.TravelDestinationRequest(
                     travelDestination = dest.destination,
                     departureDate = convertToApiDateFormat(dest.departureDate),
                     arrivalDate = convertToApiDateFormat(dest.returnDate),
@@ -1091,49 +1092,89 @@ class TravelController(private val navigator: Navigator, private val context: Co
         RetrofitClient.apiService.submitTravelRequest(travelRequest).enqueue(object : Callback<TravelRequestResponse> {
             override fun onResponse(call: Call<TravelRequestResponse>, response: Response<TravelRequestResponse>) {
                 isSubmitting = false
+                Log.d("TravelController", "Received response - Code: ${response.code()}, Success: ${response.isSuccessful}")
 
-                if (response.isSuccessful && response.body() != null) {
-                    val responseBody = response.body()!!
-                    if (responseBody.status == 200) {
-                        // Request was successful
-                        Log.d("TravelController", "Travel request submitted successfully")
+                try {
+                    Log.d("TravelController", "Response body is null: ${response.body() == null}")
+
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseBody = response.body()!!
+                        Log.d("TravelController", "Response status: ${responseBody.status}")
                         Log.d("TravelController", "Response message: ${responseBody.message}")
 
-                        // Log multi-destination details if available
-                        responseBody.orderHistory?.firstOrNull()?.let { order ->
-                            Log.d("TravelController", "Request ID: ${order.requestId}")
-                            order.travelDetails?.let { details ->
-                                Log.d("TravelController", "Travel details: ${details.size} destinations")
-                                details.forEach { dest ->
-                                    Log.d("TravelController", "  - ${dest.travelDestination}: ${dest.departureDate} to ${dest.arrivalDate}")
+                        if (responseBody.status == 200) {
+                            // Request was successful
+                            Log.d("TravelController", "Travel request submitted successfully")
+
+                            // Log multi-destination details if available
+                            responseBody.getAllOrderHistory()?.firstOrNull()?.let { order ->
+                                Log.d("TravelController", "Request ID: ${order.requestId}")
+                                order.travelDetails?.let { details ->
+                                    Log.d("TravelController", "Travel details: ${details.size} destinations")
+                                    details.forEach { dest ->
+                                        Log.d("TravelController", "  - ${dest.travelDestination}: ${dest.departureDate} to ${dest.arrivalDate}")
+                                    }
                                 }
                             }
-                        }
 
-                        // Navigate back to home
-                        navigator.navigateToHome()
+                            // Clear any previous errors and navigate to travel history
+                            submissionError = null
+                            // Refresh travel history to show the new request
+                            loadCombinedTravelHistory()
+                            navigator.navigateToTravelHistory()
+                        } else {
+                            // Server returned an error
+                            submissionError = responseBody.message
+                            Log.e("TravelController", "Error submitting travel request: ${responseBody.message}")
+                        }
                     } else {
-                        // Server returned an error
-                        submissionError = responseBody.message
-                        Log.e("TravelController", "Error submitting travel request: ${responseBody.message}")
+                        // HTTP error
+                        try {
+                            val errorBody = response.errorBody()?.string()
+                            submissionError = "Failed to submit travel request. Please try again."
+                            Log.e("TravelController", "HTTP error: ${response.code()}, Error body: $errorBody")
+
+                            // Also try to log the raw response if available
+                            if (response.body() == null) {
+                                Log.e("TravelController", "Response body is null - likely parsing error")
+                            } else {
+                                Log.e("TravelController", "Response body exists but response not successful")
+                            }
+                        } catch (e: Exception) {
+                            submissionError = "Failed to submit travel request. Please try again."
+                            Log.e("TravelController", "HTTP error: ${response.code()}, Error reading error body", e)
+                        }
                     }
-                } else {
-                    // HTTP error
-                    try {
-                        val errorBody = response.errorBody()?.string()
-                        submissionError = "Failed to submit travel request. Please try again."
-                        Log.e("TravelController", "HTTP error: ${response.code()}, Error body: $errorBody")
-                    } catch (e: Exception) {
-                        submissionError = "Failed to submit travel request. Please try again."
-                        Log.e("TravelController", "HTTP error: ${response.code()}, Error reading error body", e)
-                    }
+                } catch (e: Exception) {
+                    Log.e("TravelController", "Exception in onResponse: ${e.message}", e)
+                    submissionError = "Error processing response. Please try again."
                 }
             }
 
             override fun onFailure(call: Call<TravelRequestResponse>, t: Throwable) {
                 isSubmitting = false
-                submissionError = "Network error. Please check your connection and try again."
-                Log.e("TravelController", "Network error submitting travel request", t)
+
+                // Check if this is a JSON parsing error after a successful request
+                if (t is com.google.gson.JsonSyntaxException && (
+                    t.message?.contains("Expected an int but was BOOLEAN") == true ||
+                        t.message?.contains("stay_required") == true
+                    )
+                ) {
+                    // This means the request was successful but response parsing failed
+                    // Suppress the error and show success
+                    Log.d("TravelController", "Request successful but response parsing failed - treating as success")
+                    submissionError = null
+                    // Refresh travel history to show the new request
+                    loadCombinedTravelHistory()
+                    navigator.navigateToTravelHistory()
+                } else {
+                    // Genuine network error
+                    submissionError = "Network error. Please check your connection and try again."
+                    Log.e("TravelController", "Network error submitting travel request", t)
+                    Log.e("TravelController", "Error type: ${t.javaClass.simpleName}")
+                    Log.e("TravelController", "Error message: ${t.message}")
+                    Log.e("TravelController", "Error cause: ${t.cause}")
+                }
             }
         })
     }

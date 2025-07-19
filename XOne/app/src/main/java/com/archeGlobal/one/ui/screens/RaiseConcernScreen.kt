@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.app.Application
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -28,8 +29,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
+import com.archeGlobal.one.controller.SOSController
+import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
-import com.archeGlobal.one.network.RetrofitClient.apiService
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
 
@@ -38,9 +40,10 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Get user data
+    // Get user data and SOS controller
     val userDataManager = remember { UserDataManager.getInstance(context) }
     val userData = remember { userDataManager.getUserData() }
+    val sosController = remember { SOSController(context.applicationContext as Application) }
 
     // Form state
     var selectedCategory by remember { mutableStateOf<String?>(null) }
@@ -94,39 +97,56 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
             // Add debug log to verify description content
             Log.d(
                 "RaiseConcern",
-                "Submitting concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous"
+                "Submitting encrypted concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous"
             )
 
-            val response = apiService.submitSOS(request)
+            val result = sosController.submitEncryptedSOSRequest(request)
 
-            if (response.isSuccessful && response.body() != null) {
-                // Show success message based on anonymous status
-                if (anonymous) {
-                    Toast.makeText(context, "Concern submitted anonymously", Toast.LENGTH_SHORT)
-                        .show()
-                } else {
-                    Toast.makeText(
-                        context,
-                        "Concern submitted with your identity",
-                        Toast.LENGTH_SHORT
-                    ).show()
+            result.fold(
+                onSuccess = { response ->
+                    if (response.status) {
+                        // Show success message based on anonymous status
+                        if (anonymous) {
+                            Toast.makeText(context, "Concern submitted anonymously with encryption", Toast.LENGTH_SHORT)
+                                .show()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Concern submitted with your identity (encrypted)",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        // Reset form on success
+                        selectedCategory = null
+                        issueDescription = ""
+
+                        // Go back after successful submission
+                        onBackPressed()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Unable to submit your concern: ${response.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                onFailure = { exception ->
+                    val errorMessage = when (exception) {
+                        is APIError.Unauthorized -> "Authentication error. Please login again."
+                        is APIError.BadRequest -> "Invalid request. Please check your information."
+                        is APIError.ServerError -> "Server error. Please try again later."
+                        is APIError.EncryptionFailed -> "Security error. Please try again."
+                        is APIError.DecryptionFailed -> "Security error. Please try again."
+                        is APIError.SSLPinningFailed -> "Network security error. Please try again."
+                        is APIError.DecodingError -> "Response processing error. Please try again."
+                        else -> "Unable to submit your concern. Please try again."
+                    }
+
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    Log.e("RaiseConcern", "Error submitting encrypted SOS: ${exception.message}")
                 }
-
-                // Reset form on success
-                selectedCategory = null
-                issueDescription = ""
-
-                // Go back after successful submission
-                onBackPressed()
-            } else {
-                // Show user-friendly error message for failed submissions
-                Toast.makeText(
-                    context,
-                    "Unable to submit your concern. Please try again.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                Log.e("RaiseConcern", "Server error: ${response.message()}")
-            }
+            )
         } catch (e: Exception) {
             // Show user-friendly error message for network/other errors
             Toast.makeText(
@@ -134,7 +154,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 "Unable to submit your concern. Please check your internet connection and try again.",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.e("RaiseConcern", "Exception during submission: ${e.message}")
+            Log.e("RaiseConcern", "Exception during encrypted submission: ${e.message}")
         } finally {
             isSubmitting = false
         }

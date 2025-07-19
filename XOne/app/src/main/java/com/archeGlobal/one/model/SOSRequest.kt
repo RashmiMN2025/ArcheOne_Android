@@ -16,3 +16,9 @@ data class SOSResponse(
     val status: Boolean,
     val message: String
 )
+
+data class EncryptedSOSResponse(
+    val status: Int,
+    val message: String,
+    val encryptedData: String? = null
+)
