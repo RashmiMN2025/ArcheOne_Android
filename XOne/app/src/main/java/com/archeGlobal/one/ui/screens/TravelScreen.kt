@@ -375,6 +375,117 @@ fun TravelScreen(
                                 }
                             }
 
+                            // Dynamic booking notice and flight options - only show if mode of transport is selected
+                            if (controller.modeOfTransport == "Flight") {
+                                // Booking notice appears immediately after Flight selection
+                                val bookingNotice = when {
+                                    controller.flightType == "International" -> "* Bookings must be made 2 weeks prior to departure."
+                                    else -> "* Bookings must be made 1 week prior to departure."
+                                }
+
+                                Text(
+                                    text = bookingNotice,
+                                    fontSize = 12.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = PrimaryRed,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                // International/Domestic Dropdown
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedTextField(
+                                        value = controller.flightType,
+                                        onValueChange = { },
+                                        placeholder = {
+                                            Text(
+                                                "International",
+                                                color = Color.Gray,
+                                                fontWeight = FontWeight.Medium,
+                                                fontFamily = GraphikFontFamily
+                                            )
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 16.dp)
+                                            .clickable(onClick = { controller.toggleFlightTypeDropdown() }),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color.LightGray,
+                                            focusedBorderColor = Color.Gray,
+                                            cursorColor = Color.Black,
+                                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                                            focusedContainerColor = Color.White,
+                                            unfocusedTextColor = Color.Black,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                            focusedPlaceholderColor = Color(0xFFF6F4EE)
+                                        ),
+                                        shape = RoundedCornerShape(8.dp),
+                                        trailingIcon = {
+                                            Icon(
+                                                Icons.Default.KeyboardArrowDown,
+                                                contentDescription = "Dropdown",
+                                                tint = Color.Gray,
+                                                modifier = Modifier.clickable { controller.toggleFlightTypeDropdown() }
+                                            )
+                                        },
+                                        readOnly = true
+                                    )
+
+                                    DropdownMenu(
+                                        expanded = controller.isFlightTypeDropdownExpanded,
+                                        onDismissRequest = { controller.dismissFlightTypeDropdown() },
+                                        modifier = Modifier
+                                            .width(with(LocalDensity.current) { 300.dp })
+                                            .background(Color.White)
+                                    ) {
+                                        controller.flightTypeOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = option, fontFamily = GraphikFontFamily) },
+                                                onClick = { controller.updateFlightType(option) }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Frequent Flyer Number Input
+                                OutlinedTextField(
+                                    value = controller.frequentFlyerNumber.let { if (it == "0") "" else it },
+                                    onValueChange = { controller.updateFrequentFlyerNumber(it) },
+                                    placeholder = {
+                                        Text(
+                                            "Frequent Flyer Number",
+                                            color = Color.Gray,
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = GraphikFontFamily
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.Gray,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedContainerColor = Color.White,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                        focusedPlaceholderColor = Color(0xFFF6F4EE)
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                            } else if (controller.modeOfTransport == "Train" || controller.modeOfTransport == "Bus") {
+                                // Booking notice for Train/Bus
+                                Text(
+                                    text = "* Bookings must be made 1 week prior to departure.",
+                                    fontSize = 12.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = PrimaryRed,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                            }
+
                             // Tab buttons for Single/Multiple destinations
                             Row(
                                 modifier = Modifier
@@ -662,23 +773,21 @@ fun TravelScreen(
                                 }
                             }
 
-                            // Flight Time Preference - only show if mode of transport is Flight
+                            // Flight additional options - show flight time and seat preference after destinations for flights
                             if (controller.modeOfTransport == "Flight") {
-                                // Note about flight booking
-                                Text(
-                                    text = "Note: Flight bookings must be made 1 week prior to departure.",
-                                    fontSize = 12.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = PrimaryRed,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-
                                 // Flight Time Preference Dropdown
                                 Box(modifier = Modifier.fillMaxWidth()) {
                                     OutlinedTextField(
                                         value = controller.flightTimePreference,
                                         onValueChange = { },
-                                        label = { Text("Flight Time Preference", fontFamily = GraphikFontFamily) },
+                                        placeholder = {
+                                            Text(
+                                                "Flight Time Preference",
+                                                color = Color.Gray,
+                                                fontWeight = FontWeight.Medium,
+                                                fontFamily = GraphikFontFamily
+                                            )
+                                        },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(bottom = 16.dp)
@@ -691,8 +800,8 @@ fun TravelScreen(
                                             focusedContainerColor = Color.White,
                                             unfocusedTextColor = Color.Black,
                                             focusedTextColor = Color.Black,
-                                            unfocusedLabelColor = Color.Gray,
-                                            focusedLabelColor = Color.Gray
+                                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                                         ),
                                         shape = RoundedCornerShape(8.dp),
                                         trailingIcon = {
@@ -727,7 +836,14 @@ fun TravelScreen(
                                     OutlinedTextField(
                                         value = controller.seatPreference,
                                         onValueChange = { },
-                                        label = { Text("Seat Preference", fontFamily = GraphikFontFamily) },
+                                        placeholder = {
+                                            Text(
+                                                "Seat Preference",
+                                                color = Color.Gray,
+                                                fontWeight = FontWeight.Medium,
+                                                fontFamily = GraphikFontFamily
+                                            )
+                                        },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(bottom = 16.dp)
@@ -740,8 +856,8 @@ fun TravelScreen(
                                             focusedContainerColor = Color.White,
                                             unfocusedTextColor = Color.Black,
                                             focusedTextColor = Color.Black,
-                                            unfocusedLabelColor = Color.Gray,
-                                            focusedLabelColor = Color.Gray
+                                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                            focusedPlaceholderColor = Color(0xFFF6F4EE)
                                         ),
                                         shape = RoundedCornerShape(8.dp),
                                         trailingIcon = {
@@ -769,70 +885,6 @@ fun TravelScreen(
                                             )
                                         }
                                     }
-                                }
-
-                                // Frequent Flyer Number Button
-                                Button(
-                                    onClick = { controller.showFrequentFlyerNumberDialog() },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 16.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.White,
-                                        contentColor = Color.Black
-                                    ),
-                                    border = BorderStroke(1.dp, Color.LightGray),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Enter Frequent Flyer Number",
-                                        fontSize = 16.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        modifier = Modifier.padding(vertical = 8.dp)
-                                    )
-                                }
-
-                                // Frequent Flyer Number Dialog
-                                if (controller.showFrequentFlyerDialog) {
-                                    androidx.compose.material.AlertDialog(
-                                        onDismissRequest = { controller.dismissFrequentFlyerNumberDialog() },
-                                        title = { Text(text = "Enter Frequent Flyer Number", fontFamily = GraphikFontFamily) },
-                                        text = {
-                                            OutlinedTextField(
-                                                value = controller.frequentFlyerNumber,
-                                                onValueChange = {
-                                                    controller.updateFrequentFlyerNumber(
-                                                        it
-                                                    )
-                                                },
-                                                label = { Text("Frequent Flyer Number", fontFamily = GraphikFontFamily) },
-                                                modifier = Modifier.fillMaxWidth(),
-                                                colors = OutlinedTextFieldDefaults.colors(
-                                                    unfocusedBorderColor = Color.LightGray,
-                                                    focusedBorderColor = Color.Gray,
-                                                    cursorColor = Color.Black,
-                                                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                                                    focusedContainerColor = Color.White,
-                                                    unfocusedTextColor = Color.Black,
-                                                    focusedTextColor = Color.Black,
-                                                    unfocusedLabelColor = Color.Gray,
-                                                    focusedLabelColor = Color.Gray
-                                                ),
-                                                shape = RoundedCornerShape(8.dp)
-                                            )
-                                        },
-                                        confirmButton = {
-                                            Button(
-                                                onClick = { controller.dismissFrequentFlyerNumberDialog() },
-                                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
-                                            ) {
-                                                Text("Submit", fontFamily = GraphikFontFamily)
-                                            }
-                                        },
-                                        backgroundColor = Color.White,
-                                        contentColor = Color.Black
-                                    )
                                 }
                             }
 

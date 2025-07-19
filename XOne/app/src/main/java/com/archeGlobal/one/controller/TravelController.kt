@@ -165,6 +165,13 @@ class TravelController(private val navigator: Navigator, private val context: Co
     var arrivalDate by mutableStateOf(currentDate)
         private set
 
+    // Flight type preference options
+    val flightTypeOptions = listOf("International", "Domestic")
+    var flightType by mutableStateOf("")
+        private set
+    var isFlightTypeDropdownExpanded by mutableStateOf(false)
+        private set
+
     // Flight time preference options
     val flightTimeOptions = listOf(
         "Early Morning (00:00-06:00)",
@@ -784,6 +791,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
             // Reset flight-related fields if mode is not Flight
             if (value != "Flight") {
+                flightType = ""
                 flightTimePreference = ""
                 seatPreference = ""
                 frequentFlyerNumber = "0"
@@ -856,6 +864,29 @@ class TravelController(private val navigator: Navigator, private val context: Co
      */
     fun dismissFlightTimeDropdown() {
         isFlightTimeDropdownExpanded = false
+    }
+
+    /**
+     * Update flight type preference field
+     */
+    fun updateFlightType(value: String) {
+        flightType = value
+        // Close dropdown after selection
+        isFlightTypeDropdownExpanded = false
+    }
+
+    /**
+     * Toggle the flight type dropdown expanded state
+     */
+    fun toggleFlightTypeDropdown() {
+        isFlightTypeDropdownExpanded = !isFlightTypeDropdownExpanded
+    }
+
+    /**
+     * Dismiss the flight type dropdown
+     */
+    fun dismissFlightTypeDropdown() {
+        isFlightTypeDropdownExpanded = false
     }
 
     /**
