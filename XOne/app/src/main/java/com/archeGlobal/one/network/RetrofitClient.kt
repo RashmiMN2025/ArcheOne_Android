@@ -48,11 +48,17 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         // Clear session data but preserve MPIN and biometric data for re-authentication
         preferencesManager.clearSessionData()
         val userDataManager = UserDataManager.getInstance(context)
+
+        // Store current user data for re-authentication
+        val lastUserData = userDataManager.getUserData()
+        
+        // Clear session data but preserve re-auth methods
         userDataManager.clearSessionData()
 
-        // Navigate to login screen
+        // Navigate to login screen with session expired flag
         val intent = Intent(context, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("session_expired", true)
             putExtra("session_expired", true)
         }
         context.startActivity(intent)

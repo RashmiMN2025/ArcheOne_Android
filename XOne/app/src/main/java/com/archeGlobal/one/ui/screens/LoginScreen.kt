@@ -179,8 +179,30 @@ fun LoginScreen(
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
     LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, sessionExpired) {
+        android.util.Log.d("LoginScreen", "Reevaluating login method: sessionExpired=$sessionExpired, hasMpin=$hasMpin")
+        
+        // If session expired, prioritize quick auth methods
+        if (sessionExpired) {
+            // For session expired, prefer MPIN or biometric if available
+            when {
+                hasMpin -> {
+                    selectedLoginMethod = "MPIN"
+                    showOtpFields = false
+                }
+                showBiometricButton -> {
+                    selectedLoginMethod = "Fingerprint"
+                    showOtpFields = false
+                }
+                else -> {
+                    selectedLoginMethod = "OTP"
+                    showOtpFields = true
+                }
+            }
+            showOtpButton = false
+            isDifferentUserMode = false
+        }
         // If forceOriginalLogin is true, always show original login form
-        if (forceOriginalLogin) {
+        else if (forceOriginalLogin) {
             showOtpButton = true
             selectedLoginMethod = "OTP"
             showOtpFields = true
@@ -856,6 +878,7 @@ fun LoginScreen(
                             val mpinController = com.archeGlobal.one.controller.MpinController(context)
                             if (!mpinController.validateMpin(enteredMpin)) {
                                 mpinError = "Invalid MPIN"
+                                android.util.Log.d("LoginScreen", "MPIN validation failed")
                                 isVerifyingMpin = false
                                 return@Button
                             }

@@ -89,11 +89,21 @@ class HomeActivity : AppCompatActivity() {
                         message.contains("Token Expired", ignoreCase = true) ||
                         message.contains("401", ignoreCase = true)
                     ) {
-                        Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@HomeActivity, "Session expired. Please authenticate to continue.", Toast.LENGTH_SHORT).show()
+                        
                         // Preserve that this is not a first-time user for session expiry
                         com.archeGlobal.one.utils.setFirstTimeLogin(this@HomeActivity, false)
-                        userDataManager.clearUserData()
-                        navigator.navigateToLoginScreen()
+                        
+                        // Clear session data but preserve MPIN and biometric for re-auth
+                        userDataManager.clearSessionData()
+                        
+                        // Navigate to login with session expired flag
+                        val intent = Intent(this@HomeActivity, LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            putExtra("session_expired", true)
+                        }
+                        startActivity(intent)
+                        finish()
                     } else {
                         Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
                     }

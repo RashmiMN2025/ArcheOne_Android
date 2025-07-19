@@ -196,18 +196,36 @@ fun APIError.handleErrorWithContext(context: Context, callback: (String, Boolean
  * Helper function to handle token expiration
  */
 internal fun handleTokenExpiration(context: Context) {
-    android.util.Log.w("APIError", "Token expired - redirecting to login")
+    android.util.Log.w("APIError", "Token expired - redirecting to re-authentication")
 
-    // Clear session data but preserve MPIN and biometric data for re-authentication
+    // Get managers
     val preferencesManager = PreferencesManager(context)
-    preferencesManager.clearSessionData()
     val userDataManager = UserDataManager.getInstance(context)
+    
+    // Store current user data temporarily for re-authentication
+    val lastUserData = userDataManager.getUserData()
+    if (lastUserData != null) {
+        preferencesManager.apply {
+            setString("lastEmail", lastUserData.email ?: "")
+            setString("lastMobile", lastUserData.mobile ?: "")
+            setString("lastEmployeeId", lastUserData.employeeId ?: "")
+        }
+    }
+    
+    // Clear session data but keep MPIN/biometric
+    preferencesManager.clearSessionData()
     userDataManager.clearSessionData()
 
-    // Navigate to login screen
+    // Navigate to login screen with session expired flag and last user data
     val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {
         flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
         putExtra("session_expired", true)
+        // Pass last user data for quick re-authentication
+        lastUserData?.let {
+            putExtra("last_email", it.email)
+            putExtra("last_mobile", it.mobile)
+            putExtra("last_employee_id", it.employeeId)
+        }
     }
     context.startActivity(intent)
 }
