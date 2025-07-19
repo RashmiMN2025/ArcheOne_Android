@@ -10,12 +10,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.ProfileModel
+import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.LogoutRequest
 import com.archeGlobal.one.network.LogoutResponse
 import com.archeGlobal.one.network.ProfilePictureResponse
 import com.archeGlobal.one.network.RetrofitClient
-import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -381,7 +381,7 @@ class ProfileController(
     fun onLogoutClick() {
         val userData = userDataManager.getUserData()
         val email = userData?.email
-        
+
         if (email.isNullOrEmpty()) {
             Log.e("ProfileController", "Email not found, proceeding with local logout")
             proceedWithLocalLogout(userData)

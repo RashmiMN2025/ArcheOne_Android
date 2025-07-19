@@ -11,12 +11,12 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 
 class RSAKeyManager(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "RSAKeyManager"
         private const val RSA_ALGORITHM = "RSA"
     }
-    
+
     /**
      * Load public key from PEM file in assets
      */
@@ -24,7 +24,7 @@ class RSAKeyManager(private val context: Context) {
         return try {
             val pemString = loadPEMFromAssets(fileName)
             val keyData = parsePEMToDER(pemString)
-            
+
             if (keyData != null) {
                 val keySpec = X509EncodedKeySpec(keyData)
                 val keyFactory = KeyFactory.getInstance(RSA_ALGORITHM)
@@ -40,7 +40,7 @@ class RSAKeyManager(private val context: Context) {
             null
         }
     }
-    
+
     /**
      * Load private key from PEM file in assets
      */
@@ -48,7 +48,7 @@ class RSAKeyManager(private val context: Context) {
         return try {
             val pemString = loadPEMFromAssets(fileName)
             val keyData = parsePEMToDER(pemString)
-            
+
             if (keyData != null) {
                 val keySpec = PKCS8EncodedKeySpec(keyData)
                 val keyFactory = KeyFactory.getInstance(RSA_ALGORITHM)
@@ -64,7 +64,7 @@ class RSAKeyManager(private val context: Context) {
             null
         }
     }
-    
+
     /**
      * Load PEM file content from assets
      */
@@ -80,7 +80,7 @@ class RSAKeyManager(private val context: Context) {
             throw e
         }
     }
-    
+
     /**
      * Parse PEM format to DER format
      */
@@ -98,7 +98,7 @@ class RSAKeyManager(private val context: Context) {
                 .replace("\n", "")
                 .replace("\r", "")
                 .trim()
-            
+
             val keyData = Base64.decode(pem, Base64.DEFAULT)
             Log.d(TAG, "Successfully parsed PEM key, data size: ${keyData.size} bytes")
             keyData
@@ -107,18 +107,18 @@ class RSAKeyManager(private val context: Context) {
             null
         }
     }
-    
+
     /**
      * Get the client private key
      */
     fun getClientPrivateKey(): PrivateKey? {
         return loadPrivateKeyFromPEM("client_private_key")
     }
-    
+
     /**
      * Get the server public key
      */
     fun getServerPublicKey(): PublicKey? {
         return loadPublicKeyFromPEM("server_public_key")
     }
-} 
+}

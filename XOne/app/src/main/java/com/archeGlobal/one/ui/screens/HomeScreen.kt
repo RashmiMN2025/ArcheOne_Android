@@ -619,7 +619,7 @@ fun HomeScreenContent(
                 celebrationData = celebrationData,
                 onDismiss = { controller.dismissCelebrationDialog() },
                 onWishesClick = { email, name, type -> controller.onCelebrationWishesClick(email, name, type) },
-                onViewAllClick = { 
+                onViewAllClick = {
                     controller.dismissCelebrationDialog()
                     // Navigate to AllCelebrationActivity
                     val intent = android.content.Intent(context, com.archeGlobal.one.AllCelebrationActivity::class.java)
@@ -1117,7 +1117,7 @@ fun HomeScreenContent(
                                             tint = Color(0xFFFFD700),
                                             modifier = Modifier
                                                 .size(45.dp)
-                                                .clickable { 
+                                                .clickable {
                                                     rating = i
                                                     // If 4 or 5 stars selected, redirect to Play Store immediately
                                                     if (i >= 4) {
@@ -1132,7 +1132,7 @@ fun HomeScreenContent(
                                                             deviceName = android.os.Build.MODEL,
                                                             version = android.os.Build.VERSION.RELEASE
                                                         )
-                                                        
+
                                                         // Submit feedback in background
                                                         CoroutineScope(Dispatchers.IO).launch {
                                                             try {
@@ -1141,7 +1141,7 @@ fun HomeScreenContent(
                                                                 // Log error but don't show to user
                                                             }
                                                         }
-                                                        
+
                                                         // Redirect to Play Store immediately
                                                         try {
                                                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.archeGlobal.one"))
@@ -1149,7 +1149,7 @@ fun HomeScreenContent(
                                                         } catch (e: Exception) {
                                                             Toast.makeText(context, "Unable to open Play Store", Toast.LENGTH_SHORT).show()
                                                         }
-                                                        
+
                                                         // Close dialog
                                                         showRatingDialog = false
                                                         rating = 0

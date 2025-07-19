@@ -12,4 +12,4 @@ data class CelebrationItem(
     @SerializedName("email") val email: String,
     @SerializedName("celebration_type") val celebrationType: String,
     @SerializedName("profile_pic") val profilePic: String = ""
-) 
+)

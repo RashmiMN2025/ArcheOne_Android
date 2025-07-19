@@ -87,16 +87,16 @@ class BusinessCardControllerImpl(
 
     private fun formatPhoneNumber(phone: String): String {
         val cleanPhone = phone.trim().replace(" ", "").replace("-", "")
-        
+
         if (cleanPhone.isEmpty()) return ""
-        
+
         // Remove any non-digit characters except + at the beginning
         val digitsOnly = if (cleanPhone.startsWith("+")) {
             "+" + cleanPhone.substring(1).filter { it.isDigit() }
         } else {
             cleanPhone.filter { it.isDigit() }
         }
-        
+
         return when {
             // Already has +91 prefix
             digitsOnly.startsWith("+91") -> {

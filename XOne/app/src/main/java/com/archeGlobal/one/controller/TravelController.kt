@@ -7,17 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
-import com.archeGlobal.one.model.TravelApprovalHistoryItem
-import com.archeGlobal.one.model.TravelApprovalItem
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
-import com.archeGlobal.one.model.TravelHistoryItem
 import com.archeGlobal.one.model.TravelHistoryRequest
 import com.archeGlobal.one.model.TravelHistoryResponse
-import com.archeGlobal.one.model.TravelOrderHistoryItem
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelRequestResponse
-import com.archeGlobal.one.model.TravelRequestSubmission
 import com.archeGlobal.one.model.TravelStatus
 import com.archeGlobal.one.model.createMultiDestinationRequest
 import com.archeGlobal.one.model.createSingleDestinationRequest
@@ -304,19 +299,19 @@ class TravelController(private val navigator: Navigator, private val context: Co
                     val orderHistoryItems = response.body()!!.orderHistory
                     val approvalHistoryItems = response.body()!!.approvalHistory
                     Log.d("TravelController", "Loaded ${orderHistoryItems.size} order history items and ${approvalHistoryItems.size} approval history items")
-                    
+
                     // Convert to TravelRequest objects using the proper toTravelRequest method
                     // which now includes the Travel Details field
                     val historyItems = orderHistoryItems.map { item ->
                         Log.d("TravelController", "Processing order ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}")
                         item.toTravelRequest()
                     }
-                    
+
                     val approvalItems = approvalHistoryItems.map { item ->
                         Log.d("TravelController", "Processing approval ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}")
                         item.toTravelRequest()
                     }
-                    
+
                     travelHistoryState = TravelHistoryState.Success(
                         historyItems = historyItems,
                         approvalItems = approvalItems
@@ -372,25 +367,47 @@ class TravelController(private val navigator: Navigator, private val context: Co
     }
 
     /**
-     * Navigate to travel request details screen
+     * Navigate to travel request details screen from travel history
      */
     fun navigateToTravelDetails(travelRequestId: String) {
         // Find the travel request with the given ID from the current state
         val currentState = travelHistoryState
         if (currentState is TravelHistoryState.Success) {
-            // Search in both history items and approval items
-            val request = currentState.historyItems.find { it.id == travelRequestId } ?: currentState.approvalItems.find { it.id == travelRequestId }
+            // Search in history items (this is for travel history)
+            val request = currentState.historyItems.find { it.id == travelRequestId }
 
             if (request != null) {
                 // Store the selected travel request
                 selectedTravelRequest = request
-                // Navigate to the detail screen
-                navigator.navigateToTravelRequestDetail()
+                // Navigate to the travel history detail screen
+                navigator.navigateToTravelHistoryDetail()
             } else {
-                Log.e("TravelController", "Travel request with ID $travelRequestId not found")
+                Log.e("TravelController", "Travel request with ID $travelRequestId not found in history")
             }
         } else {
             Log.e("TravelController", "Cannot navigate to travel details: travel history not loaded")
+        }
+    }
+
+    /**
+     * Navigate to travel request details screen from travel approvals
+     */
+    fun navigateToTravelApprovalDetails(travelRequestId: String) {
+        // Find the travel request with the given ID from approval state
+        val currentApprovalState = travelApprovalsState
+        if (currentApprovalState is TravelApprovalsState.Success) {
+            val request = currentApprovalState.approvalRequests.find { it.id == travelRequestId }
+
+            if (request != null) {
+                // Store the selected travel request
+                selectedTravelRequest = request
+                // Navigate to the travel request detail screen (for approvals)
+                navigator.navigateToTravelRequestDetail()
+            } else {
+                Log.e("TravelController", "Travel request with ID $travelRequestId not found in approvals")
+            }
+        } else {
+            Log.e("TravelController", "Cannot navigate to travel approval details: approvals not loaded")
         }
     }
 
@@ -410,9 +427,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
         selectedTravelRequest = travelRequest
 
         // If the request is already processed (approved / rejected) just show the read-only
-        // details page that we reuse from travel history. Otherwise open the approval page
+        // details page for travel approvals. Otherwise open the approval page
         if (travelRequest.status == TravelStatus.APPROVED || travelRequest.status == TravelStatus.REJECTED) {
-            navigator.navigateToTravelApprovalDetails()
+            navigator.navigateToTravelRequestDetail()
         } else {
             navigator.navigateToTravelApprovalDetail()
         }
@@ -941,7 +958,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"))
                 calendar.time = date
                 calendar.add(Calendar.DAY_OF_MONTH, 1)
-                
+
                 val apiDate = apiDateFormat.format(calendar.time)
                 Log.d("TravelController", "Converting display date '$displayDate' to API date: '$apiDate' (added 1 day to compensate for API timezone bug)")
                 apiDate
@@ -1013,9 +1030,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
                     flightTimePreference = flightTimeValue
                 )
             }
-            
+
             Log.d("TravelController", "Submitting multi-destination travel request with ${travelDestinations.size} destinations")
-            
+
             createMultiDestinationRequest(
                 employeeId = employeeId,
                 employeeName = employeeName,
@@ -1039,7 +1056,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Single destination request
             val apiDepartureDate = convertToApiDateFormat(departureDate)
             val apiArrivalDate = convertToApiDateFormat(arrivalDate)
-            
+
             Log.d("TravelController", "Submitting single-destination travel request:")
             Log.d("TravelController", "  Display departure date: $departureDate")
             Log.d("TravelController", "  API departure date: $apiDepartureDate")
@@ -1081,7 +1098,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
                         // Request was successful
                         Log.d("TravelController", "Travel request submitted successfully")
                         Log.d("TravelController", "Response message: ${responseBody.message}")
-                        
+
                         // Log multi-destination details if available
                         responseBody.orderHistory?.firstOrNull()?.let { order ->
                             Log.d("TravelController", "Request ID: ${order.requestId}")
@@ -1092,7 +1109,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
                                 }
                             }
                         }
-                        
+
                         // Navigate back to home
                         navigator.navigateToHome()
                     } else {

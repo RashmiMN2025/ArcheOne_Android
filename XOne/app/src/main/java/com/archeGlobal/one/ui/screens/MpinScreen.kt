@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
@@ -23,9 +24,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -43,8 +44,6 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.model.SecurityQuestion
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -334,9 +333,8 @@ fun MpinScreen(
                                 val hasLeadingSpace = newValue.startsWith(" ")
                                 val hasMoreThan2ConsecutiveSpaces = newValue.contains("   ") // 3 or more spaces
                                 val nonSpaceLength = newValue.replace(" ", "").length
-                                
-                                if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && 
-                                    nonSpaceLength <= 20 && !newValue.contains('\n')) {
+
+                                if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && nonSpaceLength <= 20 && !newValue.contains('\n')) {
                                     resetAnswer = newValue
                                 }
                             },
@@ -713,9 +711,8 @@ fun MpinScreen(
                                     val hasLeadingSpace = newValue.startsWith(" ")
                                     val hasMoreThan2ConsecutiveSpaces = newValue.contains("   ") // 3 or more spaces
                                     val nonSpaceLength = newValue.replace(" ", "").length
-                                    
-                                    if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && 
-                                        nonSpaceLength <= 20 && !newValue.contains('\n')) {
+
+                                    if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && nonSpaceLength <= 20 && !newValue.contains('\n')) {
                                         answers = answers.toMutableList().also { it[i] = newValue }
                                     }
                                 },
@@ -1020,7 +1017,7 @@ fun MpinScreen(
                         }
                     }
                 }
-                
+
                 // Bottom spacer to ensure content doesn't get cut off
                 Spacer(modifier = Modifier.height(32.dp))
             }

@@ -209,11 +209,11 @@ class PreferencesManager(context: Context) {
             remove(KEY_BIOMETRIC_MOBILE)
             remove(KEY_BIOMETRIC_EMPLOYEE_ID)
         }.apply()
-        
+
         // Update the locked state flow
         _lockedState.value = false
     }
-    
+
     // Clear only session data but preserve MPIN and biometric data for re-authentication
     fun clearSessionData() {
         sharedPreferences.edit().apply {
@@ -233,7 +233,7 @@ class PreferencesManager(context: Context) {
             // remove("biometric_employee_id") - Keep this
             // remove("biometric_token") - Keep this temporarily for re-auth
         }.apply()
-        
+
         // Update the locked state flow
         _lockedState.value = false
     }

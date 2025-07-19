@@ -3,7 +3,6 @@ package com.archeGlobal.one.ui.screens
 import android.graphics.*
 import android.util.TypedValue
 import android.view.View
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -197,7 +196,7 @@ fun BusinessCardScreen(
                 val bangaloreOffice = indiaOffice?.regionaloffice?.find { office ->
                     office.region.contains("Bangalore", ignoreCase = true)
                 }
-                
+
                 LocationInfo(
                     name = userLocation, // Keep custom location name for front side
                     companyName = bangaloreOffice?.companyName ?: "Arche Global Pvt Ltd",
@@ -585,7 +584,7 @@ fun BusinessCardScreen(
                         // Location field with dropdown
                         val offices = OtpVerificationController.getOfficesData()
                         var expanded by remember { mutableStateOf(false) }
-                        
+
                         // Get all available locations
                         val locations = mutableListOf<String>()
                         offices?.forEach { office ->
@@ -597,19 +596,23 @@ fun BusinessCardScreen(
 
                         // Add "Other" option
                         locations.add("Other")
-                        
+
                         // Check if current location is a custom location (not in predefined list)
                         val isCurrentLocationCustom = !locations.contains(businessCard.location)
-                        
-                        var selectedLocation by remember { mutableStateOf(
-                            if (isCurrentLocationCustom) "Other" else businessCard.location
-                        ) }
+
+                        var selectedLocation by remember {
+                            mutableStateOf(
+                                if (isCurrentLocationCustom) "Other" else businessCard.location
+                            )
+                        }
                         var isOtherSelected by remember { mutableStateOf(isCurrentLocationCustom) }
-                        
+
                         // Initialize custom location with current location if it's custom
-                        var customLocation by remember { mutableStateOf(
-                            if (isCurrentLocationCustom) businessCard.location else ""
-                        ) }
+                        var customLocation by remember {
+                            mutableStateOf(
+                                if (isCurrentLocationCustom) businessCard.location else ""
+                            )
+                        }
 
                         Box {
                             OutlinedTextField(
@@ -698,7 +701,7 @@ fun BusinessCardScreen(
 
                             OutlinedTextField(
                                 value = customLocation,
-                                onValueChange = { 
+                                onValueChange = {
                                     customLocation = it
                                     newLocation = it
                                 },

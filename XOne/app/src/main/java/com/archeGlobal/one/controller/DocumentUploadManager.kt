@@ -166,7 +166,7 @@ class DocumentUploadManager(private val context: Context) {
                             Log.d(
                                 TAG,
                                 "Document: ${doc.document_name}, type: ${doc.documentType}, " +
-                                        "has data: ${!doc.doc_data.isNullOrBlank()}"
+                                    "has data: ${!doc.doc_data.isNullOrBlank()}"
                             )
                         }
 

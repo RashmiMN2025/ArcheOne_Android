@@ -9,13 +9,9 @@ import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
-import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.EncryptedAPIHelper
+import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.handleError
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class OtpVerificationController(
     private val navigator: Navigator,
@@ -59,7 +55,7 @@ class OtpVerificationController(
                                 if (mpinController.isMpinSet()) {
                                     // MPIN already set, go directly to Home and set fromLogin=true
                                     navigator.navigateToHome(
-                                        true,    // fromOtp (set to true to indicate login just happened)
+                                        true, // fromOtp (set to true to indicate login just happened)
                                         true, // <-- this extra is important for fingerprint prompt
                                         email = email,
                                         mobile = mobile,
@@ -125,12 +121,12 @@ class OtpVerificationController(
                 }
             } else if (response != null && response.status == 200) {
                 Log.d("LoginProcess", "Login successful")
-                
+
                 // Save user data from the response
                 userDataManager.saveUserDataFromResponse(response, token)
                 userDataManager.setIsLoggedIn(true)
                 userDataManager.setHasLoggedIn(true)
-                
+
                 // Navigate if needed
                 if (!fromHome && shouldNavigateToHome) {
                     if (fromOtp) {

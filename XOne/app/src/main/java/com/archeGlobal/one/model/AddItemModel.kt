@@ -12,4 +12,4 @@ data class AddItemModel(
     val locations: List<String> = listOf("Bengaluru", "Chennai", "Coimbatore"),
     val types: List<String> = listOf("Stationary", "Writing", "Paper", "Office Supplies", "Hygiene"),
     val isLoading: Boolean = false
-) 
+)

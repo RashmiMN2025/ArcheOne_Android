@@ -199,7 +199,7 @@ class UserDocumentsController(private val context: Context) {
                             Log.d(
                                 TAG,
                                 "Document in response: name=${doc.document_name}, type=${doc.documentType}, " +
-                                        "has data: ${!doc.doc_data.isNullOrBlank()}"
+                                    "has data: ${!doc.doc_data.isNullOrBlank()}"
                             )
                             if (!doc.doc_data.isNullOrBlank()) {
                                 Log.d(TAG, "Doc data starts with: ${doc.doc_data?.take(30)}...")
@@ -215,7 +215,7 @@ class UserDocumentsController(private val context: Context) {
                             Log.d(
                                 TAG,
                                 "Found matching document: ${matchingDoc.document_name}, " +
-                                        "type: ${matchingDoc.documentType}, has data: ${!matchingDoc.doc_data.isNullOrBlank()}"
+                                    "type: ${matchingDoc.documentType}, has data: ${!matchingDoc.doc_data.isNullOrBlank()}"
                             )
                             if (!matchingDoc.doc_data.isNullOrBlank()) {
                                 val filePath = matchingDoc.doc_data!!

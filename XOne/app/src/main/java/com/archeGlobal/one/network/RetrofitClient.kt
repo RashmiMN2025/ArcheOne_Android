@@ -49,14 +49,14 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         preferencesManager.clearSessionData()
         val userDataManager = UserDataManager.getInstance(context)
         userDataManager.clearSessionData()
-        
+
         // Navigate to login screen
         val intent = Intent(context, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("session_expired", true)
         }
         context.startActivity(intent)
-        
+
         Log.i("AuthInterceptor", "Redirected to login due to token expiration")
     }
 }

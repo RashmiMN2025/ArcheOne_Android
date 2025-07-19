@@ -30,9 +30,9 @@ import com.archeGlobal.one.model.AdminDashboardModel
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -246,4 +246,4 @@ private fun getAdminIcon(iconName: String): Int {
         "ic_consumption_report" -> R.drawable.ic_doc // Chart/report icon
         else -> R.drawable.ic_file
     }
-} 
+}

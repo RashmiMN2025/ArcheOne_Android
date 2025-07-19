@@ -130,7 +130,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
         } catch (e: Exception) {
             // Show user-friendly error message for network/other errors
             Toast.makeText(
-                context, 
+                context,
                 "Unable to submit your concern. Please check your internet connection and try again.",
                 Toast.LENGTH_SHORT
             ).show()

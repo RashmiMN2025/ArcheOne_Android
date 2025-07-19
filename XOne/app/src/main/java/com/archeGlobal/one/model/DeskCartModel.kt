@@ -92,4 +92,4 @@ fun getDefaultStationaryItems(): List<StationaryItem> {
             maxQuantity = 1
         )
     )
-} 
+}

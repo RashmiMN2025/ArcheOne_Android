@@ -3,31 +3,28 @@ package com.archeGlobal.one.utils
 import android.content.Context
 import android.util.Log
 import com.archeGlobal.one.model.APIError
+import com.archeGlobal.one.network.OtpVerifyResponse
 import com.archeGlobal.one.network.SendOtpRequest
 import com.archeGlobal.one.network.SendOtpResponse
 import com.archeGlobal.one.network.VerifyOtpRequest
-import com.archeGlobal.one.network.OtpVerifyResponse
 
 /**
  * Example usage of EncryptedAPIService in your existing controllers
- * 
- * This demonstrates how to migrate from regular Retrofit calls to encrypted calls
+ * * This demonstrates how to migrate from regular Retrofit calls to encrypted calls
  */
 class EncryptedAPIUsageExample(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "EncryptedAPIExample"
     }
-    
+
     private val encryptedAPIHelper = EncryptedAPIHelper(context)
-    
+
     /**
      * Example 1: Send OTP using encrypted API
-     * 
-     * BEFORE (Regular Retrofit):
+     * * BEFORE (Regular Retrofit):
      * RetrofitClient.apiService.sendOtp(request).enqueue(callback)
-     * 
-     * AFTER (Encrypted):
+     * * AFTER (Encrypted):
      */
     fun sendOtpEncrypted(
         email: String,
@@ -36,7 +33,7 @@ class EncryptedAPIUsageExample(private val context: Context) {
         callback: (String, Boolean) -> Unit
     ) {
         val request = SendOtpRequest(email, mobile, employeeId)
-        
+
         encryptedAPIHelper.makeEncryptedCall(
             endpoint = "send-otp",
             method = "POST",
@@ -55,7 +52,7 @@ class EncryptedAPIUsageExample(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Example 2: Verify OTP using encrypted API
      */
@@ -68,7 +65,7 @@ class EncryptedAPIUsageExample(private val context: Context) {
         callback: (String, Boolean) -> Unit
     ) {
         val request = VerifyOtpRequest(email, mobile, employeeId, otpFromUser, isBiometric)
-        
+
         encryptedAPIHelper.makeEncryptedCall(
             endpoint = "otpVerify",
             method = "POST",
@@ -87,11 +84,10 @@ class EncryptedAPIUsageExample(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Example 3: Using suspend functions for encrypted calls
-     * 
-     * Use this approach in coroutines or suspend functions
+     * * Use this approach in coroutines or suspend functions
      */
     suspend fun sendOtpEncryptedSuspend(
         email: String,
@@ -100,7 +96,7 @@ class EncryptedAPIUsageExample(private val context: Context) {
     ): Result<SendOtpResponse> {
         return try {
             val request = SendOtpRequest(email, mobile, employeeId)
-            
+
             val response = encryptedAPIHelper.makeEncryptedCallSuspend(
                 endpoint = "send-otp",
                 method = "POST",
@@ -108,18 +104,17 @@ class EncryptedAPIUsageExample(private val context: Context) {
                 responseClass = SendOtpResponse::class.java,
                 withAuthHeader = false
             )
-            
+
             Result.success(response)
         } catch (e: APIError) {
             Log.e(TAG, "Send OTP failed: ${e.errorMessage}")
             Result.failure(e)
         }
     }
-    
+
     /**
      * Example 4: Making regular (non-encrypted) API calls
-     * 
-     * Use this for endpoints that don't require encryption
+     * * Use this for endpoints that don't require encryption
      */
     fun sendOtpRegular(
         email: String,
@@ -128,7 +123,7 @@ class EncryptedAPIUsageExample(private val context: Context) {
         callback: (String, Boolean) -> Unit
     ) {
         val request = SendOtpRequest(email, mobile, employeeId)
-        
+
         encryptedAPIHelper.makeRegularCall(
             endpoint = "send-otp",
             method = "POST",
@@ -147,16 +142,15 @@ class EncryptedAPIUsageExample(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Example 5: Making authenticated encrypted calls
-     * 
-     * Use this for endpoints that require authentication token
+     * * Use this for endpoints that require authentication token
      */
     fun getProfileEncrypted(callback: (String, Boolean) -> Unit) {
         // Example profile request (you would define your actual request/response classes)
         val request = mapOf("action" to "getProfile")
-        
+
         encryptedAPIHelper.makeEncryptedCall(
             endpoint = "profile",
             method = "GET",
@@ -179,14 +173,12 @@ class EncryptedAPIUsageExample(private val context: Context) {
 
 /**
  * Migration Guide:
- * 
- * 1. Replace RetrofitClient.apiService calls with EncryptedAPIHelper calls
+ * * 1. Replace RetrofitClient.apiService calls with EncryptedAPIHelper calls
  * 2. For encrypted endpoints, use makeEncryptedCall() or makeEncryptedCallSuspend()
  * 3. For regular endpoints, use makeRegularCall() or makeRegularCallSuspend()
  * 4. Handle APIError using the handleError() extension function
  * 5. Set withAuthHeader = true for authenticated endpoints
- * 
- * OLD CODE:
+ * * OLD CODE:
  * RetrofitClient.apiService.sendOtp(request).enqueue(object : Callback<SendOtpResponse> {
  *     override fun onResponse(call: Call<SendOtpResponse>, response: Response<SendOtpResponse>) {
  *         if (response.isSuccessful) {
@@ -199,8 +191,7 @@ class EncryptedAPIUsageExample(private val context: Context) {
  *         // Handle failure
  *     }
  * })
- * 
- * NEW CODE:
+ * * NEW CODE:
  * encryptedAPIHelper.makeEncryptedCall(
  *     endpoint = "send-otp",
  *     method = "POST",
@@ -213,4 +204,4 @@ class EncryptedAPIUsageExample(private val context: Context) {
  *         // Handle success
  *     }
  * }
- */ 
+ */

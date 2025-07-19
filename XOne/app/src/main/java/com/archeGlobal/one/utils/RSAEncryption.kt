@@ -6,12 +6,12 @@ import java.security.PublicKey
 import javax.crypto.Cipher
 
 class RSAEncryption {
-    
+
     companion object {
         private const val TAG = "RSAEncryption"
         private const val RSA_ALGORITHM = "RSA"
         private const val TRANSFORMATION = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding" // Equivalent to iOS .rsaEncryptionOAEPSHA256
-        
+
         /**
          * Encrypt data using RSA public key with OAEP SHA-256 padding
          */
@@ -20,7 +20,7 @@ class RSAEncryption {
                 val cipher = Cipher.getInstance(TRANSFORMATION)
                 cipher.init(Cipher.ENCRYPT_MODE, publicKey)
                 val encryptedData = cipher.doFinal(data)
-                
+
                 Log.d(TAG, "Successfully encrypted data with RSA, size: ${encryptedData.size} bytes")
                 encryptedData
             } catch (e: Exception) {
@@ -28,7 +28,7 @@ class RSAEncryption {
                 null
             }
         }
-        
+
         /**
          * Decrypt data using RSA private key with OAEP SHA-256 padding
          */
@@ -37,7 +37,7 @@ class RSAEncryption {
                 val cipher = Cipher.getInstance(TRANSFORMATION)
                 cipher.init(Cipher.DECRYPT_MODE, privateKey)
                 val decryptedData = cipher.doFinal(encryptedData)
-                
+
                 Log.d(TAG, "Successfully decrypted data with RSA, size: ${decryptedData.size} bytes")
                 decryptedData
             } catch (e: Exception) {
@@ -46,4 +46,4 @@ class RSAEncryption {
             }
         }
     }
-} 
+}

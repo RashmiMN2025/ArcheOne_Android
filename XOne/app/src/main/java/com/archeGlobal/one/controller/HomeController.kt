@@ -93,7 +93,7 @@ class HomeController(
             // If not Pride Month, fetch the regular daily event
             fetchEventFromLoginData()
         }
-        
+
         // Fetch celebration data
         fetchCelebrationData()
     }
@@ -369,7 +369,7 @@ class HomeController(
     private fun fetchCelebrationData() {
         Log.d("CelebrationController", "Fetching celebration data")
         val scope = CoroutineScope(Dispatchers.IO)
-        
+
         scope.launch {
             try {
                 val response = RetrofitClient.apiService.getEmployeeCelebration()
@@ -399,23 +399,23 @@ class HomeController(
 
     fun onCelebrationWishesClick(email: String, employeeName: String, celebrationType: String) {
         Log.d("CelebrationController", "Wishes clicked for email: $email, name: $employeeName, type: $celebrationType")
-        
+
         // Get greetings data from UserDataManager
         val userDataManager = UserDataManager.getInstance(context)
         val greetingsData = userDataManager.getGreetingsData()
         val categoryMessages = userDataManager.getGreetingCategoriesData()
-        
+
         // Find the appropriate category based on celebration type
         val categoryName = when (celebrationType.lowercase()) {
             "birthday" -> "Birthday"
             "work anniversary" -> "Career Milestone"
             else -> celebrationType
         }
-        
+
         // Get greetings for the category
         val categoryGreetings = greetingsData?.get(categoryName) ?: emptyList()
         val firstGreeting = categoryGreetings.firstOrNull() ?: ""
-        
+
         // Get default message for the category and pre-fill with employee name
         val defaultMessage = categoryMessages?.find { it.name == categoryName }?.message ?: ""
         val personalizedMessage = if (defaultMessage.isNotEmpty()) {
@@ -437,7 +437,7 @@ class HomeController(
         } else {
             "Dear $employeeName,\n\nCongratulations on your special day!"
         }
-        
+
         // Navigate directly to GreetingDetailActivity
         val intent = Intent(context, com.archeGlobal.one.GreetingDetailActivity::class.java)
         intent.putExtra("imageUrl", firstGreeting)
@@ -446,7 +446,7 @@ class HomeController(
         intent.putExtra("recipientEmail", email)
         intent.putExtra("recipientName", employeeName)
         intent.putStringArrayListExtra("allGreetings", ArrayList(categoryGreetings))
-        
+
         context.startActivity(intent)
         dismissCelebrationDialog()
     }

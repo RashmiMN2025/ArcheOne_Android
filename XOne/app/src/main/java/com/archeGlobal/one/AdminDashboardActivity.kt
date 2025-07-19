@@ -17,10 +17,10 @@ class AdminDashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         navigator = AndroidNavigator(this)
         controller = AdminDashboardController(this, navigator)
-        
+
         setContent {
             XOneTheme {
                 AdminDashboardScreen(
@@ -39,5 +39,3 @@ class AdminDashboardActivity : ComponentActivity() {
         )
     }
 }
-
- 

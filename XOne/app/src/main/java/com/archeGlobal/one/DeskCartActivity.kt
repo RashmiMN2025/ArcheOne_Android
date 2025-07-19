@@ -37,4 +37,4 @@ class DeskCartActivity : ComponentActivity() {
             R.anim.slide_out_right // exit animation for current activity
         )
     }
-} 
+}

@@ -156,7 +156,7 @@ fun HolidayCalendarScreen(
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.holiday_list) ,
+                                painter = painterResource(R.drawable.holiday_list),
                                 contentDescription = "Holiday List",
                                 tint = Color.White,
                                 modifier = Modifier.size(19.dp)

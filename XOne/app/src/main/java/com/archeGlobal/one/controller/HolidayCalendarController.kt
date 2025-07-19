@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.ImageViewerActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.model.CalendarResponse
@@ -18,7 +17,6 @@ import com.archeGlobal.one.network.ApiService
 import com.archeGlobal.one.network.CalendarRequest
 import com.archeGlobal.one.repository.UserRepository
 import com.archeGlobal.one.utils.NetworkResult
-import kotlinx.coroutines.launch
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -250,7 +248,7 @@ class HolidayCalendarController(
 
         // Use encrypted API call with state parameter
         val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)
-        
+
         encryptedAPIHelper.makeEncryptedCall(
             endpoint = "calendar",
             method = "POST",
@@ -263,20 +261,20 @@ class HolidayCalendarController(
                 _holidays.value = NetworkResult.Error("Network error: ${error.errorMessage}")
                 return@makeEncryptedCall
             }
-            
+
             if (response == null) {
                 _holidays.value = NetworkResult.Error("No response received")
                 return@makeEncryptedCall
             }
-            
+
             val calendarResponse = response as CalendarResponse
-            
+
             // Log the raw response for debugging
             Log.d("HolidayCalendarController", "Calendar API Response Status: ${calendarResponse.status}")
             Log.d("HolidayCalendarController", "Holidays count: ${calendarResponse.holidays.size}")
             Log.d("HolidayCalendarController", "Milestones count: ${calendarResponse.milestones.size}")
             Log.d("HolidayCalendarController", "Global events count: ${calendarResponse.globalEvents.size}")
-            
+
             if (calendarResponse.status == 200) {
                 _holidays.value = NetworkResult.Success(calendarResponse)
 
@@ -296,7 +294,7 @@ class HolidayCalendarController(
                 // Update milestones and log count
                 _milestones.value = calendarResponse.milestones
                 Log.d("HolidayCalendarController", "Loaded ${calendarResponse.milestones.size} milestones")
-                
+
                 // Debug each milestone
                 calendarResponse.milestones.forEach { milestone ->
                     Log.d("HolidayCalendarController", "Milestone loaded: ${milestone.event}, date: ${milestone.poDate}")
@@ -310,7 +308,7 @@ class HolidayCalendarController(
                 calendarResponse.globalEvents.forEach { event ->
                     Log.d("HolidayCalendarController", "Global event loaded: ${event.name}, date: ${event.date}")
                 }
-                
+
                 // Debug holidays and their types
                 calendarResponse.holidays.forEach { holiday ->
                     Log.d("HolidayCalendarController", "Holiday loaded: ${holiday.name}, date: ${holiday.date}, type: ${holiday.holidayType}")

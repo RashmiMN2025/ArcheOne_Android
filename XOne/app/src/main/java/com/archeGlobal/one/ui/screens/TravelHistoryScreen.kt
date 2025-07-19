@@ -52,105 +52,106 @@ fun TravelHistoryScreen(
     // Wrap entire content with font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
-    ) {
-        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
-                            WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                            WelcomeBackgroundBottom // Dark Grey (0xFF474749)
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
+                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
+                                WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
+                                WelcomeBackgroundBottom // Dark Grey (0xFF474749)
+                            )
                         )
                     )
-                )
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Add space at the top to push everything down
-                Spacer(modifier = Modifier.height(48.dp))
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Add space at the top to push everything down
+                    Spacer(modifier = Modifier.height(48.dp))
 
-                TopAppBar(
-                    title = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Travel History",
-                                color = Color.Black,
-                                fontSize = 20.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { controller.onBackPressed() }) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
-                        }
-                    },
-                    backgroundColor = Color.Transparent,
-                    elevation = 0.dp,
-                    actions = {
-                        Spacer(modifier = Modifier.width(48.dp))
-                    }
-                )
-
-                // Add more space after the TopAppBar
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    // Render UI based on current travel history state
-                    when (val currentState = state) {
-                        is TravelHistoryState.Loading -> {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                        }
-
-                        is TravelHistoryState.Success -> {
-                            if (currentState.historyItems.isEmpty()) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(text = "No travel history found", fontFamily = GraphikFontFamily)
-                                }
-                            } else {
-                                TravelHistoryList(
-                                    travelRequests = currentState.historyItems,
-                                    onTravelRequestClick = { requestId ->
-                                        controller.navigateToTravelDetails(requestId)
-                                    }
+                    TopAppBar(
+                        title = {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Travel History",
+                                    color = Color.Black,
+                                    fontSize = 20.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
                                 )
                             }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { controller.onBackPressed() }) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.Black
+                                )
+                            }
+                        },
+                        backgroundColor = Color.Transparent,
+                        elevation = 0.dp,
+                        actions = {
+                            Spacer(modifier = Modifier.width(48.dp))
                         }
+                    )
 
-                        is TravelHistoryState.Error -> {
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(text = currentState.message, fontFamily = GraphikFontFamily)
-                                Button(
-                                    onClick = { controller.loadCombinedTravelHistory() },
-                                    modifier = Modifier.padding(top = 8.dp)
+                    // Add more space after the TopAppBar
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        // Render UI based on current travel history state
+                        when (val currentState = state) {
+                            is TravelHistoryState.Loading -> {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                            }
+
+                            is TravelHistoryState.Success -> {
+                                if (currentState.historyItems.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(text = "No travel history found", fontFamily = GraphikFontFamily)
+                                    }
+                                } else {
+                                    TravelHistoryList(
+                                        travelRequests = currentState.historyItems,
+                                        onTravelRequestClick = { requestId ->
+                                            controller.navigateToTravelDetails(requestId)
+                                        }
+                                    )
+                                }
+                            }
+
+                            is TravelHistoryState.Error -> {
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text("Retry", fontFamily = GraphikFontFamily)
+                                    Text(text = currentState.message, fontFamily = GraphikFontFamily)
+                                    Button(
+                                        onClick = { controller.loadCombinedTravelHistory() },
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    ) {
+                                        Text("Retry", fontFamily = GraphikFontFamily)
+                                    }
                                 }
                             }
                         }
@@ -158,7 +159,6 @@ fun TravelHistoryScreen(
                 }
             }
         }
-    }
     } // Close FontScaleAdjusted block
 }
 
@@ -235,7 +235,7 @@ fun TravelRequestCard(
 
             // Handle single vs multi-destination display
             val destinations = travelRequest.getAllDestinations()
-            
+
             if (destinations.isEmpty() || destinations.size == 1) {
                 // Single destination - show as before
                 DetailItem(
@@ -243,7 +243,7 @@ fun TravelRequestCard(
                     label = "Destination",
                     value = travelRequest.destination
                 )
-                
+
                 // Show travel dates for single destination
                 if (!travelRequest.departureDate.isNullOrEmpty() && !travelRequest.arrivalDate.isNullOrEmpty()) {
                     DetailItem(
@@ -256,7 +256,7 @@ fun TravelRequestCard(
                 // Multi-destination - show Trip 1, Trip 2, etc.
                 destinations.forEachIndexed { index, destination ->
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = "Trip ${index + 1}",
                         fontWeight = FontWeight.Bold,
@@ -265,13 +265,13 @@ fun TravelRequestCard(
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    
+
                     DetailItem(
                         icon = R.drawable.ic_location,
                         label = "Destination",
                         value = destination.travelDestination
                     )
-                    
+
                     DetailItem(
                         icon = R.drawable.ic_calendar,
                         label = "Travel Dates",
@@ -282,7 +282,7 @@ fun TravelRequestCard(
 
             // Approver
             DetailItem(
-                icon = Icons.Default.Person,
+                icon = R.drawable.person_3x,
                 label = "Approver",
                 value = travelRequest.approver
             )

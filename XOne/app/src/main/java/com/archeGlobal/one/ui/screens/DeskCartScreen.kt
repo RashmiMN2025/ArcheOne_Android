@@ -18,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -34,9 +33,9 @@ import com.archeGlobal.one.model.StationaryItem
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,58 +65,58 @@ fun DeskCartScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-            // Header
-            DeskCartHeader(
-                onBackPressed = controller::onBackPressed
-            )
-
-            // Content
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Employee Details Section
-                EmployeeDetailsSection(
-                    model = model,
-                    onAdminDashboardClick = controller::onAdminDashboardClick
+                // Header
+                DeskCartHeader(
+                    onBackPressed = controller::onBackPressed
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Store Front Section
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                // Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    StoreFrontSection(
-                        items = model.stationaryItems,
-                        onIncreaseQuantity = controller::onIncreaseQuantity,
-                        onDecreaseQuantity = controller::onDecreaseQuantity
+                    // Employee Details Section
+                    EmployeeDetailsSection(
+                        model = model,
+                        onAdminDashboardClick = controller::onAdminDashboardClick
                     )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Store Front Section
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        StoreFrontSection(
+                            items = model.stationaryItems,
+                            onIncreaseQuantity = controller::onIncreaseQuantity,
+                            onDecreaseQuantity = controller::onDecreaseQuantity
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Place Order Button
+                    PlaceOrderButton(
+                        onClick = controller::onPlaceOrder,
+                        enabled = controller.getTotalItemsSelected() > 0
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
+            }
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Place Order Button
-                PlaceOrderButton(
-                    onClick = controller::onPlaceOrder,
-                    enabled = controller.getTotalItemsSelected() > 0
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
+            // Loading overlay
+            if (model.isLoading) {
+                UniversalLoader(isLoading = true)
             }
         }
-
-        // Loading overlay
-        if (model.isLoading) {
-            UniversalLoader(isLoading = true)
-        }
     }
-}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -422,4 +421,4 @@ private fun getStationaryIcon(iconName: String): Int {
         "ic_punching_machine" -> R.drawable.ic_it_asset
         else -> R.drawable.ic_file
     }
-} 
+}

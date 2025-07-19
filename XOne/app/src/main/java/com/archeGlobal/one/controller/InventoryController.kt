@@ -1,15 +1,15 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.InventoryActivity
-import com.archeGlobal.one.model.InventoryModel
-import com.archeGlobal.one.model.InventoryItem
 import com.archeGlobal.one.model.AddItemModel
+import com.archeGlobal.one.model.InventoryItem
+import com.archeGlobal.one.model.InventoryModel
 import com.archeGlobal.one.navigation.Navigator
 import kotlinx.coroutines.launch
 
@@ -100,11 +100,11 @@ class InventoryController(
                         iconName = "ic_file", // Default icon
                         category = addItemModel.selectedType
                     )
-                    
+
                     // Add item to the current list
                     val updatedItems = model.inventoryItems + newItem
                     model = model.copy(inventoryItems = updatedItems)
-                    
+
                     // Close dialog and reset form
                     addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
                     resetAddItemForm()
@@ -118,9 +118,9 @@ class InventoryController(
 
     private fun validateAddItemForm(): Boolean {
         return addItemModel.itemName.isNotBlank() &&
-                addItemModel.itemNumber.isNotBlank() &&
-                addItemModel.totalStock.isNotBlank() &&
-                addItemModel.totalStock.toIntOrNull() != null
+            addItemModel.itemNumber.isNotBlank() &&
+            addItemModel.totalStock.isNotBlank() &&
+            addItemModel.totalStock.toIntOrNull() != null
     }
 
     private fun resetAddItemForm() {
@@ -154,4 +154,4 @@ class InventoryController(
             model = model.copy(isLoading = false)
         }
     }
-} 
+}

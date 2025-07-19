@@ -33,7 +33,7 @@ fun AllCelebrationScreen(
     val celebrationData = controller.celebrationData.collectAsState().value
     var selectedTab by remember { mutableStateOf("Today") }
     val backgroundModel = remember { WelcomeBackgroundModel() }
-    
+
     // Status bar padding
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
@@ -68,7 +68,7 @@ fun AllCelebrationScreen(
                         tint = Color.Black
                     )
                 }
-                
+
                 Text(
                     text = "All Cheers For Peers!",
                     fontSize = 20.sp,
@@ -78,11 +78,11 @@ fun AllCelebrationScreen(
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
-                
+
                 // Empty space for balance
                 Spacer(modifier = Modifier.width(48.dp))
             }
-            
+
             // Tab selector
             Row(
                 modifier = Modifier
@@ -95,16 +95,16 @@ fun AllCelebrationScreen(
                     isSelected = selectedTab == "Today",
                     onClick = { selectedTab = "Today" }
                 )
-                
+
                 TabButton(
                     text = "Tomorrow",
                     isSelected = selectedTab == "Tomorrow",
                     onClick = { selectedTab = "Tomorrow" }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Content
             LazyColumn(
                 modifier = Modifier
@@ -130,7 +130,7 @@ fun AllCelebrationScreen(
                 } else {
                     celebrationData?.tomorrow ?: emptyList()
                 }
-                
+
                 items(itemsToShow) { item ->
                     CelebrationItem(
                         item = item,
@@ -139,7 +139,7 @@ fun AllCelebrationScreen(
                     )
                 }
             }
-            
+
             // Page indicator
             Row(
                 modifier = Modifier
@@ -156,9 +156,9 @@ fun AllCelebrationScreen(
                             shape = androidx.compose.foundation.shape.CircleShape
                         )
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 // Tomorrow indicator
                 Box(
                     modifier = Modifier
@@ -195,4 +195,4 @@ private fun TabButton(
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
-} 
+}

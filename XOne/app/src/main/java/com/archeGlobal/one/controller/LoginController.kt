@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
-import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.EncryptedAPIHelper
+import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.handleError
 import kotlinx.coroutines.*
 import org.json.JSONObject
@@ -15,7 +15,7 @@ class LoginController(
     private val navigator: Navigator
 ) {
     private val encryptedAPIHelper = EncryptedAPIHelper(context)
-    
+
     // Step 1: Send OTP
     fun sendOtp(
         email: String,
@@ -50,7 +50,7 @@ class LoginController(
         val request = SendOtpRequest(email, mobile, employeeId)
         Log.d("LoginController", "Request payload: email=$email, mobile=$mobile, employeeId=$employeeId")
         Log.d("LoginController", "Making encrypted request to: ${RetrofitClient.BASE_URL}send-otp")
-        
+
         encryptedAPIHelper.makeEncryptedCall(
             endpoint = "send-otp",
             method = "POST",
@@ -88,7 +88,6 @@ class LoginController(
                 withContext(Dispatchers.Main) {
                     when {
                         response.isSuccessful && responseBody != null -> {
-
                             // Check if MPIN is already set up before navigating
                             val mpinController = com.archeGlobal.one.controller.MpinController(context)
                             val hasMpinSet = mpinController.isMpinSet()
@@ -113,7 +112,7 @@ class LoginController(
                         errorBody != null -> {
                             Log.e("LoginController", "API Error Response: $errorBody")
                             Log.e("LoginController", "Response Code: ${response.code()}")
-                            
+
                             // Check if it's a 403 (Forbidden) - app update required
                             if (response.code() == 403) {
                                 // Show update dialog

@@ -162,11 +162,11 @@ class MyDocumentsController(private val context: Context) {
         }
 
         val isImage = !isPdf && (
-                formattedUrl.endsWith(".jpg", ignoreCase = true) ||
-                        formattedUrl.endsWith(".jpeg", ignoreCase = true) ||
-                        formattedUrl.endsWith(".png", ignoreCase = true) ||
-                        formattedUrl.endsWith(".webp", ignoreCase = true)
-                )
+            formattedUrl.endsWith(".jpg", ignoreCase = true) ||
+                formattedUrl.endsWith(".jpeg", ignoreCase = true) ||
+                formattedUrl.endsWith(".png", ignoreCase = true) ||
+                formattedUrl.endsWith(".webp", ignoreCase = true)
+            )
 
         Log.d("MyDocumentsController", "onViewClick: Document '$documentName' - Formatted URL: '$formattedUrl', isPdf: $isPdf, isImage: $isImage")
 

@@ -37,21 +37,19 @@ import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 
 @Composable
-fun TravelRequestDetailScreen(
+fun TravelHistoryDetailScreen(
     controller: TravelController,
     travelRequest: TravelRequest
 ) {
-    // Get context and font adjustment for consistent font scaling
     val context = LocalContext.current
     val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
 
-    // Wrap entire content with font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+                .systemBarsPadding()
         ) {
             Box(
                 modifier = Modifier
@@ -59,15 +57,14 @@ fun TravelRequestDetailScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                WelcomeBackgroundTop, // Light Beige/Grey
-                                WelcomeBackgroundMiddle, // Light Grey
-                                WelcomeBackgroundBottom // Dark Grey
+                                WelcomeBackgroundTop,
+                                WelcomeBackgroundMiddle,
+                                WelcomeBackgroundBottom
                             )
                         )
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Add space at the top to push everything down
                     Spacer(modifier = Modifier.height(48.dp))
 
                     TopAppBar(
@@ -87,7 +84,7 @@ fun TravelRequestDetailScreen(
                             }
                         },
                         navigationIcon = {
-                            IconButton(onClick = { controller.onBackPressed(fromTravelDetail = true) }) {
+                            IconButton(onClick = { controller.onBackPressed() }) {
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
@@ -102,104 +99,78 @@ fun TravelRequestDetailScreen(
                         }
                     )
 
-                    // Main content
-                    Card(
+                    val scrollState = rememberScrollState()
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
                             .padding(16.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = 1.dp,
-                        backgroundColor = Color.White
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        val scrollState = rememberScrollState()
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(scrollState)
-                                .padding(16.dp)
+                        // Employee Details Card
+                        TravelDetailCard(
+                            title = "Employee Details"
                         ) {
-                            // Header with ID and Status Badge
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    text = "ID: ${travelRequest.id}",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black
-                                )
-
-                                // Status Badge
-                                TravelStatusBadgeComponent(status = travelRequest.status)
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Employee Details
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.person_3x,
                                 label = "Employee",
                                 value = controller.employeeName
                             )
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.person_3x,
                                 label = "Employee ID",
                                 value = controller.employeeId
                             )
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.envelope_3x,
                                 label = "Email",
                                 value = controller.employeeEmail
                             )
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.phone_3x,
                                 label = "Mobile",
                                 value = controller.mobileNumber
                             )
+                        }
 
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            // Travel Details - Handle multi-destination vs single destination
+                        // Travel Details Card
+                        TravelDetailCard(
+                            title = "Travel Details"
+                        ) {
                             val destinations = travelRequest.getAllDestinations()
 
                             if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination - show Trip 1
+                                // Single destination
                                 Text(
                                     text = "Trip 1",
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 14.sp,
+                                    fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
+                                    modifier = Modifier.padding(bottom = 8.dp)
                                 )
 
-                                DetailRowWithDrawableIcon(
+                                TravelDetailRowWithDrawableIcon(
                                     iconRes = R.drawable.ic_location,
                                     label = "Destination",
                                     value = travelRequest.destination
                                 )
 
-                                // Format departure date
                                 val formattedDepartureDate = formatDate(travelRequest.departureDate)
-                                DetailRowWithDrawableIcon(
+                                TravelDetailRowWithDrawableIcon(
                                     iconRes = R.drawable.airplane_departure,
-                                    label = "Date of Departure",
+                                    label = "Departure Date",
                                     value = formattedDepartureDate
                                 )
 
-                                // Format arrival date
                                 val formattedArrivalDate = formatDate(travelRequest.arrivalDate)
-                                DetailRowWithDrawableIcon(
+                                TravelDetailRowWithDrawableIcon(
                                     iconRes = R.drawable.airplane_arrival,
-                                    label = "Date of Arrival",
+                                    label = "Return Date",
                                     value = formattedArrivalDate
                                 )
                             } else {
-                                // Multi-destination - show Trip 1, Trip 2, etc.
+                                // Multi-destination
                                 destinations.forEachIndexed { index, destination ->
                                     if (index > 0) {
                                         Spacer(modifier = Modifier.height(12.dp))
@@ -208,29 +179,29 @@ fun TravelRequestDetailScreen(
                                     Text(
                                         text = "Trip ${index + 1}",
                                         fontWeight = FontWeight.Medium,
-                                        fontSize = 14.sp,
+                                        fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
-                                        modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
+                                        modifier = Modifier.padding(bottom = 8.dp)
                                     )
 
-                                    DetailRowWithDrawableIcon(
+                                    TravelDetailRowWithDrawableIcon(
                                         iconRes = R.drawable.ic_location,
                                         label = "Destination",
                                         value = destination.travelDestination
                                     )
 
                                     val formattedDepartureDate = formatDate(destination.departureDate)
-                                    DetailRowWithDrawableIcon(
+                                    TravelDetailRowWithDrawableIcon(
                                         iconRes = R.drawable.airplane_departure,
-                                        label = "Date of Departure",
+                                        label = "Departure Date",
                                         value = formattedDepartureDate
                                     )
 
                                     val formattedArrivalDate = formatDate(destination.arrivalDate)
-                                    DetailRowWithDrawableIcon(
+                                    TravelDetailRowWithDrawableIcon(
                                         iconRes = R.drawable.airplane_arrival,
-                                        label = "Date of Arrival",
+                                        label = "Return Date",
                                         value = formattedArrivalDate
                                     )
                                 }
@@ -238,65 +209,71 @@ fun TravelRequestDetailScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // Project and other details
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.ic_work,
-                                label = "Project",
+                                label = "Project Name",
                                 value = travelRequest.project
                             )
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.ic_info,
                                 label = "Business Justification",
                                 value = travelRequest.businessJustification ?: "N/A"
                             )
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.car_3x,
                                 label = "Mode of Transport",
                                 value = travelRequest.modeOfTransport ?: "N/A"
                             )
+                            TravelDetailRowWithDrawableIcon(
+                                iconRes = R.drawable.building,
+                                label = "Stay Required",
+                                value = "Yes" // This could be dynamic based on your data model
+                            )
+                        }
 
-                            // Format created date
+                        // Approval Details Card
+                        TravelDetailCard(
+                            title = "Approval Details"
+                        ) {
+                            TravelDetailRowWithDrawableIcon(
+                                iconRes = R.drawable.ic_info,
+                                label = "Status",
+                                value = travelRequest.status.name.lowercase().replaceFirstChar { it.uppercase() }
+                            )
+                            TravelDetailRowWithDrawableIcon(
+                                iconRes = R.drawable.person_3x,
+                                label = "Reporting Manager",
+                                value = travelRequest.approver
+                            )
+                            TravelDetailRowWithDrawableIcon(
+                                iconRes = R.drawable.envelope_3x,
+                                label = "Manager Email",
+                                value = "${travelRequest.approver.lowercase().replace(" ", ".")}@arche.global"
+                            )
+
                             val formattedCreatedDate = formatDate(
                                 java.text.SimpleDateFormat(
                                     "yyyy-MM-dd",
                                     java.util.Locale.getDefault()
                                 ).format(travelRequest.createdDate)
                             )
-                            DetailRowWithDrawableIcon(
+                            TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.calendar_3x,
-                                label = "Created",
+                                label = "Created At",
                                 value = formattedCreatedDate
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Remarks section
-                            Text(
-                                text = "Remarks",
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp,
-                                fontFamily = GraphikFontFamily,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
-                            )
-                            Text(
-                                text = "approved - njoy",
-                                fontSize = 13.sp,
-                                fontFamily = GraphikFontFamily,
-                                color = Color.Gray
                             )
                         }
                     }
                 }
             }
         }
-    } // Close FontScaleAdjusted block
+    }
 }
 
 @Composable
-fun DetailCard(
+fun TravelDetailCard(
     title: String,
-    content: @Composable () -> Unit
+    content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -314,6 +291,7 @@ fun DetailCard(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = GraphikFontFamily,
+                color = Color.Black,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -323,65 +301,36 @@ fun DetailCard(
 }
 
 @Composable
-fun DetailRow(
-    label: String,
-    value: String,
-    valueColor: Color = Color.Black
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Text(
-            text = label,
-            fontSize = 14.sp, // Smaller font size
-            fontFamily = GraphikFontFamily,
-            color = Color.Gray,
-            modifier = Modifier.width(140.dp) // Fixed width for alignment
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp, // Smaller font size
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal, // Normal font weight
-            color = valueColor
-        )
-    }
-}
-
-@Composable
-fun DetailRowWithIcon(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+fun TravelDetailRowWithIcon(
+    icon: ImageVector,
     label: String,
     value: String
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             tint = Color.Gray,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            modifier = Modifier.width(130.dp)
+            modifier = Modifier.weight(1f)
         )
-        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = value,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
+            fontWeight = FontWeight.Medium,
             color = Color.Black,
             textAlign = TextAlign.End
         )
@@ -389,7 +338,7 @@ fun DetailRowWithIcon(
 }
 
 @Composable
-fun DetailRowWithDrawableIcon(
+fun TravelDetailRowWithDrawableIcon(
     iconRes: Int,
     label: String,
     value: String
@@ -397,29 +346,28 @@ fun DetailRowWithDrawableIcon(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = label,
             tint = Color.Gray,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            modifier = Modifier.width(130.dp)
+            modifier = Modifier.weight(1f)
         )
-        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = value,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
+            fontWeight = FontWeight.Medium,
             color = Color.Black,
             textAlign = TextAlign.End
         )
@@ -445,9 +393,4 @@ private fun formatDate(dateString: String?): String {
     } catch (e: Exception) {
         "N/A"
     }
-}
-
-// Extension function to capitalize the first letter of a string
-private fun String.capitalize(): String {
-    return this.lowercase().replaceFirstChar { it.uppercase() }
 }

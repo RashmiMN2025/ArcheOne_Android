@@ -5,9 +5,11 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.net.http.SslError
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -34,8 +36,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.XOneTheme
 import org.json.JSONObject
-import android.net.http.SslError
-import android.webkit.SslErrorHandler
 
 class WebViewActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -393,7 +393,8 @@ class WebViewActivity : ComponentActivity() {
 
                                                     // Check if this is a blog or case study from arche.global and inject responsive CSS
                                                     if (url != null && url.contains("arche.global") && (url.contains("/blog/") || url.contains("/case-studies/"))) {
-                                                        view?.evaluateJavascript("""
+                                                        view?.evaluateJavascript(
+                                                            """
                                                             (function() {
                                                                 // Check if viewport meta tag already exists
                                                                 var existingViewport = document.querySelector('meta[name="viewport"]');
@@ -442,7 +443,9 @@ class WebViewActivity : ComponentActivity() {
                                                                 `;
                                                                 document.getElementsByTagName('head')[0].appendChild(style);
                                                             })();
-                                                        """, null)
+                                                        """,
+                                                            null
+                                                        )
                                                         Log.d("WebViewActivity", "Injected responsive CSS for blog/case study: $url")
                                                     }
 

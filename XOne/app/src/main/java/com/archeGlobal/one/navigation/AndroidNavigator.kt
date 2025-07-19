@@ -365,6 +365,13 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToTravelHistoryDetail() {
+        navController?.navigate("travel_history_detail") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     override fun navigateToTravelApprovals() {
         navController?.navigate("travel_approvals") {
             launchSingleTop = true
@@ -575,32 +582,32 @@ class AndroidNavigator(
             }
         }
     }
-    
+
     // Methods for services with dynamic URLs
     override fun navigateToSAPWithUrl(url: String) {
         openWebView(url, "SAP")
     }
-    
+
     override fun navigateToAmpleWithUrl(url: String) {
         openWebView(url, "Ample")
     }
-    
+
     override fun navigateToZingHRWithUrl(url: String) {
         openWebView(url, "ZingHR")
     }
-    
+
     override fun navigateToMyPayWithUrl(url: String) {
         openWebView(url, "MyPay")
     }
-    
+
     override fun navigateToMedicalWithUrl(url: String) {
         openWebView(url, "Medical")
     }
-    
+
     override fun navigateToAboutUsWithUrl(url: String) {
         openWebView(url, "About Us")
     }
-    
+
     override fun openPulseLoginWithUrl(url: String) {
         openWebView(url, "Pulse")
     }

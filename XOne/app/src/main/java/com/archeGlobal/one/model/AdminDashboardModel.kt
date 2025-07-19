@@ -39,4 +39,4 @@ fun getDefaultAdminDashboardItems(): List<AdminDashboardItem> {
             badgeCount = 0
         )
     )
-} 
+}

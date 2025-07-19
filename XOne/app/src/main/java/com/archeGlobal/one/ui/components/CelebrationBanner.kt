@@ -17,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -44,7 +43,7 @@ fun CelebrationBanner(
     modifier: Modifier = Modifier
 ) {
     val totalCelebrations = (celebrationData?.today?.size ?: 0) + (celebrationData?.tomorrow?.size ?: 0)
-    
+
     if (totalCelebrations > 0) {
         Row(
             modifier = modifier
@@ -69,9 +68,9 @@ fun CelebrationBanner(
                     modifier = Modifier.size(16.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             Text(
                 text = "Cheers to our peers' birthdays and work anniversaries—here's to celebrating your joy and achievements!",
                 fontSize = 12.sp,
@@ -82,9 +81,9 @@ fun CelebrationBanner(
                     .weight(1f)
                     .clickable { onClick() }
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             IconButton(
                 onClick = onClick,
                 modifier = Modifier.size(24.dp)
@@ -109,7 +108,7 @@ fun CelebrationDialog(
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf("Today") }
-    
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -148,7 +147,7 @@ fun CelebrationDialog(
                 ) {
                     // Empty space for balance
                     Spacer(modifier = Modifier.width(48.dp))
-                    
+
                     Text(
                         text = "Cheers For Peers!",
                         fontSize = 20.sp,
@@ -157,7 +156,7 @@ fun CelebrationDialog(
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
-                    
+
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -166,9 +165,9 @@ fun CelebrationDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Tab selector
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -179,30 +178,30 @@ fun CelebrationDialog(
                         isSelected = selectedTab == "Today",
                         onClick = { selectedTab = "Today" }
                     )
-                    
+
                     TabButton(
                         text = "Tomorrow",
                         isSelected = selectedTab == "Tomorrow",
                         onClick = { selectedTab = "Tomorrow" }
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Get items for current tab
                 val allItemsForTab = if (selectedTab == "Today") {
                     celebrationData?.today ?: emptyList()
                 } else {
                     celebrationData?.tomorrow ?: emptyList()
                 }
-                
+
                 // Content
                 LazyColumn(
                     modifier = Modifier.heightIn(max = 300.dp)
                 ) {
                     // Show only first 3 items
                     val itemsToShow = allItemsForTab.take(3)
-                    
+
                     items(itemsToShow) { item ->
                         CelebrationItem(
                             item = item,
@@ -211,9 +210,9 @@ fun CelebrationDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // View All button - only show if current tab has more than 3 items
                 if (allItemsForTab.size > 3) {
                     Row(
@@ -239,9 +238,9 @@ fun CelebrationDialog(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Page indicator
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -256,9 +255,9 @@ fun CelebrationDialog(
                                 shape = CircleShape
                             )
                     )
-                    
+
                     Spacer(modifier = Modifier.width(8.dp))
-                    
+
                     // Tomorrow indicator
                     Box(
                         modifier = Modifier
@@ -338,7 +337,7 @@ fun CelebrationItem(
                                     .fillMaxSize()
                                     .padding(8.dp)
                             )
-                            
+
                             // Load actual profile image on top
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
@@ -361,9 +360,9 @@ fun CelebrationItem(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Column {
                     Text(
                         text = item.employeeName,
@@ -371,7 +370,7 @@ fun CelebrationItem(
                         fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
-                    
+
                     Text(
                         text = item.celebrationType,
                         fontSize = 12.sp,
@@ -379,7 +378,7 @@ fun CelebrationItem(
                     )
                 }
             }
-            
+
             // Wishes button
             Button(
                 onClick = onWishesClick,
@@ -409,4 +408,4 @@ fun CelebrationBannerPreview() {
             onClick = {}
         )
     }
-} 
+}

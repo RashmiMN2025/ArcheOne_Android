@@ -13,13 +13,13 @@ import kotlinx.coroutines.withContext
  * Helper class for making encrypted API calls
  */
 class EncryptedAPIHelper(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "EncryptedAPIHelper"
     }
-    
+
     private val encryptedAPIService = EncryptedAPIService.getInstance(context)
-    
+
     /**
      * Make an encrypted API call with callback
      */
@@ -40,24 +40,24 @@ class EncryptedAPIHelper(private val context: Context) {
                     responseClass = responseClass,
                     withAuthHeader = withAuthHeader
                 )
-                
+
                 withContext(Dispatchers.Main) {
                     callback(response, null)
                 }
             } catch (e: APIError) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Encrypted API call failed: ${e.errorMessage}", e)
-                    
+
                     // Handle token expiration automatically
                     if (e is APIError.Unauthorized) {
                         handleTokenExpiration(context)
                     }
-                    
+
                     // Handle app update required (403 Forbidden)
                     if (e is APIError.Forbidden) {
                         handleAppUpdateRequired(context)
                     }
-                    
+
                     callback(null, e)
                 }
             } catch (e: Exception) {
@@ -68,7 +68,7 @@ class EncryptedAPIHelper(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Make a regular (non-encrypted) API call with callback
      */
@@ -89,24 +89,24 @@ class EncryptedAPIHelper(private val context: Context) {
                     responseClass = responseClass,
                     withAuthHeader = withAuthHeader
                 )
-                
+
                 withContext(Dispatchers.Main) {
                     callback(response, null)
                 }
             } catch (e: APIError) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Regular API call failed: ${e.errorMessage}", e)
-                    
+
                     // Handle token expiration automatically
                     if (e is APIError.Unauthorized) {
                         handleTokenExpiration(context)
                     }
-                    
+
                     // Handle app update required (403 Forbidden)
                     if (e is APIError.Forbidden) {
                         handleAppUpdateRequired(context)
                     }
-                    
+
                     callback(null, e)
                 }
             } catch (e: Exception) {
@@ -117,7 +117,7 @@ class EncryptedAPIHelper(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * Suspend version of encrypted API call
      */
@@ -136,7 +136,7 @@ class EncryptedAPIHelper(private val context: Context) {
             withAuthHeader = withAuthHeader
         )
     }
-    
+
     /**
      * Suspend version of regular API call
      */
@@ -197,13 +197,13 @@ fun APIError.handleErrorWithContext(context: Context, callback: (String, Boolean
  */
 internal fun handleTokenExpiration(context: Context) {
     android.util.Log.w("APIError", "Token expired - redirecting to login")
-    
+
     // Clear session data but preserve MPIN and biometric data for re-authentication
     val preferencesManager = PreferencesManager(context)
     preferencesManager.clearSessionData()
     val userDataManager = UserDataManager.getInstance(context)
     userDataManager.clearSessionData()
-    
+
     // Navigate to login screen
     val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {
         flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -217,11 +217,11 @@ internal fun handleTokenExpiration(context: Context) {
  */
 internal fun handleAppUpdateRequired(context: Context) {
     android.util.Log.w("APIError", "App update required - showing update dialog")
-    
+
     // Navigate to login screen with update dialog flag
     val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {
         flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
         putExtra("showUpdateDialog", true)
     }
     context.startActivity(intent)
-} 
+}

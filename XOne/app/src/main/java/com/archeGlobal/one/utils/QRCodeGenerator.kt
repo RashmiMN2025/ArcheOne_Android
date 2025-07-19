@@ -69,9 +69,9 @@ object QRCodeGenerator {
         layoutType: QRLayoutType
     ): String {
         val baseUrl = if (layoutType == QRLayoutType.VERTICAL) {
-                            "https://dev.arche.global:7000/bcard/vertical"
-            } else {
-                "https://dev.arche.global:7000/bcard/horizontal"
+            "https://dev.arche.global:7000/bcard/vertical"
+        } else {
+            "https://dev.arche.global:7000/bcard/horizontal"
         }
 
         val queryParams = mapOf(

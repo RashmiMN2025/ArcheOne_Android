@@ -957,6 +957,36 @@ class HomeActivity : AppCompatActivity() {
                         }
                     }
 
+                    // Add the travel_history_detail route
+                    composable(
+                        route = "travel_history_detail",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        // Only show the detail screen if a travel request is selected
+                        travelController.selectedTravelRequest?.let { travelRequest ->
+                            TravelHistoryDetailScreen(
+                                controller = travelController,
+                                travelRequest = travelRequest
+                            )
+                        } ?: run {
+                            // If no travel request is selected, go back to travel history
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+
                     // Add the travel_approvals route
                     composable(
                         route = "travel_approvals",

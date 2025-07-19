@@ -104,7 +104,6 @@ data class TravelRequestResponse(
     val orderHistory: List<TravelHistoryItem>? = null
 )
 
-
 /**
  * Helper function to create single destination travel request
  */
@@ -136,7 +135,7 @@ fun createSingleDestinationRequest(
         arrivalDate = arrivalDate,
         flightTimePreference = flightTime
     )
-    
+
     return TravelRequestSubmission(
         employeeId = employeeId,
         employeeName = employeeName,

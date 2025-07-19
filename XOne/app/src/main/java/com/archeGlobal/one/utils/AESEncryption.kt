@@ -7,14 +7,14 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
-    
+
     companion object {
         private const val TAG = "AESEncryption"
         private const val AES_ALGORITHM = "AES"
         private const val TRANSFORMATION = "AES/CBC/PKCS5Padding" // Android uses PKCS5 which is equivalent to PKCS7 for AES
         private const val AES_KEY_SIZE = 32 // 256 bits
         private const val AES_IV_SIZE = 16 // 128 bits
-        
+
         /**
          * Generate a random AES key
          */
@@ -23,7 +23,7 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             SecureRandom().nextBytes(keyBytes)
             return keyBytes
         }
-        
+
         /**
          * Generate a random initialization vector
          */
@@ -33,7 +33,7 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             return ivBytes
         }
     }
-    
+
     /**
      * Encrypt data using AES-256-CBC with PKCS5 padding
      */
@@ -42,10 +42,10 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             val keySpec = SecretKeySpec(key, AES_ALGORITHM)
             val ivSpec = IvParameterSpec(iv)
-            
+
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec)
             val encryptedData = cipher.doFinal(data)
-            
+
             Log.d(TAG, "Successfully encrypted data, size: ${encryptedData.size} bytes")
             encryptedData
         } catch (e: Exception) {
@@ -53,7 +53,7 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             null
         }
     }
-    
+
     /**
      * Decrypt data using AES-256-CBC with PKCS5 padding
      */
@@ -62,10 +62,10 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             val keySpec = SecretKeySpec(key, AES_ALGORITHM)
             val ivSpec = IvParameterSpec(iv)
-            
+
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
             val decryptedData = cipher.doFinal(encryptedData)
-            
+
             Log.d(TAG, "Successfully decrypted data, size: ${decryptedData.size} bytes")
             decryptedData
         } catch (e: Exception) {
@@ -73,14 +73,14 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             null
         }
     }
-    
+
     /**
      * Encrypt string data
      */
     fun encrypt(data: String): ByteArray? {
         return encrypt(data.toByteArray(Charsets.UTF_8))
     }
-    
+
     /**
      * Decrypt to string
      */
@@ -92,4 +92,4 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             null
         }
     }
-} 
+}

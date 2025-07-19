@@ -45,7 +45,7 @@ class AdminDashboardController(
 
     fun onDashboardItemClick(item: AdminDashboardItem) {
         Log.d("AdminDashboardController", "Dashboard item clicked: ${item.title}")
-        
+
         when (item.id) {
             "inventory" -> {
                 handleInventoryClick()
@@ -71,9 +71,9 @@ class AdminDashboardController(
         Log.d("AdminDashboardController", "Order Received clicked")
         Toast.makeText(context, "Order processing feature coming soon", Toast.LENGTH_SHORT).show()
         // TODO: Navigate to order processing screen
-        
+
         // Clear the badge count when clicked
-        val updatedItems = model.dashboardItems.map { 
+        val updatedItems = model.dashboardItems.map {
             if (it.id == "order_received") {
                 it.copy(badgeCount = 0)
             } else {
@@ -90,7 +90,7 @@ class AdminDashboardController(
     }
 
     fun updateBadgeCount(itemId: String, count: Int) {
-        val updatedItems = model.dashboardItems.map { 
+        val updatedItems = model.dashboardItems.map {
             if (it.id == itemId) {
                 it.copy(badgeCount = count)
             } else {
@@ -103,4 +103,4 @@ class AdminDashboardController(
     fun clearError() {
         model = model.copy(error = null)
     }
-} 
+}

@@ -104,9 +104,13 @@ fun OnboardingScreen(
                 ) {
                     repeat(pages.size) { iteration ->
                         val color =
-                            if (pagerState.currentPage == iteration) Color.White else Color.Gray.copy(
-                                alpha = 0.5f
-                            )
+                            if (pagerState.currentPage == iteration) {
+                                Color.White
+                            } else {
+                                Color.Gray.copy(
+                                    alpha = 0.5f
+                                )
+                            }
                         Box(
                             modifier = Modifier
                                 .padding(horizontal = 4.dp)
@@ -164,98 +168,98 @@ fun OnboardingPage(
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Background image
-        Image(
-            painter = painterResource(id = page.image),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
+        Box(
             modifier = Modifier.fillMaxSize()
-        )
-
-        // Content overlay
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
         ) {
-            // Add appropriate spacing at the top based on whether it's the logo page
-            Spacer(modifier = Modifier.height(if (page.showLogo) 70.dp else 0.dp))
-
-            // For non-logo pages, we need to center the content but position slightly higher
-            if (!page.showLogo) {
-                Spacer(modifier = Modifier.weight(0.2f)) // Further reduced to move content even higher
-            }
-
-            // Arche Logo (if showLogo is true)
-            if (page.showLogo) {
-                Image(
-                    painter = painterResource(id = R.drawable.arche2),
-                    contentDescription = "Arche Logo",
-                    modifier = Modifier
-                        .size(90.dp)
-                        .padding(bottom = 12.dp)
-                )
-            }
-
-            // Title with custom formatting based on page
-            Text(
-                text = page.title,
-                color = if (page.useBlackText) Color.Black else Color.White,
-                fontSize = if (page.showLogo) 18.sp else if (page.useBlackText) 24.sp else 28.sp, // Smaller for third page
-                fontFamily = GraphikFontFamily,
-                fontWeight = if (page.showLogo) FontWeight.Normal else FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                lineHeight = if (page.title.contains("All-in-One")) 36.sp else 32.sp, // Increased line height for second page
-                modifier = Modifier.padding(horizontal = 16.dp)
+            // Background image
+            Image(
+                painter = painterResource(id = page.image),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
             )
 
-            // Description (if not empty)
-            if (page.description.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = page.description,
-                    color = if (page.useBlackText) Color.Black else Color.White,
-                    fontSize = if (page.title.contains("All-in-One")) 16.sp else if (page.useBlackText) 14.sp else 18.sp, // Smaller text for third page
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp)
-                )
-            }
+            // Content overlay
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                // Add appropriate spacing at the top based on whether it's the logo page
+                Spacer(modifier = Modifier.height(if (page.showLogo) 70.dp else 0.dp))
 
-            Spacer(modifier = Modifier.weight(1f))
+                // For non-logo pages, we need to center the content but position slightly higher
+                if (!page.showLogo) {
+                    Spacer(modifier = Modifier.weight(0.2f)) // Further reduced to move content even higher
+                }
 
-            // Get Started button (only on last page)
-            if (isLastPage) {
-                Button(
-                    onClick = onGetStartedClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp, vertical = 16.dp)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                ) {
-                    Text(
-                        text = "Get Started",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
+                // Arche Logo (if showLogo is true)
+                if (page.showLogo) {
+                    Image(
+                        painter = painterResource(id = R.drawable.arche2),
+                        contentDescription = "Arche Logo",
+                        modifier = Modifier
+                            .size(90.dp)
+                            .padding(bottom = 12.dp)
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(64.dp))
+                // Title with custom formatting based on page
+                Text(
+                    text = page.title,
+                    color = if (page.useBlackText) Color.Black else Color.White,
+                    fontSize = if (page.showLogo) 18.sp else if (page.useBlackText) 24.sp else 28.sp, // Smaller for third page
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = if (page.showLogo) FontWeight.Normal else FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    lineHeight = if (page.title.contains("All-in-One")) 36.sp else 32.sp, // Increased line height for second page
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                // Description (if not empty)
+                if (page.description.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = page.description,
+                        color = if (page.useBlackText) Color.Black else Color.White,
+                        fontSize = if (page.title.contains("All-in-One")) 16.sp else if (page.useBlackText) 14.sp else 18.sp, // Smaller text for third page
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 32.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Get Started button (only on last page)
+                if (isLastPage) {
+                    Button(
+                        onClick = onGetStartedClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp, vertical = 16.dp)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    ) {
+                        Text(
+                            text = "Get Started",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(64.dp))
+            }
         }
     }
 }
-    }
 
 data class OnboardingPage(
     val image: Int,

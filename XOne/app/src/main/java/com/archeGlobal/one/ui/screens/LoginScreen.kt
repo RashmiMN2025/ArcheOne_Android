@@ -6,6 +6,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,7 +30,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -59,9 +62,6 @@ import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.gestures.detectTapGestures
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -105,7 +105,7 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
     var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
-    
+
     // Update firstTimeLogin when the screen is recreated after logout
     LaunchedEffect(Unit) {
         firstTimeLogin = forceOriginalLogin || isFirstTimeLogin(context)
@@ -120,11 +120,11 @@ fun LoginScreen(
     val hasLoggedIn = UserDataManager.getInstance(context).hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
     var isDifferentUserMode by remember { mutableStateOf(forceDifferentUserMode) }
-    
+
     // Make biometric button state reactive - don't use remember so it re-evaluates
     val showBiometricButton = biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()
     var showFingerprint by remember { mutableStateOf(false) }
-    
+
     // Update showFingerprint when relevant conditions change
     LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode) {
         showFingerprint = showBiometricButton && !firstTimeLogin
@@ -132,7 +132,7 @@ fun LoginScreen(
         if (!forceDifferentUserMode && !firstTimeLogin) {
             isDifferentUserMode = false
         }
-        
+
         // Debug logging
         android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode")
         android.util.Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
@@ -363,7 +363,7 @@ fun LoginScreen(
 
                     // Debug logging for fingerprint button condition
                     android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode")
-                    
+
                     if (showBiometricButton && !firstTimeLogin && !isDifferentUserMode) {
                         Button(
                             onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
@@ -982,7 +982,7 @@ fun LoginScreen(
                                             UserDataManager.getInstance(context).setHasLoggedIn(true)
                                             setFirstTimeLogin(context, false)
                                             firstTimeLogin = false
-                                            
+
                                             // Handle MPIN setup navigation like OTP flow
                                             val mpinController = com.archeGlobal.one.controller.MpinController(context)
                                             if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {

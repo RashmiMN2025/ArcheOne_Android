@@ -13,8 +13,6 @@ import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
-import com.archeGlobal.one.model.TravelApprovalRequest
-import com.archeGlobal.one.model.TravelApprovalResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
 import com.archeGlobal.one.model.TravelHistoryRequest
 import com.archeGlobal.one.model.TravelHistoryResponse
@@ -27,7 +25,6 @@ import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.Header

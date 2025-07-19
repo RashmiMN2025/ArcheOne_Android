@@ -30,12 +30,12 @@ class SOSController(application: Application) : AndroidViewModel(application) {
         val context = getApplication<Application>().applicationContext
         val userData = OtpVerificationController.getUserData()
         val sosNumber = userData?.sosContact
-        
+
         if (sosNumber.isNullOrEmpty()) {
             Toast.makeText(context, "SOS contact number not available", Toast.LENGTH_SHORT).show()
             return
         }
-        
+
         val callIntent = Intent(Intent.ACTION_DIAL).apply {
             data = Uri.parse("tel:$sosNumber")
         }

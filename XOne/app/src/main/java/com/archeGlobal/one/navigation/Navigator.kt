@@ -44,6 +44,7 @@ interface Navigator {
     fun navigateToTravel()
     fun navigateToTravelExpenses()
     fun navigateToTravelRequestDetail()
+    fun navigateToTravelHistoryDetail()
     fun navigateToTravelApprovals()
     fun navigateToTravelApprovalDetail()
     fun navigateToTravelApprovalDetails()
@@ -85,7 +86,7 @@ interface Navigator {
     fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory)
     fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String)
     fun showUpdateDialog()
-    
+
     // Methods for services with dynamic URLs
     fun navigateToSAPWithUrl(url: String)
     fun navigateToAmpleWithUrl(url: String)

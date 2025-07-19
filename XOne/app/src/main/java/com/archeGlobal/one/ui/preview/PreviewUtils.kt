@@ -50,6 +50,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToTravel() {}
     override fun navigateToTravelExpenses() {}
     override fun navigateToTravelRequestDetail() {}
+    override fun navigateToTravelHistoryDetail() {}
     override fun navigateToTravelApprovals() {}
     override fun navigateToTravelApprovalDetail() {}
     override fun navigateToTravelApprovalConfirm() {}
@@ -109,7 +110,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToMpinSetup(email: String, mobile: String, employeeId: String, token: String) {}
     override fun navigateToTravelApprovalDetails() {}
     override fun showUpdateDialog() {}
-    
+
     // Methods for services with dynamic URLs
     override fun navigateToSAPWithUrl(url: String) {}
     override fun navigateToAmpleWithUrl(url: String) {}

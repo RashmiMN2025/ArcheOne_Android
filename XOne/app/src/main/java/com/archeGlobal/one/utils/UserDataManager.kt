@@ -253,7 +253,7 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.setString("lastUsername", "")
         preferencesManager.clearBiometricCredentials()
     }
-    
+
     // Clear only session data but preserve MPIN and biometric data for re-authentication
     fun clearSessionData() {
         // Clear in-memory cache
@@ -265,7 +265,7 @@ class UserDataManager private constructor(context: Context) {
         communiqueData = null
         greetingsData = null
         greetingCategoriesData = null
-        
+
         // Clear session data but preserve MPIN and biometric data
         preferencesManager.clearSessionData()
         // Set logged in state to false but preserve hasLoggedIn to true
@@ -310,9 +310,7 @@ class UserDataManager private constructor(context: Context) {
      * Get service URL by service name
      */
     fun getServiceUrl(serviceName: String): String? {
-        return userData?.services?.find { 
-            it.service.equals(serviceName, ignoreCase = true) 
-        }?.url
+        return userData?.services?.find { it.service.equals(serviceName, ignoreCase = true) }?.url
     }
 
     fun getEventData(): EventResponse? {

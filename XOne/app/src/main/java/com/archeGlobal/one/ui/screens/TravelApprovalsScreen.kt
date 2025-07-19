@@ -29,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.ui.activities.TravelApproveActivity
@@ -39,9 +38,9 @@ import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.google.gson.Gson
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
+import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -312,8 +311,8 @@ fun ApprovalRequestCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        elevation = 1.dp,
+        shape = RoundedCornerShape(12.dp),
+        elevation = 4.dp,
         backgroundColor = Color.White
     ) {
         Column(
@@ -325,49 +324,124 @@ fun ApprovalRequestCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Text(
                     text = "ID: ${request.id}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = GraphikFontFamily
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
                 )
 
-                val statusColor = when (request.status) {
-                    com.archeGlobal.one.model.TravelStatus.APPROVED -> Color(0xFF4CAF50) // Green
-                    com.archeGlobal.one.model.TravelStatus.REJECTED -> PrimaryRed
-                    else -> Color(0xFFFFC107) // Amber/Yellow for pending
-                }
-
-                Box(
-                    modifier = Modifier
-                        .background(
-                            color = statusColor.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = request.status.name.lowercase().capitalize(),
-                        color = statusColor,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily
-                    )
-                }
+                // Status Badge matching the image design
+                TravelStatusBadgeComponent(status = request.status)
             }
 
-            Divider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = Color.LightGray.copy(alpha = 0.5f)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Request details - only show the 4 required items
-            DetailItem(iconRes = Icons.Default.Person, label = "Employee", value = request.approver)
-            DetailItem(iconRes = Icons.Default.LocationOn, label = "Destination", value = request.destination)
-            DetailItem(iconRes = Icons.Default.Info, label = "Project", value = request.project)
-            DetailItem(iconRes = Icons.Default.DateRange, label = "Created", value = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault()).format(request.createdDate))
+            // Employee and Project Info
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Employee",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Employee",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = request.approver,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Project",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Project",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = request.project,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Trip details based on single or multi destination
+            if (request.isMultiDestination()) {
+                MultiDestinationTripDetails(
+                    travelRequest = request
+                )
+            } else {
+                SingleDestinationTripDetails(
+                    travelRequest = request
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Created date
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Created",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Created",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(request.createdDate),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
+                )
+            }
 
             // Show action buttons only for pending requests
             if (request.status == com.archeGlobal.one.model.TravelStatus.PENDING) {
@@ -417,6 +491,194 @@ fun ApprovalRequestCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SingleDestinationTripDetails(
+    travelRequest: TravelRequest
+) {
+    Column {
+        Text(
+            text = "Trip 1",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = GraphikFontFamily,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+
+        // Destination
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = "Destination",
+                tint = Color.Gray,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = "Destination",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = travelRequest.destination,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Travel Dates
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.DateRange,
+                contentDescription = "Travel Dates",
+                tint = Color.Gray,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = "Travel Dates",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "${travelRequest.departureDate ?: "N/A"} - ${travelRequest.arrivalDate ?: "N/A"}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+fun MultiDestinationTripDetails(
+    travelRequest: TravelRequest
+) {
+    val destinations = travelRequest.getAllDestinations()
+
+    destinations.forEachIndexed { index, destination ->
+        Column(
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) {
+            Text(
+                text = "Trip ${index + 1}",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+
+            // Destination
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Destination",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Destination",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = destination.travelDestination,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Travel Dates
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Travel Dates",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Travel Dates",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "${destination.departureDate} - ${destination.arrivalDate}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
+                )
+            }
+
+            if (index < destinations.size - 1) {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
+    val (backgroundColor, textColor, text) = when (status) {
+        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFF4CAF50), Color.White, "Approved")
+        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF44336), Color.White, "Rejected")
+        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFC107), Color.Black, "Pending")
+    }
+
+    Box(
+        modifier = Modifier
+            .background(
+                color = backgroundColor,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = GraphikFontFamily,
+            color = textColor
+        )
     }
 }
 

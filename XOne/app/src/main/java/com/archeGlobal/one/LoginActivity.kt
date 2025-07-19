@@ -7,7 +7,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -25,8 +24,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ResponsiveLoginScreen
-import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.PreferencesManager
 
 class LoginActivity : AppCompatActivity() {
@@ -73,7 +72,7 @@ class LoginActivity : AppCompatActivity() {
         if (shouldShowUpdateDialog) {
             showUpdateDialog = true
         }
-        
+
         // Show session expired message if needed
         if (sessionExpired) {
             android.widget.Toast.makeText(this, "Session expired. Please log in again.", android.widget.Toast.LENGTH_LONG).show()
@@ -87,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
                     forceOriginalLogin = forceOriginalLoginFinal,
                     forceDifferentUserMode = forceDifferentUserMode
                 )
-                
+
                 // Update Required Dialog
                 if (showUpdateDialog) {
                     UpdateRequiredDialog(
@@ -102,7 +101,7 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     fun showUpdateDialog() {
         showUpdateDialog = true
     }
@@ -138,9 +137,9 @@ fun UpdateRequiredDialog(
                     tint = Color(0xFFDD3825),
                     modifier = Modifier.size(48.dp)
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Title
                 Text(
                     text = "Update Required",
@@ -150,9 +149,9 @@ fun UpdateRequiredDialog(
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 // Description
                 Text(
                     text = "A new version of ArcheOne is available. You must update to continue using the app.",
@@ -162,9 +161,9 @@ fun UpdateRequiredDialog(
                     textAlign = TextAlign.Center,
                     lineHeight = 22.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 // Update button
                 Button(
                     onClick = onUpdateClick,
