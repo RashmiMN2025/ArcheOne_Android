@@ -46,23 +46,25 @@ class OtpVerificationController(
                 Log.d("OtpVerification", "Token received: $token")
 
                 if (token.isNotEmpty()) {
-                    // Save the token for future use
-                    loginWithToken(token, email, mobile, employeeId, false, true, false) { msg, isError ->
+                    // Save the token for future use and handle navigation properly
+                    loginWithToken(token, email, mobile, employeeId, false, true, true) { msg, isError ->
                         if (!isError) {
-                            // Instead of navigating to Home, go to MPIN setup
+                            // Login successful - for session-expired users or biometric/MPIN login, navigate directly to home
+                            Log.d("OtpVerification", "OTP verification and login successful for user: $email")
+                            
                             if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
                                 val mpinController = com.archeGlobal.one.controller.MpinController(context)
                                 if (mpinController.isMpinSet()) {
-                                    // MPIN already set, go directly to Home and set fromLogin=true
+                                    // MPIN already set, go directly to Home 
                                     navigator.navigateToHome(
                                         true, // fromOtp (set to true to indicate login just happened)
-                                        true, // <-- this extra is important for fingerprint prompt
+                                        true, // showBiometricPrompt for existing users
                                         email = email,
                                         mobile = mobile,
                                         employeeId = employeeId
                                     )
                                 } else {
-                                    // MPIN not set, go to MPIN setup
+                                    // MPIN not set, go to MPIN setup (for first-time users)
                                     navigator.navigateToMpinSetup(email, mobile, employeeId, token)
                                 }
                             }
@@ -127,14 +129,12 @@ class OtpVerificationController(
                 userDataManager.setIsLoggedIn(true)
                 userDataManager.setHasLoggedIn(true)
 
-                // Navigate if needed
-                if (!fromHome && shouldNavigateToHome) {
-                    if (fromOtp) {
-                        navigator.navigateToHome(fromOtp, true, email, mobile, employeeId)
-                    } else {
-                        navigator.navigateToHome(fromOtp)
-                    }
+                // Navigate if needed - but only for non-explicit navigation cases
+                if (!fromHome && shouldNavigateToHome && !fromOtp) {
+                    // For non-OTP cases, navigate to home
+                    navigator.navigateToHome(false)
                 }
+                // For OTP cases, navigation is handled explicitly in verifyOtp method
                 callback("Login successful", false)
             } else {
                 Log.e("LoginProcess", "Login failed: Invalid response")

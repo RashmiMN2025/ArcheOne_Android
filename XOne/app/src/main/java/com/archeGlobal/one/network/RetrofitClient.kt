@@ -59,11 +59,11 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         val intent = Intent(context, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("session_expired", true)
-            putExtra("session_expired", true)
+            // Remove duplicate extra
         }
         context.startActivity(intent)
 
-        Log.i("AuthInterceptor", "Redirected to login due to token expiration")
+        Log.i("AuthInterceptor", "Redirected to login due to token expiration, preserving MPIN and biometric credentials")
     }
 }
 

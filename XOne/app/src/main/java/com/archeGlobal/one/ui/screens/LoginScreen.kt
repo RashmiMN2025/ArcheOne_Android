@@ -710,28 +710,16 @@ fun LoginScreen(
                                 biometricHelper.showBiometricPrompt(
                                     activity = activity,
                                     onSuccess = {
-                                        // Get credentials - for session expired users, prefer stored user data
-                                        val prefs = com.archeGlobal.one.utils.PreferencesManager(context)
-                                        val bioEmail = if (sessionExpired && userData != null) {
-                                            userData.email ?: prefs.getString("biometric_email", "") ?: ""
-                                        } else {
-                                            prefs.getString("biometric_email", "") ?: ""
-                                        }
-                                        val bioMobile = if (sessionExpired && userData != null) {
-                                            userData.mobile ?: prefs.getString("biometric_mobile", "") ?: ""
-                                        } else {
-                                            prefs.getString("biometric_mobile", "") ?: ""
-                                        }
-                                        val bioEmployeeId = if (sessionExpired && userData != null) {
-                                            userData.employeeId ?: prefs.getString("biometric_employee_id", "") ?: ""
-                                        } else {
-                                            prefs.getString("biometric_employee_id", "") ?: ""
-                                        }
-
-                                        if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
+                                        // Get stored biometric credentials
+                                        val credentials = biometricHelper.getStoredCredentialsWithToken()
+                                        if (credentials == null) {
                                             Toast.makeText(context, "Biometric credentials not found. Please login with MPIN or OTP.", Toast.LENGTH_SHORT).show()
                                             return@showBiometricPrompt
                                         }
+                                        
+                                        val bioEmail = credentials.first
+                                        val bioMobile = credentials.second  
+                                        val bioEmployeeId = credentials.third
 
                                         // Call OTP verify with isBiometric = true and empty OTP
                                         val otpController = com.archeGlobal.one.controller.OtpVerificationController(
@@ -903,23 +891,8 @@ fun LoginScreen(
                                 if (isError) {
                                     mpinError = message
                                 } else {
-                                    // On success, get the new token and call loginWithToken
-                                    val token = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getAuthToken() ?: ""
-                                    otpController.loginWithToken(
-                                        token = token,
-                                        email = useEmail,
-                                        mobile = useMobile,
-                                        employeeId = useEmployeeId,
-                                        fromHome = false,
-                                        fromOtp = false,
-                                        shouldNavigateToHome = true
-                                    ) { loginMsg, loginError ->
-                                        if (loginError) {
-                                            mpinError = loginMsg
-                                        } else {
-                                            // Success: Home navigation handled in controller
-                                        }
-                                    }
+                                    // Success: Navigation handled in verifyOtp, no need to call loginWithToken again
+                                    android.util.Log.d("LoginScreen", "MPIN authentication successful for session expired user")
                                 }
                             }
                         },
