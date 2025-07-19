@@ -6,7 +6,8 @@
       "Bash(.gradlew tasks)",
       "Bash(rm:*)",
       "Bash(mv:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(file:*)"
     ],
     "deny": []
   }
