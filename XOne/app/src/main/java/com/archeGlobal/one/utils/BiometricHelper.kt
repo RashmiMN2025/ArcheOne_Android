@@ -70,6 +70,15 @@ class BiometricHelper(private val context: Context) {
         return preferencesManager.getBiometricCredentialsWithToken()
     }
 
+    fun getStoredCredentials(): Triple<String, String, String>? {
+        val credentials = preferencesManager.getBiometricCredentialsWithToken()
+        return if (credentials != null) {
+            Triple(credentials.first, credentials.second, credentials.third)
+        } else {
+            null
+        }
+    }
+
     fun isBiometricEnabled(): Boolean {
         return preferencesManager.isBiometricEnabled()
     }

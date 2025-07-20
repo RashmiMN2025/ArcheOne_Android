@@ -201,7 +201,7 @@ internal fun handleTokenExpiration(context: Context) {
     // Get managers
     val preferencesManager = PreferencesManager(context)
     val userDataManager = UserDataManager.getInstance(context)
-    
+
     // Store current user data temporarily for re-authentication
     val lastUserData = userDataManager.getUserData()
     if (lastUserData != null) {
@@ -211,7 +211,7 @@ internal fun handleTokenExpiration(context: Context) {
             setString("lastEmployeeId", lastUserData.employeeId ?: "")
         }
     }
-    
+
     // Clear session data but keep MPIN/biometric
     preferencesManager.clearSessionData()
     userDataManager.clearSessionData()

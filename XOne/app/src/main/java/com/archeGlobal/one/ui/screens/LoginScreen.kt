@@ -115,19 +115,31 @@ fun LoginScreen(
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
     var showMfaTermsDialog by remember { mutableStateOf(false) }
 
-    val lastEmployeeName = UserDataManager.getInstance(context).getLastUsername()
-    val isLoggedIn = UserDataManager.getInstance(context).isLoggedIn()
-    val hasLoggedIn = UserDataManager.getInstance(context).hasUserLoggedIn()
+    val userDataManager = UserDataManager.getInstance(context)
+    val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
+    
+    // Get session expired status from intent
+    val activity = context as? android.app.Activity
+    val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
+    
+    // Get last user name from preserved data (works for both logout and session expiry)
+    val lastEmployeeName = preferencesManager.getString("last_user_name", "") 
+        ?: userDataManager.getLastUsername()
+    val isLoggedIn = userDataManager.isLoggedIn()
+    val hasLoggedIn = userDataManager.hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
     var isDifferentUserMode by remember { mutableStateOf(forceDifferentUserMode) }
 
     // Make biometric button state reactive - don't use remember so it re-evaluates
-    val showBiometricButton = biometricHelper.canUseBiometric() && biometricHelper.isBiometricEnabled()
-    var showFingerprint by remember { mutableStateOf(false) }
+    val canUseBiometric = biometricHelper.canUseBiometric()
+    val isBiometricEnabled = biometricHelper.isBiometricEnabled()
+    val showBiometricButton = canUseBiometric && isBiometricEnabled
 
-    // Get session expired status from intent
-    val activity = context as? android.app.Activity
-    val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
+    // Debug biometric state
+    LaunchedEffect(Unit) {
+        android.util.Log.d("LoginScreen", "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton")
+    }
+    var showFingerprint by remember { mutableStateOf(false) }
 
     // Update showFingerprint when relevant conditions change
     LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired) {
@@ -168,22 +180,96 @@ fun LoginScreen(
 
     var enteredMpinDigits by remember { mutableStateOf(List(4) { "" }) }
 
-    val userData = UserDataManager.getInstance(context).getUserData()
+    val userData = userDataManager.getUserData()
+    
+    // Always try to get preserved user data (works for both logout and session expiry)
+    val lastUserEmail = preferencesManager.getString("last_user_email", "")
+    val lastUserMobile = preferencesManager.getString("last_user_mobile", "")
+    val lastUserEmployeeId = preferencesManager.getString("last_user_employee_id", "")
+    
+    val preservedUserData = if (!lastUserEmail.isNullOrBlank() && 
+                                !lastUserMobile.isNullOrBlank() && 
+                                !lastUserEmployeeId.isNullOrBlank()) {
+        com.archeGlobal.one.model.UserData(
+            name = lastEmployeeName ?: "",
+            email = lastUserEmail,
+            mobile = lastUserMobile,
+            employeeId = lastUserEmployeeId,
+            designation = "",
+            department = "",
+            location = "",
+            services = emptyList(),
+            profilePic = null,
+            sosContact = null,
+            userDetails = null,
+            greetings = emptyMap()
+        )
+    } else null
+    
+    val effectiveUserData = userData ?: preservedUserData
+    
     LaunchedEffect(Unit) {
-        if (userData != null) {
-            if (email.isEmpty()) email = userData.email ?: ""
-            if (mobile.isEmpty()) mobile = userData.mobile ?: ""
-            if (employeeId.isEmpty()) employeeId = userData.employeeId ?: ""
+        if (effectiveUserData != null) {
+            if (email.isEmpty()) email = effectiveUserData.email ?: ""
+            if (mobile.isEmpty()) mobile = effectiveUserData.mobile ?: ""
+            if (employeeId.isEmpty()) employeeId = effectiveUserData.employeeId ?: ""
+        }
+    }
+
+    // Auto-refresh token using stored credentials for better data freshness
+    var autoRefreshAttempted by remember { mutableStateOf(false) }
+    var isAutoRefreshing by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(effectiveUserData, isLoggedIn, autoRefreshAttempted) {
+        // If we have preserved user data, user is not logged in, and haven't attempted auto-refresh yet
+        if (effectiveUserData != null && !isLoggedIn && !autoRefreshAttempted && 
+            !forceOriginalLogin && !forceDifferentUserMode) {
+            
+            autoRefreshAttempted = true
+            isAutoRefreshing = true
+            android.util.Log.d("LoginScreen", "Attempting auto token refresh with preserved credentials")
+            
+            // Try to auto-refresh token using preserved credentials
+            val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+                navigator = navigator,
+                context = context
+            )
+            
+            // Create a special controller that doesn't auto-navigate
+            val backgroundOtpController = com.archeGlobal.one.controller.OtpVerificationController(
+                navigator = navigator,
+                context = context
+            )
+            
+            // Use backgroundRefresh flag to avoid auto-navigation
+            backgroundOtpController.verifyOtp(
+                email = effectiveUserData.email ?: "",
+                mobile = effectiveUserData.mobile ?: "",
+                employeeId = effectiveUserData.employeeId ?: "",
+                otpFromUser = "", // Empty OTP
+                isBiometric = true, // Skip OTP validation
+                backgroundRefresh = true // Don't navigate to home
+            ) { message, isError ->
+                isAutoRefreshing = false
+                android.util.Log.d("LoginScreen", "Background token refresh result: isError=$isError, message=$message")
+                if (!isError) {
+                    // Success: Fresh data loaded, but stay on login screen
+                    android.util.Log.d("LoginScreen", "Background token refresh successful - fresh data loaded, staying on login screen")
+                } else {
+                    // Failed: Continue with manual login methods
+                    android.util.Log.d("LoginScreen", "Background token refresh failed: $message")
+                }
+            }
         }
     }
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, sessionExpired) {
-        android.util.Log.d("LoginScreen", "Reevaluating login method: sessionExpired=$sessionExpired, hasMpin=$hasMpin")
-        
-        // If session expired, prioritize quick auth methods
-        if (sessionExpired) {
-            // For session expired, prefer MPIN or biometric if available
+    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData) {
+        android.util.Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn")
+
+        // If we have preserved user data and user is not logged in (token expired/logout), prioritize quick auth methods
+        if (effectiveUserData != null && !isLoggedIn) {
+            // For returning users with preserved data, prefer MPIN or biometric if available
             when {
                 hasMpin -> {
                     selectedLoginMethod = "MPIN"
@@ -194,8 +280,8 @@ fun LoginScreen(
                     showOtpFields = false
                 }
                 else -> {
-                    selectedLoginMethod = "OTP"
-                    showOtpFields = true
+                    selectedLoginMethod = "MFA"
+                    showOtpFields = false
                 }
             }
             showOtpButton = false
@@ -296,6 +382,21 @@ fun LoginScreen(
                     )
                 }
 
+                // Show auto-refresh indicator
+                if (isAutoRefreshing) {
+                    Text(
+                        text = "Updating your data...",
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color(0xFFDD3825),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 Text(
                     text = "Log in with",
                     fontSize = 18.sp,
@@ -390,7 +491,8 @@ fun LoginScreen(
                     }
 
                     // Debug logging for fingerprint button condition
-                    android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode")
+                    android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
+                    android.util.Log.d("LoginScreen", "Fingerprint condition check: condition=${showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode}")
 
                     // Show fingerprint button for returning users (including session expired) when biometric is available
                     if (showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode) {
@@ -710,16 +812,33 @@ fun LoginScreen(
                                 biometricHelper.showBiometricPrompt(
                                     activity = activity,
                                     onSuccess = {
-                                        // Get stored biometric credentials
+                                        // Get stored biometric credentials with fallback to user data
                                         val credentials = biometricHelper.getStoredCredentialsWithToken()
-                                        if (credentials == null) {
-                                            Toast.makeText(context, "Biometric credentials not found. Please login with MPIN or OTP.", Toast.LENGTH_SHORT).show()
+                                        val bioEmail: String
+                                        val bioMobile: String
+                                        val bioEmployeeId: String
+
+                                        if (credentials != null) {
+                                            bioEmail = credentials.first
+                                            bioMobile = credentials.second
+                                            bioEmployeeId = credentials.third
+                                        } else {
+                                            // Fallback to effective user data (session expired data if available)
+                                            if (effectiveUserData != null) {
+                                                bioEmail = effectiveUserData.email ?: ""
+                                                bioMobile = effectiveUserData.mobile ?: ""
+                                                bioEmployeeId = effectiveUserData.employeeId ?: ""
+                                            } else {
+                                                Toast.makeText(context, "Biometric credentials not found. Please login with MPIN or OTP.", Toast.LENGTH_SHORT).show()
+                                                return@showBiometricPrompt
+                                            }
+                                        }
+
+                                        // Validate credentials
+                                        if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
+                                            Toast.makeText(context, "User credentials missing. Please use OTP login.", Toast.LENGTH_SHORT).show()
                                             return@showBiometricPrompt
                                         }
-                                        
-                                        val bioEmail = credentials.first
-                                        val bioMobile = credentials.second  
-                                        val bioEmployeeId = credentials.third
 
                                         // Call OTP verify with isBiometric = true and empty OTP
                                         val otpController = com.archeGlobal.one.controller.OtpVerificationController(
@@ -731,7 +850,8 @@ fun LoginScreen(
                                             mobile = bioMobile,
                                             employeeId = bioEmployeeId,
                                             otpFromUser = "", // Empty OTP
-                                            isBiometric = true
+                                            isBiometric = true,
+                                            backgroundRefresh = false // Normal login with navigation
                                         ) { message, isError ->
                                             if (isError) {
                                                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -875,17 +995,26 @@ fun LoginScreen(
                                 navigator = navigator,
                                 context = context
                             )
-                            // For session expired users, use stored credentials, otherwise use form data
-                            val useEmail = if (sessionExpired && userData != null) userData.email ?: email else email
-                            val useMobile = if (sessionExpired && userData != null) userData.mobile ?: mobile else mobile
-                            val useEmployeeId = if (sessionExpired && userData != null) userData.employeeId ?: employeeId else employeeId
+                            // Use effective user data (preserved or current)
+                            val useEmail = email.takeIf { it.isNotEmpty() } ?: effectiveUserData?.email ?: ""
+                            val useMobile = mobile.takeIf { it.isNotEmpty() } ?: effectiveUserData?.mobile ?: ""
+                            val useEmployeeId = employeeId.takeIf { it.isNotEmpty() } ?: effectiveUserData?.employeeId ?: ""
+
+                            // Validate that we have all required credentials
+                            if (useEmail.isBlank() || useMobile.isBlank() || useEmployeeId.isBlank()) {
+                                mpinError = "User credentials missing. Please use OTP login."
+                                isVerifyingMpin = false
+                                android.util.Log.e("LoginScreen", "Missing credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
+                                return@Button
+                            }
 
                             otpController.verifyOtp(
                                 email = useEmail,
                                 mobile = useMobile,
                                 employeeId = useEmployeeId,
                                 otpFromUser = "", // Empty OTP
-                                isBiometric = true
+                                isBiometric = true,
+                                backgroundRefresh = false // Normal login with navigation
                             ) { message, isError ->
                                 isVerifyingMpin = false
                                 if (isError) {
@@ -1034,7 +1163,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                if (!isLoggedIn && hasLoggedIn) {
+                if ((!isLoggedIn && hasLoggedIn) || (effectiveUserData != null && !isAutoRefreshing)) {
                     val annotatedText = buildAnnotatedString {
                         withStyle(
                             style = SpanStyle(
@@ -1082,6 +1211,12 @@ fun LoginScreen(
                                     setFirstTimeLogin(context, true)
                                     com.archeGlobal.one.utils.MpinManager.clearAllMpinData(context)
                                     BiometricHelper(context).disableBiometric() // Disable biometric
+                                    
+                                    // Clear preserved user data
+                                    preferencesManager.setString("last_user_email", "")
+                                    preferencesManager.setString("last_user_mobile", "")
+                                    preferencesManager.setString("last_user_employee_id", "")
+                                    preferencesManager.setString("last_user_name", "")
 
                                     // Reset all UI state
                                     firstTimeLogin = true

@@ -26,6 +26,7 @@ class OtpVerificationController(
         employeeId: String,
         otpFromUser: String,
         isBiometric: Boolean = false,
+        backgroundRefresh: Boolean = false,
         callback: (String, Boolean) -> Unit
     ) {
         val request = VerifyOtpRequest(email, mobile, employeeId, otpFromUser, isBiometric)
@@ -46,30 +47,40 @@ class OtpVerificationController(
                 Log.d("OtpVerification", "Token received: $token")
 
                 if (token.isNotEmpty()) {
-                    // Save the token for future use and handle navigation properly
-                    loginWithToken(token, email, mobile, employeeId, false, true, true) { msg, isError ->
-                        if (!isError) {
-                            // Login successful - for session-expired users or biometric/MPIN login, navigate directly to home
-                            Log.d("OtpVerification", "OTP verification and login successful for user: $email")
-                            
-                            if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                val mpinController = com.archeGlobal.one.controller.MpinController(context)
-                                if (mpinController.isMpinSet()) {
-                                    // MPIN already set, go directly to Home 
-                                    navigator.navigateToHome(
-                                        true, // fromOtp (set to true to indicate login just happened)
-                                        true, // showBiometricPrompt for existing users
-                                        email = email,
-                                        mobile = mobile,
-                                        employeeId = employeeId
-                                    )
-                                } else {
-                                    // MPIN not set, go to MPIN setup (for first-time users)
-                                    navigator.navigateToMpinSetup(email, mobile, employeeId, token)
+                    if (backgroundRefresh) {
+                        // For background refresh, only save data without navigation
+                        loginWithToken(token, email, mobile, employeeId, false, true, false) { msg, isError ->
+                            if (!isError) {
+                                Log.d("OtpVerification", "Background token refresh successful - data updated without navigation")
+                            }
+                            callback(msg, isError)
+                        }
+                    } else {
+                        // Save the token for future use and handle navigation properly
+                        loginWithToken(token, email, mobile, employeeId, false, true, true) { msg, isError ->
+                            if (!isError) {
+                                // Login successful - for session-expired users or biometric/MPIN login, navigate directly to home
+                                Log.d("OtpVerification", "OTP verification and login successful for user: $email")
+
+                                if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                    val mpinController = com.archeGlobal.one.controller.MpinController(context)
+                                    if (mpinController.isMpinSet()) {
+                                        // MPIN already set, go directly to Home
+                                        navigator.navigateToHome(
+                                            true, // fromOtp (set to true to indicate login just happened)
+                                            true, // showBiometricPrompt for existing users
+                                            email = email,
+                                            mobile = mobile,
+                                            employeeId = employeeId
+                                        )
+                                    } else {
+                                        // MPIN not set, go to MPIN setup (for first-time users)
+                                        navigator.navigateToMpinSetup(email, mobile, employeeId, token)
+                                    }
                                 }
                             }
+                            callback(msg, isError)
                         }
-                        callback(msg, isError)
                     }
                 } else {
                     callback("OTP verified, but no token received!", true)
@@ -89,7 +100,7 @@ class OtpVerificationController(
     ) {
         // Skip OTP and use biometric authentication
         val dummyOtp = "000000" // This won't be validated server-side when isBiometric is true
-        verifyOtp(email, mobile, employeeId, dummyOtp, true, callback)
+        verifyOtp(email, mobile, employeeId, dummyOtp, true, false, callback)
     }
 
     fun loginWithToken(
@@ -128,6 +139,13 @@ class OtpVerificationController(
                 userDataManager.saveUserDataFromResponse(response, token)
                 userDataManager.setIsLoggedIn(true)
                 userDataManager.setHasLoggedIn(true)
+                
+                // Clear session expired preserved data after successful login
+                val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
+                preferencesManager.setString("session_expired_email", "")
+                preferencesManager.setString("session_expired_mobile", "")
+                preferencesManager.setString("session_expired_employee_id", "")
+                preferencesManager.setString("session_expired_name", "")
 
                 // Navigate if needed - but only for non-explicit navigation cases
                 if (!fromHome && shouldNavigateToHome && !fromOtp) {

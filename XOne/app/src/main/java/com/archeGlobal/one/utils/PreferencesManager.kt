@@ -232,6 +232,11 @@ class PreferencesManager(context: Context) {
             // remove("biometric_mobile") - Keep this
             // remove("biometric_employee_id") - Keep this
             // remove("biometric_token") - Keep this temporarily for re-auth
+            // Keep last user data for re-authentication
+            // remove("last_user_email") - Keep this
+            // remove("last_user_mobile") - Keep this 
+            // remove("last_user_employee_id") - Keep this
+            // remove("last_user_name") - Keep this
         }.apply()
 
         // Update the locked state flow
