@@ -382,20 +382,7 @@ fun LoginScreen(
                     )
                 }
 
-                // Show auto-refresh indicator
-                if (isAutoRefreshing) {
-                    Text(
-                        text = "Updating your data...",
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color(0xFFDD3825),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        textAlign = TextAlign.Center
-                    )
-                }
+                // Hide auto-refresh indicator to avoid showing text to user
 
                 Text(
                     text = "Log in with",

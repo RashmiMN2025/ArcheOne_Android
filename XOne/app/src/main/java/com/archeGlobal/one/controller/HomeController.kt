@@ -461,6 +461,7 @@ class HomeController(
             showAllApps = true,
             categories = OtpVerificationController.getUserData()?.let { userData ->
                 userData.services
+                    .filter { !it.service.equals("HelpDesk", ignoreCase = true) } // Filter out HelpDesk
                     .groupBy { it.category }
                     .toSortedMap(
                         Comparator { a, b ->
@@ -804,6 +805,7 @@ class HomeController(
             profilePicture = userData?.profilePic,
             categories = userData?.let { data ->
                 data.services
+                    .filter { !it.service.equals("HelpDesk", ignoreCase = true) } // Filter out HelpDesk
                     .groupBy { it.category }
                     .toSortedMap(
                         Comparator { a, b ->
