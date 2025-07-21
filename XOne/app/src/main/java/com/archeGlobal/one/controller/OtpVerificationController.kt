@@ -264,58 +264,77 @@ class OtpVerificationController(
     }
     
     private fun showCustomUpdateDialog() {
-        val dialog = android.app.Dialog(context)
-        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
-        dialog.setCancelable(false)
+        // Use a simple, clean AlertDialog with custom styling
+        val builder = android.app.AlertDialog.Builder(context, android.R.style.Theme_Material_Light_Dialog_Alert)
         
-        // Create custom layout
+        // Create a clean white layout with rounded corners
         val layout = android.widget.LinearLayout(context).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(48, 48, 48, 48)
-            setBackgroundResource(android.R.drawable.dialog_frame)
+            // Create rounded white background
+            val drawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = 16f
+                setColor(android.graphics.Color.WHITE)
+            }
+            background = drawable
             gravity = android.view.Gravity.CENTER
+            // Set fixed width to make it narrower
+            layoutParams = android.view.ViewGroup.LayoutParams(
+                (320 * context.resources.displayMetrics.density).toInt(), // 320dp width
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            )
         }
         
-        // Red circle icon with download arrow
-        val iconLayout = android.widget.LinearLayout(context).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER
+        // Red circle with download icon
+        val iconContainer = android.widget.FrameLayout(context).apply {
+            val size = 120
+            layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply {
+                gravity = android.view.Gravity.CENTER
+                setMargins(0, 0, 0, 32)
+            }
         }
         
-        val iconView = android.widget.TextView(context).apply {
+        val circleView = android.view.View(context).apply {
+            val drawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(android.graphics.Color.parseColor("#E53E3E"))
+            }
+            background = drawable
+            layoutParams = android.widget.FrameLayout.LayoutParams(120, 120)
+        }
+        
+        val arrowView = android.widget.TextView(context).apply {
             text = "↓"
-            textSize = 24f
+            textSize = 28f
             setTextColor(android.graphics.Color.WHITE)
             gravity = android.view.Gravity.CENTER
-            width = 120
-            height = 120
-            setBackgroundResource(android.R.drawable.oval)
-            background.setColorFilter(android.graphics.Color.parseColor("#E53E3E"), android.graphics.PorterDuff.Mode.SRC_IN)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            layoutParams = android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+            )
         }
-        iconLayout.addView(iconView)
-        layout.addView(iconLayout)
         
-        // Add spacing
-        val spacer1 = android.view.View(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(0, 32)
-        }
-        layout.addView(spacer1)
+        iconContainer.addView(circleView)
+        iconContainer.addView(arrowView)
+        layout.addView(iconContainer)
         
         // Title
         val titleView = android.widget.TextView(context).apply {
             text = "Update Required"
             textSize = 24f
-            setTextColor(android.graphics.Color.BLACK)
+            setTextColor(android.graphics.Color.parseColor("#1A1A1A"))
             gravity = android.view.Gravity.CENTER
             setTypeface(typeface, android.graphics.Typeface.BOLD)
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 12)
+            }
         }
         layout.addView(titleView)
-        
-        // Add spacing
-        val spacer2 = android.view.View(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(0, 24)
-        }
-        layout.addView(spacer2)
         
         // Message
         val messageView = android.widget.TextView(context).apply {
@@ -323,24 +342,33 @@ class OtpVerificationController(
             textSize = 16f
             setTextColor(android.graphics.Color.parseColor("#666666"))
             gravity = android.view.Gravity.CENTER
-            lineSpacing = 1.2f, 1.0f
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 40)
+            }
         }
         layout.addView(messageView)
-        
-        // Add spacing
-        val spacer3 = android.view.View(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(0, 32)
-        }
-        layout.addView(spacer3)
         
         // Update button
         val updateButton = android.widget.Button(context).apply {
             text = "Update Now"
-            textSize = 18f
+            textSize = 16f
             setTextColor(android.graphics.Color.WHITE)
-            setBackgroundResource(android.R.drawable.btn_default)
-            background.setColorFilter(android.graphics.Color.parseColor("#E53E3E"), android.graphics.PorterDuff.Mode.SRC_IN)
-            setPadding(48, 24, 48, 24)
+            val drawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = 24f
+                setColor(android.graphics.Color.parseColor("#E53E3E"))
+            }
+            background = drawable
+            setPadding(80, 32, 80, 32)
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = android.view.Gravity.CENTER
+            }
             setOnClickListener {
                 Log.d("OtpVerification", "Update button clicked - opening Play Store")
                 try {
@@ -358,9 +386,11 @@ class OtpVerificationController(
         }
         layout.addView(updateButton)
         
-        dialog.setContentView(layout)
+        builder.setView(layout)
+        builder.setCancelable(false)
         
-        // Make dialog non-cancelable with back button
+        val dialog = builder.create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.setOnKeyListener { _, keyCode, _ ->
             keyCode == android.view.KeyEvent.KEYCODE_BACK
         }
@@ -369,13 +399,13 @@ class OtpVerificationController(
         if (context is android.app.Activity) {
             if (!context.isFinishing && !context.isDestroyed) {
                 dialog.show()
-                Log.d("OtpVerification", "Custom dialog shown successfully")
+                Log.d("OtpVerification", "Clean update dialog shown successfully")
             } else {
                 Log.w("OtpVerification", "Activity is finishing/destroyed, cannot show dialog")
             }
         } else {
             dialog.show()
-            Log.d("OtpVerification", "Custom dialog shown (non-Activity context)")
+            Log.d("OtpVerification", "Clean update dialog shown (non-Activity context)")
         }
     }
 
