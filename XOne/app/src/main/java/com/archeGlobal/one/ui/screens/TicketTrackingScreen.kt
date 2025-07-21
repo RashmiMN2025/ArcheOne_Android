@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,9 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.SupportTicket
 import com.archeGlobal.one.model.TicketStatus
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,11 +34,24 @@ fun TicketTrackingScreen(
 ) {
     val model by controller.model.collectAsState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5E6F0))
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
+                    )
+                )
+        ) {
         TopAppBar(
             title = {
                 Text(
@@ -53,7 +70,7 @@ fun TicketTrackingScreen(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFF5E6F0)
+                containerColor = Color.Transparent
             )
         )
 
@@ -79,6 +96,7 @@ fun TicketTrackingScreen(
         }
     }
 }
+}
 
 @Composable
 fun TicketCard(
@@ -88,11 +106,11 @@ fun TicketCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.8f)
+            containerColor = Color.White.copy(alpha = 0.7f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -136,11 +154,8 @@ fun TicketCard(
                 }
             }
 
-            if (isExpanded && ticket.details != null) {
-                Divider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    color = Color.Gray.copy(alpha = 0.3f)
-                )
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -162,6 +177,15 @@ fun TicketCard(
                             color = Color.Gray
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Hello Team,",
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium
+                    )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -203,15 +227,18 @@ fun TicketCard(
                             color = Color.Gray
                         )
 
-                        details.additionalNotes?.let { notes ->
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = notes,
-                                fontSize = 12.sp,
-                                color = Color.Gray,
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            text = "Best regards,",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "ArcheOne Team",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
                     }
                 }
             }
@@ -221,29 +248,17 @@ fun TicketCard(
 
 @Composable
 fun StatusChip(status: TicketStatus) {
-    val (backgroundColor, textColor) = when (status) {
-        TicketStatus.OPEN -> Color(0xFFE3F2FD) to Color(0xFF1976D2)
-        TicketStatus.IN_PROGRESS -> Color(0xFFFFF3E0) to Color(0xFFF57C00)
-        TicketStatus.CLOSED -> Color(0xFFE8F5E8) to Color(0xFF388E3C)
-        TicketStatus.PENDING -> Color(0xFFFFE8E6) to Color(0xFFD32F2F)
-    }
-
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF4CAF50))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
-            text = when (status) {
-                TicketStatus.OPEN -> "Open"
-                TicketStatus.IN_PROGRESS -> "In Progress"
-                TicketStatus.CLOSED -> "Closed"
-                TicketStatus.PENDING -> "Pending"
-            },
+            text = "Closed",
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = textColor
+            color = Color.White
         )
     }
 }

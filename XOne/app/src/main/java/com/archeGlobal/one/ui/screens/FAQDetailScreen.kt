@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -17,6 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.HelpDeskFAQ
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,27 +31,54 @@ fun FAQDetailScreen(
     val faq = controller.getFAQById(faqId)
 
     if (faq == null) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5E6F0)),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(MaterialTheme.colorScheme.background)
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                WelcomeBackgroundTop,
+                                WelcomeBackgroundMiddle,
+                                WelcomeBackgroundBottom
+                            )
+                        )
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
             Text(
                 text = "FAQ not found",
                 fontSize = 18.sp,
                 color = Color.Black
             )
+            }
         }
         return
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5E6F0))
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
+                    )
+                )
+        ) {
         TopAppBar(
             title = {
                 Text(
@@ -66,7 +97,7 @@ fun FAQDetailScreen(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFF5E6F0)
+                containerColor = Color.Transparent
             )
         )
 
@@ -114,16 +145,17 @@ fun FAQDetailScreen(
         }
     }
 }
+}
 
 @Composable
 fun QuestionCard(faq: HelpDeskFAQ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.8f)
+            containerColor = Color.White.copy(alpha = 0.7f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -143,7 +175,7 @@ fun QuestionCard(faq: HelpDeskFAQ) {
                     Text(
                         text = "!",
                         color = Color(0xFFD32F2F),
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -175,11 +207,11 @@ fun QuestionCard(faq: HelpDeskFAQ) {
 fun AnswerCard(faq: HelpDeskFAQ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.8f)
+            containerColor = Color.White.copy(alpha = 0.7f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -193,14 +225,12 @@ fun AnswerCard(faq: HelpDeskFAQ) {
                     modifier = Modifier
                         .size(24.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFE8F5E8)),
+                        .background(Color(0xFFFFE8DC)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "A",
-                        color = Color(0xFF388E3C),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        text = "💬",
+                        fontSize = 12.sp
                     )
                 }
 
@@ -210,7 +240,7 @@ fun AnswerCard(faq: HelpDeskFAQ) {
                     text = "Answer",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF388E3C)
+                    color = Color(0xFFFF6B35)
                 )
             }
 

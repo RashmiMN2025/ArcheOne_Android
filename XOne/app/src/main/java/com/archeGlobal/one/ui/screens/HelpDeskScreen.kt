@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -21,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.HelpDeskFAQ
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
+import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,11 +33,24 @@ fun HelpDeskScreen(
 ) {
     val model by controller.model.collectAsState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5E6F0))
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            WelcomeBackgroundTop,
+                            WelcomeBackgroundMiddle,
+                            WelcomeBackgroundBottom
+                        )
+                    )
+                )
+        ) {
         TopAppBar(
             title = {
                 Text(
@@ -63,7 +80,7 @@ fun HelpDeskScreen(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFF5E6F0)
+                containerColor = Color.Transparent
             )
         )
 
@@ -88,7 +105,7 @@ fun HelpDeskScreen(
             )
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(model.faqItems) { faq ->
                     FAQCard(
@@ -100,6 +117,7 @@ fun HelpDeskScreen(
         }
     }
 }
+}
 
 @Composable
 fun FAQCard(
@@ -110,11 +128,11 @@ fun FAQCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.8f)
+            containerColor = Color.White.copy(alpha = 0.7f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -129,33 +147,29 @@ fun FAQCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(16.dp))
                         .background(
-                            when (faq.category) {
-                                "Technical" -> Color(0xFFE3F2FD)
-                                "Performance" -> Color(0xFFF3E5F5)
-                                "HR" -> Color(0xFFE8F5E8)
-                                "Emergency" -> Color(0xFFFFE8E6)
-                                "Travel" -> Color(0xFFFFF3E0)
-                                "Compliance" -> Color(0xFFE1F5FE)
-                                else -> Color(0xFFF5F5F5)
+                            if (faq.question.contains("Other issue", ignoreCase = true)) {
+                                Color(0xFFFFE8E6)
+                            } else {
+                                Color(0xFFE8E4F3)
                             }
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "?",
-                        color = when (faq.category) {
-                            "Technical" -> Color(0xFF1976D2)
-                            "Performance" -> Color(0xFF7B1FA2)
-                            "HR" -> Color(0xFF388E3C)
-                            "Emergency" -> Color(0xFFD32F2F)
-                            "Travel" -> Color(0xFFF57C00)
-                            "Compliance" -> Color(0xFF0288D1)
-                            else -> Color.Gray
+                        text = if (faq.question.contains("Other issue", ignoreCase = true)) {
+                            "!"
+                        } else {
+                            "?"
                         },
-                        fontSize = 12.sp,
+                        color = if (faq.question.contains("Other issue", ignoreCase = true)) {
+                            Color(0xFFD32F2F)
+                        } else {
+                            Color(0xFF6B4EFF)
+                        },
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -164,18 +178,19 @@ fun FAQCard(
 
                 Text(
                     text = faq.question,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     color = Color.Black,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.weight(1f)
+                    fontWeight = FontWeight.Normal,
+                    modifier = Modifier.weight(1f),
+                    lineHeight = 20.sp
                 )
             }
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "Arrow",
-                tint = Color.Gray,
-                modifier = Modifier.size(20.dp)
+                tint = Color.Gray.copy(alpha = 0.6f),
+                modifier = Modifier.size(18.dp)
             )
         }
     }

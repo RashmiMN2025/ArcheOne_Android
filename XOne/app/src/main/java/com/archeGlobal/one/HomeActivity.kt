@@ -257,7 +257,7 @@ class HomeActivity : AppCompatActivity() {
                 travelController = TravelController(navigator, this@HomeActivity)
                 // Log that the travel controller was initialized
                 android.util.Log.d("HomeActivity", "TravelController initialized with navigator: ${navigator.hashCode()}")
-                
+
                 // Initialize helpdesk controller
                 helpDeskController = HelpDeskController()
                 helpDeskController.setNavigationCallback { route ->

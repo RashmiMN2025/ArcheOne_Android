@@ -240,7 +240,7 @@ internal fun handleTokenExpiration(context: Context) {
 internal fun showUpdateDialogDirect(context: Context) {
     android.util.Log.w("APIError", "App update required - showing dialog directly")
     android.util.Log.d("APIError", "Context type: ${context::class.java.simpleName}")
-    
+
     try {
         // Create and show AlertDialog directly
         val builder = android.app.AlertDialog.Builder(context)
@@ -266,7 +266,7 @@ internal fun showUpdateDialogDirect(context: Context) {
             // Prevent back button from dismissing the dialog
             keyCode == android.view.KeyEvent.KEYCODE_BACK
         }
-        
+
         val dialog = builder.create()
         android.util.Log.d("APIError", "Showing update dialog")
         dialog.show()
@@ -281,7 +281,7 @@ internal fun showUpdateDialogDirect(context: Context) {
 internal fun handleAppUpdateRequired(context: Context) {
     android.util.Log.w("APIError", "App update required - showing update dialog")
     android.util.Log.d("APIError", "Context type: ${context::class.java.simpleName}")
-    
+
     try {
         // Navigate to login screen with update dialog flag
         val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {

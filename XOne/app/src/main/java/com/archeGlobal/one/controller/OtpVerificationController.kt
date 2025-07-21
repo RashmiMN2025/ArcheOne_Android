@@ -15,7 +15,6 @@ import com.archeGlobal.one.network.*
 import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.EncryptedAPIHelper
 import com.archeGlobal.one.utils.UserDataManager
-import com.archeGlobal.one.utils.handleError
 import com.archeGlobal.one.utils.handleErrorWithContext
 
 class OtpVerificationController(
@@ -48,15 +47,13 @@ class OtpVerificationController(
                 Log.e("OtpVerification", "OTP verification failed: ${error.errorMessage}")
                 Log.e("OtpVerification", "Error type: ${error::class.java.simpleName}")
                 Log.e("OtpVerification", "Full error details: $error")
-                
+
                 // Check if error message contains 403 or update-related keywords
                 val errorMsg = error.errorMessage.lowercase()
-                val isForbiddenError = error is APIError.Forbidden || 
-                                     errorMsg.contains("403") || 
-                                     errorMsg.contains("forbidden") ||
-                                     errorMsg.contains("update") ||
-                                     errorMsg.contains("version")
-                
+                val isForbiddenError = error is APIError.Forbidden || errorMsg.contains("403") || errorMsg.contains("forbidden") ||
+                    errorMsg.contains("update") ||
+                    errorMsg.contains("version")
+
                 if (isForbiddenError) {
                     Log.d("OtpVerification", "Detected 403/update-related error in OTP verification - showing update dialog")
                     Log.d("OtpVerification", "Error check: is Forbidden=${error is APIError.Forbidden}, message='${error.errorMessage}'")
@@ -164,15 +161,13 @@ class OtpVerificationController(
                 Log.e("LoginProcess", "Login failed: ${error.errorMessage}")
                 Log.e("LoginProcess", "Error type: ${error::class.java.simpleName}")
                 Log.e("LoginProcess", "Full error details: $error")
-                
-                // Check if error message contains 403 or update-related keywords  
+
+                // Check if error message contains 403 or update-related keywords
                 val errorMsg = error.errorMessage.lowercase()
-                val isForbiddenError = error is APIError.Forbidden || 
-                                     errorMsg.contains("403") || 
-                                     errorMsg.contains("forbidden") ||
-                                     errorMsg.contains("update") ||
-                                     errorMsg.contains("version")
-                
+                val isForbiddenError = error is APIError.Forbidden || errorMsg.contains("403") || errorMsg.contains("forbidden") ||
+                    errorMsg.contains("update") ||
+                    errorMsg.contains("version")
+
                 if (isForbiddenError) {
                     Log.d("LoginProcess", "Detected 403/update-related error in login - showing update dialog")
                     Log.d("LoginProcess", "Error check: is Forbidden=${error is APIError.Forbidden}, message='${error.errorMessage}'")
@@ -236,13 +231,13 @@ class OtpVerificationController(
 
     private fun showUpdateDialog() {
         Log.d("OtpVerification", "showUpdateDialog called - thread: ${Thread.currentThread().name}")
-        
+
         // Always show Toast as immediate feedback
         android.os.Handler(android.os.Looper.getMainLooper()).post {
             android.widget.Toast.makeText(context, "App Update Required - Please update from Play Store", android.widget.Toast.LENGTH_LONG).show()
             Log.d("OtpVerification", "Toast shown")
         }
-        
+
         // Ensure dialog creation happens on main thread
         android.os.Handler(android.os.Looper.getMainLooper()).post {
             try {
@@ -262,11 +257,11 @@ class OtpVerificationController(
             }
         }
     }
-    
+
     private fun showCustomUpdateDialog() {
         // Use a simple, clean AlertDialog with custom styling
         val builder = android.app.AlertDialog.Builder(context, android.R.style.Theme_Material_Light_Dialog_Alert)
-        
+
         // Create a clean white layout with rounded corners
         val layout = android.widget.LinearLayout(context).apply {
             orientation = android.widget.LinearLayout.VERTICAL
@@ -285,7 +280,7 @@ class OtpVerificationController(
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             )
         }
-        
+
         // Red circle with download icon
         val iconContainer = android.widget.FrameLayout(context).apply {
             val size = 120
@@ -294,7 +289,7 @@ class OtpVerificationController(
                 setMargins(0, 0, 0, 32)
             }
         }
-        
+
         val circleView = android.view.View(context).apply {
             val drawable = android.graphics.drawable.GradientDrawable().apply {
                 shape = android.graphics.drawable.GradientDrawable.OVAL
@@ -303,7 +298,7 @@ class OtpVerificationController(
             background = drawable
             layoutParams = android.widget.FrameLayout.LayoutParams(120, 120)
         }
-        
+
         val arrowView = android.widget.TextView(context).apply {
             text = "↓"
             textSize = 28f
@@ -315,11 +310,11 @@ class OtpVerificationController(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT
             )
         }
-        
+
         iconContainer.addView(circleView)
         iconContainer.addView(arrowView)
         layout.addView(iconContainer)
-        
+
         // Title
         val titleView = android.widget.TextView(context).apply {
             text = "Update Required"
@@ -335,7 +330,7 @@ class OtpVerificationController(
             }
         }
         layout.addView(titleView)
-        
+
         // Message
         val messageView = android.widget.TextView(context).apply {
             text = "A new version of ArcheOne is available. You must update to continue using the app."
@@ -350,7 +345,7 @@ class OtpVerificationController(
             }
         }
         layout.addView(messageView)
-        
+
         // Update button
         val updateButton = android.widget.Button(context).apply {
             text = "Update Now"
@@ -385,16 +380,16 @@ class OtpVerificationController(
             }
         }
         layout.addView(updateButton)
-        
+
         builder.setView(layout)
         builder.setCancelable(false)
-        
+
         val dialog = builder.create()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.setOnKeyListener { _, keyCode, _ ->
             keyCode == android.view.KeyEvent.KEYCODE_BACK
         }
-        
+
         // Show dialog with safety checks
         if (context is android.app.Activity) {
             if (!context.isFinishing && !context.isDestroyed) {
