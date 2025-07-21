@@ -1,17 +1,22 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import com.archeGlobal.one.XOneApplication
+import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
+import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.EncryptedAPIHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.handleError
+import com.archeGlobal.one.utils.handleErrorWithContext
 
 class OtpVerificationController(
     private val navigator: Navigator,
@@ -41,7 +46,26 @@ class OtpVerificationController(
         ) { response, error ->
             if (error != null) {
                 Log.e("OtpVerification", "OTP verification failed: ${error.errorMessage}")
-                error.handleError(callback)
+                Log.e("OtpVerification", "Error type: ${error::class.java.simpleName}")
+                Log.e("OtpVerification", "Full error details: $error")
+                
+                // Check if error message contains 403 or update-related keywords
+                val errorMsg = error.errorMessage.lowercase()
+                val isForbiddenError = error is APIError.Forbidden || 
+                                     errorMsg.contains("403") || 
+                                     errorMsg.contains("forbidden") ||
+                                     errorMsg.contains("update") ||
+                                     errorMsg.contains("version")
+                
+                if (isForbiddenError) {
+                    Log.d("OtpVerification", "Detected 403/update-related error in OTP verification - showing update dialog")
+                    Log.d("OtpVerification", "Error check: is Forbidden=${error is APIError.Forbidden}, message='${error.errorMessage}'")
+                    showUpdateDialog()
+                    callback("App update required", true)
+                } else {
+                    Log.d("OtpVerification", "Not a 403 error, using standard error handling")
+                    error.handleErrorWithContext(context, callback)
+                }
             } else if (response != null && response.status == 200) {
                 val token = response.token
                 Log.d("OtpVerification", "Token received: $token")
@@ -113,7 +137,16 @@ class OtpVerificationController(
         shouldNavigateToHome: Boolean = true,
         callback: (String, Boolean) -> Unit
     ) {
-        val request = LoginRequest(email, mobile, employeeId)
+        val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
+        val request = LoginRequest(
+            email = email,
+            mobile = mobile,
+            employeeId = employeeId,
+            platform = deviceInfo.platform,
+            deviceModel = deviceInfo.deviceModel,
+            osVersion = deviceInfo.osVersion,
+            appVersion = deviceInfo.appVersion
+        )
         Log.d("LoginProcess", "Sending encrypted login request with token: Bearer $token")
 
         // Store the token temporarily for the encrypted request
@@ -129,8 +162,27 @@ class OtpVerificationController(
         ) { response, error ->
             if (error != null) {
                 Log.e("LoginProcess", "Login failed: ${error.errorMessage}")
-                error.handleError { message, isError ->
-                    callback("Login failed: $message", isError)
+                Log.e("LoginProcess", "Error type: ${error::class.java.simpleName}")
+                Log.e("LoginProcess", "Full error details: $error")
+                
+                // Check if error message contains 403 or update-related keywords  
+                val errorMsg = error.errorMessage.lowercase()
+                val isForbiddenError = error is APIError.Forbidden || 
+                                     errorMsg.contains("403") || 
+                                     errorMsg.contains("forbidden") ||
+                                     errorMsg.contains("update") ||
+                                     errorMsg.contains("version")
+                
+                if (isForbiddenError) {
+                    Log.d("LoginProcess", "Detected 403/update-related error in login - showing update dialog")
+                    Log.d("LoginProcess", "Error check: is Forbidden=${error is APIError.Forbidden}, message='${error.errorMessage}'")
+                    showUpdateDialog()
+                    callback("App update required", true)
+                } else {
+                    Log.d("LoginProcess", "Not a 403 error, using standard error handling")
+                    error.handleErrorWithContext(context) { message: String, isError: Boolean ->
+                        callback("Login failed: $message", isError)
+                    }
                 }
             } else if (response != null && response.status == 200) {
                 Log.d("LoginProcess", "Login successful")
@@ -139,7 +191,7 @@ class OtpVerificationController(
                 userDataManager.saveUserDataFromResponse(response, token)
                 userDataManager.setIsLoggedIn(true)
                 userDataManager.setHasLoggedIn(true)
-                
+
                 // Clear session expired preserved data after successful login
                 val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
                 preferencesManager.setString("session_expired_email", "")
@@ -179,6 +231,151 @@ class OtpVerificationController(
             } else {
                 callback("Failed to resend OTP")
             }
+        }
+    }
+
+    private fun showUpdateDialog() {
+        Log.d("OtpVerification", "showUpdateDialog called - thread: ${Thread.currentThread().name}")
+        
+        // Always show Toast as immediate feedback
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(context, "App Update Required - Please update from Play Store", android.widget.Toast.LENGTH_LONG).show()
+            Log.d("OtpVerification", "Toast shown")
+        }
+        
+        // Ensure dialog creation happens on main thread
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            try {
+                Log.d("OtpVerification", "Creating custom update dialog")
+                showCustomUpdateDialog()
+            } catch (e: Exception) {
+                Log.e("OtpVerification", "Failed to create/show update dialog: ${e.message}", e)
+                // Fallback: Try to open Play Store directly
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(intent)
+                    Log.d("OtpVerification", "Opened Play Store as fallback")
+                } catch (fallbackError: Exception) {
+                    Log.e("OtpVerification", "Fallback also failed: ${fallbackError.message}")
+                }
+            }
+        }
+    }
+    
+    private fun showCustomUpdateDialog() {
+        val dialog = android.app.Dialog(context)
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        dialog.setCancelable(false)
+        
+        // Create custom layout
+        val layout = android.widget.LinearLayout(context).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 48, 48, 48)
+            setBackgroundResource(android.R.drawable.dialog_frame)
+            gravity = android.view.Gravity.CENTER
+        }
+        
+        // Red circle icon with download arrow
+        val iconLayout = android.widget.LinearLayout(context).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER
+        }
+        
+        val iconView = android.widget.TextView(context).apply {
+            text = "↓"
+            textSize = 24f
+            setTextColor(android.graphics.Color.WHITE)
+            gravity = android.view.Gravity.CENTER
+            width = 120
+            height = 120
+            setBackgroundResource(android.R.drawable.oval)
+            background.setColorFilter(android.graphics.Color.parseColor("#E53E3E"), android.graphics.PorterDuff.Mode.SRC_IN)
+        }
+        iconLayout.addView(iconView)
+        layout.addView(iconLayout)
+        
+        // Add spacing
+        val spacer1 = android.view.View(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(0, 32)
+        }
+        layout.addView(spacer1)
+        
+        // Title
+        val titleView = android.widget.TextView(context).apply {
+            text = "Update Required"
+            textSize = 24f
+            setTextColor(android.graphics.Color.BLACK)
+            gravity = android.view.Gravity.CENTER
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        layout.addView(titleView)
+        
+        // Add spacing
+        val spacer2 = android.view.View(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(0, 24)
+        }
+        layout.addView(spacer2)
+        
+        // Message
+        val messageView = android.widget.TextView(context).apply {
+            text = "A new version of ArcheOne is available. You must update to continue using the app."
+            textSize = 16f
+            setTextColor(android.graphics.Color.parseColor("#666666"))
+            gravity = android.view.Gravity.CENTER
+            lineSpacing = 1.2f, 1.0f
+        }
+        layout.addView(messageView)
+        
+        // Add spacing
+        val spacer3 = android.view.View(context).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(0, 32)
+        }
+        layout.addView(spacer3)
+        
+        // Update button
+        val updateButton = android.widget.Button(context).apply {
+            text = "Update Now"
+            textSize = 18f
+            setTextColor(android.graphics.Color.WHITE)
+            setBackgroundResource(android.R.drawable.btn_default)
+            background.setColorFilter(android.graphics.Color.parseColor("#E53E3E"), android.graphics.PorterDuff.Mode.SRC_IN)
+            setPadding(48, 24, 48, 24)
+            setOnClickListener {
+                Log.d("OtpVerification", "Update button clicked - opening Play Store")
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("OtpVerification", "Failed to open Play Store: ${e.message}")
+                    // Fallback to web browser
+                    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
+                    webIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    context.startActivity(webIntent)
+                }
+            }
+        }
+        layout.addView(updateButton)
+        
+        dialog.setContentView(layout)
+        
+        // Make dialog non-cancelable with back button
+        dialog.setOnKeyListener { _, keyCode, _ ->
+            keyCode == android.view.KeyEvent.KEYCODE_BACK
+        }
+        
+        // Show dialog with safety checks
+        if (context is android.app.Activity) {
+            if (!context.isFinishing && !context.isDestroyed) {
+                dialog.show()
+                Log.d("OtpVerification", "Custom dialog shown successfully")
+            } else {
+                Log.w("OtpVerification", "Activity is finishing/destroyed, cannot show dialog")
+            }
+        } else {
+            dialog.show()
+            Log.d("OtpVerification", "Custom dialog shown (non-Activity context)")
         }
     }
 

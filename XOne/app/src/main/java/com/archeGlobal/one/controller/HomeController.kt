@@ -461,7 +461,6 @@ class HomeController(
             showAllApps = true,
             categories = OtpVerificationController.getUserData()?.let { userData ->
                 userData.services
-                    .filter { !it.service.equals("HelpDesk", ignoreCase = true) } // Filter out HelpDesk
                     .groupBy { it.category }
                     .toSortedMap(
                         Comparator { a, b ->
@@ -617,8 +616,8 @@ class HomeController(
                     navigator.navigateToXConnect("Blogs")
                 }
                 "helpdesk" -> {
-                    Log.d("HomeController", "Navigating to Service Not Available screen for Helpdesk")
-                    navigate("service_not_available?serviceName=Helpdesk")
+                    Log.d("HomeController", "Navigating to Helpdesk screen")
+                    navigate("helpdesk")
                 }
                 "announcements" -> {
                     Log.d("HomeController", "Navigating to Service Not Available screen for Announcements")
@@ -805,7 +804,6 @@ class HomeController(
             profilePicture = userData?.profilePic,
             categories = userData?.let { data ->
                 data.services
-                    .filter { !it.service.equals("HelpDesk", ignoreCase = true) } // Filter out HelpDesk
                     .groupBy { it.category }
                     .toSortedMap(
                         Comparator { a, b ->

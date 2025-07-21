@@ -117,14 +117,13 @@ fun LoginScreen(
 
     val userDataManager = UserDataManager.getInstance(context)
     val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
-    
+
     // Get session expired status from intent
     val activity = context as? android.app.Activity
     val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
-    
+
     // Get last user name from preserved data (works for both logout and session expiry)
-    val lastEmployeeName = preferencesManager.getString("last_user_name", "") 
-        ?: userDataManager.getLastUsername()
+    val lastEmployeeName = preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
     val isLoggedIn = userDataManager.isLoggedIn()
     val hasLoggedIn = userDataManager.hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
@@ -181,15 +180,13 @@ fun LoginScreen(
     var enteredMpinDigits by remember { mutableStateOf(List(4) { "" }) }
 
     val userData = userDataManager.getUserData()
-    
+
     // Always try to get preserved user data (works for both logout and session expiry)
     val lastUserEmail = preferencesManager.getString("last_user_email", "")
     val lastUserMobile = preferencesManager.getString("last_user_mobile", "")
     val lastUserEmployeeId = preferencesManager.getString("last_user_employee_id", "")
-    
-    val preservedUserData = if (!lastUserEmail.isNullOrBlank() && 
-                                !lastUserMobile.isNullOrBlank() && 
-                                !lastUserEmployeeId.isNullOrBlank()) {
+
+    val preservedUserData = if (!lastUserEmail.isNullOrBlank() && !lastUserMobile.isNullOrBlank() && !lastUserEmployeeId.isNullOrBlank()) {
         com.archeGlobal.one.model.UserData(
             name = lastEmployeeName ?: "",
             email = lastUserEmail,
@@ -204,10 +201,12 @@ fun LoginScreen(
             userDetails = null,
             greetings = emptyMap()
         )
-    } else null
-    
+    } else {
+        null
+    }
+
     val effectiveUserData = userData ?: preservedUserData
-    
+
     LaunchedEffect(Unit) {
         if (effectiveUserData != null) {
             if (email.isEmpty()) email = effectiveUserData.email ?: ""
@@ -219,28 +218,26 @@ fun LoginScreen(
     // Auto-refresh token using stored credentials for better data freshness
     var autoRefreshAttempted by remember { mutableStateOf(false) }
     var isAutoRefreshing by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(effectiveUserData, isLoggedIn, autoRefreshAttempted) {
         // If we have preserved user data, user is not logged in, and haven't attempted auto-refresh yet
-        if (effectiveUserData != null && !isLoggedIn && !autoRefreshAttempted && 
-            !forceOriginalLogin && !forceDifferentUserMode) {
-            
+        if (effectiveUserData != null && !isLoggedIn && !autoRefreshAttempted && !forceOriginalLogin && !forceDifferentUserMode) {
             autoRefreshAttempted = true
             isAutoRefreshing = true
             android.util.Log.d("LoginScreen", "Attempting auto token refresh with preserved credentials")
-            
+
             // Try to auto-refresh token using preserved credentials
             val otpController = com.archeGlobal.one.controller.OtpVerificationController(
                 navigator = navigator,
                 context = context
             )
-            
+
             // Create a special controller that doesn't auto-navigate
             val backgroundOtpController = com.archeGlobal.one.controller.OtpVerificationController(
                 navigator = navigator,
                 context = context
             )
-            
+
             // Use backgroundRefresh flag to avoid auto-navigation
             backgroundOtpController.verifyOtp(
                 email = effectiveUserData.email ?: "",
@@ -1198,7 +1195,7 @@ fun LoginScreen(
                                     setFirstTimeLogin(context, true)
                                     com.archeGlobal.one.utils.MpinManager.clearAllMpinData(context)
                                     BiometricHelper(context).disableBiometric() // Disable biometric
-                                    
+
                                     // Clear preserved user data
                                     preferencesManager.setString("last_user_email", "")
                                     preferencesManager.setString("last_user_mobile", "")

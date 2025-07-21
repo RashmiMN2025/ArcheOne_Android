@@ -141,7 +141,7 @@ class UserDataManager private constructor(context: Context) {
     fun saveUserDataFromResponse(response: VerifyOtpResponse, token: String) {
         preferencesManager.saveAuthToken(token)
         preferencesManager.saveLong(PREF_LAST_LOGIN_TIME, System.currentTimeMillis())
-        
+
         // Always preserve last user credentials for re-authentication
         response.user?.let { user ->
             preferencesManager.setString("last_user_email", user.email ?: "")

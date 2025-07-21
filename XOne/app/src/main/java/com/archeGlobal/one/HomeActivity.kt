@@ -62,6 +62,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var greetingsController: GreetingsController
     private lateinit var ideaVaultController: IdeaVaultController
     private lateinit var holidayOptionsController: HolidayOptionsController
+    private lateinit var helpDeskController: HelpDeskController
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -256,6 +257,12 @@ class HomeActivity : AppCompatActivity() {
                 travelController = TravelController(navigator, this@HomeActivity)
                 // Log that the travel controller was initialized
                 android.util.Log.d("HomeActivity", "TravelController initialized with navigator: ${navigator.hashCode()}")
+                
+                // Initialize helpdesk controller
+                helpDeskController = HelpDeskController()
+                helpDeskController.setNavigationCallback { route ->
+                    navController.navigate(route)
+                }
                 var isLoading by remember { mutableStateOf(false) }
 
                 // If we have a destination or navigateTo, navigate to it
@@ -1219,6 +1226,62 @@ class HomeActivity : AppCompatActivity() {
                         } ?: run {
                             LaunchedEffect(Unit) { navController.popBackStack() }
                         }
+                    }
+
+                    // Helpdesk routes
+                    composable(
+                        route = "helpdesk",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) {
+                        HelpDeskScreen(controller = helpDeskController)
+                    }
+
+                    composable(
+                        route = "track_tickets",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) {
+                        TicketTrackingScreen(controller = helpDeskController)
+                    }
+
+                    composable(
+                        route = "faq_detail/{faqId}",
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) { backStackEntry ->
+                        val faqId = backStackEntry.arguments?.getString("faqId") ?: ""
+                        FAQDetailScreen(faqId = faqId, controller = helpDeskController)
                     }
                 }
             }

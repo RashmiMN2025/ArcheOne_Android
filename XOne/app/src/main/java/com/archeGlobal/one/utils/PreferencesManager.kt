@@ -228,13 +228,13 @@ class PreferencesManager(context: Context) {
             remove(KEY_APP_LOCKED) // Clear app lock state when session expires
             // Keep MPIN and biometric data for re-authentication
             // remove(KEY_BIOMETRIC_ENABLED) - Keep this
-            // remove("biometric_email") - Keep this
-            // remove("biometric_mobile") - Keep this
-            // remove("biometric_employee_id") - Keep this
-            // remove("biometric_token") - Keep this temporarily for re-auth
+            // remove(KEY_BIOMETRIC_EMAIL) - Keep this
+            // remove(KEY_BIOMETRIC_MOBILE) - Keep this
+            // remove(KEY_BIOMETRIC_EMPLOYEE_ID) - Keep this
+            // remove(KEY_BIOMETRIC_TOKEN) - Keep this temporarily for re-auth
             // Keep last user data for re-authentication
             // remove("last_user_email") - Keep this
-            // remove("last_user_mobile") - Keep this 
+            // remove("last_user_mobile") - Keep this
             // remove("last_user_employee_id") - Keep this
             // remove("last_user_name") - Keep this
         }.apply()
@@ -277,6 +277,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_BIOMETRIC_EMAIL = "biometric_email"
         private const val KEY_BIOMETRIC_MOBILE = "biometric_mobile"
         private const val KEY_BIOMETRIC_EMPLOYEE_ID = "biometric_employee_id"
+        private const val KEY_BIOMETRIC_TOKEN = "biometric_token"
         private const val KEY_GREETINGS_DATA = "greetings_data"
     }
 
@@ -321,19 +322,19 @@ class PreferencesManager(context: Context) {
 
     fun saveBiometricCredentials(email: String, mobile: String, employeeId: String, token: String) {
         sharedPreferences.edit().apply {
-            putString("biometric_email", email)
-            putString("biometric_mobile", mobile)
-            putString("biometric_employee_id", employeeId)
-            putString("biometric_token", token)
-            putBoolean("biometric_enabled", true)
+            putString(KEY_BIOMETRIC_EMAIL, email)
+            putString(KEY_BIOMETRIC_MOBILE, mobile)
+            putString(KEY_BIOMETRIC_EMPLOYEE_ID, employeeId)
+            putString(KEY_BIOMETRIC_TOKEN, token)
+            putBoolean(KEY_BIOMETRIC_ENABLED, true)
         }.apply()
     }
 
     fun getBiometricCredentialsWithToken(): Quad<String, String, String, String>? {
-        val email = sharedPreferences.getString("biometric_email", null)
-        val mobile = sharedPreferences.getString("biometric_mobile", null)
-        val employeeId = sharedPreferences.getString("biometric_employee_id", null)
-        val token = sharedPreferences.getString("biometric_token", null)
+        val email = sharedPreferences.getString(KEY_BIOMETRIC_EMAIL, null)
+        val mobile = sharedPreferences.getString(KEY_BIOMETRIC_MOBILE, null)
+        val employeeId = sharedPreferences.getString(KEY_BIOMETRIC_EMPLOYEE_ID, null)
+        val token = sharedPreferences.getString(KEY_BIOMETRIC_TOKEN, null)
         return if (email != null && mobile != null && employeeId != null && token != null) {
             Quad(email, mobile, employeeId, token)
         } else {
@@ -342,10 +343,11 @@ class PreferencesManager(context: Context) {
     }
 
     fun clearBiometricCredentials() {
-        setBoolean("biometric_enabled", false)
-        setString("biometric_email", "")
-        setString("biometric_mobile", "")
-        setString("biometric_employee_id", "")
+        setBoolean(KEY_BIOMETRIC_ENABLED, false)
+        setString(KEY_BIOMETRIC_EMAIL, "")
+        setString(KEY_BIOMETRIC_MOBILE, "")
+        setString(KEY_BIOMETRIC_EMPLOYEE_ID, "")
+        setString(KEY_BIOMETRIC_TOKEN, "")
     }
 
     fun clearBiometricData() {
@@ -354,6 +356,7 @@ class PreferencesManager(context: Context) {
             remove(KEY_BIOMETRIC_EMAIL)
             remove(KEY_BIOMETRIC_MOBILE)
             remove(KEY_BIOMETRIC_EMPLOYEE_ID)
+            remove(KEY_BIOMETRIC_TOKEN)
         }.apply()
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.*
+import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.EncryptedAPIHelper
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.handleError
@@ -80,7 +81,16 @@ class LoginController(
         Log.d("LoginController", "Token used for login: $token")
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val request = LoginRequest(email, mobile, employeeId)
+                val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
+                val request = LoginRequest(
+                    email = email,
+                    mobile = mobile,
+                    employeeId = employeeId,
+                    platform = deviceInfo.platform,
+                    deviceModel = deviceInfo.deviceModel,
+                    osVersion = deviceInfo.osVersion,
+                    appVersion = deviceInfo.appVersion
+                )
                 val response = RetrofitClient.apiService.login(token, request).execute()
                 val responseBody = response.body()
                 val errorBody = response.errorBody()?.string()

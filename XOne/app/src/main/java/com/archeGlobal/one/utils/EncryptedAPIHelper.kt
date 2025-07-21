@@ -47,17 +47,21 @@ class EncryptedAPIHelper(private val context: Context) {
             } catch (e: APIError) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Encrypted API call failed: ${e.errorMessage}", e)
+                    Log.e(TAG, "APIError type: ${e::class.java.simpleName}")
 
                     // Handle token expiration automatically
                     if (e is APIError.Unauthorized) {
+                        Log.d(TAG, "Handling APIError.Unauthorized - calling handleTokenExpiration")
                         handleTokenExpiration(context)
                     }
 
                     // Handle app update required (403 Forbidden)
                     if (e is APIError.Forbidden) {
-                        handleAppUpdateRequired(context)
+                        Log.d(TAG, "Handling APIError.Forbidden - showing update dialog directly")
+                        showUpdateDialogDirect(context)
                     }
 
+                    Log.d(TAG, "Calling controller callback with error")
                     callback(null, e)
                 }
             } catch (e: Exception) {
@@ -233,13 +237,61 @@ internal fun handleTokenExpiration(context: Context) {
 /**
  * Helper function to handle app update required (403 Forbidden)
  */
+internal fun showUpdateDialogDirect(context: Context) {
+    android.util.Log.w("APIError", "App update required - showing dialog directly")
+    android.util.Log.d("APIError", "Context type: ${context::class.java.simpleName}")
+    
+    try {
+        // Create and show AlertDialog directly
+        val builder = android.app.AlertDialog.Builder(context)
+        builder.setTitle("App Update Required")
+        builder.setMessage("A newer version of the app is required to continue. Please update from the Play Store to proceed.")
+        builder.setPositiveButton("Update Now") { _, _ ->
+            android.util.Log.d("APIError", "Update button clicked - opening Play Store")
+            try {
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=${context.packageName}"))
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                android.util.Log.e("APIError", "Failed to open Play Store: ${e.message}")
+                // Fallback to web browser
+                val webIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
+                webIntent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(webIntent)
+            }
+        }
+        // No cancel button - force user to update
+        builder.setCancelable(false)
+        builder.setOnKeyListener { _, keyCode, _ ->
+            // Prevent back button from dismissing the dialog
+            keyCode == android.view.KeyEvent.KEYCODE_BACK
+        }
+        
+        val dialog = builder.create()
+        android.util.Log.d("APIError", "Showing update dialog")
+        dialog.show()
+        android.util.Log.d("APIError", "Dialog shown successfully")
+    } catch (e: Exception) {
+        android.util.Log.e("APIError", "Failed to show update dialog: ${e.message}", e)
+        // Fallback to the original intent-based approach
+        handleAppUpdateRequired(context)
+    }
+}
+
 internal fun handleAppUpdateRequired(context: Context) {
     android.util.Log.w("APIError", "App update required - showing update dialog")
-
-    // Navigate to login screen with update dialog flag
-    val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {
-        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
-        putExtra("showUpdateDialog", true)
+    android.util.Log.d("APIError", "Context type: ${context::class.java.simpleName}")
+    
+    try {
+        // Navigate to login screen with update dialog flag
+        val intent = android.content.Intent(context, com.archeGlobal.one.LoginActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("showUpdateDialog", true)
+        }
+        android.util.Log.d("APIError", "Starting LoginActivity with showUpdateDialog=true")
+        context.startActivity(intent)
+        android.util.Log.d("APIError", "Successfully started LoginActivity")
+    } catch (e: Exception) {
+        android.util.Log.e("APIError", "Failed to start LoginActivity: ${e.message}", e)
     }
-    context.startActivity(intent)
 }

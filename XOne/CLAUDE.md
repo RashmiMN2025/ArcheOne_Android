@@ -21,6 +21,9 @@ XOne is a comprehensive enterprise Android application developed by Arche Global
 
 # Clean build
 ./gradlew clean
+
+# Clean and rebuild everything
+./gradlew clean assembleDebug
 ```
 
 ### Code Quality & Linting
@@ -279,11 +282,177 @@ This travel system demonstrates robust API integration with format flexibility, 
 
 ## Login Flow
 
-- Supports multiple authentication methods (MPIN, Biometric, SSO)
-- Implements secure token-based authentication
-- Handles Microsoft SSO integration for enterprise login
-- Manages session persistence and automatic token refresh
-- Implements multi-factor authentication with OTP verification
-- Provides fallback mechanisms for authentication failures
-- Encrypts and securely stores login credentials
-- Supports offline authentication with cached credentials
+### **Authentication Methods**
+- **OTP Login**: Email/Mobile/EmployeeID + OTP verification
+- **MPIN Login**: 4-digit PIN for returning users
+- **Biometric Login**: Fingerprint/Face authentication
+- **MFA/SSO Login**: Microsoft SSO integration
+- **Session Recovery**: Automatic token refresh after logout/expiry
+
+### **Complete Login Flow Documentation**
+
+#### **Scenario 1: First Time Login (Fresh Install)**
+**Initial State:** No stored data, `firstTimeLogin = true`
+**Flow:**
+1. LoginScreen shows OTP form only
+2. User enters credentials → `POST /send-otp` → OTP sent
+3. Navigate to OTP screen → User enters OTP
+4. `POST /otpVerify` with OTP → **Returns Token #1**
+5. `POST /login` with Token #1 → Returns user data + saves `last_user_*` credentials
+6. Navigate to MPIN setup (first-time users)
+
+**Tokens Generated:** 1 new token
+
+#### **Scenario 2: Normal Logout → Return**
+**Initial State:** User data preserved in `last_user_*` preferences
+**Flow:**
+1. LoginScreen loads → **Background Auto-Refresh:**
+   - `POST /otpVerify` with `{isBiometric: true, backgroundRefresh: true}` → **Token #1**
+   - `POST /login` with Token #1 → Fresh data loaded silently, NO navigation
+2. User sees "Welcome, [Name]" + Quick login options (MPIN/Biometric/MFA)
+3. User clicks authentication method:
+   - `POST /otpVerify` with `{isBiometric: true, backgroundRefresh: false}` → **Token #2**
+   - `POST /login` with Token #2 → Navigate to Home
+
+**Tokens Generated:** 2 tokens (background refresh + manual login)
+
+#### **Scenario 3: Session Expiry (401 Error)**
+**Flow:**
+1. Any API call returns 401 → AuthInterceptor detects
+2. `preferencesManager.clearSessionData()` + `userDataManager.clearSessionData()`
+3. Preserve user data in `session_expired_*` preferences + preserve MPIN/biometric
+4. Navigate to LoginActivity with `session_expired=true`
+5. **Identical flow to Scenario 2** (background refresh + manual login)
+
+**Tokens Generated:** 2 tokens (same as logout scenario)
+
+#### **Scenario 4: MPIN Login**
+**Flow:**
+1. Background refresh happens (if applicable)
+2. User clicks MPIN → Enters 4-digit PIN
+3. Local MPIN validation: `mpinController.validateMpin()`
+4. If valid: `POST /otpVerify` with `{isBiometric: true}` → **New Token**
+5. `POST /login` with new token → Navigate to Home
+
+**Tokens Generated:** 1 token (+ background refresh if applicable)
+
+#### **Scenario 5: Biometric Login**
+**Flow:**
+1. Background refresh happens (if applicable)
+2. User clicks Fingerprint → Biometric prompt → Authentication succeeds
+3. `POST /otpVerify` with `{isBiometric: true}` → **New Token**
+4. `POST /login` with new token → Navigate to Home
+
+**Tokens Generated:** 1 token (+ background refresh if applicable)
+
+#### **Scenario 6: MFA/SSO Login**
+**Flow:**
+1. User clicks "Login with MFA" → Terms dialog → Microsoft SSO WebView
+2. User completes Microsoft authentication → Returns token from Microsoft
+3. `POST /login` with Microsoft token → Navigate to Home/MPIN setup
+
+**Tokens Generated:** 1 token (from Microsoft SSO)
+
+#### **Scenario 7: "Login as Different User"**
+**Flow:**
+1. User clicks "Log in as different user" link
+2. Clear ALL data: `UserDataManager.clearUserData()`, `MpinManager.clearAllMpinData()`, `BiometricHelper.disableBiometric()`, clear `last_user_*`
+3. Reset to fresh state → Same as Scenario 1
+
+**Tokens Generated:** 1 token (after fresh OTP login)
+
+### **API Endpoints & Token Generation**
+
+| **Endpoint** | **Purpose** | **When Called** | **Auth Header** | **Returns Token** |
+|--------------|-------------|-----------------|-----------------|-------------------|
+| `POST /send-otp` | Send OTP to user | First-time login, OTP method | No | No |
+| `POST /otpVerify` | Verify OTP/Generate token | After OTP entry, MPIN/Biometric login, Background refresh | No | **YES** |
+| `POST /login` | Get user data and establish session | After token received | **YES** (Bearer token) | No |
+
+### **Key Implementation Details**
+
+#### **Credential Preservation System**
+- **Always Preserved:** `last_user_email`, `last_user_mobile`, `last_user_employee_id`, `last_user_name`
+- **Session Expiry:** Additional `session_expired_*` preservation
+- **Background Refresh:** `backgroundRefresh=true` parameter prevents auto-navigation
+- **Token Storage:** Temporary token storage in PreferencesManager for API calls
+
+#### **Session Management**
+- **AuthInterceptor:** Detects 401 responses and triggers `handleTokenExpiration()`
+- **clearSessionData():** Preserves re-authentication credentials
+- **clearUserData():** Complete reset for different user login
+
+#### **Security Features**
+- Local MPIN validation before server calls
+- Biometric authentication before token generation
+- Encrypted API calls via `EncryptedAPIHelper`
+- Certificate pinning for arche.global domain
+- Automatic token refresh ensures fresh data
+
+#### **Navigation Logic**
+- **Background Refresh:** Updates data without navigation
+- **Manual Authentication:** Always navigates to Home after success
+- **MPIN Setup:** First-time users go to MPIN setup, returning users go to Home
+
+### **Benefits of Current Implementation**
+✅ **Always Fresh Data** - New tokens generated frequently
+✅ **Seamless UX** - Logout and session expiry provide identical experience
+✅ **Security** - No token reuse, always generate fresh authentication
+✅ **Convenience** - Quick re-authentication with preserved credentials
+✅ **Fallbacks** - Multiple authentication methods available
+
+## Authentication State Management
+
+### **Critical Implementation Detail**
+The app uses a dual-check authentication system in `MainActivity.kt`:
+
+```kotlin
+val hasAuthToken = preferencesManager.getAuthToken() != null
+val isLoggedInState = preferencesManager.getBoolean("isLoggedIn", false)  
+val isUserLoggedIn = hasAuthToken && isLoggedInState
+```
+
+**Why this matters:**
+- **Token alone is insufficient** - Background authentication can generate tokens without user interaction
+- **Login state is crucial** - Only set to `true` during actual user login actions
+- **Prevents logout bypass** - After logout, `isLoggedIn=false` even if background auth creates new tokens
+- **Key preference keys:** `"auth_token"` and `"isLoggedIn"` (note: no underscore in isLoggedIn)
+
+### **Logout Implementation**
+Located in `ProfileController.proceedWithLocalLogout()`:
+1. Sets `userDataManager.setIsLoggedIn(false)` ✅
+2. Clears auth token via `clearAuthToken()` ✅  
+3. Preserves user credentials for quick re-login ✅
+4. Navigates to LoginActivity ✅
+
+### **Login Success Implementation**
+Both `OtpVerificationController.loginWithToken()` and `LoginController.loginWithToken()` properly call:
+```kotlin
+userDataManager.setIsLoggedIn(true)  // Critical for MainActivity auth check
+userDataManager.setHasLoggedIn(true) // For returning user experience
+```
+
+## Claude Code Development Rules
+
+When working on this codebase, follow these 7 essential rules:
+
+1. **Think and Plan First**: Read the codebase for relevant files and write a plan to tasks/todo.md before starting any work.
+
+2. **Create Todo Lists**: The plan should have a list of todo items that you can check off as you complete them.
+
+3. **Get Plan Approval**: Before beginning work, check in with the user to verify the plan.
+
+4. **Execute and Track Progress**: Begin working on the todo items, marking them as complete as you go.
+
+5. **Provide High-Level Updates**: At every step, give high-level explanations of what changes you made.
+
+6. **Keep Changes Simple**: Make every task and code change as simple as possible. Avoid massive or complex changes. Every change should impact as little code as possible. Everything is about simplicity.
+
+7. **Document and Review**: Add a review section to the todo.md file with a summary of the changes made and any other relevant information.
+
+### **Task Management Workflow**
+- Use TodoWrite tool to create and track tasks
+- Mark tasks as `pending`, `in_progress`, or `completed`
+- Always provide clear, actionable task descriptions
+- Break complex features into smaller, manageable steps
+- Document any blockers or issues encountered

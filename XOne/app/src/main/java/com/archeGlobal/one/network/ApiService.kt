@@ -202,7 +202,11 @@ data class OtpVerifyResponse(
 data class LoginRequest(
     val email: String,
     val mobile: String,
-    val employeeId: String
+    val employeeId: String,
+    val platform: String,
+    val deviceModel: String,
+    val osVersion: String,
+    val appVersion: String
 )
 
 data class VerifyOtpResponse(

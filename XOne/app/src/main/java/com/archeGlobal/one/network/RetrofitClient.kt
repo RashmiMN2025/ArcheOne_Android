@@ -54,7 +54,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
         // Clear session data but preserve re-auth methods
         userDataManager.clearSessionData()
-        
+
         // Preserve essential user data for session expired re-authentication
         if (lastUserData != null) {
             // Save essential credentials back for session expired login
@@ -62,7 +62,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
             preferencesManager.setString("session_expired_mobile", lastUserData.mobile ?: "")
             preferencesManager.setString("session_expired_employee_id", lastUserData.employeeId ?: "")
             preferencesManager.setString("session_expired_name", lastUserData.name ?: "")
-            
+
             Log.d("AuthInterceptor", "Preserved user data for session expired login: ${lastUserData.name}")
         }
 

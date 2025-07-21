@@ -7,7 +7,8 @@
       "Bash(rm:*)",
       "Bash(mv:*)",
       "Bash(ls:*)",
-      "Bash(file:*)"
+      "Bash(file:*)",
+      "Bash(adb logcat:*)"
     ],
     "deny": []
   }
