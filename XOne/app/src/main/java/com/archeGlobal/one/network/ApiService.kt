@@ -116,6 +116,12 @@ interface ApiService {
 
     @GET("employee-celebration")
     suspend fun getEmployeeCelebration(): Response<CelebrationResponse>
+
+    // @GET("faq")  // Endpoint returns 404 - FAQ data comes from login response instead
+    // fun getFAQData(): Call<FAQDataResponse>
+
+    @POST("tickets")
+    fun getTickets(@Body request: TicketsRequest): Call<TicketsResponse>
 }
 
 data class FeedbackRequest(
@@ -223,7 +229,8 @@ data class VerifyOtpResponse(
     val communique: List<CommuniqueModel.Communique> = emptyList(),
     val greetings: Map<String, List<String>>? = null,
     val greetingCategories1: List<ApiGreetingCategory>? = null, // changed from greetingCategories
-    @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null
+    @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null,
+    val faqList: List<FAQCategory>? = null
 )
 
 data class User(
@@ -318,4 +325,41 @@ data class AssetDetail(
 
 data class CalendarRequest(
     val state: String
+)
+
+data class TicketsRequest(
+    val email: String,
+    val category: String
+)
+
+data class TicketsResponse(
+    val tickets: List<TicketItem>
+)
+
+data class TicketItem(
+    val created_time: String,
+    val description: String,
+    val id: String,
+    val status: String,
+    val subject: String
+)
+
+data class FAQCategory(
+    val title: String,
+    val items: List<FAQItem>
+)
+
+data class FAQItem(
+    val question: String,
+    val answer: List<FAQAnswer>
+)
+
+data class FAQAnswer(
+    val cat: String,
+    val des: String
+)
+
+data class FAQDataResponse(
+    val status: Int,
+    val faqList: List<FAQCategory>
 )

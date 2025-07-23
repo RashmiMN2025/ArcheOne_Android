@@ -11,6 +11,7 @@ import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.network.AssetDetail
 import com.archeGlobal.one.network.Office
+import com.archeGlobal.one.network.FAQCategory
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -192,6 +193,27 @@ class PreferencesManager(context: Context) {
         }
     }
 
+    // Save FAQ data
+    fun saveFAQData(faqData: List<FAQCategory>?) {
+        if (faqData == null) {
+            sharedPreferences.edit().remove(KEY_FAQ_DATA).apply()
+        } else {
+            val json = gson.toJson(faqData)
+            sharedPreferences.edit().putString(KEY_FAQ_DATA, json).apply()
+        }
+    }
+
+    // Get FAQ data
+    fun getFAQData(): List<FAQCategory>? {
+        val json = sharedPreferences.getString(KEY_FAQ_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<FAQCategory>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+
     // Clear all user-related data on logout
     fun clearAllUserData() {
         sharedPreferences.edit().apply {
@@ -202,6 +224,7 @@ class PreferencesManager(context: Context) {
             remove(KEY_SOS_BLOGS_DATA)
             remove(KEY_ASSET_DETAILS)
             remove(KEY_COMMUNIQUE_DATA)
+            remove(KEY_FAQ_DATA)
             remove(KEY_EVENT_DATA)
             remove(KEY_APP_LOCKED) // Clear app lock state when session expires
             remove(KEY_BIOMETRIC_ENABLED) // Clear biometric settings
@@ -224,6 +247,7 @@ class PreferencesManager(context: Context) {
             remove(KEY_SOS_BLOGS_DATA)
             remove(KEY_ASSET_DETAILS)
             remove(KEY_COMMUNIQUE_DATA)
+            remove(KEY_FAQ_DATA)
             remove(KEY_EVENT_DATA)
             remove(KEY_APP_LOCKED) // Clear app lock state when session expires
             // Keep MPIN and biometric data for re-authentication
@@ -268,6 +292,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_SOS_BLOGS_DATA = "sos_blogs_data"
         private const val KEY_ASSET_DETAILS = "asset_details"
         private const val KEY_COMMUNIQUE_DATA = "communique_data"
+        private const val KEY_FAQ_DATA = "faq_data"
         private const val KEY_IS_FIRST_LAUNCH = "is_first_launch"
         private const val KEY_APP_LOCKED = "app_locked"
         private const val KEY_PROFILE_UPDATE_TIMESTAMP = "profile_update_timestamp"

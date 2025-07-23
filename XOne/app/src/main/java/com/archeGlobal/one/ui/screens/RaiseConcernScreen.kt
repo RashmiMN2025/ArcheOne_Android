@@ -30,20 +30,28 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.SOSController
+import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
 
 @Composable
-fun RaiseConcernScreen(onBackPressed: () -> Unit) {
+fun RaiseConcernScreen(
+    onBackPressed: () -> Unit,
+    title: String = "Raise a Concern"
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Get user data and SOS controller
+    // Get user data and controllers
     val userDataManager = remember { UserDataManager.getInstance(context) }
     val userData = remember { userDataManager.getUserData() }
     val sosController = remember { SOSController(context.applicationContext as Application) }
+    val helpDeskController = remember { HelpDeskController(context) }
+    
+    // Determine if this is a help desk ticket or SOS concern
+    val isHelpDeskTicket = title.contains("Ticket", ignoreCase = true)
 
     // Form state
     var selectedCategory by remember { mutableStateOf<String?>(null) }
@@ -52,19 +60,118 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
     var isSubmitting by remember { mutableStateOf(false) }
     var showAnonymousDialog by remember { mutableStateOf(false) }
 
-    // Categories based on the screenshot
-    val categories = listOf(
-        "Medical Emergency",
-        "Fire Safety",
-        "Security Risk",
-        "Workplace Safety",
-        "Non-Compliance",
-        "PoSH",
-        "Other Issue"
-    )
+    // Get categories based on context
+    val helpDeskModel by helpDeskController.model.collectAsState()
+    val categories = if (isHelpDeskTicket) {
+        // Extract categories from help desk FAQ data, excluding "Other Issues" 
+        val helpDeskCategories = helpDeskModel.faqItems
+            .map { it.category }
+            .distinct()
+            .filter { it != "General" && it != "Other Issues" }
+            .sorted()
+        
+        // Add help desk specific categories
+        helpDeskCategories + listOf("Other Issue")
+    } else {
+        // SOS categories
+        listOf(
+            "Medical Emergency",
+            "Fire Safety", 
+            "Security Risk",
+            "Workplace Safety",
+            "Non-Compliance",
+            "PoSH",
+            "Other Issue"
+        )
+    }
 
-    // Submit functions
-    suspend fun submitConcern(anonymous: Boolean) {
+    // Submit function for help desk tickets (using SOS endpoint, no anonymous option)
+    suspend fun submitHelpDeskTicket() {
+        if (selectedCategory == null || issueDescription.isBlank()) {
+            Toast.makeText(
+                context,
+                "Please select a category and describe your issue",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        val user = userData
+        if (user == null) {
+            Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        isSubmitting = true
+
+        try {
+            val request = SOSRequest(
+                name = user.name ?: "",
+                email = user.email ?: "",
+                mobile = user.mobile ?: "",
+                category = selectedCategory ?: "Other Issue",
+                query = "Help Desk Ticket - ${selectedCategory ?: "Other Issue"}",
+                description = issueDescription,
+                anonymous = false // Help desk tickets are never anonymous
+            )
+
+            Log.d("RaiseConcern", "Submitting help desk ticket via SOS endpoint: Category=$selectedCategory, Description=$issueDescription")
+
+            val result = sosController.submitEncryptedSOSRequest(request)
+
+            result.fold(
+                onSuccess = { response ->
+                    if (response.status) {
+                        Toast.makeText(
+                            context,
+                            "Help desk ticket submitted successfully!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        
+                        // Reset form on success
+                        selectedCategory = null
+                        issueDescription = ""
+                        
+                        // Go back after successful submission
+                        onBackPressed()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Failed to submit ticket: ${response.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                onFailure = { exception ->
+                    val errorMessage = when (exception) {
+                        is APIError.Unauthorized -> "Authentication error. Please login again."
+                        is APIError.BadRequest -> "Invalid request. Please check your information."
+                        is APIError.ServerError -> "Server error. Please try again later."
+                        is APIError.EncryptionFailed -> "Security error. Please try again."
+                        is APIError.DecryptionFailed -> "Security error. Please try again."
+                        is APIError.SSLPinningFailed -> "Network security error. Please try again."
+                        is APIError.DecodingError -> "Response processing error. Please try again."
+                        else -> "Unable to submit your ticket. Please try again."
+                    }
+
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    Log.e("RaiseConcern", "Error submitting help desk ticket: ${exception.message}")
+                }
+            )
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Unable to submit your ticket. Please check your internet connection and try again.",
+                Toast.LENGTH_SHORT
+            ).show()
+            Log.e("RaiseConcern", "Exception during help desk ticket submission: ${e.message}")
+        } finally {
+            isSubmitting = false
+        }
+    }
+
+    // Submit function for SOS concerns (existing functionality)
+    suspend fun submitSOSConcern(anonymous: Boolean) {
         if (selectedCategory == null || issueDescription.isBlank()) {
             Toast.makeText(
                 context,
@@ -94,11 +201,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 anonymous = anonymous
             )
 
-            // Add debug log to verify description content
-            Log.d(
-                "RaiseConcern",
-                "Submitting encrypted concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous"
-            )
+            Log.d("RaiseConcern", "Submitting SOS concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous")
 
             val result = sosController.submitEncryptedSOSRequest(request)
 
@@ -106,16 +209,12 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 onSuccess = { response ->
                     if (response.status) {
                         // Show success message based on anonymous status
-                        if (anonymous) {
-                            Toast.makeText(context, "Concern submitted anonymously with encryption", Toast.LENGTH_SHORT)
-                                .show()
+                        val message = if (anonymous) {
+                            "Concern submitted anonymously with encryption"
                         } else {
-                            Toast.makeText(
-                                context,
-                                "Concern submitted with your identity (encrypted)",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            "Concern submitted with your identity (encrypted)"
                         }
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 
                         // Reset form on success
                         selectedCategory = null
@@ -148,7 +247,6 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 }
             )
         } catch (e: Exception) {
-            // Show user-friendly error message for network/other errors
             Toast.makeText(
                 context,
                 "Unable to submit your concern. Please check your internet connection and try again.",
@@ -195,7 +293,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                         )
                     }
                     Text(
-                        text = "Raise a Concern",
+                        text = title,
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
@@ -341,7 +439,11 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
                         if (issueDescription.isNotBlank() && selectedCategory != null) {
-                            showAnonymousDialog = true
+                            if (isHelpDeskTicket) {
+                                coroutineScope.launch { submitHelpDeskTicket() }
+                            } else {
+                                showAnonymousDialog = true
+                            }
                         }
                     }),
                     shape = RoundedCornerShape(8.dp)
@@ -349,7 +451,13 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
 
                 // Submit button
                 Button(
-                    onClick = { showAnonymousDialog = true },
+                    onClick = { 
+                        if (isHelpDeskTicket) {
+                            coroutineScope.launch { submitHelpDeskTicket() }
+                        } else {
+                            showAnonymousDialog = true
+                        }
+                    },
                     enabled = !isSubmitting,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                     modifier = Modifier
@@ -367,8 +475,8 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                 }
             }
 
-            // Anonymous submission dialog
-            if (showAnonymousDialog) {
+            // Anonymous submission dialog (only for SOS concerns)
+            if (showAnonymousDialog && !isHelpDeskTicket) {
                 Dialog(onDismissRequest = { showAnonymousDialog = false }) {
                     Card(
                         modifier = Modifier
@@ -421,7 +529,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                             Button(
                                 onClick = {
                                     showAnonymousDialog = false
-                                    coroutineScope.launch { submitConcern(anonymous = true) }
+                                    coroutineScope.launch { submitSOSConcern(anonymous = true) }
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(
@@ -445,7 +553,7 @@ fun RaiseConcernScreen(onBackPressed: () -> Unit) {
                             Button(
                                 onClick = {
                                     showAnonymousDialog = false
-                                    coroutineScope.launch { submitConcern(anonymous = false) }
+                                    coroutineScope.launch { submitSOSConcern(anonymous = false) }
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()

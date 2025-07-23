@@ -2,7 +2,9 @@ package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -12,8 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.HelpDeskController
@@ -21,6 +28,7 @@ import com.archeGlobal.one.model.HelpDeskFAQ
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,11 +59,12 @@ fun FAQDetailScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-            Text(
-                text = "FAQ not found",
-                fontSize = 18.sp,
-                color = Color.Black
-            )
+                Text(
+                    text = "FAQ not found",
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
+                )
             }
         }
         return
@@ -65,8 +74,9 @@ fun FAQDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding()
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
@@ -79,72 +89,92 @@ fun FAQDetailScreen(
                     )
                 )
         ) {
-        TopAppBar(
-            title = {
-                Text(
-                    text = "FAQ Details",
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { controller.navigateBack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.Black
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent
-            )
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            QuestionCard(faq)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            AnswerCard(faq)
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Have another query?",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-
-                Button(
-                    onClick = { 
-                        controller.raiseConcern(faq.question, faq.answer)
+            Column(modifier = Modifier.fillMaxSize()) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "FAQ Details",
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Red
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                ) {
-                    Text(
-                        text = "Raise Concern",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
+                    navigationIcon = {
+                        IconButton(onClick = { controller.navigateBack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
                     )
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    item {
+                        QuestionCard(faq)
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    item {
+                        AnswerCard(faq)
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Still unable to fix the issue",
+                                fontSize = 15.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black
+                            )
+
+                            Button(
+                                onClick = {
+                                    controller.raiseTicket(faq.question, faq.answer)
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825)
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = "Raise a Ticket",
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-}
 }
 
 @Composable
@@ -169,13 +199,14 @@ fun QuestionCard(faq: HelpDeskFAQ) {
                     modifier = Modifier
                         .size(24.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFFFE8E6)),
+                        .background(Color(0xFFD32F2F)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "!",
-                        color = Color(0xFFD32F2F),
-                        fontSize = 14.sp,
+                        text = "Q",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -183,10 +214,11 @@ fun QuestionCard(faq: HelpDeskFAQ) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Question",
-                    fontSize = 14.sp,
+                    text = "Query",
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Red
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray
                 )
             }
 
@@ -194,10 +226,11 @@ fun QuestionCard(faq: HelpDeskFAQ) {
 
             Text(
                 text = faq.question,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = GraphikFontFamily,
                 color = Color.Black,
-                lineHeight = 22.sp
+                lineHeight = 24.sp
             )
         }
     }
@@ -205,6 +238,8 @@ fun QuestionCard(faq: HelpDeskFAQ) {
 
 @Composable
 fun AnswerCard(faq: HelpDeskFAQ) {
+    val uriHandler = LocalUriHandler.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -225,7 +260,7 @@ fun AnswerCard(faq: HelpDeskFAQ) {
                     modifier = Modifier
                         .size(24.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFFFE8DC)),
+                        .background(Color(0xFFFF6B35)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -237,20 +272,91 @@ fun AnswerCard(faq: HelpDeskFAQ) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Answer",
-                    fontSize = 14.sp,
+                    text = "Solution",
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFFFF6B35)
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = faq.answer,
-                fontSize = 14.sp,
-                color = Color.Black,
-                lineHeight = 20.sp
+            // Create annotated string with styling for steps and emails
+            val emailPattern = Regex("[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
+            val stepPattern = Regex("• ([^:]+):")
+            val answerText = faq.answer
+            val emailMatches = emailPattern.findAll(answerText).toList()
+            val stepMatches = stepPattern.findAll(answerText).toList()
+
+            val annotatedString = buildAnnotatedString {
+                var lastIndex = 0
+                val allMatches = (emailMatches.map { "email" to it } + stepMatches.map { "step" to it })
+                    .sortedBy { it.second.range.first }
+
+                allMatches.forEach { (type, match) ->
+                    // Add text before match
+                    append(answerText.substring(lastIndex, match.range.first))
+
+                    when (type) {
+                        "email" -> {
+                            // Add clickable email
+                            pushStringAnnotation(
+                                tag = "EMAIL",
+                                annotation = match.value
+                            )
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Color(0xFFD32F2F),
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append(match.value)
+                            }
+                            pop()
+                        }
+                        "step" -> {
+                            // Add bullet point
+                            append("• ")
+                            // Add semibold step title
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            ) {
+                                append(match.groupValues[1])
+                            }
+                            // Add colon
+                            append(":")
+                        }
+                    }
+
+                    lastIndex = match.range.last + 1
+                }
+
+                // Add remaining text
+                if (lastIndex < answerText.length) {
+                    append(answerText.substring(lastIndex))
+                }
+            }
+
+            ClickableText(
+                text = annotatedString,
+                style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    fontFamily = GraphikFontFamily,
+                    lineHeight = 20.sp
+                ),
+                onClick = { offset ->
+                    annotatedString.getStringAnnotations(
+                        tag = "EMAIL",
+                        start = offset,
+                        end = offset
+                    ).firstOrNull()?.let { annotation ->
+                        uriHandler.openUri("mailto:${annotation.item}")
+                    }
+                }
             )
         }
     }

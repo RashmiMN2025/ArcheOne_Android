@@ -1,142 +1,179 @@
 package com.archeGlobal.one.controller
 
 import androidx.compose.runtime.*
+import android.content.Context
 import com.archeGlobal.one.model.*
+import com.archeGlobal.one.utils.UserDataManager
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.network.TicketsRequest
+import com.archeGlobal.one.network.TicketsResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-class HelpDeskController {
+class HelpDeskController(private val context: Context) {
     private val _model = MutableStateFlow(HelpDeskModel())
     val model: StateFlow<HelpDeskModel> = _model.asStateFlow()
 
     private var navigate: (String) -> Unit = {}
+    private val apiService = RetrofitClient.apiService
+    private val userDataManager = UserDataManager.getInstance(context)
 
     fun setNavigationCallback(navCallback: (String) -> Unit) {
         navigate = navCallback
     }
 
     init {
-        loadFAQData()
-        loadTicketsData()
+        loadFAQFromLogin()
+        // Note: loadTicketsData() is called separately when user navigates to ticket tracking
     }
 
-    private fun loadFAQData() {
-        val faqItems = listOf(
+    private fun loadFAQFromLogin() {
+        // Set loading state
+        _model.value = _model.value.copy(isLoading = true, error = null)
+        android.util.Log.d("HelpDeskController", "Loading FAQ data from login response only")
+        
+        // Get FAQ data from login response (stored in UserDataManager)
+        val loginFaqData = userDataManager.getFAQData()
+        android.util.Log.d("HelpDeskController", "Login FAQ data: ${loginFaqData?.size ?: 0} categories")
+        
+        val faqItems = if (loginFaqData != null && loginFaqData.isNotEmpty()) {
+            android.util.Log.d("HelpDeskController", "Using login FAQ data")
+            loginFaqData.toHelpDeskFAQs()
+        } else {
+            android.util.Log.d("HelpDeskController", "No login FAQ data, using default FAQ data")
+            getDefaultFAQData()
+        }
+        
+        android.util.Log.d("HelpDeskController", "Final FAQ items: ${faqItems.size}")
+        
+        _model.value = _model.value.copy(
+            faqItems = faqItems,
+            isLoading = false,
+            error = null
+        )
+    }
+
+    // Legacy method - kept for reference but not used since /faq endpoint returns 404
+    private fun refreshLoginAndLoadFAQ() {
+        // This method is no longer used since we only rely on login FAQ data
+        loadFAQFromLogin()
+    }
+
+    // Legacy methods removed - FAQ data now comes only from login response
+    // The /faq API endpoint returns 404, so we rely entirely on login data
+    
+    private fun getDefaultFAQData(): List<HelpDeskFAQ> {
+        return listOf(
+            // Hardware Issues
             HelpDeskFAQ(
-                id = "faq1",
-                title = "Technical Issues",
-                question = "What should I do if I encounter technical issues?",
-                answer = "Restart the app, clear cache, or update to the latest version. If the issue persists, contact platform@arche.global",
-                category = "Technical"
+                id = "laptop_not_booting",
+                title = "Hardware Issues",
+                question = "Laptop/Desktop not booting",
+                answer = "• Check Power Supply: Ensure the power cable is securely connected to both the device and the power outlet. Try a different outlet or adapter if available. For laptops, check if the battery is charged.\n\n• Look for Indicator Lights or Sounds: Check for power or charging lights, and listen for fan noise or beeps.\n\n• Try a Hard Reset: Hold the power button for 10-15 seconds, then restart the device.\n\n• Disconnect External Devices: Remove all USB devices and accessories to eliminate hardware conflicts.\n\n• Boot into Safe Mode or BIOS: Press F2, F10, DEL, or ESC during startup to enter BIOS or Safe Mode.\n\n• Check Display Connection: Ensure the monitor is securely connected to the CPU or laptop's display output.\n\n• Use Recovery Media: Insert a bootable USB or recovery disk to troubleshoot startup issues.\n\n• Document Any Error Messages: Note down any error codes or messages for further IT support.",
+                category = "Hardware"
             ),
             HelpDeskFAQ(
-                id = "faq2",
-                title = "Performance Management",
-                question = "How do I access my Performance Management (PMS)?",
-                answer = "Navigate to the PMS section from the main dashboard. Ensure you have the required permissions.",
-                category = "Performance"
+                id = "printer_not_working",
+                title = "Hardware Issues",
+                question = "Printer not working",
+                answer = "• Check Power and Connections: Ensure the printer is powered on and all cables are securely connected.\n\n• Verify Network Connection: For network printers, check if they're connected to the correct network.\n\n• Update Printer Drivers: Download and install the latest drivers from the manufacturer's website.\n\n• Clear Print Queue: Cancel all pending print jobs and restart the print spooler service.\n\n• Run Printer Troubleshooter: Use the built-in Windows or Mac printer troubleshooter.\n\n• Check Ink/Toner Levels: Replace cartridges if they're low or empty.\n\n• Clean Print Heads: Use the printer's maintenance utility to clean print heads if quality is poor.",
+                category = "Hardware"
+            ),
+            // Network & Connectivity
+            HelpDeskFAQ(
+                id = "vpn_connection_issue",
+                title = "Network & Connectivity",
+                question = "Unable to connect to VPN",
+                answer = "• Check Internet Connection: Ensure your base internet connection is stable before connecting to VPN.\n\n• Verify VPN Credentials: Double-check your username, password, and server settings.\n\n• Try Different VPN Servers: Switch to a different server location if available.\n\n• Restart Network Services: Disable and re-enable your network adapter or restart your router.\n\n• Update VPN Client: Ensure you're using the latest version of your VPN software.\n\n• Check Firewall Settings: Temporarily disable firewall or add VPN client to exceptions.\n\n• Contact IT Support: If issues persist, contact your IT department for corporate VPN configuration.",
+                category = "Network"
             ),
             HelpDeskFAQ(
-                id = "faq3",
-                title = "Payslips & Tax Forms",
-                question = "How can I access my Payslips, Form16 and Form 12A?",
-                answer = "You can access payslips and tax forms through the HR section. Login with your employee credentials.",
-                category = "HR"
+                id = "wifi_issues",
+                title = "Network & Connectivity",
+                question = "Wi-Fi not working or slow",
+                answer = "• Restart Your Device: Turn off Wi-Fi on your device, wait 30 seconds, then turn it back on.\n\n• Restart Router/Modem: Unplug your router for 30 seconds, then plug it back in.\n\n• Check Signal Strength: Move closer to the router or check for physical obstructions.\n\n• Forget and Reconnect: Remove the Wi-Fi network from your device and reconnect with the password.\n\n• Update Network Drivers: Ensure your device's network drivers are up to date.\n\n• Check for Interference: Move away from other electronic devices that might cause interference.\n\n• Reset Network Settings: As a last resort, reset your device's network settings to defaults.",
+                category = "Network"
             ),
             HelpDeskFAQ(
-                id = "faq4",
-                title = "Emergency Contacts",
-                question = "How do I access emergency contact information?",
-                answer = "Emergency contacts are available in the SOS section of the app. You can also update your emergency contacts there.",
-                category = "Emergency"
+                id = "network_drive_access",
+                title = "Network & Connectivity",
+                question = "Network drive access issues",
+                answer = "• Verify Network Connection: Ensure you're connected to the corporate network or VPN.\n\n• Check Drive Mapping: Verify the network drive path and mapping in File Explorer.\n\n• Re-enter Credentials: Try disconnecting and reconnecting with your domain credentials.\n\n• Test with UNC Path: Try accessing the drive directly using \\\\server\\share format.\n\n• Clear Stored Credentials: Remove old credentials from Windows Credential Manager.\n\n• Contact IT Support: Network drives often require specific permissions from IT department.",
+                category = "Network"
             ),
             HelpDeskFAQ(
-                id = "faq5",
-                title = "Travel Requests",
-                question = "How do I raise a Travel request?",
-                answer = "Go to Travel section, select your destination, dates, and submit for approval. Ensure all required fields are completed.",
-                category = "Travel"
+                id = "internet_connectivity",
+                title = "Network & Connectivity",
+                question = "Internet connectivity problems",
+                answer = "• Check Physical Connections: Ensure all ethernet cables are securely connected.\n\n• Restart Network Equipment: Power cycle your modem, router, and device.\n\n• Run Network Troubleshooter: Use your operating system's built-in network diagnostic tools.\n\n• Check DNS Settings: Try using public DNS servers like 8.8.8.8 or 1.1.1.1.\n\n• Disable VPN/Proxy: Temporarily disable any VPN or proxy connections.\n\n• Update Network Drivers: Ensure your network adapter drivers are current.\n\n• Contact ISP: If all else fails, contact your internet service provider for assistance.",
+                category = "Network"
             ),
+            // Other Issues
             HelpDeskFAQ(
-                id = "faq6",
-                title = "Anonymous Reporting",
-                question = "How do I report an issue/security risk/Non Compliance anonymously?",
-                answer = "Use the anonymous reporting feature in the Compliance section. All reports are handled confidentially.",
-                category = "Compliance"
-            ),
-            HelpDeskFAQ(
-                id = "faq7",
+                id = "raise_ticket",
                 title = "Other Issues",
                 question = "Other issue raise concern",
-                answer = "For any other issues not covered in the FAQ, please use the 'Raise Concern' button to create a support ticket.",
+                answer = "For any other issues not covered in the FAQ, please use the 'Raise a Ticket' button to create a support ticket.",
                 category = "General"
             )
         )
-
-        _model.value = _model.value.copy(faqItems = faqItems)
     }
 
     private fun loadTicketsData() {
-        val sampleTickets = listOf(
-            SupportTicket(
-                id = "1",
-                ticketNumber = "#58202",
-                title = "Other",
-                description = "Hello Team, You have received ratings from Nova O&#39;Sullivan.",
-                status = TicketStatus.CLOSED,
-                category = "Other",
-                createdDate = "Jul 9, 2025 01:34 PM",
-                details = TicketDetails(
-                    platform = "Android",
-                    deviceInfo = "Pixel 8a",
-                    appVersion = "16",
-                    rating = 5,
-                    additionalNotes = "Best regards, ArcheOne Team"
-                )
-            ),
-            SupportTicket(
-                id = "2",
-                ticketNumber = "#58157",
-                title = "Other",
-                description = "Login issue",
-                status = TicketStatus.CLOSED,
-                category = "Other",
-                createdDate = "Jul 8, 2025 02:15 PM"
-            ),
-            SupportTicket(
-                id = "3",
-                ticketNumber = "#58156",
-                title = "Other",
-                description = "App crash on startup",
-                status = TicketStatus.CLOSED,
-                category = "Other",
-                createdDate = "Jul 7, 2025 11:30 AM"
-            ),
-            SupportTicket(
-                id = "4",
-                ticketNumber = "#58155",
-                title = "Other",
-                description = "Cannot access travel history",
-                status = TicketStatus.CLOSED,
-                category = "Other",
-                createdDate = "Jul 6, 2025 09:45 AM"
-            ),
-            SupportTicket(
-                id = "5",
-                ticketNumber = "#58152",
-                title = "Other",
-                description = "Profile picture not updating",
-                status = TicketStatus.CLOSED,
-                category = "Other",
-                createdDate = "Jul 5, 2025 03:20 PM"
+        // Set loading state
+        _model.value = _model.value.copy(isLoading = true, error = null)
+
+        // Get user email from login data
+        val userEmail = OtpVerificationController.getUserData()?.email ?: ""
+
+        if (userEmail.isBlank()) {
+            _model.value = _model.value.copy(
+                isLoading = false,
+                error = "User email not found. Please log in again."
             )
+            return
+        }
+
+        val request = TicketsRequest(
+            email = userEmail,
+            category = "Helpdesk"
         )
 
-        _model.value = _model.value.copy(tickets = sampleTickets)
+        apiService.getTickets(request).enqueue(object : Callback<TicketsResponse> {
+            override fun onResponse(call: Call<TicketsResponse>, response: Response<TicketsResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val ticketsResponse = response.body()!!
+                    val supportTickets = ticketsResponse.tickets.map { it.toSupportTicket() }
+
+                    _model.value = _model.value.copy(
+                        tickets = supportTickets,
+                        isLoading = false,
+                        error = null
+                    )
+                } else {
+                    _model.value = _model.value.copy(
+                        isLoading = false,
+                        error = "Failed to load tickets: ${response.message()}"
+                    )
+                }
+            }
+
+            override fun onFailure(call: Call<TicketsResponse>, t: Throwable) {
+                _model.value = _model.value.copy(
+                    isLoading = false,
+                    error = "Network error: ${t.message}"
+                )
+            }
+        })
     }
 
     fun navigateToTrackTickets() {
+        // Load tickets data when navigating to ticket tracking
+        loadTicketsData()
         navigate("track_tickets")
     }
 
@@ -145,6 +182,10 @@ class HelpDeskController {
     }
 
     fun navigateBack() {
+        navigate("helpdesk")
+    }
+    
+    fun navigateToHome() {
         navigate("home")
     }
 
@@ -154,5 +195,23 @@ class HelpDeskController {
 
     fun raiseConcern(question: String, description: String) {
         navigate("chat")
+    }
+    
+    fun raiseTicket(question: String, description: String) {
+        val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
+        navigate("raise_concern/$encodedTitle")
+    }
+    
+    fun navigateToRaiseConcern(title: String = "Raise a Concern") {
+        val encodedTitle = java.net.URLEncoder.encode(title, "UTF-8")
+        navigate("raise_concern/$encodedTitle")
+    }
+
+    fun refreshTickets() {
+        loadTicketsData()
+    }
+    
+    fun refreshFAQData() {
+        loadFAQFromLogin()
     }
 }

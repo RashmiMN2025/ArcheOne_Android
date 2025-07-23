@@ -5,13 +5,13 @@ import android.content.pm.PackageManager
 import android.os.Build
 
 object DeviceInfoUtils {
-    
+
     fun getPlatform(): String = "android"
-    
+
     fun getDeviceModel(): String = "${Build.MANUFACTURER} ${Build.MODEL}"
-    
+
     fun getOSVersion(): String = Build.VERSION.RELEASE
-    
+
     fun getAppVersion(context: Context): String {
         return try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -20,7 +20,7 @@ object DeviceInfoUtils {
             "1.0"
         }
     }
-    
+
     fun getAllDeviceInfo(context: Context): DeviceInfo {
         return DeviceInfo(
             platform = getPlatform(),

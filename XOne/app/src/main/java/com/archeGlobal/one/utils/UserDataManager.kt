@@ -11,6 +11,7 @@ import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.network.AssetDetail
 import com.archeGlobal.one.network.Office
 import com.archeGlobal.one.network.VerifyOtpResponse
+import com.archeGlobal.one.network.FAQCategory
 import com.google.gson.Gson
 
 /**
@@ -32,6 +33,7 @@ class UserDataManager private constructor(context: Context) {
     private var greetingsData: Map<String, List<String>>? = null
     private var greetingCategoriesData: List<ApiGreetingCategory>? = null
     private var eventData: EventResponse? = null
+    private var faqData: List<FAQCategory>? = null
     private var lastUsername: String? = null
     // Private var isLoggedIn: Boolean = false
     // private var hasLoggedIn: Boolean = false
@@ -66,6 +68,7 @@ class UserDataManager private constructor(context: Context) {
         communiqueData = preferencesManager.getCommuniqueData()
         greetingsData = preferencesManager.getGreetings()
         greetingCategoriesData = preferencesManager.getGreetingCategories()
+        faqData = preferencesManager.getFAQData()
 
         // Load event data from preferences
         val eventDataJson = preferencesManager.getEventData()
@@ -91,7 +94,8 @@ class UserDataManager private constructor(context: Context) {
                 "AssetDetails: ${assetDetails?.size ?: 0}, " +
                 "Communique: ${communiqueData?.size ?: 0}, " +
                 "Greetings: ${greetingsData?.size ?: 0}, " +
-                "GreetingCategories: ${greetingCategoriesData?.size ?: 0}"
+                "GreetingCategories: ${greetingCategoriesData?.size ?: 0}, " +
+                "FAQ: ${faqData?.size ?: 0}"
         )
     }
 
@@ -133,6 +137,8 @@ class UserDataManager private constructor(context: Context) {
     fun getCommuniqueData(): List<CommuniqueModel.Communique>? = communiqueData
 
     fun getGreetingsData(): Map<String, List<String>>? = greetingsData
+
+    fun getFAQData(): List<FAQCategory>? = faqData
 
     fun getAuthToken(): String? = preferencesManager.getAuthToken()
 
@@ -207,6 +213,9 @@ class UserDataManager private constructor(context: Context) {
         greetingsData = fullGreetingsData
         greetingCategoriesData = apiGreetingCategories
 
+        // Save FAQ data from login response
+        faqData = response.faqList
+
         // Save event data from login response
         eventData = response.eventData
         val localEventData = eventData // Use local variable to avoid smart cast issue
@@ -235,6 +244,8 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.saveGreetingsList(greetingsData)
         // Save the new greeting categories with messages
         preferencesManager.saveGreetingCategories(greetingCategoriesData)
+        // Save FAQ data to persistent storage
+        preferencesManager.saveFAQData(faqData)
 
         Log.d(TAG, "Saved user data to preferences: ${newUserData?.name}")
         Log.d(TAG, "Saved greetings data with ${greetingsData?.size} categories.")
@@ -254,6 +265,7 @@ class UserDataManager private constructor(context: Context) {
         communiqueData = null
         greetingsData = null
         greetingCategoriesData = null
+        faqData = null
         lastUsername = null
 
         // Clear persistent storage
@@ -273,6 +285,7 @@ class UserDataManager private constructor(context: Context) {
         communiqueData = null
         greetingsData = null
         greetingCategoriesData = null
+        faqData = null
 
         // Clear session data but preserve MPIN and biometric data
         preferencesManager.clearSessionData()
@@ -356,6 +369,7 @@ class UserDataManager private constructor(context: Context) {
         communiqueData = null
         greetingsData = null
         greetingCategoriesData = null
+        faqData = null
         eventData = null
         preferencesManager.clearAllUserData()
         preferencesManager.clearAuthToken()

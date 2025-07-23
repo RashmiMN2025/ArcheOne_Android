@@ -259,7 +259,7 @@ class HomeActivity : AppCompatActivity() {
                 android.util.Log.d("HomeActivity", "TravelController initialized with navigator: ${navigator.hashCode()}")
 
                 // Initialize helpdesk controller
-                helpDeskController = HelpDeskController()
+                helpDeskController = HelpDeskController(this@HomeActivity)
                 helpDeskController.setNavigationCallback { route ->
                     navController.navigate(route)
                 }
@@ -383,6 +383,32 @@ class HomeActivity : AppCompatActivity() {
                             navController = navController,
                             onBackPressed = chatController::onBackPressed,
                             showBottomBar = true
+                        )
+                    }
+
+                    // Add raise concern screen with customizable title
+                    composable(
+                        route = "raise_concern/{title}",
+                        arguments = listOf(navArgument("title") { type = NavType.StringType }),
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) { backStackEntry ->
+                        val title = backStackEntry.arguments?.getString("title") ?: "Raise a Concern"
+                        val decodedTitle = java.net.URLDecoder.decode(title, "UTF-8")
+                        
+                        RaiseConcernScreen(
+                            onBackPressed = { navController.popBackStack() },
+                            title = decodedTitle
                         )
                     }
 
