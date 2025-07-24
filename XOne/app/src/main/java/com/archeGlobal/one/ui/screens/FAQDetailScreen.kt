@@ -29,10 +29,10 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.HelpDeskFAQ
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -93,6 +93,7 @@ fun PrideMonthTestScreen() {
             override fun navigateToXConnect(initialTab: String) {}
             override fun navigateToLocations(showHeader: Boolean) {}
             override fun navigateToHelpdesk() {}
+            override fun navigateToTrackTickets(category: String) {}
             override fun navigateToAnnouncements() {}
             override fun navigateToXProfile() {}
             override fun navigateToPasswordReset() {}

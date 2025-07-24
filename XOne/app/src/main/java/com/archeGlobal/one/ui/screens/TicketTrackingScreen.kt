@@ -12,7 +12,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,14 +25,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.archeGlobal.one.ui.components.UniversalLoader
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.SupportTicket
 import com.archeGlobal.one.model.TicketStatus
-import com.archeGlobal.one.R
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +43,13 @@ fun TicketTrackingScreen(
     controller: HelpDeskController
 ) {
     val model by controller.model.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+
+    // Update isRefreshing based on model.isLoading
+    LaunchedEffect(model.isLoading) {
+        isRefreshing = model.isLoading
+    }
 
     Box(
         modifier = Modifier
@@ -108,82 +117,100 @@ fun TicketTrackingScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    when {
-                        model.isLoading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
-                        model.error != null -> {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "Error loading tickets",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Red
-                                )
-                                Text(
-                                    text = model.error!!,
-                                    fontSize = 14.sp,
-                                    color = Color.Gray,
-                                    fontFamily = GraphikFontFamily,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
-                                Button(
-                                    onClick = { controller.refreshTickets() },
-                                    modifier = Modifier.padding(top = 16.dp)
+                    SwipeRefresh(
+                        state = swipeRefreshState,
+                        onRefresh = { controller.refreshTickets() },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        when {
+                            model.error != null -> {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Retry",
-                                        fontFamily = GraphikFontFamily
+                                        text = "Error loading tickets",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Red
+                                    )
+                                    Text(
+                                        text = model.error!!,
+                                        fontSize = 14.sp,
+                                        color = Color.Gray,
+                                        fontFamily = GraphikFontFamily,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                    Button(
+                                        onClick = { controller.refreshTickets() },
+                                        modifier = Modifier.padding(top = 16.dp)
+                                    ) {
+                                        Text(
+                                            text = "Retry",
+                                            fontFamily = GraphikFontFamily
+                                        )
+                                    }
+                                }
+                            }
+                            model.tickets.isEmpty() && !model.isLoading -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No tickets found",
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Gray
                                     )
                                 }
                             }
-                        }
-                        model.tickets.isEmpty() -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No tickets found",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Gray
-                                )
-                            }
-                        }
-                        else -> {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(model.tickets) { ticket ->
-                                    TicketCard(ticket = ticket)
-                                }
+                            else -> {
+                                TicketsList(tickets = model.tickets)
                             }
                         }
                     }
                 }
             }
         }
+        
+        // Show UniversalLoader for programmatic refresh (not swipe refresh)
+        if (isRefreshing && !swipeRefreshState.isRefreshing) {
+            UniversalLoader(isLoading = true)
+        }
+    }
+}
+
+@Composable
+fun TicketsList(
+    tickets: List<SupportTicket>
+) {
+    var expandedTicketId by remember { mutableStateOf<String?>(null) }
+    
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(tickets) { ticket ->
+            TicketCard(
+                ticket = ticket,
+                isExpanded = expandedTicketId == ticket.ticketNumber,
+                onExpandToggle = { ticketId ->
+                    expandedTicketId = if (expandedTicketId == ticketId) null else ticketId
+                }
+            )
+        }
     }
 }
 
 @Composable
 fun TicketCard(
-    ticket: SupportTicket
+    ticket: SupportTicket,
+    isExpanded: Boolean,
+    onExpandToggle: (String) -> Unit
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -200,7 +227,7 @@ fun TicketCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded },
+                    .clickable { onExpandToggle(ticket.ticketNumber) },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -249,9 +276,9 @@ fun TicketCard(
                             .height(1.dp)
                             .background(Color.Gray.copy(alpha = 0.2f))
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Start,

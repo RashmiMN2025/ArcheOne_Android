@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
-import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.controller.HelpDeskController
+import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.utils.UserDataManager
@@ -49,7 +49,7 @@ fun RaiseConcernScreen(
     val userData = remember { userDataManager.getUserData() }
     val sosController = remember { SOSController(context.applicationContext as Application) }
     val helpDeskController = remember { HelpDeskController(context) }
-    
+
     // Determine if this is a help desk ticket or SOS concern
     val isHelpDeskTicket = title.contains("Ticket", ignoreCase = true)
 
@@ -63,21 +63,20 @@ fun RaiseConcernScreen(
     // Get categories based on context
     val helpDeskModel by helpDeskController.model.collectAsState()
     val categories = if (isHelpDeskTicket) {
-        // Extract categories from help desk FAQ data, excluding "Other Issues" 
+        // Extract categories from help desk FAQ data, excluding "Other Issues"
         val helpDeskCategories = helpDeskModel.faqItems
             .map { it.category }
             .distinct()
             .filter { it != "General" && it != "Other Issues" }
             .sorted()
-        
+
         // Add help desk specific categories
         helpDeskCategories + listOf("Other Issue")
     } else {
         // SOS categories
         listOf(
             "Medical Emergency",
-            "Fire Safety", 
-            "Security Risk",
+            "Fire Safety", "Security Risk",
             "Workplace Safety",
             "Non-Compliance",
             "PoSH",
@@ -127,11 +126,11 @@ fun RaiseConcernScreen(
                             "Help desk ticket submitted successfully!",
                             Toast.LENGTH_LONG
                         ).show()
-                        
+
                         // Reset form on success
                         selectedCategory = null
                         issueDescription = ""
-                        
+
                         // Go back after successful submission
                         onBackPressed()
                     } else {
@@ -451,7 +450,7 @@ fun RaiseConcernScreen(
 
                 // Submit button
                 Button(
-                    onClick = { 
+                    onClick = {
                         if (isHelpDeskTicket) {
                             coroutineScope.launch { submitHelpDeskTicket() }
                         } else {

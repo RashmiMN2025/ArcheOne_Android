@@ -14,6 +14,8 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -118,12 +120,12 @@ class HomeActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent) // Update the activity's intent
-        
+
         val navigateTo = intent.getStringExtra("navigateTo")
         val ticketCategory = intent.getStringExtra("ticketCategory")
-        
+
         Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, ticketCategory=$ticketCategory")
-        
+
         if (navigateTo == "track_tickets" && ticketCategory != null) {
             // Initialize helpdesk controller if not already done and navigate
             if (::helpDeskController.isInitialized) {
@@ -290,7 +292,7 @@ class HomeActivity : AppCompatActivity() {
                 val currentNavigateTo = currentIntent.getStringExtra("navigateTo")
                 val currentTicketCategory = currentIntent.getStringExtra("ticketCategory")
                 val currentDestination = currentIntent.getStringExtra("destination")
-                
+
                 // If we have a destination or navigateTo, navigate to it
                 LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, isEmergencyContact) {
                     if (!fromOtp) {
@@ -315,7 +317,7 @@ class HomeActivity : AppCompatActivity() {
                                 // Successful token refresh, update user data silently
                                 controller.refreshUserData()
                             }
-                            
+
                             // Handle navigation after token refresh
                             currentDestination?.let { dest ->
                                 navController.navigate(dest)
@@ -402,8 +404,8 @@ class HomeActivity : AppCompatActivity() {
                             // Pass event-related parameters
                             eventData = eventData,
                             showEventPopup = showEventPopup,
-                            onDismissEventPopup = controller::dismissEventPopup
-
+                            onDismissEventPopup = controller::dismissEventPopup,
+                            navigator = navigator
                         )
                     }
 
@@ -455,7 +457,7 @@ class HomeActivity : AppCompatActivity() {
                     ) { backStackEntry ->
                         val title = backStackEntry.arguments?.getString("title") ?: "Raise a Concern"
                         val decodedTitle = java.net.URLDecoder.decode(title, "UTF-8")
-                        
+
                         RaiseConcernScreen(
                             onBackPressed = { navController.popBackStack() },
                             title = decodedTitle
@@ -1315,6 +1317,18 @@ class HomeActivity : AppCompatActivity() {
                         },
                         exitTransition = {
                             slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
                                 animationSpec = tween(300)
                             )
@@ -1333,6 +1347,18 @@ class HomeActivity : AppCompatActivity() {
                         },
                         exitTransition = {
                             slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
                                 animationSpec = tween(300)
                             )
@@ -1350,6 +1376,18 @@ class HomeActivity : AppCompatActivity() {
                             )
                         },
                         exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
                             slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
                                 animationSpec = tween(300)

@@ -1,8 +1,7 @@
 package com.archeGlobal.one.model
 
-import com.archeGlobal.one.network.TicketItem
 import com.archeGlobal.one.network.FAQCategory
-import com.archeGlobal.one.network.FAQItem
+import com.archeGlobal.one.network.TicketItem
 
 data class SupportTicket(
     val id: String,
@@ -69,7 +68,7 @@ fun TicketItem.toSupportTicket(): SupportTicket {
 // Extension function to convert API FAQ structure to HelpDeskFAQ list
 fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
     val faqs = mutableListOf<HelpDeskFAQ>()
-    
+
     this.forEachIndexed { categoryIndex, category ->
         category.items.forEachIndexed { itemIndex, item ->
             // Combine all answer descriptions into a single formatted answer
@@ -80,10 +79,10 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
                     "• ${answer.des}"
                 }
             }
-            
+
             faqs.add(
                 HelpDeskFAQ(
-                    id = "${categoryIndex}_${itemIndex}",
+                    id = "${categoryIndex}_$itemIndex",
                     title = category.title,
                     question = item.question,
                     answer = combinedAnswer,
@@ -92,7 +91,7 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
             )
         }
     }
-    
+
     // Add the default "Other issue" FAQ for ticket raising
     faqs.add(
         HelpDeskFAQ(
@@ -103,6 +102,6 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
             category = "General"
         )
     )
-    
+
     return faqs
 }

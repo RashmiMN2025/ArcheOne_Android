@@ -66,6 +66,7 @@ import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HomeController
+import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.controller.MpinController
 import com.archeGlobal.one.model.AboutMeModel
 import com.archeGlobal.one.model.EventResponse
@@ -86,6 +87,8 @@ import com.archeGlobal.one.ui.theme.getColorForApp
 import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.UserDataManager
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -244,7 +247,8 @@ fun ResponsiveHomeScreen(
     controller: HomeController,
     eventData: EventResponse? = null,
     showEventPopup: Boolean = false,
-    onDismissEventPopup: () -> Unit = {}
+    onDismissEventPopup: () -> Unit = {},
+    navigator: com.archeGlobal.one.navigation.Navigator? = null
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -275,7 +279,8 @@ fun ResponsiveHomeScreen(
         eventData = eventData,
         showEventPopup = showEventPopup,
         onDismissEventPopup = onDismissEventPopup,
-        columns = columns // Pass the column count
+        columns = columns, // Pass the column count
+        navigator = navigator
     )
 }
 
@@ -299,7 +304,8 @@ fun HomeScreenContent(
     eventData: EventResponse? = null,
     showEventPopup: Boolean = false,
     onDismissEventPopup: () -> Unit = {},
-    columns: Int = 3 // Default to 3 for phones
+    columns: Int = 3, // Default to 3 for phones
+    navigator: com.archeGlobal.one.navigation.Navigator? = null
 ) {
     Box(
         modifier = Modifier
@@ -307,8 +313,12 @@ fun HomeScreenContent(
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
     ) {
-        // Get the user data manager to access preferences
-        val userDataManager = UserDataManager.getInstance(LocalContext.current)
+        val context = LocalContext.current
+
+        // Initialize UserDataManager and LoginController for refresh functionality
+        val userDataManager = remember { UserDataManager.getInstance(context) }
+        val loginController = remember { navigator?.let { LoginController(context, it) } }
+
         // Observe the locked state
         val lockedState = userDataManager.preferencesManager.lockedState.collectAsState().value
         // Initialize background model with proper colors to prevent black screen
@@ -325,13 +335,15 @@ fun HomeScreenContent(
         var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
         var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
         var isRefreshing by remember { mutableStateOf(false) }
-        val context = LocalContext.current
 
         // Get user data (replace with your actual user data source)
         val apiService = RetrofitClient.apiService
 
         // State to track the current view (All Apps or Favorites)
         var currentView by remember { mutableStateOf("All Apps") }
+
+        // SwipeRefresh state
+        val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
         // --- Rating Pop-up Logic ---
         var navigationCount by rememberSaveable { mutableStateOf(0) }
@@ -345,11 +357,73 @@ fun HomeScreenContent(
             controller.onShowRatingDialog = { showRatingDialog = true }
         }
 
+        // Handle refresh functionality with login API call
+        fun performRefresh() {
+            isRefreshing = true
+            val refreshStartTime = System.currentTimeMillis()
+
+            // Get stored user credentials
+            val lastEmail = userDataManager.preferencesManager.getString("last_user_email", "") ?: ""
+            val lastMobile = userDataManager.preferencesManager.getString("last_user_mobile", "") ?: ""
+            val lastEmployeeId = userDataManager.preferencesManager.getString("last_user_employee_id", "") ?: ""
+            val currentToken = userDataManager.preferencesManager.getAuthToken()
+
+            if (currentToken != null && loginController != null && lastEmail.isNotEmpty()) {
+                Log.d("HomeScreen", "Refreshing with stored credentials - Email: $lastEmail")
+
+                loginController.loginWithToken(
+                    token = currentToken,
+                    email = lastEmail,
+                    mobile = lastMobile,
+                    employeeId = lastEmployeeId
+                ) { message, isError ->
+                    // Calculate elapsed time and ensure minimum 2-second loading
+                    val elapsedTime = System.currentTimeMillis() - refreshStartTime
+                    val remainingTime = maxOf(0, 2000 - elapsedTime) // 2000ms = 2 seconds
+                    
+                    // Use coroutine to handle the delay
+                    CoroutineScope(Dispatchers.Main).launch {
+                        if (remainingTime > 0) {
+                            kotlinx.coroutines.delay(remainingTime)
+                        }
+                        
+                        if (isError) {
+                            Log.e("HomeScreen", "Refresh failed: $message")
+                            // Check if token expired (should navigate to login)
+                            if (message.contains("token", ignoreCase = true) || message.contains("unauthorized", ignoreCase = true) ||
+                                message.contains("expired", ignoreCase = true)
+                            ) {
+                                Log.d("HomeScreen", "Token expired during refresh, navigating to login")
+                                navigator?.navigateToLoginScreen()
+                            }
+                        } else {
+                            Log.d("HomeScreen", "Refresh successful: $message")
+                            // Refresh the home screen data
+                            controller.refreshUserData()
+                            onRefresh()
+                        }
+                        isRefreshing = false
+                    }
+                }
+            } else {
+                Log.e("HomeScreen", "Cannot refresh - missing credentials or controller")
+                // Ensure minimum 2-second loading even for error case
+                CoroutineScope(Dispatchers.Main).launch {
+                    val elapsedTime = System.currentTimeMillis() - refreshStartTime
+                    val remainingTime = maxOf(0, 2000 - elapsedTime)
+                    if (remainingTime > 0) {
+                        kotlinx.coroutines.delay(remainingTime)
+                    }
+                    isRefreshing = false
+                }
+            }
+        }
+
         // Effect to handle refresh completion
         LaunchedEffect(isRefreshing) {
-            if (isRefreshing) {
+            if (isRefreshing && loginController == null) {
+                // Fallback to original refresh if no login controller available
                 onRefresh()
-                // Add a small delay to ensure the refresh operation has time to complete
                 kotlinx.coroutines.delay(1000)
                 isRefreshing = false
             }
@@ -831,68 +905,20 @@ fun HomeScreenContent(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Content
+                        // Content with SwipeRefresh
                         Box(modifier = Modifier.weight(1f)) {
-                            if (currentView == "All Apps") {
-                                // All Apps View
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
-                                ) {
-                                    model.categories.forEach { (category, items) ->
-                                        item {
-                                            CategoryHeader(
-                                                title = category,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 8.dp)
-                                            )
-                                        }
-
-                                        items(items.chunked(columns)) { rowItems ->
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                rowItems.forEach { item ->
-                                                    AppItem(
-                                                        title = item.title,
-                                                        isFavorite = item.isFavorite,
-                                                        // Wrap onClick with handleNavigation!
-                                                        onClick = { onItemClick(item) },
-                                                        onFavoriteClick = { onToggleFavorite(item) },
-                                                        modifier = Modifier.weight(1f),
-                                                        showFavoriteButton = false,
-                                                        isSelected = false,
-                                                        onLongPress = { position ->
-                                                            selectedApp = item
-                                                            selectedPosition = position
-                                                        }
-                                                    )
-                                                }
-                                                repeat(columns - rowItems.size) {
-                                                    Spacer(modifier = Modifier.weight(1f))
-                                                }
-                                            }
-                                            Spacer(modifier = Modifier.height(10.dp))
-                                        }
-                                    }
-                                }
-                            } else if (currentView == "Favorites") {
-                                // Favorites View
-                                if (model.favorites.isEmpty()) {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        EmptyFavorites()
-                                    }
-                                } else {
+                            SwipeRefresh(
+                                state = swipeRefreshState,
+                                onRefresh = { performRefresh() },
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                if (currentView == "All Apps") {
+                                    // All Apps View
                                     LazyColumn(
                                         modifier = Modifier.fillMaxSize(),
-                                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                                        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
                                     ) {
-                                        model.favorites.forEach { (category, items) ->
+                                        model.categories.forEach { (category, items) ->
                                             item {
                                                 CategoryHeader(
                                                     title = category,
@@ -910,7 +936,7 @@ fun HomeScreenContent(
                                                     rowItems.forEach { item ->
                                                         AppItem(
                                                             title = item.title,
-                                                            isFavorite = true,
+                                                            isFavorite = item.isFavorite,
                                                             // Wrap onClick with handleNavigation!
                                                             onClick = { onItemClick(item) },
                                                             onFavoriteClick = { onToggleFavorite(item) },
@@ -931,14 +957,70 @@ fun HomeScreenContent(
                                             }
                                         }
                                     }
+                                } else if (currentView == "Favorites") {
+                                    // Favorites View
+                                    if (model.favorites.isEmpty()) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            EmptyFavorites()
+                                        }
+                                    } else {
+                                        LazyColumn(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                                        ) {
+                                            model.favorites.forEach { (category, items) ->
+                                                item {
+                                                    CategoryHeader(
+                                                        title = category,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(vertical = 8.dp)
+                                                    )
+                                                }
+
+                                                items(items.chunked(columns)) { rowItems ->
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        rowItems.forEach { item ->
+                                                            AppItem(
+                                                                title = item.title,
+                                                                isFavorite = true,
+                                                                // Wrap onClick with handleNavigation!
+                                                                onClick = { onItemClick(item) },
+                                                                onFavoriteClick = { onToggleFavorite(item) },
+                                                                modifier = Modifier.weight(1f),
+                                                                showFavoriteButton = false,
+                                                                isSelected = false,
+                                                                onLongPress = { position ->
+                                                                    selectedApp = item
+                                                                    selectedPosition = position
+                                                                }
+                                                            )
+                                                        }
+                                                        repeat(columns - rowItems.size) {
+                                                            Spacer(modifier = Modifier.weight(1f))
+                                                        }
+                                                    }
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
-                            }
+                            } // Close SwipeRefresh
                         }
                     }
                 }
 
-                // Show universal loader while refreshing
-                UniversalLoader(isLoading = isRefreshing)
+                // Show universal loader only for programmatic refresh (not swipe refresh)
+                if (isRefreshing && !swipeRefreshState.isRefreshing) {
+                    UniversalLoader(isLoading = isRefreshing)
+                }
 
                 // Semi-transparent overlay when an app is selected
                 if (selectedApp != null) {

@@ -1,12 +1,12 @@
 package com.archeGlobal.one.controller
 
-import androidx.compose.runtime.*
 import android.content.Context
+import androidx.compose.runtime.*
 import com.archeGlobal.one.model.*
-import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.network.TicketsRequest
 import com.archeGlobal.one.network.TicketsResponse
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,11 +35,11 @@ class HelpDeskController(private val context: Context) {
         // Set loading state
         _model.value = _model.value.copy(isLoading = true, error = null)
         android.util.Log.d("HelpDeskController", "Loading FAQ data from login response only")
-        
+
         // Get FAQ data from login response (stored in UserDataManager)
         val loginFaqData = userDataManager.getFAQData()
         android.util.Log.d("HelpDeskController", "Login FAQ data: ${loginFaqData?.size ?: 0} categories")
-        
+
         val faqItems = if (loginFaqData != null && loginFaqData.isNotEmpty()) {
             android.util.Log.d("HelpDeskController", "Using login FAQ data")
             loginFaqData.toHelpDeskFAQs()
@@ -47,9 +47,9 @@ class HelpDeskController(private val context: Context) {
             android.util.Log.d("HelpDeskController", "No login FAQ data, using default FAQ data")
             getDefaultFAQData()
         }
-        
+
         android.util.Log.d("HelpDeskController", "Final FAQ items: ${faqItems.size}")
-        
+
         _model.value = _model.value.copy(
             faqItems = faqItems,
             isLoading = false,
@@ -65,7 +65,7 @@ class HelpDeskController(private val context: Context) {
 
     // Legacy methods removed - FAQ data now comes only from login response
     // The /faq API endpoint returns 404, so we rely entirely on login data
-    
+
     private fun getDefaultFAQData(): List<HelpDeskFAQ> {
         return listOf(
             // Hardware Issues
@@ -184,7 +184,7 @@ class HelpDeskController(private val context: Context) {
     fun navigateBack() {
         navigate("helpdesk")
     }
-    
+
     fun navigateToHome() {
         navigate("home")
     }
@@ -196,12 +196,12 @@ class HelpDeskController(private val context: Context) {
     fun raiseConcern(question: String, description: String) {
         navigate("chat")
     }
-    
+
     fun raiseTicket(question: String, description: String) {
         val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
         navigate("raise_concern/$encodedTitle")
     }
-    
+
     fun navigateToRaiseConcern(title: String = "Raise a Concern") {
         val encodedTitle = java.net.URLEncoder.encode(title, "UTF-8")
         navigate("raise_concern/$encodedTitle")
@@ -210,7 +210,7 @@ class HelpDeskController(private val context: Context) {
     fun refreshTickets() {
         loadTicketsData()
     }
-    
+
     fun refreshFAQData() {
         loadFAQFromLogin()
     }

@@ -187,6 +187,74 @@ Repositories abstract data sources and provide clean interfaces for controllers 
 
 This codebase represents a mature, production-ready enterprise application with strong security practices, modern Android development patterns, and comprehensive feature coverage for employee needs.
 
+## Cross-Screen Navigation Architecture
+
+### HomeActivity Navigation Hub
+The app uses a centralized navigation system where `HomeActivity` serves as the main navigation hub containing most screens as composables within a `NavHost`. Key architectural patterns:
+
+#### Intent-Based Cross-Activity Navigation
+For navigating from separate activities (like `AssetActivity`) back to HomeActivity screens:
+```kotlin
+val intent = Intent(context, HomeActivity::class.java).apply {
+    putExtra("navigateTo", "track_tickets")
+    putExtra("ticketCategory", "Asset Related Issue")
+    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+}
+```
+
+#### Intent Processing in HomeActivity
+HomeActivity processes navigation intents via:
+- `onCreate()` for fresh activity starts
+- `onNewIntent()` for existing activity instances
+- `LaunchedEffect` dependency tracking for intent parameter changes
+
+#### Category-Specific Data Loading
+Controllers support category-specific data loading:
+```kotlin
+fun navigateToTrackTickets(category: String = "Helpdesk") {
+    loadTicketsData(category) // Loads filtered data
+    navigate("track_tickets")
+}
+```
+
+### Help Desk & Ticketing System
+Integrated ticketing system with category-based filtering:
+- **API Endpoint**: `POST /tickets` with `{email, category}` request format
+- **Categories**: "Helpdesk", "Asset Related Issue" 
+- **Cross-screen access**: Track Tickets buttons in HelpDeskScreen and AssetScreen
+- **Data Models**: `TicketsRequest`, `TicketsResponse`, `SupportTicket`
+
+## UI Consistency Patterns
+
+### TopAppBar Header Centering
+Standardized header centering pattern across all screens accounts for navigation and action elements:
+
+**For screens WITH actions (buttons on right side):**
+```kotlin
+Text(
+    modifier = Modifier.offset(x = 24.dp), // Positive offset
+    text = "Screen Title"
+)
+```
+Used in: HelpDeskScreen, AssetScreen, TravelScreen
+
+**For screens WITHOUT actions (only back button):**
+```kotlin
+Text(
+    modifier = Modifier.offset(x = (-24).dp), // Negative offset  
+    text = "Screen Title"
+)
+```
+Used in: TicketTrackingScreen, FAQDetailScreen
+
+This ensures visual centering regardless of TopAppBar button configuration.
+
+### Icon Integration Patterns
+Consistent icon usage across screens:
+- **Custom drawable icons**: `query.png`, `solution.png`, `description.png`, `helpq.png`
+- **Red tinting**: `ColorFilter.tint(Color(0xFFD32F2F))` for thematic consistency
+- **Centered alignment**: `contentAlignment = Alignment.Center` in icon containers
+
 ## Travel Management System - Key Implementation Details
 
 ### Travel Request Submission
@@ -434,21 +502,14 @@ userDataManager.setHasLoggedIn(true) // For returning user experience
 
 ## Claude Code Development Rules
 
-When working on this codebase, follow these 7 essential rules:
+When working on this codebase, follow these essential rules:
 
-1. **Think and Plan First**: Read the codebase for relevant files and write a plan to tasks/todo.md before starting any work.
-
-2. **Create Todo Lists**: The plan should have a list of todo items that you can check off as you complete them.
-
-3. **Get Plan Approval**: Before beginning work, check in with the user to verify the plan.
-
-4. **Execute and Track Progress**: Begin working on the todo items, marking them as complete as you go.
-
-5. **Provide High-Level Updates**: At every step, give high-level explanations of what changes you made.
-
-6. **Keep Changes Simple**: Make every task and code change as simple as possible. Avoid massive or complex changes. Every change should impact as little code as possible. Everything is about simplicity.
-
-7. **Document and Review**: Add a review section to the todo.md file with a summary of the changes made and any other relevant information.
+1. **Use TodoWrite Tool**: Always use the TodoWrite tool to plan and track tasks throughout development
+2. **UI Consistency**: Follow established TopAppBar header centering patterns based on action presence
+3. **Navigation Patterns**: Use intent-based navigation for cross-activity flows, preserve navigation state
+4. **API Integration**: Maintain format flexibility for camelCase requests and snake_case responses
+5. **Security First**: Use EncryptedAPIService for sensitive operations, never commit credentials
+6. **Error Handling**: Implement graceful degradation for parsing errors while preserving genuine error reporting
 
 ### **Task Management Workflow**
 - Use TodoWrite tool to create and track tasks

@@ -1,7 +1,14 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,22 +20,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.HelpDeskFAQ
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
-import com.archeGlobal.one.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +80,20 @@ fun HelpDeskScreen(
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { controller.navigateToHome() }) {
+                        val backInteractionSource = remember { MutableInteractionSource() }
+                        val isBackPressed by backInteractionSource.collectIsPressedAsState()
+                        
+                        val backScale by animateFloatAsState(
+                            targetValue = if (isBackPressed) 0.8f else 1f,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "backScale"
+                        )
+                        
+                        IconButton(
+                            onClick = { controller.navigateToHome() },
+                            interactionSource = backInteractionSource,
+                            modifier = Modifier.scale(backScale)
+                        ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
@@ -83,9 +102,20 @@ fun HelpDeskScreen(
                         }
                     },
                     actions = {
+                        val trackInteractionSource = remember { MutableInteractionSource() }
+                        val isTrackPressed by trackInteractionSource.collectIsPressedAsState()
+                        
+                        val trackScale by animateFloatAsState(
+                            targetValue = if (isTrackPressed) 0.9f else 1f,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "trackScale"
+                        )
+                        
                         TextButton(
                             onClick = { controller.navigateToTrackTickets() },
-                            colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                            colors = ButtonDefaults.textButtonColors(contentColor = Color.Red),
+                            interactionSource = trackInteractionSource,
+                            modifier = Modifier.scale(trackScale)
                         ) {
                             Text(
                                 text = "Track Tickets",
@@ -162,12 +192,16 @@ fun HelpDeskScreen(
                             }
                         }
                         else -> {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            AnimatedVisibility(
+                                visible = !model.isLoading,
+                                enter = fadeIn(animationSpec = tween(300))
                             ) {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
                                 // Dynamically generate categories from FAQ data
                                 val faqsByCategory = model.faqItems.groupBy { it.title }
-                                
+
                                 // Display each category with its FAQ items
                                 faqsByCategory.forEach { (categoryTitle, faqs) ->
                                     if (categoryTitle != "Other Issues") { // Handle "Other Issues" separately
@@ -192,6 +226,7 @@ fun HelpDeskScreen(
                                         )
                                     }
                                 }
+                            }
                             }
                         }
                     }
@@ -232,10 +267,23 @@ fun CategoryItem(
     text: String,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 150),
+        label = "scale"
+    )
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White.copy(alpha = 0.7f)
@@ -294,10 +342,23 @@ fun FAQCard(
     faq: HelpDeskFAQ,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 150),
+        label = "scale"
+    )
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White.copy(alpha = 0.7f)
