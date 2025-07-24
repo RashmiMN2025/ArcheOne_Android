@@ -366,7 +366,7 @@ fun CelebrationItem(
                 Column {
                     Text(
                         text = item.employeeName,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black
                     )
