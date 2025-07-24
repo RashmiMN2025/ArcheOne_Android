@@ -6,7 +6,9 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import android.content.Intent
 import com.archeGlobal.one.AssetActivity
+import com.archeGlobal.one.HomeActivity
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.AssetDetails
 import com.archeGlobal.one.model.AssetModel
@@ -223,6 +225,19 @@ class AssetController(
     }
 
     fun onBackPressed() {
+        (context as? AssetActivity)?.finishWithAnimation()
+    }
+
+    fun navigateToTrackTickets() {
+        // Navigate to HomeActivity with track tickets intent for asset category
+        val intent = Intent(context, HomeActivity::class.java).apply {
+            putExtra("navigateTo", "track_tickets")
+            putExtra("ticketCategory", "Asset Related Issue")
+            // Use NEW_TASK to ensure proper intent handling
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        Log.d("AssetController", "Starting HomeActivity with navigateTo=track_tickets, ticketCategory=Asset Related Issue")
+        context.startActivity(intent)
         (context as? AssetActivity)?.finishWithAnimation()
     }
 }

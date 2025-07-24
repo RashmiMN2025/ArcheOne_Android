@@ -115,6 +115,24 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // Update the activity's intent
+        
+        val navigateTo = intent.getStringExtra("navigateTo")
+        val ticketCategory = intent.getStringExtra("ticketCategory")
+        
+        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, ticketCategory=$ticketCategory")
+        
+        if (navigateTo == "track_tickets" && ticketCategory != null) {
+            // Initialize helpdesk controller if not already done and navigate
+            if (::helpDeskController.isInitialized) {
+                helpDeskController.navigateToTrackTickets(ticketCategory)
+                Log.d("HomeActivity", "Navigating to track_tickets with category: $ticketCategory via onNewIntent")
+            }
+        }
+    }
+
     @SuppressLint("ViewModelConstructorInComposable")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -213,10 +231,12 @@ class HomeActivity : AppCompatActivity() {
         // Check if we need to navigate to a specific destination
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
+        val ticketCategory = intent.getStringExtra("ticketCategory")
         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
         val fromOtp = intent.getBooleanExtra("FROM_OTP", false) // Print the intent extras for debugging
-        Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, isEmergencyContact=$isEmergencyContact")
+        Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, ticketCategory=$ticketCategory, isEmergencyContact=$isEmergencyContact")
         Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
+        Log.d("HomeActivity", "fromOtp=$fromOtp")
 
         setContent {
             XOneTheme {
@@ -265,8 +285,14 @@ class HomeActivity : AppCompatActivity() {
                 }
                 var isLoading by remember { mutableStateOf(false) }
 
+                // Get the current intent (which might be updated by onNewIntent)
+                val currentIntent = intent
+                val currentNavigateTo = currentIntent.getStringExtra("navigateTo")
+                val currentTicketCategory = currentIntent.getStringExtra("ticketCategory")
+                val currentDestination = currentIntent.getStringExtra("destination")
+                
                 // If we have a destination or navigateTo, navigate to it
-                LaunchedEffect(destination, navigateTo, isEmergencyContact) {
+                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, isEmergencyContact) {
                     if (!fromOtp) {
                         val token = userDataManager.getAuthToken() ?: "your_token_here"
                         isLoading = true // Start loading
@@ -289,17 +315,41 @@ class HomeActivity : AppCompatActivity() {
                                 // Successful token refresh, update user data silently
                                 controller.refreshUserData()
                             }
+                            
+                            // Handle navigation after token refresh
+                            currentDestination?.let { dest ->
+                                navController.navigate(dest)
+                            }
+
+                            currentNavigateTo?.let { route ->
+                                // Handle track_tickets with category
+                                if (route == "track_tickets" && currentTicketCategory != null) {
+                                    // Load tickets with the specified category before navigating
+                                    helpDeskController.navigateToTrackTickets(currentTicketCategory)
+                                    Log.d("HomeActivity", "Navigating to track_tickets with category: $currentTicketCategory")
+                                } else {
+                                    navController.navigate(route)
+                                    Log.d("HomeActivity", "Navigating to: $route")
+                                }
+                            }
                         }
-                    }
-                    destination?.let {
-                        navController.navigate(it)
-                    }
+                    } else {
+                        // Handle navigation immediately if coming from OTP
+                        currentDestination?.let { dest ->
+                            navController.navigate(dest)
+                        }
 
-                    navigateTo?.let {
-                        navController.navigate(it)
-
-                        // Log the navigation attempt for debugging
-                        Log.d("HomeActivity", "Navigating to $it with isEmergencyContact=$isEmergencyContact")
+                        currentNavigateTo?.let { route ->
+                            // Handle track_tickets with category
+                            if (route == "track_tickets" && currentTicketCategory != null) {
+                                // Load tickets with the specified category before navigating
+                                helpDeskController.navigateToTrackTickets(currentTicketCategory)
+                                Log.d("HomeActivity", "Navigating to track_tickets with category: $currentTicketCategory")
+                            } else {
+                                navController.navigate(route)
+                                Log.d("HomeActivity", "Navigating to: $route")
+                            }
+                        }
                     }
                 }
                 // UniversalLoader(isLoading = isLoading)

@@ -62,6 +62,7 @@ fun AssetScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
+                            modifier = Modifier.offset(x = 24.dp),
                             text = "Asset Information",
                             color = Color.Black,
                             fontFamily = GraphikFontFamily,
@@ -81,7 +82,16 @@ fun AssetScreen(
                     }
                 },
                 actions = {
-                    Spacer(modifier = Modifier.width(50.dp))
+                    TextButton(
+                        onClick = { controller.navigateToTrackTickets() },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) {
+                        Text(
+                            text = "Track Tickets",
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent

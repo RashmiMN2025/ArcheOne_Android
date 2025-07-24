@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
@@ -18,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.SupportTicket
 import com.archeGlobal.one.model.TicketStatus
+import com.archeGlobal.one.R
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
@@ -64,8 +69,9 @@ fun TicketTrackingScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
+                                modifier = Modifier.offset(x = (-24).dp),
                                 text = "Track Your Tickets",
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center
@@ -93,7 +99,7 @@ fun TicketTrackingScreen(
                 ) {
                     Text(
                         text = "View the status of your raised concerns",
-                        fontSize = 15.sp,
+                        fontSize = 16.sp,
                         color = Color.Gray,
                         fontFamily = GraphikFontFamily,
                         textAlign = TextAlign.Center,
@@ -204,7 +210,7 @@ fun TicketCard(
                     Text(
                         text = "Ticket ${ticket.ticketNumber}",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         fontFamily = GraphikFontFamily,
                         color = Color.Black
                     )
@@ -248,23 +254,16 @@ fun TicketCard(
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.Gray.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = Color.Gray,
-                                modifier = Modifier.size(12.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Created Date",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Created: ${ticket.createdDate}",
                             fontSize = 12.sp,
@@ -282,16 +281,14 @@ fun TicketCard(
                         Box(
                             modifier = Modifier
                                 .size(16.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.Gray.copy(alpha = 0.2f)),
+                                .clip(RoundedCornerShape(8.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "D",
-                                color = Color.Gray,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily
+                            Image(
+                                painter = painterResource(id = R.drawable.description),
+                                contentDescription = "Description",
+                                modifier = Modifier.size(12.dp),
+                                colorFilter = ColorFilter.tint(Color.Gray)
                             )
                         }
                         Spacer(modifier = Modifier.width(4.dp))

@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +26,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.HelpDeskFAQ
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -97,6 +101,7 @@ fun FAQDetailScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
+                                modifier = Modifier.offset(x = (-24).dp),
                                 text = "FAQ Details",
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = GraphikFontFamily,
@@ -202,16 +207,14 @@ fun QuestionCard(faq: HelpDeskFAQ) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFD32F2F)),
+                        .clip(RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Q",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold
+                    Image(
+                        painter = painterResource(id = R.drawable.query),
+                        contentDescription = "Query",
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = ColorFilter.tint(Color(0xFFD32F2F))
                     )
                 }
 
@@ -230,7 +233,7 @@ fun QuestionCard(faq: HelpDeskFAQ) {
 
             Text(
                 text = faq.question,
-                fontSize = 19.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = GraphikFontFamily,
                 color = Color.Black,
@@ -263,13 +266,14 @@ fun AnswerCard(faq: HelpDeskFAQ) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFFF6B35)),
+                        .clip(RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "💬",
-                        fontSize = 12.sp
+                    Image(
+                        painter = painterResource(id = R.drawable.solution),
+                        contentDescription = "Solution",
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = ColorFilter.tint(Color(0xFFD32F2F))
                     )
                 }
 

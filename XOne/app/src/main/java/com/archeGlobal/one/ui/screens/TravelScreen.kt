@@ -107,7 +107,7 @@ fun TravelScreen(
                             ) {
                                 Text(
                                     modifier = Modifier.offset(x = 24.dp),
-                                    text = "Travel",
+                                    text = "TravelDesk",
                                     color = Color.Black,
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,

@@ -123,7 +123,7 @@ class HelpDeskController(private val context: Context) {
         )
     }
 
-    private fun loadTicketsData() {
+    private fun loadTicketsData(category: String = "Helpdesk") {
         // Set loading state
         _model.value = _model.value.copy(isLoading = true, error = null)
 
@@ -140,7 +140,7 @@ class HelpDeskController(private val context: Context) {
 
         val request = TicketsRequest(
             email = userEmail,
-            category = "Helpdesk"
+            category = category
         )
 
         apiService.getTickets(request).enqueue(object : Callback<TicketsResponse> {
@@ -171,9 +171,9 @@ class HelpDeskController(private val context: Context) {
         })
     }
 
-    fun navigateToTrackTickets() {
+    fun navigateToTrackTickets(category: String = "Helpdesk") {
         // Load tickets data when navigating to ticket tracking
-        loadTicketsData()
+        loadTicketsData(category)
         navigate("track_tickets")
     }
 

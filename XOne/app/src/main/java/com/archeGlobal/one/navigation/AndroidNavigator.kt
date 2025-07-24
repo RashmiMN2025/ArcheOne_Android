@@ -312,6 +312,11 @@ class AndroidNavigator(
         // Implementation not provided
     }
 
+    override fun navigateToTrackTickets(category: String) {
+        // Navigate to track tickets with category - handled by HomeActivity navigation
+        navigate("track_tickets")
+    }
+
     override fun navigateToAnnouncements() {
         // Implementation not provided
     }

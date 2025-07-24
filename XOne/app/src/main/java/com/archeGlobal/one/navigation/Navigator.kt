@@ -36,6 +36,7 @@ interface Navigator {
     fun navigateToXConnect(initialTab: String = "All Posts")
     fun navigateToLocations(showHeader: Boolean = true)
     fun navigateToHelpdesk()
+    fun navigateToTrackTickets(category: String = "Helpdesk")
     fun navigateToAnnouncements()
     fun navigateToXProfile()
     fun navigateToPasswordReset()

@@ -64,6 +64,7 @@ fun HelpDeskScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
+                                modifier = Modifier.offset(x = 24.dp),
                                 text = "Help Desk",
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = GraphikFontFamily,
@@ -255,15 +256,13 @@ fun CategoryItem(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Gray.copy(alpha = 0.2f)),
+                        .clip(RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.helpq),
                         contentDescription = "Help Question",
-                        modifier = Modifier.size(20.dp),
-                        colorFilter = ColorFilter.tint(Color(0xFF666666))
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
@@ -340,8 +339,7 @@ fun FAQCard(
                         Image(
                             painter = painterResource(id = R.drawable.helpq),
                             contentDescription = "Help Question",
-                            modifier = Modifier.size(20.dp),
-                            colorFilter = ColorFilter.tint(Color(0xFF666666))
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }

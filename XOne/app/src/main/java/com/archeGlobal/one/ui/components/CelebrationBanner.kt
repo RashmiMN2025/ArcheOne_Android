@@ -390,7 +390,7 @@ fun CelebrationItem(
             ) {
                 Text(
                     text = "WISHES",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
