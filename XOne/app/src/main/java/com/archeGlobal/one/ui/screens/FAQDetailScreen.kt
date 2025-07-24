@@ -92,14 +92,18 @@ fun FAQDetailScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = "FAQ Details",
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "FAQ Details",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = { controller.navigateBack() }) {

@@ -59,14 +59,18 @@ fun TicketTrackingScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = "Track Your Tickets",
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Track Your Tickets",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = { controller.navigateBack() }) {
@@ -89,9 +93,10 @@ fun TicketTrackingScreen(
                 ) {
                     Text(
                         text = "View the status of your raised concerns",
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         color = Color.Gray,
                         fontFamily = GraphikFontFamily,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -206,7 +211,7 @@ fun TicketCard(
                     Text(
                         text = ticket.title,
                         fontSize = 14.sp,
-                        color = Color.Gray,
+                        color = Color.Black,
                         fontFamily = GraphikFontFamily,
                         modifier = Modifier.padding(top = 2.dp)
                     )
@@ -231,16 +236,34 @@ fun TicketCard(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // Add separator line
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(Color.Gray.copy(alpha = 0.2f))
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Start
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ExpandMore,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Created: ${ticket.createdDate}",
@@ -252,23 +275,35 @@ fun TicketCard(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(
-                        text = "Hello Team,",
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = ticket.description,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        fontFamily = GraphikFontFamily,
-                        lineHeight = 20.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "D",
+                                color = Color.Gray,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = ticket.description,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            fontFamily = GraphikFontFamily,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
 
                     ticket.details?.let { details ->
                         Spacer(modifier = Modifier.height(12.dp))
@@ -330,7 +365,7 @@ fun TicketCard(
 @Composable
 fun StatusChip(status: TicketStatus) {
     val (statusText, backgroundColor) = when (status) {
-        TicketStatus.OPEN -> "Open" to Color(0xFFFF9800)
+        TicketStatus.OPEN -> "Open" to Color(0xFFD32F2F) // Changed to red
         TicketStatus.IN_PROGRESS -> "In Progress" to Color(0xFF2196F3)
         TicketStatus.CLOSED -> "Closed" to Color(0xFF4CAF50)
         TicketStatus.PENDING -> "Pending" to Color(0xFFFFC107)
@@ -340,7 +375,7 @@ fun StatusChip(status: TicketStatus) {
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .background(backgroundColor)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Text(
             text = statusText,

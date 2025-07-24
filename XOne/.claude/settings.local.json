@@ -8,7 +8,12 @@
       "Bash(mv:*)",
       "Bash(ls:*)",
       "Bash(file:*)",
-      "Bash(adb logcat:*)"
+      "Bash(adb logcat:*)",
+      "Bash(magick:*)",
+      "Bash(convert:*)",
+      "Bash(python:*)",
+      "Bash(powershell:*)",
+      "Bash(del \"C:\\Users\\user\\Documents\\GitHub\\XOne---Android\\XOne\\convert_image.ps1\")"
     ],
     "deny": []
   }

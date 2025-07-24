@@ -25,6 +25,10 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import com.archeGlobal.one.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,14 +59,18 @@ fun HelpDeskScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = "Help Desk",
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Help Desk",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = { controller.navigateToHome() }) {
@@ -251,12 +259,11 @@ fun CategoryItem(
                         .background(Color.Gray.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "?",
-                        color = Color.Gray,
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold
+                    Image(
+                        painter = painterResource(id = R.drawable.helpq),
+                        contentDescription = "Help Question",
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = ColorFilter.tint(Color(0xFF666666))
                     )
                 }
 
@@ -322,20 +329,21 @@ fun FAQCard(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (faq.question.contains("Other issue", ignoreCase = true)) {
-                            "!"
-                        } else {
-                            "?"
-                        },
-                        color = if (faq.question.contains("Other issue", ignoreCase = true)) {
-                            Color.White
-                        } else {
-                            Color(0xFF6B4EFF)
-                        },
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (faq.question.contains("Other issue", ignoreCase = true)) {
+                        Text(
+                            text = "!",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.helpq),
+                            contentDescription = "Help Question",
+                            modifier = Modifier.size(20.dp),
+                            colorFilter = ColorFilter.tint(Color(0xFF666666))
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
