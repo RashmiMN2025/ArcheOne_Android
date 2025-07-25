@@ -2,6 +2,7 @@ package com.archeGlobal.one
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.archeGlobal.one.controller.AssetController
@@ -18,6 +19,14 @@ class AssetActivity : ComponentActivity() {
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         val controller = AssetController(this, AndroidNavigator(this))
+        
+        // Handle back gesture and back button
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                controller.onBackPressed()
+            }
+        })
+        
         setContent {
             XOneTheme {
                 AssetScreen(

@@ -11,6 +11,9 @@ class RaiseConcernActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Get the source from intent extras, default to "helpdesk" if not specified
+        val source = intent.getStringExtra("source") ?: "helpdesk"
+
         enableEdgeToEdge()
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
@@ -18,7 +21,12 @@ class RaiseConcernActivity : ComponentActivity() {
         setContent {
             XOneTheme {
                 RaiseConcernScreen(
-                    onBackPressed = { finish() }
+                    onBackPressed = { // Return to the appropriate screen based on source
+                        if (source == "asset") {
+                            setResult(RESULT_OK)
+                        }
+                        finish()
+                    }
                 )
             }
         }

@@ -46,6 +46,9 @@ interface ApiService {
     @POST("/sos")
     suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
 
+    @POST("/helpdesk")
+    suspend fun submitHelpdesk(@Body request: SOSRequest): Response<SOSResponse>
+
     @POST("/logout")
     fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
 

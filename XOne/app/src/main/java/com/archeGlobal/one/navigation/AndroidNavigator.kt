@@ -313,8 +313,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToTrackTickets(category: String) {
-        // Navigate to track tickets with category - handled by HomeActivity navigation
-        navigate("track_tickets")
+        // Use NavController to navigate while preserving back stack
+        navController?.navigate("track_tickets") {
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     override fun navigateToAnnouncements() {

@@ -163,9 +163,8 @@ class AssetController(
             name = name,
             email = email,
             mobile = mobile,
-            category = "Technical Issue",
+            category = "Asset Related Issue",
             query = description,
-            description = "",
             anonymous = false // Asset issues are not anonymous since they're tied to specific assets
         )
 
@@ -225,19 +224,26 @@ class AssetController(
     }
 
     fun onBackPressed() {
-        (context as? AssetActivity)?.finishWithAnimation()
+        // Navigate back to HomeActivity instead of just finishing
+        val intent = Intent(context, HomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        context.startActivity(intent)
+        (context as? AssetActivity)?.finish()
     }
 
     fun navigateToTrackTickets() {
-        // Navigate to HomeActivity with track tickets intent for asset category
+        // Navigate directly to HomeActivity with track_tickets as the target
         val intent = Intent(context, HomeActivity::class.java).apply {
             putExtra("navigateTo", "track_tickets")
             putExtra("ticketCategory", "Asset Related Issue")
-            // Use NEW_TASK to ensure proper intent handling
+            putExtra("source", "asset") // Add source to track navigation origin
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         Log.d("AssetController", "Starting HomeActivity with navigateTo=track_tickets, ticketCategory=Asset Related Issue")
         context.startActivity(intent)
-        (context as? AssetActivity)?.finishWithAnimation()
+
+        // Finish AssetActivity to prevent going back to it
+        (context as? AssetActivity)?.finish()
     }
 }

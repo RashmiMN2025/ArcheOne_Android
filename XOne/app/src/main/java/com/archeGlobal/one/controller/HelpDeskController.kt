@@ -21,9 +21,19 @@ class HelpDeskController(private val context: Context) {
     private var navigate: (String) -> Unit = {}
     private val apiService = RetrofitClient.apiService
     private val userDataManager = UserDataManager.getInstance(context)
+    private var navigationSource: String? = null
 
     fun setNavigationCallback(navCallback: (String) -> Unit) {
         navigate = navCallback
+    }
+
+    fun setNavigationSource(source: String) {
+        navigationSource = source
+        android.util.Log.d("HelpDeskController", "Navigation source set to: $source")
+    }
+
+    fun getNavigationSource(): String? {
+        return navigationSource
     }
 
     init {
@@ -123,9 +133,13 @@ class HelpDeskController(private val context: Context) {
         )
     }
 
-    private fun loadTicketsData(category: String = "Helpdesk") {
-        // Set loading state
-        _model.value = _model.value.copy(isLoading = true, error = null)
+    fun loadTicketsData(category: String = "Helpdesk") {
+        // Set loading state and clear existing tickets to prevent showing old data
+        _model.value = _model.value.copy(
+            isLoading = true, 
+            error = null,
+            tickets = emptyList() // Clear tickets immediately to prevent flash
+        )
 
         // Get user email from login data
         val userEmail = OtpVerificationController.getUserData()?.email ?: ""
@@ -182,11 +196,41 @@ class HelpDeskController(private val context: Context) {
     }
 
     fun navigateBack() {
-        navigate("helpdesk")
+        // Navigate back to the source screen if available, otherwise go to helpdesk
+        when (navigationSource) {
+            "asset" -> {
+                android.util.Log.d("HelpDeskController", "Navigating back to asset screen from navigateBack")
+                // Navigate to asset screen by starting AssetActivity
+                val intent = android.content.Intent(context, com.archeGlobal.one.AssetActivity::class.java)
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                context.startActivity(intent)
+                // Finish HomeActivity to prevent going back to it
+                (context as? android.app.Activity)?.finish()
+            }
+            else -> {
+                android.util.Log.d("HelpDeskController", "Navigating back to helpdesk screen")
+                navigate("helpdesk")
+            }
+        }
     }
 
     fun navigateToHome() {
-        navigate("home")
+        // Navigate back to the source screen if available, otherwise go to home
+        when (navigationSource) {
+            "asset" -> {
+                android.util.Log.d("HelpDeskController", "Navigating back to asset screen from navigateToHome")
+                // Navigate to asset screen by starting AssetActivity
+                val intent = android.content.Intent(context, com.archeGlobal.one.AssetActivity::class.java)
+                intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                context.startActivity(intent)
+                // Finish HomeActivity to prevent going back to it
+                (context as? android.app.Activity)?.finish()
+            }
+            else -> {
+                android.util.Log.d("HelpDeskController", "Navigating to home screen")
+                navigate("home")
+            }
+        }
     }
 
     fun getFAQById(id: String): HelpDeskFAQ? {
@@ -199,7 +243,8 @@ class HelpDeskController(private val context: Context) {
 
     fun raiseTicket(question: String, description: String) {
         val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
-        navigate("raise_concern/$encodedTitle")
+        val encodedCategory = java.net.URLEncoder.encode(question, "UTF-8")
+        navigate("raise_concern/$encodedTitle?category=$encodedCategory")
     }
 
     fun navigateToRaiseConcern(title: String = "Raise a Concern") {

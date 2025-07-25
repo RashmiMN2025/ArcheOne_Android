@@ -125,110 +125,113 @@ fun UserDocumentsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Documents card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
+            Box {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp, horizontal = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            UniversalLoader(isLoading = true)
-                        }
-                    }
-
-                    errorMessage?.let { error ->
-                        Text(
-                            text = error,
-                            color = Color.Red,
-                            fontSize = 14.sp,
-                            fontFamily = GraphikFontFamily,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-
-                    val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance Card")
-                    val docMap = documents.associateBy { it.document_name }
-                    val docsToShow = requiredDocs.map { docName ->
-                        docMap[docName] ?: UserDocument(docName, "")
-                    }
-
-                    docsToShow.forEach { document ->
-                        DocumentItem(
-                            document = document,
-                            isUploaded = uploadStatus[document.document_name] ?: false,
-                            onViewClick = { controller.viewDocument(document) },
-                            onUploadClick = {
-                                selectedDocument = document.document_name
-                                filePickerLauncher.launch("application/pdf")
-                                Toast.makeText(context, "Please select a PDF file", Toast.LENGTH_SHORT).show()
-                            },
-                            onDeleteClick = {
-                                controller.deleteDocument(document) { success ->
-                                    if (success) {
-                                        Toast.makeText(context, "${document.document_name} deleted successfully", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "Failed to delete ${document.document_name}", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            }
-                        )
-
-                        if (document != docsToShow.last()) {
-                            Divider(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                color = Color.LightGray,
-                                thickness = 1.5.dp
-                            )
-                        }
-                    }
-
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        color = Color.LightGray,
-                        thickness = 1.5.dp
-                    )
-
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(5.dp)
+                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 2.dp)
-                        ) {
+                        errorMessage?.let { error ->
                             Text(
-                                text = "Note: You can only upload PDF files. The file size limit is 5MB.",
+                                text = error,
+                                color = Color.Red,
                                 fontSize = 14.sp,
-                                color = Color.Gray,
-                                lineHeight = 17.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                modifier = Modifier.padding(top = 4.dp)
+                                modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
+
+                        val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance Card")
+                        val docMap = documents.associateBy { it.document_name }
+                        val docsToShow = requiredDocs.map { docName ->
+                            docMap[docName] ?: UserDocument(docName, "")
+                        }
+
+                        docsToShow.forEach { document ->
+                            DocumentItem(
+                                document = document,
+                                isUploaded = uploadStatus[document.document_name] ?: false,
+                                onViewClick = { controller.viewDocument(document) },
+                                onUploadClick = {
+                                    selectedDocument = document.document_name
+                                    filePickerLauncher.launch("application/pdf")
+                                    Toast.makeText(context, "Please select a PDF file", Toast.LENGTH_SHORT).show()
+                                },
+                                onDeleteClick = {
+                                    controller.deleteDocument(document) { success ->
+                                        if (success) {
+                                            Toast.makeText(context, "${document.document_name} deleted successfully", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, "Failed to delete ${document.document_name}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            )
+
+                            if (document != docsToShow.last()) {
+                                Divider(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    color = Color.LightGray,
+                                    thickness = 1.5.dp
+                                )
+                            }
+                        }
+
+                        Divider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            color = Color.LightGray,
+                            thickness = 1.5.dp
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(5.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 2.dp)
+                            ) {
+                                Text(
+                                    text = "Note: You can only upload PDF files. The file size limit is 5MB.",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    lineHeight = 17.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // Loading overlay
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        UniversalLoader(isLoading = true)
                     }
                 }
             }

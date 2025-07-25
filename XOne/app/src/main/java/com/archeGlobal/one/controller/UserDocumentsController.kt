@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.archeGlobal.one.NoDocumentFoundActivity
 import com.archeGlobal.one.WebViewActivity
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
@@ -230,33 +229,16 @@ class UserDocumentsController(private val context: Context) {
                                         }
                                         context.startActivity(intent)
                                     } else {
-                                        val displayHtml = """
-                                            <html>
-                                            <body>
-                                            <h2>No document found for ${matchingDoc.document_name}.</h2>
-                                            <p>Please upload the document.</p>
-                                            </body>
-                                            </html>
-                                        """.trimIndent()
-                                        val intent = Intent(context, WebViewActivity::class.java).apply {
-                                            putExtra("rawHtmlContent", displayHtml)
-                                            putExtra("title", matchingDoc.document_name ?: document.document_name)
-                                            putExtra("isPdf", false)
-                                            putExtra("isPersonal", true)
-                                        }
-                                        context.startActivity(intent)
+                                        Toast.makeText(context, "No document found for ${matchingDoc.document_name}. Please upload the document.", Toast.LENGTH_SHORT).show()
+                                        Log.d(TAG, "Document URL is not a valid PDF for ${matchingDoc.document_name}")
                                     }
                                 }
                             } else {
-                                val intent = Intent(context, NoDocumentFoundActivity::class.java)
-                                intent.putExtra("documentName", document.document_name)
-                                context.startActivity(intent)
+                                Toast.makeText(context, "No document found for ${document.document_name}. Please upload the document.", Toast.LENGTH_SHORT).show()
                                 Log.d(TAG, "Document found but no URL in doc_data for ${document.document_name}")
                             }
                         } else {
-                            val intent = Intent(context, NoDocumentFoundActivity::class.java)
-                            intent.putExtra("documentName", document.document_name)
-                            context.startActivity(intent)
+                            Toast.makeText(context, "No document found for ${document.document_name}. Please upload the document.", Toast.LENGTH_SHORT).show()
                             Log.d(TAG, "No matching document found for ${document.document_name} in response")
                         }
                     } else {

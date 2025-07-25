@@ -39,7 +39,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun RaiseConcernScreen(
     onBackPressed: () -> Unit,
-    title: String = "Raise a Concern"
+    title: String = "Raise a Concern",
+    source: String = "helpdesk", // Add source parameter to track where we came from
+    prefilledCategory: String? = null // FAQ category to prefill and lock
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -54,29 +56,31 @@ fun RaiseConcernScreen(
     val isHelpDeskTicket = title.contains("Ticket", ignoreCase = true)
 
     // Form state
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var selectedCategory by remember { mutableStateOf<String?>(prefilledCategory) }
     var issueDescription by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    val isCategoryLocked = prefilledCategory != null
     var isSubmitting by remember { mutableStateOf(false) }
     var showAnonymousDialog by remember { mutableStateOf(false) }
 
     // Get categories based on context
     val helpDeskModel by helpDeskController.model.collectAsState()
     val categories = if (isHelpDeskTicket) {
-        // Extract categories from help desk FAQ data, excluding "Other Issues"
+        // Extract categories from help desk FAQ data in their original order
         val helpDeskCategories = helpDeskModel.faqItems
             .map { it.category }
             .distinct()
             .filter { it != "General" && it != "Other Issues" }
-            .sorted()
+        // Preserve original order by removing .sorted()
 
-        // Add help desk specific categories
-        helpDeskCategories + listOf("Other Issue")
+        // Add help desk specific categories at the end
+        helpDeskCategories + listOf("Other")
     } else {
         // SOS categories
         listOf(
             "Medical Emergency",
-            "Fire Safety", "Security Risk",
+            "Fire Safety",
+            "Security Risk",
             "Workplace Safety",
             "Non-Compliance",
             "PoSH",
@@ -109,14 +113,13 @@ fun RaiseConcernScreen(
                 email = user.email ?: "",
                 mobile = user.mobile ?: "",
                 category = selectedCategory ?: "Other Issue",
-                query = "Help Desk Ticket - ${selectedCategory ?: "Other Issue"}",
-                description = issueDescription,
+                query = issueDescription,
                 anonymous = false // Help desk tickets are never anonymous
             )
 
-            Log.d("RaiseConcern", "Submitting help desk ticket via SOS endpoint: Category=$selectedCategory, Description=$issueDescription")
+            Log.d("RaiseConcern", "Submitting help desk ticket via helpdesk endpoint: Category=$selectedCategory, Description=$issueDescription")
 
-            val result = sosController.submitEncryptedSOSRequest(request)
+            val result = sosController.submitEncryptedHelpdeskRequest(request)
 
             result.fold(
                 onSuccess = { response ->
@@ -196,7 +199,6 @@ fun RaiseConcernScreen(
                 mobile = user.mobile ?: "",
                 category = selectedCategory ?: "Other Issue",
                 query = issueDescription,
-                description = "",
                 anonymous = anonymous
             )
 
@@ -318,11 +320,13 @@ fun RaiseConcernScreen(
                         readOnly = true,
                         placeholder = { Text("Select Issue category") },
                         trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Dropdown",
-                                tint = Color.Black
-                            )
+                            if (!isCategoryLocked) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Dropdown",
+                                    tint = Color.Black
+                                )
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -338,12 +342,14 @@ fun RaiseConcernScreen(
                     )
 
                     // Invisible clickable box over the TextField to trigger dropdown
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .padding(horizontal = 15.dp)
-                            .clickable { expanded = true }
-                    )
+                    if (!isCategoryLocked) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .padding(horizontal = 15.dp)
+                                .clickable { expanded = true }
+                        )
+                    }
 
                     // This will position the dropdown below the TextField
                     // with exact same width as parent
@@ -360,8 +366,8 @@ fun RaiseConcernScreen(
                             // The main container with padding to match the screen layout
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
+                                    .fillMaxWidth(0.85f) // Make the dropdown width 85% of screen width
+                                    .padding(horizontal = 8.dp) // Reduce horizontal padding
                             ) {
                                 // Dropdown menu card
                                 Card(
@@ -390,8 +396,8 @@ fun RaiseConcernScreen(
                                                             expanded = false
                                                         }
                                                         .padding(
-                                                            vertical = 16.dp,
-                                                            horizontal = 16.dp
+                                                            vertical = 12.dp, // Reduce vertical padding
+                                                            horizontal = 12.dp // Reduce horizontal padding
                                                         ),
                                                     fontSize = 16.sp,
                                                     color = Color.Black

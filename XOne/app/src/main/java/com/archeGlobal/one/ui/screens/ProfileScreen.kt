@@ -626,7 +626,7 @@ fun ProfilePictureUploadDialog(
                             )
                             Text(
                                 text = "Camera",
-                                fontSize = 14.sp,
+                                fontSize = 13.sp,
                                 color = Color.White,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium
@@ -649,7 +649,7 @@ fun ProfilePictureUploadDialog(
                             )
                             Text(
                                 text = "Gallery",
-                                fontSize = 14.sp,
+                                fontSize = 13.sp,
                                 color = Color.White,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium
@@ -680,7 +680,7 @@ fun ProfilePictureUploadDialog(
                             ) {
                                 Text(
                                     text = "Delete",
-                                    fontSize = 14.sp,
+                                    fontSize = 13.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color(0xFFDD3825)

@@ -61,10 +61,16 @@ class LoginController(
         ) { response, error ->
             if (error != null) {
                 Log.e("LoginController", "Send OTP failed: ${error.errorMessage}")
-                error.handleError(callback)
+                // Extract the actual error message from API response
+                callback(error.errorMessage, true)
             } else if (response != null) {
-                Log.d("LoginController", "Send OTP successful: ${response.message}")
-                callback(response.message, response.status != 200)
+                Log.d("LoginController", "Send OTP response: ${response.message}, status: ${response.status}")
+                // Check if the API response indicates an error even with 200 status
+                if (response.status != 200) {
+                    callback(response.message, true)
+                } else {
+                    callback(response.message, false)
+                }
             } else {
                 callback("Unknown error occurred", true)
             }
@@ -123,17 +129,45 @@ class LoginController(
                             Log.e("LoginController", "API Error Response: $errorBody")
                             Log.e("LoginController", "Response Code: ${response.code()}")
 
-                            // Check if it's a 403 (Forbidden) - app update required
-                            if (response.code() == 403) {
-                                // Show update dialog
-                                if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
-                                    navigator.showUpdateDialog()
+                            try {
+                                // Parse the error response to extract the message
+                                val errorJson = JSONObject(errorBody)
+                                val errorMessage = errorJson.optString("message", "")
+                                
+                                // Check if it's a 403 (Forbidden) - app update required
+                                if (response.code() == 403) {
+                                    // Show update dialog
+                                    if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                        navigator.showUpdateDialog()
+                                    }
+                                    val updateMessage = if (errorMessage.isNotBlank()) errorMessage else "App update required"
+                                    callback(updateMessage, true)
+                                } else {
+                                    // Use the API error message if available, otherwise use a default message
+                                    val finalErrorMessage = if (errorMessage.isNotBlank()) {
+                                        errorMessage
+                                    } else {
+                                        when (response.code()) {
+                                            400 -> "Invalid login details. Please check your credentials."
+                                            401 -> "Invalid credentials. Please try again."
+                                            404 -> "User not found. Please check your details."
+                                            500 -> "Server error. Please try again later."
+                                            else -> "Login failed. Please try again."
+                                        }
+                                    }
+                                    callback(finalErrorMessage, true)
                                 }
-                                callback("App update required", true)
-                            } else {
-                                val errorMessage =
-                                    JSONObject(errorBody).optString("message", "Server error occurred")
-                                callback(errorMessage, true)
+                            } catch (e: Exception) {
+                                Log.e("LoginController", "Error parsing error response: ${e.message}")
+                                val fallbackMessage = when (response.code()) {
+                                    400 -> "Invalid login details. Please check your credentials."
+                                    401 -> "Invalid credentials. Please try again."
+                                    403 -> "App update required"
+                                    404 -> "User not found. Please check your details."
+                                    500 -> "Server error. Please try again later."
+                                    else -> "Login failed. Please try again."
+                                }
+                                callback(fallbackMessage, true)
                             }
                         }
                         else -> {

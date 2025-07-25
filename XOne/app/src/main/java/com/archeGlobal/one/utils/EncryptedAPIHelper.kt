@@ -67,7 +67,14 @@ class EncryptedAPIHelper(private val context: Context) {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Unexpected error in encrypted API call: ${e.message}", e)
-                    callback(null, APIError.UnknownError(-1, "Unexpected error: ${e.message}"))
+                    // Provide a more user-friendly error message
+                    val userFriendlyMessage = when {
+                        e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please check your internet connection and try again."
+                        e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your internet connection."
+                        e.message?.contains("connection", ignoreCase = true) == true -> "Connection failed. Please check your internet connection."
+                        else -> "Unable to connect to server. Please try again."
+                    }
+                    callback(null, APIError.UnknownError(-1, userFriendlyMessage))
                 }
             }
         }
@@ -116,7 +123,14 @@ class EncryptedAPIHelper(private val context: Context) {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Unexpected error in regular API call: ${e.message}", e)
-                    callback(null, APIError.UnknownError(-1, "Unexpected error: ${e.message}"))
+                    // Provide a more user-friendly error message
+                    val userFriendlyMessage = when {
+                        e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please check your internet connection and try again."
+                        e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your internet connection."
+                        e.message?.contains("connection", ignoreCase = true) == true -> "Connection failed. Please check your internet connection."
+                        else -> "Unable to connect to server. Please try again."
+                    }
+                    callback(null, APIError.UnknownError(-1, userFriendlyMessage))
                 }
             }
         }

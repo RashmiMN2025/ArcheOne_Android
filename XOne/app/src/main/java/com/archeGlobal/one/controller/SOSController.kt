@@ -85,4 +85,36 @@ class SOSController(application: Application) : AndroidViewModel(application) {
             _isSubmitting.value = false
         }
     }
+
+    suspend fun submitEncryptedHelpdeskRequest(request: SOSRequest): Result<SOSResponse> {
+        return try {
+            _isSubmitting.value = true
+            Log.d("SOSController", "Submitting encrypted helpdesk request: ${request.category}")
+
+            val response = encryptedApiService.encryptedRequest(
+                endpoint = "helpdesk",
+                method = "POST",
+                body = request,
+                responseClass = EncryptedSOSResponse::class.java,
+                withAuthHeader = true
+            )
+
+            // Convert EncryptedSOSResponse to SOSResponse
+            val sosResponse = SOSResponse(
+                status = response.status == 200,
+                message = response.message
+            )
+
+            Log.d("SOSController", "Helpdesk request submitted successfully")
+            Result.success(sosResponse)
+        } catch (e: APIError) {
+            Log.e("SOSController", "API Error submitting helpdesk request: ${e.message}")
+            Result.failure(e)
+        } catch (e: Exception) {
+            Log.e("SOSController", "Exception submitting helpdesk request: ${e.message}", e)
+            Result.failure(e)
+        } finally {
+            _isSubmitting.value = false
+        }
+    }
 }

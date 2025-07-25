@@ -1,20 +1,24 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +46,11 @@ fun HelpDeskScreen(
     controller: HelpDeskController
 ) {
     val model by controller.model.collectAsState()
+
+    // Handle back press gesture to navigate to proper source screen
+    BackHandler {
+        controller.navigateToHome()
+    }
 
     Box(
         modifier = Modifier
@@ -82,13 +91,13 @@ fun HelpDeskScreen(
                     navigationIcon = {
                         val backInteractionSource = remember { MutableInteractionSource() }
                         val isBackPressed by backInteractionSource.collectIsPressedAsState()
-                        
+
                         val backScale by animateFloatAsState(
                             targetValue = if (isBackPressed) 0.8f else 1f,
                             animationSpec = tween(durationMillis = 150),
                             label = "backScale"
                         )
-                        
+
                         IconButton(
                             onClick = { controller.navigateToHome() },
                             interactionSource = backInteractionSource,
@@ -104,13 +113,13 @@ fun HelpDeskScreen(
                     actions = {
                         val trackInteractionSource = remember { MutableInteractionSource() }
                         val isTrackPressed by trackInteractionSource.collectIsPressedAsState()
-                        
+
                         val trackScale by animateFloatAsState(
                             targetValue = if (isTrackPressed) 0.9f else 1f,
                             animationSpec = tween(durationMillis = 150),
                             label = "trackScale"
                         )
-                        
+
                         TextButton(
                             onClick = { controller.navigateToTrackTickets() },
                             colors = ButtonDefaults.textButtonColors(contentColor = Color.Red),
@@ -197,38 +206,104 @@ fun HelpDeskScreen(
                                 enter = fadeIn(animationSpec = tween(300))
                             ) {
                                 LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    verticalArrangement = Arrangement.spacedBy(22.dp)
                                 ) {
-                                // Dynamically generate categories from FAQ data
-                                val faqsByCategory = model.faqItems.groupBy { it.title }
+                                    // Dynamically generate categories from FAQ data
+                                    val faqsByCategory = model.faqItems.groupBy { it.title }
 
-                                // Display each category with its FAQ items
-                                faqsByCategory.forEach { (categoryTitle, faqs) ->
-                                    if (categoryTitle != "Other Issues") { // Handle "Other Issues" separately
-                                        item {
-                                            CategorySection(
-                                                title = categoryTitle,
-                                                items = faqs.map { faq -> faq.question to faq.id },
-                                                onItemClick = { itemId -> controller.navigateToFAQDetail(itemId) }
-                                            )
+                                    // Display each category with its FAQ items
+                                    faqsByCategory.forEach { (categoryTitle, faqs) ->
+                                        if (categoryTitle != "Other Issues") { // Handle "Other Issues" separately
+                                            item {
+                                                CategorySection(
+                                                    title = categoryTitle,
+                                                    items = faqs.map { faq -> faq.question to faq.id },
+                                                    onItemClick = { itemId -> controller.navigateToFAQDetail(itemId) }
+                                                )
+                                            }
                                         }
                                     }
-                                }
 
-                                // Add "Other issue Raise a Ticket" at the end
-                                val otherIssuesFAQ = model.faqItems.find { it.id == "raise_ticket" }
-                                if (otherIssuesFAQ != null) {
+                                    // Add extra space at the bottom for the fixed button
                                     item {
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        FAQCard(
-                                            faq = otherIssuesFAQ,
-                                            onClick = { controller.navigateToRaiseConcern("Raise a Ticket") }
-                                        )
+                                        Spacer(modifier = Modifier.height(80.dp))
                                     }
                                 }
                             }
-                            }
                         }
+                    }
+                }
+            }
+        }
+
+        // Fixed "Raise a Ticket" button at the bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 32.dp, vertical = 40.dp)
+        ) {
+            val raiseTicketInteractionSource = remember { MutableInteractionSource() }
+            val isRaiseTicketPressed by raiseTicketInteractionSource.collectIsPressedAsState()
+
+            val raiseTicketScale by animateFloatAsState(
+                targetValue = if (isRaiseTicketPressed) 0.95f else 1f,
+                animationSpec = tween(durationMillis = 150),
+                label = "raiseTicketScale"
+            )
+
+            Button(
+                onClick = { controller.navigateToRaiseConcern("Raise a Ticket") },
+                modifier = Modifier
+                    .fillMaxWidth(0.63f)
+                    .height(56.dp)
+                    .scale(raiseTicketScale)
+                    .align(Alignment.Center),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFD32F2F)
+                ),
+                shape = RoundedCornerShape(28.dp),
+                interactionSource = raiseTicketInteractionSource
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "!",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFD32F2F)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Raise a Ticket",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.25.sp,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .border(1.dp, Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = "Add Ticket",
+                            tint = Color.White,
+                            modifier = Modifier.size(9.dp)
+                        )
                     }
                 }
             }
@@ -245,7 +320,7 @@ fun CategorySection(
     Column {
         Text(
             text = title,
-            fontSize = 18.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = GraphikFontFamily,
             color = Color.Black,
@@ -257,7 +332,7 @@ fun CategorySection(
                 text = itemText,
                 onClick = { onItemClick(itemId) }
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -269,13 +344,13 @@ fun CategoryItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(durationMillis = 150),
         label = "scale"
     )
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -310,7 +385,8 @@ fun CategoryItem(
                     Image(
                         painter = painterResource(id = R.drawable.helpq),
                         contentDescription = "Help Question",
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.Gray)
                     )
                 }
 
@@ -329,7 +405,7 @@ fun CategoryItem(
 
             Text(
                 text = ">",
-                color = Color.Gray.copy(alpha = 0.6f),
+                color = Color.Gray,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Normal
             )
@@ -344,13 +420,13 @@ fun FAQCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(durationMillis = 150),
         label = "scale"
     )
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -397,10 +473,11 @@ fun FAQCard(
                             fontWeight = FontWeight.Bold
                         )
                     } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.helpq),
-                            contentDescription = "Help Question",
-                            modifier = Modifier.size(20.dp)
+                        Text(
+                            text = "+",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

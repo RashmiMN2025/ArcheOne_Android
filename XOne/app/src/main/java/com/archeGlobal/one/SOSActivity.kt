@@ -76,7 +76,9 @@ class SOSActivity : ComponentActivity() {
                 SOSScreen(
                     controller = controller,
                     onNavigateToRaiseConcern = {
-                        val intent = Intent(this, RaiseConcernActivity::class.java)
+                        val intent = Intent(this, RaiseConcernActivity::class.java).apply {
+                            putExtra("source", "sos")
+                        }
                         startActivity(intent)
                     },
                     onBackPressed = { finish() },

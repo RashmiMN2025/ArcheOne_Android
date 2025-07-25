@@ -1,5 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,17 +27,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.model.SupportTicket
 import com.archeGlobal.one.model.TicketStatus
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +47,11 @@ fun TicketTrackingScreen(
     val model by controller.model.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+
+    // Handle back press gesture to navigate to proper source screen
+    BackHandler {
+        controller.navigateBack()
+    }
 
     // Update isRefreshing based on model.isLoading
     LaunchedEffect(model.isLoading) {
@@ -106,8 +113,14 @@ fun TicketTrackingScreen(
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
+                    // Show different text based on navigation source
+                    val statusText = when (controller.getNavigationSource()) {
+                        "asset" -> "View the status of your raised issues"
+                        else -> "View the status of your raised tickets"
+                    }
+                    
                     Text(
-                        text = "View the status of your raised concerns",
+                        text = statusText,
                         fontSize = 16.sp,
                         color = Color.Gray,
                         fontFamily = GraphikFontFamily,
@@ -156,17 +169,11 @@ fun TicketTrackingScreen(
                                 }
                             }
                             model.tickets.isEmpty() && !model.isLoading -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "No tickets found",
-                                        fontSize = 16.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        color = Color.Gray
-                                    )
-                                }
+                                EmptyTicketsState(
+                                    navigationSource = controller.getNavigationSource(),
+                                    onRaiseTicket = { controller.raiseTicket("", "") },
+                                    onRaiseConcern = { controller.raiseConcern("", "") }
+                                )
                             }
                             else -> {
                                 TicketsList(tickets = model.tickets)
@@ -176,7 +183,7 @@ fun TicketTrackingScreen(
                 }
             }
         }
-        
+
         // Show UniversalLoader for programmatic refresh (not swipe refresh)
         if (isRefreshing && !swipeRefreshState.isRefreshing) {
             UniversalLoader(isLoading = true)
@@ -189,9 +196,9 @@ fun TicketsList(
     tickets: List<SupportTicket>
 ) {
     var expandedTicketId by remember { mutableStateOf<String?>(null) }
-    
+
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         items(tickets) { ticket ->
             TicketCard(
@@ -222,7 +229,7 @@ fun TicketCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(10.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -253,7 +260,9 @@ fun TicketCard(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatusChip(status = ticket.status)
+                    Box(modifier = Modifier.offset(y = (-4).dp)) {
+                        StatusChip(status = ticket.status)
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -399,7 +408,7 @@ fun StatusChip(status: TicketStatus) {
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .background(backgroundColor)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 1.dp)
     ) {
         Text(
             text = statusText,
@@ -407,6 +416,55 @@ fun StatusChip(status: TicketStatus) {
             fontWeight = FontWeight.Medium,
             fontFamily = GraphikFontFamily,
             color = Color.White
+        )
+    }
+}
+
+@Composable
+fun EmptyTicketsState(
+    navigationSource: String?,
+    onRaiseTicket: () -> Unit,
+    onRaiseConcern: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Spacer(modifier = Modifier.height(80.dp))
+        
+        Box(
+            modifier = Modifier.size(80.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.noimage),
+                contentDescription = "No tickets",
+                modifier = Modifier.size(80.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            text = "No tickets raised yet.",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = GraphikFontFamily,
+            color = Color.Gray,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "Raise a issue to start tracking.",
+            fontSize = 14.sp,
+            fontFamily = GraphikFontFamily,
+            color = Color.Gray,
+            textAlign = TextAlign.Center
         )
     }
 }

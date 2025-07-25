@@ -14,8 +14,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -123,14 +121,21 @@ class HomeActivity : AppCompatActivity() {
 
         val navigateTo = intent.getStringExtra("navigateTo")
         val ticketCategory = intent.getStringExtra("ticketCategory")
+        val source = intent.getStringExtra("source")
 
-        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, ticketCategory=$ticketCategory")
+        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, ticketCategory=$ticketCategory, source=$source")
 
         if (navigateTo == "track_tickets" && ticketCategory != null) {
-            // Initialize helpdesk controller if not already done and navigate
+            // Initialize helpdesk controller if not already done and navigate directly
             if (::helpDeskController.isInitialized) {
-                helpDeskController.navigateToTrackTickets(ticketCategory)
-                Log.d("HomeActivity", "Navigating to track_tickets with category: $ticketCategory via onNewIntent")
+                // Set the source screen for proper back navigation
+                if (source != null) {
+                    helpDeskController.setNavigationSource(source)
+                }
+                // Load tickets data and navigate directly without going through home screen
+                helpDeskController.loadTicketsData(ticketCategory)
+                navigator.navController?.navigate("track_tickets")
+                Log.d("HomeActivity", "Navigating directly to track_tickets with category: $ticketCategory via onNewIntent")
             }
         }
     }
@@ -234,9 +239,10 @@ class HomeActivity : AppCompatActivity() {
         val destination = intent.getStringExtra("destination")
         val navigateTo = intent.getStringExtra("navigateTo")
         val ticketCategory = intent.getStringExtra("ticketCategory")
+        val source = intent.getStringExtra("source")
         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
         val fromOtp = intent.getBooleanExtra("FROM_OTP", false) // Print the intent extras for debugging
-        Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, ticketCategory=$ticketCategory, isEmergencyContact=$isEmergencyContact")
+        Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, ticketCategory=$ticketCategory, source=$source, isEmergencyContact=$isEmergencyContact")
         Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
         Log.d("HomeActivity", "fromOtp=$fromOtp")
 
@@ -291,10 +297,28 @@ class HomeActivity : AppCompatActivity() {
                 val currentIntent = intent
                 val currentNavigateTo = currentIntent.getStringExtra("navigateTo")
                 val currentTicketCategory = currentIntent.getStringExtra("ticketCategory")
+                val currentSource = currentIntent.getStringExtra("source")
                 val currentDestination = currentIntent.getStringExtra("destination")
 
-                // If we have a destination or navigateTo, navigate to it
-                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, isEmergencyContact) {
+                // Determine start destination based on intent
+                val startDestination = if (currentNavigateTo == "track_tickets" && currentTicketCategory != null) {
+                    "track_tickets"
+                } else {
+                    "home"
+                }
+
+                // Handle data loading and navigation setup
+                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, currentSource, isEmergencyContact) {
+                    // Set up track_tickets controller FIRST if that's our destination
+                    if (startDestination == "track_tickets" && currentTicketCategory != null) {
+                        if (currentSource != null) {
+                            helpDeskController.setNavigationSource(currentSource)
+                        }
+                        // Load tickets data directly without calling navigate()
+                        helpDeskController.loadTicketsData(currentTicketCategory)
+                        Log.d("HomeActivity", "Starting at track_tickets with category: $currentTicketCategory from source: $currentSource")
+                    }
+
                     if (!fromOtp) {
                         val token = userDataManager.getAuthToken() ?: "your_token_here"
                         isLoading = true // Start loading
@@ -318,7 +342,32 @@ class HomeActivity : AppCompatActivity() {
                                 controller.refreshUserData()
                             }
 
-                            // Handle navigation after token refresh
+                            // Handle navigation after token refresh - only if not already at the destination
+                            if (startDestination == "home") {
+                                currentDestination?.let { dest ->
+                                    navController.navigate(dest)
+                                }
+
+                                currentNavigateTo?.let { route ->
+                                    // Handle track_tickets with category
+                                    if (route == "track_tickets" && currentTicketCategory != null) {
+                                        // Set the source screen for proper back navigation
+                                        if (currentSource != null) {
+                                            helpDeskController.setNavigationSource(currentSource)
+                                        }
+                                        // Load tickets with the specified category before navigating
+                                        helpDeskController.navigateToTrackTickets(currentTicketCategory)
+                                        Log.d("HomeActivity", "Navigating to track_tickets with category: $currentTicketCategory from source: $currentSource")
+                                    } else {
+                                        navController.navigate(route)
+                                        Log.d("HomeActivity", "Navigating to: $route")
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Handle navigation immediately if coming from OTP - only if not already at the destination
+                        if (startDestination == "home") {
                             currentDestination?.let { dest ->
                                 navController.navigate(dest)
                             }
@@ -335,29 +384,12 @@ class HomeActivity : AppCompatActivity() {
                                 }
                             }
                         }
-                    } else {
-                        // Handle navigation immediately if coming from OTP
-                        currentDestination?.let { dest ->
-                            navController.navigate(dest)
-                        }
-
-                        currentNavigateTo?.let { route ->
-                            // Handle track_tickets with category
-                            if (route == "track_tickets" && currentTicketCategory != null) {
-                                // Load tickets with the specified category before navigating
-                                helpDeskController.navigateToTrackTickets(currentTicketCategory)
-                                Log.d("HomeActivity", "Navigating to track_tickets with category: $currentTicketCategory")
-                            } else {
-                                navController.navigate(route)
-                                Log.d("HomeActivity", "Navigating to: $route")
-                            }
-                        }
                     }
                 }
                 // UniversalLoader(isLoading = isLoading)
                 NavHost(
                     navController = navController,
-                    startDestination = "home"
+                    startDestination = startDestination
                 ) {
                     composable(
                         route = "home",
@@ -440,8 +472,15 @@ class HomeActivity : AppCompatActivity() {
 
                     // Add raise concern screen with customizable title
                     composable(
-                        route = "raise_concern/{title}",
-                        arguments = listOf(navArgument("title") { type = NavType.StringType }),
+                        route = "raise_concern/{title}?category={category}",
+                        arguments = listOf(
+                            navArgument("title") { type = NavType.StringType },
+                            navArgument("category") { 
+                                type = NavType.StringType 
+                                nullable = true
+                                defaultValue = null
+                            }
+                        ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -457,10 +496,13 @@ class HomeActivity : AppCompatActivity() {
                     ) { backStackEntry ->
                         val title = backStackEntry.arguments?.getString("title") ?: "Raise a Concern"
                         val decodedTitle = java.net.URLDecoder.decode(title, "UTF-8")
+                        val category = backStackEntry.arguments?.getString("category")
+                        val decodedCategory = category?.let { java.net.URLDecoder.decode(it, "UTF-8") }
 
                         RaiseConcernScreen(
                             onBackPressed = { navController.popBackStack() },
-                            title = decodedTitle
+                            title = decodedTitle,
+                            prefilledCategory = decodedCategory
                         )
                     }
 

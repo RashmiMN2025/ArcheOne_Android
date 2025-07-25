@@ -13,6 +13,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -87,8 +90,6 @@ import com.archeGlobal.one.ui.theme.getColorForApp
 import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.UserDataManager
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -335,6 +336,9 @@ fun HomeScreenContent(
         var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
         var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
         var isRefreshing by remember { mutableStateOf(false) }
+        
+        // SwipeRefresh state
+        val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
         // Get user data (replace with your actual user data source)
         val apiService = RetrofitClient.apiService
@@ -342,8 +346,6 @@ fun HomeScreenContent(
         // State to track the current view (All Apps or Favorites)
         var currentView by remember { mutableStateOf("All Apps") }
 
-        // SwipeRefresh state
-        val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
         // --- Rating Pop-up Logic ---
         var navigationCount by rememberSaveable { mutableStateOf(0) }
@@ -380,13 +382,13 @@ fun HomeScreenContent(
                     // Calculate elapsed time and ensure minimum 2-second loading
                     val elapsedTime = System.currentTimeMillis() - refreshStartTime
                     val remainingTime = maxOf(0, 2000 - elapsedTime) // 2000ms = 2 seconds
-                    
+
                     // Use coroutine to handle the delay
                     CoroutineScope(Dispatchers.Main).launch {
                         if (remainingTime > 0) {
                             kotlinx.coroutines.delay(remainingTime)
                         }
-                        
+
                         if (isError) {
                             Log.e("HomeScreen", "Refresh failed: $message")
                             // Check if token expired (should navigate to login)
@@ -905,16 +907,19 @@ fun HomeScreenContent(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Content with SwipeRefresh
+                        // Content area with SwipeRefresh
                         Box(modifier = Modifier.weight(1f)) {
                             SwipeRefresh(
                                 state = swipeRefreshState,
                                 onRefresh = { performRefresh() },
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                indicator = { _, _ -> 
+                                    // Empty indicator - we'll use UniversalLoader instead
+                                }
                             ) {
-                                if (currentView == "All Apps") {
-                                    // All Apps View
-                                    LazyColumn(
+                            if (currentView == "All Apps") {
+                                // All Apps View
+                                LazyColumn(
                                         modifier = Modifier.fillMaxSize(),
                                         contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
                                     ) {
@@ -1014,11 +1019,12 @@ fun HomeScreenContent(
                                 }
                             } // Close SwipeRefresh
                         }
+                        }
                     }
                 }
 
-                // Show universal loader only for programmatic refresh (not swipe refresh)
-                if (isRefreshing && !swipeRefreshState.isRefreshing) {
+                // Show universal loader for all refresh operations
+                if (isRefreshing) {
                     UniversalLoader(isLoading = isRefreshing)
                 }
 
@@ -1346,7 +1352,7 @@ fun HomeScreenContent(
             }
         }
     }
-}
+
 
 // Update this helper function to better format long titles
 private fun formatServiceTitle(title: String): String {
@@ -1360,14 +1366,16 @@ private fun formatServiceTitle(title: String): String {
         "Calendar" -> "Calendar"
         "Holiday Calendar" -> "Holiday\nCalendar"
         "New Onboarding" -> "New\nOnboarding"
-        "TravelDesk" -> "Travel\nDesk"
+        "TravelDesk" -> "TravelDesk"
+        "HelpDesk" -> "HelpDesk"
         "Goal Setting/KPI" -> "Goal\nSetting/KPI"
         "Business Card" -> "Business\nCard"
         "My Documents" -> "My\nDocuments"
         "MyDocuments" -> "My\nDocuments"
         "ZenTask" -> "ZenTask"
         "My Career" -> "My\nCareer"
-        "Admin" -> "Admin" "Medical" -> "Medical"
+        "Admin" -> "Admin"
+        "Medical" -> "Medical"
         "ID" -> "ID"
         "MyPay" -> "MyPay"
         "SAP" -> "SAP"
