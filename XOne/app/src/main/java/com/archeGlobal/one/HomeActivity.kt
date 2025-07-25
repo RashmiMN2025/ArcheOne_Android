@@ -475,9 +475,8 @@ class HomeActivity : AppCompatActivity() {
                         route = "raise_concern/{title}?category={category}",
                         arguments = listOf(
                             navArgument("title") { type = NavType.StringType },
-                            navArgument("category") { 
-                                type = NavType.StringType 
-                                nullable = true
+                            navArgument("category") {
+                                type = NavType.StringType nullable = true
                                 defaultValue = null
                             }
                         ),

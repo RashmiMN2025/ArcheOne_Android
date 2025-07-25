@@ -222,7 +222,7 @@ fun UserDocumentsScreen(
                         }
                     }
                 }
-                
+
                 // Loading overlay
                 if (isLoading) {
                     Box(

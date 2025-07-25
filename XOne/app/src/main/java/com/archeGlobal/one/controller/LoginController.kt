@@ -7,7 +7,6 @@ import com.archeGlobal.one.network.*
 import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.EncryptedAPIHelper
 import com.archeGlobal.one.utils.UserDataManager
-import com.archeGlobal.one.utils.handleError
 import kotlinx.coroutines.*
 import org.json.JSONObject
 
@@ -133,7 +132,7 @@ class LoginController(
                                 // Parse the error response to extract the message
                                 val errorJson = JSONObject(errorBody)
                                 val errorMessage = errorJson.optString("message", "")
-                                
+
                                 // Check if it's a 403 (Forbidden) - app update required
                                 if (response.code() == 403) {
                                     // Show update dialog

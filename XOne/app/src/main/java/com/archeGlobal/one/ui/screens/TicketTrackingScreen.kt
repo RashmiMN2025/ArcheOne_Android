@@ -1,7 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -118,7 +117,7 @@ fun TicketTrackingScreen(
                         "asset" -> "View the status of your raised issues"
                         else -> "View the status of your raised tickets"
                     }
-                    
+
                     Text(
                         text = statusText,
                         fontSize = 16.sp,
@@ -434,7 +433,7 @@ fun EmptyTicketsState(
         verticalArrangement = Arrangement.Top
     ) {
         Spacer(modifier = Modifier.height(80.dp))
-        
+
         Box(
             modifier = Modifier.size(80.dp),
             contentAlignment = Alignment.Center
@@ -445,9 +444,9 @@ fun EmptyTicketsState(
                 modifier = Modifier.size(80.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         Text(
             text = "No tickets raised yet.",
             fontSize = 16.sp,
@@ -456,9 +455,9 @@ fun EmptyTicketsState(
             color = Color.Gray,
             textAlign = TextAlign.Center
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Text(
             text = "Raise a issue to start tracking.",
             fontSize = 14.sp,

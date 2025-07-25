@@ -13,8 +13,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -90,6 +88,8 @@ import com.archeGlobal.one.ui.theme.getColorForApp
 import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.UserDataManager
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -336,7 +336,7 @@ fun HomeScreenContent(
         var selectedApp by remember { mutableStateOf<HomeItem?>(null) }
         var selectedPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
         var isRefreshing by remember { mutableStateOf(false) }
-        
+
         // SwipeRefresh state
         val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
@@ -345,7 +345,6 @@ fun HomeScreenContent(
 
         // State to track the current view (All Apps or Favorites)
         var currentView by remember { mutableStateOf("All Apps") }
-
 
         // --- Rating Pop-up Logic ---
         var navigationCount by rememberSaveable { mutableStateOf(0) }
@@ -913,13 +912,12 @@ fun HomeScreenContent(
                                 state = swipeRefreshState,
                                 onRefresh = { performRefresh() },
                                 modifier = Modifier.fillMaxSize(),
-                                indicator = { _, _ -> 
-                                    // Empty indicator - we'll use UniversalLoader instead
+                                indicator = { _, _ -> // Empty indicator - we'll use UniversalLoader instead
                                 }
                             ) {
-                            if (currentView == "All Apps") {
-                                // All Apps View
-                                LazyColumn(
+                                if (currentView == "All Apps") {
+                                    // All Apps View
+                                    LazyColumn(
                                         modifier = Modifier.fillMaxSize(),
                                         contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 16.dp)
                                     ) {
@@ -1019,330 +1017,77 @@ fun HomeScreenContent(
                                 }
                             } // Close SwipeRefresh
                         }
-                        }
                     }
                 }
+            }
 
-                // Show universal loader for all refresh operations
-                if (isRefreshing) {
-                    UniversalLoader(isLoading = isRefreshing)
-                }
+            // Show universal loader for all refresh operations
+            if (isRefreshing) {
+                UniversalLoader(isLoading = isRefreshing)
+            }
 
-                // Semi-transparent overlay when an app is selected
-                if (selectedApp != null) {
+            // Semi-transparent overlay when an app is selected
+            if (selectedApp != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .blur(radius = 8.dp)
+                        .clickable(onClick = {
+                            selectedApp = null
+                            selectedPosition = null
+                        })
+                )
+            }
+
+            // Overlay the selected app
+            if (selectedApp != null) {
+                selectedPosition?.let { (x, y) ->
+                    val density = LocalDensity.current
+                    val itemSize = 80.dp
+                    val scaleFactor = 1.2f // Slightly bigger than original
+                    val itemSizePx = with(density) { itemSize.toPx() }
+
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.6f))
-                            .blur(radius = 8.dp)
-                            .clickable(onClick = {
-                                selectedApp = null
-                                selectedPosition = null
-                            })
-                    )
-                }
-
-                // Overlay the selected app
-                if (selectedApp != null) {
-                    selectedPosition?.let { (x, y) ->
-                        val density = LocalDensity.current
-                        val itemSize = 80.dp
-                        val scaleFactor = 1.2f // Slightly bigger than original
-                        val itemSizePx = with(density) { itemSize.toPx() }
-
-                        Box(
-                            modifier = Modifier
-                                .offset {
-                                    IntOffset(
-                                        x = (x - itemSizePx * scaleFactor / 2).toInt(),
-                                        y = (y - itemSizePx - 15).toInt() // Position exactly above with exact pixel offset
-                                    )
-                                }
-                        ) {
-                            val formattedTitle = formatServiceTitle(selectedApp!!.title)
-
-                            Card(
-                                modifier = Modifier
-                                    .width(115.dp) // Set fixed width
-                                    .height(115.dp), // Set fixed height
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Box(modifier = Modifier.fillMaxSize()) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(4.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center
-                                    ) {
-                                        AppIcon(title = selectedApp!!.title, modifier = Modifier.size(50.dp))
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Text(
-                                            text = formattedTitle,
-                                            fontSize = 12.sp,
-                                            color = Color.Black,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            textAlign = TextAlign.Center,
-                                            maxLines = 2,
-                                            lineHeight = 14.sp,
-                                            overflow = TextOverflow.Visible,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Show favorite dialog
-                if (selectedApp != null && selectedPosition != null) {
-                    selectedPosition?.let { (x, y) ->
-                        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-                        val dialogWidth = 160.dp // Return to original width
-                        val density = LocalDensity.current
-
-                        val dialogWidthPx = with(density) { dialogWidth.toPx() }
-                        val screenWidthPx = with(density) { screenWidth.toPx() }
-                        val itemSizePx = with(density) { 80.dp.toPx() }
-                        val scaleFactor = 1.1f // Same as app scale factor
-
-                        // Calculate x position (centered with the app)
-                        val xOffset = when {
-                            x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
-                            x - (dialogWidthPx / 2) < 0 -> 16f
-                            else -> x - (dialogWidthPx / 2)
-                        }
-
-                        // Reduce the yOffset to decrease the space between the service card and the dialog
-                        val yOffset = y - itemSizePx - 180 // Reduced from 235 to 200
-
-                        Card(
-                            modifier = Modifier
-                                .width(dialogWidth)
-                                .offset {
-                                    IntOffset(
-                                        x = xOffset.toInt(),
-                                        y = yOffset.toInt()
-                                    )
-                                },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                        ) {
-                            Text(
-                                text = if (selectedApp!!.isFavorite) "Remove from Favourites" else "Add to Favourites",
-                                fontSize = 13.sp,
-                                color = Color.Black,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onToggleFavorite(selectedApp!!)
-                                        selectedApp = null
-                                        selectedPosition = null
-                                    }
-                                    .padding(vertical = 8.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-
-                // Show authentication overlay if authenticating
-                if (isAuthenticating) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.3f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Optional: Add a fingerprint icon or loading indicator here
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                }
-
-                // --- Rating Dialog ---
-                if (showRatingDialog) {
-                    Dialog(onDismissRequest = { showRatingDialog = false }) {
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    "How was your experience?",
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 16.sp,
-                                    color = Color.Black,
-                                    maxLines = 2,
-                                    lineHeight = 14.sp,
-                                    textAlign = TextAlign.Center, // Center align the text
-                                    modifier = Modifier.fillMaxWidth() // Make sure it uses the full width
+                            .offset {
+                                IntOffset(
+                                    x = (x - itemSizePx * scaleFactor / 2).toInt(),
+                                    y = (y - itemSizePx - 15).toInt() // Position exactly above with exact pixel offset
                                 )
+                            }
+                    ) {
+                        val formattedTitle = formatServiceTitle(selectedApp!!.title)
 
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                Row(
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    for (i in 1..5) {
-                                        Icon(
-                                            painter = painterResource(
-                                                id = if (i <= rating) R.drawable.ic_star_filled else R.drawable.ic_star_outline
-                                            ),
-                                            contentDescription = "Star $i",
-                                            tint = Color(0xFFFFD700),
-                                            modifier = Modifier
-                                                .size(45.dp)
-                                                .clickable {
-                                                    rating = i
-                                                    // If 4 or 5 stars selected, redirect to Play Store immediately
-                                                    if (i >= 4) {
-                                                        // Submit feedback first
-                                                        val feedbackRequest = FeedbackRequest(
-                                                            name = employeeData.name,
-                                                            email = employeeData.email,
-                                                            category = "App rating",
-                                                            feedback = null,
-                                                            rating = i,
-                                                            platform = "Android",
-                                                            deviceName = android.os.Build.MODEL,
-                                                            version = android.os.Build.VERSION.RELEASE
-                                                        )
-
-                                                        // Submit feedback in background
-                                                        CoroutineScope(Dispatchers.IO).launch {
-                                                            try {
-                                                                apiService.submitFeedback(feedbackRequest)
-                                                            } catch (e: Exception) {
-                                                                // Log error but don't show to user
-                                                            }
-                                                        }
-
-                                                        // Redirect to Play Store immediately
-                                                        try {
-                                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.archeGlobal.one"))
-                                                            context.startActivity(intent)
-                                                        } catch (e: Exception) {
-                                                            Toast.makeText(context, "Unable to open Play Store", Toast.LENGTH_SHORT).show()
-                                                        }
-
-                                                        // Close dialog
-                                                        showRatingDialog = false
-                                                        rating = 0
-                                                        feedbackText = ""
-                                                    }
-                                                }
-                                                .padding(4.dp)
-                                        )
-                                    }
-                                }
-
-                                // Show feedback field if rating is 3 or below and user has selected a rating
-                                if (rating in 1..3) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    OutlinedTextField(
-                                        value = feedbackText,
-                                        onValueChange = { feedbackText = it },
-                                        placeholder = { Text("Please tell us what could be better") },
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.LightGray,
-                                            cursorColor = Color.Gray,
-                                            unfocusedContainerColor = Color.White,
-                                            focusedContainerColor = Color.White
-                                        ),
-                                        shape = RoundedCornerShape(12.dp),
-                                        textStyle = TextStyle(
-                                            fontSize = 16.sp,
-                                            color = Color.Black,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium
-                                        ),
-                                        maxLines = 4
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Button(
-                                    onClick = {
-                                        if (rating == 0) {
-                                            Toast.makeText(context, "Please select a rating.", Toast.LENGTH_SHORT).show()
-                                            return@Button
-                                        }
-                                        if (rating <= 3 && feedbackText.isBlank()) {
-                                            Toast.makeText(context, "Please provide feedback.", Toast.LENGTH_SHORT).show()
-                                            return@Button
-                                        }
-                                        isSubmitting = true
-
-                                        // Prepare request (only for 1-3 star ratings, 4-5 stars are handled on selection)
-                                        val feedbackRequest = FeedbackRequest(
-                                            name = employeeData.name,
-                                            email = employeeData.email,
-                                            category = "App rating",
-                                            feedback = feedbackText,
-                                            rating = rating,
-                                            platform = "Android",
-                                            deviceName = android.os.Build.MODEL,
-                                            version = android.os.Build.VERSION.RELEASE
-                                        )
-
-                                        // Call API
-                                        CoroutineScope(Dispatchers.IO).launch {
-                                            try {
-                                                val response = apiService.submitFeedback(feedbackRequest)
-                                                withContext(Dispatchers.Main) {
-                                                    isSubmitting = false
-                                                    if (response.isSuccessful) {
-                                                        Toast.makeText(context, "Thank you for your feedback!", Toast.LENGTH_SHORT).show()
-                                                        showRatingDialog = false
-                                                        rating = 0
-                                                        feedbackText = ""
-                                                    } else {
-                                                        Toast.makeText(context, "Failed to submit feedback.", Toast.LENGTH_SHORT).show()
-                                                    }
-                                                }
-                                            } catch (e: Exception) {
-                                                withContext(Dispatchers.Main) {
-                                                    isSubmitting = false
-                                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }
-                                    },
+                        Card(
+                            modifier = Modifier
+                                .width(115.dp) // Set fixed width
+                                .height(115.dp), // Set fixed height
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Column(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-                                    enabled = !isSubmitting,
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFDD3825),
-                                        disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
-                                        contentColor = Color.White,
-                                        disabledContentColor = Color.White
-                                    )
+                                        .fillMaxSize()
+                                        .padding(4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
                                 ) {
+                                    AppIcon(title = selectedApp!!.title, modifier = Modifier.size(50.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        if (isSubmitting) "Submit" else "Submit",
+                                        text = formattedTitle,
                                         fontSize = 12.sp,
+                                        color = Color.Black,
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color.White
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        lineHeight = 14.sp,
+                                        overflow = TextOverflow.Visible,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
@@ -1350,9 +1095,261 @@ fun HomeScreenContent(
                     }
                 }
             }
+
+            // Show favorite dialog
+            if (selectedApp != null && selectedPosition != null) {
+                selectedPosition?.let { (x, y) ->
+                    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+                    val dialogWidth = 160.dp // Return to original width
+                    val density = LocalDensity.current
+
+                    val dialogWidthPx = with(density) { dialogWidth.toPx() }
+                    val screenWidthPx = with(density) { screenWidth.toPx() }
+                    val itemSizePx = with(density) { 80.dp.toPx() }
+                    val scaleFactor = 1.1f // Same as app scale factor
+
+                    // Calculate x position (centered with the app)
+                    val xOffset = when {
+                        x + (dialogWidthPx / 2) > screenWidthPx -> screenWidthPx - dialogWidthPx - 16f
+                        x - (dialogWidthPx / 2) < 0 -> 16f
+                        else -> x - (dialogWidthPx / 2)
+                    }
+
+                    // Reduce the yOffset to decrease the space between the service card and the dialog
+                    val yOffset = y - itemSizePx - 180 // Reduced from 235 to 200
+
+                    Card(
+                        modifier = Modifier
+                            .width(dialogWidth)
+                            .offset {
+                                IntOffset(
+                                    x = xOffset.toInt(),
+                                    y = yOffset.toInt()
+                                )
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Text(
+                            text = if (selectedApp!!.isFavorite) "Remove from Favourites" else "Add to Favourites",
+                            fontSize = 13.sp,
+                            color = Color.Black,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onToggleFavorite(selectedApp!!)
+                                    selectedApp = null
+                                    selectedPosition = null
+                                }
+                                .padding(vertical = 8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            // Show authentication overlay if authenticating
+            if (isAuthenticating) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Optional: Add a fingerprint icon or loading indicator here
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
+
+            // --- Rating Dialog ---
+            if (showRatingDialog) {
+                Dialog(onDismissRequest = { showRatingDialog = false }) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "How was your experience?",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = Color.Black,
+                                maxLines = 2,
+                                lineHeight = 14.sp,
+                                textAlign = TextAlign.Center, // Center align the text
+                                modifier = Modifier.fillMaxWidth() // Make sure it uses the full width
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                for (i in 1..5) {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = if (i <= rating) R.drawable.ic_star_filled else R.drawable.ic_star_outline
+                                        ),
+                                        contentDescription = "Star $i",
+                                        tint = Color(0xFFFFD700),
+                                        modifier = Modifier
+                                            .size(45.dp)
+                                            .clickable {
+                                                rating = i
+                                                // If 4 or 5 stars selected, redirect to Play Store immediately
+                                                if (i >= 4) {
+                                                    // Submit feedback first
+                                                    val feedbackRequest = FeedbackRequest(
+                                                        name = employeeData.name,
+                                                        email = employeeData.email,
+                                                        category = "App rating",
+                                                        feedback = null,
+                                                        rating = i,
+                                                        platform = "Android",
+                                                        deviceName = android.os.Build.MODEL,
+                                                        version = android.os.Build.VERSION.RELEASE
+                                                    )
+
+                                                    // Submit feedback in background
+                                                    CoroutineScope(Dispatchers.IO).launch {
+                                                        try {
+                                                            apiService.submitFeedback(feedbackRequest)
+                                                        } catch (e: Exception) {
+                                                            // Log error but don't show to user
+                                                        }
+                                                    }
+
+                                                    // Redirect to Play Store immediately
+                                                    try {
+                                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.archeGlobal.one"))
+                                                        context.startActivity(intent)
+                                                    } catch (e: Exception) {
+                                                        Toast.makeText(context, "Unable to open Play Store", Toast.LENGTH_SHORT).show()
+                                                    }
+
+                                                    // Close dialog
+                                                    showRatingDialog = false
+                                                    rating = 0
+                                                    feedbackText = ""
+                                                }
+                                            }
+                                            .padding(4.dp)
+                                    )
+                                }
+                            }
+
+                            // Show feedback field if rating is 3 or below and user has selected a rating
+                            if (rating in 1..3) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedTextField(
+                                    value = feedbackText,
+                                    onValueChange = { feedbackText = it },
+                                    placeholder = { Text("Please tell us what could be better") },
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.LightGray,
+                                        cursorColor = Color.Gray,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    textStyle = TextStyle(
+                                        fontSize = 16.sp,
+                                        color = Color.Black,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    maxLines = 4
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = {
+                                    if (rating == 0) {
+                                        Toast.makeText(context, "Please select a rating.", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+                                    if (rating <= 3 && feedbackText.isBlank()) {
+                                        Toast.makeText(context, "Please provide feedback.", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+                                    isSubmitting = true
+
+                                    // Prepare request (only for 1-3 star ratings, 4-5 stars are handled on selection)
+                                    val feedbackRequest = FeedbackRequest(
+                                        name = employeeData.name,
+                                        email = employeeData.email,
+                                        category = "App rating",
+                                        feedback = feedbackText,
+                                        rating = rating,
+                                        platform = "Android",
+                                        deviceName = android.os.Build.MODEL,
+                                        version = android.os.Build.VERSION.RELEASE
+                                    )
+
+                                    // Call API
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            val response = apiService.submitFeedback(feedbackRequest)
+                                            withContext(Dispatchers.Main) {
+                                                isSubmitting = false
+                                                if (response.isSuccessful) {
+                                                    Toast.makeText(context, "Thank you for your feedback!", Toast.LENGTH_SHORT).show()
+                                                    showRatingDialog = false
+                                                    rating = 0
+                                                    feedbackText = ""
+                                                } else {
+                                                    Toast.makeText(context, "Failed to submit feedback.", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            withContext(Dispatchers.Main) {
+                                                isSubmitting = false
+                                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                enabled = !isSubmitting,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825), // keep red even when disabled
+                                    contentColor = Color.White,
+                                    disabledContentColor = Color.White
+                                )
+                            ) {
+                                Text(
+                                    if (isSubmitting) "Submit" else "Submit",
+                                    fontSize = 12.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-
+}
 
 // Update this helper function to better format long titles
 private fun formatServiceTitle(title: String): String {
