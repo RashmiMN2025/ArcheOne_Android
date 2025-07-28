@@ -272,6 +272,10 @@ fun MonthCard(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEven
 fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEvent> = emptyList()) {
     val firstDayOfMonth = LocalDate.of(2025, month, 1).dayOfWeek.value % 7
     val totalDays = YearMonth.of(2025, month).lengthOfMonth()
+    
+    // Get current date to check if today should be highlighted
+    val currentDate = LocalDate.now()
+    val isCurrentMonth = currentDate.monthValue == month && currentDate.year == 2025
 
     Column(
         verticalArrangement = Arrangement.spacedBy(3.dp), // Slightly reduced spacing between rows
@@ -295,6 +299,9 @@ fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEve
                         0
                     }
 
+                    // Check if this is today
+                    val isToday = isCurrentMonth && date == currentDate.dayOfMonth
+
                     // Check for holidays and global events
                     val mandatoryHoliday = holidays.any {
                         it.day == date && it.holidayType == "Yes"
@@ -313,7 +320,7 @@ fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEve
                         }
                     }
 
-                    DateView(date, mandatoryHoliday, regionalHoliday, hasGlobalEvent)
+                    DateView(date, mandatoryHoliday, regionalHoliday, hasGlobalEvent, isToday)
                 }
             }
         }
@@ -321,7 +328,7 @@ fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEve
 }
 
 @Composable
-fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean, hasGlobalEvent: Boolean = false) {
+fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean, hasGlobalEvent: Boolean = false, isToday: Boolean = false) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -340,6 +347,10 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean,
                         Modifier
                             .clip(CircleShape)
                             .background(Color(0xFF4CAF50)) // Green for global events
+                    isToday ->
+                        Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF2196F3).copy(alpha = 0.3f)) // Light blue for today
                     else -> Modifier
                 }
             )

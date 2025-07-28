@@ -819,15 +819,13 @@ fun MonthCalendarView(
                                     color = when {
                                         isMandatoryHoliday || isRegionalHoliday -> Color.White
                                         hasGlobalEvent -> Color.White
-                                        (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) -> Color.White
                                         else -> Color.Black
                                     },
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = when {
                                         isMandatoryHoliday || isRegionalHoliday -> FontWeight.Bold
                                         hasGlobalEvent -> FontWeight.Bold
-                                        (isToday && !isUserSelectedDate) || (day == selectedDay && isUserSelectedDate) -> FontWeight.Bold
-                                        else -> FontWeight.Normal
+                                        else -> FontWeight.SemiBold
                                     }
                                 )
 
@@ -968,6 +966,8 @@ fun HolidayDetailsBox(
                     Text(
                         text = formatDetailDate(holiday.date),
                         fontSize = 12.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.Gray,
                         textAlign = TextAlign.Center
                     )
@@ -1069,6 +1069,8 @@ fun HolidayDetailItem(
                 text = formatDetailDate(holiday.date),
                 color = Color.DarkGray,
                 fontSize = 14.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.End
             )
@@ -1230,7 +1232,7 @@ fun MilestoneDetailsBox(
                             color = Color.Black,
                             fontSize = 12.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
@@ -1411,7 +1413,7 @@ fun GlobalEventItem(
                     text = formatDetailDate(event.date),
                     fontSize = 12.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color.Gray,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center

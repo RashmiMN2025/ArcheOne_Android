@@ -476,7 +476,8 @@ class HomeActivity : AppCompatActivity() {
                         arguments = listOf(
                             navArgument("title") { type = NavType.StringType },
                             navArgument("category") {
-                                type = NavType.StringType nullable = true
+                                type = NavType.StringType
+                                nullable = true
                                 defaultValue = null
                             }
                         ),
