@@ -114,7 +114,7 @@ fun TicketTrackingScreen(
                 ) {
                     // Show different text based on navigation source
                     val statusText = when (controller.getNavigationSource()) {
-                        "asset" -> "View the status of your raised issues"
+                        "asset" -> "View the status of your raised issue"
                         else -> "View the status of your raised tickets"
                     }
 

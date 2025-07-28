@@ -475,15 +475,6 @@ fun TravelScreen(
                                     ),
                                     shape = RoundedCornerShape(8.dp)
                                 )
-                            } else if (controller.modeOfTransport == "Train" || controller.modeOfTransport == "Bus") {
-                                // Booking notice for Train/Bus
-                                Text(
-                                    text = "* Bookings must be made 1 week prior to departure.",
-                                    fontSize = 12.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = PrimaryRed,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
                             }
 
                             // Tab buttons for Single/Multiple destinations
@@ -888,80 +879,82 @@ fun TravelScreen(
                                 }
                             }
 
-                            // Meal Preference Toggle and Dropdown
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Select Meal Preference",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black
-                                )
-
-                                // Toggle switch
-                                androidx.compose.material.Switch(
-                                    checked = controller.mealPreferenceEnabled,
-                                    onCheckedChange = { controller.toggleMealPreference(it) },
-                                    colors = androidx.compose.material.SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFF4CAF50),
-                                        checkedTrackColor = Color(0xFFADE1B6),
-                                        uncheckedThumbColor = Color.Gray,
-                                        uncheckedTrackColor = Color.LightGray
-                                    )
-                                )
-                            }
-
-                            // Show meal preference dropdown if enabled
-                            if (controller.mealPreferenceEnabled) {
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    OutlinedTextField(
-                                        value = controller.mealPreference,
-                                        onValueChange = { },
-                                        label = { Text("Meal Preference", fontFamily = GraphikFontFamily) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 16.dp)
-                                            .clickable(onClick = { controller.toggleMealPrefDropdown() }),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.Gray,
-                                            cursorColor = Color.Black,
-                                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                                            focusedContainerColor = Color.White,
-                                            unfocusedTextColor = Color.Black,
-                                            focusedTextColor = Color.Black,
-                                            unfocusedLabelColor = Color.Gray,
-                                            focusedLabelColor = Color.Gray
-                                        ),
-                                        shape = RoundedCornerShape(8.dp),
-                                        trailingIcon = {
-                                            Icon(
-                                                Icons.Default.KeyboardArrowDown,
-                                                contentDescription = "Dropdown",
-                                                tint = Color.Gray,
-                                                modifier = Modifier.clickable { controller.toggleMealPrefDropdown() }
-                                            )
-                                        },
-                                        readOnly = true
+                            // Meal Preference Toggle and Dropdown (only for Flight and Train)
+                            if (controller.modeOfTransport == "Flight" || controller.modeOfTransport == "Train") {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Select Meal Preference",
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black
                                     )
 
-                                    DropdownMenu(
-                                        expanded = controller.isMealPrefDropdownExpanded,
-                                        onDismissRequest = { controller.dismissMealPrefDropdown() },
-                                        modifier = Modifier
-                                            .width(with(LocalDensity.current) { 300.dp })
-                                            .background(Color.White)
-                                    ) {
-                                        controller.mealPreferenceOptions.forEach { option ->
-                                            DropdownMenuItem(
-                                                text = { Text(text = option, fontFamily = GraphikFontFamily) },
-                                                onClick = { controller.updateMealPreference(option) }
-                                            )
+                                    // Toggle switch
+                                    androidx.compose.material.Switch(
+                                        checked = controller.mealPreferenceEnabled,
+                                        onCheckedChange = { controller.toggleMealPreference(it) },
+                                        colors = androidx.compose.material.SwitchDefaults.colors(
+                                            checkedThumbColor = Color(0xFF4CAF50),
+                                            checkedTrackColor = Color(0xFFADE1B6),
+                                            uncheckedThumbColor = Color.Gray,
+                                            uncheckedTrackColor = Color.LightGray
+                                        )
+                                    )
+                                }
+
+                                // Show meal preference dropdown if enabled
+                                if (controller.mealPreferenceEnabled) {
+                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                        OutlinedTextField(
+                                            value = controller.mealPreference,
+                                            onValueChange = { },
+                                            label = { Text("Meal Preference", fontFamily = GraphikFontFamily) },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 16.dp)
+                                                .clickable(onClick = { controller.toggleMealPrefDropdown() }),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                unfocusedBorderColor = Color.LightGray,
+                                                focusedBorderColor = Color.Gray,
+                                                cursorColor = Color.Black,
+                                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                                focusedContainerColor = Color.White,
+                                                unfocusedTextColor = Color.Black,
+                                                focusedTextColor = Color.Black,
+                                                unfocusedLabelColor = Color.Gray,
+                                                focusedLabelColor = Color.Gray
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            trailingIcon = {
+                                                Icon(
+                                                    Icons.Default.KeyboardArrowDown,
+                                                    contentDescription = "Dropdown",
+                                                    tint = Color.Gray,
+                                                    modifier = Modifier.clickable { controller.toggleMealPrefDropdown() }
+                                                )
+                                            },
+                                            readOnly = true
+                                        )
+
+                                        DropdownMenu(
+                                            expanded = controller.isMealPrefDropdownExpanded,
+                                            onDismissRequest = { controller.dismissMealPrefDropdown() },
+                                            modifier = Modifier
+                                                .width(with(LocalDensity.current) { 300.dp })
+                                                .background(Color.White)
+                                        ) {
+                                            controller.mealPreferenceOptions.forEach { option ->
+                                                DropdownMenuItem(
+                                                    text = { Text(text = option, fontFamily = GraphikFontFamily) },
+                                                    onClick = { controller.updateMealPreference(option) }
+                                                )
+                                            }
                                         }
                                     }
                                 }

@@ -697,7 +697,7 @@ class HomeActivity : AppCompatActivity() {
                             },
                             onHolidayListClick = { pdfUrl ->
                                 // Use our PDFViewerScreen with navigator
-                                navigator.navigateToPDFViewer(pdfUrl, "Holiday List 2025")
+                                navigator.navigateToPDFViewer(pdfUrl, "Holiday Calendar PDF")
                                 Log.d("HomeActivity", "Opening holiday list PDF in PDFViewerScreen: $pdfUrl")
                             }
                         )

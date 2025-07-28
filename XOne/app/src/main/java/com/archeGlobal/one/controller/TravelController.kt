@@ -24,7 +24,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -980,19 +979,13 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
     /**
      * Convert display date format (dd MMM yyyy) to API date format (yyyy-MM-dd)
-     * Add one day to compensate for the API's timezone conversion bug
      */
     private fun convertToApiDateFormat(displayDate: String): String {
         return try {
             val date = displayDateFormat.parse(displayDate)
             if (date != null) {
-                // Add one day to compensate for API timezone bug
-                val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"))
-                calendar.time = date
-                calendar.add(Calendar.DAY_OF_MONTH, 1)
-
-                val apiDate = apiDateFormat.format(calendar.time)
-                Log.d("TravelController", "Converting display date '$displayDate' to API date: '$apiDate' (added 1 day to compensate for API timezone bug)")
+                val apiDate = apiDateFormat.format(date)
+                Log.d("TravelController", "Converting display date '$displayDate' to API date: '$apiDate'")
                 apiDate
             } else {
                 displayDate

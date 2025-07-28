@@ -141,7 +141,7 @@ fun HolidayCalendarScreen(
                             pdfUrl.value?.let { url ->
                                 controller.onViewClick(
                                     context = context,
-                                    documentName = "Holiday List 2025",
+                                    documentName = "Holiday Calendar PDF",
                                     filePath = url
                                 )
                                 // onHolidayListClick(url)
@@ -272,7 +272,7 @@ fun MonthCard(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEven
 fun MonthDates(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEvent> = emptyList()) {
     val firstDayOfMonth = LocalDate.of(2025, month, 1).dayOfWeek.value % 7
     val totalDays = YearMonth.of(2025, month).lengthOfMonth()
-    
+
     // Get current date to check if today should be highlighted
     val currentDate = LocalDate.now()
     val isCurrentMonth = currentDate.monthValue == month && currentDate.year == 2025
@@ -425,7 +425,7 @@ fun PreviewHolidayCalendarScreen() {
                     }
 
                     Text(
-                        text = "Holiday Calendar",
+                        text = "Holiday Calendar PDF",
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,

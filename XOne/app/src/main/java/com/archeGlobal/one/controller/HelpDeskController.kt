@@ -136,7 +136,8 @@ class HelpDeskController(private val context: Context) {
     fun loadTicketsData(category: String = "Helpdesk") {
         // Set loading state and clear existing tickets to prevent showing old data
         _model.value = _model.value.copy(
-            isLoading = true, error = null,
+            isLoading = true,
+            error = null,
             tickets = emptyList() // Clear tickets immediately to prevent flash
         )
 

@@ -95,7 +95,7 @@ fun HolidayListScreen(
 
                 // Title centered in the Box
                 Text(
-                    text = "Holiday List 2025",
+                    text = "Holiday Calendar PDF",
                     color = Color.Black,
                     fontSize = 20.sp,
                     fontFamily = GraphikFontFamily,
@@ -110,7 +110,7 @@ fun HolidayListScreen(
                             onClick = {
                                 if (url.isNotBlank()) {
                                     Log.d("HolidayListScreen", "Opening PDF with URL: $url")
-                                    navigator.navigateToPDFViewer(url, "Holiday List 2025")
+                                    navigator.navigateToPDFViewer(url, "Holiday Calendar PDF")
                                 } else {
                                     Log.e("HolidayListScreen", "Cannot open PDF: URL is empty")
                                     // Could show a toast here if needed
