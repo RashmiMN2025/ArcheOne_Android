@@ -62,7 +62,7 @@ fun EmergencyContactScreen(
                             "Emergency Contact",
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     },
                     navigationIcon = {
@@ -120,7 +120,7 @@ fun EmergencyContactScreen(
                                     text = "Emergency Contact",
                                     fontSize = 18.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = Color.Black
                                 )
                             }
@@ -140,7 +140,7 @@ fun EmergencyContactScreen(
                                 // Relationship
                                 LabeledValue(
                                     label = "Relationship",
-                                    value = controller.model.relationship.ifEmpty { "-" }
+                                    value = controller.model.relationship.ifEmpty { "N/A" }
                                 )
 
                                 // Phone Number (with underline)
@@ -156,7 +156,7 @@ fun EmergencyContactScreen(
                                         text = controller.model.phoneNumber.ifEmpty { "-" },
                                         fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.Medium,
                                         color = Color.Black,
                                         textDecoration = if (controller.model.phoneNumber.isNotEmpty()) {
                                             TextDecoration.Underline
@@ -237,7 +237,7 @@ fun LabeledValue(
             text = value,
             fontSize = 16.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Medium,
             color = Color.Black
         )
     }

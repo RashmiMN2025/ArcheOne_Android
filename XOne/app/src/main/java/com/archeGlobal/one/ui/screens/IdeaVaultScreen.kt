@@ -1,6 +1,5 @@
 package com.archeGlobal.one.ui.screens
 
-import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,12 +50,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.IdeaVaultController
 import com.archeGlobal.one.network.ApiService
-import com.archeGlobal.one.network.FeedbackRequest
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun IdeaVaultScreen(
@@ -65,7 +59,7 @@ fun IdeaVaultScreen(
     apiService: ApiService
 ) {
     val employeeData = controller.employeeData
-    var isSubmitting by remember { mutableStateOf(false) }
+    val isSubmitting = controller.isSubmitting
 
     val context = LocalContext.current
 
@@ -360,63 +354,20 @@ fun IdeaVaultScreen(
                                 // Submit Button
                                 Button(
                                     onClick = {
-                                        // Validate feedback and rating
-                                        if (feedbackText.isBlank()) {
+                                        controller.submitFeedback(
+                                            category = selectedCategory,
+                                            feedback = feedbackText
+                                        ) { message, isError ->
                                             Toast.makeText(
                                                 context,
-                                                "Please provide feedback before submitting.",
+                                                message,
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            return@Button
-                                        }
-
-                                        isSubmitting = true
-
-                                        // Prepare the request body
-                                        val feedbackRequest = FeedbackRequest(
-                                            name = employeeData.name,
-                                            email = employeeData.email,
-                                            category = if (selectedCategory != "Select Category") selectedCategory else null,
-                                            feedback = feedbackText,
-                                            rating = 0,
-                                            platform = "Android",
-                                            deviceName = Build.MODEL,
-                                            version = Build.VERSION.RELEASE
-                                        )
-
-                                        // Make the API call
-                                        CoroutineScope(Dispatchers.IO).launch {
-                                            try {
-                                                val response =
-                                                    apiService.submitFeedback(feedbackRequest)
-                                                withContext(Dispatchers.Main) {
-                                                    isSubmitting = false
-                                                    if (response.isSuccessful) {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Feedback submitted successfully!",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                        // Clear fields after successful submission
-                                                        selectedCategory = "Select Category"
-                                                        feedbackText = ""
-                                                    } else {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Failed to submit feedback: ${response.message()}",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                }
-                                            } catch (e: Exception) {
-                                                withContext(Dispatchers.Main) {
-                                                    isSubmitting = false
-                                                    Toast.makeText(
-                                                        context,
-                                                        "An error occurred: ${e.message}",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
+                                            
+                                            // Clear fields after successful submission
+                                            if (!isError) {
+                                                selectedCategory = "Select Category"
+                                                feedbackText = ""
                                             }
                                         }
                                     },

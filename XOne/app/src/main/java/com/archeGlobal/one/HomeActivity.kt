@@ -268,7 +268,7 @@ class HomeActivity : AppCompatActivity() {
 
                 // Initialize greetings controller
                 greetingsController = GreetingsController(this@HomeActivity, navigator)
-                ideaVaultController = IdeaVaultController(navigator)
+                ideaVaultController = IdeaVaultController(this@HomeActivity, navigator)
                 locationsController = LocationsController(this@HomeActivity)
                 businessCardController = BusinessCardControllerImpl(this@HomeActivity, navigator)
                 policyController = PolicyController(this@HomeActivity, navigator)

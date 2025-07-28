@@ -28,7 +28,7 @@ class IdeaVaultActivity : AppCompatActivity() {
         navigator = AndroidNavigator(this)
 
         // Initialize the controller
-        controller = IdeaVaultController(navigator)
+        controller = IdeaVaultController(this, navigator)
 
         // Get the ApiService instance
         val apiService: ApiService = RetrofitClient.apiService

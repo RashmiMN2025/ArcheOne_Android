@@ -74,7 +74,7 @@ fun RaiseConcernScreen(
         // Preserve original order by removing .sorted()
 
         // Add help desk specific categories at the end
-        helpDeskCategories + listOf("Other")
+        helpDeskCategories + listOf("Other issue")
     } else {
         // SOS categories
         listOf(
