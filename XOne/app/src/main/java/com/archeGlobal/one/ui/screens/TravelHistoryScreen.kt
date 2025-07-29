@@ -33,6 +33,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.utils.DateFormatter
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 import java.text.SimpleDateFormat
@@ -248,7 +249,7 @@ fun TravelRequestCard(
                     DetailItem(
                         icon = R.drawable.ic_calendar,
                         label = "Travel Dates",
-                        value = "${travelRequest.departureDate} - ${travelRequest.arrivalDate}"
+                        value = DateFormatter.formatTravelDateRange(travelRequest.departureDate, travelRequest.arrivalDate)
                     )
                 }
             } else {
@@ -274,7 +275,7 @@ fun TravelRequestCard(
                     DetailItem(
                         icon = R.drawable.ic_calendar,
                         label = "Travel Dates",
-                        value = "${destination.departureDate} - ${destination.arrivalDate}"
+                        value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate)
                     )
                 }
             }
@@ -293,8 +294,7 @@ fun TravelRequestCard(
             DetailItem(
                 icon = R.drawable.ic_calendar,
                 label = "Created",
-                value = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
-                    .format(travelRequest.createdDate)
+                value = DateFormatter.formatDisplayDate(travelRequest.createdDate)
             )
         }
     }
@@ -317,7 +317,7 @@ fun StatusTag(status: TravelStatus) {
             text = text,
             color = textColor,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             fontFamily = GraphikFontFamily,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
         )
@@ -357,7 +357,7 @@ fun DetailItem(
         Text(
             text = value,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             fontFamily = GraphikFontFamily
         )
     }
@@ -396,7 +396,7 @@ fun DetailItem(
         Text(
             text = value,
             fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             fontFamily = GraphikFontFamily
         )
     }

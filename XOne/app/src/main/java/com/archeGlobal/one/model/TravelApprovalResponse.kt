@@ -1,5 +1,6 @@
 package com.archeGlobal.one.model
 
+import com.archeGlobal.one.utils.DateFormatter
 import com.google.gson.annotations.SerializedName
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -112,7 +113,8 @@ data class TravelApprovalItem(
             project = projectName,
             destination = destinationDisplay,
             approver = employeeName,
-            createdDate = parseDate(createdAt),
+            approverEmail = null, // Approval response doesn't include manager email
+            createdDate = DateFormatter.parseApiDate(createdAt),
             status = travelStatus,
             businessJustification = businessJustification,
             modeOfTransport = modeOfTransport,
@@ -137,11 +139,4 @@ data class TravelApprovalItem(
         return travelDetails ?: emptyList()
     }
 
-    private fun parseDate(dateString: String): Date {
-        return try {
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(dateString) ?: Date()
-        } catch (e: Exception) {
-            Date()
-        }
-    }
 }

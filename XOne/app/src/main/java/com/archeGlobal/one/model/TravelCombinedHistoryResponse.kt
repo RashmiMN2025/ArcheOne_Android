@@ -1,5 +1,6 @@
 package com.archeGlobal.one.model
 
+import com.archeGlobal.one.utils.DateFormatter
 import com.google.gson.annotations.SerializedName
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -99,13 +100,8 @@ data class TravelOrderHistoryItem(
      * Convert to TravelRequest model for UI display
      */
     fun toTravelRequest(): TravelRequest {
-        // Parse the created date
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val createdDate = try {
-            dateFormat.parse(createdAt)
-        } catch (e: Exception) {
-            Date() // Fallback to current date if parsing fails
-        }
+        // Parse the created date using DateFormatter utility
+        val createdDate = DateFormatter.parseApiDate(createdAt)
 
         // Map status string to TravelStatus enum
         val travelStatus = when (status.lowercase()) {
@@ -119,6 +115,7 @@ data class TravelOrderHistoryItem(
             project = projectName,
             destination = travelDestination,
             approver = reportingManagerName,
+            approverEmail = reportingManagerEmail,
             createdDate = createdDate ?: Date(),
             status = travelStatus,
             businessJustification = businessJustification,
@@ -206,13 +203,8 @@ data class TravelApprovalHistoryItem(
      * Convert to TravelRequest model for UI display
      */
     fun toTravelRequest(): TravelRequest {
-        // Parse the created date
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val createdDate = try {
-            dateFormat.parse(createdAt)
-        } catch (e: Exception) {
-            Date() // Fallback to current date if parsing fails
-        }
+        // Parse the created date using DateFormatter utility
+        val createdDate = DateFormatter.parseApiDate(createdAt)
 
         // Map status string to TravelStatus enum
         val travelStatus = when (status.lowercase()) {
@@ -226,6 +218,7 @@ data class TravelApprovalHistoryItem(
             project = projectName,
             destination = travelDestination,
             approver = employeeName,
+            approverEmail = null, // Approval history doesn't have manager email field
             createdDate = createdDate ?: Date(),
             status = travelStatus,
             businessJustification = businessJustification,

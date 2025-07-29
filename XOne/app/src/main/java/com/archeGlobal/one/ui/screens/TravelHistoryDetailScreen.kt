@@ -248,7 +248,7 @@ fun TravelHistoryDetailScreen(
                             TravelDetailRowWithDrawableIcon(
                                 iconRes = R.drawable.envelope_3x,
                                 label = "Manager Email",
-                                value = "${travelRequest.approver.lowercase().replace(" ", ".")}@arche.global"
+                                value = travelRequest.approverEmail ?: "N/A"
                             )
 
                             val formattedCreatedDate = formatDate(

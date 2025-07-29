@@ -10,6 +10,7 @@ data class TravelRequest(
     val project: String, // Project name
     val destination: String, // Travel destination (formatted for display)
     val approver: String, // Name of the approver
+    val approverEmail: String? = null, // Email of the approver/reporting manager
     val createdDate: Date, // Date when the request was created
     val status: TravelStatus, // Status of the request
     val businessJustification: String? = null, // Business justification for the travel
