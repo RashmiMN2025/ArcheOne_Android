@@ -327,7 +327,15 @@ class WebViewActivity : ComponentActivity() {
                                                 override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
                                                     Log.e("WebViewActivity", "SSL Error: ${error.primaryError} on URL: ${error.url}")
 
-                                                    // Create an alert dialog to inform the user
+                                                    // Auto-proceed for arche.global domains (About Us content)
+                                                    val url = error.url ?: ""
+                                                    if (url.contains("arche.global")) {
+                                                        Log.w("WebViewActivity", "Auto-proceeding with SSL error for arche.global domain")
+                                                        handler.proceed()
+                                                        return
+                                                    }
+
+                                                    // Create an alert dialog to inform the user for other domains
                                                     val builder = AlertDialog.Builder(context)
                                                     builder.setTitle("SSL Certificate Error")
 
