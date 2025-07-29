@@ -335,6 +335,11 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean,
             .size(14.dp) // Slightly reduced size
             .then(
                 when {
+                    // Priority: If date has both holiday and global event, show green
+                    (isMandatoryHoliday || isRegionalHoliday) && hasGlobalEvent ->
+                        Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF4CAF50)) // Green for both holiday and global event
                     isMandatoryHoliday ->
                         Modifier
                             .clip(CircleShape)

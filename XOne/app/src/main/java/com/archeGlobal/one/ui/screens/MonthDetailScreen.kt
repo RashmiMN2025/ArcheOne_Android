@@ -313,47 +313,58 @@ fun MonthDetailScreen(
             }
         }
     } // Initialize with today's date if we're in current month, otherwise first day of month
-    LaunchedEffect(selectedMonth) {
-        val currentDate = LocalDate.now()
-        if (currentDate.monthValue == selectedMonth && currentDate.year == 2025) {
-            // If it's current month, select today's date
-            val todayStr =
-                String.format("%02d-%02d-%04d", currentDate.dayOfMonth, selectedMonth, 2025)
-            selectedDate = todayStr
-            selectedDay = currentDate.dayOfMonth
+    LaunchedEffect(selectedMonth, monthHolidays) {
+        // Only auto-select if no user selection has been made
+        if (!isUserSelectedDate) {
+            val currentDate = LocalDate.now()
+            if (currentDate.monthValue == selectedMonth && currentDate.year == 2025) {
+                // If it's current month, select today's date
+                val todayStr =
+                    String.format("%02d-%02d-%04d", currentDate.dayOfMonth, selectedMonth, 2025)
+                selectedDate = todayStr
+                selectedDay = currentDate.dayOfMonth
 
-            // Find holiday for today
-            val todayHoliday = monthHolidays.find { holiday ->
-                try {
-                    val holidayDate =
-                        LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                    holidayDate.dayOfMonth == currentDate.dayOfMonth
-                } catch (e: Exception) {
-                    false
+                // Find holiday for today
+                val todayHoliday = monthHolidays.find { holiday ->
+                    try {
+                        val holidayDate =
+                            LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                        holidayDate.dayOfMonth == currentDate.dayOfMonth
+                    } catch (e: Exception) {
+                        false
+                    }
                 }
-            }
-            selectedHoliday = todayHoliday
-            // Reset user selection flag since this is automatic selection
-            isUserSelectedDate = false
-        } else {
-            // For other months, select the first day
-            val firstDayStr = String.format("%02d-%02d-%04d", 1, selectedMonth, 2025)
-            selectedDate = firstDayStr
-            selectedDay = 1
+                selectedHoliday = todayHoliday
+                
+                // Also load global events for today
+                selectedGlobalEvents = controller.getGlobalEventsForDate(todayStr)
+                
+                // Reset user selection flag since this is automatic selection
+                isUserSelectedDate = false
+            } else {
+                // For other months, select the first day
+                val firstDayStr = String.format("%02d-%02d-%04d", 1, selectedMonth, 2025)
+                selectedDate = firstDayStr
+                selectedDay = 1
 
-            // Find holiday for first day if any
-            val firstDayHoliday = monthHolidays.find { holiday ->
-                try {
-                    val holidayDate =
-                        LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-                    holidayDate.dayOfMonth == 1
-                } catch (e: Exception) {
-                    false
+                // Find holiday for first day if any
+                val firstDayHoliday = monthHolidays.find { holiday ->
+                    try {
+                        val holidayDate =
+                            LocalDate.parse(holiday.date, DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                        holidayDate.dayOfMonth == 1
+                    } catch (e: Exception) {
+                        false
+                    }
                 }
+                selectedHoliday = firstDayHoliday
+                
+                // Also load global events for first day
+                selectedGlobalEvents = controller.getGlobalEventsForDate(firstDayStr)
+                
+                // Reset user selection flag since this is automatic selection
+                isUserSelectedDate = false
             }
-            selectedHoliday = firstDayHoliday
-            // Reset user selection flag since this is automatic selection
-            isUserSelectedDate = false
         }
     }
 
@@ -470,6 +481,9 @@ fun MonthDetailScreen(
                                             // Clear current selections
                                             selectedHoliday = null
                                             selectedMilestones = emptyList()
+                                            selectedGlobalEvents = emptyList()
+                                            // Reset user selection flag to allow auto-selection
+                                            isUserSelectedDate = false
                                             // Set first day of new month
                                             val firstDayStr = String.format(
                                                 "%02d-%02d-%04d",
@@ -514,6 +528,9 @@ fun MonthDetailScreen(
                                             // Clear current selections
                                             selectedHoliday = null
                                             selectedMilestones = emptyList()
+                                            selectedGlobalEvents = emptyList()
+                                            // Reset user selection flag to allow auto-selection
+                                            isUserSelectedDate = false
                                             // Set first day of new month
                                             val firstDayStr = String.format(
                                                 "%02d-%02d-%04d",
@@ -654,35 +671,44 @@ fun MonthDetailScreen(
                         ) {
                         }
                     } else {
-                        // Show details boxes in order: Holiday, Global Events, Milestones
+                        // Show details boxes in order: Global Events, Holiday, Milestones
                         // Each section will display if content is available
+                        // Wrap in scrollable column
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(rememberScrollState())
+                                .fillMaxWidth()
+                        ) {
+                            // 1. Global Events Box (appears first)
+                            if (selectedDate != null && selectedGlobalEvents.isNotEmpty()) {
+                                GlobalEventDetailsBox(
+                                    date = selectedDate!!,
+                                    globalEvents = selectedGlobalEvents,
+                                    controller = controller
+                                )
 
-                        // 1. Holiday Details Box
-                        if (selectedHoliday != null) {
-                            HolidayDetailsBox(
-                                holiday = selectedHoliday!!
-                            )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
 
+                            // 2. Holiday Details Box (appears second)
+                            if (selectedHoliday != null) {
+                                HolidayDetailsBox(
+                                    holiday = selectedHoliday!!
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+
+                            // 3. Milestones Box (appears last)
+                            if (selectedDate != null && selectedMilestones.isNotEmpty()) {
+                                MilestoneDetailsBox(
+                                    date = selectedDate!!,
+                                    milestones = selectedMilestones
+                                )
+                            }
+                            
+                            // Add bottom padding for better scrolling experience
                             Spacer(modifier = Modifier.height(16.dp))
-                        }
-
-                        // 2. Global Events Box
-                        if (selectedDate != null && selectedGlobalEvents.isNotEmpty()) {
-                            GlobalEventDetailsBox(
-                                date = selectedDate!!,
-                                globalEvents = selectedGlobalEvents,
-                                controller = controller
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-
-                        // 3. Milestones Box
-                        if (selectedDate != null && selectedMilestones.isNotEmpty()) {
-                            MilestoneDetailsBox(
-                                date = selectedDate!!,
-                                milestones = selectedMilestones
-                            )
                         }
                     }
                 }
@@ -792,6 +818,8 @@ fun MonthCalendarView(
                                 .size(32.dp)
                                 .clip(CircleShape).background(
                                     when {
+                                        // Priority: If date has both holiday and global event, show green
+                                        (isMandatoryHoliday || isRegionalHoliday) && hasGlobalEvent -> Color(0xFF4CAF50) // Green for both holiday and global event
                                         isMandatoryHoliday -> Color(0xFFDD3825) // Solid red for holidays
                                         isRegionalHoliday -> Color(0xFF2196F3) // Solid blue for RH
                                         hasGlobalEvent -> Color(0xFF4CAF50) // Solid green for global events
@@ -886,7 +914,9 @@ fun HolidayDetailsBox(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 12.dp),
+            modifier = Modifier
+                .padding(vertical = 16.dp, horizontal = 12.dp)
+                .heightIn(min = 100.dp), // Increased minimum height
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Replace the header row containing title and close button with just the title
@@ -899,14 +929,13 @@ fun HolidayDetailsBox(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp)) // Increased spacing
 
-            // Icon and holiday name in a row
+            // Icon and holiday name in a row - centered
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp)
+                horizontalArrangement = Arrangement.Center, // Center the row content
+                modifier = Modifier.fillMaxWidth()
             ) {
                 // Load holiday icon from URL
                 if (holiday.icon != null) {
@@ -947,10 +976,9 @@ fun HolidayDetailsBox(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Holiday name and date in a column
+                // Holiday name and date in a column - centered
                 Column(
-                    horizontalAlignment = Alignment.Start,
-                    modifier = Modifier.weight(1f)
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = holiday.name,
@@ -1137,8 +1165,7 @@ fun MilestoneDetailsBox(
     ) {
         Column(
             modifier = Modifier
-                .padding(vertical = 12.dp, horizontal = 12.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(vertical = 12.dp, horizontal = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Title with formatted date
@@ -1287,8 +1314,7 @@ fun GlobalEventDetailsBox(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Events list
