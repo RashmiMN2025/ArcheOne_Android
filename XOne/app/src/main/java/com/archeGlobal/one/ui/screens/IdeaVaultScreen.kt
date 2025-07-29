@@ -363,7 +363,7 @@ fun IdeaVaultScreen(
                                                 message,
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            
+
                                             // Clear fields after successful submission
                                             if (!isError) {
                                                 selectedCategory = "Select Category"

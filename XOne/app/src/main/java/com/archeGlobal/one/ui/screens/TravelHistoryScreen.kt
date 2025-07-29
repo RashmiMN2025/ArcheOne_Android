@@ -10,9 +10,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -36,8 +34,6 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.utils.DateFormatter
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun TravelHistoryScreen(
@@ -228,7 +224,7 @@ fun TravelRequestCard(
 
             // Project
             DetailItem(
-                icon = R.drawable.ic_work,
+                icon = R.drawable.folder_3x,
                 label = "Project",
                 value = travelRequest.project
             )
@@ -273,7 +269,7 @@ fun TravelRequestCard(
                     )
 
                     DetailItem(
-                        icon = R.drawable.ic_calendar,
+                        icon = R.drawable.airplane_departure,
                         label = "Travel Dates",
                         value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate)
                     )
@@ -282,7 +278,7 @@ fun TravelRequestCard(
 
             // Approver
             DetailItem(
-                icon = R.drawable.person_3x,
+                icon = R.drawable.approver,
                 label = "Approver",
                 value = travelRequest.approver
             )

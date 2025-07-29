@@ -2,9 +2,6 @@ package com.archeGlobal.one.model
 
 import com.archeGlobal.one.utils.DateFormatter
 import com.google.gson.annotations.SerializedName
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * Response model for travel approval history API
@@ -138,5 +135,4 @@ data class TravelApprovalItem(
     fun getAllDestinations(): List<TravelDestination> {
         return travelDetails ?: emptyList()
     }
-
 }

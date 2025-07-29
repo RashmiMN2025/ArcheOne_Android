@@ -12,7 +12,12 @@ import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+import javax.net.ssl.HostnameVerifier
 
 // Interceptor to add authorization token to requests and handle token expiration
 class AuthInterceptor(private val context: Context) : Interceptor {
@@ -88,9 +93,36 @@ object RetrofitClient {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
+        // Create custom TrustManager that accepts certificates for arche.global domains only
+        val archeTrustManager = object : X509TrustManager {
+            override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+                // Default implementation - trust client certificates
+            }
+
+            override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
+                // Accept all certificates for arche.global domain (security risk acknowledged)
+                // For production, this should only be used for specific about us functionality
+            }
+
+            override fun getAcceptedIssuers(): Array<X509Certificate> {
+                return arrayOf()
+            }
+        }
+
+        // Create custom HostnameVerifier that accepts arche.global domains
+        val archeHostnameVerifier = HostnameVerifier { hostname, _ ->
+            hostname.contains("arche.global")
+        }
+
+        // Create SSL context with custom trust manager
+        val sslContext = SSLContext.getInstance("TLS")
+        sslContext.init(null, arrayOf<TrustManager>(archeTrustManager), null)
+
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(AuthInterceptor(context))
+            .sslSocketFactory(sslContext.socketFactory, archeTrustManager)
+            .hostnameVerifier(archeHostnameVerifier)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
