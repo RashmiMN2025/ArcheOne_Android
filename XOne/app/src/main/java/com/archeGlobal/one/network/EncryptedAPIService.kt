@@ -215,7 +215,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
                     // Try to parse as plain error response
                     try {
                         val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                        throw APIError.UnknownError(response.code, errorResponse.message)
+                        val errorMessage = errorResponse.message ?: "Unknown error occurred"
+                        throw APIError.UnknownError(response.code, errorMessage)
                     } catch (ex: Exception) {
                         throw APIError.DecodingError
                     }
@@ -224,16 +225,18 @@ class EncryptedAPIService private constructor(private val context: Context) {
             400 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.BadRequest(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Invalid request. Please check your credentials."
+                    throw APIError.BadRequest(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 400 error response: ${e.message}")
-                    throw APIError.BadRequest("Invalid request. Please check your details.")
+                    throw APIError.BadRequest("Invalid request. Please check your credentials.")
                 }
             }
             401 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.Unauthorized(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Invalid credentials. Please try again."
+                    throw APIError.Unauthorized(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 401 error response: ${e.message}")
                     throw APIError.Unauthorized("Invalid credentials. Please try again.")
@@ -242,7 +245,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             403 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.Forbidden(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Access denied. App update may be required."
+                    throw APIError.Forbidden(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 403 error response: ${e.message}")
                     throw APIError.Forbidden("Access denied. App update may be required.")
@@ -251,7 +255,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             500 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.ServerError(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Server error. Please try again later."
+                    throw APIError.ServerError(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 500 error response: ${e.message}")
                     throw APIError.ServerError("Server error. Please try again later.")
@@ -260,7 +265,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             else -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.UnknownError(response.code, errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Server error occurred. Please try again."
+                    throw APIError.UnknownError(response.code, errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse ${response.code} error response: ${e.message}")
                     throw APIError.UnknownError(response.code, "Server error occurred. Please try again.")
@@ -287,7 +293,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             400 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.BadRequest(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Invalid request. Please check your details."
+                    throw APIError.BadRequest(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 400 error response: ${e.message}")
                     throw APIError.BadRequest("Invalid request. Please check your details.")
@@ -296,7 +303,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             401 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.Unauthorized(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Invalid credentials. Please try again."
+                    throw APIError.Unauthorized(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 401 error response: ${e.message}")
                     throw APIError.Unauthorized("Invalid credentials. Please try again.")
@@ -305,7 +313,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             403 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.Forbidden(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Access denied. App update may be required."
+                    throw APIError.Forbidden(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 403 error response: ${e.message}")
                     throw APIError.Forbidden("Access denied. App update may be required.")
@@ -314,7 +323,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             500 -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.ServerError(errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Server error. Please try again later."
+                    throw APIError.ServerError(errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 500 error response: ${e.message}")
                     throw APIError.ServerError("Server error. Please try again later.")
@@ -323,7 +333,8 @@ class EncryptedAPIService private constructor(private val context: Context) {
             else -> {
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
-                    throw APIError.UnknownError(response.code, errorResponse.message)
+                    val errorMessage = errorResponse.message ?: "Server error occurred. Please try again."
+                    throw APIError.UnknownError(response.code, errorMessage)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse ${response.code} error response: ${e.message}")
                     throw APIError.UnknownError(response.code, "Server error occurred. Please try again.")
@@ -352,7 +363,7 @@ class EncryptedAPIService private constructor(private val context: Context) {
                 ?: throw APIError.DecryptionFailed
 
             val result = String(decryptedData, Charsets.UTF_8)
-            Log.d(TAG, "Successfully decrypted response")
+            Log.d(TAG, "Decrypted response: $result") // Log the decrypted response
             return result
         } catch (e: APIError) {
             throw e

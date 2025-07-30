@@ -114,6 +114,7 @@ fun LoginScreen(
     var showWebView by remember { mutableStateOf(false) }
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
     var showMfaTermsDialog by remember { mutableStateOf(false) }
+    var showOtpTermsDialog by remember { mutableStateOf(false) }
 
     val userDataManager = UserDataManager.getInstance(context)
     val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
@@ -512,21 +513,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
                         onClick = {
-                            showOtpFields = true
-                            if (!termsAccepted) {
-                                Toast.makeText(context, "Please accept the terms and condition", Toast.LENGTH_SHORT).show()
-                                return@Button
-                            }
-                            isLoading = true
-                            controller.sendOtp(email, mobile, employeeId) { message, isError ->
-                                isLoading = false
-                                if (!isError) {
-                                    // Don't set firstTimeLogin to false here - user hasn't logged in yet
-                                    navigator.navigateToOtpVerification(email, mobile, employeeId)
-                                } else {
-                                    errorMessage = message
-                                }
-                            }
+                            showOtpTermsDialog = true
                         },
                         modifier = Modifier
                             .fillMaxWidth(0.97f)
@@ -659,60 +646,10 @@ fun LoginScreen(
                         shape = MaterialTheme.shapes.medium
                     )
 
-                    // Entire row is clickable to show dialog or uncheck if already checked
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(0.dp, 8.dp, 0.dp, 8.dp)
-                            .clickable {
-                                if (termsAccepted) {
-                                    // If already checked, allow unchecking directly
-                                    termsAccepted = false
-                                } else {
-                                    // If not checked, show dialog to read terms first
-                                    showTermsDialog = true
-                                }
-                            }
-                    ) {
-                        // Checkbox with no onCheckedChange - handled by row click
-                        Checkbox(
-                            checked = termsAccepted,
-                            onCheckedChange = null, // Disable default behavior
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Color(0xFFDD3825),
-                                uncheckedColor = Color.Gray,
-                                checkmarkColor = Color.White
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        // Text with no clickable - handled by row click
-                        Text(
-                            text = "I agree to the terms and condition",
-                            color = Color.Black,
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        )
-                    }
-
                     // Login Button
                     Button(
                         onClick = {
-                            if (!termsAccepted) {
-                                Toast.makeText(context, "Please accept the terms and condition", Toast.LENGTH_SHORT).show()
-                                return@Button
-                            }
-                            isLoading = true
-                            controller.sendOtp(email, mobile, employeeId) { message, isError ->
-                                isLoading = false
-                                if (!isError) {
-                                    // Don't set firstTimeLogin to false here - user hasn't logged in yet
-                                    navigator.navigateToOtpVerification(email, mobile, employeeId)
-                                } else {
-                                    errorMessage = message
-                                }
-                            }
+                            showOtpTermsDialog = true
                         },
                         modifier = Modifier
                             .fillMaxWidth(0.97f)
@@ -1215,6 +1152,7 @@ fun LoginScreen(
                                     enteredMpin = ""
                                     mpinError = null
                                     showMfaTermsDialog = false
+                                    showOtpTermsDialog = false
                                     termsAccepted = false
 
                                     // Force a UI refresh
@@ -1375,10 +1313,10 @@ fun LoginScreen(
             }
         }
 
-        if (showTermsDialog || showMfaTermsDialog) {
+        if (showOtpTermsDialog || showMfaTermsDialog) {
             Dialog(
                 onDismissRequest = {
-                    if (showTermsDialog) showTermsDialog = false
+                    if (showOtpTermsDialog) showOtpTermsDialog = false
                     if (showMfaTermsDialog) showMfaTermsDialog = false
                 }
             ) {
@@ -1473,7 +1411,7 @@ fun LoginScreen(
                         ) {
                             Button(
                                 onClick = {
-                                    if (showTermsDialog) showTermsDialog = false
+                                    if (showOtpTermsDialog) showOtpTermsDialog = false
                                     if (showMfaTermsDialog) showMfaTermsDialog = false
                                 },
                                 modifier = Modifier
@@ -1496,8 +1434,17 @@ fun LoginScreen(
                             Button(
                                 onClick = {
                                     termsAccepted = true
-                                    if (showTermsDialog) {
-                                        showTermsDialog = false
+                                    if (showOtpTermsDialog) {
+                                        showOtpTermsDialog = false
+                                        isLoading = true
+                                        controller.sendOtp(email, mobile, employeeId) { message, isError ->
+                                            isLoading = false
+                                            if (!isError) {
+                                                navigator.navigateToOtpVerification(email, mobile, employeeId)
+                                            } else {
+                                                errorMessage = message
+                                            }
+                                        }
                                     }
                                     if (showMfaTermsDialog) {
                                         showMfaTermsDialog = false

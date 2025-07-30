@@ -24,7 +24,7 @@ data class APIErrorResponse(
     val status: Int? = null,
 
     @SerializedName("message")
-    val message: String
+    val message: String? = null,
 )
 
 /**
