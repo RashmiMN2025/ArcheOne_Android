@@ -2,9 +2,7 @@ package com.archeGlobal.one.model
 
 import com.archeGlobal.one.utils.DateFormatter
 import com.google.gson.annotations.SerializedName
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /**
  * Response model for combined travel history API
@@ -122,6 +120,7 @@ data class TravelOrderHistoryItem(
             modeOfTransport = modeOfTransport,
             departureDate = departureDate,
             arrivalDate = arrivalDate,
+            rejectionReason = rejectionDescription,
             stayRequired = stayRequired,
             mealPreference = mealPreference,
             seatPreference = seatPreference,

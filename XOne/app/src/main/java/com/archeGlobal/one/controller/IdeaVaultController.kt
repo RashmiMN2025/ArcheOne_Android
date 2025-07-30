@@ -17,7 +17,7 @@ class IdeaVaultController(
     private val navigator: Navigator
 ) {
     private val encryptedAPIHelper = EncryptedAPIHelper(context)
-    
+
     var employeeData by mutableStateOf(
         AboutMeModel(
             name = OtpVerificationController.getUserData()?.name ?: "",
@@ -60,7 +60,7 @@ class IdeaVaultController(
             withAuthHeader = false
         ) { response, error ->
             isSubmitting = false
-            
+
             if (error != null) {
                 Log.e("IdeaVaultController", "Feedback submission failed: ${error.errorMessage}")
                 callback("Failed to submit feedback: ${error.errorMessage}", true)

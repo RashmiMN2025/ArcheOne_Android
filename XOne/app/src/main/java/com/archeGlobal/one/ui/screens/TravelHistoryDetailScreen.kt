@@ -140,16 +140,7 @@ fun TravelHistoryDetailScreen(
                             val destinations = travelRequest.getAllDestinations()
 
                             if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination
-                                Text(
-                                    text = "Trip 1",
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-
+                                // Single destination (no trip label needed)
                                 TravelDetailRowWithDrawableIcon(
                                     iconRes = R.drawable.mappin_and_ellipse,
                                     label = "Destination",
@@ -178,7 +169,7 @@ fun TravelHistoryDetailScreen(
 
                                     Text(
                                         text = "Trip ${index + 1}",
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.Normal,
                                         fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
@@ -210,12 +201,12 @@ fun TravelHistoryDetailScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.ic_work,
+                                iconRes = R.drawable.folder_3x,
                                 label = "Project Name",
                                 value = travelRequest.project
                             )
                             TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.ic_info,
+                                iconRes = R.drawable.holiday_list,
                                 label = "Business Justification",
                                 value = travelRequest.businessJustification ?: "N/A"
                             )
@@ -225,7 +216,7 @@ fun TravelHistoryDetailScreen(
                                 value = travelRequest.modeOfTransport ?: "N/A"
                             )
                             TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.building,
+                                iconRes = R.drawable.stayreq,
                                 label = "Stay Required",
                                 value = "Yes" // This could be dynamic based on your data model
                             )
@@ -236,12 +227,27 @@ fun TravelHistoryDetailScreen(
                             title = "Approval Details"
                         ) {
                             TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.ic_info,
+                                iconRes = when (travelRequest.status) {
+                                    com.archeGlobal.one.model.TravelStatus.APPROVED -> R.drawable.approved
+                                    com.archeGlobal.one.model.TravelStatus.REJECTED -> R.drawable.rejected
+                                    com.archeGlobal.one.model.TravelStatus.PENDING -> R.drawable.pending
+                                },
                                 label = "Status",
                                 value = travelRequest.status.name.lowercase().replaceFirstChar { it.uppercase() }
                             )
+
+                            // Show rejection reason if the status is rejected and reason is available
+                            if (travelRequest.status == com.archeGlobal.one.model.TravelStatus.REJECTED &&
+                                !travelRequest.rejectionReason.isNullOrEmpty()
+                            ) {
+                                TravelDetailRowWithDrawableIcon(
+                                    iconRes = R.drawable.rejectionreason,
+                                    label = "Rejection Reason",
+                                    value = travelRequest.rejectionReason
+                                )
+                            }
                             TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.person_3x,
+                                iconRes = R.drawable.manager,
                                 label = "Reporting Manager",
                                 value = travelRequest.approver
                             )
@@ -330,7 +336,7 @@ fun TravelDetailRowWithIcon(
             text = value,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             color = Color.Black,
             textAlign = TextAlign.End
         )
@@ -367,7 +373,7 @@ fun TravelDetailRowWithDrawableIcon(
             text = value,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             color = Color.Black,
             textAlign = TextAlign.End
         )

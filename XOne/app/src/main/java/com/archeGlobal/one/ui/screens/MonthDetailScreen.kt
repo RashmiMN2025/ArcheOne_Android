@@ -335,10 +335,10 @@ fun MonthDetailScreen(
                     }
                 }
                 selectedHoliday = todayHoliday
-                
+
                 // Also load global events for today
                 selectedGlobalEvents = controller.getGlobalEventsForDate(todayStr)
-                
+
                 // Reset user selection flag since this is automatic selection
                 isUserSelectedDate = false
             } else {
@@ -358,10 +358,10 @@ fun MonthDetailScreen(
                     }
                 }
                 selectedHoliday = firstDayHoliday
-                
+
                 // Also load global events for first day
                 selectedGlobalEvents = controller.getGlobalEventsForDate(firstDayStr)
-                
+
                 // Reset user selection flag since this is automatic selection
                 isUserSelectedDate = false
             }
@@ -706,7 +706,7 @@ fun MonthDetailScreen(
                                     milestones = selectedMilestones
                                 )
                             }
-                            
+
                             // Add bottom padding for better scrolling experience
                             Spacer(modifier = Modifier.height(16.dp))
                         }
