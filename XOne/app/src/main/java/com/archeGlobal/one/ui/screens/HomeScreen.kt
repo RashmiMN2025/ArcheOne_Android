@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -468,12 +469,16 @@ fun HomeScreenContent(
 
             val navController = androidx.navigation.compose.rememberNavController()
 
-            // Centered MPIN prompt box
+            // Keyboard-aware MPIN prompt box
+            val density = LocalDensity.current
+            val keyboardHeight = WindowInsets.ime.getBottom(density)
+            val isKeyboardVisible = keyboardHeight > 0
+            
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .zIndex(101f),
-                contentAlignment = Alignment.Center
+                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
@@ -483,6 +488,13 @@ fun HomeScreenContent(
                     modifier = Modifier
                         .widthIn(min = 340.dp, max = 420.dp)
                         .padding(horizontal = 16.dp)
+                        .then(
+                            if (isKeyboardVisible) {
+                                Modifier.padding(top = 32.dp)
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Column(
                         modifier = Modifier

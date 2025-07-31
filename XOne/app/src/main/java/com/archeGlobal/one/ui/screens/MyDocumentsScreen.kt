@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -389,12 +390,16 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                 UniversalLoader(isLoading = true)
             }
 
-            // Centered MPIN prompt box
+            // Keyboard-aware MPIN prompt box
+            val density = LocalDensity.current
+            val keyboardHeight = WindowInsets.ime.getBottom(density)
+            val isKeyboardVisible = keyboardHeight > 0
+            
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .zIndex(101f),
-                contentAlignment = Alignment.Center
+                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
@@ -404,6 +409,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                     modifier = Modifier
                         .widthIn(min = 340.dp, max = 420.dp)
                         .padding(horizontal = 16.dp)
+                        .then(
+                            if (isKeyboardVisible) {
+                                Modifier.padding(top = 32.dp)
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Column(
                         modifier = Modifier

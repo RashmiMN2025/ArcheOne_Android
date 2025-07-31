@@ -1,6 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
 import MicrosoftLoginWebView
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import android.view.Gravity
 import androidx.compose.foundation.BorderStroke
@@ -157,9 +159,7 @@ fun LoginScreen(
         android.util.Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
     }
 
-    var showPolicyWebView by remember { mutableStateOf(false) }
-    var policyUrl by remember { mutableStateOf("") }
-    var policyTitle by remember { mutableStateOf("") }
+    // Removed policy WebView state variables - now using external browser
 
     val mpinController = remember { com.archeGlobal.one.controller.MpinController(context) }
     // Make hasMpin reactive to changes - don't use remember so it re-evaluates
@@ -1241,9 +1241,8 @@ fun LoginScreen(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .clickable {
-                            policyUrl = "https://arche.global/arche-one-privacy-policy"
-                            policyTitle = "Privacy Policy"
-                            showPolicyWebView = true
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/arche-one-privacy-policy"))
+                            context.startActivity(intent)
                         },
                     textDecoration = TextDecoration.Underline
                 )
@@ -1265,9 +1264,8 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                policyUrl = "https://arche.global/anti-bribery-and-anti-corruption-policy"
-                                policyTitle = "Anti-Bribery Policy"
-                                showPolicyWebView = true
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/anti-bribery-and-anti-corruption-policy"))
+                                context.startActivity(intent)
                             }
                             .padding(end = 8.dp),
                         textDecoration = TextDecoration.Underline,
@@ -1292,9 +1290,8 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                policyUrl = "https://arche.global/employee-code-of-conduct"
-                                policyTitle = "Employee Code of Conduct"
-                                showPolicyWebView = true
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/employee-code-of-conduct"))
+                                context.startActivity(intent)
                             }
                             .padding(start = 10.dp),
                         textDecoration = TextDecoration.Underline,
@@ -1305,31 +1302,7 @@ fun LoginScreen(
                 }
             }
 
-            // Policy WebView Dialog
-            if (showPolicyWebView) {
-                Dialog(
-                    onDismissRequest = { showPolicyWebView = false },
-                    properties = DialogProperties(
-                        dismissOnBackPress = true,
-                        dismissOnClickOutside = true,
-                        usePlatformDefaultWidth = false
-                    )
-                ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        color = Color.White,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                    ) {
-                        MicrosoftLoginWebView(
-                            url = policyUrl,
-                            onReceiveAuth = { /* Not needed for policy pages */ },
-                            onClose = { showPolicyWebView = false }
-                        )
-                    }
-                }
-            }
+            // Policy WebView Dialog removed - now using external browser
 
             // Reset Password Button at the bottom
             Card(
