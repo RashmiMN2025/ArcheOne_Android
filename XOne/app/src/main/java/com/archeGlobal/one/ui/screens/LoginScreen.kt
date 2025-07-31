@@ -2,6 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import MicrosoftLoginWebView
 import android.widget.Toast
+import android.view.Gravity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -265,23 +266,11 @@ fun LoginScreen(
     LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData) {
         android.util.Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn")
 
-        // If we have preserved user data and user is not logged in (token expired/logout), prioritize quick auth methods
+        // If we have preserved user data and user is not logged in (token expired/logout), prioritize MFA first
         if (effectiveUserData != null && !isLoggedIn) {
-            // For returning users with preserved data, prefer MPIN or biometric if available
-            when {
-                hasMpin -> {
-                    selectedLoginMethod = "MPIN"
-                    showOtpFields = false
-                }
-                showBiometricButton -> {
-                    selectedLoginMethod = "Fingerprint"
-                    showOtpFields = false
-                }
-                else -> {
-                    selectedLoginMethod = "MFA"
-                    showOtpFields = false
-                }
-            }
+            // For returning users with preserved data, prefer MFA by default
+            selectedLoginMethod = "MFA"
+            showOtpFields = false
             showOtpButton = false
             isDifferentUserMode = false
         }
@@ -298,16 +287,8 @@ fun LoginScreen(
             if ((firstTimeLogin && !sessionExpired) || isDifferentUserMode) {
                 selectedLoginMethod = "OTP"
                 showOtpFields = true
-            } else if (hasMpin) {
-                // For existing users (including session expired), default to MPIN if available
-                selectedLoginMethod = "MPIN"
-                showOtpFields = false
-            } else if (showBiometricButton) {
-                // If biometric is available, default to Fingerprint
-                selectedLoginMethod = "Fingerprint"
-                showOtpFields = false
             } else {
-                // Default to MFA for existing users without MPIN or biometric
+                // For existing users (including session expired), default to MFA
                 selectedLoginMethod = "MFA"
                 showOtpFields = false
             }
@@ -316,8 +297,38 @@ fun LoginScreen(
 
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        errorMessage?.let { message ->
+            // Format long messages with line breaks for better visibility
+            val formattedMessage = if (message.length > 50) {
+                // Split long messages into multiple lines
+                val words = message.split(" ")
+                val lines = mutableListOf<String>()
+                var currentLine = ""
+                
+                for (word in words) {
+                    if ((currentLine + word).length > 35) {
+                        if (currentLine.isNotEmpty()) {
+                            lines.add(currentLine.trim())
+                            currentLine = word + " "
+                        } else {
+                            lines.add(word)
+                        }
+                    } else {
+                        currentLine += "$word "
+                    }
+                }
+                
+                if (currentLine.isNotEmpty()) {
+                    lines.add(currentLine.trim())
+                }
+                
+                // Join with newlines to create multi-line toast
+                lines.joinToString("\n")
+            } else {
+                message
+            }
+            
+            Toast.makeText(context, formattedMessage, Toast.LENGTH_LONG).show()
             errorMessage = null
         }
     }
@@ -401,23 +412,52 @@ fun LoginScreen(
                         .height(52.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Show MPIN button for returning users (including session expired) who have MPIN set
-                    if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired)) {
+                    // For new users (firstTimeLogin or isDifferentUserMode): OTP first, then MFA
+                    // For returning users: MFA first, then MPIN, then Fingerprint
+                    
+                    if (firstTimeLogin || isDifferentUserMode) {
+                        // OTP button - first for new users
+                        if (showOtpButton) {
+                            Button(
+                                onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                    contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "OTP",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                        
+                        // MFA button - second for new users
                         Button(
-                            onClick = { selectedLoginMethod = "MPIN" },
+                            onClick = { selectedLoginMethod = "MFA" },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
                             shape = MaterialTheme.shapes.medium,
                             contentPadding = PaddingValues(0.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
-                                contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black
+                                containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
                             ),
                             border = BorderStroke(0.5.dp, Color(0xFFDD3825))
                         ) {
                             Text(
-                                "MPIN",
+                                "MFA",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -425,24 +465,23 @@ fun LoginScreen(
                                 softWrap = false
                             )
                         }
-                    }
-
-                    if (showOtpButton) {
+                    } else {
+                        // For returning users: MFA first
                         Button(
-                            onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
+                            onClick = { selectedLoginMethod = "MFA" },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
                             shape = MaterialTheme.shapes.medium,
                             contentPadding = PaddingValues(0.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                                contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
+                                containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
                             ),
                             border = BorderStroke(0.5.dp, Color(0xFFDD3825))
                         ) {
                             Text(
-                                "OTP",
+                                "MFA",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -450,58 +489,87 @@ fun LoginScreen(
                                 softWrap = false
                             )
                         }
-                    }
 
-                    Button(
-                        onClick = { selectedLoginMethod = "MFA" },
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        shape = MaterialTheme.shapes.medium,
-                        contentPadding = PaddingValues(0.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                            contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
-                        ),
-                        border = BorderStroke(0.5.dp, Color(0xFFDD3825))
-                    ) {
-                        Text(
-                            "MFA",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
+                        // Show MPIN button for returning users (including session expired) who have MPIN set - second for returning users
+                        if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired)) {
+                            Button(
+                                onClick = { selectedLoginMethod = "MPIN" },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
+                                    contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "MPIN",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
 
-                    // Debug logging for fingerprint button condition
-                    android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
-                    android.util.Log.d("LoginScreen", "Fingerprint condition check: condition=${showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode}")
+                        // Show OTP button for returning users if needed
+                        if (showOtpButton) {
+                            Button(
+                                onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                    contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "OTP",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
 
-                    // Show fingerprint button for returning users (including session expired) when biometric is available
-                    if (showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode) {
-                        Button(
-                            onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            shape = MaterialTheme.shapes.medium,
-                            contentPadding = PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
-                                contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black
-                            ),
-                            border = BorderStroke(0.5.dp, Color(0xFFDD3825))
-                        ) {
-                            Text(
-                                "Fingerprint",
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                maxLines = 1,
-                                softWrap = false
-                            )
+                        // Debug logging for fingerprint button condition
+                        android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
+                        android.util.Log.d("LoginScreen", "Fingerprint condition check: condition=${showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode}")
+
+                        // Show fingerprint button for returning users (including session expired) when biometric is available - third for returning users
+                        if (showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode) {
+                            Button(
+                                onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
+                                    contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "Fingerprint",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
                         }
                     }
                 }

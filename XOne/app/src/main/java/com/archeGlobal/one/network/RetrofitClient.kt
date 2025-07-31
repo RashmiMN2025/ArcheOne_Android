@@ -27,7 +27,11 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         val token = preferencesManager.getAuthToken()
 
         // Skip adding token for auth endpoints
-        val skipAuth = original.url.toString().contains("send-otp") || original.url.toString().contains("otpVerify")
+        val url = original.url.toString()
+        val skipAuth = url.contains("send-otp") || url.contains("otpVerify") || url.contains("otp") || 
+                      url.endsWith("/otpVerify") || url.endsWith("/send-otp")
+        
+        Log.d("AuthInterceptor", "Processing request: $url, skipAuth: $skipAuth")
 
         val response = if (token != null && !skipAuth) {
             // If we have a token and it's not an auth endpoint, add it to the request
@@ -41,9 +45,16 @@ class AuthInterceptor(private val context: Context) : Interceptor {
         }
 
         // Check if the response indicates token expiration (401 Unauthorized)
-        if (response.code == 401 && !skipAuth) {
-            Log.w("AuthInterceptor", "Received 401 Unauthorized - Token expired")
+        // Skip token expiration handling for OTP-related endpoints completely
+        val isOtpEndpoint = url.contains("otp", ignoreCase = true) || 
+                           url.contains("send-otp", ignoreCase = true) || 
+                           url.contains("otpVerify", ignoreCase = true)
+        
+        if (response.code == 401 && !skipAuth && !isOtpEndpoint) {
+            Log.w("AuthInterceptor", "Received 401 Unauthorized - Token expired for URL: $url")
             handleTokenExpiration(context, preferencesManager)
+        } else if (response.code == 401) {
+            Log.d("AuthInterceptor", "Received 401 for endpoint, not handling as token expiration (skipAuth: $skipAuth, isOtpEndpoint: $isOtpEndpoint): $url")
         }
 
         return response
@@ -84,8 +95,8 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 }
 
 object RetrofitClient {
-    // const val BASE_URL = "https://archeone.arche.global/"
-    const val BASE_URL = "https://dev.arche.global/"
+     const val BASE_URL = "https://archeone.arche.global/"
+    //const val BASE_URL = "https://dev.arche.global/"
     private var retrofit: Retrofit? = null
 
     // Initialize with context to get the token

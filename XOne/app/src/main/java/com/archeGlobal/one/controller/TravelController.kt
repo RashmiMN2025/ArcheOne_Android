@@ -122,6 +122,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
     )
 
     // Travel form fields
+    var originCity by mutableStateOf("")
+        private set
     var destination by mutableStateOf("")
         private set
     var projectName by mutableStateOf("")
@@ -761,6 +763,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
     /**
      * Update destination field
      */
+    fun updateOriginCity(value: String) {
+        originCity = value
+    }
+
     fun updateDestination(value: String) {
         destination = value
     }

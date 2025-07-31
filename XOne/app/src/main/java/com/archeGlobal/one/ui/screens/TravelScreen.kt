@@ -2,11 +2,13 @@ package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.scale
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -173,6 +175,9 @@ fun TravelScreen(
                                 controller.loadTravelApprovals()
                             }
 
+                            // Add space above Employee Details section
+                            Spacer(modifier = Modifier.height(24.dp))
+
                             // Header row with Employee Details and Approval button
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -182,7 +187,7 @@ fun TravelScreen(
                                 Text(
                                     text = "Employee Details",
                                     fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily
                                 )
 
@@ -234,6 +239,9 @@ fun TravelScreen(
                                 }
                             }
 
+                            // Add space between Employee Details header and employee rows
+                            Spacer(modifier = Modifier.height(16.dp))
+
                             // Employee Details with proper alignment
                             EmployeeDetailRow(label = "Name:", value = controller.employeeName)
                             EmployeeDetailRow(label = "Employee ID:", value = controller.employeeId)
@@ -245,19 +253,25 @@ fun TravelScreen(
                             EmployeeDetailRow(label = "Date of Birth:", value = controller.dateOfBirth)
                             EmployeeDetailRow(label = "Aadhar Number:", value = controller.aadharNumber)
 
+                            // Add space below Employee Details section
+                            Spacer(modifier = Modifier.height(24.dp))
+
                             Divider(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 16.dp),
+                                    .padding(vertical = 20.dp),
                                 color = Color.LightGray,
                                 thickness = 1.dp
                             )
+
+                            // Add space between divider and Travel Details
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Travel Details Section
                             Text(
                                 text = "Travel Details",
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontFamily = GraphikFontFamily,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -270,7 +284,7 @@ fun TravelScreen(
                                     Text(
                                         "Project Name",
                                         color = Color.Gray,
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.Normal,
                                         fontFamily = GraphikFontFamily
                                     )
                                 },
@@ -299,7 +313,7 @@ fun TravelScreen(
                                     Text(
                                         "Business Justification",
                                         color = Color.Gray,
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.Normal,
                                         fontFamily = GraphikFontFamily
                                     )
                                 },
@@ -330,7 +344,7 @@ fun TravelScreen(
                                         Text(
                                             "Mode of Transport",
                                             color = Color.Gray,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.Normal,
                                             fontFamily = GraphikFontFamily
                                         )
                                     },
@@ -400,7 +414,7 @@ fun TravelScreen(
                                             Text(
                                                 "International",
                                                 color = Color.Gray,
-                                                fontWeight = FontWeight.Medium,
+                                                fontWeight = FontWeight.Normal,
                                                 fontFamily = GraphikFontFamily
                                             )
                                         },
@@ -455,7 +469,7 @@ fun TravelScreen(
                                         Text(
                                             "Frequent Flyer Number",
                                             color = Color.Gray,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.Normal,
                                             fontFamily = GraphikFontFamily
                                         )
                                     },
@@ -533,351 +547,425 @@ fun TravelScreen(
 
                             // Show destination fields based on mode
                             if (!controller.isMultiDestination) {
-                                // Single Destination
-                                OutlinedTextField(
-                                    value = controller.destination,
-                                    onValueChange = { controller.updateDestination(it) },
-                                    placeholder = {
-                                        Text(
-                                            "Travel Destination",
-                                            color = Color.Gray,
-                                            fontWeight = FontWeight.Medium,
-                                            fontFamily = GraphikFontFamily
-                                        )
-                                    },
+                                // Single Destination Section
+                                // Destination header
+                                Text(
+                                    text = "Destination",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                
+                                // White card containing destination fields
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Black,
-                                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                                        focusedContainerColor = Color.White,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedPlaceholderColor = Color(0xFFF6F4EE),
-                                        focusedPlaceholderColor = Color(0xFFF6F4EE)
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
+                                    shape = RoundedCornerShape(8.dp),
+                                    elevation = 2.dp,
+                                    backgroundColor = Color.White
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                    ) {
+                                        // Origin City field
+                                        androidx.compose.material3.OutlinedTextField(
+                                            value = controller.originCity,
+                                            onValueChange = { controller.updateOriginCity(it) },
+                                            placeholder = {
+                                                Text(
+                                                    "Origin City",
+                                                    color = Color.Gray,
+                                                    fontWeight = FontWeight.Normal,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 16.dp),
+                                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                unfocusedBorderColor = Color.LightGray,
+                                                focusedBorderColor = Color.Gray,
+                                                cursorColor = Color.Black,
+                                                unfocusedContainerColor = Color.White,
+                                                focusedContainerColor = Color.White,
+                                                unfocusedTextColor = Color.Black,
+                                                focusedTextColor = Color.Black,
+                                                unfocusedPlaceholderColor = Color.Gray,
+                                                focusedPlaceholderColor = Color.Gray
+                                            ),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        
+                                        // Destination City field
+                                        androidx.compose.material3.OutlinedTextField(
+                                            value = controller.destination,
+                                            onValueChange = { controller.updateDestination(it) },
+                                            placeholder = {
+                                                Text(
+                                                    "Destination City",
+                                                    color = Color.Gray,
+                                                    fontWeight = FontWeight.Normal,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 16.dp),
+                                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                unfocusedBorderColor = Color.LightGray,
+                                                focusedBorderColor = Color.Gray,
+                                                cursorColor = Color.Black,
+                                                unfocusedContainerColor = Color.White,
+                                                focusedContainerColor = Color.White,
+                                                unfocusedTextColor = Color.Black,
+                                                focusedTextColor = Color.Black,
+                                                unfocusedPlaceholderColor = Color.Gray,
+                                                focusedPlaceholderColor = Color.Gray
+                                            ),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        
+                                        // Date Selection Row inside the card
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            // Departure Date
+                                            Column(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text(
+                                                    text = "Departure Date",
+                                                    fontSize = 14.sp,
+                                                    fontFamily = GraphikFontFamily,
+                                                    color = Color.Black,
+                                                    modifier = Modifier.padding(bottom = 4.dp),
+                                                    fontWeight = FontWeight.Medium
+                                                )
+
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(end = 8.dp)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .background(Color.White, RoundedCornerShape(8.dp))
+                                                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                                            .padding(16.dp)
+                                                            .clickable { showDepartureDatePicker = true },
+                                                        contentAlignment = Alignment.CenterStart
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .background(
+                                                                    Color(0xFFEEEEEE),
+                                                                    RoundedCornerShape(4.dp)
+                                                                )
+                                                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = controller.departureDate,
+                                                                color = Color.Black,
+                                                                fontSize = 15.sp,
+                                                                fontFamily = GraphikFontFamily
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // Return Date
+                                            Column(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text(
+                                                    text = "Return Date",
+                                                    fontSize = 14.sp,
+                                                    fontFamily = GraphikFontFamily,
+                                                    color = Color.Black,
+                                                    modifier = Modifier.padding(bottom = 4.dp),
+                                                    fontWeight = FontWeight.Medium
+                                                )
+
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(start = 8.dp)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .background(Color.White, RoundedCornerShape(8.dp))
+                                                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                                            .padding(16.dp)
+                                                            .clickable { showArrivalDatePicker = true },
+                                                        contentAlignment = Alignment.CenterStart
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .background(
+                                                                    Color(0xFFEEEEEE),
+                                                                    RoundedCornerShape(4.dp)
+                                                                )
+                                                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = controller.arrivalDate,
+                                                                color = Color.Black,
+                                                                fontSize = 15.sp,
+                                                                fontFamily = GraphikFontFamily
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Flight additional options - show flight time and seat preference inside the card for flights
+                                        if (controller.modeOfTransport == "Flight") {
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            
+                                            // Flight Time Preference Dropdown
+                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = controller.flightTimePreference,
+                                                    onValueChange = { },
+                                                    placeholder = {
+                                                        Text(
+                                                            "Flight Time Preference",
+                                                            color = Color.Gray,
+                                                            fontWeight = FontWeight.Normal,
+                                                            fontFamily = GraphikFontFamily
+                                                        )
+                                                    },
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(bottom = 16.dp)
+                                                        .clickable(onClick = { controller.toggleFlightTimeDropdown() }),
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        unfocusedBorderColor = Color.LightGray,
+                                                        focusedBorderColor = Color.Gray,
+                                                        cursorColor = Color.Black,
+                                                        unfocusedContainerColor = Color.White,
+                                                        focusedContainerColor = Color.White,
+                                                        unfocusedTextColor = Color.Black,
+                                                        focusedTextColor = Color.Black,
+                                                        unfocusedPlaceholderColor = Color.Gray,
+                                                        focusedPlaceholderColor = Color.Gray
+                                                    ),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    trailingIcon = {
+                                                        Icon(
+                                                            Icons.Default.KeyboardArrowDown,
+                                                            contentDescription = "Dropdown",
+                                                            tint = Color.Gray,
+                                                            modifier = Modifier.clickable { controller.toggleFlightTimeDropdown() }
+                                                        )
+                                                    },
+                                                    readOnly = true
+                                                )
+
+                                                DropdownMenu(
+                                                    expanded = controller.isFlightTimeDropdownExpanded,
+                                                    onDismissRequest = { controller.dismissFlightTimeDropdown() },
+                                                    modifier = Modifier
+                                                        .width(with(LocalDensity.current) { 300.dp })
+                                                        .background(Color(0xCC000000)) // 80% opacity black background
+                                                ) {
+                                                    controller.flightTimeOptions.forEach { option ->
+                                                        DropdownMenuItem(
+                                                            text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
+                                                            onClick = { controller.updateFlightTimePreference(option) }
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            // Seat Preference Dropdown
+                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = controller.seatPreference,
+                                                    onValueChange = { },
+                                                    placeholder = {
+                                                        Text(
+                                                            "Seat Preference",
+                                                            color = Color.Gray,
+                                                            fontWeight = FontWeight.Normal,
+                                                            fontFamily = GraphikFontFamily
+                                                        )
+                                                    },
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        unfocusedBorderColor = Color.LightGray,
+                                                        focusedBorderColor = Color.Gray,
+                                                        cursorColor = Color.Black,
+                                                        unfocusedContainerColor = Color.White,
+                                                        focusedContainerColor = Color.White,
+                                                        unfocusedTextColor = Color.Black,
+                                                        focusedTextColor = Color.Black,
+                                                        unfocusedPlaceholderColor = Color.Gray,
+                                                        focusedPlaceholderColor = Color.Gray
+                                                    ),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    trailingIcon = {
+                                                        Icon(
+                                                            Icons.Default.KeyboardArrowDown,
+                                                            contentDescription = "Dropdown",
+                                                            tint = Color.Gray,
+                                                            modifier = Modifier.clickable { controller.toggleSeatPrefDropdown() }
+                                                        )
+                                                    },
+                                                    readOnly = true
+                                                )
+
+                                                DropdownMenu(
+                                                    expanded = controller.isSeatPrefDropdownExpanded,
+                                                    onDismissRequest = { controller.dismissSeatPrefDropdown() },
+                                                    modifier = Modifier
+                                                        .width(with(LocalDensity.current) { 300.dp })
+                                                        .background(Color(0xCC000000)) // 80% opacity black background
+                                                ) {
+                                                    controller.seatPreferenceOptions.forEach { option ->
+                                                        DropdownMenuItem(
+                                                            text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
+                                                            onClick = { controller.updateSeatPreference(option) }
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             } else {
                                 // Multiple Destinations
                                 MultiDestinationSection(controller)
                             }
 
-                            // Date Selection Row (only for single destination)
+                            // Stay Required Toggle (outside destination cards)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Stay Required",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black
+                                )
+
+                                // Toggle switch
+                                androidx.compose.material.Switch(
+                                    checked = controller.stayRequired,
+                                    onCheckedChange = { controller.toggleStayRequired(it) },
+                                    modifier = Modifier.scale(1.2f),
+                                    colors = androidx.compose.material.SwitchDefaults.colors(
+                                        checkedThumbColor = Color(0xFF4CAF50),
+                                        checkedTrackColor = Color(0xFFADE1B6),
+                                        uncheckedThumbColor = Color.Gray,
+                                        uncheckedTrackColor = Color.LightGray
+                                    )
+                                )
+                            }
+
+                            // Date Picker Dialogs for single destination (outside the card)
                             if (!controller.isMultiDestination) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 16.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    // Departure Date
-                                    Column(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = "Departure Date",
-                                            fontSize = 14.sp,
-                                            fontFamily = GraphikFontFamily,
-                                            color = Color.Black,
-                                            modifier = Modifier.padding(bottom = 4.dp),
-                                            fontWeight = FontWeight.Medium
-                                        )
-
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(end = 8.dp)
-                                        ) {
-                                            OutlinedTextField(
-                                                value = controller.departureDate,
-                                                onValueChange = { showDepartureDatePicker = true },
-                                                modifier = Modifier.fillMaxWidth(),
-                                                colors = OutlinedTextFieldDefaults.colors(
-                                                    unfocusedBorderColor = Color.LightGray,
-                                                    focusedBorderColor = Color.Gray,
-                                                    cursorColor = Color.Black,
-                                                    unfocusedContainerColor = Color.White,
-                                                    focusedContainerColor = Color.White,
-                                                    unfocusedTextColor = Color.Black,
-                                                    focusedTextColor = Color.Black
-                                                ),
-                                                shape = RoundedCornerShape(8.dp),
-                                                readOnly = true,
-                                                enabled = true,
-                                                textStyle = TextStyle(
-                                                    background = Color(0xFFEEEEEE),
-                                                    color = Color.Black,
-                                                    fontSize = 15.sp,
-                                                    fontFamily = GraphikFontFamily
-                                                )
-                                            )
-
-                                            // Add invisible clickable overlay
-                                            Box(
-                                                modifier = Modifier
-                                                    .matchParentSize()
-                                                    .clickable { showDepartureDatePicker = true }
-                                                    .background(Color.Transparent)
-                                            )
-                                        }
-
-                                        // Departure Date Picker Dialog
-                                        if (showDepartureDatePicker) {
-                                            val datePickerState = rememberDatePickerState(
-                                                initialDisplayMode = DisplayMode.Picker,
-                                                initialSelectedDateMillis = System.currentTimeMillis(),
-                                                selectableDates = object : androidx.compose.material3.SelectableDates {
-                                                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                                                        // Only allow dates from today onwards
-                                                        val today = Calendar.getInstance().apply {
-                                                            set(Calendar.HOUR_OF_DAY, 0)
-                                                            set(Calendar.MINUTE, 0)
-                                                            set(Calendar.SECOND, 0)
-                                                            set(Calendar.MILLISECOND, 0)
-                                                        }.timeInMillis
-                                                        return utcTimeMillis >= today
-                                                    }
-                                                }
-                                            )
-                                            DatePickerDialog(
-                                                onDismissRequest = { showDepartureDatePicker = false },
-                                                confirmButton = {
-                                                    TextButton(onClick = {
-                                                        datePickerState.selectedDateMillis?.let { millis ->
-                                                            controller.updateDepartureDateFromMillis(millis)
-                                                        }
-                                                        showDepartureDatePicker = false
-                                                    }) {
-                                                        Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
-                                                    }
-                                                },
-                                                dismissButton = {
-                                                    TextButton(onClick = {
-                                                        showDepartureDatePicker = false
-                                                    }) {
-                                                        Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
-                                                    }
-                                                }
-                                            ) {
-                                                DatePicker(state = datePickerState)
+                                // Departure Date Picker Dialog
+                                if (showDepartureDatePicker) {
+                                    val datePickerState = rememberDatePickerState(
+                                        initialDisplayMode = DisplayMode.Picker,
+                                        initialSelectedDateMillis = System.currentTimeMillis(),
+                                        selectableDates = object : androidx.compose.material3.SelectableDates {
+                                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                                // Only allow dates from today onwards
+                                                val today = Calendar.getInstance().apply {
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.timeInMillis
+                                                return utcTimeMillis >= today
                                             }
                                         }
+                                    )
+                                    DatePickerDialog(
+                                        onDismissRequest = { showDepartureDatePicker = false },
+                                        confirmButton = {
+                                            TextButton(onClick = {
+                                                datePickerState.selectedDateMillis?.let { millis ->
+                                                    controller.updateDepartureDateFromMillis(millis)
+                                                }
+                                                showDepartureDatePicker = false
+                                            }) {
+                                                Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = {
+                                                showDepartureDatePicker = false
+                                            }) {
+                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        }
+                                    ) {
+                                        DatePicker(state = datePickerState)
                                     }
+                                }
 
-                                    // Arrival Date
-                                    Column(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = "Return Date",
-                                            fontSize = 14.sp,
-                                            fontFamily = GraphikFontFamily,
-                                            color = Color.Black,
-                                            modifier = Modifier.padding(bottom = 4.dp),
-                                            fontWeight = FontWeight.Medium
-                                        )
-
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(start = 8.dp)
-                                        ) {
-                                            OutlinedTextField(
-                                                value = controller.arrivalDate,
-                                                onValueChange = { showArrivalDatePicker = true },
-                                                modifier = Modifier.fillMaxWidth(),
-                                                colors = OutlinedTextFieldDefaults.colors(
-                                                    unfocusedBorderColor = Color.LightGray,
-                                                    focusedBorderColor = Color.Gray,
-                                                    cursorColor = Color.Black,
-                                                    unfocusedContainerColor = Color.White,
-                                                    focusedContainerColor = Color.White,
-                                                    unfocusedTextColor = Color.Black,
-                                                    focusedTextColor = Color.Black
-                                                ),
-                                                shape = RoundedCornerShape(8.dp),
-                                                readOnly = true,
-                                                enabled = true,
-                                                textStyle = TextStyle(
-                                                    background = Color(0xFFEEEEEE),
-                                                    color = Color.Black,
-                                                    fontSize = 15.sp,
-                                                    fontFamily = GraphikFontFamily
-                                                )
-                                            )
-
-                                            // Add invisible clickable overlay
-                                            Box(
-                                                modifier = Modifier
-                                                    .matchParentSize()
-                                                    .clickable { showArrivalDatePicker = true }
-                                                    .background(Color.Transparent)
-                                            )
-                                        }
-
-                                        // Arrival Date Picker Dialog
-                                        if (showArrivalDatePicker) {
-                                            val datePickerState = rememberDatePickerState(
-                                                initialDisplayMode = DisplayMode.Picker,
-                                                initialSelectedDateMillis = System.currentTimeMillis(),
-                                                selectableDates = object : androidx.compose.material3.SelectableDates {
-                                                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                                                        // Only allow dates from today onwards
-                                                        val today = Calendar.getInstance().apply {
-                                                            set(Calendar.HOUR_OF_DAY, 0)
-                                                            set(Calendar.MINUTE, 0)
-                                                            set(Calendar.SECOND, 0)
-                                                            set(Calendar.MILLISECOND, 0)
-                                                        }.timeInMillis
-                                                        return utcTimeMillis >= today
-                                                    }
-                                                }
-                                            )
-                                            DatePickerDialog(
-                                                onDismissRequest = { showArrivalDatePicker = false },
-                                                confirmButton = {
-                                                    TextButton(onClick = {
-                                                        datePickerState.selectedDateMillis?.let { millis ->
-                                                            controller.updateArrivalDateFromMillis(millis)
-                                                        }
-                                                        showArrivalDatePicker = false
-                                                    }) {
-                                                        Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
-                                                    }
-                                                },
-                                                dismissButton = {
-                                                    TextButton(onClick = {
-                                                        showArrivalDatePicker = false
-                                                    }) {
-                                                        Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
-                                                    }
-                                                }
-                                            ) {
-                                                DatePicker(state = datePickerState)
+                                // Arrival Date Picker Dialog
+                                if (showArrivalDatePicker) {
+                                    val datePickerState = rememberDatePickerState(
+                                        initialDisplayMode = DisplayMode.Picker,
+                                        initialSelectedDateMillis = System.currentTimeMillis(),
+                                        selectableDates = object : androidx.compose.material3.SelectableDates {
+                                            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                                // Only allow dates from today onwards
+                                                val today = Calendar.getInstance().apply {
+                                                    set(Calendar.HOUR_OF_DAY, 0)
+                                                    set(Calendar.MINUTE, 0)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }.timeInMillis
+                                                return utcTimeMillis >= today
                                             }
                                         }
+                                    )
+                                    DatePickerDialog(
+                                        onDismissRequest = { showArrivalDatePicker = false },
+                                        confirmButton = {
+                                            TextButton(onClick = {
+                                                datePickerState.selectedDateMillis?.let { millis ->
+                                                    controller.updateArrivalDateFromMillis(millis)
+                                                }
+                                                showArrivalDatePicker = false
+                                            }) {
+                                                Text("OK", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = {
+                                                showArrivalDatePicker = false
+                                            }) {
+                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        }
+                                    ) {
+                                        DatePicker(state = datePickerState)
                                     }
                                 }
                             }
 
-                            // Flight additional options - show flight time and seat preference after destinations for flights
-                            if (controller.modeOfTransport == "Flight") {
-                                // Flight Time Preference Dropdown
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    OutlinedTextField(
-                                        value = controller.flightTimePreference,
-                                        onValueChange = { },
-                                        placeholder = {
-                                            Text(
-                                                "Flight Time Preference",
-                                                color = Color.Gray,
-                                                fontWeight = FontWeight.Medium,
-                                                fontFamily = GraphikFontFamily
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 16.dp)
-                                            .clickable(onClick = { controller.toggleFlightTimeDropdown() }),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.Gray,
-                                            cursorColor = Color.Black,
-                                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                                            focusedContainerColor = Color.White,
-                                            unfocusedTextColor = Color.Black,
-                                            focusedTextColor = Color.Black,
-                                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
-                                            focusedPlaceholderColor = Color(0xFFF6F4EE)
-                                        ),
-                                        shape = RoundedCornerShape(8.dp),
-                                        trailingIcon = {
-                                            Icon(
-                                                Icons.Default.KeyboardArrowDown,
-                                                contentDescription = "Dropdown",
-                                                tint = Color.Gray,
-                                                modifier = Modifier.clickable { controller.toggleFlightTimeDropdown() }
-                                            )
-                                        },
-                                        readOnly = true
-                                    )
-
-                                    DropdownMenu(
-                                        expanded = controller.isFlightTimeDropdownExpanded,
-                                        onDismissRequest = { controller.dismissFlightTimeDropdown() },
-                                        modifier = Modifier
-                                            .width(with(LocalDensity.current) { 300.dp })
-                                            .background(Color(0xCC000000)) // 80% opacity black background
-                                    ) {
-                                        controller.flightTimeOptions.forEach { option ->
-                                            DropdownMenuItem(
-                                                text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
-                                                onClick = { controller.updateFlightTimePreference(option) }
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // Seat Preference Dropdown
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    OutlinedTextField(
-                                        value = controller.seatPreference,
-                                        onValueChange = { },
-                                        placeholder = {
-                                            Text(
-                                                "Seat Preference",
-                                                color = Color.Gray,
-                                                fontWeight = FontWeight.Medium,
-                                                fontFamily = GraphikFontFamily
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 16.dp)
-                                            .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.Gray,
-                                            cursorColor = Color.Black,
-                                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                                            focusedContainerColor = Color.White,
-                                            unfocusedTextColor = Color.Black,
-                                            focusedTextColor = Color.Black,
-                                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
-                                            focusedPlaceholderColor = Color(0xFFF6F4EE)
-                                        ),
-                                        shape = RoundedCornerShape(8.dp),
-                                        trailingIcon = {
-                                            Icon(
-                                                Icons.Default.KeyboardArrowDown,
-                                                contentDescription = "Dropdown",
-                                                tint = Color.Gray,
-                                                modifier = Modifier.clickable { controller.toggleSeatPrefDropdown() }
-                                            )
-                                        },
-                                        readOnly = true
-                                    )
-
-                                    DropdownMenu(
-                                        expanded = controller.isSeatPrefDropdownExpanded,
-                                        onDismissRequest = { controller.dismissSeatPrefDropdown() },
-                                        modifier = Modifier
-                                            .width(with(LocalDensity.current) { 300.dp })
-                                            .background(Color(0xCC000000)) // 80% opacity black background
-                                    ) {
-                                        controller.seatPreferenceOptions.forEach { option ->
-                                            DropdownMenuItem(
-                                                text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
-                                                onClick = { controller.updateSeatPreference(option) }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
 
                             // Meal Preference Toggle and Dropdown (only for Flight and Train)
                             if (controller.modeOfTransport == "Flight" || controller.modeOfTransport == "Train") {
@@ -899,6 +987,7 @@ fun TravelScreen(
                                     androidx.compose.material.Switch(
                                         checked = controller.mealPreferenceEnabled,
                                         onCheckedChange = { controller.toggleMealPreference(it) },
+                                        modifier = Modifier.scale(1.2f),
                                         colors = androidx.compose.material.SwitchDefaults.colors(
                                             checkedThumbColor = Color(0xFF4CAF50),
                                             checkedTrackColor = Color(0xFFADE1B6),
@@ -960,33 +1049,6 @@ fun TravelScreen(
                                 }
                             }
 
-                            // Stay Required Toggle
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Stay Required",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black
-                                )
-
-                                // Toggle switch
-                                androidx.compose.material.Switch(
-                                    checked = controller.stayRequired,
-                                    onCheckedChange = { controller.toggleStayRequired(it) },
-                                    colors = androidx.compose.material.SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFF4CAF50),
-                                        checkedTrackColor = Color(0xFFADE1B6),
-                                        uncheckedThumbColor = Color.Gray,
-                                        uncheckedTrackColor = Color.LightGray
-                                    )
-                                )
-                            }
 
                             // Approval Chain
                             Text(
@@ -995,14 +1057,43 @@ fun TravelScreen(
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 8.dp),
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.SemiBold
                             )
 
-                            // Reporting Manager - using the same EmployeeDetailRow component for consistent alignment
-                            EmployeeDetailRow(
-                                label = "Reporting Manager:",
-                                value = controller.reportingManagerName
-                            )
+                            // Reporting Manager - custom layout with two-line label
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    modifier = Modifier.width(140.dp)
+                                ) {
+                                    Text(
+                                        text = "Reporting",
+                                        fontSize = 14.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Gray
+                                    )
+                                    Text(
+                                        text = "Manager:",
+                                        fontSize = 14.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Gray
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(20.dp))
+                                Text(
+                                    text = controller.reportingManagerName,
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.Black
+                                )
+                            }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -1071,12 +1162,13 @@ fun EmployeeDetailRow(label: String, value: String) {
             text = label,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
             color = Color.Gray,
             modifier = Modifier.width(140.dp) // Increased fixed width for alignment
         )
         Text(
             text = value,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
             color = Color.Black
@@ -1104,7 +1196,7 @@ fun MultiDestinationSection(controller: TravelController) {
             Text(
                 text = "Destinations",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 fontFamily = GraphikFontFamily,
                 color = Color.Black
             )
@@ -1176,31 +1268,60 @@ fun MultiDestinationSection(controller: TravelController) {
                         }
                     }
 
-                    // Destination field
-                    OutlinedTextField(
-                        value = destination.destination,
-                        onValueChange = { controller.updateDestinationField(destination.id, it) },
+                    // Origin City field
+                    androidx.compose.material3.OutlinedTextField(
+                        value = controller.originCity,
+                        onValueChange = { controller.updateOriginCity(it) },
                         placeholder = {
                             Text(
-                                "Travel Destination",
+                                "Origin City",
                                 color = Color.Gray,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily
                             )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.LightGray,
                             focusedBorderColor = Color.Gray,
                             cursorColor = Color.Black,
-                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            unfocusedContainerColor = Color.White,
                             focusedContainerColor = Color.White,
                             unfocusedTextColor = Color.Black,
                             focusedTextColor = Color.Black,
-                            unfocusedPlaceholderColor = Color(0xFFF6F4EE),
-                            focusedPlaceholderColor = Color(0xFFF6F4EE)
+                            unfocusedPlaceholderColor = Color.Gray,
+                            focusedPlaceholderColor = Color.Gray
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    // Destination City field
+                    androidx.compose.material3.OutlinedTextField(
+                        value = destination.destination,
+                        onValueChange = { controller.updateDestinationField(destination.id, it) },
+                        placeholder = {
+                            Text(
+                                "Destination City",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.Gray,
+                            cursorColor = Color.Black,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White,
+                            unfocusedTextColor = Color.Black,
+                            focusedTextColor = Color.Black,
+                            unfocusedPlaceholderColor = Color.Gray,
+                            focusedPlaceholderColor = Color.Gray
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
@@ -1400,6 +1521,151 @@ fun MultiDestinationSection(controller: TravelController) {
                                     ) {
                                         DatePicker(state = datePickerState)
                                     }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Flight additional options - show flight time and seat preference inside the card for flights
+                    if (controller.modeOfTransport == "Flight") {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Flight Time Preference Dropdown
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            androidx.compose.material3.OutlinedTextField(
+                                value = controller.flightTimePreference,
+                                onValueChange = { },
+                                placeholder = {
+                                    Text(
+                                        "Flight Time Preference",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp)
+                                    .clickable(onClick = { controller.toggleFlightTimeDropdown() }),
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Black,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedPlaceholderColor = Color.Gray,
+                                    focusedPlaceholderColor = Color.Gray
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.clickable { controller.toggleFlightTimeDropdown() }
+                                    )
+                                },
+                                readOnly = true
+                            )
+
+                            DropdownMenu(
+                                expanded = controller.isFlightTimeDropdownExpanded,
+                                onDismissRequest = { controller.dismissFlightTimeDropdown() },
+                                modifier = Modifier
+                                    .width(with(LocalDensity.current) { 300.dp })
+                                    .background(Color(0xCC000000)) // 80% opacity black background
+                            ) {
+                                controller.flightTimeOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
+                                        onClick = { controller.updateFlightTimePreference(option) }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Frequent Flyer Number Input
+                        androidx.compose.material3.OutlinedTextField(
+                            value = controller.frequentFlyerNumber.let { if (it == "0") "" else it },
+                            onValueChange = { controller.updateFrequentFlyerNumber(it) },
+                            placeholder = {
+                                Text(
+                                    "Frequent Flyer Number",
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = GraphikFontFamily
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.LightGray,
+                                focusedBorderColor = Color.Gray,
+                                cursorColor = Color.Black,
+                                unfocusedContainerColor = Color.White,
+                                focusedContainerColor = Color.White,
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black,
+                                unfocusedPlaceholderColor = Color.Gray,
+                                focusedPlaceholderColor = Color.Gray
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+
+                        // Seat Preference Dropdown
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            androidx.compose.material3.OutlinedTextField(
+                                value = controller.seatPreference,
+                                onValueChange = { },
+                                placeholder = {
+                                    Text(
+                                        "Seat Preference",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color.Gray,
+                                    cursorColor = Color.Black,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedPlaceholderColor = Color.Gray,
+                                    focusedPlaceholderColor = Color.Gray
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.clickable { controller.toggleSeatPrefDropdown() }
+                                    )
+                                },
+                                readOnly = true
+                            )
+
+                            DropdownMenu(
+                                expanded = controller.isSeatPrefDropdownExpanded,
+                                onDismissRequest = { controller.dismissSeatPrefDropdown() },
+                                modifier = Modifier
+                                    .width(with(LocalDensity.current) { 300.dp })
+                                    .background(Color(0xCC000000)) // 80% opacity black background
+                            ) {
+                                controller.seatPreferenceOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
+                                        onClick = { controller.updateSeatPreference(option) }
+                                    )
                                 }
                             }
                         }

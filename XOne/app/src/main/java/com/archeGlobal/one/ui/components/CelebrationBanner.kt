@@ -34,6 +34,7 @@ import coil.request.ImageRequest
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.CelebrationItem
 import com.archeGlobal.one.model.CelebrationResponse
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 @Composable
@@ -62,10 +63,10 @@ fun CelebrationBanner(
                 modifier = Modifier.size(24.dp)
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.leftpin),
+                    painter = painterResource(id = R.drawable.cele),
                     contentDescription = "Celebration Pin",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(16.dp),
                 )
             }
 
@@ -74,7 +75,8 @@ fun CelebrationBanner(
             Text(
                 text = "Cheers to our peers' birthdays and work anniversaries—here's to celebrating your joy and achievements!",
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Normal,
+                fontFamily = GraphikFontFamily,
                 textAlign = TextAlign.Center,
                 color = Color.Black,
                 modifier = Modifier
@@ -152,6 +154,7 @@ fun CelebrationDialog(
                         text = "Cheers For Peers!",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
                         color = Color.Black,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
@@ -233,6 +236,7 @@ fun CelebrationDialog(
                                 text = "View All",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily,
                                 color = Color(0xFFDD3825)
                             )
                         }
@@ -292,7 +296,8 @@ private fun TabButton(
         Text(
             text = text,
             fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            fontFamily = GraphikFontFamily
         )
     }
 }
@@ -368,12 +373,14 @@ fun CelebrationItem(
                         text = item.employeeName,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
                         color = Color.Black
                     )
 
                     Text(
                         text = item.celebrationType,
                         fontSize = 12.sp,
+                        fontFamily = GraphikFontFamily,
                         color = Color(0xFF007AFF)
                     )
                 }
@@ -392,6 +399,7 @@ fun CelebrationItem(
                     text = "WISHES",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
+                    fontFamily = GraphikFontFamily,
                     color = Color.White
                 )
             }

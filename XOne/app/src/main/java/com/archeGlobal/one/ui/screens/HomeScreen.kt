@@ -799,7 +799,7 @@ fun HomeScreenContent(
                                     text = "Celebrating love, equality, and pride this month and always.",
                                     fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Center,
                                     color = Color.Black,
                                     modifier = Modifier

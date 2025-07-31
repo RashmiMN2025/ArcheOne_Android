@@ -41,7 +41,8 @@ class OtpVerificationController(
             method = "POST",
             request = request,
             responseClass = OtpVerifyResponse::class.java,
-            withAuthHeader = false
+            withAuthHeader = false,
+            handleTokenExpiration = false  // Disable automatic navigation for OTP errors
         ) { response, error ->
             if (error != null) {
                 Log.e("OtpVerification", "OTP verification failed: ${error.errorMessage}")
@@ -60,8 +61,9 @@ class OtpVerificationController(
                     showUpdateDialog()
                     callback("App update required", true)
                 } else {
-                    Log.d("OtpVerification", "Not a 403 error, using standard error handling")
-                    error.handleErrorWithContext(context, callback)
+                    Log.d("OtpVerification", "Not a 403 error, showing error message without navigation")
+                    // For OTP verification errors, just show the message without navigation
+                    callback(error.errorMessage, true)
                 }
             } else if (response != null && response.status == 200) {
                 val token = response.token
@@ -155,7 +157,8 @@ class OtpVerificationController(
             method = "POST",
             request = request,
             responseClass = VerifyOtpResponse::class.java,
-            withAuthHeader = true // This will use the token we just saved
+            withAuthHeader = true, // This will use the token we just saved
+            handleTokenExpiration = false  // Disable automatic navigation for login errors during OTP flow
         ) { response, error ->
             if (error != null) {
                 Log.e("LoginProcess", "Login failed: ${error.errorMessage}")
@@ -174,10 +177,9 @@ class OtpVerificationController(
                     showUpdateDialog()
                     callback("App update required", true)
                 } else {
-                    Log.d("LoginProcess", "Not a 403 error, using standard error handling")
-                    error.handleErrorWithContext(context) { message: String, isError: Boolean ->
-                        callback("Login failed: $message", isError)
-                    }
+                    Log.d("LoginProcess", "Not a 403 error, showing error message without navigation")
+                    // For login errors during OTP flow, just show the message without navigation
+                    callback("Login failed: ${error.errorMessage}", true)
                 }
             } else if (response != null && response.status == 200) {
                 Log.d("LoginProcess", "Login successful")
@@ -216,7 +218,8 @@ class OtpVerificationController(
             method = "POST",
             request = request,
             responseClass = SendOtpResponse::class.java,
-            withAuthHeader = false
+            withAuthHeader = false,
+            handleTokenExpiration = false  // Disable automatic navigation for resend OTP errors
         ) { response, error ->
             if (error != null) {
                 Log.e("OtpVerification", "Resend OTP failed: ${error.errorMessage}")
