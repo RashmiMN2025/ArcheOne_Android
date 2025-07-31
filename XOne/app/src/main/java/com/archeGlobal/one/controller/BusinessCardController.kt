@@ -79,7 +79,7 @@ class BusinessCardControllerImpl(
             _businessCard.value = generateQRCodeForCard(updatedCard)
 
             showEditCardDialog.value = false
-            Toast.makeText(context, "Card updated!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Business Card updated Successfully", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
@@ -102,32 +102,32 @@ class BusinessCardControllerImpl(
             digitsOnly.startsWith("+91") -> {
                 val numberPart = digitsOnly.substring(3)
                 when {
-                    numberPart.length == 10 -> digitsOnly // Perfect: +91 + 10 digits = 12 total
-                    numberPart.length < 10 -> "+91" + numberPart.padEnd(10, '0') // Pad with zeros if needed
-                    else -> "+91" + numberPart.take(10) // Truncate if too long
+                    numberPart.length == 10 -> "+91 - $numberPart" // Perfect: +91 + 10 digits = 12 total
+                    numberPart.length < 10 -> "+91 - ${numberPart.padEnd(10, '0')}" // Pad with zeros if needed
+                    else -> "+91 - ${numberPart.padEnd(10, '0')}" // Truncate if too long
                 }
             }
             // Starts with 91 and has exactly 12 digits total (treat 91 as country code)
             digitsOnly.startsWith("91") && digitsOnly.length == 12 -> {
-                "+$digitsOnly"
+                "+91 - ${digitsOnly.substring(2)}"
             }
             // Has exactly 10 digits (complete Indian mobile number)
             digitsOnly.length == 10 -> {
-                "+91$digitsOnly"
+                "+91 - $digitsOnly"
             }
             // Starts with 91 but not 12 digits total (91 might be part of the number)
             digitsOnly.startsWith("91") -> {
                 when {
-                    digitsOnly.length < 10 -> "+91" + digitsOnly.padEnd(10, '0') // Pad with zeros if needed
-                    digitsOnly.length > 10 && digitsOnly.length != 12 -> "+91" + digitsOnly.take(10) // Truncate if too long but not 12 digits
-                    else -> "+91$digitsOnly" // Fallback
+                    digitsOnly.length < 10 -> "+91 - ${digitsOnly.padEnd(10, '0')}" // Pad with zeros if needed
+                    digitsOnly.length > 10 && digitsOnly.length != 12 -> "+91 - ${digitsOnly.take(10)}" // Truncate if too long but not 12 digits
+                    else -> "+91 - $digitsOnly" // Fallback
                 }
             }
             // Any other case
             else -> {
                 when {
-                    digitsOnly.length < 10 -> "+91" + digitsOnly.padEnd(10, '0') // Pad with zeros if needed
-                    else -> "+91" + digitsOnly.take(10) // Truncate if too long
+                    digitsOnly.length < 10 -> "+91 - ${digitsOnly.padEnd(10, '0')}" // Pad with zeros if needed
+                    else -> "+91 - ${digitsOnly.take(10)}" // Truncate if too long
                 }
             }
         }
@@ -284,7 +284,7 @@ class BusinessCardControllerImpl(
             // Show toast
             android.widget.Toast.makeText(
                 context,
-                "Business card saved to Downloads/BusinessCards",
+                "Business card downloaded successfully. Check Photos or Gallery",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         } catch (e: IOException) {

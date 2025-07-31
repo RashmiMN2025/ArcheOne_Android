@@ -237,7 +237,7 @@ fun MonthCard(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEven
             .height(140.dp) // Maintained height
             .padding(horizontal = 0.5.dp) // Minimized padding
             .clickable { onMonthClick(month) },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -255,7 +255,7 @@ fun MonthCard(month: Int, holidays: List<Holiday>, globalEvents: List<GlobalEven
                     .take(3), // Just first 3 characters to match image (Jan, Feb, etc.)
                 fontSize = 18.sp,
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 1.dp) // Reduced bottom padding
             )
@@ -367,7 +367,7 @@ fun DateView(date: Int, isMandatoryHoliday: Boolean, isRegionalHoliday: Boolean,
                 lineHeight = 8.sp,
                 color = if (isMandatoryHoliday || isRegionalHoliday || hasGlobalEvent) Color.White else Color.Black,
                 fontFamily = GraphikFontFamily,
-                fontWeight = if (isMandatoryHoliday || isRegionalHoliday || hasGlobalEvent) FontWeight.Bold else FontWeight.Normal
+                fontWeight = if (isMandatoryHoliday || isRegionalHoliday || hasGlobalEvent) FontWeight.Normal else FontWeight.Normal
             )
         }
     }
@@ -450,7 +450,7 @@ fun PreviewHolidayCalendarScreen() {
                         text = "Year 2025",
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
 

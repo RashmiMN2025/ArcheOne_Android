@@ -1362,7 +1362,7 @@ fun GlobalEventItem(
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF5F5F5))
+                    .background(Color(0xFFFEF7F2))
             ) {
                 if (!event.image.isNullOrEmpty()) {
                     SubcomposeAsyncImage(

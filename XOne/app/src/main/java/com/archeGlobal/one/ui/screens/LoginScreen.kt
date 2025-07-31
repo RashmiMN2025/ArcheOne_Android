@@ -904,24 +904,27 @@ fun LoginScreen(
                             isVerifyingMpin = true
                             mpinError = null
                             val enteredMpin = enteredMpinDigits.joinToString("")
+                            if (enteredMpin.isEmpty()) {
+                                mpinError = "Please enter the MPIN"
+                                isVerifyingMpin = false
+                                android.util.Log.d("LoginScreen", "MPIN validation failed: Empty MPIN")
+                                return@Button
+                            }
                             val mpinController = com.archeGlobal.one.controller.MpinController(context)
                             if (!mpinController.validateMpin(enteredMpin)) {
                                 mpinError = "Invalid MPIN"
-                                android.util.Log.d("LoginScreen", "MPIN validation failed")
+                                android.util.Log.d("LoginScreen", "MPIN validation failed: Invalid MPIN")
                                 isVerifyingMpin = false
                                 return@Button
                             }
-                            // Call OTP verify with isBiometric = true and empty OTP
                             val otpController = com.archeGlobal.one.controller.OtpVerificationController(
                                 navigator = navigator,
                                 context = context
                             )
-                            // Use effective user data (preserved or current)
                             val useEmail = email.takeIf { it.isNotEmpty() } ?: effectiveUserData?.email ?: ""
                             val useMobile = mobile.takeIf { it.isNotEmpty() } ?: effectiveUserData?.mobile ?: ""
                             val useEmployeeId = employeeId.takeIf { it.isNotEmpty() } ?: effectiveUserData?.employeeId ?: ""
 
-                            // Validate that we have all required credentials
                             if (useEmail.isBlank() || useMobile.isBlank() || useEmployeeId.isBlank()) {
                                 mpinError = "User credentials missing. Please use OTP login."
                                 isVerifyingMpin = false
@@ -933,16 +936,15 @@ fun LoginScreen(
                                 email = useEmail,
                                 mobile = useMobile,
                                 employeeId = useEmployeeId,
-                                otpFromUser = "", // Empty OTP
+                                otpFromUser = "",
                                 isBiometric = true,
-                                backgroundRefresh = false // Normal login with navigation
+                                backgroundRefresh = false
                             ) { message, isError ->
                                 isVerifyingMpin = false
                                 if (isError) {
                                     mpinError = message
                                 } else {
-                                    // Success: Navigation handled in verifyOtp, no need to call loginWithToken again
-                                    android.util.Log.d("LoginScreen", "MPIN authentication successful for session expired user")
+                                    android.util.Log.d("LoginScreen", "MPIN authentication successful")
                                 }
                             }
                         },
@@ -957,7 +959,7 @@ fun LoginScreen(
                         enabled = !isVerifyingMpin
                     ) {
                         Icon(
-                            painter = painterResource(id = com.archeGlobal.one.R.drawable.ic_lock),
+                            painter = painterResource(id = com.archeGlobal.one.R.drawable.lock),
                             contentDescription = "Lock",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
@@ -1283,7 +1285,7 @@ fun LoginScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_key),
+                        painter = painterResource(id = R.drawable.key),
                         contentDescription = "Reset Password Icon",
                         tint = Color.Black,
                         modifier = Modifier.size(28.dp)

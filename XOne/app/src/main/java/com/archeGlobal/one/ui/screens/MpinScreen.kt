@@ -264,7 +264,7 @@ fun MpinScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_lock),
+                        painter = painterResource(id = R.drawable.lock),
                         contentDescription = "Security",
                         tint = Color(0xFFDD3825),
                         modifier = Modifier.size(28.dp)
@@ -282,7 +282,7 @@ fun MpinScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(32.dp, 20.dp, 32.dp, 32.dp)
+                        .padding(30.dp, 20.dp, 30.dp, 28.dp)
                 ) {
                     Text(
                         text = if (isReset) {
@@ -303,9 +303,7 @@ fun MpinScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 if (isReset) {
-                    // --- RESET FLOW ---
                     if (!resetVerified) {
-                        // Step 1: Show only one dropdown with the two saved questions
                         Text(
                             "Answer Security Question",
                             fontSize = 16.sp,
@@ -383,7 +381,35 @@ fun MpinScreen(
                                 }
                             }
                         )
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.info),
+                                contentDescription = "Info",
+                                tint = Color(0xFFDD3825),
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .padding(top = 2.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                lineHeight = 16.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         Button(
                             onClick = {
                                 val correctAnswer =
@@ -466,6 +492,55 @@ fun MpinScreen(
                                                 context.startActivity(intent)
                                                 activity.finish()
                                             }
+                                        }
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "or",
+                                fontSize = 15.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Black,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            val goBackText = buildAnnotatedString {
+                                val start = length
+                                append("go back")
+                                addStyle(
+                                    style = SpanStyle(
+                                        color = Color(0xFFDD3825),
+                                        textDecoration = TextDecoration.Underline,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    start = start,
+                                    end = length
+                                )
+                                addStringAnnotation(
+                                    tag = "go_back",
+                                    annotation = "go_back",
+                                    start = start,
+                                    end = length
+                                )
+                            }
+                            ClickableText(
+                                text = goBackText,
+                                style = TextStyle(
+                                    fontSize = 15.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black
+                                ),
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                onClick = { offset ->
+                                    goBackText.getStringAnnotations(
+                                        tag = "go_back",
+                                        start = offset,
+                                        end = offset
+                                    )
+                                        .firstOrNull()?.let {
+                                            val activity = context as? android.app.Activity
+                                            activity?.finish()
                                         }
                                 }
                             )
@@ -775,7 +850,7 @@ fun MpinScreen(
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_info),
+                                painter = painterResource(id = R.drawable.info),
                                 contentDescription = "Info",
                                 tint = Color(0xFFDD3825),
                                 modifier = Modifier
