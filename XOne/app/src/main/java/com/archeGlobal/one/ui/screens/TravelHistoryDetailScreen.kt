@@ -178,8 +178,8 @@ fun TravelHistoryDetailScreen(
 
                                     TravelDetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
-                                        label = "Destination",
-                                        value = destination.travelDestination
+                                        label = "Origin → Destination",
+                                        value = "${destination.originCity} → ${destination.destinationCity}"
                                     )
 
                                     val formattedDepartureDate = formatDate(destination.departureDate)
@@ -330,6 +330,7 @@ fun TravelDetailRowWithIcon(
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f)
         )
         Text(
@@ -367,6 +368,7 @@ fun TravelDetailRowWithDrawableIcon(
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f)
         )
         Text(

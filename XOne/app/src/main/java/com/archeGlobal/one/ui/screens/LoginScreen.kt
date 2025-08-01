@@ -107,12 +107,6 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
     var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
-
-    // Update firstTimeLogin when the screen is recreated after logout
-    LaunchedEffect(Unit) {
-        firstTimeLogin = forceOriginalLogin || isFirstTimeLogin(context)
-        android.util.Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}")
-    }
     var showWebView by remember { mutableStateOf(false) }
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
     var showMfaTermsDialog by remember { mutableStateOf(false) }
@@ -131,6 +125,10 @@ fun LoginScreen(
     } else {
         preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
     }
+    
+    // For session expiry, treat as returning user if we have preserved data
+    val shouldTreatAsReturningUser = sessionExpired && !lastEmployeeName.isNullOrEmpty()
+    
     val isLoggedIn = userDataManager.isLoggedIn()
     val hasLoggedIn = userDataManager.hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
@@ -145,19 +143,27 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         android.util.Log.d("LoginScreen", "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton")
     }
+    
+    // Update firstTimeLogin when the screen is created, considering session expiry
+    LaunchedEffect(Unit) {
+        val calculatedFirstTime = forceOriginalLogin || (isFirstTimeLogin(context) && !shouldTreatAsReturningUser)
+        firstTimeLogin = calculatedFirstTime
+        android.util.Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+    }
+    
     var showFingerprint by remember { mutableStateOf(false) }
 
     // Update showFingerprint when relevant conditions change
-    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired) {
+    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired, shouldTreatAsReturningUser) {
         // Show fingerprint for returning users (including session expired) if biometric is available
-        showFingerprint = showBiometricButton && (!firstTimeLogin || sessionExpired)
+        showFingerprint = showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)
         // Reset isDifferentUserMode after normal logout (when it's not forced)
         if (!forceDifferentUserMode && !firstTimeLogin) {
             isDifferentUserMode = false
         }
 
         // Debug logging
-        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
+        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
         android.util.Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
         android.util.Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
     }
@@ -278,12 +284,12 @@ fun LoginScreen(
     }
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData) {
-        android.util.Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn")
+    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData, sessionExpired) {
+        android.util.Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin")
 
         // If we have preserved user data and user is not logged in (token expired/logout), prioritize MFA first
         if (effectiveUserData != null && !isLoggedIn) {
-            // For returning users with preserved data, prefer MFA by default
+            // For returning users with preserved data (including session expired), prefer MFA by default
             selectedLoginMethod = "MFA"
             showOtpFields = false
             showOtpButton = false
@@ -477,7 +483,7 @@ fun LoginScreen(
                         }
 
                         // Show MPIN button for returning users (including session expired) who have MPIN set - second for returning users
-                        if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired)) {
+                        if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)) {
                             Button(
                                 onClick = { selectedLoginMethod = "MPIN" },
                                 modifier = Modifier
@@ -529,11 +535,11 @@ fun LoginScreen(
                         }
 
                         // Debug logging for fingerprint button condition
-                        android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
-                        android.util.Log.d("LoginScreen", "Fingerprint condition check: condition=${showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode}")
+                        android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+                        android.util.Log.d("LoginScreen", "Fingerprint condition check: condition=${showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser) && !isDifferentUserMode}")
 
                         // Show fingerprint button for returning users (including session expired) when biometric is available - third for returning users
-                        if (showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode) {
+                        if (showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser) && !isDifferentUserMode) {
                             Button(
                                 onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
                                 modifier = Modifier
@@ -778,7 +784,7 @@ fun LoginScreen(
                 }
 
                 // Show fingerprint authentication for returning users (including session expired)
-                if (selectedLoginMethod == "Fingerprint" && showBiometricButton && (!firstTimeLogin || sessionExpired)) {
+                if (selectedLoginMethod == "Fingerprint" && showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
                         onClick = {

@@ -10,6 +10,12 @@ data class TravelDestination(
     @SerializedName("travel_destination")
     val travelDestination: String,
 
+    @SerializedName("origin_city")
+    val originCity: String,
+
+    @SerializedName("destination_city")
+    val destinationCity: String,
+
     @SerializedName("departure_date") val departureDate: String,
 
     @SerializedName("arrival_date")
