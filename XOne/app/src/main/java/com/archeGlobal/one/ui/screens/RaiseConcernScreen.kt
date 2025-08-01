@@ -41,7 +41,8 @@ fun RaiseConcernScreen(
     onBackPressed: () -> Unit,
     title: String = "Raise a Concern",
     source: String = "helpdesk", // Add source parameter to track where we came from
-    prefilledCategory: String? = null // FAQ category to prefill and lock
+    prefilledCategory: String? = null, // FAQ category to prefill and lock
+    prefilledSubcategory: String? = null // FAQ subcategory to prefill and lock
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -57,9 +58,12 @@ fun RaiseConcernScreen(
 
     // Form state
     var selectedCategory by remember { mutableStateOf<String?>(prefilledCategory) }
+    var selectedSubcategory by remember { mutableStateOf<String?>(prefilledSubcategory) }
     var issueDescription by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var subcategoryExpanded by remember { mutableStateOf(false) }
     val isCategoryLocked = prefilledCategory != null
+    val isSubcategoryLocked = prefilledSubcategory != null
     var isSubmitting by remember { mutableStateOf(false) }
     var showAnonymousDialog by remember { mutableStateOf(false) }
 
@@ -88,12 +92,86 @@ fun RaiseConcernScreen(
         )
     }
 
+    // Subcategory mapping - extract from FAQ data for help desk, use hardcoded for SOS
+    val subcategoryMap = if (isHelpDeskTicket) {
+        // Extract subcategories from FAQ data by accessing the original FAQ structure
+        val subcategoriesFromFAQ = mutableMapOf<String, MutableSet<String>>()
+        
+        // Get the original FAQ data from UserDataManager to access FAQAnswer.cat fields
+        val userDataManager = UserDataManager.getInstance(context)
+        val originalFaqData = userDataManager.getFAQData()
+        
+        originalFaqData?.forEach { faqCategory ->
+            // Skip the default categories
+            if (faqCategory.title != "General" && faqCategory.title != "Other Issues") {
+                val subcategorySet = subcategoriesFromFAQ.getOrPut(faqCategory.title) { mutableSetOf() }
+                
+                // Debug logging to see the actual FAQ structure
+                Log.d("RaiseConcern", "Processing FAQ Category: ${faqCategory.title}")
+                
+                // Use FAQ questions as subcategories (each question represents a subcategory)
+                faqCategory.items.forEach { faqItem ->
+                    Log.d("RaiseConcern", "  Adding FAQ question as subcategory: ${faqItem.question}")
+                    subcategorySet.add(faqItem.question)
+                }
+                
+                Log.d("RaiseConcern", "  Final subcategories for ${faqCategory.title}: ${subcategorySet.toList()}")
+            }
+        }
+        
+        // Convert to Map<String, List<String>> without adding "Other" options
+        val finalSubcategoryMap = subcategoriesFromFAQ.mapValues { (_, subcategories) ->
+            subcategories.toList().sorted()
+        }.toMutableMap().apply {
+            // Add default subcategories for "Other Issue" category
+            put("Other Issue", listOf("General Query", "Feature Request", "Training", "Documentation", "Other"))
+        }
+        
+        // Debug logging for final subcategory map
+        Log.d("RaiseConcern", "Final subcategory map:")
+        finalSubcategoryMap.forEach { (category, subcategories) ->
+            Log.d("RaiseConcern", "  $category: ${subcategories.joinToString(", ")}")
+        }
+        
+        finalSubcategoryMap
+    } else {
+        // SOS categories - keep hardcoded as they don't come from FAQ API
+        mapOf(
+            "Medical Emergency" to listOf("Heart Attack", "Stroke", "Injury", "Breathing Issues", "Unconscious", "Other Medical"),
+            "Fire Safety" to listOf("Fire Outbreak", "Smoke Detection", "Evacuation", "Fire Equipment", "Other Fire Safety"),
+            "Security Risk" to listOf("Unauthorized Access", "Theft", "Violence", "Threat", "Suspicious Activity", "Other Security"),
+            "Workplace Safety" to listOf("Accident", "Hazardous Conditions", "Equipment Failure", "Chemical Spill", "Other Safety"),
+            "Non-Compliance" to listOf("Policy Violation", "Regulatory Issue", "Safety Standards", "Other Compliance"),
+            "PoSH" to listOf("Sexual Harassment", "Discrimination", "Inappropriate Behavior", "Other PoSH"),
+            "Other Issue" to listOf("General Concern", "Anonymous Report", "Other")
+        )
+    }
+
+    // Get available subcategories for selected category
+    val availableSubcategories = selectedCategory?.let { subcategoryMap[it] } ?: emptyList()
+
+    // Reset subcategory when category changes (unless it's pre-filled)
+    LaunchedEffect(selectedCategory) {
+        if (!isSubcategoryLocked) {
+            selectedSubcategory = null
+        }
+    }
+
     // Submit function for help desk tickets (using SOS endpoint, no anonymous option)
     suspend fun submitHelpDeskTicket() {
         if (selectedCategory == null || issueDescription.isBlank()) {
             Toast.makeText(
                 context,
                 "Please select a category and describe your issue",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (availableSubcategories.isNotEmpty() && selectedSubcategory == null) {
+            Toast.makeText(
+                context,
+                "Please select a subcategory",
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -113,11 +191,12 @@ fun RaiseConcernScreen(
                 email = user.email ?: "",
                 mobile = user.mobile ?: "",
                 category = selectedCategory ?: "Other Issue",
+                subcategory = selectedSubcategory,
                 query = issueDescription,
                 anonymous = false // Help desk tickets are never anonymous
             )
 
-            Log.d("RaiseConcern", "Submitting help desk ticket via helpdesk endpoint: Category=$selectedCategory, Description=$issueDescription")
+            Log.d("RaiseConcern", "Submitting help desk ticket via helpdesk endpoint: Category=$selectedCategory, Subcategory=$selectedSubcategory, Description=$issueDescription")
 
             val result = sosController.submitEncryptedHelpdeskRequest(request)
 
@@ -132,6 +211,7 @@ fun RaiseConcernScreen(
 
                         // Reset form on success
                         selectedCategory = null
+                        selectedSubcategory = null
                         issueDescription = ""
 
                         // Go back after successful submission
@@ -183,6 +263,15 @@ fun RaiseConcernScreen(
             return
         }
 
+        if (availableSubcategories.isNotEmpty() && selectedSubcategory == null) {
+            Toast.makeText(
+                context,
+                "Please select a subcategory",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
         isSubmitting = true
 
         try {
@@ -198,11 +287,12 @@ fun RaiseConcernScreen(
                 email = user.email ?: "",
                 mobile = user.mobile ?: "",
                 category = selectedCategory ?: "Other Issue",
+                subcategory = selectedSubcategory,
                 query = issueDescription,
                 anonymous = anonymous
             )
 
-            Log.d("RaiseConcern", "Submitting SOS concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous")
+            Log.d("RaiseConcern", "Submitting SOS concern: Category=$selectedCategory, Subcategory=$selectedSubcategory, Query=$issueDescription, Anonymous=$anonymous")
 
             val result = sosController.submitEncryptedSOSRequest(request)
 
@@ -219,6 +309,7 @@ fun RaiseConcernScreen(
 
                         // Reset form on success
                         selectedCategory = null
+                        selectedSubcategory = null
                         issueDescription = ""
 
                         // Go back after successful submission
@@ -307,7 +398,8 @@ fun RaiseConcernScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Category dropdown
+                // Category dropdown (hide when pre-filled from FAQ)
+                if (!isCategoryLocked) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -419,6 +511,113 @@ fun RaiseConcernScreen(
                         }
                     }
                 }
+                } // End of category dropdown conditional
+
+                // Subcategory dropdown (show when category is selected or pre-filled)
+                if (selectedCategory != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                            .padding(horizontal = 15.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedSubcategory ?: "",
+                            onValueChange = { },
+                            readOnly = true,
+                            placeholder = { Text("Select Subcategory") },
+                            trailingIcon = {
+                                if (!isSubcategoryLocked) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Black
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+
+                        // Invisible clickable box over the TextField to trigger dropdown
+                        if (!isSubcategoryLocked) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .padding(horizontal = 15.dp)
+                                    .clickable { subcategoryExpanded = true }
+                            )
+                        }
+
+                        // Subcategory dropdown menu
+                        if (subcategoryExpanded) {
+                            Dialog(
+                                onDismissRequest = { subcategoryExpanded = false },
+                                properties = DialogProperties(
+                                    dismissOnBackPress = true,
+                                    dismissOnClickOutside = true,
+                                    usePlatformDefaultWidth = false
+                                )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .padding(horizontal = 8.dp)
+                                ) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = Color.White
+                                        )
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            availableSubcategories.forEach { subcategory ->
+                                                Column(
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Text(
+                                                        text = subcategory,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clickable {
+                                                                selectedSubcategory = subcategory
+                                                                subcategoryExpanded = false
+                                                            }
+                                                            .padding(
+                                                                vertical = 12.dp,
+                                                                horizontal = 12.dp
+                                                            ),
+                                                        fontSize = 16.sp,
+                                                        color = Color.Black
+                                                    )
+
+                                                    if (subcategory != availableSubcategories.last()) {
+                                                        Divider(
+                                                            color = Color.LightGray,
+                                                            thickness = 1.dp,
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Issue description
                 OutlinedTextField(
@@ -443,7 +642,8 @@ fun RaiseConcernScreen(
                     maxLines = 8,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
-                        if (issueDescription.isNotBlank() && selectedCategory != null) {
+                        if (issueDescription.isNotBlank() && selectedCategory != null && 
+                            (availableSubcategories.isEmpty() || selectedSubcategory != null)) {
                             if (isHelpDeskTicket) {
                                 coroutineScope.launch { submitHelpDeskTicket() }
                             } else {

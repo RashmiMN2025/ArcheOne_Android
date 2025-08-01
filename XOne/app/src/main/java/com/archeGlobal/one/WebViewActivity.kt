@@ -69,7 +69,7 @@ class WebViewActivity : ComponentActivity() {
 
         // Check if this is specific policy that needs SOS button
         val showSosButton = title.contains("Anti Bribery", ignoreCase = true) || title.contains("POSH", ignoreCase = true)
-        
+
         // Check if this is blog or case study content that needs share button
         val showShareButton = fileUrl.contains("arche.global") && (fileUrl.contains("/blog/") || fileUrl.contains("/case-studies/"))
 

@@ -1055,7 +1055,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Multi-destination request
             val travelDestinations = destinations.map { dest ->
                 com.archeGlobal.one.model.TravelDestinationRequest(
-                    travelDestination = dest.destination,
+                    originCity = originCity,
+                    destinationCity = dest.destination,
                     departureDate = convertToApiDateFormat(dest.departureDate),
                     arrivalDate = convertToApiDateFormat(dest.returnDate),
                     flightTimePreference = flightTimeValue
@@ -1099,7 +1100,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 employeeName = employeeName,
                 employeeEmail = employeeEmail,
                 mobile = mobileNumber,
-                travelDestination = destination,
+                originCity = originCity,
+                destinationCity = destination,
                 projectName = projectName,
                 businessJustification = businessJustification,
                 modeOfTransport = modeOfTransport,

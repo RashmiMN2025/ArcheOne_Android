@@ -66,7 +66,7 @@ fun CelebrationBanner(
                     painter = painterResource(id = R.drawable.cele),
                     contentDescription = "Celebration Pin",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(16.dp)
                 )
             }
 

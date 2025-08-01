@@ -23,7 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -31,6 +30,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -394,7 +394,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             val density = LocalDensity.current
             val keyboardHeight = WindowInsets.ime.getBottom(density)
             val isKeyboardVisible = keyboardHeight > 0
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()

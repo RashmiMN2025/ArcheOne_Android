@@ -206,7 +206,7 @@ fun TravelHistoryDetailScreen(
                                 value = travelRequest.project
                             )
                             TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.holiday_list,
+                                iconRes = R.drawable.busjust,
                                 label = "Business Justification",
                                 value = travelRequest.businessJustification ?: "N/A"
                             )

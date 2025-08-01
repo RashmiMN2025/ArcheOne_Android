@@ -15,7 +15,6 @@ import com.archeGlobal.one.network.*
 import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.EncryptedAPIHelper
 import com.archeGlobal.one.utils.UserDataManager
-import com.archeGlobal.one.utils.handleErrorWithContext
 
 class OtpVerificationController(
     private val navigator: Navigator,
@@ -42,7 +41,7 @@ class OtpVerificationController(
             request = request,
             responseClass = OtpVerifyResponse::class.java,
             withAuthHeader = false,
-            handleTokenExpiration = false  // Disable automatic navigation for OTP errors
+            handleTokenExpiration = false // Disable automatic navigation for OTP errors
         ) { response, error ->
             if (error != null) {
                 Log.e("OtpVerification", "OTP verification failed: ${error.errorMessage}")
@@ -158,7 +157,7 @@ class OtpVerificationController(
             request = request,
             responseClass = VerifyOtpResponse::class.java,
             withAuthHeader = true, // This will use the token we just saved
-            handleTokenExpiration = false  // Disable automatic navigation for login errors during OTP flow
+            handleTokenExpiration = false // Disable automatic navigation for login errors during OTP flow
         ) { response, error ->
             if (error != null) {
                 Log.e("LoginProcess", "Login failed: ${error.errorMessage}")
@@ -219,7 +218,7 @@ class OtpVerificationController(
             request = request,
             responseClass = SendOtpResponse::class.java,
             withAuthHeader = false,
-            handleTokenExpiration = false  // Disable automatic navigation for resend OTP errors
+            handleTokenExpiration = false // Disable automatic navigation for resend OTP errors
         ) { response, error ->
             if (error != null) {
                 Log.e("OtpVerification", "Resend OTP failed: ${error.errorMessage}")

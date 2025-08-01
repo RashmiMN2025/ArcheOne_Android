@@ -14,10 +14,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import javax.net.ssl.HostnameVerifier
 
 // Interceptor to add authorization token to requests and handle token expiration
 class AuthInterceptor(private val context: Context) : Interceptor {
@@ -28,9 +28,8 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
         // Skip adding token for auth endpoints
         val url = original.url.toString()
-        val skipAuth = url.contains("send-otp") || url.contains("otpVerify") || url.contains("otp") || 
-                      url.endsWith("/otpVerify") || url.endsWith("/send-otp")
-        
+        val skipAuth = url.contains("send-otp") || url.contains("otpVerify") || url.contains("otp") || url.endsWith("/otpVerify") || url.endsWith("/send-otp")
+
         Log.d("AuthInterceptor", "Processing request: $url, skipAuth: $skipAuth")
 
         val response = if (token != null && !skipAuth) {
@@ -46,10 +45,8 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
         // Check if the response indicates token expiration (401 Unauthorized)
         // Skip token expiration handling for OTP-related endpoints completely
-        val isOtpEndpoint = url.contains("otp", ignoreCase = true) || 
-                           url.contains("send-otp", ignoreCase = true) || 
-                           url.contains("otpVerify", ignoreCase = true)
-        
+        val isOtpEndpoint = url.contains("otp", ignoreCase = true) || url.contains("send-otp", ignoreCase = true) || url.contains("otpVerify", ignoreCase = true)
+
         if (response.code == 401 && !skipAuth && !isOtpEndpoint) {
             Log.w("AuthInterceptor", "Received 401 Unauthorized - Token expired for URL: $url")
             handleTokenExpiration(context, preferencesManager)
@@ -95,8 +92,9 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 }
 
 object RetrofitClient {
-     const val BASE_URL = "https://archeone.arche.global/"
-    //const val BASE_URL = "https://dev.arche.global/"
+    const val BASE_URL = "https://archeone.arche.global/"
+
+    // const val BASE_URL = "https://dev.arche.global/"
     private var retrofit: Retrofit? = null
 
     // Initialize with context to get the token

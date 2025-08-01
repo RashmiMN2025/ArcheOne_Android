@@ -472,10 +472,15 @@ class HomeActivity : AppCompatActivity() {
 
                     // Add raise concern screen with customizable title
                     composable(
-                        route = "raise_concern/{title}?category={category}",
+                        route = "raise_concern/{title}?category={category}&subcategory={subcategory}",
                         arguments = listOf(
                             navArgument("title") { type = NavType.StringType },
                             navArgument("category") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            },
+                            navArgument("subcategory") {
                                 type = NavType.StringType
                                 nullable = true
                                 defaultValue = null
@@ -498,11 +503,14 @@ class HomeActivity : AppCompatActivity() {
                         val decodedTitle = java.net.URLDecoder.decode(title, "UTF-8")
                         val category = backStackEntry.arguments?.getString("category")
                         val decodedCategory = category?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                        val subcategory = backStackEntry.arguments?.getString("subcategory")
+                        val decodedSubcategory = subcategory?.let { java.net.URLDecoder.decode(it, "UTF-8") }
 
                         RaiseConcernScreen(
                             onBackPressed = { navController.popBackStack() },
                             title = decodedTitle,
-                            prefilledCategory = decodedCategory
+                            prefilledCategory = decodedCategory,
+                            prefilledSubcategory = decodedSubcategory
                         )
                     }
 

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.draw.scale
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -37,6 +36,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -489,6 +489,64 @@ fun TravelScreen(
                                     ),
                                     shape = RoundedCornerShape(8.dp)
                                 )
+
+                                // Seat Preference Dropdown - only for multi-destination mode (below frequent flyer number and above single/multi destination buttons)
+                                if (controller.isMultiDestination) {
+                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                        OutlinedTextField(
+                                            value = controller.seatPreference,
+                                            onValueChange = { },
+                                            placeholder = {
+                                                Text(
+                                                    "Seat Preference",
+                                                    color = Color.Gray,
+                                                    fontWeight = FontWeight.Normal,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 16.dp)
+                                                .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                unfocusedBorderColor = Color.LightGray,
+                                                focusedBorderColor = Color.Gray,
+                                                cursorColor = Color.Black,
+                                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                                focusedContainerColor = Color.White,
+                                                unfocusedTextColor = Color.Black,
+                                                focusedTextColor = Color.Black,
+                                                unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                                focusedPlaceholderColor = Color(0xFFF6F4EE)
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            trailingIcon = {
+                                                Icon(
+                                                    Icons.Default.KeyboardArrowDown,
+                                                    contentDescription = "Dropdown",
+                                                    tint = Color.Gray,
+                                                    modifier = Modifier.clickable { controller.toggleSeatPrefDropdown() }
+                                                )
+                                            },
+                                            readOnly = true
+                                        )
+
+                                        DropdownMenu(
+                                            expanded = controller.isSeatPrefDropdownExpanded,
+                                            onDismissRequest = { controller.dismissSeatPrefDropdown() },
+                                            modifier = Modifier
+                                                .width(with(LocalDensity.current) { 300.dp })
+                                                .background(Color.White)
+                                        ) {
+                                            controller.seatPreferenceOptions.forEach { option ->
+                                                DropdownMenuItem(
+                                                    text = { Text(text = option, fontFamily = GraphikFontFamily) },
+                                                    onClick = { controller.updateSeatPreference(option) }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             // Tab buttons for Single/Multiple destinations
@@ -557,7 +615,7 @@ fun TravelScreen(
                                     color = Color.Black,
                                     modifier = Modifier.padding(bottom = 16.dp)
                                 )
-                                
+
                                 // White card containing destination fields
                                 Card(
                                     modifier = Modifier
@@ -600,7 +658,7 @@ fun TravelScreen(
                                             ),
                                             shape = RoundedCornerShape(8.dp)
                                         )
-                                        
+
                                         // Destination City field
                                         androidx.compose.material3.OutlinedTextField(
                                             value = controller.destination,
@@ -629,7 +687,7 @@ fun TravelScreen(
                                             ),
                                             shape = RoundedCornerShape(8.dp)
                                         )
-                                        
+
                                         // Date Selection Row inside the card
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -727,11 +785,11 @@ fun TravelScreen(
                                                 }
                                             }
                                         }
-                                        
+
                                         // Flight additional options - show flight time and seat preference inside the card for flights
                                         if (controller.modeOfTransport == "Flight") {
                                             Spacer(modifier = Modifier.height(16.dp))
-                                            
+
                                             // Flight Time Preference Dropdown
                                             Box(modifier = Modifier.fillMaxWidth()) {
                                                 androidx.compose.material3.OutlinedTextField(
@@ -966,7 +1024,6 @@ fun TravelScreen(
                                 }
                             }
 
-
                             // Meal Preference Toggle and Dropdown (only for Flight and Train)
                             if (controller.modeOfTransport == "Flight" || controller.modeOfTransport == "Train") {
                                 Row(
@@ -1048,7 +1105,6 @@ fun TravelScreen(
                                     }
                                 }
                             }
-
 
                             // Approval Chain
                             Text(
@@ -1296,7 +1352,7 @@ fun MultiDestinationSection(controller: TravelController) {
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
-                    
+
                     // Destination City field
                     androidx.compose.material3.OutlinedTextField(
                         value = destination.destination,
@@ -1525,11 +1581,11 @@ fun MultiDestinationSection(controller: TravelController) {
                             }
                         }
                     }
-                    
+
                     // Flight additional options - show flight time and seat preference inside the card for flights
                     if (controller.modeOfTransport == "Flight") {
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Flight Time Preference Dropdown
                         Box(modifier = Modifier.fillMaxWidth()) {
                             androidx.compose.material3.OutlinedTextField(
@@ -1585,90 +1641,8 @@ fun MultiDestinationSection(controller: TravelController) {
                                 }
                             }
                         }
-                        
-                        // Frequent Flyer Number Input
-                        androidx.compose.material3.OutlinedTextField(
-                            value = controller.frequentFlyerNumber.let { if (it == "0") "" else it },
-                            onValueChange = { controller.updateFrequentFlyerNumber(it) },
-                            placeholder = {
-                                Text(
-                                    "Frequent Flyer Number",
-                                    color = Color.Gray,
-                                    fontWeight = FontWeight.Normal,
-                                    fontFamily = GraphikFontFamily
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Color.Gray,
-                                cursorColor = Color.Black,
-                                unfocusedContainerColor = Color.White,
-                                focusedContainerColor = Color.White,
-                                unfocusedTextColor = Color.Black,
-                                focusedTextColor = Color.Black,
-                                unfocusedPlaceholderColor = Color.Gray,
-                                focusedPlaceholderColor = Color.Gray
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        )
 
-                        // Seat Preference Dropdown
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            androidx.compose.material3.OutlinedTextField(
-                                value = controller.seatPreference,
-                                onValueChange = { },
-                                placeholder = {
-                                    Text(
-                                        "Seat Preference",
-                                        color = Color.Gray,
-                                        fontWeight = FontWeight.Normal,
-                                        fontFamily = GraphikFontFamily
-                                    )
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
-                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.Gray,
-                                    cursorColor = Color.Black,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedContainerColor = Color.White,
-                                    unfocusedTextColor = Color.Black,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedPlaceholderColor = Color.Gray,
-                                    focusedPlaceholderColor = Color.Gray
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                trailingIcon = {
-                                    Icon(
-                                        Icons.Default.KeyboardArrowDown,
-                                        contentDescription = "Dropdown",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.clickable { controller.toggleSeatPrefDropdown() }
-                                    )
-                                },
-                                readOnly = true
-                            )
 
-                            DropdownMenu(
-                                expanded = controller.isSeatPrefDropdownExpanded,
-                                onDismissRequest = { controller.dismissSeatPrefDropdown() },
-                                modifier = Modifier
-                                    .width(with(LocalDensity.current) { 300.dp })
-                                    .background(Color(0xCC000000)) // 80% opacity black background
-                            ) {
-                                controller.seatPreferenceOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
-                                        onClick = { controller.updateSeatPreference(option) }
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
             }

@@ -3,8 +3,6 @@ package com.archeGlobal.one.ui.screens
 import MicrosoftLoginWebView
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
-import android.view.Gravity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,6 +60,7 @@ import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.BiometricHelper
+import com.archeGlobal.one.utils.CustomToast
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
@@ -127,7 +126,11 @@ fun LoginScreen(
     val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
 
     // Get last user name from preserved data (works for both logout and session expiry)
-    val lastEmployeeName = preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
+    val lastEmployeeName = if (sessionExpired) {
+        preferencesManager.getString("session_expired_name", "") ?: preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
+    } else {
+        preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
+    }
     val isLoggedIn = userDataManager.isLoggedIn()
     val hasLoggedIn = userDataManager.hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
@@ -184,9 +187,21 @@ fun LoginScreen(
     val userData = userDataManager.getUserData()
 
     // Always try to get preserved user data (works for both logout and session expiry)
-    val lastUserEmail = preferencesManager.getString("last_user_email", "")
-    val lastUserMobile = preferencesManager.getString("last_user_mobile", "")
-    val lastUserEmployeeId = preferencesManager.getString("last_user_employee_id", "")
+    val lastUserEmail = if (sessionExpired) {
+        preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "")
+    } else {
+        preferencesManager.getString("last_user_email", "")
+    }
+    val lastUserMobile = if (sessionExpired) {
+        preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "")
+    } else {
+        preferencesManager.getString("last_user_mobile", "")
+    }
+    val lastUserEmployeeId = if (sessionExpired) {
+        preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "")
+    } else {
+        preferencesManager.getString("last_user_employee_id", "")
+    }
 
     val preservedUserData = if (!lastUserEmail.isNullOrBlank() && !lastUserMobile.isNullOrBlank() && !lastUserEmployeeId.isNullOrBlank()) {
         com.archeGlobal.one.model.UserData(
@@ -281,10 +296,10 @@ fun LoginScreen(
             showOtpFields = true
             isDifferentUserMode = false
         } else {
-            // Show OTP button only for first-time users or different users (but not for session expired)
-            showOtpButton = (firstTimeLogin && !sessionExpired) || isDifferentUserMode
+            // Show OTP button only for first-time users or different users
+            showOtpButton = firstTimeLogin || isDifferentUserMode
 
-            if ((firstTimeLogin && !sessionExpired) || isDifferentUserMode) {
+            if (firstTimeLogin || isDifferentUserMode) {
                 selectedLoginMethod = "OTP"
                 showOtpFields = true
             } else {
@@ -298,37 +313,8 @@ fun LoginScreen(
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
-            // Format long messages with line breaks for better visibility
-            val formattedMessage = if (message.length > 50) {
-                // Split long messages into multiple lines
-                val words = message.split(" ")
-                val lines = mutableListOf<String>()
-                var currentLine = ""
-                
-                for (word in words) {
-                    if ((currentLine + word).length > 35) {
-                        if (currentLine.isNotEmpty()) {
-                            lines.add(currentLine.trim())
-                            currentLine = word + " "
-                        } else {
-                            lines.add(word)
-                        }
-                    } else {
-                        currentLine += "$word "
-                    }
-                }
-                
-                if (currentLine.isNotEmpty()) {
-                    lines.add(currentLine.trim())
-                }
-                
-                // Join with newlines to create multi-line toast
-                lines.joinToString("\n")
-            } else {
-                message
-            }
-            
-            Toast.makeText(context, formattedMessage, Toast.LENGTH_LONG).show()
+            // Use custom toast for better handling of long messages
+            CustomToast.showErrorToast(context, message)
             errorMessage = null
         }
     }
@@ -414,7 +400,7 @@ fun LoginScreen(
                 ) {
                     // For new users (firstTimeLogin or isDifferentUserMode): OTP first, then MFA
                     // For returning users: MFA first, then MPIN, then Fingerprint
-                    
+
                     if (firstTimeLogin || isDifferentUserMode) {
                         // OTP button - first for new users
                         if (showOtpButton) {
@@ -441,7 +427,7 @@ fun LoginScreen(
                                 )
                             }
                         }
-                        
+
                         // MFA button - second for new users
                         Button(
                             onClick = { selectedLoginMethod = "MFA" },
@@ -818,14 +804,14 @@ fun LoginScreen(
                                                 bioMobile = effectiveUserData.mobile ?: ""
                                                 bioEmployeeId = effectiveUserData.employeeId ?: ""
                                             } else {
-                                                Toast.makeText(context, "Biometric credentials not found. Please login with MPIN or OTP.", Toast.LENGTH_SHORT).show()
+                                                CustomToast.showErrorToast(context, "Biometric credentials not found. Please login with MPIN or OTP.")
                                                 return@showBiometricPrompt
                                             }
                                         }
 
                                         // Validate credentials
                                         if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
-                                            Toast.makeText(context, "User credentials missing. Please use OTP login.", Toast.LENGTH_SHORT).show()
+                                            CustomToast.showErrorToast(context, "User credentials missing. Please use OTP login.")
                                             return@showBiometricPrompt
                                         }
 
@@ -843,13 +829,13 @@ fun LoginScreen(
                                             backgroundRefresh = false // Normal login with navigation
                                         ) { message, isError ->
                                             if (isError) {
-                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                CustomToast.showErrorToast(context, message)
                                             }
                                         }
                                     },
                                     onError = { error ->
                                         // Show error and prevent app bypass by staying on login screen
-                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                        CustomToast.showErrorToast(context, error)
                                         // Reset login method selection if needed
                                         if (error.contains("cancelled", ignoreCase = true)) {
                                             // User cancelled - they can try again or use another method

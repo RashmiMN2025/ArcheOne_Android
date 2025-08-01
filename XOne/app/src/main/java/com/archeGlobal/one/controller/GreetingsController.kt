@@ -392,13 +392,13 @@ class GreetingsController(
     }
 
     fun getCategoryThumbnail(category: String): String {
-        // Special handling for Global Celebration category - use same logic as GlobalCelebrationController
+        // Special handling for Global Celebration category - use image from API
         if (category == "Global Celebration") {
             val greetingCategories = userDataManager.getGreetingCategoriesData()
             val globalCelebration = greetingCategories?.find { it.name == "Global Celebration" }
-            val subcategories = globalCelebration?.subfolder ?: emptyList()
-            val firstSubcategory = subcategories.firstOrNull()
-            return firstSubcategory?.files?.firstOrNull() ?: ""
+
+            // Use the files from the main Global Celebration category as provided by API
+            return globalCelebration?.files?.firstOrNull() ?: ""
         }
         // Return a placeholder or the first greeting image for the category
         return model.categories[category]?.firstOrNull() ?: ""

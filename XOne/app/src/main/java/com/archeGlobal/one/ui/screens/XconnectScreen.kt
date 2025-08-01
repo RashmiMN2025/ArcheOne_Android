@@ -499,18 +499,10 @@ fun AllPostsContent(
 
         // If all sections are empty after filtering, show a message
         if (filteredCaseStudies.isEmpty() && filteredBlogs.isEmpty() && searchQuery.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No results found for '$searchQuery'",
-                    color = Color.Gray,
-                    fontSize = 16.sp
-                )
-            }
+            NoResultsCard(
+                searchQuery = searchQuery,
+                message = "No results found"
+            )
         }
     }
 }
@@ -584,19 +576,14 @@ fun CaseStudiesContent(
     }
 
     if (caseStudies.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (searchQuery.isEmpty()) {
-                    "No case studies available"
-                } else {
-                    "No case studies found for '$searchQuery'"
-                },
-                color = Color.Gray
-            )
-        }
+        NoResultsCard(
+            searchQuery = if (searchQuery.isEmpty()) "" else searchQuery,
+            message = if (searchQuery.isEmpty()) {
+                "No case studies available"
+            } else {
+                "No case studies found"
+            }
+        )
     } else {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -627,19 +614,14 @@ fun BlogsContent(
     }
 
     if (blogs.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (searchQuery.isEmpty()) {
-                    "No blogs available"
-                } else {
-                    "No blogs found for '$searchQuery'"
-                },
-                color = Color.Gray
-            )
-        }
+        NoResultsCard(
+            searchQuery = if (searchQuery.isEmpty()) "" else searchQuery,
+            message = if (searchQuery.isEmpty()) {
+                "No blogs available"
+            } else {
+                "No blogs found"
+            }
+        )
     } else {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -656,6 +638,62 @@ fun BlogsContent(
             socialController = socialController,
             showArticleDetail = showArticleDetail
         )
+    }
+}
+
+@Composable
+fun NoResultsCard(
+    searchQuery: String = "",
+    message: String = "No results found"
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Large magnifying glass icon
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "No results",
+                modifier = Modifier.size(80.dp),
+                tint = Color.Gray.copy(alpha = 0.6f)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Main message
+            Text(
+                text = message,
+                fontSize = 20.sp,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black,
+                textAlign = TextAlign.Center
+            )
+
+            // Subtitle with search query if provided
+            if (searchQuery.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "We couldn't find any matches for '$searchQuery'",
+                    fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp
+                )
+            }
+        }
     }
 }
 

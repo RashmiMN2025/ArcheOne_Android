@@ -73,7 +73,7 @@ fun OtpVerificationScreen(
                 val words = message.split(" ")
                 val lines = mutableListOf<String>()
                 var currentLine = ""
-                
+
                 for (word in words) {
                     if ((currentLine + word).length > 35) {
                         if (currentLine.isNotEmpty()) {
@@ -86,17 +86,17 @@ fun OtpVerificationScreen(
                         currentLine += "$word "
                     }
                 }
-                
+
                 if (currentLine.isNotEmpty()) {
                     lines.add(currentLine.trim())
                 }
-                
+
                 // Join with newlines to create multi-line toast
                 lines.joinToString("\n")
             } else {
                 message
             }
-            
+
             Toast.makeText(context, formattedMessage, Toast.LENGTH_LONG).show()
             errorMessage = null
         }

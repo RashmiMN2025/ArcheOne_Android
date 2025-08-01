@@ -225,18 +225,18 @@ class EncryptedAPIService private constructor(private val context: Context) {
             400 -> {
                 Log.d(TAG, "400 Error Response Body (encrypted): ${responseBody.take(100)}...")
                 var errorMessage = "Invalid request. Please check your credentials."
-                
+
                 // First try to decrypt the response since it's an encrypted endpoint
                 try {
                     Log.d(TAG, "Attempting to decrypt 400 error response")
                     val encryptedPayload = gson.fromJson(responseBody, EncryptedPayload::class.java)
                     val decryptedData = decryptResponse(encryptedPayload)
                     Log.d(TAG, "Decrypted 400 error response: $decryptedData")
-                    
+
                     // Now parse the decrypted JSON
                     val jsonObject = org.json.JSONObject(decryptedData)
                     Log.d(TAG, "Decrypted JSON Object keys: ${jsonObject.keys().asSequence().toList()}")
-                    
+
                     // Try different possible message field names
                     val possibleKeys = listOf("message", "Message", "error", "Error", "errorMessage", "error_message")
                     for (key in possibleKeys) {
@@ -251,12 +251,12 @@ class EncryptedAPIService private constructor(private val context: Context) {
                     Log.e(TAG, "Failed to decrypt and parse 400 error response: ${e.message}")
                     // Fall back to trying plain JSON parsing (in case it's not encrypted)
                 }
-                
+
                 // Fallback: Try to parse as plain JSON (in case the error response is not encrypted)
                 try {
                     val jsonObject = org.json.JSONObject(responseBody)
                     Log.d(TAG, "Plain JSON Object keys: ${jsonObject.keys().asSequence().toList()}")
-                    
+
                     val possibleKeys = listOf("message", "Message", "error", "Error", "errorMessage", "error_message")
                     for (key in possibleKeys) {
                         val message = jsonObject.optString(key, "")
@@ -269,7 +269,7 @@ class EncryptedAPIService private constructor(private val context: Context) {
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse as plain JSON: ${e.message}")
                 }
-                
+
                 // Last fallback: Try Gson parsing
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
@@ -281,20 +281,20 @@ class EncryptedAPIService private constructor(private val context: Context) {
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 400 error response with Gson: ${e.message}")
                 }
-                
+
                 Log.d(TAG, "Final error message for 400: $errorMessage")
                 throw APIError.BadRequest(errorMessage)
             }
             401 -> {
                 var errorMessage = "Invalid credentials. Please try again."
-                
+
                 // Try to decrypt the response first
                 try {
                     Log.d(TAG, "Attempting to decrypt 401 error response")
                     val encryptedPayload = gson.fromJson(responseBody, EncryptedPayload::class.java)
                     val decryptedData = decryptResponse(encryptedPayload)
                     Log.d(TAG, "Decrypted 401 error response: $decryptedData")
-                    
+
                     val jsonObject = org.json.JSONObject(decryptedData)
                     val possibleKeys = listOf("message", "Message", "error", "Error", "errorMessage", "error_message")
                     for (key in possibleKeys) {
@@ -318,19 +318,19 @@ class EncryptedAPIService private constructor(private val context: Context) {
                         Log.e(TAG, "Failed to parse 401 error response: ${ex.message}")
                     }
                 }
-                
+
                 throw APIError.Unauthorized(errorMessage)
             }
             403 -> {
                 var errorMessage = "Access denied. App update may be required."
-                
+
                 // Try to decrypt the response first
                 try {
                     Log.d(TAG, "Attempting to decrypt 403 error response")
                     val encryptedPayload = gson.fromJson(responseBody, EncryptedPayload::class.java)
                     val decryptedData = decryptResponse(encryptedPayload)
                     Log.d(TAG, "Decrypted 403 error response: $decryptedData")
-                    
+
                     val jsonObject = org.json.JSONObject(decryptedData)
                     val possibleKeys = listOf("message", "Message", "error", "Error", "errorMessage", "error_message")
                     for (key in possibleKeys) {
@@ -354,19 +354,19 @@ class EncryptedAPIService private constructor(private val context: Context) {
                         Log.e(TAG, "Failed to parse 403 error response: ${ex.message}")
                     }
                 }
-                
+
                 throw APIError.Forbidden(errorMessage)
             }
             500 -> {
                 var errorMessage = "Server error. Please try again later."
-                
+
                 // Try to decrypt the response first
                 try {
                     Log.d(TAG, "Attempting to decrypt 500 error response")
                     val encryptedPayload = gson.fromJson(responseBody, EncryptedPayload::class.java)
                     val decryptedData = decryptResponse(encryptedPayload)
                     Log.d(TAG, "Decrypted 500 error response: $decryptedData")
-                    
+
                     val jsonObject = org.json.JSONObject(decryptedData)
                     val possibleKeys = listOf("message", "Message", "error", "Error", "errorMessage", "error_message")
                     for (key in possibleKeys) {
@@ -390,7 +390,7 @@ class EncryptedAPIService private constructor(private val context: Context) {
                         Log.e(TAG, "Failed to parse 500 error response: ${ex.message}")
                     }
                 }
-                
+
                 throw APIError.ServerError(errorMessage)
             }
             else -> {
@@ -425,13 +425,13 @@ class EncryptedAPIService private constructor(private val context: Context) {
                 Log.d(TAG, "400 Plain Error Response Body (full): $responseBody")
                 Log.d(TAG, "Plain response body length: ${responseBody.length}")
                 var errorMessage = "Invalid request. Please check your details."
-                
+
                 // Try multiple parsing approaches
                 try {
                     // Try to parse as plain JSON first
                     val jsonObject = org.json.JSONObject(responseBody)
                     Log.d(TAG, "Plain JSON Object keys: ${jsonObject.keys().asSequence().toList()}")
-                    
+
                     // Try different possible message field names
                     val possibleKeys = listOf("message", "Message", "error", "Error", "errorMessage", "error_message")
                     for (key in possibleKeys) {
@@ -450,7 +450,7 @@ class EncryptedAPIService private constructor(private val context: Context) {
                 } catch (e: Exception) {
                     Log.e(TAG, "Plain unexpected exception parsing JSON: ${e.message}")
                 }
-                
+
                 try {
                     val errorResponse = gson.fromJson(responseBody, APIErrorResponse::class.java)
                     Log.d(TAG, "Plain Gson parsed response: status=${errorResponse.status}, message=${errorResponse.message}")
@@ -462,7 +462,7 @@ class EncryptedAPIService private constructor(private val context: Context) {
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse 400 plain error response with Gson: ${e.message}")
                 }
-                
+
                 // Last resort: try to extract any text that looks like an error message
                 if (errorMessage == "Invalid request. Please check your details." && responseBody.contains("message", ignoreCase = true)) {
                     try {
@@ -480,7 +480,7 @@ class EncryptedAPIService private constructor(private val context: Context) {
                         Log.e(TAG, "Plain regex extraction failed: ${e.message}")
                     }
                 }
-                
+
                 Log.d(TAG, "Final plain error message for 400: $errorMessage")
                 throw APIError.BadRequest(errorMessage)
             }
@@ -556,5 +556,4 @@ class EncryptedAPIService private constructor(private val context: Context) {
             throw APIError.DecryptionFailed
         }
     }
-
 }

@@ -332,7 +332,8 @@ data class CalendarRequest(
 
 data class TicketsRequest(
     val email: String,
-    val category: String
+    val category: String,
+    val subcategory: String? = null
 )
 
 data class TicketsResponse(

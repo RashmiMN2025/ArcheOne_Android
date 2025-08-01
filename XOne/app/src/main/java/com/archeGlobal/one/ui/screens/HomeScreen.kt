@@ -48,7 +48,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -473,7 +472,7 @@ fun HomeScreenContent(
             val density = LocalDensity.current
             val keyboardHeight = WindowInsets.ime.getBottom(density)
             val isKeyboardVisible = keyboardHeight > 0
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()

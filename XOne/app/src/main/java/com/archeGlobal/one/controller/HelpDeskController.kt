@@ -154,7 +154,8 @@ class HelpDeskController(private val context: Context) {
 
         val request = TicketsRequest(
             email = userEmail,
-            category = category
+            category = category,
+            subcategory = null // Currently not filtering by subcategory when loading tickets
         )
 
         apiService.getTickets(request).enqueue(object : Callback<TicketsResponse> {
@@ -242,9 +243,19 @@ class HelpDeskController(private val context: Context) {
     }
 
     fun raiseTicket(question: String, description: String) {
-        val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
-        val encodedCategory = java.net.URLEncoder.encode(question, "UTF-8")
-        navigate("raise_concern/$encodedTitle?category=$encodedCategory")
+        // Get the FAQ by question to find its category
+        val faq = _model.value.faqItems.find { it.question == question }
+        if (faq != null) {
+            val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
+            val encodedCategory = java.net.URLEncoder.encode(faq.category, "UTF-8")
+            val encodedSubcategory = java.net.URLEncoder.encode(faq.question, "UTF-8")
+            navigate("raise_concern/$encodedTitle?category=$encodedCategory&subcategory=$encodedSubcategory")
+        } else {
+            // Fallback to old behavior if FAQ not found
+            val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
+            val encodedCategory = java.net.URLEncoder.encode(question, "UTF-8")
+            navigate("raise_concern/$encodedTitle?category=$encodedCategory")
+        }
     }
 
     fun navigateToRaiseConcern(title: String = "Raise a Concern") {
