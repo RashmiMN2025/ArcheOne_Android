@@ -66,7 +66,7 @@ class ProfileController(
     private fun formatLastLoginTime(timestamp: Long): String {
         return try {
             val date = java.util.Date(timestamp)
-            android.text.format.DateFormat.format("MMM dd, yyyy hh:mm a", date).toString()
+            android.text.format.DateFormat.format("dd MMM yyyy 'at' hh:mm a", date).toString()
         } catch (e: Exception) {
             Log.e("ProfileController", "Error formatting last login time", e)
             ""

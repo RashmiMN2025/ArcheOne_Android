@@ -41,6 +41,7 @@ import com.archeGlobal.one.model.LocationInfo
 import com.archeGlobal.one.model.StateInfo
 import com.archeGlobal.one.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationsScreen(
     navController: NavHostController,
@@ -137,85 +138,64 @@ fun LocationsScreen(
                 modifier = Modifier.fillMaxSize(),
                 containerColor = Color.Transparent,
                 topBar = {
-                    Column {
-                        Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .background(Color.Transparent),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Navigation icon
-                            Box(
-                                modifier = Modifier.width(48.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        if (locationController.isInEmergencyContactMode()) {
-                                            val stayInCurrentScreen =
-                                                locationController.onEmergencyBackPressed()
-                                            if (!stayInCurrentScreen) {
-                                                navController.navigate("sos?showHeader=$showHeader") {
-                                                    popUpTo("sos") { inclusive = true }
-                                                }
-                                            }
-                                        } else {
-                                            val state = locationController.getState()
-                                            val atTopLevel =
-                                                !state.showingStateList && !state.showingDetails
-                                            if (atTopLevel) {
-                                                onBackToHome()
-                                            } else {
-                                                if (!locationController.onBackPressed()) {
-                                                    navController.popBackStack()
-                                                }
-                                            }
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.ArrowBack,
-                                        contentDescription = "Back",
-                                        tint = Color.Black
-                                    )
-                                }
-                            }
-
-                            // Title
+                    TopAppBar(
+                        title = {
                             Box(
                                 modifier = Modifier
-                                    .weight(1f),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(start = 80.dp),
+                                contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
                                     text = when {
-                                        locationController.isInEmergencyContactMode() -> "Emergency Contact"
+                                        locationController.isInEmergencyContactMode() -> "Emergency Contacts"
                                         state.showingStateList -> "Regional Offices"
-                                        state.showingDetails -> {
-                                            state.selectedLocation?.name ?: "Locations"
-                                        }
-
+                                        state.showingDetails -> "Regional Offices"
                                         else -> "Locations"
                                     },
                                     fontSize = 20.sp,
                                     color = Color.Black,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
-
-                            // Right spacer
-                            Box(
-                                modifier = Modifier.width(48.dp)
+                        },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {
+                                    if (locationController.isInEmergencyContactMode()) {
+                                        val stayInCurrentScreen =
+                                            locationController.onEmergencyBackPressed()
+                                        if (!stayInCurrentScreen) {
+                                            navController.navigate("sos?showHeader=$showHeader") {
+                                                popUpTo("sos") { inclusive = true }
+                                            }
+                                        }
+                                    } else {
+                                        val state = locationController.getState()
+                                        val atTopLevel =
+                                            !state.showingStateList && !state.showingDetails
+                                        if (atTopLevel) {
+                                            onBackToHome()
+                                        } else {
+                                            if (!locationController.onBackPressed()) {
+                                                navController.popBackStack()
+                                            }
+                                        }
+                                    }
+                                }
                             ) {
-                                Spacer(modifier = Modifier.fillMaxWidth())
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.Black
+                                )
                             }
-                        }
-                    }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
+                        )
+                    )
                 }
             ) { padding ->
                 when {
@@ -873,7 +853,7 @@ private fun LocationDetails(
                             text = "Floor Map",
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Medium,
                             color = Color.White
                         )
                     }

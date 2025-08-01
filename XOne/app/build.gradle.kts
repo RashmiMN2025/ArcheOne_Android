@@ -111,6 +111,7 @@ dependencies {
     implementation(libs.core)
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.lifecycle.process)
+    implementation(libs.protolite.well.known.types)
 
     // Testing
     testImplementation(libs.junit)

@@ -33,7 +33,9 @@ import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -135,6 +137,7 @@ fun RaiseConcernScreen(
                         issueDescription = ""
 
                         // Go back after successful submission
+                        delay(2000)
                         onBackPressed()
                     } else {
                         Toast.makeText(
@@ -211,9 +214,9 @@ fun RaiseConcernScreen(
                     if (response.status) {
                         // Show success message based on anonymous status
                         val message = if (anonymous) {
-                            "Concern submitted anonymously with encryption"
+                            "Query submitted Successfully"
                         } else {
-                            "Concern submitted with your identity (encrypted)"
+                            "Query submitted Successfully"
                         }
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 
@@ -222,6 +225,7 @@ fun RaiseConcernScreen(
                         issueDescription = ""
 
                         // Go back after successful submission
+                        delay(2000)
                         onBackPressed()
                     } else {
                         Toast.makeText(
@@ -284,7 +288,6 @@ fun RaiseConcernScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 25.dp)
                 ) {
                     IconButton(onClick = onBackPressed) {
                         Icon(
@@ -298,6 +301,7 @@ fun RaiseConcernScreen(
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
@@ -305,7 +309,7 @@ fun RaiseConcernScreen(
                     Spacer(modifier = Modifier.width(48.dp))
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
                 // Category dropdown
                 Box(
@@ -318,7 +322,13 @@ fun RaiseConcernScreen(
                         value = selectedCategory ?: "",
                         onValueChange = { },
                         readOnly = true,
-                        placeholder = { Text("Select Issue category") },
+                        placeholder = {
+                            Text(
+                                "Select Issue category",
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 16.sp
+                            ) },
                         trailingIcon = {
                             if (!isCategoryLocked) {
                                 Icon(
@@ -334,9 +344,15 @@ fun RaiseConcernScreen(
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
                             focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.LightGray,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        textStyle = TextStyle(
+                            color = Color.Black,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 16.sp
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
@@ -424,7 +440,12 @@ fun RaiseConcernScreen(
                 OutlinedTextField(
                     value = issueDescription,
                     onValueChange = { issueDescription = it },
-                    placeholder = { Text("Please describe your issue") },
+                    placeholder = { Text(
+                        "Please describe your issue",
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp
+                    ) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 140.dp)
@@ -434,11 +455,16 @@ fun RaiseConcernScreen(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.LightGray,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    textStyle = TextStyle(color = Color.Black),
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp
+                    ),
                     minLines = 5,
                     maxLines = 8,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
@@ -475,6 +501,8 @@ fun RaiseConcernScreen(
                     Text(
                         text = "Submit",
                         color = Color.White,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
                         fontSize = 16.sp
                     )
                 }
@@ -516,6 +544,7 @@ fun RaiseConcernScreen(
                                 text = "Submit Anonymously?",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -526,6 +555,8 @@ fun RaiseConcernScreen(
                                 text = "Would you like to submit this concern anonymously? Your identity will not be disclosed.",
                                 fontSize = 16.sp,
                                 color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(bottom = 24.dp)
                             )
@@ -550,6 +581,8 @@ fun RaiseConcernScreen(
                                 Text(
                                     text = "Submit Anonymously",
                                     fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily,
                                     color = Color.White
                                 )
                             }
@@ -571,7 +604,9 @@ fun RaiseConcernScreen(
                                 Text(
                                     text = "Submit with Identity",
                                     fontSize = 16.sp,
-                                    color = Color.White
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily,
                                 )
                             }
                         }

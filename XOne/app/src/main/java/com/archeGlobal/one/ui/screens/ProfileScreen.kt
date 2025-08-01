@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -50,6 +51,9 @@ import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.preview.PreviewNavigator
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.ImageCache
+import com.google.type.TimeZone
+import java.text.SimpleDateFormat
+import java.util.Date
 
 @Composable
 fun ProfileScreen(
@@ -210,6 +214,7 @@ fun ProfileScreen(
                         LogoutConfirmationDialog(
                             onConfirm = {
                                 showLogoutDialog = false
+                                Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
                                 controller.onLogoutClick()
                             },
                             onDismiss = { showLogoutDialog = false }
@@ -246,91 +251,100 @@ private fun LogoutConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(16.dp)
+                .fillMaxWidth(1f)
         ) {
-            Column(
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFF6F4EE),
+                tonalElevation = 8.dp,
                 modifier = Modifier
+                    .align(Alignment.Center)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 15.dp, vertical = 30.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_logout1),
-                    contentDescription = "Logout",
-                    tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Log Out",
-                    fontSize = 20.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Are you sure you want to log out of\nyour account?",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 16.sp
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Button(
-                        onClick = onConfirm,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "Log Out",
-                            color = Color.White,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_logout1),
+                        contentDescription = "Logout",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(32.dp)
+                    )
 
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFABABAB)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Log Out",
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Are you sure you want to log out of your account?",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 20.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Cancel",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Button(
+                            onClick = onConfirm,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Log Out",
+                                color = Color.White,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFABABAB)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
@@ -410,11 +424,11 @@ private fun ProfileHeader(
             Box(
                 modifier = Modifier
                     .padding(top = 24.dp)
-                    .size(90.dp),
+                    .size(110.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
-                    modifier = Modifier.size(90.dp),
+                    modifier = Modifier.size(110.dp),
                     shape = CircleShape,
                     color = Color.LightGray
                 ) {
@@ -450,11 +464,12 @@ private fun ProfileHeader(
                 if (onProfilePictureClick != null) {
                     Surface(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(30.dp)
                             .align(Alignment.BottomEnd)
                             .clickable { showUploadDialog = true },
                         shape = CircleShape,
-                        color = Color.Black
+                        color = Color.Black,
+                        border = BorderStroke(1.5.dp, Color.White)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
@@ -526,14 +541,14 @@ fun ProfilePictureUploadDialog(
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(horizontal = 10.dp)
+                .padding(horizontal = 14.dp)
         ) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
                 Column(
@@ -556,7 +571,7 @@ fun ProfilePictureUploadDialog(
 
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(110.dp)
                             .padding(8.dp)
                             .clip(CircleShape)
                             .background(Color.LightGray),
@@ -593,7 +608,7 @@ fun ProfilePictureUploadDialog(
 
                     Text(
                         text = if (!profilePicture.isNullOrEmpty()) "Choose a method to edit your profile picture" else "Choose a method to upload your profile picture",
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         color = Color.Gray,
@@ -601,7 +616,7 @@ fun ProfilePictureUploadDialog(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         textAlign = TextAlign.Center,
-                        lineHeight = 16.sp
+                        lineHeight = 18.sp
                     )
 
                     Row(
@@ -610,29 +625,6 @@ fun ProfilePictureUploadDialog(
                             .padding(bottom = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Button(
-                            onClick = onCameraClick,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_camera),
-                                contentDescription = "Camera",
-                                modifier = Modifier.padding(end = 8.dp),
-                                tint = Color.White
-                            )
-                            Text(
-                                text = "Camera",
-                                fontSize = 13.sp,
-                                color = Color.White,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-
                         Button(
                             onClick = onGalleryClick,
                             modifier = Modifier
@@ -655,6 +647,29 @@ fun ProfilePictureUploadDialog(
                                 fontWeight = FontWeight.Medium
                             )
                         }
+
+                        Button(
+                            onClick = onCameraClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_camera),
+                                contentDescription = "Camera",
+                                modifier = Modifier.padding(end = 8.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                text = "Camera",
+                                fontSize = 13.sp,
+                                color = Color.White,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
 
                     if (!profilePicture.isNullOrEmpty()) {
@@ -667,7 +682,7 @@ fun ProfilePictureUploadDialog(
                             Button(
                                 onClick = { onDeleteClick?.invoke() },
                                 modifier = Modifier
-                                    .width(120.dp)
+                                    .width(125.dp)
                                     .height(40.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFFE0B4AA),
@@ -678,6 +693,12 @@ fun ProfilePictureUploadDialog(
                                 border = BorderStroke(1.dp, Color(0xFFDD3825)),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color(0xFFDD3825),
+                                    modifier = Modifier.size(22.dp)
+                                )
                                 Text(
                                     text = "Delete",
                                     fontSize = 13.sp,
@@ -781,7 +802,7 @@ private fun MenuItem(
 
 fun getIconForMenuItem(icon: String): Int {
     return when (icon) {
-        "person" -> R.drawable.profile
+        "person" -> R.drawable.ic_user
         "home" -> R.drawable.ic_home1
         "phone" -> R.drawable.ic_call
         "document" -> R.drawable.ic_doc

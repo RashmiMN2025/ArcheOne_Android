@@ -4,12 +4,14 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.MutableState
@@ -25,6 +27,7 @@ import com.archeGlobal.one.utils.QRCodeGenerator
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
 
 interface BusinessCardController {
     val showEditCardDialog: MutableState<Boolean>
@@ -33,7 +36,7 @@ interface BusinessCardController {
     fun onDownloadCard(bitmap: Bitmap)
     fun onShareCard(bitmap: Bitmap)
     fun onEditCard()
-    fun onCardUpdated(newLocation: String, newPhone: String)
+    fun onCardUpdated(newLocation: String, newCountryCode: String, newPhoneNumber: String)
     fun refreshQRCode(isPortraitMode: Boolean)
 }
 
@@ -51,7 +54,7 @@ class BusinessCardControllerImpl(
         showEditCardDialog.value = true
     }
 
-    override fun onCardUpdated(newLocation: String, newPhone: String) {
+    override fun onCardUpdated(newLocation: String, newCountryCode: String, newPhoneNumber: String) {
         var isValid = true
         var message = ""
 
@@ -60,9 +63,17 @@ class BusinessCardControllerImpl(
             message = "Location cannot be empty!"
         }
 
-        if (newPhone.isEmpty()) {
+        if (newCountryCode.isEmpty()) {
             isValid = false
-            message = if (message.isEmpty()) "Phone number cannot be empty!" else "Location and phone number cannot be empty!"
+            message = if (message.isEmpty()) "Country code cannot be empty!" else "$message Country code cannot be empty!"
+        }
+
+        if (newPhoneNumber.isEmpty()) {
+            isValid = false
+            message = if (message.isEmpty()) "Phone number cannot be empty!" else "$message Phone number cannot be empty!"
+        } else if (newPhoneNumber.length != 10 || !newPhoneNumber.all { it.isDigit() }) {
+            isValid = false
+            message = if (message.isEmpty()) "Phone number must be 10 digits!" else "$message Phone number must be 10 digits!"
         }
 
         if (isValid) {
@@ -74,7 +85,7 @@ class BusinessCardControllerImpl(
 
             val updatedCard = _businessCard.value.copy(
                 location = locationValue,
-                phone = formatPhoneNumber(newPhone)
+                phone = formatPhoneNumber(newCountryCode, newPhoneNumber)
             )
             _businessCard.value = generateQRCodeForCard(updatedCard)
 
@@ -85,52 +96,22 @@ class BusinessCardControllerImpl(
         }
     }
 
-    private fun formatPhoneNumber(phone: String): String {
-        val cleanPhone = phone.trim().replace(" ", "").replace("-", "")
+    private fun formatPhoneNumber(countryCode: String, phoneNumber: String): String {
+        // Clean inputs
+        val cleanCountryCode = countryCode.trim().replace(" ", "").take(4)
+        val cleanPhoneNumber = phoneNumber.filter { it.isDigit() }.take(10)
 
-        if (cleanPhone.isEmpty()) return ""
+        // Default to +91 if country code is empty
+        val finalCountryCode = if (cleanCountryCode.isEmpty()) "+91" else cleanCountryCode
 
-        // Remove any non-digit characters except + at the beginning
-        val digitsOnly = if (cleanPhone.startsWith("+")) {
-            "+" + cleanPhone.substring(1).filter { it.isDigit() }
-        } else {
-            cleanPhone.filter { it.isDigit() }
+        // Pad or truncate phone number to 10 digits
+        val finalPhoneNumber = when {
+            cleanPhoneNumber.length < 10 -> cleanPhoneNumber.padEnd(10, '0')
+            else -> cleanPhoneNumber
         }
 
-        return when {
-            // Already has +91 prefix
-            digitsOnly.startsWith("+91") -> {
-                val numberPart = digitsOnly.substring(3)
-                when {
-                    numberPart.length == 10 -> "+91 - $numberPart" // Perfect: +91 + 10 digits = 12 total
-                    numberPart.length < 10 -> "+91 - ${numberPart.padEnd(10, '0')}" // Pad with zeros if needed
-                    else -> "+91 - ${numberPart.padEnd(10, '0')}" // Truncate if too long
-                }
-            }
-            // Starts with 91 and has exactly 12 digits total (treat 91 as country code)
-            digitsOnly.startsWith("91") && digitsOnly.length == 12 -> {
-                "+91 - ${digitsOnly.substring(2)}"
-            }
-            // Has exactly 10 digits (complete Indian mobile number)
-            digitsOnly.length == 10 -> {
-                "+91 - $digitsOnly"
-            }
-            // Starts with 91 but not 12 digits total (91 might be part of the number)
-            digitsOnly.startsWith("91") -> {
-                when {
-                    digitsOnly.length < 10 -> "+91 - ${digitsOnly.padEnd(10, '0')}" // Pad with zeros if needed
-                    digitsOnly.length > 10 && digitsOnly.length != 12 -> "+91 - ${digitsOnly.take(10)}" // Truncate if too long but not 12 digits
-                    else -> "+91 - $digitsOnly" // Fallback
-                }
-            }
-            // Any other case
-            else -> {
-                when {
-                    digitsOnly.length < 10 -> "+91 - ${digitsOnly.padEnd(10, '0')}" // Pad with zeros if needed
-                    else -> "+91 - ${digitsOnly.take(10)}" // Truncate if too long
-                }
-            }
-        }
+        // Format as "<countryCode> - <phoneNumber>"
+        return "$finalCountryCode - $finalPhoneNumber"
     }
 
     private val notificationManager by lazy {
@@ -192,7 +173,7 @@ class BusinessCardControllerImpl(
                 designation = userData.designation,
                 department = userData.department,
                 email = userData.email,
-                phone = formatPhoneNumber(userData.mobile),
+                phone = formatPhoneNumber("+91", userData.mobile),
                 location = locationValue, // Updated location with Bangalore fallback
                 website = "www.arche.global"
             )
@@ -233,66 +214,69 @@ class BusinessCardControllerImpl(
 
     override fun onDownloadCard(bitmap: Bitmap) {
         try {
-            // Create a file in the Downloads directory
             val fileName = "business_card_${System.currentTimeMillis()}.png"
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val businessCardsDir = File(downloadsDir, "BusinessCards")
-            if (!businessCardsDir.exists()) {
-                businessCardsDir.mkdirs()
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/BusinessCards")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
             }
 
-            val imageFile = File(businessCardsDir, fileName)
-            FileOutputStream(imageFile).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-            }
+            val resolver = context.contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
 
-            if (checkNotificationPermission()) {
-                // Create intent to open the file
-                val contentUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider",
-                    imageFile
-                )
-
-                val viewIntent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(contentUri, "image/png")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            uri?.let {
+                resolver.openOutputStream(it).use { outputStream: OutputStream? ->
+                    outputStream?.let { stream ->
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        stream.flush()
+                    }
                 }
 
-                val pendingIntent = PendingIntent.getActivity(
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(it, contentValues, null, null)
+
+                if (checkNotificationPermission()) {
+                    val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "image/png")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+
+                    val pendingIntent = PendingIntent.getActivity(
+                        context,
+                        0,
+                        viewIntent,
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+
+                    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_notification_download)
+                        .setContentTitle("Business Card Downloaded")
+                        .setContentText("Tap to view your business card")
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent)
+                        .build()
+
+                    val notificationId = System.currentTimeMillis().toInt()
+                    notificationManager?.notify(notificationId, notification)
+                }
+
+                Toast.makeText(
                     context,
-                    0,
-                    viewIntent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                )
-
-                // Build notification
-                val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_notification_download)
-                    .setContentTitle("Business Card Downloaded")
-                    .setContentText("Tap to view your business card")
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setAutoCancel(true)
-                    .setContentIntent(pendingIntent)
-                    .build()
-
-                // Use a unique notification ID and safely access notificationManager
-                val notificationId = System.currentTimeMillis().toInt()
-                notificationManager?.notify(notificationId, notification)
+                    "Business card downloaded successfully. Check Photos or Gallery",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } ?: run {
+                throw IOException("Failed to create media store entry")
             }
-
-            // Show toast
-            android.widget.Toast.makeText(
-                context,
-                "Business card downloaded successfully. Check Photos or Gallery",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
         } catch (e: IOException) {
             e.printStackTrace()
-            android.widget.Toast.makeText(
+            Toast.makeText(
                 context,
                 "Failed to save business card",
-                android.widget.Toast.LENGTH_SHORT
+                Toast.LENGTH_SHORT
             ).show()
         }
     }

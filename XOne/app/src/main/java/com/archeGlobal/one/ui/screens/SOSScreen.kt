@@ -106,7 +106,7 @@ fun SOSScreen(
                                 .fillMaxWidth()
                                 .padding(16.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color.White)
+                                .background(Color(0xFFF6F4EE))
                                 .padding(16.dp)
                         ) {
                             Column(
@@ -258,7 +258,7 @@ fun SOSScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
+                            .background(Color(0xFFF6F4EE))
                             .padding(16.dp)
                     ) {
                         Column(

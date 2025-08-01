@@ -543,14 +543,14 @@ private fun LegendItem(color: Color, text: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(8.dp)
+                .size(10.dp)
                 .clip(CircleShape)
                 .background(color)
         )
         Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = text,
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Black
         )

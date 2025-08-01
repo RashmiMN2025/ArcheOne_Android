@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -84,7 +85,7 @@ fun SOSDetailScreen(
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp)
-                        .padding(bottom = 16.dp) // Add extra padding at the bottom to prevent content from being hidden
+                        .padding(bottom = 12.dp) // Add extra padding at the bottom to prevent content from being hidden
                 ) {
                     Spacer(modifier = Modifier.height(5.dp))
 
@@ -97,6 +98,7 @@ fun SOSDetailScreen(
                             .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
                             .build(),
                         contentDescription = blog.name,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(300.dp) // Increased height for better visibility

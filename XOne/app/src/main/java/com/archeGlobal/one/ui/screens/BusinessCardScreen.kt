@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,7 +59,36 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import kotlinx.coroutines.launch
 
-// Composable to display a QR code bitmap using Canvas
+// Function to crop the white border from the QR code bitmap
+private fun cropQRCodeBitmap(bitmap: Bitmap, borderFraction: Float = 0.075f): Bitmap {
+    val borderSize = (bitmap.width * borderFraction).toInt()
+    val clippedSize = bitmap.width - (2 * borderSize)
+    try {
+        // Create a new bitmap with ARGB_8888 for transparency
+        val croppedBitmap = Bitmap.createBitmap(
+            clippedSize,
+            clippedSize,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(croppedBitmap)
+        val paint = Paint().apply {
+            isAntiAlias = true
+        }
+        // Draw the cropped portion
+        canvas.drawBitmap(
+            bitmap,
+            Rect(borderSize, borderSize, bitmap.width - borderSize, bitmap.height - borderSize),
+            Rect(0, 0, clippedSize, clippedSize),
+            paint
+        )
+        return croppedBitmap
+    } catch (e: IllegalArgumentException) {
+        e.printStackTrace()
+        return bitmap // Return original if cropping fails
+    }
+}
+
+// Composable to display a QR code bitmap with clipped borders
 @Composable
 private fun ComposeQRCodeImage(
     bitmap: Bitmap,
@@ -66,68 +97,28 @@ private fun ComposeQRCodeImage(
 ) {
     Box(
         modifier = modifier
-            .background(Color(0xFFF6F4EE))
-            .clip(RoundedCornerShape(4.dp)) // Optional: slight rounding for QR code edges
+            .background(Color.Transparent) // Ensure transparent background
+            .clip(RoundedCornerShape(8.dp))
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            // Calculate the size to clip the white border (assuming a standard QR code margin)
-            val borderSize = bitmap.width * 0.05f // Adjust based on typical QR code margin (5% of width)
-            val clippedSize = bitmap.width - (2 * borderSize)
-            val srcRect = Rect(
-                borderSize.toInt(),
-                borderSize.toInt(),
-                (borderSize + clippedSize).toInt(),
-                (borderSize + clippedSize).toInt()
-            )
-            val dstRect = RectF(0f, 0f, size.width, size.height)
-
-            // Draw the clipped QR code bitmap
-            drawContext.canvas.nativeCanvas.drawBitmap(
-                bitmap,
-                srcRect,
-                dstRect,
-                null
-            )
-        }
+        Image(
+            bitmap = cropQRCodeBitmap(bitmap).asImageBitmap(),
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
+        )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CustomTopAppBar(
     onBackPressed: () -> Unit,
     onShareClick: () -> Unit
 ) {
-    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
-
-    Column {
-        Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(Color.Transparent),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Back button
+    TopAppBar(
+        title = {
             Box(
-                modifier = Modifier.width(48.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = onBackPressed
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = TextPrimary
-                    )
-                }
-            }
-
-            // Title
-            Box(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -139,25 +130,34 @@ private fun CustomTopAppBar(
                     fontWeight = FontWeight.Bold
                 )
             }
-
-            // Share button
-            Box(
-                modifier = Modifier.width(48.dp),
-                contentAlignment = Alignment.Center
+        },
+        navigationIcon = {
+            IconButton(
+                onClick = onBackPressed
             ) {
-                IconButton(
-                    onClick = onShareClick,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.share),
-                        contentDescription = "Share",
-                        tint = TextPrimary
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_back),
+                    contentDescription = "Back",
+                    tint = TextPrimary
+                )
             }
-        }
-    }
+        },
+        actions = {
+            IconButton(
+                onClick = onShareClick,
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.share),
+                    contentDescription = "Share",
+                    tint = TextPrimary
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
+        )
+    )
 }
 
 @Composable
@@ -568,6 +568,17 @@ fun BusinessCardScreen(
         // Show Edit Card Dialog
         if (controller.showEditCardDialog.value) {
             var newPhone by remember(businessCard.phone) { mutableStateOf(businessCard.phone) }
+            // Split phone number into country code and number
+            var countryCode by remember(businessCard.phone) {
+                mutableStateOf(
+                    businessCard.phone.split(" - ").firstOrNull()?.take(4) ?: "+91"
+                )
+            }
+            var phoneNumber by remember(businessCard.phone) {
+                mutableStateOf(
+                    businessCard.phone.split(" - ").getOrNull(1)?.take(10) ?: ""
+                )
+            }
 
             // Define keywords for designation check
             val keywords = listOf(
@@ -747,8 +758,10 @@ fun BusinessCardScreen(
                             OutlinedTextField(
                                 value = customLocation,
                                 onValueChange = {
-                                    customLocation = it
-                                    newLocation = it
+                                    // Allow only letters, numbers, and spaces
+                                    val filtered = it.filter { it.isLetterOrDigit() || it.isWhitespace() }
+                                    customLocation = filtered
+                                    newLocation = filtered
                                 },
                                 placeholder = {
                                     Text(
@@ -761,7 +774,7 @@ fun BusinessCardScreen(
                                 singleLine = true,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(56.dp),
+                                    .height(52.dp),
                                 colors = TextFieldDefaults.colors(
                                     focusedContainerColor = Color.White,
                                     unfocusedContainerColor = Color.White,
@@ -786,40 +799,107 @@ fun BusinessCardScreen(
                         if (canEditPhone) {
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Phone number field
-                            OutlinedTextField(
-                                value = newPhone,
-                                onValueChange = { newPhone = it },
-                                placeholder = {
-                                    Text(
-                                        "Enter phone number",
-                                        color = Color.Gray,
+                            // Phone number fields (Country Code + Number)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Country Code field
+                                OutlinedTextField(
+                                    value = countryCode,
+                                    onValueChange = { newValue ->
+                                        // Allow only digits and optional leading '+'
+                                        val filtered = newValue.filter { it.isDigit() || it == '+' }
+                                        // Limit to 4 characters, ensure '+' is only at start
+                                        if (filtered.length <= 4 && (filtered.startsWith("+") || filtered.all { it.isDigit() })) {
+                                            countryCode = filtered
+                                        }
+                                    },
+                                    placeholder = {
+                                        Text(
+                                            text = "Code",
+                                            color = Color.Gray,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 14.sp
+                                        )
+                                    },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(0.3f)
+                                        .height(52.dp),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        cursorColor = Color.Black,
+                                        focusedIndicatorColor = Color.Black,
+                                        unfocusedIndicatorColor = Color.Black,
+                                        focusedPlaceholderColor = Color.Gray,
+                                        unfocusedPlaceholderColor = Color.Gray
+                                    ),
+                                    textStyle = androidx.compose.ui.text.TextStyle(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 14.sp
-                                    ) },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    cursorColor = Color.Black,
-                                    focusedIndicatorColor = Color.Black,
-                                    unfocusedIndicatorColor = Color.Black,
-                                    focusedPlaceholderColor = Color.Gray,
-                                    unfocusedPlaceholderColor = Color.Gray
-                                ),
-                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                )
+
+                                Text(
+                                    text = "-",
+                                    color = Color.Black,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            )
+                                    fontSize = 16.sp
+                                )
+
+                                // Phone Number field
+                                OutlinedTextField(
+                                    value = phoneNumber,
+                                    onValueChange = { newValue ->
+                                        // Allow only digits, limit to 10
+                                        val filtered = newValue.filter { it.isDigit() }
+                                        if (filtered.length <= 10) {
+                                            phoneNumber = filtered
+                                        }
+                                    },
+                                    placeholder = {
+                                        Text(
+                                            text = "Enter Phone Number",
+                                            color = Color.Gray,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 14.sp
+                                        )
+                                    },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(0.7f)
+                                        .height(52.dp),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        cursorColor = Color.Black,
+                                        focusedIndicatorColor = Color.Black,
+                                        unfocusedIndicatorColor = Color.Black,
+                                        focusedPlaceholderColor = Color.Gray,
+                                        unfocusedPlaceholderColor = Color.Gray
+                                    ),
+                                    textStyle = androidx.compose.ui.text.TextStyle(
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                )
+                            }
                         }
                     }
                 },
@@ -849,11 +929,18 @@ fun BusinessCardScreen(
 
                         Button(
                             onClick = {
-                                // If user can't edit phone, pass the existing phone number
                                 if (canEditPhone) {
-                                    controller.onCardUpdated(newLocation, newPhone)
+                                    if (phoneNumber.length == 10 && countryCode.isNotEmpty()) {
+                                        controller.onCardUpdated(newLocation, countryCode, phoneNumber)
+                                    } else {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            if (countryCode.isEmpty()) "Country code cannot be empty!" else "Phone number must be 10 digits!",
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 } else {
-                                    controller.onCardUpdated(newLocation, businessCard.phone)
+                                    controller.onCardUpdated(newLocation, businessCard.phone.split(" - ").firstOrNull() ?: "+91", businessCard.phone.split(" - ").getOrNull(1) ?: "")
                                 }
                             },
                             modifier = Modifier
@@ -881,54 +968,40 @@ fun BusinessCardScreen(
 }
 
 private fun captureCardArea(view: View, cardBounds: android.graphics.Rect): Bitmap {
-    // Take a screenshot of the entire view
     view.isDrawingCacheEnabled = true
     val fullBitmap = Bitmap.createBitmap(view.drawingCache)
     view.isDrawingCacheEnabled = false
 
     return try {
-        // Create a bitmap with transparency support
         val result = Bitmap.createBitmap(
             cardBounds.width(),
             cardBounds.height(),
             Bitmap.Config.ARGB_8888
         )
-
-        // Create a canvas to draw the cropped area
-        val canvas = android.graphics.Canvas(result)
-
-        // Create a paint object with anti-aliasing
-        val paint = android.graphics.Paint().apply {
+        val canvas = Canvas(result)
+        val paint = Paint().apply {
             isAntiAlias = true
         }
-
-        // Create a path for rounded corners
-        val path = android.graphics.Path().apply {
-            // Add a rounded rectangle path
-            val cornerRadius = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                16f,
-                view.resources.displayMetrics
-            )
+        val cornerRadius = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            16f,
+            view.resources.displayMetrics
+        )
+        val path = Path().apply {
             addRoundRect(
-                android.graphics.RectF(0f, 0f, cardBounds.width().toFloat(), cardBounds.height().toFloat()),
+                RectF(0f, 0f, cardBounds.width().toFloat(), cardBounds.height().toFloat()),
                 cornerRadius,
                 cornerRadius,
-                android.graphics.Path.Direction.CW
+                Path.Direction.CW
             )
         }
-
-        // Clip the canvas to the rounded rectangle path
         canvas.clipPath(path)
-
-        // Draw the cropped portion of the original bitmap
         canvas.drawBitmap(
             fullBitmap,
             -cardBounds.left.toFloat(),
             -cardBounds.top.toFloat(),
             paint
         )
-
         result
     } catch (e: IllegalArgumentException) {
         e.printStackTrace()

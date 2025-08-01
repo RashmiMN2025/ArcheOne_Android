@@ -36,6 +36,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.XOneTheme
 import org.json.JSONObject
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 class WebViewActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -99,7 +100,8 @@ class WebViewActivity : ComponentActivity() {
                                         Text(
                                             text = title,
                                             fontSize = 18.sp,
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontFamily = GraphikFontFamily,
                                             color = Color.Black
                                         )
                                     }
@@ -173,7 +175,8 @@ class WebViewActivity : ComponentActivity() {
                                     Text(
                                         text = title,
                                         fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontFamily = GraphikFontFamily,
                                         color = Color.Black
                                     )
                                 }
@@ -228,7 +231,8 @@ class WebViewActivity : ComponentActivity() {
                                             Text(
                                                 text = "SOS",
                                                 color = Color.White,
-                                                fontWeight = FontWeight.Bold,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontFamily = GraphikFontFamily,
                                                 fontSize = 12.sp
                                             )
                                         }

@@ -212,7 +212,7 @@ fun UserDocumentsScreen(
                                     text = "Note: You can only upload PDF files. The file size limit is 5MB.",
                                     fontSize = 14.sp,
                                     color = Color.Gray,
-                                    lineHeight = 17.sp,
+                                    lineHeight = 22.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -265,8 +265,8 @@ fun DocumentItem(
             Text(
                 text = document.document_name,
                 modifier = Modifier.padding(start = 12.dp),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.Black
             )
         }
@@ -290,12 +290,12 @@ fun DocumentItem(
                         painter = painterResource(id = R.drawable.ic_view_eye),
                         contentDescription = "View",
                         tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                     Text(
                         text = "View",
                         modifier = Modifier.padding(start = 8.dp),
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black
@@ -315,12 +315,12 @@ fun DocumentItem(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
                             tint = Color(0xFFDD3825),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                         Text(
                             text = "Delete",
                             modifier = Modifier.padding(start = 8.dp),
-                            fontSize = 14.sp,
+                            fontSize = 16.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black

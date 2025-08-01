@@ -38,11 +38,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TodoController
 import com.archeGlobal.one.model.TaskPriority
 import com.archeGlobal.one.model.TodoTask
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -53,11 +55,11 @@ fun TodoScreen(
     onBackPressed: () -> Unit
 ) {
     var newTask by remember { mutableStateOf<TodoTask?>(null) } // <-- Add this line
-
     val tasksForSelectedDay = controller.getTasksForSelectedDay()
     val currentNewTask = newTask
+    val currentDayOfWeek = LocalDate.now().dayOfWeek.value
+    val isPastDay = controller.model.selectedDay < currentDayOfWeek
 
-    // --- Clear newTask if there are other tasks for the day (not just the new one) ---
     LaunchedEffect(tasksForSelectedDay.size, controller.model.selectedDay) {
         // If there are no tasks, clear newTask
         if (tasksForSelectedDay.isEmpty() && newTask != null) {
@@ -169,14 +171,16 @@ fun TodoScreen(
 
                 // Add Task Button at bottom
                 Button(
-                    onClick = controller::startAddTask,
+                    onClick = { if (!isPastDay) controller.startAddTask() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE83A25) // Red color from image
+                        containerColor = if (isPastDay) Color.Gray else Color(0xFFE83A25),
+                        disabledContainerColor = Color.Gray
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isPastDay
                 ) {
                     Text(
                         text = "Add Task",
@@ -201,7 +205,7 @@ fun TodoScreen(
             }
 
             // Add Task Dialog
-            if (controller.model.isAddingTask) {
+            if (controller.model.isAddingTask && !isPastDay) {
                 TaskFormDialog(
                     isEditing = false,
                     initialTask = null,
@@ -847,253 +851,261 @@ fun TaskFormDialog(
     val dialogWidth = screenWidthDp - 40.dp // Match the card container's horizontal padding
 
     // Full-screen overlay
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x80000000)) // semi-transparent background
-            .clickable(onClick = onCancel) // dismiss on outside click
+    Dialog(
+        onDismissRequest = onCancel,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false
+        )
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = Color.White,
-            tonalElevation = 8.dp,
+        Box(
             modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 40.dp) // match your card container
+                .fillMaxWidth(1f)
         ) {
-            Column(
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFF6F4EE),
+                tonalElevation = 8.dp,
                 modifier = Modifier
+                    .align(Alignment.Center)
                     .fillMaxWidth()
-                    .padding(18.dp)
+                    .padding(horizontal = 15.dp, vertical = 30.dp) // match your card container
             ) {
-                Text(
-                    text = if (isEditing) "Edit Task" else "Add Task",
-                    fontSize = 22.sp,
-                    fontFamily = GraphikFontFamily,
-                    color = Color.Black,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Task Note section
-                Text(
-                    text = "Task Note",
-                    fontSize = 18.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Task input field
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    placeholder = { Text("Please enter your task details") },
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 120.dp), // Make text field taller
-                    textStyle = TextStyle(
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.LightGray,
-                        focusedBorderColor = Color.LightGray,
-                        unfocusedTextColor = Color.LightGray,
-                        focusedTextColor = Color.Black
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Priority selection - segmented control
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFEBEBEB) // Light gray background
-                    )
+                        .padding(18.dp)
                 ) {
-                    Row(
+                    Text(
+                        text = if (isEditing) "Edit Task" else "Add Task",
+                        fontSize = 22.sp,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Black,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Task Note section
+                    Text(
+                        text = "Task Note",
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Task input field
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        placeholder = { Text("Please enter your task details") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val options = listOf(TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH)
-                        options.forEachIndexed { index, option ->
-                            val isSelected = priority == option
+                            .heightIn(min = 120.dp), // Make text field taller
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.LightGray,
+                            focusedBorderColor = Color.LightGray,
+                            unfocusedTextColor = Color.LightGray,
+                            focusedTextColor = Color.Black
+                        )
+                    )
 
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        if (isSelected) Color.White else Color.Transparent
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Priority selection - segmented control
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(45.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFEBEBEB) // Light gray background
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val options =
+                                listOf(TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH)
+                            options.forEachIndexed { index, option ->
+                                val isSelected = priority == option
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (isSelected) Color.White else Color.Transparent
+                                        )
+                                        .clickable { priority = option }
+                                        .padding(vertical = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = option.name.capitalize(),
+                                        color = Color.Black,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Medium
                                     )
-                                    .clickable { priority = option }
-                                    .padding(vertical = 6.dp),
-                                contentAlignment = Alignment.Center
+                                }
+
+                                // Add divider between priorities except after the last one
+                                if (index < options.lastIndex) {
+                                    Divider(
+                                        color = Color(0xFFD0D0D0),
+                                        modifier = Modifier
+                                            .fillMaxHeight(0.7f)
+                                            .width(1.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Time range section
+                    Text(
+                        text = "Time Range",
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Combined time range selection box
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFEBEBEB) // Light gray
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // From time
+                            Row(
+                                modifier = Modifier
+                                    .clickable { showStartTimePicker = true },
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = option.name.capitalize(),
+                                    text = "From:",
+                                    fontSize = 18.sp,
                                     color = Color.Black,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Medium
+                                    fontWeight = FontWeight.Medium
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Text(
+                                    text = startTimeFormatted,
+                                    fontSize = 18.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
                                 )
                             }
 
-                            // Add divider between priorities except after the last one
-                            if (index < options.lastIndex) {
-                                Divider(
-                                    color = Color(0xFFD0D0D0),
-                                    modifier = Modifier
-                                        .fillMaxHeight(0.7f)
-                                        .width(1.dp)
+                            // Separator
+                            Box(
+                                modifier = Modifier
+                                    .width(1.dp)
+                                    .height(24.dp)
+                                    .background(Color.Gray)
+                            )
+
+                            // To time
+                            Row(
+                                modifier = Modifier
+                                    .clickable { showEndTimePicker = true },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "To:",
+                                    fontSize = 18.sp,
+                                    color = Color.Black,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Text(
+                                    text = endTimeFormatted,
+                                    fontSize = 18.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
                                 )
                             }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // Time range section
-                Text(
-                    text = "Time Range",
-                    fontSize = 18.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Combined time range selection box
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFEBEBEB) // Light gray
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Add Task button
+                    Button(
+                        onClick = {
+                            val startTime = LocalTime.of(startTimeHour, startTimeMinute)
+                            val endTime = LocalTime.of(endTimeHour, endTimeMinute)
+                            onSave(title, priority, startTime, endTime)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825) // Red button
+                        ),
+                        shape = RoundedCornerShape(24.dp)
                     ) {
-                        // From time
-                        Row(
-                            modifier = Modifier
-                                .clickable { showStartTimePicker = true },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "From:",
-                                fontSize = 18.sp,
-                                color = Color.Black,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Text(
-                                text = startTimeFormatted,
-                                fontSize = 18.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            )
-                        }
-
-                        // Separator
-                        Box(
-                            modifier = Modifier
-                                .width(1.dp)
-                                .height(24.dp)
-                                .background(Color.Gray)
+                        Text(
+                            text = if (isEditing) "Save Task" else "Add Task",
+                            fontSize = 20.sp,
+                            color = Color.White,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
-
-                        // To time
-                        Row(
-                            modifier = Modifier
-                                .clickable { showEndTimePicker = true },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "To:",
-                                fontSize = 18.sp,
-                                color = Color.Black,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Text(
-                                text = endTimeFormatted,
-                                fontSize = 18.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.Black
-                            )
-                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                // Add Task button
-                Button(
-                    onClick = {
-                        val startTime = LocalTime.of(startTimeHour, startTimeMinute)
-                        val endTime = LocalTime.of(endTimeHour, endTimeMinute)
-                        onSave(title, priority, startTime, endTime)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFDD3825) // Red button
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Text(
-                        text = if (isEditing) "Save Task" else "Add Task",
-                        fontSize = 20.sp,
-                        color = Color.White,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 4.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Close text button
-                TextButton(
-                    onClick = onCancel,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text(
-                        text = "Close",
-                        color = Color(0xFFDD3825), // Red text
-                        fontSize = 20.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal
-                    )
+                    // Close text button
+                    TextButton(
+                        onClick = onCancel,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = "Close",
+                            color = Color(0xFFDD3825), // Red text
+                            fontSize = 20.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
             }
         }

@@ -460,7 +460,7 @@ fun MonthDetailScreen(
                             .fillMaxWidth()
                             .height(400.dp)
                             .padding(horizontal = 12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                         shape = RoundedCornerShape(16.dp)
                     ) {
@@ -909,7 +909,7 @@ fun HolidayDetailsBox(
                 indication = null,
                 onClick = { /* Prevent click from reaching background */ }
             ),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -1123,14 +1123,14 @@ private fun LegendItem(color: Color, text: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(8.dp)
+                .size(10.dp)
                 .clip(CircleShape)
                 .background(color)
         )
         Spacer(modifier = Modifier.width(3.dp))
         Text(
             text = text,
-            fontSize = 10.sp,
+            fontSize = 12.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Black
         )
@@ -1159,7 +1159,7 @@ fun MilestoneDetailsBox(
                 indication = null,
                 onClick = { /* Prevent click from reaching background */ }
             ),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -1288,17 +1288,17 @@ private fun formatMilestoneDate(dateStr: String): String {
 
         // Parse DD-MM-YYYY format
         val day = parts[0].toInt()
-        val monthNum = parts[1].toInt() // Renamed to avoid shadowing
+        val monthNum = parts[1].toInt()
         val year = parts[2].toInt()
 
-        // Format as "Month DD, YYYY"
+        // Format as "DD Month YYYY"
         val monthName = when (monthNum) {
             1 -> "January"; 2 -> "February"; 3 -> "March"; 4 -> "April"; 5 -> "May"; 6 -> "June"
             7 -> "July"; 8 -> "August"; 9 -> "September"; 10 -> "October"; 11 -> "November"; 12 -> "December"
             else -> "Unknown"
         }
 
-        "$monthName $day, $year"
+        "$day $monthName $year"
     } catch (e: Exception) {
         // On any error, return the original string
         dateStr
@@ -1346,7 +1346,7 @@ fun GlobalEventItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
