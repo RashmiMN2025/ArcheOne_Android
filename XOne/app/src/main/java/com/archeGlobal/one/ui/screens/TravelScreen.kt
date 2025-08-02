@@ -929,9 +929,9 @@ fun TravelScreen(
                                     onCheckedChange = { controller.toggleStayRequired(it) },
                                     modifier = Modifier.scale(1.2f),
                                     colors = androidx.compose.material.SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFF4CAF50),
+                                        checkedThumbColor = Color(0xFFF6F4EE),
                                         checkedTrackColor = Color(0xFFADE1B6),
-                                        uncheckedThumbColor = Color.Gray,
+                                        uncheckedThumbColor =  Color(0xFFF6F4EE),
                                         uncheckedTrackColor = Color.LightGray
                                     )
                                 )
@@ -1046,9 +1046,9 @@ fun TravelScreen(
                                         onCheckedChange = { controller.toggleMealPreference(it) },
                                         modifier = Modifier.scale(1.2f),
                                         colors = androidx.compose.material.SwitchDefaults.colors(
-                                            checkedThumbColor = Color(0xFF4CAF50),
+                                            checkedThumbColor = Color(0xFFF6F4EE),
                                             checkedTrackColor = Color(0xFFADE1B6),
-                                            uncheckedThumbColor = Color.Gray,
+                                            uncheckedThumbColor = Color(0xFFF6F4EE),
                                             uncheckedTrackColor = Color.LightGray
                                         )
                                     )

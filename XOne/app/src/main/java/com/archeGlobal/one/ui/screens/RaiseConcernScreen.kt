@@ -203,9 +203,17 @@ fun RaiseConcernScreen(
             result.fold(
                 onSuccess = { response ->
                     if (response.status) {
+                        val successMessage = if (source == "asset") {
+                            // For asset concerns, use API response message
+                            response.message
+                        } else {
+                            // For helpdesk concerns, use hardcoded message
+                            "Ticket raised successfully"
+                        }
+                        
                         Toast.makeText(
                             context,
-                            "Help desk ticket submitted successfully!",
+                            successMessage,
                             Toast.LENGTH_LONG
                         ).show()
 
@@ -214,26 +222,41 @@ fun RaiseConcernScreen(
                         selectedSubcategory = null
                         issueDescription = ""
 
-                        // Go back after successful submission
+                        // Wait 2 seconds then go back after successful submission
+                        kotlinx.coroutines.delay(2000)
                         onBackPressed()
                     } else {
+                        val errorMessage = if (source == "asset") {
+                            // For asset concerns, use API response message
+                            response.message
+                        } else {
+                            // For helpdesk concerns, use hardcoded message with API message
+                            "Failed to submit ticket: ${response.message}"
+                        }
+                        
                         Toast.makeText(
                             context,
-                            "Failed to submit ticket: ${response.message}",
+                            errorMessage,
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 },
                 onFailure = { exception ->
-                    val errorMessage = when (exception) {
-                        is APIError.Unauthorized -> "Authentication error. Please login again."
-                        is APIError.BadRequest -> "Invalid request. Please check your information."
-                        is APIError.ServerError -> "Server error. Please try again later."
-                        is APIError.EncryptionFailed -> "Security error. Please try again."
-                        is APIError.DecryptionFailed -> "Security error. Please try again."
-                        is APIError.SSLPinningFailed -> "Network security error. Please try again."
-                        is APIError.DecodingError -> "Response processing error. Please try again."
-                        else -> "Unable to submit your ticket. Please try again."
+                    val errorMessage = if (source == "asset") {
+                        // For asset concerns, use generic message since no API response available
+                        "Unable to submit your concern. Please try again."
+                    } else {
+                        // For helpdesk concerns, use detailed hardcoded messages
+                        when (exception) {
+                            is APIError.Unauthorized -> "Authentication error. Please login again."
+                            is APIError.BadRequest -> "Invalid request. Please check your information."
+                            is APIError.ServerError -> "Server error. Please try again later."
+                            is APIError.EncryptionFailed -> "Security error. Please try again."
+                            is APIError.DecryptionFailed -> "Security error. Please try again."
+                            is APIError.SSLPinningFailed -> "Network security error. Please try again."
+                            is APIError.DecodingError -> "Response processing error. Please try again."
+                            else -> "Unable to submit your ticket. Please try again."
+                        }
                     }
 
                     Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
@@ -241,9 +264,15 @@ fun RaiseConcernScreen(
                 }
             )
         } catch (e: Exception) {
+            val exceptionMessage = if (source == "asset") {
+                "Unable to submit your concern. Please check your internet connection and try again."
+            } else {
+                "Unable to submit your ticket. Please check your internet connection and try again."
+            }
+            
             Toast.makeText(
                 context,
-                "Unable to submit your ticket. Please check your internet connection and try again.",
+                exceptionMessage,
                 Toast.LENGTH_SHORT
             ).show()
             Log.e("RaiseConcern", "Exception during help desk ticket submission: ${e.message}")
