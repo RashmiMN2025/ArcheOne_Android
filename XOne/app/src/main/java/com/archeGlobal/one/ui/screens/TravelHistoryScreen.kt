@@ -216,7 +216,6 @@ fun TravelRequestCard(
                     fontWeight = FontWeight.Bold,
                     fontFamily = GraphikFontFamily
                 )
-
                 StatusTag(status = travelRequest.status)
             }
 
@@ -264,8 +263,8 @@ fun TravelRequestCard(
 
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
-                        label = "Destination",
-                        value = destination.travelDestination
+                        label = "Origin → Destination",
+                        value = "${destination.originCity} → ${destination.destinationCity}"
                     )
 
                     DetailItem(
@@ -345,7 +344,8 @@ fun DetailItem(
             text = label,
             fontSize = 14.sp,
             color = Color.Gray,
-            fontFamily = GraphikFontFamily
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -384,7 +384,8 @@ fun DetailItem(
             text = label,
             fontSize = 14.sp,
             color = Color.Gray,
-            fontFamily = GraphikFontFamily
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium
         )
 
         Spacer(modifier = Modifier.weight(1f))

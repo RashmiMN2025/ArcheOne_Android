@@ -63,7 +63,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
@@ -467,17 +466,18 @@ fun HomeScreenContent(
                 UniversalLoader(isLoading = true)
             }
 
-            val density = LocalDensity.current
-            val imeInsets = WindowInsets.ime
-            val isKeyboardVisible = imeInsets.getBottom(density) > 0
+            val navController = androidx.navigation.compose.rememberNavController()
 
-            // Centered MPIN prompt box
+            // Keyboard-aware MPIN prompt box
+            val density = LocalDensity.current
+            val keyboardHeight = WindowInsets.ime.getBottom(density)
+            val isKeyboardVisible = keyboardHeight > 0
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .zIndex(101f)
-                    .offset(y = if (isKeyboardVisible) (-150).dp else 0.dp),
-                contentAlignment = Alignment.Center
+                    .zIndex(101f),
+                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
@@ -487,6 +487,13 @@ fun HomeScreenContent(
                     modifier = Modifier
                         .widthIn(min = 340.dp, max = 420.dp)
                         .padding(horizontal = 16.dp)
+                        .then(
+                            if (isKeyboardVisible) {
+                                Modifier.padding(top = 32.dp)
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Column(
                         modifier = Modifier
@@ -496,7 +503,7 @@ fun HomeScreenContent(
                     ) {
                         // Red lock icon
                         Icon(
-                            painter = painterResource(id = R.drawable.lock), // Use your red lock icon
+                            painter = painterResource(id = R.drawable.ic_lock), // Use your red lock icon
                             contentDescription = "Lock",
                             tint = Color(0xFFDD3825),
                             modifier = Modifier.size(48.dp)
@@ -615,24 +622,15 @@ fun HomeScreenContent(
                         // Unlock button
                         Button(
                             onClick = {
-                                if (enteredMpin.isEmpty()) {
-                                    mpinError = "Please enter the MPIN"
-                                } else if (enteredMpin.length < 4) {
-                                    mpinError = "Please enter the MPIN"
+                                if (enteredMpin.length == 4 && mpinController.validateMpin(enteredMpin)) {
+                                    userDataManager.preferencesManager.setAppLockState(false)
+                                    mpinError = null
+                                    enteredMpin = ""
+                                    Toast.makeText(appContext, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
                                 } else {
-                                    isVerifyingMpin = true
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        kotlinx.coroutines.delay(700)
-                                        if (mpinController.validateMpin(enteredMpin)) {
-                                            mpinError = null
-                                            enteredMpin = ""
-                                            userDataManager.preferencesManager.setAppLockState(false)
-                                        } else {
-                                            mpinError = "Invalid MPIN"
-                                            enteredMpin = ""
-                                        }
-                                        isVerifyingMpin = false
-                                    }
+                                    mpinError = "Invalid MPIN. Please try again."
+                                    enteredMpin = ""
+                                    Toast.makeText(appContext, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier
@@ -642,8 +640,7 @@ fun HomeScreenContent(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFDD3825),
                                 contentColor = Color.White
-                            ),
-                            enabled = !isVerifyingMpin
+                            )
                         ) {
                             Text(
                                 "Unlock",
@@ -653,7 +650,6 @@ fun HomeScreenContent(
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-
                         // Reset MPIN button
                         OutlinedButton(
                             onClick = {
@@ -678,20 +674,6 @@ fun HomeScreenContent(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 16.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        if (mpinError != null) {
-                            Text(
-                                text = mpinError!!,
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                color = Color.Red,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
                             )
                         }
                     }
@@ -828,7 +810,7 @@ fun HomeScreenContent(
                                     text = "Celebrating love, equality, and pride this month and always.",
                                     fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Center,
                                     color = Color.Black,
                                     modifier = Modifier

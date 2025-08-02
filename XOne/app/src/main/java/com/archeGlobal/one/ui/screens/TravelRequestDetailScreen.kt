@@ -216,8 +216,8 @@ fun TravelRequestDetailScreen(
 
                                     DetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
-                                        label = "Destination",
-                                        value = destination.travelDestination
+                                        label = "Origin → Destination",
+                                        value = "${destination.originCity} → ${destination.destinationCity}"
                                     )
 
                                     val formattedDepartureDate = formatDate(destination.departureDate)
@@ -338,6 +338,7 @@ fun DetailRow(
             fontSize = 14.sp, // Smaller font size
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.width(140.dp) // Fixed width for alignment
         )
         Text(
@@ -374,6 +375,7 @@ fun DetailRowWithIcon(
             fontSize = 13.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.width(130.dp)
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -412,6 +414,7 @@ fun DetailRowWithDrawableIcon(
             fontSize = 13.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.width(130.dp)
         )
         Spacer(modifier = Modifier.weight(1f))

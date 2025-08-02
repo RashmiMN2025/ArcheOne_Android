@@ -13,8 +13,11 @@
       "Bash(convert:*)",
       "Bash(python:*)",
       "Bash(powershell:*)",
-      "Bash(del \"C:\\Users\\user\\Documents\\GitHub\\XOne---Android\\XOne\\convert_image.ps1\")"
+      "Bash(del \"C:\\Users\\user\\Documents\\GitHub\\XOne---Android\\XOne\\convert_image.ps1\")",
+      "Bash(.gradlew assembleDebug)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
-  }
+  },
+  "$schema": "https://json.schemastore.org/claude-code-settings.json"
 }

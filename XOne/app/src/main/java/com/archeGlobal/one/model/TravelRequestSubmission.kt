@@ -10,6 +10,12 @@ data class TravelDestination(
     @SerializedName("travel_destination")
     val travelDestination: String,
 
+    @SerializedName("origin_city")
+    val originCity: String,
+
+    @SerializedName("destination_city")
+    val destinationCity: String,
+
     @SerializedName("departure_date") val departureDate: String,
 
     @SerializedName("arrival_date")
@@ -24,8 +30,11 @@ data class TravelDestination(
  * Uses camelCase format for API requests
  */
 data class TravelDestinationRequest(
-    @SerializedName("travelDestination")
-    val travelDestination: String,
+    @SerializedName("origin_city")
+    val originCity: String,
+
+    @SerializedName("destination_city")
+    val destinationCity: String,
 
     @SerializedName("departureDate")
     val departureDate: String,
@@ -95,8 +104,11 @@ data class TravelRequestSubmission(
     val destinations: List<TravelDestinationRequest>,
 
     // Legacy fields for backward compatibility (single destination)
-    @SerializedName("travelDestination")
-    val travelDestination: String? = null,
+    @SerializedName("origin_city")
+    val originCity: String? = null,
+
+    @SerializedName("destination_city")
+    val destinationCity: String? = null,
 
     @SerializedName("departureDate")
     val departureDate: String? = null,
@@ -140,7 +152,8 @@ fun createSingleDestinationRequest(
     employeeName: String,
     employeeEmail: String,
     mobile: String,
-    travelDestination: String,
+    originCity: String,
+    destinationCity: String,
     projectName: String,
     businessJustification: String,
     modeOfTransport: String,
@@ -158,7 +171,8 @@ fun createSingleDestinationRequest(
     flightTime: String
 ): TravelRequestSubmission {
     val destination = TravelDestinationRequest(
-        travelDestination = travelDestination,
+        originCity = originCity,
+        destinationCity = destinationCity,
         departureDate = departureDate,
         arrivalDate = arrivalDate,
         flightTimePreference = flightTime
@@ -183,7 +197,8 @@ fun createSingleDestinationRequest(
         seatPreference = seatPreference,
         destinations = listOf(destination),
         // Legacy fields for backward compatibility
-        travelDestination = travelDestination,
+        originCity = originCity,
+        destinationCity = destinationCity,
         departureDate = departureDate,
         arrivalDate = arrivalDate,
         flightTime = flightTime
@@ -231,7 +246,7 @@ fun createMultiDestinationRequest(
         seatPreference = seatPreference,
         destinations = destinations,
         // Don't include legacy fields for multi-destination
-        travelDestination = null,
+       // travelDestination = null,
         departureDate = null,
         arrivalDate = null,
         flightTime = null

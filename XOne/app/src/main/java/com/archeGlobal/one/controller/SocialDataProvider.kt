@@ -81,24 +81,24 @@ class SocialDataProvider private constructor(private val applicationContext: Con
      * Process the raw data into usable formats
      */
     private fun processData() {
-        // Process blogs
+        // Process blogs - use Content for longer descriptions like case studies
         _blogs = _socialContent.blogs.map { blog ->
             SocialArticle(
                 id = blog.Slug,
                 title = blog.Title,
-                description = blog.Description,
+                description = blog.Content?.takeIf { it.isNotEmpty() } ?: blog.Description,
                 imageUrl = blog.Image,
                 content = blog.Content
             )
         }
 
-        // Process case studies
+        // Process case studies - use Content for longer descriptions
         _caseStudies = if (_socialContent.caseStudies.isNotEmpty()) {
             _socialContent.caseStudies.map { caseStudy ->
                 SocialArticle(
                     id = caseStudy.Slug,
                     title = caseStudy.Title,
-                    description = caseStudy.Description,
+                    description = caseStudy.Content?.takeIf { it.isNotEmpty() } ?: caseStudy.Description,
                     imageUrl = caseStudy.Image,
                     content = caseStudy.Content
                 )

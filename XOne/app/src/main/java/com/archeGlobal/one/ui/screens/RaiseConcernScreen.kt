@@ -33,9 +33,7 @@ import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,7 +41,8 @@ fun RaiseConcernScreen(
     onBackPressed: () -> Unit,
     title: String = "Raise a Concern",
     source: String = "helpdesk", // Add source parameter to track where we came from
-    prefilledCategory: String? = null // FAQ category to prefill and lock
+    prefilledCategory: String? = null, // FAQ category to prefill and lock
+    prefilledSubcategory: String? = null // FAQ subcategory to prefill and lock
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -59,9 +58,12 @@ fun RaiseConcernScreen(
 
     // Form state
     var selectedCategory by remember { mutableStateOf<String?>(prefilledCategory) }
+    var selectedSubcategory by remember { mutableStateOf<String?>(prefilledSubcategory) }
     var issueDescription by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var subcategoryExpanded by remember { mutableStateOf(false) }
     val isCategoryLocked = prefilledCategory != null
+    val isSubcategoryLocked = prefilledSubcategory != null
     var isSubmitting by remember { mutableStateOf(false) }
     var showAnonymousDialog by remember { mutableStateOf(false) }
 
@@ -90,12 +92,86 @@ fun RaiseConcernScreen(
         )
     }
 
+    // Subcategory mapping - extract from FAQ data for help desk, use hardcoded for SOS
+    val subcategoryMap = if (isHelpDeskTicket) {
+        // Extract subcategories from FAQ data by accessing the original FAQ structure
+        val subcategoriesFromFAQ = mutableMapOf<String, MutableSet<String>>()
+        
+        // Get the original FAQ data from UserDataManager to access FAQAnswer.cat fields
+        val userDataManager = UserDataManager.getInstance(context)
+        val originalFaqData = userDataManager.getFAQData()
+        
+        originalFaqData?.forEach { faqCategory ->
+            // Skip the default categories
+            if (faqCategory.title != "General" && faqCategory.title != "Other Issues") {
+                val subcategorySet = subcategoriesFromFAQ.getOrPut(faqCategory.title) { mutableSetOf() }
+                
+                // Debug logging to see the actual FAQ structure
+                Log.d("RaiseConcern", "Processing FAQ Category: ${faqCategory.title}")
+                
+                // Use FAQ questions as subcategories (each question represents a subcategory)
+                faqCategory.items.forEach { faqItem ->
+                    Log.d("RaiseConcern", "  Adding FAQ question as subcategory: ${faqItem.question}")
+                    subcategorySet.add(faqItem.question)
+                }
+                
+                Log.d("RaiseConcern", "  Final subcategories for ${faqCategory.title}: ${subcategorySet.toList()}")
+            }
+        }
+        
+        // Convert to Map<String, List<String>> without adding "Other" options
+        val finalSubcategoryMap = subcategoriesFromFAQ.mapValues { (_, subcategories) ->
+            subcategories.toList().sorted()
+        }.toMutableMap().apply {
+            // Add default subcategories for "Other Issue" category
+            put("Other Issue", listOf("General Query", "Feature Request", "Training", "Documentation", "Other"))
+        }
+        
+        // Debug logging for final subcategory map
+        Log.d("RaiseConcern", "Final subcategory map:")
+        finalSubcategoryMap.forEach { (category, subcategories) ->
+            Log.d("RaiseConcern", "  $category: ${subcategories.joinToString(", ")}")
+        }
+        
+        finalSubcategoryMap
+    } else {
+        // SOS categories - keep hardcoded as they don't come from FAQ API
+        mapOf(
+            "Medical Emergency" to listOf("Heart Attack", "Stroke", "Injury", "Breathing Issues", "Unconscious", "Other Medical"),
+            "Fire Safety" to listOf("Fire Outbreak", "Smoke Detection", "Evacuation", "Fire Equipment", "Other Fire Safety"),
+            "Security Risk" to listOf("Unauthorized Access", "Theft", "Violence", "Threat", "Suspicious Activity", "Other Security"),
+            "Workplace Safety" to listOf("Accident", "Hazardous Conditions", "Equipment Failure", "Chemical Spill", "Other Safety"),
+            "Non-Compliance" to listOf("Policy Violation", "Regulatory Issue", "Safety Standards", "Other Compliance"),
+            "PoSH" to listOf("Sexual Harassment", "Discrimination", "Inappropriate Behavior", "Other PoSH"),
+            "Other Issue" to listOf("General Concern", "Anonymous Report", "Other")
+        )
+    }
+
+    // Get available subcategories for selected category
+    val availableSubcategories = selectedCategory?.let { subcategoryMap[it] } ?: emptyList()
+
+    // Reset subcategory when category changes (unless it's pre-filled)
+    LaunchedEffect(selectedCategory) {
+        if (!isSubcategoryLocked) {
+            selectedSubcategory = null
+        }
+    }
+
     // Submit function for help desk tickets (using SOS endpoint, no anonymous option)
     suspend fun submitHelpDeskTicket() {
         if (selectedCategory == null || issueDescription.isBlank()) {
             Toast.makeText(
                 context,
                 "Please select a category and describe your issue",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (availableSubcategories.isNotEmpty() && selectedSubcategory == null) {
+            Toast.makeText(
+                context,
+                "Please select a subcategory",
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -115,48 +191,72 @@ fun RaiseConcernScreen(
                 email = user.email ?: "",
                 mobile = user.mobile ?: "",
                 category = selectedCategory ?: "Other Issue",
+                subcategory = selectedSubcategory,
                 query = issueDescription,
                 anonymous = false // Help desk tickets are never anonymous
             )
 
-            Log.d("RaiseConcern", "Submitting help desk ticket via helpdesk endpoint: Category=$selectedCategory, Description=$issueDescription")
+            Log.d("RaiseConcern", "Submitting help desk ticket via helpdesk endpoint: Category=$selectedCategory, Subcategory=$selectedSubcategory, Description=$issueDescription")
 
             val result = sosController.submitEncryptedHelpdeskRequest(request)
 
             result.fold(
                 onSuccess = { response ->
                     if (response.status) {
+                        val successMessage = if (source == "asset") {
+                            // For asset concerns, use API response message
+                            response.message
+                        } else {
+                            // For helpdesk concerns, use hardcoded message
+                            "Ticket raised successfully"
+                        }
+                        
                         Toast.makeText(
                             context,
-                            "Help desk ticket submitted successfully!",
+                            successMessage,
                             Toast.LENGTH_LONG
                         ).show()
 
                         // Reset form on success
                         selectedCategory = null
+                        selectedSubcategory = null
                         issueDescription = ""
 
-                        // Go back after successful submission
-                        delay(2000)
+                        // Wait 2 seconds then go back after successful submission
+                        kotlinx.coroutines.delay(2000)
                         onBackPressed()
                     } else {
+                        val errorMessage = if (source == "asset") {
+                            // For asset concerns, use API response message
+                            response.message
+                        } else {
+                            // For helpdesk concerns, use hardcoded message with API message
+                            "Failed to submit ticket: ${response.message}"
+                        }
+                        
                         Toast.makeText(
                             context,
-                            "Failed to submit ticket: ${response.message}",
+                            errorMessage,
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 },
                 onFailure = { exception ->
-                    val errorMessage = when (exception) {
-                        is APIError.Unauthorized -> "Authentication error. Please login again."
-                        is APIError.BadRequest -> "Invalid request. Please check your information."
-                        is APIError.ServerError -> "Server error. Please try again later."
-                        is APIError.EncryptionFailed -> "Security error. Please try again."
-                        is APIError.DecryptionFailed -> "Security error. Please try again."
-                        is APIError.SSLPinningFailed -> "Network security error. Please try again."
-                        is APIError.DecodingError -> "Response processing error. Please try again."
-                        else -> "Unable to submit your ticket. Please try again."
+                    val errorMessage = if (source == "asset") {
+                        // For asset concerns, use generic message since no API response available
+                        "Unable to submit your concern. Please try again."
+                    } else {
+                        // For helpdesk concerns, use detailed hardcoded messages
+                        when (exception) {
+                            is APIError.Unauthorized -> "Authentication error. Please login again."
+                            is APIError.BadRequest -> "Invalid request. Please check your information."
+                            is APIError.ServerError -> "Server error. Please try again later."
+                            is APIError.EncryptionFailed -> "Security error. Please try again."
+                            is APIError.DecryptionFailed -> "Security error. Please try again."
+                            is APIError.SSLPinningFailed -> "Network security error. Please try again."
+                            is APIError.DecodingError -> "Response processing error. Please try again."
+                            else -> "Unable to submit your ticket. Please try again."
+                        }
                     }
 
                     Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
@@ -164,9 +264,15 @@ fun RaiseConcernScreen(
                 }
             )
         } catch (e: Exception) {
+            val exceptionMessage = if (source == "asset") {
+                "Unable to submit your concern. Please check your internet connection and try again."
+            } else {
+                "Unable to submit your ticket. Please check your internet connection and try again."
+            }
+            
             Toast.makeText(
                 context,
-                "Unable to submit your ticket. Please check your internet connection and try again.",
+                exceptionMessage,
                 Toast.LENGTH_SHORT
             ).show()
             Log.e("RaiseConcern", "Exception during help desk ticket submission: ${e.message}")
@@ -181,6 +287,15 @@ fun RaiseConcernScreen(
             Toast.makeText(
                 context,
                 "Please select a category and describe your issue",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (availableSubcategories.isNotEmpty() && selectedSubcategory == null) {
+            Toast.makeText(
+                context,
+                "Please select a subcategory",
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -201,11 +316,12 @@ fun RaiseConcernScreen(
                 email = user.email ?: "",
                 mobile = user.mobile ?: "",
                 category = selectedCategory ?: "Other Issue",
+                subcategory = selectedSubcategory,
                 query = issueDescription,
                 anonymous = anonymous
             )
 
-            Log.d("RaiseConcern", "Submitting SOS concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous")
+            Log.d("RaiseConcern", "Submitting SOS concern: Category=$selectedCategory, Subcategory=$selectedSubcategory, Query=$issueDescription, Anonymous=$anonymous")
 
             val result = sosController.submitEncryptedSOSRequest(request)
 
@@ -214,18 +330,18 @@ fun RaiseConcernScreen(
                     if (response.status) {
                         // Show success message based on anonymous status
                         val message = if (anonymous) {
-                            "Query submitted Successfully"
+                            "Concern submitted anonymously with encryption"
                         } else {
-                            "Query submitted Successfully"
+                            "Concern submitted with your identity (encrypted)"
                         }
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 
                         // Reset form on success
                         selectedCategory = null
+                        selectedSubcategory = null
                         issueDescription = ""
 
                         // Go back after successful submission
-                        delay(2000)
                         onBackPressed()
                     } else {
                         Toast.makeText(
@@ -288,6 +404,7 @@ fun RaiseConcernScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = 25.dp)
                 ) {
                     IconButton(onClick = onBackPressed) {
                         Icon(
@@ -301,7 +418,6 @@ fun RaiseConcernScreen(
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = GraphikFontFamily,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
@@ -309,9 +425,10 @@ fun RaiseConcernScreen(
                     Spacer(modifier = Modifier.width(48.dp))
                 }
 
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
-                // Category dropdown
+                // Category dropdown (hide when pre-filled from FAQ)
+                if (!isCategoryLocked) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -322,13 +439,7 @@ fun RaiseConcernScreen(
                         value = selectedCategory ?: "",
                         onValueChange = { },
                         readOnly = true,
-                        placeholder = {
-                            Text(
-                                "Select Issue category",
-                                fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily,
-                                fontSize = 16.sp
-                            ) },
+                        placeholder = { Text("Select Issue category") },
                         trailingIcon = {
                             if (!isCategoryLocked) {
                                 Icon(
@@ -344,15 +455,9 @@ fun RaiseConcernScreen(
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
                             focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.LightGray,
+                            unfocusedTextColor = Color.Black,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        textStyle = TextStyle(
-                            color = Color.Black,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily,
-                            fontSize = 16.sp
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
@@ -435,17 +540,119 @@ fun RaiseConcernScreen(
                         }
                     }
                 }
+                } // End of category dropdown conditional
+
+                // Subcategory dropdown (show when category is selected or pre-filled)
+                if (selectedCategory != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                            .padding(horizontal = 15.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedSubcategory ?: "",
+                            onValueChange = { },
+                            readOnly = true,
+                            placeholder = { Text("Select Subcategory") },
+                            trailingIcon = {
+                                if (!isSubcategoryLocked) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Black
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+
+                        // Invisible clickable box over the TextField to trigger dropdown
+                        if (!isSubcategoryLocked) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .padding(horizontal = 15.dp)
+                                    .clickable { subcategoryExpanded = true }
+                            )
+                        }
+
+                        // Subcategory dropdown menu
+                        if (subcategoryExpanded) {
+                            Dialog(
+                                onDismissRequest = { subcategoryExpanded = false },
+                                properties = DialogProperties(
+                                    dismissOnBackPress = true,
+                                    dismissOnClickOutside = true,
+                                    usePlatformDefaultWidth = false
+                                )
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .padding(horizontal = 8.dp)
+                                ) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = Color.White
+                                        )
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            availableSubcategories.forEach { subcategory ->
+                                                Column(
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Text(
+                                                        text = subcategory,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clickable {
+                                                                selectedSubcategory = subcategory
+                                                                subcategoryExpanded = false
+                                                            }
+                                                            .padding(
+                                                                vertical = 12.dp,
+                                                                horizontal = 12.dp
+                                                            ),
+                                                        fontSize = 16.sp,
+                                                        color = Color.Black
+                                                    )
+
+                                                    if (subcategory != availableSubcategories.last()) {
+                                                        Divider(
+                                                            color = Color.LightGray,
+                                                            thickness = 1.dp,
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Issue description
                 OutlinedTextField(
                     value = issueDescription,
                     onValueChange = { issueDescription = it },
-                    placeholder = { Text(
-                        "Please describe your issue",
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 16.sp
-                    ) },
+                    placeholder = { Text("Please describe your issue") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 140.dp)
@@ -455,21 +662,17 @@ fun RaiseConcernScreen(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.LightGray,
+                        unfocusedTextColor = Color.Black,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    textStyle = TextStyle(
-                        color = Color.Black,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 16.sp
-                    ),
+                    textStyle = TextStyle(color = Color.Black),
                     minLines = 5,
                     maxLines = 8,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
-                        if (issueDescription.isNotBlank() && selectedCategory != null) {
+                        if (issueDescription.isNotBlank() && selectedCategory != null && 
+                            (availableSubcategories.isEmpty() || selectedSubcategory != null)) {
                             if (isHelpDeskTicket) {
                                 coroutineScope.launch { submitHelpDeskTicket() }
                             } else {
@@ -501,8 +704,6 @@ fun RaiseConcernScreen(
                     Text(
                         text = "Submit",
                         color = Color.White,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily,
                         fontSize = 16.sp
                     )
                 }
@@ -544,7 +745,6 @@ fun RaiseConcernScreen(
                                 text = "Submit Anonymously?",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
-                                fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -555,8 +755,6 @@ fun RaiseConcernScreen(
                                 text = "Would you like to submit this concern anonymously? Your identity will not be disclosed.",
                                 fontSize = 16.sp,
                                 color = Color.Gray,
-                                fontWeight = FontWeight.Normal,
-                                fontFamily = GraphikFontFamily,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(bottom = 24.dp)
                             )
@@ -581,8 +779,6 @@ fun RaiseConcernScreen(
                                 Text(
                                     text = "Submit Anonymously",
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    fontFamily = GraphikFontFamily,
                                     color = Color.White
                                 )
                             }
@@ -604,9 +800,7 @@ fun RaiseConcernScreen(
                                 Text(
                                     text = "Submit with Identity",
                                     fontSize = 16.sp,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Medium,
-                                    fontFamily = GraphikFontFamily,
+                                    color = Color.White
                                 )
                             }
                         }

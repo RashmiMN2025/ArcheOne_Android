@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -41,7 +40,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import com.archeGlobal.one.R
@@ -51,8 +49,6 @@ import com.archeGlobal.one.controller.MyDocumentsController
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -182,10 +178,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             hasInitialLoadCompleted = true
         }
     }
-
-    val density = LocalDensity.current
-    val imeInsets = WindowInsets.ime
-    val isKeyboardVisible = imeInsets.getBottom(density) > 0
 
     Box(
         modifier = Modifier
@@ -398,13 +390,16 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                 UniversalLoader(isLoading = true)
             }
 
-            // Centered MPIN prompt box
+            // Keyboard-aware MPIN prompt box
+            val density = LocalDensity.current
+            val keyboardHeight = WindowInsets.ime.getBottom(density)
+            val isKeyboardVisible = keyboardHeight > 0
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .zIndex(101f)
-                    .offset(y = if (isKeyboardVisible) (-150).dp else 0.dp),
-                contentAlignment = Alignment.Center
+                    .zIndex(101f),
+                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
@@ -414,6 +409,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                     modifier = Modifier
                         .widthIn(min = 340.dp, max = 420.dp)
                         .padding(horizontal = 16.dp)
+                        .then(
+                            if (isKeyboardVisible) {
+                                Modifier.padding(top = 32.dp)
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Column(
                         modifier = Modifier
@@ -422,7 +424,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            painter = painterResource(id = com.archeGlobal.one.R.drawable.lock),
+                            painter = painterResource(id = com.archeGlobal.one.R.drawable.ic_lock),
                             contentDescription = "Lock",
                             tint = Color(0xFFDD3825),
                             modifier = Modifier.size(48.dp)
@@ -528,25 +530,27 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         Spacer(modifier = Modifier.height(26.dp))
                         Button(
                             onClick = {
-                                if (enteredMpin.isEmpty()) {
-                                    mpinError = "Please enter the MPIN"
-                                } else if (enteredMpin.length < 4) {
-                                    mpinError = "Please enter the MPIN"
-                                } else {
+                                if (enteredMpin.length == 4) {
                                     isVerifyingMpin = true
-                                    CoroutineScope(Dispatchers.Main).launch {
+                                    mpinError = null
+                                    // Simulate async verification
+                                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
                                         kotlinx.coroutines.delay(700)
                                         if (mpinController.validateMpin(enteredMpin)) {
                                             mpinError = null
                                             enteredMpin = ""
                                             showMpinPrompt = false
-                                            userDataManager.preferencesManager.setAppLockState(false)
+                                            Toast.makeText(context, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
                                         } else {
-                                            mpinError = "Invalid MPIN"
+                                            mpinError = "Invalid MPIN. Please try again."
                                             enteredMpin = ""
+                                            Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
                                         }
                                         isVerifyingMpin = false
                                     }
+                                } else {
+                                    mpinError = "Please enter 4 digits."
+                                    Toast.makeText(context, "Please enter 4 digits.", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier
@@ -567,7 +571,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-
                         // Reset MPIN button
                         OutlinedButton(
                             onClick = {
@@ -592,20 +595,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 16.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        if (mpinError != null) {
-                            Text(
-                                text = mpinError!!,
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                color = Color.Red,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
                             )
                         }
                     }

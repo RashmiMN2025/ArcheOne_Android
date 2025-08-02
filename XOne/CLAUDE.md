@@ -517,3 +517,65 @@ When working on this codebase, follow these essential rules:
 - Always provide clear, actionable task descriptions
 - Break complex features into smaller, manageable steps
 - Document any blockers or issues encountered
+
+## Travel Management Navigation Flow
+
+### **Complete Travel Navigation Architecture**
+
+The travel management system uses a multi-screen navigation flow that supports both employee travel history tracking and manager approval workflows.
+
+#### **Navigation Routes Available**
+1. `"travel"` - Main travel request form
+2. `"travel_history"` - Travel history list screen
+3. `"travel_history_detail"` - Individual travel history details (TravelHistoryDetailScreen)
+4. `"travel_approvals"` - Travel approvals list for managers
+5. `"travel_approval_detail"` - Travel approval detail screen
+6. `"travel_request_detail"` - Read-only processed request details
+7. `TravelApproveActivity` - Approve screen (Intent-based)
+8. `TravelRejectActivity` - Reject screen (Intent-based)
+
+#### **Complete Navigation Flow**
+
+**Path 1: Employee History Flow**
+```
+TravelScreen → [History Button] → TravelHistoryScreen → [Click Item] → TravelHistoryDetailScreen
+```
+
+**Path 2: Manager Approvals Flow (Multiple Routes to Approve/Reject)**
+
+**Route 2A: Direct from TravelApprovalsScreen**
+```
+TravelScreen → [Approvals Button] → TravelApprovalsScreen → [Approve/Reject Buttons] → TravelApproveScreen/TravelRejectScreen
+```
+
+**Route 2B: Via TravelApprovalDetailScreen**
+```
+TravelScreen → [Approvals Button] → TravelApprovalsScreen → [Click Item] → TravelApprovalDetailScreen → [Approve/Reject Buttons] → TravelApproveScreen/TravelRejectScreen
+```
+
+#### **Navigation Methods in TravelController**
+- `navigateToTravelHistory()` - Refreshes data and navigates to history
+- `navigateToTravelDetails(requestId)` - Navigates to history detail from history list
+- `navigateToTravelApprovalDetails(requestId)` - Navigates to approval detail from approvals list
+- `navigateToTravelApprovals()` - Loads and navigates to approvals screen
+- `navigateToTravelApprovalDetail(request)` - Conditional navigation based on request status
+- `navigateToTravelApprove(request)` - Intent-based navigation to TravelApproveActivity
+- `navigateToTravelReject(request)` - Intent-based navigation to TravelRejectActivity
+
+#### **Navigation Architecture Types**
+- **Compose Navigation**: Used for screens 1-6 within HomeActivity
+- **Intent-based Navigation**: Used for approve/reject screens (7-8) - separate Activities
+- **State Management**: Controller manages selected travel request state for detail screens
+- **Auto-refresh**: Lists refresh automatically after approve/reject actions and successful submissions
+
+#### **Key Navigation Patterns**
+- **Dual Approval Access**: Managers can approve/reject directly from list or via detail screen
+- **Post-action Navigation**: Approve/reject actions return to TravelApprovalsScreen with refreshed data
+- **History Auto-navigation**: Successful travel request submission automatically navigates to travel history
+- **Back Navigation**: Consistent use of `navigator.popBackStack()` for proper back button behavior
+
+#### **Data Models for Travel Navigation**
+- **Request Models**: Use `TravelDestinationRequest` with camelCase for API submissions
+- **Response Models**: Use `TravelDestination` with snake_case from API responses
+- **Origin/Destination Display**: UI shows `"${originCity} → ${destinationCity}"` format instead of single travel_destination field
+- **Multi-destination Support**: Handles both single and multi-destination travel requests seamlessly

@@ -43,7 +43,7 @@ fun ChatBottomNavigationBar(
     val unselectedColor = Color(0xFF808080) // Gray for unselected
 
     NavigationBar(
-        modifier = modifier.height(56.dp),
+        modifier = modifier.height(70.dp),
         containerColor = Color.White,
         contentColor = selectedColor,
         tonalElevation = 4.dp
@@ -62,14 +62,14 @@ fun ChatBottomNavigationBar(
                         Image(
                             painter = painterResource(id = homeIconRes),
                             contentDescription = "Home",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                             colorFilter = if (isUsingPrideIcon) null else androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Home",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = unselectedColor
                         )
                     }
@@ -98,14 +98,14 @@ fun ChatBottomNavigationBar(
                         Icon(
                             painterResource(id = R.drawable.chat),
                             contentDescription = "Chat",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                             tint = selectedColor
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Chat",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = selectedColor
                         )
                     }
@@ -134,14 +134,14 @@ fun ChatBottomNavigationBar(
                         Icon(
                             painterResource(id = R.drawable.sostab),
                             contentDescription = "SOS",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                             tint = unselectedColor
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "SOS",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = unselectedColor
                         )
                     }
@@ -170,14 +170,14 @@ fun ChatBottomNavigationBar(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                             tint = unselectedColor
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Profile",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = unselectedColor
                         )
                     }

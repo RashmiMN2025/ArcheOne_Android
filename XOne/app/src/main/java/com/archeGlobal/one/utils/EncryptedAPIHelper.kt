@@ -29,6 +29,7 @@ class EncryptedAPIHelper(private val context: Context) {
         request: T,
         responseClass: Class<R>,
         withAuthHeader: Boolean = false,
+        handleTokenExpiration: Boolean = true,
         callback: (R?, APIError?) -> Unit
     ) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -49,10 +50,12 @@ class EncryptedAPIHelper(private val context: Context) {
                     Log.e(TAG, "Encrypted API call failed: ${e.errorMessage}", e)
                     Log.e(TAG, "APIError type: ${e::class.java.simpleName}")
 
-                    // Handle token expiration automatically
-                    if (e is APIError.Unauthorized) {
+                    // Handle token expiration automatically (unless disabled)
+                    if (e is APIError.Unauthorized && handleTokenExpiration) {
                         Log.d(TAG, "Handling APIError.Unauthorized - calling handleTokenExpiration")
                         handleTokenExpiration(context)
+                    } else if (e is APIError.Unauthorized && !handleTokenExpiration) {
+                        Log.d(TAG, "APIError.Unauthorized detected but handleTokenExpiration disabled for this call")
                     }
 
                     // Handle app update required (403 Forbidden)
@@ -89,6 +92,7 @@ class EncryptedAPIHelper(private val context: Context) {
         request: T?,
         responseClass: Class<R>,
         withAuthHeader: Boolean = false,
+        handleTokenExpiration: Boolean = true,
         callback: (R?, APIError?) -> Unit
     ) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -108,9 +112,11 @@ class EncryptedAPIHelper(private val context: Context) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Regular API call failed: ${e.errorMessage}", e)
 
-                    // Handle token expiration automatically
-                    if (e is APIError.Unauthorized) {
+                    // Handle token expiration automatically (unless disabled)
+                    if (e is APIError.Unauthorized && handleTokenExpiration) {
                         handleTokenExpiration(context)
+                    } else if (e is APIError.Unauthorized && !handleTokenExpiration) {
+                        Log.d(TAG, "APIError.Unauthorized detected but handleTokenExpiration disabled for regular call")
                     }
 
                     // Handle app update required (403 Forbidden)
