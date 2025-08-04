@@ -178,8 +178,23 @@ fun TravelRejectScreen(
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
+                            // Show origin → destination format
+                            val destinationText = run {
+                                val destinations = travelRequest.getAllDestinations()
+                                if (destinations.isNotEmpty()) {
+                                    val destination = destinations[0]
+                                    if (!destination.originCity.isNullOrEmpty()) {
+                                        "${destination.originCity} → ${destination.destinationCity}"
+                                    } else {
+                                        destination.destinationCity
+                                    }
+                                } else {
+                                    travelRequest.destination // Fallback
+                                }
+                            }
+                            
                             Text(
-                                text = "Destination: ${travelRequest.destination}",
+                                text = "Origin → Destination: $destinationText",
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily,
                                 modifier = Modifier.padding(bottom = 16.dp)

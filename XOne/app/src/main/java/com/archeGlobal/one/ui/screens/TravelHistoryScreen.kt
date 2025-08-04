@@ -232,12 +232,33 @@ fun TravelRequestCard(
             val destinations = travelRequest.getAllDestinations()
 
             if (destinations.isEmpty() || destinations.size == 1) {
-                // Single destination - show as before
-                DetailItem(
-                    icon = R.drawable.mappin_and_ellipse,
-                    label = "Destination",
-                    value = travelRequest.destination
-                )
+                // Single destination - show origin city and destination city separately
+                if (destinations.isNotEmpty()) {
+                    val destination = destinations[0]
+                    
+                    // Show origin city if available
+                    if (!destination.originCity.isNullOrEmpty()) {
+                        DetailItem(
+                            icon = R.drawable.mappin_and_ellipse,
+                            label = "Origin City",
+                            value = destination.originCity
+                        )
+                    }
+                    
+                    // Show destination city
+                    DetailItem(
+                        icon = R.drawable.mappin_and_ellipse,
+                        label = "Destination City", 
+                        value = destination.destinationCity
+                    )
+                } else {
+                    // Fallback for cases without travel details
+                    DetailItem(
+                        icon = R.drawable.mappin_and_ellipse,
+                        label = "Destination",
+                        value = travelRequest.destination
+                    )
+                }
 
                 // Show travel dates for single destination
                 if (!travelRequest.departureDate.isNullOrEmpty() && !travelRequest.arrivalDate.isNullOrEmpty()) {
@@ -261,10 +282,20 @@ fun TravelRequestCard(
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
 
+                    // Show origin city if available
+                    if (!destination.originCity.isNullOrEmpty()) {
+                        DetailItem(
+                            icon = R.drawable.mappin_and_ellipse,
+                            label = "Origin City",
+                            value = destination.originCity
+                        )
+                    }
+                    
+                    // Show destination city
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
-                        label = "Origin → Destination",
-                        value = "${destination.originCity} → ${destination.destinationCity}"
+                        label = "Destination City",
+                        value = destination.destinationCity
                     )
 
                     DetailItem(

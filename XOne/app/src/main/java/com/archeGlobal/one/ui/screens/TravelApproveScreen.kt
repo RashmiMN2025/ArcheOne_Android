@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -143,64 +144,84 @@ fun TravelApproveScreen(
                             .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
-                        backgroundColor = Color(0xFFF6F4EE)
+                        backgroundColor = Color.White
                     ) {
                         val scrollState = rememberScrollState()
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .verticalScroll(scrollState)
-                                .padding(16.dp)
+                                .padding(24.dp)
                         ) {
                             // Title
                             Text(
                                 text = "Approve Travel Request",
-                                fontSize = 18.sp,
+                                fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 24.dp)
                             )
 
-                            // Request details
+                            // Request ID
                             Text(
                                 text = "Request ID: ${travelRequest.id}",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
+                            // Employee name
                             Text(
-                                text = "Employee: ${travelRequest.approver}",
-                                fontSize = 14.sp,
+                                text = "Employee: ${travelRequest.approver ?: "Nova O'Sullivan"}",
+                                fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
+                                color = Color.Black,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
+                            // Origin → Destination
+                            val destinations = travelRequest.getAllDestinations()
+                            val destinationText = if (destinations.isNotEmpty()) {
+                                val destination = destinations[0]
+                                if (!destination.originCity.isNullOrEmpty()) {
+                                    "${destination.originCity} → ${destination.destinationCity}"
+                                } else {
+                                    destination.destinationCity
+                                }
+                            } else {
+                                "Hyd → BBI" // Fallback
+                            }
+                            
                             Text(
-                                text = "Destination: ${travelRequest.destination}",
-                                fontSize = 14.sp,
+                                text = "Origin → Destination: $destinationText",
+                                fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 24.dp)
                             )
 
+                            // Horizontal divider
                             Divider(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 16.dp),
+                                    .padding(bottom = 24.dp),
                                 color = Color.LightGray,
                                 thickness = 1.dp
                             )
 
-                            // Remarks input
+                            // Remarks section
                             Text(
                                 text = "Remarks (Optional)",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = GraphikFontFamily,
+                                color = Color.Black,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
+                            // Remarks input
                             OutlinedTextField(
                                 value = remarks,
                                 onValueChange = { remarks = it },
@@ -211,18 +232,21 @@ fun TravelApproveScreen(
                                 placeholder = {
                                     Text(
                                         "Enter approval remarks...",
-                                        fontFamily = GraphikFontFamily
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Gray
                                     )
                                 },
                                 colors = TextFieldDefaults.outlinedTextFieldColors(
                                     focusedBorderColor = Color(0xFF4CAF50),
-                                    unfocusedBorderColor = Color.LightGray,
+                                    unfocusedBorderColor = Color(0xFFE0E0E0),
                                     textColor = Color.Black,
-                                    placeholderColor = Color.Gray
-                                )
+                                    placeholderColor = Color.Gray,
+                                    backgroundColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp)
                             )
 
-                            // Approve button
+                            // Approve Request button
                             Button(
                                 onClick = {
                                     isLoading = true
@@ -230,12 +254,12 @@ fun TravelApproveScreen(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(50.dp),
+                                    .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     backgroundColor = Color(0xFF4CAF50),
                                     disabledBackgroundColor = Color.Gray
                                 ),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(28.dp),
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {
@@ -263,24 +287,39 @@ fun TravelApproveScreen(
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun ApprovalDetailRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = Color.Gray
+        )
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            fontSize = 14.sp
+            fontSize = 14.sp,
+            modifier = Modifier.weight(1f)
         )
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 14.sp
+            fontSize = 14.sp,
+            color = Color.Black,
+            textAlign = TextAlign.End
         )
     }
 }
+

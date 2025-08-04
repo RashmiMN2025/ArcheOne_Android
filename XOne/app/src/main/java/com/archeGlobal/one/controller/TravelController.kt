@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
-import com.archeGlobal.one.model.TravelDestinationRequest
+import com.archeGlobal.one.model.TravelDetail
 import com.archeGlobal.one.model.TravelHistoryRequest
 import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
@@ -1053,17 +1053,17 @@ class TravelController(private val navigator: Navigator, private val context: Co
         // Create travel request submission object
         val travelRequest = if (isMultiDestination) {
             // Multi-destination request
-            val travelDestinations = destinations.map { dest ->
-                com.archeGlobal.one.model.TravelDestinationRequest(
+            val travelDetailsList = destinations.map { dest ->
+                TravelDetail(
                     originCity = originCity,
                     destinationCity = dest.destination,
                     departureDate = convertToApiDateFormat(dest.departureDate),
                     arrivalDate = convertToApiDateFormat(dest.returnDate),
-                    flightTimePreference = flightTimeValue
+                    flightTime = flightTimeValue
                 )
             }
 
-            Log.d("TravelController", "Submitting multi-destination travel request with ${travelDestinations.size} destinations")
+            Log.d("TravelController", "Submitting multi-destination travel request with ${travelDetailsList.size} destinations")
 
             createMultiDestinationRequest(
                 employeeId = employeeId,
@@ -1082,7 +1082,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 frequentFlyerNumber = frequentFlyerNumber,
                 mealPreference = if (mealPreferenceEnabled) mealPreference else "",
                 seatPreference = seatPreference,
-                destinations = travelDestinations
+                travelDetails = travelDetailsList
             )
         } else {
             // Single destination request
@@ -1118,6 +1118,44 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 seatPreference = seatPreference,
                 flightTime = flightTimeValue
             )
+        }
+
+        // Log the travel request being sent for debugging
+        Log.d("TravelController", "Submitting travel request:")
+        Log.d("TravelController", "  Employee Name: ${travelRequest.employeeName}")
+        Log.d("TravelController", "  Employee Email: ${travelRequest.employeeEmail}")
+        Log.d("TravelController", "  Employee ID: ${travelRequest.employeeId}")
+        Log.d("TravelController", "  Grade: ${travelRequest.grade}")
+        Log.d("TravelController", "  Aadhar Number: ${travelRequest.aadharNumber}")
+        Log.d("TravelController", "  Date of Birth: ${travelRequest.dateOfBirth}")
+        Log.d("TravelController", "  Mobile: ${travelRequest.mobile}")
+        Log.d("TravelController", "  Project Name: ${travelRequest.projectName}")
+        Log.d("TravelController", "  Business Justification: ${travelRequest.businessJustification}")
+        Log.d("TravelController", "  Mode of Transport: ${travelRequest.modeOfTransport}")
+        Log.d("TravelController", "  Stay Required: ${travelRequest.stayRequired}")
+        Log.d("TravelController", "  Meal Preference: ${travelRequest.mealPref}")
+        Log.d("TravelController", "  Seat Preference: ${travelRequest.seatPref}")
+        Log.d("TravelController", "  Frequent Flyer Number: ${travelRequest.frequentFlyerNum}")
+        Log.d("TravelController", "  Reporting Manager Name: ${travelRequest.reportingManagerName}")
+        Log.d("TravelController", "  Reporting Manager Email: ${travelRequest.reportingManagerEmail}")
+        Log.d("TravelController", "  Multi Travel: ${travelRequest.multiTravel}")
+        Log.d("TravelController", "  Travel Details Count: ${travelRequest.travelDetails.size}")
+        travelRequest.travelDetails.forEachIndexed { index, detail ->
+            Log.d("TravelController", "    Detail $index:")
+            Log.d("TravelController", "      Origin City: ${detail.originCity}")
+            Log.d("TravelController", "      Destination City: ${detail.destinationCity}")
+            Log.d("TravelController", "      Departure Date: ${detail.departureDate}")
+            Log.d("TravelController", "      Arrival Date: ${detail.arrivalDate}")
+            Log.d("TravelController", "      Flight Time: ${detail.flightTime}")
+        }
+        
+        // Log the serialized JSON for debugging
+        try {
+            val gson = com.google.gson.Gson()
+            val jsonString = gson.toJson(travelRequest)
+            Log.d("TravelController", "Serialized JSON: $jsonString")
+        } catch (e: Exception) {
+            Log.e("TravelController", "Error serializing request to JSON", e)
         }
 
         // Make API call

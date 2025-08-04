@@ -26,14 +26,14 @@ data class TravelDestination(
 )
 
 /**
- * Data class representing a single travel destination for API requests
- * Uses camelCase format for API requests
+ * Data class representing a single travel detail for API requests
+ * Uses camelCase format to match iOS implementation
  */
-data class TravelDestinationRequest(
-    @SerializedName("origin_city")
-    val originCity: String,
+data class TravelDetail(
+    @SerializedName("originCity")
+    val originCity: String = "N/A",
 
-    @SerializedName("destination_city")
+    @SerializedName("destinationCity")
     val destinationCity: String,
 
     @SerializedName("departureDate")
@@ -43,25 +43,37 @@ data class TravelDestinationRequest(
     val arrivalDate: String,
 
     @SerializedName("flightTimePreference")
-    val flightTimePreference: String = ""
+    val flightTime: String = ""
 )
 
 /**
  * Request model for submitting a new travel request
- * Supports both single and multi-destination travel
+ * Uses exact format to match working iOS implementation
  */
 data class TravelRequestSubmission(
-    @SerializedName("employeeId")
-    val employeeId: String,
-
     @SerializedName("employeeName")
     val employeeName: String,
 
     @SerializedName("employeeEmail")
     val employeeEmail: String,
 
+    @SerializedName("employeeId")
+    val employeeId: String,
+
     @SerializedName("mobile")
-    val mobile: String,
+    val mobile: String = "",
+
+    @SerializedName("destinations")
+    val travelDetails: List<TravelDetail>,
+
+    @SerializedName("frequentFlyerNumber")
+    val frequentFlyerNum: String = "",
+
+    @SerializedName("mealPreference")
+    val mealPref: String = "",
+
+    @SerializedName("seatPreference")
+    val seatPref: String = "",
 
     @SerializedName("projectName")
     val projectName: String,
@@ -72,6 +84,9 @@ data class TravelRequestSubmission(
     @SerializedName("modeOfTransport")
     val modeOfTransport: String,
 
+    @SerializedName("flightType")
+    val flightType: String = "",
+
     @SerializedName("reportingManagerName")
     val reportingManagerName: String,
 
@@ -79,7 +94,7 @@ data class TravelRequestSubmission(
     val reportingManagerEmail: String,
 
     @SerializedName("stayRequired")
-    val stayRequired: Boolean = false,
+    val stayRequired: Boolean,
 
     @SerializedName("grade")
     val grade: String,
@@ -90,34 +105,8 @@ data class TravelRequestSubmission(
     @SerializedName("date_of_birth")
     val dateOfBirth: String,
 
-    @SerializedName("frequentFlyerNumber")
-    val frequentFlyerNumber: String = "0",
-
-    @SerializedName("mealPreference")
-    val mealPreference: String = "",
-
-    @SerializedName("seatPreference")
-    val seatPreference: String = "",
-
-    // Multi-destination support
-    @SerializedName("destinations")
-    val destinations: List<TravelDestinationRequest>,
-
-    // Legacy fields for backward compatibility (single destination)
-    @SerializedName("origin_city")
-    val originCity: String? = null,
-
-    @SerializedName("destination_city")
-    val destinationCity: String? = null,
-
-    @SerializedName("departureDate")
-    val departureDate: String? = null,
-
-    @SerializedName("arrivalDate")
-    val arrivalDate: String? = null,
-
-    @SerializedName("flightTime")
-    val flightTime: String? = null
+    @SerializedName("multiTravel")
+    val multiTravel: Boolean
 )
 
 /**
@@ -170,38 +159,34 @@ fun createSingleDestinationRequest(
     seatPreference: String,
     flightTime: String
 ): TravelRequestSubmission {
-    val destination = TravelDestinationRequest(
+    val travelDetail = TravelDetail(
         originCity = originCity,
         destinationCity = destinationCity,
         departureDate = departureDate,
         arrivalDate = arrivalDate,
-        flightTimePreference = flightTime
+        flightTime = flightTime
     )
 
     return TravelRequestSubmission(
-        employeeId = employeeId,
         employeeName = employeeName,
         employeeEmail = employeeEmail,
+        employeeId = employeeId,
         mobile = mobile,
+        travelDetails = listOf(travelDetail),
+        frequentFlyerNum = frequentFlyerNumber,
+        mealPref = mealPreference,
+        seatPref = seatPreference,
         projectName = projectName,
         businessJustification = businessJustification,
         modeOfTransport = modeOfTransport,
+        flightType = "",
         reportingManagerName = reportingManagerName,
         reportingManagerEmail = reportingManagerEmail,
         stayRequired = stayRequired,
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
-        frequentFlyerNumber = frequentFlyerNumber,
-        mealPreference = mealPreference,
-        seatPreference = seatPreference,
-        destinations = listOf(destination),
-        // Legacy fields for backward compatibility
-        originCity = originCity,
-        destinationCity = destinationCity,
-        departureDate = departureDate,
-        arrivalDate = arrivalDate,
-        flightTime = flightTime
+        multiTravel = false
     )
 }
 
@@ -225,30 +210,27 @@ fun createMultiDestinationRequest(
     frequentFlyerNumber: String,
     mealPreference: String,
     seatPreference: String,
-    destinations: List<TravelDestinationRequest>
+    travelDetails: List<TravelDetail>
 ): TravelRequestSubmission {
     return TravelRequestSubmission(
-        employeeId = employeeId,
         employeeName = employeeName,
         employeeEmail = employeeEmail,
+        employeeId = employeeId,
         mobile = mobile,
+        travelDetails = travelDetails,
+        frequentFlyerNum = frequentFlyerNumber,
+        mealPref = mealPreference,
+        seatPref = seatPreference,
         projectName = projectName,
         businessJustification = businessJustification,
         modeOfTransport = modeOfTransport,
+        flightType = "",
         reportingManagerName = reportingManagerName,
         reportingManagerEmail = reportingManagerEmail,
         stayRequired = stayRequired,
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
-        frequentFlyerNumber = frequentFlyerNumber,
-        mealPreference = mealPreference,
-        seatPreference = seatPreference,
-        destinations = destinations,
-        // Don't include legacy fields for multi-destination
-       // travelDestination = null,
-        departureDate = null,
-        arrivalDate = null,
-        flightTime = null
+        multiTravel = true
     )
 }

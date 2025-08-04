@@ -140,12 +140,33 @@ fun TravelHistoryDetailScreen(
                             val destinations = travelRequest.getAllDestinations()
 
                             if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination (no trip label needed)
-                                TravelDetailRowWithDrawableIcon(
-                                    iconRes = R.drawable.mappin_and_ellipse,
-                                    label = "Destination",
-                                    value = travelRequest.destination
-                                )
+                                // Single destination - show origin city and destination city separately
+                                if (destinations.isNotEmpty()) {
+                                    val destination = destinations[0]
+                                    
+                                    // Show origin city if available
+                                    if (!destination.originCity.isNullOrEmpty()) {
+                                        TravelDetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Origin City",
+                                            value = destination.originCity
+                                        )
+                                    }
+                                    
+                                    // Show destination city
+                                    TravelDetailRowWithDrawableIcon(
+                                        iconRes = R.drawable.mappin_and_ellipse,
+                                        label = "Destination City",
+                                        value = destination.destinationCity
+                                    )
+                                } else {
+                                    // Fallback for cases without travel details
+                                    TravelDetailRowWithDrawableIcon(
+                                        iconRes = R.drawable.mappin_and_ellipse,
+                                        label = "Destination",
+                                        value = travelRequest.destination
+                                    )
+                                }
 
                                 val formattedDepartureDate = formatDate(travelRequest.departureDate)
                                 TravelDetailRowWithDrawableIcon(
@@ -176,10 +197,20 @@ fun TravelHistoryDetailScreen(
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
 
+                                    // Show origin city if available
+                                    if (!destination.originCity.isNullOrEmpty()) {
+                                        TravelDetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Origin City",
+                                            value = destination.originCity
+                                        )
+                                    }
+                                    
+                                    // Show destination city
                                     TravelDetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
-                                        label = "Origin → Destination",
-                                        value = "${destination.originCity} → ${destination.destinationCity}"
+                                        label = "Destination City",
+                                        value = destination.destinationCity
                                     )
 
                                     val formattedDepartureDate = formatDate(destination.departureDate)
