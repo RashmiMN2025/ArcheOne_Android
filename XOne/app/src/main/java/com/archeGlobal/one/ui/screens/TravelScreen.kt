@@ -563,17 +563,18 @@ fun TravelScreen(
                                         containerColor = if (!controller.isMultiDestination) PrimaryRed else Color.White,
                                         contentColor = if (!controller.isMultiDestination) Color.White else Color.Black
                                     ),
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f),
                                     border = BorderStroke(
                                         width = 1.dp,
                                         color = if (!controller.isMultiDestination) PrimaryRed else Color.LightGray
-                                    )
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
                                 ) {
                                     Text(
                                         text = "Single Destination",
                                         fontFamily = GraphikFontFamily,
-                                        fontSize = 12.sp,
+                                        fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = if (!controller.isMultiDestination) Color.White else Color.Black
                                     )
@@ -586,17 +587,18 @@ fun TravelScreen(
                                         containerColor = if (controller.isMultiDestination) PrimaryRed else Color.White,
                                         contentColor = if (controller.isMultiDestination) Color.White else Color.Black
                                     ),
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f),
                                     border = BorderStroke(
                                         width = 1.dp,
                                         color = if (controller.isMultiDestination) PrimaryRed else Color.LightGray
-                                    )
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
                                 ) {
                                     Text(
                                         text = "Multiple Destinations",
                                         fontFamily = GraphikFontFamily,
-                                        fontSize = 12.sp,
+                                        fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = if (controller.isMultiDestination) Color.White else Color.Black
                                     )
@@ -703,7 +705,7 @@ fun TravelScreen(
                                                     fontFamily = GraphikFontFamily,
                                                     color = Color.Black,
                                                     modifier = Modifier.padding(bottom = 4.dp),
-                                                    fontWeight = FontWeight.Medium
+                                                    fontWeight = FontWeight.SemiBold
                                                 )
 
                                                 Box(
@@ -749,7 +751,7 @@ fun TravelScreen(
                                                     fontFamily = GraphikFontFamily,
                                                     color = Color.Black,
                                                     modifier = Modifier.padding(bottom = 4.dp),
-                                                    fontWeight = FontWeight.Medium
+                                                    fontWeight = FontWeight.SemiBold
                                                 )
 
                                                 Box(
@@ -1151,7 +1153,7 @@ fun TravelScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(28.dp))
 
                             // Error message if submission failed
                             controller.submissionError?.let { error ->
@@ -1263,12 +1265,15 @@ fun MultiDestinationSection(controller: TravelController) {
                     containerColor = Color(0xFF2196F3),
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.height(40.dp)
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .height(40.dp)
+                    .width(140.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = "Add Destination",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     color = Color.White
@@ -1303,7 +1308,7 @@ fun MultiDestinationSection(controller: TravelController) {
                         Text(
                             text = "Destination ${index + 1}",
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                             fontFamily = GraphikFontFamily,
                             color = Color.Black
                         )
@@ -1397,7 +1402,7 @@ fun MultiDestinationSection(controller: TravelController) {
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 4.dp),
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold
                             )
 
                             Box(
@@ -1407,39 +1412,33 @@ fun MultiDestinationSection(controller: TravelController) {
                             ) {
                                 val showDepartureDatePicker = datePickerStates["departure_${destination.id}"] ?: false
 
-                                OutlinedTextField(
-                                    value = destination.departureDate,
-                                    onValueChange = { },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black
-                                    ),
-                                    shape = RoundedCornerShape(8.dp),
-                                    readOnly = true,
-                                    enabled = true,
-                                    textStyle = TextStyle(
-                                        background = Color(0xFFEEEEEE),
-                                        color = Color.Black,
-                                        fontSize = 15.sp,
-                                        fontFamily = GraphikFontFamily
-                                    )
-                                )
-
-                                // Add invisible clickable overlay
                                 Box(
                                     modifier = Modifier
-                                        .matchParentSize()
+                                        .fillMaxWidth()
+                                        .background(Color.White, RoundedCornerShape(8.dp))
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                        .padding(16.dp)
                                         .clickable {
                                             datePickerStates["departure_${destination.id}"] = true
-                                        }
-                                        .background(Color.Transparent)
-                                )
+                                        },
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                Color(0xFFEEEEEE),
+                                                RoundedCornerShape(4.dp)
+                                            )
+                                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = destination.departureDate,
+                                            color = Color.Black,
+                                            fontSize = 15.sp,
+                                            fontFamily = GraphikFontFamily
+                                        )
+                                    }
+                                }
 
                                 // Departure Date Picker Dialog
                                 if (showDepartureDatePicker) {
@@ -1494,7 +1493,7 @@ fun MultiDestinationSection(controller: TravelController) {
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 4.dp),
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold
                             )
 
                             Box(
@@ -1504,39 +1503,33 @@ fun MultiDestinationSection(controller: TravelController) {
                             ) {
                                 val showReturnDatePicker = datePickerStates["return_${destination.id}"] ?: false
 
-                                OutlinedTextField(
-                                    value = destination.returnDate,
-                                    onValueChange = { },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.Gray,
-                                        cursorColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black
-                                    ),
-                                    shape = RoundedCornerShape(8.dp),
-                                    readOnly = true,
-                                    enabled = true,
-                                    textStyle = TextStyle(
-                                        background = Color(0xFFEEEEEE),
-                                        color = Color.Black,
-                                        fontSize = 15.sp,
-                                        fontFamily = GraphikFontFamily
-                                    )
-                                )
-
-                                // Add invisible clickable overlay
                                 Box(
                                     modifier = Modifier
-                                        .matchParentSize()
+                                        .fillMaxWidth()
+                                        .background(Color.White, RoundedCornerShape(8.dp))
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                        .padding(16.dp)
                                         .clickable {
                                             datePickerStates["return_${destination.id}"] = true
-                                        }
-                                        .background(Color.Transparent)
-                                )
+                                        },
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .background(
+                                                Color(0xFFEEEEEE),
+                                                RoundedCornerShape(4.dp)
+                                            )
+                                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = destination.returnDate,
+                                            color = Color.Black,
+                                            fontSize = 15.sp,
+                                            fontFamily = GraphikFontFamily
+                                        )
+                                    }
+                                }
 
                                 // Return Date Picker Dialog
                                 if (showReturnDatePicker) {
