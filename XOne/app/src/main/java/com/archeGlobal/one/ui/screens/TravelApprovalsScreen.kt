@@ -342,6 +342,15 @@ fun ApprovalRequestCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Light divider line below ID/status section
+            Divider(
+                color = Color.LightGray.copy(alpha = 0.5f),
+                thickness = 1.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Employee and Project Info
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -447,6 +456,15 @@ fun ApprovalRequestCard(
 
             // Show action buttons only for pending requests
             if (request.status == com.archeGlobal.one.model.TravelStatus.PENDING) {
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Light divider line above approve/reject buttons
+                Divider(
+                    color = Color.LightGray.copy(alpha = 0.5f),
+                    thickness = 1.dp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -727,8 +745,8 @@ fun MultiDestinationTripDetails(
 @Composable
 fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
     val (backgroundColor, textColor, text) = when (status) {
-        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF155724), "Approved")
-        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFF721C24), "Rejected")
+        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF28A745), "Approved") // Lighter green
+        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFFDC3545), "Rejected") // Lighter red
         com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
     }
 
