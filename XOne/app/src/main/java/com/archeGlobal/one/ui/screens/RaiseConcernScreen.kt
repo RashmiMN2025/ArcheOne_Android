@@ -292,14 +292,7 @@ fun RaiseConcernScreen(
             return
         }
 
-        if (availableSubcategories.isNotEmpty() && selectedSubcategory == null) {
-            Toast.makeText(
-                context,
-                "Please select a subcategory",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+        // SOS concerns don't require subcategory - validation removed
 
         isSubmitting = true
 
@@ -316,12 +309,12 @@ fun RaiseConcernScreen(
                 email = user.email ?: "",
                 mobile = user.mobile ?: "",
                 category = selectedCategory ?: "Other Issue",
-                subcategory = selectedSubcategory,
+                subcategory = null, // SOS concerns don't use subcategory
                 query = issueDescription,
                 anonymous = anonymous
             )
 
-            Log.d("RaiseConcern", "Submitting SOS concern: Category=$selectedCategory, Subcategory=$selectedSubcategory, Query=$issueDescription, Anonymous=$anonymous")
+            Log.d("RaiseConcern", "Submitting SOS concern: Category=$selectedCategory, Query=$issueDescription, Anonymous=$anonymous")
 
             val result = sosController.submitEncryptedSOSRequest(request)
 
@@ -542,8 +535,8 @@ fun RaiseConcernScreen(
                 }
                 } // End of category dropdown conditional
 
-                // Subcategory dropdown (show when category is selected or pre-filled)
-                if (selectedCategory != null) {
+                // Subcategory dropdown (show when category is selected or pre-filled) - only for helpdesk tickets
+                if (selectedCategory != null && isHelpDeskTicket) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -672,7 +665,7 @@ fun RaiseConcernScreen(
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
                         if (issueDescription.isNotBlank() && selectedCategory != null && 
-                            (availableSubcategories.isEmpty() || selectedSubcategory != null)) {
+                            (isHelpDeskTicket && (availableSubcategories.isEmpty() || selectedSubcategory != null) || !isHelpDeskTicket)) {
                             if (isHelpDeskTicket) {
                                 coroutineScope.launch { submitHelpDeskTicket() }
                             } else {

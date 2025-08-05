@@ -331,7 +331,7 @@ fun ApprovalRequestCard(
                 Text(
                     text = "ID: ${request.id}",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontFamily = GraphikFontFamily,
                     color = Color.Black
                 )
@@ -349,7 +349,7 @@ fun ApprovalRequestCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
+                    painter = painterResource(id = R.drawable.person_3x),
                     contentDescription = "Employee",
                     tint = Color.Gray,
                     modifier = Modifier.size(18.dp)
@@ -379,7 +379,7 @@ fun ApprovalRequestCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info,
+                    painter = painterResource(id = R.drawable.folder_3x),
                     contentDescription = "Project",
                     tint = Color.Gray,
                     modifier = Modifier.size(18.dp)
@@ -423,7 +423,7 @@ fun ApprovalRequestCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.DateRange,
+                    painter = painterResource(id = R.drawable.calendar_3x),
                     contentDescription = "Created",
                     tint = Color.Gray,
                     modifier = Modifier.size(18.dp)
@@ -521,7 +521,7 @@ fun SingleDestinationTripDetails(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.LocationOn,
+                painter = painterResource(id = R.drawable.mappin_and_ellipse),
                 contentDescription = "Origin City",
                 tint = Color.Gray,
                 modifier = Modifier.size(18.dp)
@@ -552,7 +552,7 @@ fun SingleDestinationTripDetails(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.LocationOn,
+                painter = painterResource(id = R.drawable.mappin_and_ellipse),
                 contentDescription = "Destination City",
                 tint = Color.Gray,
                 modifier = Modifier.size(18.dp)
@@ -727,25 +727,23 @@ fun MultiDestinationTripDetails(
 @Composable
 fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
     val (backgroundColor, textColor, text) = when (status) {
-        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFF4CAF50), Color.White, "Approved")
-        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF44336), Color.White, "Rejected")
-        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFC107), Color.Black, "Pending")
+        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF155724), "Approved")
+        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFF721C24), "Rejected")
+        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
     }
 
-    Box(
-        modifier = Modifier
-            .background(
-                color = backgroundColor,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        backgroundColor = backgroundColor,
+        elevation = 0.dp
     ) {
         Text(
             text = text,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            color = textColor
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
 }

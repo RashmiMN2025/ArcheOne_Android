@@ -122,18 +122,18 @@ fun TravelRequestDetailScreen(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "ID: ${travelRequest.id}",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily,
                                     color = Color.Black
                                 )
 
-                                // Status Badge
-                                TravelStatusBadgeComponent(status = travelRequest.status)
+                                // Status Badge matching reject screen style
+                                TravelRequestStatusBadge(status = travelRequest.status)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -263,12 +263,12 @@ fun TravelRequestDetailScreen(
 
                             // Project and other details
                             DetailRowWithDrawableIcon(
-                                iconRes = R.drawable.ic_work,
+                                iconRes = R.drawable.folder_3x,
                                 label = "Project",
                                 value = travelRequest.project
                             )
                             DetailRowWithDrawableIcon(
-                                iconRes = R.drawable.ic_info,
+                                iconRes = R.drawable.busjust,
                                 label = "Business Justification",
                                 value = travelRequest.businessJustification ?: "N/A"
                             )
@@ -459,4 +459,28 @@ private fun formatDate(dateString: String?): String {
 // Extension function to capitalize the first letter of a string
 private fun String.capitalize(): String {
     return this.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+@Composable
+fun TravelRequestStatusBadge(status: com.archeGlobal.one.model.TravelStatus) {
+    val (backgroundColor, textColor, text) = when (status) {
+        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF155724), "Approved")
+        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFF721C24), "Rejected")
+        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        backgroundColor = backgroundColor,
+        elevation = 0.dp
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
 }

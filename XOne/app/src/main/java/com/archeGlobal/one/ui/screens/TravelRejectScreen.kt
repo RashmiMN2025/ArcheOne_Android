@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,8 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
+import com.archeGlobal.one.model.TravelStatus
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -29,6 +33,8 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Screen for rejecting travel request with confirmation
@@ -46,6 +52,11 @@ fun TravelRejectScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
+
+    // Date formatter for display
+    val dateFormatter = remember {
+        SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    }
 
     // Observe the approval action state from the controller
     val approvalActionState = controller.approvalActionState
@@ -117,7 +128,8 @@ fun TravelRejectScreen(
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.offset(x = (-24).dp)
                                 )
                             }
                         },
@@ -131,10 +143,7 @@ fun TravelRejectScreen(
                             }
                         },
                         backgroundColor = Color.Transparent,
-                        elevation = 0.dp,
-                        actions = {
-                            Spacer(modifier = Modifier.width(48.dp))
-                        }
+                        elevation = 0.dp
                     )
 
                     Card(
@@ -144,76 +153,129 @@ fun TravelRejectScreen(
                             .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
-                        backgroundColor = Color(0xFFF6F4EE)
+                        backgroundColor = Color.White
                     ) {
                         val scrollState = rememberScrollState()
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .verticalScroll(scrollState)
-                                .padding(16.dp)
+                                .padding(24.dp)
                         ) {
-                            // Title
-                            Text(
-                                text = "Reject Travel Request",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-
-                            // Request details
-                            Text(
-                                text = "Request ID: ${travelRequest.id}",
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            Text(
-                                text = "Employee: ${travelRequest.approver}",
-                                fontSize = 14.sp,
-                                fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            // Show origin → destination format
-                            val destinationText = run {
-                                val destinations = travelRequest.getAllDestinations()
-                                if (destinations.isNotEmpty()) {
-                                    val destination = destinations[0]
-                                    if (!destination.originCity.isNullOrEmpty()) {
-                                        "${destination.originCity} → ${destination.destinationCity}"
-                                    } else {
-                                        destination.destinationCity
-                                    }
-                                } else {
-                                    travelRequest.destination // Fallback
+                            // Header with ID and Status
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "ID: ${travelRequest.id}",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black
+                                )
+                                
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    backgroundColor = Color(0xFFFFF3CD),
+                                    elevation = 0.dp
+                                ) {
+                                    Text(
+                                        text = "Pending",
+                                        fontSize = 14.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFFFF9800),
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
                                 }
                             }
-                            
-                            Text(
-                                text = "Origin → Destination: $destinationText",
-                                fontSize = 14.sp,
-                                fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(bottom = 16.dp)
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Employee details
+                            RejectDetailRow(
+                                iconRes = R.drawable.person_3x,
+                                label = "Employee",
+                                value = travelRequest.approver ?: "Nova O'Sullivan"
                             )
 
-                            Divider(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 16.dp),
-                                color = Color.LightGray,
-                                thickness = 1.dp
+                            RejectDetailRow(
+                                iconRes = R.drawable.person_badge_clock,
+                                label = "Employee ID",
+                                value = "NT9999"
                             )
 
-                            // Remarks input (required for rejection)
+                            RejectDetailRow(
+                                iconRes = R.drawable.envelope_3x,
+                                label = "Email",
+                                value = "webtestuser@arche.global"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.phone_3x,
+                                label = "Mobile",
+                                value = "7397768656"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.mappin_and_ellipse,
+                                label = "Origin City",
+                                value = "Hyd"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.mappin_and_ellipse,
+                                label = "Destination City",
+                                value = "BBI"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.airplane_departure,
+                                label = "Date of Departure",
+                                value = travelRequest.departureDate ?: "11 Aug 2025"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.airplane_arrival,
+                                label = "Date of Arrival",
+                                value = travelRequest.arrivalDate ?: "11 Aug 2025"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.folder_3x,
+                                label = "Project",
+                                value = travelRequest.project
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.busjust,
+                                label = "Business Justification",
+                                value = travelRequest.businessJustification ?: "Test"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.car_3x,
+                                label = "Mode of Transport",
+                                value = travelRequest.modeOfTransport ?: "Flight"
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.calendar_3x,
+                                label = "Created",
+                                value = dateFormatter.format(travelRequest.createdDate)
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Rejection reason input (required)
                             Text(
                                 text = "Reason for Rejection *",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = GraphikFontFamily,
+                                color = Color.Black,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
@@ -227,15 +289,18 @@ fun TravelRejectScreen(
                                 placeholder = {
                                     Text(
                                         "Enter reason for rejection...",
-                                        fontFamily = GraphikFontFamily
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Gray
                                     )
                                 },
                                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = PrimaryRed,
-                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Color(0xFFD32F2F),
+                                    unfocusedBorderColor = Color(0xFFE0E0E0),
                                     textColor = Color.Black,
-                                    placeholderColor = Color.Gray
-                                )
+                                    placeholderColor = Color.Gray,
+                                    backgroundColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp)
                             )
 
                             Text(
@@ -246,7 +311,7 @@ fun TravelRejectScreen(
                                 modifier = Modifier.padding(bottom = 24.dp)
                             )
 
-                            // Reject button
+                            // Submit Rejection button
                             Button(
                                 onClick = {
                                     if (remarks.isNotBlank()) {
@@ -256,13 +321,13 @@ fun TravelRejectScreen(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(50.dp),
+                                    .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = PrimaryRed,
-                                    disabledBackgroundColor = Color.Gray
+                                    backgroundColor = Color(0xFFD32F2F),
+                                    disabledBackgroundColor = Color(0xFFD32F2F)
                                 ),
-                                shape = RoundedCornerShape(8.dp),
-                                enabled = !isLoading && remarks.isNotBlank()
+                                shape = RoundedCornerShape(28.dp),
+                                enabled = !isLoading
                             ) {
                                 if (isLoading) {
                                     CircularProgressIndicator(
@@ -272,13 +337,39 @@ fun TravelRejectScreen(
                                     )
                                 } else {
                                     Text(
-                                        text = "Reject Request",
+                                        text = "Submit Rejection",
                                         color = Color.White,
                                         fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
+                            }
+
+                            // Error message
+                            errorMessage?.let { error ->
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = error,
+                                    color = Color.Red,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            // Success message
+                            successMessage?.let { success ->
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = success,
+                                    color = Color(0xFFD32F2F),
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
@@ -289,24 +380,41 @@ fun TravelRejectScreen(
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun RejectDetailRow(
+    iconRes: Int,
+    label: String,
+    value: String
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.Top
     ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = Color(0xFF757575)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
-            color = Color.Gray,
-            fontSize = 14.sp
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF757575),
+            fontSize = 16.sp,
+            modifier = Modifier.weight(1f)
         )
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp
+            fontWeight = FontWeight.Normal,
+            fontSize = 16.sp,
+            color = Color.Black,
+            textAlign = TextAlign.End,
+            maxLines = 2,
+            modifier = Modifier.weight(1f)
         )
     }
 }
