@@ -910,35 +910,6 @@ fun TravelScreen(
                                 MultiDestinationSection(controller)
                             }
 
-                            // Stay Required Toggle (outside destination cards)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Stay Required",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black
-                                )
-
-                                // Toggle switch
-                                androidx.compose.material.Switch(
-                                    checked = controller.stayRequired,
-                                    onCheckedChange = { controller.toggleStayRequired(it) },
-                                    modifier = Modifier.scale(1.2f),
-                                    colors = androidx.compose.material.SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFFF6F4EE),
-                                        checkedTrackColor = Color(0xFFADE1B6),
-                                        uncheckedThumbColor =  Color(0xFFF6F4EE),
-                                        uncheckedTrackColor = Color.LightGray
-                                    )
-                                )
-                            }
-
                             // Date Picker Dialogs for single destination (outside the card)
                             if (!controller.isMultiDestination) {
                                 // Departure Date Picker Dialog
@@ -1106,6 +1077,35 @@ fun TravelScreen(
                                         }
                                     }
                                 }
+                            }
+
+                            // Stay Required Toggle (outside destination cards)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Stay Required",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black
+                                )
+
+                                // Toggle switch
+                                androidx.compose.material.Switch(
+                                    checked = controller.stayRequired,
+                                    onCheckedChange = { controller.toggleStayRequired(it) },
+                                    modifier = Modifier.scale(1.2f),
+                                    colors = androidx.compose.material.SwitchDefaults.colors(
+                                        checkedThumbColor = Color(0xFFF6F4EE),
+                                        checkedTrackColor = Color(0xFFADE1B6),
+                                        uncheckedThumbColor =  Color(0xFFF6F4EE),
+                                        uncheckedTrackColor = Color.LightGray
+                                    )
+                                )
                             }
 
                             // Approval Chain
@@ -1331,8 +1331,8 @@ fun MultiDestinationSection(controller: TravelController) {
 
                     // Origin City field
                     androidx.compose.material3.OutlinedTextField(
-                        value = controller.originCity,
-                        onValueChange = { controller.updateOriginCity(it) },
+                        value = destination.originCity,
+                        onValueChange = { controller.updateDestinationOriginCity(destination.id, it) },
                         placeholder = {
                             Text(
                                 "Origin City",
@@ -1581,8 +1581,10 @@ fun MultiDestinationSection(controller: TravelController) {
 
                         // Flight Time Preference Dropdown
                         Box(modifier = Modifier.fillMaxWidth()) {
+                            val isFlightTimeDropdownExpanded = datePickerStates["flightTime_${destination.id}"] ?: false
+                            
                             androidx.compose.material3.OutlinedTextField(
-                                value = controller.flightTimePreference,
+                                value = destination.flightTimePreference,
                                 onValueChange = { },
                                 placeholder = {
                                     Text(
@@ -1595,7 +1597,9 @@ fun MultiDestinationSection(controller: TravelController) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 16.dp)
-                                    .clickable(onClick = { controller.toggleFlightTimeDropdown() }),
+                                    .clickable(onClick = { 
+                                        datePickerStates["flightTime_${destination.id}"] = true
+                                    }),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.Gray,
@@ -1613,15 +1617,17 @@ fun MultiDestinationSection(controller: TravelController) {
                                         Icons.Default.KeyboardArrowDown,
                                         contentDescription = "Dropdown",
                                         tint = Color.Gray,
-                                        modifier = Modifier.clickable { controller.toggleFlightTimeDropdown() }
+                                        modifier = Modifier.clickable { 
+                                            datePickerStates["flightTime_${destination.id}"] = true
+                                        }
                                     )
                                 },
                                 readOnly = true
                             )
 
                             DropdownMenu(
-                                expanded = controller.isFlightTimeDropdownExpanded,
-                                onDismissRequest = { controller.dismissFlightTimeDropdown() },
+                                expanded = isFlightTimeDropdownExpanded,
+                                onDismissRequest = { datePickerStates["flightTime_${destination.id}"] = false },
                                 modifier = Modifier
                                     .width(with(LocalDensity.current) { 300.dp })
                                     .background(Color(0xCC000000)) // 80% opacity black background
@@ -1629,7 +1635,10 @@ fun MultiDestinationSection(controller: TravelController) {
                                 controller.flightTimeOptions.forEach { option ->
                                     DropdownMenuItem(
                                         text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
-                                        onClick = { controller.updateFlightTimePreference(option) }
+                                        onClick = { 
+                                            controller.updateDestinationFlightTimePreference(destination.id, option)
+                                            datePickerStates["flightTime_${destination.id}"] = false
+                                        }
                                     )
                                 }
                             }

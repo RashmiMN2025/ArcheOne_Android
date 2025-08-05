@@ -424,8 +424,10 @@ class ProfileController(
         userDataManager.setHasLoggedIn(true)
         // Preserve that this is not a first-time user (important for showing fingerprint option)
         com.archeGlobal.one.utils.setFirstTimeLogin(context, false)
-        // Remove token from preferences
+        // Remove token and clear seen services so New stickers can appear on next login
         userDataManager.preferencesManager.clearAuthToken()
+        userDataManager.preferencesManager.clearSeenServices()
+        userDataManager.preferencesManager.clearInstallType()
         // Navigate to login screen WITHOUT token
         navigator.navigateToLoginScreen()
     }

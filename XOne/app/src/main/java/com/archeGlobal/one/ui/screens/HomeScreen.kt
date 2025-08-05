@@ -434,6 +434,17 @@ fun HomeScreenContent(
         val isPrideMonth = controller.isPrideMonth.collectAsState().value
         val showPrideMonthDialog = controller.showPrideMonthDialog.collectAsState().value
         val isUsingPrideIcon = remember { mutableStateOf(controller.isUsingPrideIcon()) }
+        
+        // Mark services as seen after a short delay to let user see New stickers
+        LaunchedEffect(model.categories) {
+            if (model.categories.isNotEmpty()) {
+                // Wait 2 seconds before marking services as seen
+                // This gives user time to see the New stickers on fresh install
+                kotlinx.coroutines.delay(2000)
+                val allServices = model.categories.values.flatten()
+                controller.markServicesAsSeen(allServices)
+            }
+        }
 
         // Show Pride Month Dialog if it's Pride Month and dialog should be shown
         if (isPrideMonth && showPrideMonthDialog) {
@@ -960,7 +971,9 @@ fun HomeScreenContent(
                                                             onLongPress = { position ->
                                                                 selectedApp = item
                                                                 selectedPosition = position
-                                                            }
+                                                            },
+                                                            isNew = item.isNew,
+                                                            stickerText = item.stickerText
                                                         )
                                                     }
                                                     repeat(columns - rowItems.size) {
@@ -1013,7 +1026,9 @@ fun HomeScreenContent(
                                                                 onLongPress = { position ->
                                                                     selectedApp = item
                                                                     selectedPosition = position
-                                                                }
+                                                                },
+                                                                isNew = item.isNew,
+                                                                stickerText = item.stickerText
                                                             )
                                                         }
                                                         repeat(columns - rowItems.size) {
@@ -1440,7 +1455,9 @@ private fun AppItem(
     modifier: Modifier = Modifier,
     showFavoriteButton: Boolean = false,
     isSelected: Boolean = false,
-    onLongPress: (Pair<Float, Float>) -> Unit
+    onLongPress: (Pair<Float, Float>) -> Unit,
+    isNew: Boolean = false,
+    stickerText: String = "New"
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     val context = LocalContext.current
@@ -1505,6 +1522,37 @@ private fun AppItem(
                     overflow = TextOverflow.Visible,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+            
+            // New sticker in top-right corner with straight right edge and curved left edge
+            if (isNew) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 6.dp)
+                        .background(
+                            color = Color(0xFFDD3825),
+                            shape = RoundedCornerShape(
+                                topStart = 12.dp,
+                                topEnd = 0.dp,
+                                bottomStart = 12.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
+                        .padding(horizontal = 9.dp, vertical = 0.dp)
+                        .height(16.dp)
+                ) {
+                    Text(
+                        text = stickerText,
+                        color = Color.White,
+                        fontSize = 8.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = (-1).dp)
+                    )
+                }
             }
         }
     }

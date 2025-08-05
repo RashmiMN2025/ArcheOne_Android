@@ -250,6 +250,8 @@ class PreferencesManager(context: Context) {
             remove(KEY_FAQ_DATA)
             remove(KEY_EVENT_DATA)
             remove(KEY_APP_LOCKED) // Clear app lock state when session expires
+            remove(KEY_SEEN_SERVICES) // Clear seen services so New stickers can appear again
+            remove(KEY_INSTALL_TYPE) // Clear install type so it can be determined fresh on next login
             // Keep MPIN and biometric data for re-authentication
             // remove(KEY_BIOMETRIC_ENABLED) - Keep this
             // remove(KEY_BIOMETRIC_EMAIL) - Keep this
@@ -283,6 +285,51 @@ class PreferencesManager(context: Context) {
         _lockedState.value = locked
     }
 
+    // App version and service tracking methods
+    fun getAppVersion(): String {
+        return sharedPreferences.getString(KEY_APP_VERSION, "") ?: ""
+    }
+    
+    fun setAppVersion(version: String) {
+        sharedPreferences.edit().putString(KEY_APP_VERSION, version).apply()
+    }
+    
+    fun getSeenServices(): Set<String> {
+        return sharedPreferences.getStringSet(KEY_SEEN_SERVICES, emptySet()) ?: emptySet()
+    }
+    
+    fun addSeenService(serviceName: String) {
+        val seenServices = getSeenServices().toMutableSet()
+        seenServices.add(serviceName)
+        sharedPreferences.edit().putStringSet(KEY_SEEN_SERVICES, seenServices).apply()
+    }
+    
+    fun markAllServicesAsSeen(serviceNames: List<String>) {
+        val seenServices = getSeenServices().toMutableSet()
+        seenServices.addAll(serviceNames)
+        sharedPreferences.edit().putStringSet(KEY_SEEN_SERVICES, seenServices).apply()
+    }
+    
+    fun isServiceNew(serviceName: String): Boolean {
+        return !getSeenServices().contains(serviceName)
+    }
+    
+    fun clearSeenServices() {
+        sharedPreferences.edit().remove(KEY_SEEN_SERVICES).apply()
+    }
+    
+    fun setInstallType(type: String) {
+        sharedPreferences.edit().putString(KEY_INSTALL_TYPE, type).apply()
+    }
+    
+    fun getInstallType(): String {
+        return sharedPreferences.getString(KEY_INSTALL_TYPE, "NEW") ?: "NEW"
+    }
+    
+    fun clearInstallType() {
+        sharedPreferences.edit().remove(KEY_INSTALL_TYPE).apply()
+    }
+
     companion object {
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_AUTH_TOKEN = "auth_token"
@@ -304,6 +351,9 @@ class PreferencesManager(context: Context) {
         private const val KEY_BIOMETRIC_EMPLOYEE_ID = "biometric_employee_id"
         private const val KEY_BIOMETRIC_TOKEN = "biometric_token"
         private const val KEY_GREETINGS_DATA = "greetings_data"
+        private const val KEY_APP_VERSION = "app_version"
+        private const val KEY_SEEN_SERVICES = "seen_services"
+        private const val KEY_INSTALL_TYPE = "install_type"
     }
 
     fun setBoolean(key: String, value: Boolean) {

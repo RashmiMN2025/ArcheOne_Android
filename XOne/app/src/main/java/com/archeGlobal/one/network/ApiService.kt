@@ -102,19 +102,19 @@ interface ApiService {
     @GET("daily-event")
     suspend fun getDailyEvent(): Response<EventResponse>
 
-    @POST("travel-request")
+    @POST("travel-request-one")
     fun submitTravelRequest(@Body request: TravelRequestSubmission): Call<TravelRequestResponse>
 
-    @POST("travel-request")
+    @POST("travel-request-one")
     fun getTravelHistory(@Body request: TravelHistoryRequest): Call<TravelHistoryResponse>
 
-    @POST("travel-request/combined-history")
+    @POST("travel-request-one/combined-history-one")
     fun getTravelCombinedHistory(@Body request: TravelHistoryRequest): Call<TravelCombinedHistoryResponse>
 
-    @POST("travel-request/approve")
+    @POST("travel-request-one/approve-one")
     fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
 
-    @POST("travel-request/reject")
+    @POST("travel-request-one/reject-one")
     fun rejectTravelRequest(@Body request: TravelRejectActionRequest): Call<TravelApprovalActionResponse>
 
     @GET("employee-celebration")
@@ -278,7 +278,8 @@ data class Service(
     val favourite: Boolean = false,
     val category: String,
     val icon: String? = null,
-    val url: String? = null
+    val url: String? = null,
+    val isNew: Boolean = false
 )
 
 data class Office(

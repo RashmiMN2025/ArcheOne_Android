@@ -154,7 +154,7 @@ fun LoginScreen(
     var showFingerprint by remember { mutableStateOf(false) }
 
     // Update showFingerprint when relevant conditions change
-    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired, shouldTreatAsReturningUser) {
+    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired, shouldTreatAsReturningUser, isBiometricEnabled) {
         // Show fingerprint for returning users (including session expired) if biometric is available
         showFingerprint = showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)
         // Reset isDifferentUserMode after normal logout (when it's not forced)
@@ -536,10 +536,10 @@ fun LoginScreen(
 
                         // Debug logging for fingerprint button condition
                         android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
-                        android.util.Log.d("LoginScreen", "Fingerprint condition check: condition=${showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser) && !isDifferentUserMode}")
+                        android.util.Log.d("LoginScreen", "Fingerprint condition check: showFingerprint=$showFingerprint")
 
                         // Show fingerprint button for returning users (including session expired) when biometric is available - third for returning users
-                        if (showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser) && !isDifferentUserMode) {
+                        if (showFingerprint && !isDifferentUserMode) {
                             Button(
                                 onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
                                 modifier = Modifier
@@ -784,7 +784,7 @@ fun LoginScreen(
                 }
 
                 // Show fingerprint authentication for returning users (including session expired)
-                if (selectedLoginMethod == "Fingerprint" && showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)) {
+                if (selectedLoginMethod == "Fingerprint" && showFingerprint) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
                         onClick = {
@@ -804,12 +804,31 @@ fun LoginScreen(
                                             bioMobile = credentials.second
                                             bioEmployeeId = credentials.third
                                         } else {
-                                            // Fallback to effective user data (session expired data if available)
-                                            if (effectiveUserData != null) {
-                                                bioEmail = effectiveUserData.email ?: ""
-                                                bioMobile = effectiveUserData.mobile ?: ""
-                                                bioEmployeeId = effectiveUserData.employeeId ?: ""
-                                            } else {
+                                            // Enhanced fallback to session expired data if available
+                                            bioEmail = when {
+                                                effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
+                                                sessionExpired -> preferencesManager.getString("session_expired_email", "") 
+                                                    ?: preferencesManager.getString("last_user_email", "") ?: ""
+                                                else -> preferencesManager.getString("last_user_email", "") ?: ""
+                                            }
+                                            
+                                            bioMobile = when {
+                                                effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
+                                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") 
+                                                    ?: preferencesManager.getString("last_user_mobile", "") ?: ""
+                                                else -> preferencesManager.getString("last_user_mobile", "") ?: ""
+                                            }
+                                            
+                                            bioEmployeeId = when {
+                                                effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
+                                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") 
+                                                    ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                                else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                            }
+                                            
+                                            android.util.Log.d("LoginScreen", "Biometric fallback credentials: email=$bioEmail, mobile=$bioMobile, employeeId=$bioEmployeeId, sessionExpired=$sessionExpired")
+                                            
+                                            if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
                                                 CustomToast.showErrorToast(context, "Biometric credentials not found. Please login with MPIN or OTP.")
                                                 return@showBiometricPrompt
                                             }
@@ -981,14 +1000,37 @@ fun LoginScreen(
                                 navigator = navigator,
                                 context = context
                             )
-                            val useEmail = email.takeIf { it.isNotEmpty() } ?: effectiveUserData?.email ?: ""
-                            val useMobile = mobile.takeIf { it.isNotEmpty() } ?: effectiveUserData?.mobile ?: ""
-                            val useEmployeeId = employeeId.takeIf { it.isNotEmpty() } ?: effectiveUserData?.employeeId ?: ""
+                            // Get credentials with better fallback logic for session expiry
+                            val useEmail = when {
+                                email.isNotEmpty() -> email
+                                effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
+                                sessionExpired -> preferencesManager.getString("session_expired_email", "") 
+                                    ?: preferencesManager.getString("last_user_email", "") ?: ""
+                                else -> preferencesManager.getString("last_user_email", "") ?: ""
+                            }
+                            
+                            val useMobile = when {
+                                mobile.isNotEmpty() -> mobile
+                                effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
+                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") 
+                                    ?: preferencesManager.getString("last_user_mobile", "") ?: ""
+                                else -> preferencesManager.getString("last_user_mobile", "") ?: ""
+                            }
+                            
+                            val useEmployeeId = when {
+                                employeeId.isNotEmpty() -> employeeId
+                                effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
+                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") 
+                                    ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
+                            }
+
+                            android.util.Log.d("LoginScreen", "MPIN credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId, sessionExpired=$sessionExpired")
 
                             if (useEmail.isBlank() || useMobile.isBlank() || useEmployeeId.isBlank()) {
                                 mpinError = "User credentials missing. Please use OTP login."
                                 isVerifyingMpin = false
-                                android.util.Log.e("LoginScreen", "Missing credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
+                                android.util.Log.e("LoginScreen", "Missing credentials after fallback: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
                                 return@Button
                             }
 

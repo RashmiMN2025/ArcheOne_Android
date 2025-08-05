@@ -25,6 +25,7 @@ import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
+import com.archeGlobal.one.network.Service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,6 +100,11 @@ class HomeController(
     }
 
     private val preferencesManager = PreferencesManager(context)
+    
+    init {
+        // Check app version and handle first install vs updates vs returning users
+        checkAppVersionAndMarkServices()
+    }
 
     // Helper method to navigate within the same activity
     private fun navigate(route: String) {
@@ -478,7 +484,9 @@ class HomeController(
                                 title = service.service,
                                 icon = service.icon ?: service.service.lowercase().replace(" ", ""),
                                 isFavorite = service.favourite,
-                                category = service.category
+                                category = service.category,
+                                isNew = shouldShowAsNew(service),
+                                stickerText = getStickerText()
                             )
                         }
                     }
@@ -821,7 +829,9 @@ class HomeController(
                                 title = service.service,
                                 icon = service.icon ?: service.service.lowercase().replace(" ", ""),
                                 isFavorite = service.favourite,
-                                category = service.category
+                                category = service.category,
+                                isNew = shouldShowAsNew(service),
+                                stickerText = getStickerText()
                             )
                         }
                     }
@@ -855,5 +865,67 @@ class HomeController(
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             refreshUserData()
         }, 300) // Short delay to ensure the update propagates
+    }
+    
+    private fun shouldShowAsNew(service: Service): Boolean {
+        val userHasntSeen = preferencesManager.isServiceNew(service.service)
+        val installType = preferencesManager.getInstallType()
+        
+        // For fresh installs, show New sticker for all services that haven't been seen
+        // For updates, only show for services marked as new by backend
+        val shouldShow = when (installType) {
+            "NEW" -> userHasntSeen // Fresh install - show for all unseen services
+            "UPDATED" -> service.isNew && userHasntSeen // Update - only show for backend-marked new services
+            else -> service.isNew && userHasntSeen // Default behavior
+        }
+        
+        Log.d("HomeController", "Service '${service.service}': installType=$installType, backendSaysNew=${service.isNew}, userHasntSeen=$userHasntSeen, shouldShow=$shouldShow")
+        return shouldShow
+    }
+    
+    private fun getStickerText(): String {
+        val installType = preferencesManager.getInstallType()
+        val stickerText = when (installType) {
+            "NEW" -> "New"
+            "UPDATED" -> "Updated"
+            else -> "New"
+        }
+        Log.d("HomeController", "getStickerText: installType=$installType, returning '$stickerText'")
+        return stickerText
+    }
+    
+    private fun checkAppVersionAndMarkServices() {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val currentVersion = packageInfo.versionName ?: "unknown"
+            val storedVersion = preferencesManager.getAppVersion()
+            
+            if (storedVersion.isEmpty()) {
+                // First time install - clear any existing seen services and store version
+                // This ensures New stickers will show for services marked as new by backend
+                preferencesManager.clearSeenServices()
+                preferencesManager.setAppVersion(currentVersion)
+                preferencesManager.setInstallType("NEW")
+                Log.d("HomeController", "First install detected, version: $currentVersion")
+            } else if (storedVersion != currentVersion) {
+                // App update detected - clear seen services to allow new ones to show
+                preferencesManager.clearSeenServices()
+                preferencesManager.setAppVersion(currentVersion)
+                preferencesManager.setInstallType("UPDATED")
+                Log.d("HomeController", "App update detected: $storedVersion -> $currentVersion")
+            } else {
+                // Returning user with same version - services may remain as seen
+                Log.d("HomeController", "Returning user, version: $currentVersion")
+            }
+        } catch (e: Exception) {
+            Log.e("HomeController", "Error checking app version", e)
+        }
+    }
+    
+    fun markServicesAsSeen(services: List<HomeItem>) {
+        val serviceNames = services.map { it.title }
+        Log.d("HomeController", "About to mark ${serviceNames.size} services as seen: $serviceNames")
+        preferencesManager.markAllServicesAsSeen(serviceNames)
+        Log.d("HomeController", "Marked ${serviceNames.size} services as seen")
     }
 }
