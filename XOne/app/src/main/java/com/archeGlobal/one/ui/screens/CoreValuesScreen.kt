@@ -36,7 +36,7 @@ fun CoreValuesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(top = 100.dp) // Add padding to avoid overlapping with the fixed header
+                    .padding(top = 70.dp) // Add padding to avoid overlapping with the fixed header
             ) {
                 // New Heading
                 Spacer(modifier = Modifier.height(18.dp))

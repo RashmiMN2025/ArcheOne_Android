@@ -88,14 +88,14 @@ fun HolidayCalendarScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(6.dp, 12.dp, 6.dp, 0.dp) // Minimized horizontal padding
+                    .padding(4.dp, 10.dp, 4.dp, 0.dp) // Minimized horizontal padding
             ) {
                 // Top Bar
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(bottom = 10.dp)
+                        .padding(bottom = 8.dp)
                 ) {
                     IconButton(
                         onClick = onBackPressed,
@@ -124,7 +124,9 @@ fun HolidayCalendarScreen(
 
                 // Year heading and Holiday List Button
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(6.dp, 0.dp, 6.dp, 0.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -173,6 +175,7 @@ fun HolidayCalendarScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp)) // Legend for holiday types
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -188,6 +191,7 @@ fun HolidayCalendarScreen(
                 }
 
                 Spacer(modifier = Modifier.height(2.dp)) // Responsive Calendar Grid
+
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3), // Changed to 3 columns to match the image
                     verticalArrangement = Arrangement.spacedBy(20.dp), // Adjusted vertical spacing
@@ -198,7 +202,9 @@ fun HolidayCalendarScreen(
                         end = 2.dp,
                         bottom = 100.dp
                     ), // Minimized side padding
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(6.dp)
                 ) {
                     items(12) { monthIndex ->
                         val currentMonth = monthIndex + 1

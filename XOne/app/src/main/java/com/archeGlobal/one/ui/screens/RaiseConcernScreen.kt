@@ -34,7 +34,9 @@ import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun RaiseConcernScreen(
@@ -323,9 +325,9 @@ fun RaiseConcernScreen(
                     if (response.status) {
                         // Show success message based on anonymous status
                         val message = if (anonymous) {
-                            "Concern submitted anonymously with encryption"
+                            "Query submitted Successfully"
                         } else {
-                            "Concern submitted with your identity (encrypted)"
+                            "Query submitted Successfully"
                         }
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 
@@ -335,6 +337,7 @@ fun RaiseConcernScreen(
                         issueDescription = ""
 
                         // Go back after successful submission
+                        delay(2000)
                         onBackPressed()
                     } else {
                         Toast.makeText(
@@ -397,7 +400,6 @@ fun RaiseConcernScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 25.dp)
                 ) {
                     IconButton(onClick = onBackPressed) {
                         Icon(
@@ -411,6 +413,7 @@ fun RaiseConcernScreen(
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
@@ -418,7 +421,7 @@ fun RaiseConcernScreen(
                     Spacer(modifier = Modifier.width(48.dp))
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
                 // Category dropdown (hide when pre-filled from FAQ)
                 if (!isCategoryLocked) {
@@ -432,7 +435,13 @@ fun RaiseConcernScreen(
                         value = selectedCategory ?: "",
                         onValueChange = { },
                         readOnly = true,
-                        placeholder = { Text("Select Issue category") },
+                        placeholder = {
+                            Text(
+                                "Select Issue category",
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 16.sp
+                            ) },
                         trailingIcon = {
                             if (!isCategoryLocked) {
                                 Icon(
@@ -448,9 +457,15 @@ fun RaiseConcernScreen(
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
                             focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.LightGray,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        textStyle = TextStyle(
+                            color = Color.Black,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 16.sp
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
@@ -645,7 +660,12 @@ fun RaiseConcernScreen(
                 OutlinedTextField(
                     value = issueDescription,
                     onValueChange = { issueDescription = it },
-                    placeholder = { Text("Please describe your issue") },
+                    placeholder = { Text(
+                        "Please describe your issue",
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp
+                    ) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 140.dp)
@@ -655,11 +675,16 @@ fun RaiseConcernScreen(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
                         focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.LightGray,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    textStyle = TextStyle(color = Color.Black),
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
+                        fontSize = 16.sp
+                    ),
                     minLines = 5,
                     maxLines = 8,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
@@ -697,47 +722,42 @@ fun RaiseConcernScreen(
                     Text(
                         text = "Submit",
                         color = Color.White,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = GraphikFontFamily,
                     )
                 }
             }
 
             // Anonymous submission dialog (only for SOS concerns)
             if (showAnonymousDialog && !isHelpDeskTicket) {
-                Dialog(onDismissRequest = { showAnonymousDialog = false }) {
-                    Card(
+                Dialog(
+                    onDismissRequest = { showAnonymousDialog = false },
+                    properties = DialogProperties(usePlatformDefaultWidth = false)
+                ) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                            .width(360.dp) // Set wider width for the dialog
+                            .background(Color(0xFFF6F4EE), shape = RoundedCornerShape(16.dp))
+                            .padding(horizontal = 24.dp, vertical = 16.dp)
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Icon
-                            Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .padding(bottom = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_anonymous),
-                                    contentDescription = "Anonymous Icon",
-                                    tint = Color(0xFFDD3825),
-                                    modifier = Modifier.size(60.dp)
-                                )
-                            }
+                            Icon(
+                                painter = painterResource(id = R.drawable.anonymous),
+                                contentDescription = "Anonymous Icon",
+                                tint = Color(0xFFDD3825),
+                                modifier = Modifier.size(60.dp)
+                            )
 
                             // Title
                             Text(
                                 text = "Submit Anonymously?",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -746,9 +766,12 @@ fun RaiseConcernScreen(
                             // Description
                             Text(
                                 text = "Would you like to submit this concern anonymously? Your identity will not be disclosed.",
-                                fontSize = 16.sp,
+                                fontSize = 12.sp,
                                 color = Color.Gray,
                                 textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                                lineHeight = 22.sp,
                                 modifier = Modifier.padding(bottom = 24.dp)
                             )
 
@@ -766,13 +789,15 @@ fun RaiseConcernScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp)
-                                    .padding(bottom = 8.dp),
+                                    .padding(bottom = 2.dp),
                                 shape = RoundedCornerShape(28.dp)
                             ) {
                                 Text(
                                     text = "Submit Anonymously",
-                                    fontSize = 16.sp,
-                                    color = Color.White
+                                    fontSize = 18.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily,
                                 )
                             }
 
@@ -792,8 +817,10 @@ fun RaiseConcernScreen(
                             ) {
                                 Text(
                                     text = "Submit with Identity",
-                                    fontSize = 16.sp,
-                                    color = Color.White
+                                    fontSize = 18.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily,
                                 )
                             }
                         }

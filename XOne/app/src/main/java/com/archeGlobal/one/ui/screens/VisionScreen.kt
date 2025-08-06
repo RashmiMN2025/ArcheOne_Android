@@ -191,7 +191,7 @@ fun VisionScreen(onBackPressed: () -> Unit) {
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(top = 120.dp) // Add padding to avoid overlapping with the fixed header
+                    .padding(top = 80.dp) // Add padding to avoid overlapping with the fixed header
             ) {
                 // Hero Image Section with Vision text
                 Box(

@@ -65,7 +65,7 @@ class IdeaVaultController(
                 Log.e("IdeaVaultController", "Feedback submission failed: ${error.errorMessage}")
                 callback("Failed to submit feedback: ${error.errorMessage}", true)
             } else {
-                Log.d("IdeaVaultController", "Feedback submitted successfully")
+                Log.d("IdeaVaultController", "Feedback submitted successfully!")
                 callback("Feedback submitted successfully!", false)
             }
         }
