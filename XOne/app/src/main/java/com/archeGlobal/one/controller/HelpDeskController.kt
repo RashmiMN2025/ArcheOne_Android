@@ -141,19 +141,19 @@ class HelpDeskController(private val context: Context) {
             tickets = emptyList() // Clear tickets immediately to prevent flash
         )
 
-        // Get user email from login data
-        val userEmail = OtpVerificationController.getUserData()?.email ?: ""
+        // Get user name from login data
+        val userName = OtpVerificationController.getUserData()?.name ?: ""
 
-        if (userEmail.isBlank()) {
+        if (userName.isBlank()) {
             _model.value = _model.value.copy(
                 isLoading = false,
-                error = "User email not found. Please log in again."
+                error = "User name not found. Please log in again."
             )
             return
         }
 
         val request = TicketsRequest(
-            email = userEmail,
+            name = userName,
             category = category,
             subcategory = null // Currently not filtering by subcategory when loading tickets
         )

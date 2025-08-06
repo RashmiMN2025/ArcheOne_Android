@@ -233,7 +233,8 @@ data class VerifyOtpResponse(
     val greetings: Map<String, List<String>>? = null,
     val greetingCategories1: List<ApiGreetingCategory>? = null, // changed from greetingCategories
     @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null,
-    val faqList: List<FAQCategory>? = null
+    val faqList: List<FAQCategory>? = null,
+    val whatsNew: List<WhatsNewItem>? = null
 )
 
 data class User(
@@ -305,6 +306,11 @@ data class RegionalOffice(
     val redirection: String? = null
 )
 
+data class WhatsNewItem(
+    val category: String,
+    val description: String
+)
+
 data class AssetResponse(
     val status: Int,
     val department: String,
@@ -332,7 +338,7 @@ data class CalendarRequest(
 )
 
 data class TicketsRequest(
-    val email: String,
+    val name: String,
     val category: String,
     val subcategory: String? = null
 )
@@ -346,7 +352,11 @@ data class TicketItem(
     val description: String,
     val id: String,
     val status: String,
-    val subject: String
+    val category: String? = null,
+    val subcategory: String? = null,
+    val closure_comments: String? = null,
+    val resolved_time: String? = null,
+    val subject: String? = null  // Make subject optional since API doesn't always return it
 )
 
 data class FAQCategory(

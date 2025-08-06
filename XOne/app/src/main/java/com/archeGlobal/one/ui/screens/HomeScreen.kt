@@ -725,6 +725,17 @@ fun HomeScreenContent(
             )
         }
 
+        // Show WhatsNew dialog
+        val showWhatsNewDialog = controller.showWhatsNewDialog.collectAsState().value
+        val whatsNewData = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getWhatsNewData()
+        if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
+            com.archeGlobal.one.ui.components.WhatsNewDialog(
+                whatsNewItems = whatsNewData,
+                appVersion = "1.3",
+                onDismiss = { controller.dismissWhatsNewDialog() }
+            )
+        }
+
         // Wrap with FooterScaffold for bottom navigation
         FooterScaffold(
             footerNavigation = model.footerNavigation,

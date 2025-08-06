@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -35,6 +36,7 @@ import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @Composable
 fun RaiseConcernScreen(
@@ -66,6 +68,8 @@ fun RaiseConcernScreen(
     val isSubcategoryLocked = prefilledSubcategory != null
     var isSubmitting by remember { mutableStateOf(false) }
     var showAnonymousDialog by remember { mutableStateOf(false) }
+    var showTimerDialog by remember { mutableStateOf(false) }
+    var timerSeconds by remember { mutableStateOf(20) }
 
     // Get categories based on context
     val helpDeskModel by helpDeskController.model.collectAsState()
@@ -222,9 +226,9 @@ fun RaiseConcernScreen(
                         selectedSubcategory = null
                         issueDescription = ""
 
-                        // Wait 2 seconds then go back after successful submission
-                        kotlinx.coroutines.delay(2000)
-                        onBackPressed()
+                        // Show timer dialog for helpdesk tickets only
+                        showTimerDialog = true
+                        timerSeconds = 20
                     } else {
                         val errorMessage = if (source == "asset") {
                             // For asset concerns, use API response message
@@ -794,6 +798,98 @@ fun RaiseConcernScreen(
                                     text = "Submit with Identity",
                                     fontSize = 16.sp,
                                     color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Timer dialog for helpdesk tickets
+            if (showTimerDialog && isHelpDeskTicket) {
+                LaunchedEffect(showTimerDialog) {
+                    while (timerSeconds > 0) {
+                        delay(1000)
+                        timerSeconds--
+                    }
+                    if (timerSeconds <= 0) {
+                        showTimerDialog = false
+                        // Navigate to track tickets after timer completes
+                        helpDeskController.navigateToTrackTickets("Helpdesk")
+                    }
+                }
+                
+                Dialog(
+                    onDismissRequest = { /* Don't allow dismissing during timer */ },
+                    properties = DialogProperties(
+                        dismissOnBackPress = false,
+                        dismissOnClickOutside = false
+                    )
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(0.75f)
+                            .wrapContentHeight(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // Title
+                            Text(
+                                text = "Ticket Submitted!",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            // Description
+                            Text(
+                                text = "Your ticket status will be shown in",
+                                fontSize = 16.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 24.dp)
+                            )
+
+                            // Timer circle
+                            Box(
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .padding(bottom = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                // Background circle
+                                Box(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .background(
+                                            Color(0xFFE5E5E5),
+                                            shape = CircleShape
+                                        )
+                                )
+                                
+                                // Red circular progress indicator
+                                CircularProgressIndicator(
+                                    progress = (20 - timerSeconds) / 20f,
+                                    modifier = Modifier.size(96.dp),
+                                    color = Color(0xFFD32F2F),
+                                    strokeWidth = 4.dp,
+                                    trackColor = Color.Transparent
+                                )
+                                
+                                // Timer text in center
+                                Text(
+                                    text = String.format("%02d:%02d", 0, timerSeconds),
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black
                                 )
                             }
                         }

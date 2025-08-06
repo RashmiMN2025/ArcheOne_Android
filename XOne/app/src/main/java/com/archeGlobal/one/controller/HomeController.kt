@@ -70,12 +70,20 @@ class HomeController(
     private val _showCelebrationDialog = MutableStateFlow(false)
     val showCelebrationDialog: StateFlow<Boolean> = _showCelebrationDialog.asStateFlow()
 
+    // WhatsNew dialog state management
+    private val _showWhatsNewDialog = MutableStateFlow(false)
+    val showWhatsNewDialog: StateFlow<Boolean> = _showWhatsNewDialog.asStateFlow()
+
+    // Initialize PreferencesManager early to avoid null pointer exceptions
+    private val preferencesManager by lazy { PreferencesManager(context) }
+
     // Companion object and other class members follow
     companion object {
         private const val PREF_NAME = "event_preferences"
         private const val KEY_LAST_SHOWN_DATE = "last_shown_date"
         private const val KEY_PRIDE_MONTH_SHOWN = "pride_month_shown"
         private const val KEY_USING_PRIDE_ICON = "using_pride_icon"
+        private const val KEY_WHATS_NEW_SHOWN = "whats_new_shown"
     }
 
     // Initialize event handling
@@ -97,10 +105,11 @@ class HomeController(
 
         // Fetch celebration data
         fetchCelebrationData()
+        
+        // Check if WhatsNew dialog should be shown
+        checkWhatsNewDialog()
     }
 
-    private val preferencesManager = PreferencesManager(context)
-    
     init {
         // Check app version and handle first install vs updates vs returning users
         checkAppVersionAndMarkServices()
@@ -401,6 +410,46 @@ class HomeController(
     fun dismissCelebrationDialog() {
         Log.d("CelebrationController", "Dismissing celebration dialog")
         _showCelebrationDialog.value = false
+    }
+
+    fun showWhatsNewDialog() {
+        Log.d("HomeController", "Showing WhatsNew dialog")
+        _showWhatsNewDialog.value = true
+    }
+
+    fun dismissWhatsNewDialog() {
+        Log.d("HomeController", "Dismissing WhatsNew dialog")
+        _showWhatsNewDialog.value = false
+        // Mark as shown so it doesn't show again
+        preferencesManager.setBoolean(KEY_WHATS_NEW_SHOWN, true)
+    }
+
+    private fun checkWhatsNewDialog() {
+        Log.d("HomeController", "Checking if WhatsNew dialog should be shown")
+        
+        // Check if dialog has already been shown
+        val alreadyShown = preferencesManager.getBoolean(KEY_WHATS_NEW_SHOWN, false)
+        if (alreadyShown) {
+            Log.d("HomeController", "WhatsNew dialog already shown, skipping")
+            return
+        }
+        
+        // Check if we have WhatsNew data from the login response
+        val whatsNewData = UserDataManager.getInstance(context).getWhatsNewData()
+        if (whatsNewData.isNullOrEmpty()) {
+            Log.d("HomeController", "No WhatsNew data available, skipping dialog")
+            return
+        }
+        
+        // Check install type - only show on fresh install
+        val installType = preferencesManager.getInstallType()
+        if (installType != "NEW") {
+            Log.d("HomeController", "Not a fresh install (installType: $installType), skipping WhatsNew dialog")
+            return
+        }
+        
+        Log.d("HomeController", "Showing WhatsNew dialog for fresh install with ${whatsNewData.size} items")
+        _showWhatsNewDialog.value = true
     }
 
     fun onCelebrationWishesClick(email: String, employeeName: String, celebrationType: String) {
@@ -871,13 +920,9 @@ class HomeController(
         val userHasntSeen = preferencesManager.isServiceNew(service.service)
         val installType = preferencesManager.getInstallType()
         
-        // For fresh installs, show New sticker for all services that haven't been seen
-        // For updates, only show for services marked as new by backend
-        val shouldShow = when (installType) {
-            "NEW" -> userHasntSeen // Fresh install - show for all unseen services
-            "UPDATED" -> service.isNew && userHasntSeen // Update - only show for backend-marked new services
-            else -> service.isNew && userHasntSeen // Default behavior
-        }
+        // Only show New sticker when backend explicitly marks service as isNew: true
+        // AND the user hasn't seen this service yet
+        val shouldShow = service.isNew && userHasntSeen
         
         Log.d("HomeController", "Service '${service.service}': installType=$installType, backendSaysNew=${service.isNew}, userHasntSeen=$userHasntSeen, shouldShow=$shouldShow")
         return shouldShow
