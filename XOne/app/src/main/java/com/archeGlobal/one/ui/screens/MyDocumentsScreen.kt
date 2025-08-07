@@ -531,27 +531,27 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         Spacer(modifier = Modifier.height(26.dp))
                         Button(
                             onClick = {
-                                if (enteredMpin.isEmpty()) {
-                                    mpinError = "Please enter the MPIN"
-                                } else if (enteredMpin.length < 4) {
-                                    mpinError = "Please enter the MPIN"
-                                } else {
-                                    isVerifyingMpin = true
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        kotlinx.coroutines.delay(700)
-                                        if (mpinController.validateMpin(enteredMpin)) {
-                                            mpinError = null
-                                            enteredMpin = ""
-                                            showMpinPrompt = false
-                                            userDataManager.preferencesManager.setAppLockState(false)
-                                        } else {
-                                            mpinError = "Invalid MPIN"
-                                            enteredMpin = ""
+                                    if (enteredMpin.isEmpty()) {
+                                        mpinError = "Please enter the MPIN"
+                                    } else if (enteredMpin.length < 4) {
+                                        mpinError = "Please enter the MPIN"
+                                    } else {
+                                        isVerifyingMpin = true
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            kotlinx.coroutines.delay(700)
+                                            if (mpinController.validateMpin(enteredMpin)) {
+                                                mpinError = null
+                                                enteredMpin = ""
+                                                showMpinPrompt = false
+                                                userDataManager.preferencesManager.setAppLockState(false)
+                                            } else {
+                                                mpinError = "Invalid MPIN"
+                                                enteredMpin = ""
+                                            }
+                                            isVerifyingMpin = false
                                         }
-                                        isVerifyingMpin = false
                                     }
-                                }
-                            },
+                                },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(54.dp),
@@ -609,7 +609,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp)
                             )
-                        } 
+                        }
                     }
                 }
             }
