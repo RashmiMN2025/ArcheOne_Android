@@ -920,9 +920,8 @@ class HomeController(
         val userHasntSeen = preferencesManager.isServiceNew(service.service)
         val installType = preferencesManager.getInstallType()
         
-        // Only show New sticker when backend explicitly marks service as isNew: true
-        // AND the user hasn't seen this service yet
-        val shouldShow = service.isNew && userHasntSeen
+        // Show New sticker when backend explicitly marks service as isNew: true
+        val shouldShow = service.isNew
         
         Log.d("HomeController", "Service '${service.service}': installType=$installType, backendSaysNew=${service.isNew}, userHasntSeen=$userHasntSeen, shouldShow=$shouldShow")
         return shouldShow
