@@ -514,7 +514,7 @@ fun HomeScreenContent(
                     ) {
                         // Red lock icon
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_lock), // Use your red lock icon
+                            painter = painterResource(id = R.drawable.lock), // Use your red lock icon
                             contentDescription = "Lock",
                             tint = Color(0xFFDD3825),
                             modifier = Modifier.size(48.dp)
@@ -633,15 +633,24 @@ fun HomeScreenContent(
                         // Unlock button
                         Button(
                             onClick = {
-                                if (enteredMpin.length == 4 && mpinController.validateMpin(enteredMpin)) {
-                                    userDataManager.preferencesManager.setAppLockState(false)
-                                    mpinError = null
-                                    enteredMpin = ""
-                                    Toast.makeText(appContext, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
+                                if (enteredMpin.isEmpty()) {
+                                    mpinError = "Please enter the MPIN"
+                                } else if (enteredMpin.length < 4) {
+                                    mpinError = "Please enter the MPIN"
                                 } else {
-                                    mpinError = "Invalid MPIN. Please try again."
-                                    enteredMpin = ""
-                                    Toast.makeText(appContext, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
+                                    isVerifyingMpin = true
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        kotlinx.coroutines.delay(700)
+                                        if (mpinController.validateMpin(enteredMpin)) {
+                                            mpinError = null
+                                            enteredMpin = ""
+                                            userDataManager.preferencesManager.setAppLockState(false)
+                                        } else {
+                                            mpinError = "Invalid MPIN"
+                                            enteredMpin = ""
+                                        }
+                                        isVerifyingMpin = false
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -651,7 +660,8 @@ fun HomeScreenContent(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFDD3825),
                                 contentColor = Color.White
-                            )
+                            ),
+                            enabled = !isVerifyingMpin
                         ) {
                             Text(
                                 "Unlock",
@@ -685,6 +695,20 @@ fun HomeScreenContent(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 16.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (mpinError != null) {
+                            Text(
+                                text = mpinError!!,
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Red,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp)
                             )
                         }
                     }
