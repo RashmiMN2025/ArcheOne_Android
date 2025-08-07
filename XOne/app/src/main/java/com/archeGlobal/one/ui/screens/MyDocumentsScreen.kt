@@ -609,7 +609,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp)
                             )
-                        }
+                        } 
                     }
                 }
             }
