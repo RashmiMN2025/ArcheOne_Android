@@ -46,7 +46,8 @@ fun RaiseConcernScreen(
     title: String = "Raise a Concern",
     source: String = "helpdesk", // Add source parameter to track where we came from
     prefilledCategory: String? = null, // FAQ category to prefill and lock
-    prefilledSubcategory: String? = null // FAQ subcategory to prefill and lock
+    prefilledSubcategory: String? = null, // FAQ subcategory to prefill and lock
+    onNavigateToTrackTickets: ((String) -> Unit)? = null // Add navigation callback for track tickets
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -842,7 +843,12 @@ fun RaiseConcernScreen(
                     if (timerSeconds <= 0) {
                         showTimerDialog = false
                         // Navigate to track tickets after timer completes
-                        helpDeskController.navigateToTrackTickets("Helpdesk")
+                        if (onNavigateToTrackTickets != null) {
+                            onNavigateToTrackTickets("Helpdesk")
+                        } else {
+                            // Fallback: try controller navigation
+                            helpDeskController.navigateToTrackTickets("Helpdesk")
+                        }
                     }
                 }
                 
@@ -885,23 +891,13 @@ fun RaiseConcernScreen(
                                 modifier = Modifier.padding(bottom = 24.dp)
                             )
 
-                            // Timer circle
+                            // Timer circle - Remove grey background
                             Box(
                                 modifier = Modifier
                                     .size(100.dp)
                                     .padding(bottom = 16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                // Background circle
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .background(
-                                            Color(0xFFE5E5E5),
-                                            shape = CircleShape
-                                        )
-                                )
-                                
                                 // Red circular progress indicator
                                 CircularProgressIndicator(
                                     progress = (20 - timerSeconds) / 20f,

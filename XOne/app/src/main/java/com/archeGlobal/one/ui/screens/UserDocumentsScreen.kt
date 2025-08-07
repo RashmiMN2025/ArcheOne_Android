@@ -2,6 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,7 +36,14 @@ fun UserDocumentsScreen(
 ) {
     // Get documents from the controller
     val documents by controller.userDocuments.observeAsState(emptyList())
-    val uploadStatus by controller.uploadStatus.observeAsState(emptyMap())
+    
+    // Log when documents change to verify LiveData updates are received
+    LaunchedEffect(documents) {
+        Log.d("UserDocumentsScreen", "Documents updated: ${documents.size} documents received")
+        documents.forEach { doc ->
+            Log.d("UserDocumentsScreen", "Document in list: ${doc.document_name}, hasData=${!doc.doc_data.isBlank()}")
+        }
+    }
 
     // Observe loading state
     val isLoading by controller.isLoading.observeAsState(false)
@@ -153,13 +161,20 @@ fun UserDocumentsScreen(
                         val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance Card")
                         val docMap = documents.associateBy { it.document_name }
                         val docsToShow = requiredDocs.map { docName ->
-                            docMap[docName] ?: UserDocument(docName, "")
+                            val existingDoc = docMap[docName]
+                            if (existingDoc != null) {
+                                existingDoc // Use the document from API with actual doc_data
+                            } else {
+                                UserDocument(docName, "") // Create empty document for display
+                            }
                         }
 
                         docsToShow.forEach { document ->
+                            val isUploaded = !document.doc_data.isNullOrBlank()
+                            Log.d("UserDocumentsScreen", "Document: ${document.document_name}, doc_data: '${document.doc_data}', isUploaded: $isUploaded")
                             DocumentItem(
                                 document = document,
-                                isUploaded = uploadStatus[document.document_name] ?: false,
+                                isUploaded = isUploaded,
                                 onViewClick = { controller.viewDocument(document) },
                                 onUploadClick = {
                                     selectedDocument = document.document_name

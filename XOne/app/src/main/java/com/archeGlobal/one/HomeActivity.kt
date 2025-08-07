@@ -510,7 +510,10 @@ class HomeActivity : AppCompatActivity() {
                             onBackPressed = { navController.popBackStack() },
                             title = decodedTitle,
                             prefilledCategory = decodedCategory,
-                            prefilledSubcategory = decodedSubcategory
+                            prefilledSubcategory = decodedSubcategory,
+                            onNavigateToTrackTickets = { category ->
+                                helpDeskController.navigateToTrackTickets(category)
+                            }
                         )
                     }
 
@@ -876,7 +879,12 @@ class HomeActivity : AppCompatActivity() {
                         var showRaiseConcern by remember { mutableStateOf(false) }
 
                         if (showRaiseConcern) {
-                            RaiseConcernScreen(onBackPressed = { showRaiseConcern = false })
+                            RaiseConcernScreen(
+                                onBackPressed = { showRaiseConcern = false },
+                                onNavigateToTrackTickets = { category ->
+                                    helpDeskController.navigateToTrackTickets(category)
+                                }
+                            )
                         } else {
                             SOSScreen(
                                 controller = sosController,
