@@ -7,9 +7,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -132,33 +129,26 @@ fun LocationsScreen(
                     )
                 )
         ) {
-            val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
                 containerColor = Color.Transparent,
                 topBar = {
-                    TopAppBar(
+                    CenterAlignedTopAppBar(
                         title = {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 80.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(
-                                    text = when {
-                                        locationController.isInEmergencyContactMode() -> "Emergency Contacts"
-                                        state.showingStateList -> "Regional Offices"
-                                        state.showingDetails -> "Regional Offices"
-                                        else -> "Locations"
-                                    },
-                                    fontSize = 20.sp,
-                                    color = Color.Black,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Text(
+                                text = when {
+                                    locationController.isInEmergencyContactMode() -> "Emergency Contacts"
+                                    state.showingStateList -> "Regional Offices"
+                                    state.showingDetails -> "Regional Offices"
+                                    else -> "Locations"
+                                },
+                                fontSize = 20.sp,
+                                color = Color.Black,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
                         },
                         navigationIcon = {
                             IconButton(
@@ -436,7 +426,7 @@ private fun LocationCard(
                     modifier = Modifier.width(180.dp)
                 ) {
                     Text(
-                        text = "View Location",
+                        text = "View Locations",
                         color = Color.White,
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,

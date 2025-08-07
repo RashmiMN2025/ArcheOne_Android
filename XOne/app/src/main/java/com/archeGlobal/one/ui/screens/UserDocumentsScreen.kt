@@ -312,7 +312,7 @@ fun DocumentItem(
                 ) {
                     if (isUploaded) {
                         Icon(
-                            imageVector = Icons.Default.Delete,
+                            painter = painterResource(id = R.drawable.delete),
                             contentDescription = "Delete",
                             tint = Color(0xFFDD3825),
                             modifier = Modifier.size(22.dp)

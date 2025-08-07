@@ -404,7 +404,7 @@ fun MonthDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(4.dp, 12.dp, 4.dp, 0.dp) // Minimized horizontal padding
+                    .padding(4.dp, 10.dp, 4.dp, 0.dp) // Minimized horizontal padding
                     .clickable(
                         enabled = true,
                         interactionSource = remember { MutableInteractionSource() },

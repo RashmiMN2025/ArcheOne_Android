@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -47,6 +48,7 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +61,9 @@ fun TodoScreen(
     val currentNewTask = newTask
     val currentDayOfWeek = LocalDate.now().dayOfWeek.value
     val isPastDay = controller.model.selectedDay < currentDayOfWeek
+    val context = LocalContext.current
+
+    val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
 
     LaunchedEffect(tasksForSelectedDay.size, controller.model.selectedDay) {
         // If there are no tasks, clear newTask
@@ -143,6 +148,8 @@ fun TodoScreen(
                     if (tasksForSelectedDay.isEmpty() && currentNewTask != null && currentNewTask.dayOfWeek == controller.model.selectedDay) {
                         EmptyTasksMessage(
                             newTask = currentNewTask,
+                            selectedDay = controller.model.selectedDay,
+                            days = days,
                             onTaskClick = { /* ... */ },
                             onEditClick = controller::startEditTask,
                             onDeleteClick = {
@@ -155,7 +162,10 @@ fun TodoScreen(
                         )
                     } else if (tasksForSelectedDay.isEmpty()) {
                         // Show the empty state if there are no tasks at all for this day
-                        EmptyTasksMessage()
+                        EmptyTasksMessage(
+                            selectedDay = controller.model.selectedDay,
+                            days = days
+                        )
                     } else {
                         TaskList(
                             tasks = tasksForSelectedDay,
@@ -171,16 +181,24 @@ fun TodoScreen(
 
                 // Add Task Button at bottom
                 Button(
-                    onClick = { if (!isPastDay) controller.startAddTask() },
+                    onClick = {
+                        if (isPastDay) {
+                            Toast.makeText(
+                                context,
+                                "Tasks cannot be added for previous days",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            controller.startAddTask()
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isPastDay) Color.Gray else Color(0xFFE83A25),
-                        disabledContainerColor = Color.Gray
+                        containerColor = Color(0xFFE83A25)
                     ),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isPastDay
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = "Add Task",
@@ -636,6 +654,8 @@ fun SwipeableTaskItem(
 fun EmptyTasksMessage(
     newTask: TodoTask? = null, // Pass the newly added task here, or null if none
     onTaskClick: (() -> Unit)? = null,
+    selectedDay: Int? = null,
+    days: List<String> = emptyList(),
     onEditClick: ((TodoTask) -> Unit)? = null,
     onDeleteClick: ((TodoTask) -> Unit)? = null,
     onToggleCompleted: ((TodoTask) -> Unit)? = null,
@@ -657,7 +677,11 @@ fun EmptyTasksMessage(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "No tasks for this day",
+                    text = if (selectedDay != null && days.isNotEmpty()) {
+                        "No tasks for ${days[selectedDay - 1]}"
+                    } else {
+                        "No tasks"
+                    },
                     fontSize = 18.sp,
                     color = Color.Gray,
                     fontFamily = GraphikFontFamily,
