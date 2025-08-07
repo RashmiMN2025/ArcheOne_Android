@@ -49,6 +49,8 @@ import com.archeGlobal.one.controller.MyDocumentsController
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -178,6 +180,10 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             hasInitialLoadCompleted = true
         }
     }
+
+    val density = LocalDensity.current
+    val imeInsets = WindowInsets.ime
+    val isKeyboardVisible = imeInsets.getBottom(density) > 0
 
     Box(
         modifier = Modifier
@@ -390,11 +396,6 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                 UniversalLoader(isLoading = true)
             }
 
-            // Keyboard-aware MPIN prompt box
-            val density = LocalDensity.current
-            val keyboardHeight = WindowInsets.ime.getBottom(density)
-            val isKeyboardVisible = keyboardHeight > 0
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -424,7 +425,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            painter = painterResource(id = com.archeGlobal.one.R.drawable.ic_lock),
+                            painter = painterResource(id = com.archeGlobal.one.R.drawable.lock),
                             contentDescription = "Lock",
                             tint = Color(0xFFDD3825),
                             modifier = Modifier.size(48.dp)
@@ -530,27 +531,25 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         Spacer(modifier = Modifier.height(26.dp))
                         Button(
                             onClick = {
-                                if (enteredMpin.length == 4) {
+                                if (enteredMpin.isEmpty()) {
+                                    mpinError = "Please enter the MPIN"
+                                } else if (enteredMpin.length < 4) {
+                                    mpinError = "Please enter the MPIN"
+                                } else {
                                     isVerifyingMpin = true
-                                    mpinError = null
-                                    // Simulate async verification
-                                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                                    CoroutineScope(Dispatchers.Main).launch {
                                         kotlinx.coroutines.delay(700)
                                         if (mpinController.validateMpin(enteredMpin)) {
                                             mpinError = null
                                             enteredMpin = ""
                                             showMpinPrompt = false
-                                            Toast.makeText(context, "MPIN verified successfully", Toast.LENGTH_SHORT).show()
+                                            userDataManager.preferencesManager.setAppLockState(false)
                                         } else {
-                                            mpinError = "Invalid MPIN. Please try again."
+                                            mpinError = "Invalid MPIN"
                                             enteredMpin = ""
-                                            Toast.makeText(context, "Invalid MPIN. Please try again.", Toast.LENGTH_SHORT).show()
                                         }
                                         isVerifyingMpin = false
                                     }
-                                } else {
-                                    mpinError = "Please enter 4 digits."
-                                    Toast.makeText(context, "Please enter 4 digits.", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier
@@ -595,6 +594,20 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 16.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (mpinError != null) {
+                            Text(
+                                text = mpinError!!,
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Red,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp)
                             )
                         }
                     }
