@@ -55,10 +55,10 @@ fun TicketItem.toSupportTicket(): SupportTicket {
     return SupportTicket(
         id = id,
         ticketNumber = "#$id",
-        title = subject,
+        title = subject ?: "Support Ticket #$id", // Use default title if subject is null
         description = description,
         status = ticketStatus,
-        category = "Helpdesk", // Default category as per API request
+        category = category ?: "Helpdesk", // Use API category or default to Helpdesk
         createdDate = created_time,
         lastUpdate = null,
         details = null

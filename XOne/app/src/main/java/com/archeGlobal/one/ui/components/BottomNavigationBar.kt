@@ -44,7 +44,7 @@ fun BottomNavigationBar(
 
     NavigationBar(
         modifier = modifier
-            .height(56.dp)
+            .height(70.dp)
             .fillMaxWidth(),
         containerColor = Color.White,
         contentColor = selectedColor,
@@ -69,14 +69,14 @@ fun BottomNavigationBar(
                     Image(
                         painter = painterResource(id = homeIconRes),
                         contentDescription = "Home",
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(24.dp),
                         colorFilter = if (isUsingPrideIcon) null else androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Home",
                         style = MaterialTheme.typography.bodySmall,
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         color = homeSelectedColor, // Always black
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -106,14 +106,14 @@ fun BottomNavigationBar(
                         Icon(
                             painterResource(id = R.drawable.chat),
                             contentDescription = "Chat",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                             tint = if (model.showChat) selectedColor else unselectedColor
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Chat",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = if (model.showChat) selectedColor else unselectedColor
                         )
                     }
@@ -142,14 +142,14 @@ fun BottomNavigationBar(
                         Icon(
                             painterResource(id = R.drawable.sostab),
                             contentDescription = "SOS",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                             tint = if (model.showSOS) selectedColor else unselectedColor
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "SOS",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = if (model.showSOS) selectedColor else unselectedColor
                         )
                     }
@@ -178,14 +178,14 @@ fun BottomNavigationBar(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                             tint = if (model.showProfile) selectedColor else unselectedColor
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Profile",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 10.sp,
+                            fontSize = 12.sp,
                             color = if (model.showProfile) selectedColor else unselectedColor
                         )
                     }

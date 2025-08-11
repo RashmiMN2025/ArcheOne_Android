@@ -63,7 +63,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
@@ -435,6 +434,17 @@ fun HomeScreenContent(
         val isPrideMonth = controller.isPrideMonth.collectAsState().value
         val showPrideMonthDialog = controller.showPrideMonthDialog.collectAsState().value
         val isUsingPrideIcon = remember { mutableStateOf(controller.isUsingPrideIcon()) }
+        
+        // Mark services as seen after a short delay to let user see New stickers
+        LaunchedEffect(model.categories) {
+            if (model.categories.isNotEmpty()) {
+                // Wait 2 seconds before marking services as seen
+                // This gives user time to see the New stickers on fresh install
+                kotlinx.coroutines.delay(2000)
+                val allServices = model.categories.values.flatten()
+                controller.markServicesAsSeen(allServices)
+            }
+        }
 
         // Show Pride Month Dialog if it's Pride Month and dialog should be shown
         if (isPrideMonth && showPrideMonthDialog) {
@@ -467,17 +477,18 @@ fun HomeScreenContent(
                 UniversalLoader(isLoading = true)
             }
 
-            val density = LocalDensity.current
-            val imeInsets = WindowInsets.ime
-            val isKeyboardVisible = imeInsets.getBottom(density) > 0
+            val navController = androidx.navigation.compose.rememberNavController()
 
-            // Centered MPIN prompt box
+            // Keyboard-aware MPIN prompt box
+            val density = LocalDensity.current
+            val keyboardHeight = WindowInsets.ime.getBottom(density)
+            val isKeyboardVisible = keyboardHeight > 0
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .zIndex(101f)
-                    .offset(y = if (isKeyboardVisible) (-150).dp else 0.dp),
-                contentAlignment = Alignment.Center
+                    .zIndex(101f),
+                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
@@ -487,6 +498,13 @@ fun HomeScreenContent(
                     modifier = Modifier
                         .widthIn(min = 340.dp, max = 420.dp)
                         .padding(horizontal = 16.dp)
+                        .then(
+                            if (isKeyboardVisible) {
+                                Modifier.padding(top = 32.dp)
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Column(
                         modifier = Modifier
@@ -653,7 +671,6 @@ fun HomeScreenContent(
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-
                         // Reset MPIN button
                         OutlinedButton(
                             onClick = {
@@ -729,6 +746,17 @@ fun HomeScreenContent(
                     val intent = android.content.Intent(context, com.archeGlobal.one.AllCelebrationActivity::class.java)
                     context.startActivity(intent)
                 }
+            )
+        }
+
+        // Show WhatsNew dialog
+        val showWhatsNewDialog = controller.showWhatsNewDialog.collectAsState().value
+        val whatsNewData = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getWhatsNewData()
+        if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
+            com.archeGlobal.one.ui.components.WhatsNewDialog(
+                whatsNewItems = whatsNewData,
+                appVersion = "1.3",
+                onDismiss = { controller.dismissWhatsNewDialog() }
             )
         }
 
@@ -828,7 +856,7 @@ fun HomeScreenContent(
                                     text = "Celebrating love, equality, and pride this month and always.",
                                     fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Center,
                                     color = Color.Black,
                                     modifier = Modifier
@@ -978,7 +1006,9 @@ fun HomeScreenContent(
                                                             onLongPress = { position ->
                                                                 selectedApp = item
                                                                 selectedPosition = position
-                                                            }
+                                                            },
+                                                            isNew = item.isNew,
+                                                            stickerText = item.stickerText
                                                         )
                                                     }
                                                     repeat(columns - rowItems.size) {
@@ -1031,7 +1061,9 @@ fun HomeScreenContent(
                                                                 onLongPress = { position ->
                                                                     selectedApp = item
                                                                     selectedPosition = position
-                                                                }
+                                                                },
+                                                                isNew = item.isNew,
+                                                                stickerText = item.stickerText
                                                             )
                                                         }
                                                         repeat(columns - rowItems.size) {
@@ -1458,7 +1490,9 @@ private fun AppItem(
     modifier: Modifier = Modifier,
     showFavoriteButton: Boolean = false,
     isSelected: Boolean = false,
-    onLongPress: (Pair<Float, Float>) -> Unit
+    onLongPress: (Pair<Float, Float>) -> Unit,
+    isNew: Boolean = false,
+    stickerText: String = "New"
 ) {
     var itemPosition by remember { mutableStateOf<Pair<Float, Float>?>(null) }
     val context = LocalContext.current
@@ -1523,6 +1557,37 @@ private fun AppItem(
                     overflow = TextOverflow.Visible,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+            
+            // New sticker in top-right corner with straight right edge and curved left edge
+            if (isNew) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 6.dp)
+                        .background(
+                            color = Color(0xFFDD3825),
+                            shape = RoundedCornerShape(
+                                topStart = 12.dp,
+                                topEnd = 0.dp,
+                                bottomStart = 12.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
+                        .padding(horizontal = 9.dp, vertical = 0.dp)
+                        .height(16.dp)
+                ) {
+                    Text(
+                        text = stickerText,
+                        color = Color.White,
+                        fontSize = 8.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = (-1).dp)
+                    )
+                }
             }
         }
     }

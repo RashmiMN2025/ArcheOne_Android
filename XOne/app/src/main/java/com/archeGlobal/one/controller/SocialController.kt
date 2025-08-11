@@ -73,12 +73,12 @@ class SocialController(private val context: Context) {
         return if (dataProvider.isLoaded) {
             dataProvider.blogs
         } else {
-            // Fallback to local processing
+            // Fallback to local processing - use Content for longer descriptions like case studies
             _socialState.blogs.map { blog ->
                 SocialArticle(
                     id = blog.Slug,
                     title = blog.Title,
-                    description = blog.Description,
+                    description = blog.Content?.takeIf { it.isNotEmpty() } ?: blog.Description,
                     imageUrl = blog.Image,
                     content = blog.Content
                 )
@@ -97,7 +97,7 @@ class SocialController(private val context: Context) {
                     SocialArticle(
                         id = caseStudy.Slug,
                         title = caseStudy.Title,
-                        description = caseStudy.Description,
+                        description = caseStudy.Content?.takeIf { it.isNotEmpty() } ?: caseStudy.Description,
                         imageUrl = caseStudy.Image,
                         content = caseStudy.Content
                     )

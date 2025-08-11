@@ -26,6 +26,7 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ResponsiveLoginScreen
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
+import com.archeGlobal.one.utils.CustomToast
 
 class LoginActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
@@ -75,7 +76,7 @@ class LoginActivity : AppCompatActivity() {
 
         // Show session expired message if needed
         if (sessionExpired) {
-            android.widget.Toast.makeText(this, "Session expired. Please log in again.", android.widget.Toast.LENGTH_LONG).show()
+            CustomToast.show(this, "Session expired. Please log in again.", android.widget.Toast.LENGTH_LONG)
         }
 
         setContent {

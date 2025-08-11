@@ -64,10 +64,41 @@ fun OtpVerificationScreen(
     // Format time into MM:SS
     val formattedTime = String.format("%02d:%02d", timeLeft / 60, timeLeft % 60)
 
-    // Show Toast message for verification feedback
+    // Show Toast message for errors
     LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        errorMessage?.let { message ->
+            // Format long messages with line breaks for better visibility
+            val formattedMessage = if (message.length > 50) {
+                // Split long messages into multiple lines
+                val words = message.split(" ")
+                val lines = mutableListOf<String>()
+                var currentLine = ""
+
+                for (word in words) {
+                    if ((currentLine + word).length > 35) {
+                        if (currentLine.isNotEmpty()) {
+                            lines.add(currentLine.trim())
+                            currentLine = word + " "
+                        } else {
+                            lines.add(word)
+                        }
+                    } else {
+                        currentLine += "$word "
+                    }
+                }
+
+                if (currentLine.isNotEmpty()) {
+                    lines.add(currentLine.trim())
+                }
+
+                // Join with newlines to create multi-line toast
+                lines.joinToString("\n")
+            } else {
+                message
+            }
+
+            Toast.makeText(context, formattedMessage, Toast.LENGTH_LONG).show()
+            errorMessage = null
         }
     }
 

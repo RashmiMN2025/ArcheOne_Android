@@ -1,7 +1,8 @@
 package com.archeGlobal.one.ui.screens
 
 import MicrosoftLoginWebView
-import android.widget.Toast
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -59,6 +60,7 @@ import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.BiometricHelper
+import com.archeGlobal.one.utils.CustomToast
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
@@ -105,12 +107,6 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
     var firstTimeLogin by remember { mutableStateOf(forceOriginalLogin || isFirstTimeLogin(context)) }
-
-    // Update firstTimeLogin when the screen is recreated after logout
-    LaunchedEffect(Unit) {
-        firstTimeLogin = forceOriginalLogin || isFirstTimeLogin(context)
-        android.util.Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}")
-    }
     var showWebView by remember { mutableStateOf(false) }
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
     var showMfaTermsDialog by remember { mutableStateOf(false) }
@@ -124,7 +120,15 @@ fun LoginScreen(
     val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
 
     // Get last user name from preserved data (works for both logout and session expiry)
-    val lastEmployeeName = preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
+    val lastEmployeeName = if (sessionExpired) {
+        preferencesManager.getString("session_expired_name", "") ?: preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
+    } else {
+        preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
+    }
+    
+    // For session expiry, treat as returning user if we have preserved data
+    val shouldTreatAsReturningUser = sessionExpired && !lastEmployeeName.isNullOrEmpty()
+    
     val isLoggedIn = userDataManager.isLoggedIn()
     val hasLoggedIn = userDataManager.hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
@@ -139,26 +143,32 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         android.util.Log.d("LoginScreen", "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton")
     }
+    
+    // Update firstTimeLogin when the screen is created, considering session expiry
+    LaunchedEffect(Unit) {
+        val calculatedFirstTime = forceOriginalLogin || (isFirstTimeLogin(context) && !shouldTreatAsReturningUser)
+        firstTimeLogin = calculatedFirstTime
+        android.util.Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+    }
+    
     var showFingerprint by remember { mutableStateOf(false) }
 
     // Update showFingerprint when relevant conditions change
-    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired) {
+    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired, shouldTreatAsReturningUser, isBiometricEnabled) {
         // Show fingerprint for returning users (including session expired) if biometric is available
-        showFingerprint = showBiometricButton && (!firstTimeLogin || sessionExpired)
+        showFingerprint = showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)
         // Reset isDifferentUserMode after normal logout (when it's not forced)
         if (!forceDifferentUserMode && !firstTimeLogin) {
             isDifferentUserMode = false
         }
 
         // Debug logging
-        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
+        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
         android.util.Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
         android.util.Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
     }
 
-    var showPolicyWebView by remember { mutableStateOf(false) }
-    var policyUrl by remember { mutableStateOf("") }
-    var policyTitle by remember { mutableStateOf("") }
+    // Removed policy WebView state variables - now using external browser
 
     val mpinController = remember { com.archeGlobal.one.controller.MpinController(context) }
     // Make hasMpin reactive to changes - don't use remember so it re-evaluates
@@ -183,9 +193,21 @@ fun LoginScreen(
     val userData = userDataManager.getUserData()
 
     // Always try to get preserved user data (works for both logout and session expiry)
-    val lastUserEmail = preferencesManager.getString("last_user_email", "")
-    val lastUserMobile = preferencesManager.getString("last_user_mobile", "")
-    val lastUserEmployeeId = preferencesManager.getString("last_user_employee_id", "")
+    val lastUserEmail = if (sessionExpired) {
+        preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "")
+    } else {
+        preferencesManager.getString("last_user_email", "")
+    }
+    val lastUserMobile = if (sessionExpired) {
+        preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "")
+    } else {
+        preferencesManager.getString("last_user_mobile", "")
+    }
+    val lastUserEmployeeId = if (sessionExpired) {
+        preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "")
+    } else {
+        preferencesManager.getString("last_user_employee_id", "")
+    }
 
     val preservedUserData = if (!lastUserEmail.isNullOrBlank() && !lastUserMobile.isNullOrBlank() && !lastUserEmployeeId.isNullOrBlank()) {
         com.archeGlobal.one.model.UserData(
@@ -262,26 +284,14 @@ fun LoginScreen(
     }
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
-    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData) {
-        android.util.Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn")
+    LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData, sessionExpired) {
+        android.util.Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin")
 
-        // If we have preserved user data and user is not logged in (token expired/logout), prioritize quick auth methods
+        // If we have preserved user data and user is not logged in (token expired/logout), prioritize MFA first
         if (effectiveUserData != null && !isLoggedIn) {
-            // For returning users with preserved data, prefer MPIN or biometric if available
-            when {
-                hasMpin -> {
-                    selectedLoginMethod = "MPIN"
-                    showOtpFields = false
-                }
-                showBiometricButton -> {
-                    selectedLoginMethod = "Fingerprint"
-                    showOtpFields = false
-                }
-                else -> {
-                    selectedLoginMethod = "MFA"
-                    showOtpFields = false
-                }
-            }
+            // For returning users with preserved data (including session expired), prefer MFA by default
+            selectedLoginMethod = "MFA"
+            showOtpFields = false
             showOtpButton = false
             isDifferentUserMode = false
         }
@@ -292,22 +302,14 @@ fun LoginScreen(
             showOtpFields = true
             isDifferentUserMode = false
         } else {
-            // Show OTP button only for first-time users or different users (but not for session expired)
-            showOtpButton = (firstTimeLogin && !sessionExpired) || isDifferentUserMode
+            // Show OTP button only for first-time users or different users
+            showOtpButton = firstTimeLogin || isDifferentUserMode
 
-            if ((firstTimeLogin && !sessionExpired) || isDifferentUserMode) {
+            if (firstTimeLogin || isDifferentUserMode) {
                 selectedLoginMethod = "OTP"
                 showOtpFields = true
-            } else if (hasMpin) {
-                // For existing users (including session expired), default to MPIN if available
-                selectedLoginMethod = "MPIN"
-                showOtpFields = false
-            } else if (showBiometricButton) {
-                // If biometric is available, default to Fingerprint
-                selectedLoginMethod = "Fingerprint"
-                showOtpFields = false
             } else {
-                // Default to MFA for existing users without MPIN or biometric
+                // For existing users (including session expired), default to MFA
                 selectedLoginMethod = "MFA"
                 showOtpFields = false
             }
@@ -316,8 +318,9 @@ fun LoginScreen(
 
     // Show Toast message for errors
     LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        errorMessage?.let { message ->
+            // Use custom toast for better handling of long messages
+            CustomToast.showErrorToast(context, message)
             errorMessage = null
         }
     }
@@ -401,23 +404,52 @@ fun LoginScreen(
                         .height(52.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Show MPIN button for returning users (including session expired) who have MPIN set
-                    if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired)) {
+                    // For new users (firstTimeLogin or isDifferentUserMode): OTP first, then MFA
+                    // For returning users: MFA first, then MPIN, then Fingerprint
+
+                    if (firstTimeLogin || isDifferentUserMode) {
+                        // OTP button - first for new users
+                        if (showOtpButton) {
+                            Button(
+                                onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                    contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "OTP",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+
+                        // MFA button - second for new users
                         Button(
-                            onClick = { selectedLoginMethod = "MPIN" },
+                            onClick = { selectedLoginMethod = "MFA" },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
                             shape = MaterialTheme.shapes.medium,
                             contentPadding = PaddingValues(0.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
-                                contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black
+                                containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
                             ),
                             border = BorderStroke(0.5.dp, Color(0xFFDD3825))
                         ) {
                             Text(
-                                "MPIN",
+                                "MFA",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -425,24 +457,23 @@ fun LoginScreen(
                                 softWrap = false
                             )
                         }
-                    }
-
-                    if (showOtpButton) {
+                    } else {
+                        // For returning users: MFA first
                         Button(
-                            onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
+                            onClick = { selectedLoginMethod = "MFA" },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
                             shape = MaterialTheme.shapes.medium,
                             contentPadding = PaddingValues(0.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                                contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
+                                containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
                             ),
                             border = BorderStroke(0.5.dp, Color(0xFFDD3825))
                         ) {
                             Text(
-                                "OTP",
+                                "MFA",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -450,58 +481,87 @@ fun LoginScreen(
                                 softWrap = false
                             )
                         }
-                    }
 
-                    Button(
-                        onClick = { selectedLoginMethod = "MFA" },
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        shape = MaterialTheme.shapes.medium,
-                        contentPadding = PaddingValues(0.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                            contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
-                        ),
-                        border = BorderStroke(0.5.dp, Color(0xFFDD3825))
-                    ) {
-                        Text(
-                            "MFA",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
+                        // Show MPIN button for returning users (including session expired) who have MPIN set - second for returning users
+                        if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)) {
+                            Button(
+                                onClick = { selectedLoginMethod = "MPIN" },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
+                                    contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "MPIN",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
 
-                    // Debug logging for fingerprint button condition
-                    android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired")
-                    android.util.Log.d("LoginScreen", "Fingerprint condition check: condition=${showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode}")
+                        // Show OTP button for returning users if needed
+                        if (showOtpButton) {
+                            Button(
+                                onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                    contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "OTP",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
 
-                    // Show fingerprint button for returning users (including session expired) when biometric is available
-                    if (showBiometricButton && (!firstTimeLogin || sessionExpired) && !isDifferentUserMode) {
-                        Button(
-                            onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            shape = MaterialTheme.shapes.medium,
-                            contentPadding = PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
-                                contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black
-                            ),
-                            border = BorderStroke(0.5.dp, Color(0xFFDD3825))
-                        ) {
-                            Text(
-                                "Fingerprint",
-                                fontSize = 16.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                maxLines = 1,
-                                softWrap = false
-                            )
+                        // Debug logging for fingerprint button condition
+                        android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+                        android.util.Log.d("LoginScreen", "Fingerprint condition check: showFingerprint=$showFingerprint")
+
+                        // Show fingerprint button for returning users (including session expired) when biometric is available - third for returning users
+                        if (showFingerprint && !isDifferentUserMode) {
+                            Button(
+                                onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
+                                shape = MaterialTheme.shapes.medium,
+                                contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
+                                    contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black
+                                ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            ) {
+                                Text(
+                                    "Fingerprint",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
                         }
                     }
                 }
@@ -724,7 +784,7 @@ fun LoginScreen(
                 }
 
                 // Show fingerprint authentication for returning users (including session expired)
-                if (selectedLoginMethod == "Fingerprint" && showBiometricButton && (!firstTimeLogin || sessionExpired)) {
+                if (selectedLoginMethod == "Fingerprint" && showFingerprint) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
                         onClick = {
@@ -744,20 +804,39 @@ fun LoginScreen(
                                             bioMobile = credentials.second
                                             bioEmployeeId = credentials.third
                                         } else {
-                                            // Fallback to effective user data (session expired data if available)
-                                            if (effectiveUserData != null) {
-                                                bioEmail = effectiveUserData.email ?: ""
-                                                bioMobile = effectiveUserData.mobile ?: ""
-                                                bioEmployeeId = effectiveUserData.employeeId ?: ""
-                                            } else {
-                                                Toast.makeText(context, "Biometric credentials not found. Please login with MPIN or OTP.", Toast.LENGTH_SHORT).show()
+                                            // Enhanced fallback to session expired data if available
+                                            bioEmail = when {
+                                                effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
+                                                sessionExpired -> preferencesManager.getString("session_expired_email", "") 
+                                                    ?: preferencesManager.getString("last_user_email", "") ?: ""
+                                                else -> preferencesManager.getString("last_user_email", "") ?: ""
+                                            }
+                                            
+                                            bioMobile = when {
+                                                effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
+                                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") 
+                                                    ?: preferencesManager.getString("last_user_mobile", "") ?: ""
+                                                else -> preferencesManager.getString("last_user_mobile", "") ?: ""
+                                            }
+                                            
+                                            bioEmployeeId = when {
+                                                effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
+                                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") 
+                                                    ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                                else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                            }
+                                            
+                                            android.util.Log.d("LoginScreen", "Biometric fallback credentials: email=$bioEmail, mobile=$bioMobile, employeeId=$bioEmployeeId, sessionExpired=$sessionExpired")
+                                            
+                                            if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
+                                                CustomToast.showErrorToast(context, "Biometric credentials not found. Please login with MPIN or OTP.")
                                                 return@showBiometricPrompt
                                             }
                                         }
 
                                         // Validate credentials
                                         if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
-                                            Toast.makeText(context, "User credentials missing. Please use OTP login.", Toast.LENGTH_SHORT).show()
+                                            CustomToast.showErrorToast(context, "User credentials missing. Please use OTP login.")
                                             return@showBiometricPrompt
                                         }
 
@@ -775,13 +854,13 @@ fun LoginScreen(
                                             backgroundRefresh = false // Normal login with navigation
                                         ) { message, isError ->
                                             if (isError) {
-                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                CustomToast.showErrorToast(context, message)
                                             }
                                         }
                                     },
                                     onError = { error ->
                                         // Show error and prevent app bypass by staying on login screen
-                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                        CustomToast.showErrorToast(context, error)
                                         // Reset login method selection if needed
                                         if (error.contains("cancelled", ignoreCase = true)) {
                                             // User cancelled - they can try again or use another method
@@ -921,14 +1000,37 @@ fun LoginScreen(
                                 navigator = navigator,
                                 context = context
                             )
-                            val useEmail = email.takeIf { it.isNotEmpty() } ?: effectiveUserData?.email ?: ""
-                            val useMobile = mobile.takeIf { it.isNotEmpty() } ?: effectiveUserData?.mobile ?: ""
-                            val useEmployeeId = employeeId.takeIf { it.isNotEmpty() } ?: effectiveUserData?.employeeId ?: ""
+                            // Get credentials with better fallback logic for session expiry
+                            val useEmail = when {
+                                email.isNotEmpty() -> email
+                                effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
+                                sessionExpired -> preferencesManager.getString("session_expired_email", "") 
+                                    ?: preferencesManager.getString("last_user_email", "") ?: ""
+                                else -> preferencesManager.getString("last_user_email", "") ?: ""
+                            }
+                            
+                            val useMobile = when {
+                                mobile.isNotEmpty() -> mobile
+                                effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
+                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") 
+                                    ?: preferencesManager.getString("last_user_mobile", "") ?: ""
+                                else -> preferencesManager.getString("last_user_mobile", "") ?: ""
+                            }
+                            
+                            val useEmployeeId = when {
+                                employeeId.isNotEmpty() -> employeeId
+                                effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
+                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") 
+                                    ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
+                            }
+
+                            android.util.Log.d("LoginScreen", "MPIN credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId, sessionExpired=$sessionExpired")
 
                             if (useEmail.isBlank() || useMobile.isBlank() || useEmployeeId.isBlank()) {
                                 mpinError = "User credentials missing. Please use OTP login."
                                 isVerifyingMpin = false
-                                android.util.Log.e("LoginScreen", "Missing credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
+                                android.util.Log.e("LoginScreen", "Missing credentials after fallback: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
                                 return@Button
                             }
 
@@ -1175,9 +1277,8 @@ fun LoginScreen(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .clickable {
-                            policyUrl = "https://arche.global/arche-one-privacy-policy"
-                            policyTitle = "Privacy Policy"
-                            showPolicyWebView = true
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/arche-one-privacy-policy"))
+                            context.startActivity(intent)
                         },
                     textDecoration = TextDecoration.Underline
                 )
@@ -1199,9 +1300,8 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                policyUrl = "https://arche.global/anti-bribery-and-anti-corruption-policy"
-                                policyTitle = "Anti-Bribery Policy"
-                                showPolicyWebView = true
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/anti-bribery-and-anti-corruption-policy"))
+                                context.startActivity(intent)
                             }
                             .padding(end = 8.dp),
                         textDecoration = TextDecoration.Underline,
@@ -1226,9 +1326,8 @@ fun LoginScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                policyUrl = "https://arche.global/employee-code-of-conduct"
-                                policyTitle = "Employee Code of Conduct"
-                                showPolicyWebView = true
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/employee-code-of-conduct"))
+                                context.startActivity(intent)
                             }
                             .padding(start = 10.dp),
                         textDecoration = TextDecoration.Underline,
@@ -1239,31 +1338,7 @@ fun LoginScreen(
                 }
             }
 
-            // Policy WebView Dialog
-            if (showPolicyWebView) {
-                Dialog(
-                    onDismissRequest = { showPolicyWebView = false },
-                    properties = DialogProperties(
-                        dismissOnBackPress = true,
-                        dismissOnClickOutside = true,
-                        usePlatformDefaultWidth = false
-                    )
-                ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        color = Color.White,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                    ) {
-                        MicrosoftLoginWebView(
-                            url = policyUrl,
-                            onReceiveAuth = { /* Not needed for policy pages */ },
-                            onClose = { showPolicyWebView = false }
-                        )
-                    }
-                }
-            }
+            // Policy WebView Dialog removed - now using external browser
 
             // Reset Password Button at the bottom
             Card(

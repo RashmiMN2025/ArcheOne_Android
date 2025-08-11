@@ -20,6 +20,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -29,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +40,9 @@ import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.XOneTheme
 import org.json.JSONObject
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.ui.platform.LocalContext
 
 class WebViewActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -70,10 +76,18 @@ class WebViewActivity : ComponentActivity() {
         // Check if this is specific policy that needs SOS button
         val showSosButton = title.contains("Anti Bribery", ignoreCase = true) || title.contains("POSH", ignoreCase = true)
 
+        // Check if this is blog or case study content that needs share button
+        val showShareButton = fileUrl.contains("arche.global") && (fileUrl.contains("/blog/") || fileUrl.contains("/case-studies/"))
+
         val rawHtmlContent = intent.getStringExtra("rawHtmlContent")
         if (rawHtmlContent != null && rawHtmlContent.isNotBlank()) {
             setContent {
                 XOneTheme {
+                    var offsetX by remember { mutableStateOf(0f) }
+                    val swipeThreshold = with(LocalDensity.current) { 100.dp.toPx() } // Swipe distance to trigger navigation
+                    var isLoading by remember { mutableStateOf(true) }
+                    val context = LocalContext.current
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -85,6 +99,23 @@ class WebViewActivity : ComponentActivity() {
                                         Color(0xFF474749) // Dark Grey
                                     )
                                 )
+                            )
+                            .draggable(
+                                orientation = Orientation.Horizontal,
+                                state = rememberDraggableState { delta ->
+                                    if (!isLoading) {
+                                        offsetX += delta
+                                        offsetX = offsetX.coerceIn(0f, swipeThreshold)
+                                    }
+                                },
+                                onDragStopped = {
+                                    if (!isLoading && offsetX >= swipeThreshold) {
+                                        finish()
+                                    } else if (isLoading) {
+                                        Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
+                                    }
+                                    offsetX = 0f
+                                }
                             )
                     ) {
                         Column(
@@ -107,7 +138,13 @@ class WebViewActivity : ComponentActivity() {
                                     }
                                 },
                                 navigationIcon = {
-                                    IconButton(onClick = { finish() }) {
+                                    IconButton(onClick = {
+                                        if (!isLoading) {
+                                            finish()
+                                        } else {
+                                            Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }) {
                                         Icon(
                                             imageVector = Icons.Default.ArrowBack,
                                             contentDescription = "Back",
@@ -130,12 +167,20 @@ class WebViewActivity : ComponentActivity() {
                                     WebView(ctx).apply {
                                         settings.defaultTextEncodingName = "utf-8"
                                         settings.javaScriptEnabled = true
+                                        webChromeClient = object : WebChromeClient() {
+                                            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                                                isLoading = newProgress < 100
+                                            }
+                                        }
+                                        webViewClient = object : WebViewClient() {
+                                            override fun onPageFinished(view: WebView?, url: String?) {
+                                                isLoading = false
+                                            }
+                                        }
                                         loadDataWithBaseURL(null, rawHtmlContent, "text/html", "UTF-8", null)
                                     }
                                 },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .weight(1f)
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
                     }
@@ -148,6 +193,11 @@ class WebViewActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
+                var offsetX by remember { mutableStateOf(0f) }
+                val swipeThreshold = with(LocalDensity.current) { 100.dp.toPx() }
+                var isLoading by remember { mutableStateOf(true) }
+                val context = LocalContext.current
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -159,6 +209,23 @@ class WebViewActivity : ComponentActivity() {
                                     Color(0xFF474749) // Dark Grey
                                 )
                             )
+                        )
+                        .draggable(
+                            orientation = Orientation.Horizontal,
+                            state = rememberDraggableState { delta ->
+                                if (!isLoading) {
+                                    offsetX += delta
+                                    offsetX = offsetX.coerceIn(0f, swipeThreshold)
+                                }
+                            },
+                            onDragStopped = {
+                                if (!isLoading && offsetX >= swipeThreshold) {
+                                    finish()
+                                } else if (isLoading) {
+                                    Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
+                                }
+                                offsetX = 0f
+                            }
                         )
                 ) {
                     // Main content
@@ -182,7 +249,13 @@ class WebViewActivity : ComponentActivity() {
                                 }
                             },
                             navigationIcon = {
-                                IconButton(onClick = { finish() }) {
+                                IconButton(onClick = {
+                                    if (!isLoading) {
+                                        finish()
+                                    } else {
+                                        Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
+                                    }
+                                }) {
                                     Icon(
                                         imageVector = Icons.Default.ArrowBack,
                                         contentDescription = "Back",
@@ -236,6 +309,30 @@ class WebViewActivity : ComponentActivity() {
                                                 fontSize = 12.sp
                                             )
                                         }
+                                    }
+                                } else if (showShareButton) {
+                                    // Share button for blogs and case studies
+                                    IconButton(onClick = {
+                                        try {
+                                            Log.d("WebViewActivity", "Sharing content: $fileUrl")
+                                            val shareIntent = Intent().apply {
+                                                action = Intent.ACTION_SEND
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_TEXT, "$title\n\n$fileUrl")
+                                                putExtra(Intent.EXTRA_SUBJECT, title)
+                                            }
+                                            startActivity(Intent.createChooser(shareIntent, "Share Article"))
+                                        } catch (e: Exception) {
+                                            Log.e("WebViewActivity", "Error sharing content: ${e.message}", e)
+                                            Toast.makeText(this@WebViewActivity, "Failed to share content", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.share),
+                                            contentDescription = "Share",
+                                            tint = Color.Black,
+                                            modifier = Modifier.size(22.dp)
+                                        )
                                     }
                                 } else {
                                     // Add empty spacer with same size as navigation icon for balance

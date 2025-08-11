@@ -34,6 +34,7 @@ class UserDataManager private constructor(context: Context) {
     private var greetingCategoriesData: List<ApiGreetingCategory>? = null
     private var eventData: EventResponse? = null
     private var faqData: List<FAQCategory>? = null
+    private var whatsNewData: List<com.archeGlobal.one.network.WhatsNewItem>? = null
     private var lastUsername: String? = null
     // Private var isLoggedIn: Boolean = false
     // private var hasLoggedIn: Boolean = false
@@ -140,6 +141,8 @@ class UserDataManager private constructor(context: Context) {
 
     fun getFAQData(): List<FAQCategory>? = faqData
 
+    fun getWhatsNewData(): List<com.archeGlobal.one.network.WhatsNewItem>? = whatsNewData
+
     fun getAuthToken(): String? = preferencesManager.getAuthToken()
 
     fun getLastLoginTime(): Long? = preferencesManager.getLong(PREF_LAST_LOGIN_TIME)
@@ -215,6 +218,9 @@ class UserDataManager private constructor(context: Context) {
 
         // Save FAQ data from login response
         faqData = response.faqList
+
+        // Save WhatsNew data from login response
+        whatsNewData = response.whatsNew
 
         // Save event data from login response
         eventData = response.eventData

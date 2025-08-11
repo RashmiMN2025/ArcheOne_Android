@@ -106,7 +106,6 @@ fun TravelRequestDetailScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
                             .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
@@ -123,18 +122,18 @@ fun TravelRequestDetailScreen(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "ID: ${travelRequest.id}",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily,
                                     color = Color.Black
                                 )
 
-                                // Status Badge
-                                TravelStatusBadgeComponent(status = travelRequest.status)
+                                // Status Badge matching reject screen style
+                                TravelRequestStatusBadge(status = travelRequest.status)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -170,17 +169,28 @@ fun TravelRequestDetailScreen(
                                 // Single destination - show Trip 1
                                 Text(
                                     text = "Trip 1",
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.SemiBold,
                                     fontSize = 14.sp,
                                     fontFamily = GraphikFontFamily,
                                     color = Color.Black,
                                     modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
                                 )
 
+                                // Show separate origin and destination fields
+                                val destination = if (destinations.isNotEmpty()) destinations[0] else null
+                                
+                                // Origin City
                                 DetailRowWithDrawableIcon(
                                     iconRes = R.drawable.mappin_and_ellipse,
-                                    label = "Destination",
-                                    value = travelRequest.destination
+                                    label = "Origin City",
+                                    value = destination?.originCity?.takeIf { it.isNotEmpty() } ?: "N/A"
+                                )
+                                
+                                // Destination City
+                                DetailRowWithDrawableIcon(
+                                    iconRes = R.drawable.mappin_and_ellipse,
+                                    label = "Destination City",
+                                    value = destination?.destinationCity ?: travelRequest.destination
                                 )
 
                                 // Format departure date
@@ -202,22 +212,35 @@ fun TravelRequestDetailScreen(
                                 // Multi-destination - show Trip 1, Trip 2, etc.
                                 destinations.forEachIndexed { index, destination ->
                                     if (index > 0) {
-                                        Spacer(modifier = Modifier.height(12.dp))
+                                        // Add light divider line between trips
+                                        androidx.compose.material3.HorizontalDivider(
+                                            modifier = Modifier.padding(vertical = 12.dp),
+                                            thickness = 1.dp,
+                                            color = Color.Gray.copy(alpha = 0.3f)
+                                        )
                                     }
 
                                     Text(
                                         text = "Trip ${index + 1}",
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.SemiBold,
                                         fontSize = 14.sp,
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
                                         modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
                                     )
 
+                                    // Origin City
                                     DetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
-                                        label = "Destination",
-                                        value = destination.travelDestination
+                                        label = "Origin City",
+                                        value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A"
+                                    )
+                                    
+                                    // Destination City
+                                    DetailRowWithDrawableIcon(
+                                        iconRes = R.drawable.mappin_and_ellipse,
+                                        label = "Destination City",
+                                        value = destination.destinationCity
                                     )
 
                                     val formattedDepartureDate = formatDate(destination.departureDate)
@@ -240,12 +263,12 @@ fun TravelRequestDetailScreen(
 
                             // Project and other details
                             DetailRowWithDrawableIcon(
-                                iconRes = R.drawable.ic_work,
+                                iconRes = R.drawable.folder_3x,
                                 label = "Project",
                                 value = travelRequest.project
                             )
                             DetailRowWithDrawableIcon(
-                                iconRes = R.drawable.ic_info,
+                                iconRes = R.drawable.busjust,
                                 label = "Business Justification",
                                 value = travelRequest.businessJustification ?: "N/A"
                             )
@@ -268,23 +291,6 @@ fun TravelRequestDetailScreen(
                                 value = formattedCreatedDate
                             )
 
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Remarks section
-                            Text(
-                                text = "Remarks",
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp,
-                                fontFamily = GraphikFontFamily,
-                                color = Color.Black,
-                                modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
-                            )
-                            Text(
-                                text = "approved - njoy",
-                                fontSize = 13.sp,
-                                fontFamily = GraphikFontFamily,
-                                color = Color.Gray
-                            )
                         }
                     }
                 }
@@ -338,6 +344,7 @@ fun DetailRow(
             fontSize = 14.sp, // Smaller font size
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.width(140.dp) // Fixed width for alignment
         )
         Text(
@@ -374,6 +381,7 @@ fun DetailRowWithIcon(
             fontSize = 13.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.width(130.dp)
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -404,20 +412,21 @@ fun DetailRowWithDrawableIcon(
             painter = painterResource(id = iconRes),
             contentDescription = label,
             tint = Color.Gray,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = label,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.width(130.dp)
         )
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = value,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
             color = Color.Black,
@@ -450,4 +459,28 @@ private fun formatDate(dateString: String?): String {
 // Extension function to capitalize the first letter of a string
 private fun String.capitalize(): String {
     return this.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+@Composable
+fun TravelRequestStatusBadge(status: com.archeGlobal.one.model.TravelStatus) {
+    val (backgroundColor, textColor, text) = when (status) {
+        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF155724), "Approved")
+        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFF721C24), "Rejected")
+        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        backgroundColor = backgroundColor,
+        elevation = 0.dp
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
 }

@@ -102,19 +102,19 @@ interface ApiService {
     @GET("daily-event")
     suspend fun getDailyEvent(): Response<EventResponse>
 
-    @POST("travel-request")
+    @POST("travel-request-one")
     fun submitTravelRequest(@Body request: TravelRequestSubmission): Call<TravelRequestResponse>
 
-    @POST("travel-request")
+    @POST("travel-request-one")
     fun getTravelHistory(@Body request: TravelHistoryRequest): Call<TravelHistoryResponse>
 
-    @POST("travel-request/combined-history")
+    @POST("travel-request-one/combined-history-one")
     fun getTravelCombinedHistory(@Body request: TravelHistoryRequest): Call<TravelCombinedHistoryResponse>
 
-    @POST("travel-request/approve")
+    @POST("travel-request-one/approve-one")
     fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
 
-    @POST("travel-request/reject")
+    @POST("travel-request-one/reject-one")
     fun rejectTravelRequest(@Body request: TravelRejectActionRequest): Call<TravelApprovalActionResponse>
 
     @GET("employee-celebration")
@@ -233,7 +233,8 @@ data class VerifyOtpResponse(
     val greetings: Map<String, List<String>>? = null,
     val greetingCategories1: List<ApiGreetingCategory>? = null, // changed from greetingCategories
     @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null,
-    val faqList: List<FAQCategory>? = null
+    val faqList: List<FAQCategory>? = null,
+    val whatsNew: List<WhatsNewItem>? = null
 )
 
 data class User(
@@ -278,7 +279,8 @@ data class Service(
     val favourite: Boolean = false,
     val category: String,
     val icon: String? = null,
-    val url: String? = null
+    val url: String? = null,
+    val isNew: Boolean = false
 )
 
 data class Office(
@@ -302,6 +304,11 @@ data class RegionalOffice(
     val email: String? = null,
     val floorMap: String? = null,
     val redirection: String? = null
+)
+
+data class WhatsNewItem(
+    val category: String,
+    val description: String
 )
 
 data class AssetResponse(
@@ -331,8 +338,9 @@ data class CalendarRequest(
 )
 
 data class TicketsRequest(
-    val email: String,
-    val category: String
+    val name: String,
+    val category: String,
+    val subcategory: String? = null
 )
 
 data class TicketsResponse(
@@ -344,7 +352,11 @@ data class TicketItem(
     val description: String,
     val id: String,
     val status: String,
-    val subject: String
+    val category: String? = null,
+    val subcategory: String? = null,
+    val closure_comments: String? = null,
+    val resolved_time: String? = null,
+    val subject: String? = null  // Make subject optional since API doesn't always return it
 )
 
 data class FAQCategory(

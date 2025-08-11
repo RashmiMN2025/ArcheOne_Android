@@ -118,7 +118,9 @@ private fun CustomTopAppBar(
     TopAppBar(
         title = {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 20.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -145,7 +147,9 @@ private fun CustomTopAppBar(
         actions = {
             IconButton(
                 onClick = onShareClick,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(end = 5.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.share),
@@ -250,8 +254,7 @@ fun BusinessCardScreen(
         ) {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 15.dp),
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {

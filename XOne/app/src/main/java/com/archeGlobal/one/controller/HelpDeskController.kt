@@ -22,6 +22,10 @@ class HelpDeskController(private val context: Context) {
     private val apiService = RetrofitClient.apiService
     private val userDataManager = UserDataManager.getInstance(context)
     private var navigationSource: String? = null
+    
+    // Add navigation trigger counter for auto-refresh
+    private val _navigationTrigger = MutableStateFlow(0L)
+    val navigationTrigger: StateFlow<Long> = _navigationTrigger.asStateFlow()
 
     fun setNavigationCallback(navCallback: (String) -> Unit) {
         navigate = navCallback
@@ -141,20 +145,21 @@ class HelpDeskController(private val context: Context) {
             tickets = emptyList() // Clear tickets immediately to prevent flash
         )
 
-        // Get user email from login data
-        val userEmail = OtpVerificationController.getUserData()?.email ?: ""
+        // Get user name from login data
+        val userName = OtpVerificationController.getUserData()?.name ?: ""
 
-        if (userEmail.isBlank()) {
+        if (userName.isBlank()) {
             _model.value = _model.value.copy(
                 isLoading = false,
-                error = "User email not found. Please log in again."
+                error = "User name not found. Please log in again."
             )
             return
         }
 
         val request = TicketsRequest(
-            email = userEmail,
-            category = category
+            name = userName,
+            category = category,
+            subcategory = null // Currently not filtering by subcategory when loading tickets
         )
 
         apiService.getTickets(request).enqueue(object : Callback<TicketsResponse> {
@@ -188,6 +193,10 @@ class HelpDeskController(private val context: Context) {
     fun navigateToTrackTickets(category: String = "Helpdesk") {
         // Load tickets data when navigating to ticket tracking
         loadTicketsData(category)
+        
+        // Trigger navigation counter to force refresh in TicketTrackingScreen
+        _navigationTrigger.value = System.currentTimeMillis()
+        
         navigate("track_tickets")
     }
 
@@ -242,9 +251,19 @@ class HelpDeskController(private val context: Context) {
     }
 
     fun raiseTicket(question: String, description: String) {
-        val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
-        val encodedCategory = java.net.URLEncoder.encode(question, "UTF-8")
-        navigate("raise_concern/$encodedTitle?category=$encodedCategory")
+        // Get the FAQ by question to find its category
+        val faq = _model.value.faqItems.find { it.question == question }
+        if (faq != null) {
+            val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
+            val encodedCategory = java.net.URLEncoder.encode(faq.category, "UTF-8")
+            val encodedSubcategory = java.net.URLEncoder.encode(faq.question, "UTF-8")
+            navigate("raise_concern/$encodedTitle?category=$encodedCategory&subcategory=$encodedSubcategory")
+        } else {
+            // Fallback to old behavior if FAQ not found
+            val encodedTitle = java.net.URLEncoder.encode("Raise a Ticket", "UTF-8")
+            val encodedCategory = java.net.URLEncoder.encode(question, "UTF-8")
+            navigate("raise_concern/$encodedTitle?category=$encodedCategory")
+        }
     }
 
     fun navigateToRaiseConcern(title: String = "Raise a Concern") {
@@ -254,6 +273,13 @@ class HelpDeskController(private val context: Context) {
 
     fun refreshTickets() {
         loadTicketsData()
+    }
+    
+    fun triggerNavigationRefresh() {
+        // Trigger navigation counter to force refresh
+        _navigationTrigger.value = System.currentTimeMillis()
+        // Also refresh the tickets data
+        refreshTickets()
     }
 
     fun refreshFAQData() {

@@ -37,9 +37,6 @@ data class TravelOrderHistoryItem(
     @SerializedName("mobile")
     val mobile: String,
 
-    @SerializedName("travel_destination")
-    val travelDestination: String,
-
     @SerializedName("project_name")
     val projectName: String,
 
@@ -91,7 +88,7 @@ data class TravelOrderHistoryItem(
     @SerializedName("frequent_flyer_num")
     val frequentFlyerNumber: String?,
 
-    @SerializedName("Travel Details")
+    @SerializedName("travelDetails")
     val travelDetails: List<TravelDestination>? = null
 ) {
     /**
@@ -108,10 +105,39 @@ data class TravelOrderHistoryItem(
             else -> TravelStatus.PENDING
         }
 
+        // Handle destination display using travelDetails array
+        // Debug logging
+        android.util.Log.d("TravelCombinedHistory", "Request $requestId: travelDetails = ${travelDetails?.size ?: "null"}")
+        travelDetails?.forEachIndexed { index, detail ->
+            android.util.Log.d("TravelCombinedHistory", "  Detail $index: origin=${detail.originCity}, destination=${detail.destinationCity}")
+        }
+        
+        val destinationDisplay = when {
+            travelDetails != null && travelDetails.isNotEmpty() -> {
+                if (travelDetails.size == 1) {
+                    val detail = travelDetails[0]
+                    // Single destination: show origin → destination if origin exists, otherwise just destination
+                    if (!detail.originCity.isNullOrEmpty()) {
+                        "${detail.originCity} → ${detail.destinationCity}"
+                    } else {
+                        detail.destinationCity
+                    }
+                } else {
+                    // Multi-destination: show count and first destination
+                    val firstDestination = travelDetails[0].destinationCity
+                    "$firstDestination +${travelDetails.size - 1} more"
+                }
+            }
+            else -> {
+                // Fallback: Show a more descriptive message
+                "Travel Request #${requestId.takeLast(4)}"
+            }
+        }
+
         return TravelRequest(
             id = requestId,
             project = projectName,
-            destination = travelDestination,
+            destination = destinationDisplay,
             approver = reportingManagerName,
             approverEmail = reportingManagerEmail,
             createdDate = createdDate ?: Date(),
@@ -149,9 +175,6 @@ data class TravelApprovalHistoryItem(
 
     @SerializedName("mobile")
     val mobile: String,
-
-    @SerializedName("travel_destination")
-    val travelDestination: String,
 
     @SerializedName("project_name")
     val projectName: String,
@@ -195,7 +218,7 @@ data class TravelApprovalHistoryItem(
     @SerializedName("frequent_flyer_num")
     val frequentFlyerNumber: String?,
 
-    @SerializedName("Travel Details")
+    @SerializedName("travelDetails")
     val travelDetails: List<TravelDestination>? = null
 ) {
     /**
@@ -212,10 +235,39 @@ data class TravelApprovalHistoryItem(
             else -> TravelStatus.PENDING
         }
 
+        // Handle destination display using travelDetails array
+        // Debug logging
+        android.util.Log.d("TravelCombinedHistory", "Request $requestId: travelDetails = ${travelDetails?.size ?: "null"}")
+        travelDetails?.forEachIndexed { index, detail ->
+            android.util.Log.d("TravelCombinedHistory", "  Detail $index: origin=${detail.originCity}, destination=${detail.destinationCity}")
+        }
+        
+        val destinationDisplay = when {
+            travelDetails != null && travelDetails.isNotEmpty() -> {
+                if (travelDetails.size == 1) {
+                    val detail = travelDetails[0]
+                    // Single destination: show origin → destination if origin exists, otherwise just destination
+                    if (!detail.originCity.isNullOrEmpty()) {
+                        "${detail.originCity} → ${detail.destinationCity}"
+                    } else {
+                        detail.destinationCity
+                    }
+                } else {
+                    // Multi-destination: show count and first destination
+                    val firstDestination = travelDetails[0].destinationCity
+                    "$firstDestination +${travelDetails.size - 1} more"
+                }
+            }
+            else -> {
+                // Fallback: Show a more descriptive message
+                "Travel Request #${requestId.takeLast(4)}"
+            }
+        }
+
         return TravelRequest(
             id = requestId,
             project = projectName,
-            destination = travelDestination,
+            destination = destinationDisplay,
             approver = employeeName,
             approverEmail = null, // Approval history doesn't have manager email field
             createdDate = createdDate ?: Date(),

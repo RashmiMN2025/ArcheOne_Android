@@ -302,7 +302,7 @@ private fun PolicyCard(
                             Image(
                                 bitmap = bitmap.asImageBitmap(),
                                 contentDescription = policy.policyName,
-                                contentScale = ContentScale.FillBounds,
+                                contentScale = ContentScale.Fit,
                                 modifier = Modifier.fillMaxSize()
                             )
                         } ?: Icon(

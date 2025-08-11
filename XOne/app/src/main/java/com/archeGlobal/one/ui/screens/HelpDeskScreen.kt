@@ -81,7 +81,7 @@ fun HelpDeskScreen(
                             Text(
                                 modifier = Modifier.offset(x = 24.dp),
                                 text = "Help Desk",
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center

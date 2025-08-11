@@ -148,7 +148,6 @@ fun CommuniqueScreen(
                         )
                     )
                 )
-                .padding(horizontal = contentPadding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
@@ -183,47 +182,60 @@ fun CommuniqueScreen(
                 )
 
                 // New search bar implementation
-                Row(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .border(
-                            width = 1.dp,
-                            color = Color.LightGray.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = Color.Transparent
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.Gray,
-                        modifier = Modifier.padding(start = 12.dp).size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = {
-                            Text(
-                                "Search communique...",
-                                color = Color.Gray.copy(alpha = 0.6f)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .border(
+                                width = 1.dp,
+                                color = Color.LightGray.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(12.dp)
                             )
-                        },
-                        singleLine = true,
-                        textStyle = TextStyle(color = Color.Black),
-                        colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = Color.Gray,
+                                modifier = Modifier.padding(start = 12.dp).size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = {
+                                    Text(
+                                        "Search communique...",
+                                        color = Color.Gray.copy(alpha = 0.6f)
+                                    )
+                                },
+                                singleLine = true,
+                                textStyle = TextStyle(color = Color.Black),
+                                colors = TextFieldDefaults.colors(
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent
+                                ),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                 }
 
                 // Communique List

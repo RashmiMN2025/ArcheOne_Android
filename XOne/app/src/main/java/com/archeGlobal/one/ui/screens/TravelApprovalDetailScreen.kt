@@ -127,7 +127,21 @@ fun TravelApprovalDetailScreen(
                             // Request details
                             DetailRow(label = "Request ID:", value = travelRequest.id)
                             DetailRow(label = "Employee:", value = travelRequest.approver)
-                            DetailRow(label = "Destination:", value = travelRequest.destination)
+                            // Show origin → destination format
+                            val destinationValue = run {
+                                val destinations = travelRequest.getAllDestinations()
+                                if (destinations.isNotEmpty()) {
+                                    val destination = destinations[0]
+                                    if (!destination.originCity.isNullOrEmpty()) {
+                                        "${destination.originCity} → ${destination.destinationCity}"
+                                    } else {
+                                        destination.destinationCity
+                                    }
+                                } else {
+                                    travelRequest.destination // Fallback
+                                }
+                            }
+                            DetailRow(label = "Origin → Destination:", value = destinationValue)
                             DetailRow(label = "Project:", value = travelRequest.project)
                             DetailRow(label = "Business Justification:", value = travelRequest.businessJustification ?: "N/A")
                             DetailRow(label = "Departure Date:", value = travelRequest.departureDate ?: "N/A")

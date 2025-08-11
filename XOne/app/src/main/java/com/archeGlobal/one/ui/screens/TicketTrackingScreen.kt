@@ -44,6 +44,7 @@ fun TicketTrackingScreen(
     controller: HelpDeskController
 ) {
     val model by controller.model.collectAsState()
+    val navigationTrigger by controller.navigationTrigger.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
@@ -55,6 +56,15 @@ fun TicketTrackingScreen(
     // Update isRefreshing based on model.isLoading
     LaunchedEffect(model.isLoading) {
         isRefreshing = model.isLoading
+    }
+
+    // Auto-refresh tickets when navigation trigger changes (when screen becomes active)
+    LaunchedEffect(navigationTrigger) {
+        if (navigationTrigger > 0L) {
+            // Small delay to ensure smooth navigation animation
+            kotlinx.coroutines.delay(100)
+            controller.refreshTickets()
+        }
     }
 
     Box(
@@ -114,8 +124,8 @@ fun TicketTrackingScreen(
                 ) {
                     // Show different text based on navigation source
                     val statusText = when (controller.getNavigationSource()) {
-                        "asset" -> "View the status of your raised issue"
-                        else -> "View the status of your raised tickets"
+                        "asset" -> "Check the status of your tickets"
+                        else -> "Check the status of your tickets"
                     }
 
                     Text(
@@ -184,7 +194,7 @@ fun TicketTrackingScreen(
         }
 
         // Show UniversalLoader for programmatic refresh (not swipe refresh)
-        if (isRefreshing && !swipeRefreshState.isRefreshing) {
+        if (model.isLoading && !swipeRefreshState.isRefreshing) {
             UniversalLoader(isLoading = true)
         }
     }

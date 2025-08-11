@@ -18,5 +18,7 @@ data class HomeItem(
     val title: String,
     val icon: String,
     val isFavorite: Boolean = false,
-    val category: String = ""
+    val category: String = "",
+    val isNew: Boolean = false,
+    val stickerText: String = "New"
 )

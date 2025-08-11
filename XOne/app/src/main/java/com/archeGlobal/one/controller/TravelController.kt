@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
-import com.archeGlobal.one.model.TravelDestinationRequest
+import com.archeGlobal.one.model.TravelDetail
 import com.archeGlobal.one.model.TravelHistoryRequest
 import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
@@ -19,6 +19,7 @@ import com.archeGlobal.one.model.createMultiDestinationRequest
 import com.archeGlobal.one.model.createSingleDestinationRequest
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.CustomToast
 import com.archeGlobal.one.utils.UserDataManager
 import retrofit2.Call
 import retrofit2.Callback
@@ -116,12 +117,16 @@ class TravelController(private val navigator: Navigator, private val context: Co
     // Data class for individual destination
     data class Destination(
         val id: String = java.util.UUID.randomUUID().toString(),
+        val originCity: String = "",
         val destination: String = "",
         val departureDate: String = "",
-        val returnDate: String = ""
+        val returnDate: String = "",
+        val flightTimePreference: String = ""
     )
 
     // Travel form fields
+    var originCity by mutableStateOf("")
+        private set
     var destination by mutableStateOf("")
         private set
     var projectName by mutableStateOf("")
@@ -143,7 +148,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
             // For grade 6 and above, include flight option
             return if (gradeNumber >= 6) {
-                listOf("Bus", "Flight", "Train")
+                listOf("Flight", "Bus", "Train")
             } else {
                 listOf("Bus", "Train")
             }
@@ -193,7 +198,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
     // Meal preference
     var mealPreferenceEnabled by mutableStateOf(false)
         private set
-    val mealPreferenceOptions = listOf("Veg", "Non-Veg", "Jain")
+    val mealPreferenceOptions = listOf("Veg", "Non-Veg")
     var mealPreference by mutableStateOf("")
         private set
     var isMealPrefDropdownExpanded by mutableStateOf(false)
@@ -215,9 +220,11 @@ class TravelController(private val navigator: Navigator, private val context: Co
         // Initialize with one destination for multi-destination mode
         destinations = listOf(
             Destination(
+                originCity = "",
                 destination = "",
                 departureDate = currentDate,
-                returnDate = currentDate
+                returnDate = currentDate,
+                flightTimePreference = ""
             )
         )
     }
@@ -761,6 +768,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
     /**
      * Update destination field
      */
+    fun updateOriginCity(value: String) {
+        originCity = value
+    }
+
     fun updateDestination(value: String) {
         destination = value
     }
@@ -788,8 +799,11 @@ class TravelController(private val navigator: Navigator, private val context: Co
         if (transportOptions.contains(value)) {
             modeOfTransport = value
 
-            // Reset flight-related fields if mode is not Flight
-            if (value != "Flight") {
+            // Set default flight type to "Domestic" when Flight is selected
+            if (value == "Flight") {
+                flightType = "Domestic"
+            } else {
+                // Reset flight-related fields if mode is not Flight
                 flightType = ""
                 flightTimePreference = ""
                 seatPreference = ""
@@ -1047,16 +1061,26 @@ class TravelController(private val navigator: Navigator, private val context: Co
         // Create travel request submission object
         val travelRequest = if (isMultiDestination) {
             // Multi-destination request
-            val travelDestinations = destinations.map { dest ->
-                com.archeGlobal.one.model.TravelDestinationRequest(
-                    travelDestination = dest.destination,
+            val travelDetailsList = destinations.map { dest ->
+                // Extract the flight time value for this specific destination
+                val destinationFlightTime = when {
+                    dest.flightTimePreference.contains("Early Morning") -> "Early Morning"
+                    dest.flightTimePreference.contains("Morning") -> "Morning"
+                    dest.flightTimePreference.contains("Mid Day") -> "Mid Day"
+                    dest.flightTimePreference.contains("Night") -> "Night"
+                    else -> dest.flightTimePreference
+                }
+                
+                TravelDetail(
+                    originCity = dest.originCity,
+                    destinationCity = dest.destination,
                     departureDate = convertToApiDateFormat(dest.departureDate),
                     arrivalDate = convertToApiDateFormat(dest.returnDate),
-                    flightTimePreference = flightTimeValue
+                    flightTime = destinationFlightTime
                 )
             }
 
-            Log.d("TravelController", "Submitting multi-destination travel request with ${travelDestinations.size} destinations")
+            Log.d("TravelController", "Submitting multi-destination travel request with ${travelDetailsList.size} destinations")
 
             createMultiDestinationRequest(
                 employeeId = employeeId,
@@ -1075,7 +1099,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 frequentFlyerNumber = frequentFlyerNumber,
                 mealPreference = if (mealPreferenceEnabled) mealPreference else "",
                 seatPreference = seatPreference,
-                destinations = travelDestinations
+                travelDetails = travelDetailsList
             )
         } else {
             // Single destination request
@@ -1093,7 +1117,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 employeeName = employeeName,
                 employeeEmail = employeeEmail,
                 mobile = mobileNumber,
-                travelDestination = destination,
+                originCity = originCity,
+                destinationCity = destination,
                 projectName = projectName,
                 businessJustification = businessJustification,
                 modeOfTransport = modeOfTransport,
@@ -1110,6 +1135,44 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 seatPreference = seatPreference,
                 flightTime = flightTimeValue
             )
+        }
+
+        // Log the travel request being sent for debugging
+        Log.d("TravelController", "Submitting travel request:")
+        Log.d("TravelController", "  Employee Name: ${travelRequest.employeeName}")
+        Log.d("TravelController", "  Employee Email: ${travelRequest.employeeEmail}")
+        Log.d("TravelController", "  Employee ID: ${travelRequest.employeeId}")
+        Log.d("TravelController", "  Grade: ${travelRequest.grade}")
+        Log.d("TravelController", "  Aadhar Number: ${travelRequest.aadharNumber}")
+        Log.d("TravelController", "  Date of Birth: ${travelRequest.dateOfBirth}")
+        Log.d("TravelController", "  Mobile: ${travelRequest.mobile}")
+        Log.d("TravelController", "  Project Name: ${travelRequest.projectName}")
+        Log.d("TravelController", "  Business Justification: ${travelRequest.businessJustification}")
+        Log.d("TravelController", "  Mode of Transport: ${travelRequest.modeOfTransport}")
+        Log.d("TravelController", "  Stay Required: ${travelRequest.stayRequired}")
+        Log.d("TravelController", "  Meal Preference: ${travelRequest.mealPref}")
+        Log.d("TravelController", "  Seat Preference: ${travelRequest.seatPref}")
+        Log.d("TravelController", "  Frequent Flyer Number: ${travelRequest.frequentFlyerNum}")
+        Log.d("TravelController", "  Reporting Manager Name: ${travelRequest.reportingManagerName}")
+        Log.d("TravelController", "  Reporting Manager Email: ${travelRequest.reportingManagerEmail}")
+        Log.d("TravelController", "  Multi Travel: ${travelRequest.multiTravel}")
+        Log.d("TravelController", "  Travel Details Count: ${travelRequest.travelDetails.size}")
+        travelRequest.travelDetails.forEachIndexed { index, detail ->
+            Log.d("TravelController", "    Detail $index:")
+            Log.d("TravelController", "      Origin City: ${detail.originCity}")
+            Log.d("TravelController", "      Destination City: ${detail.destinationCity}")
+            Log.d("TravelController", "      Departure Date: ${detail.departureDate}")
+            Log.d("TravelController", "      Arrival Date: ${detail.arrivalDate}")
+            Log.d("TravelController", "      Flight Time: ${detail.flightTime}")
+        }
+        
+        // Log the serialized JSON for debugging
+        try {
+            val gson = com.google.gson.Gson()
+            val jsonString = gson.toJson(travelRequest)
+            Log.d("TravelController", "Serialized JSON: $jsonString")
+        } catch (e: Exception) {
+            Log.e("TravelController", "Error serializing request to JSON", e)
         }
 
         // Make API call
@@ -1129,6 +1192,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
                         if (responseBody.status == 200) {
                             // Request was successful
                             Log.d("TravelController", "Travel request submitted successfully")
+
+                            // Show success toast message
+                            CustomToast.show(context, "Travel request submitted successfully!")
 
                             // Log multi-destination details if available
                             responseBody.getAllOrderHistory()?.firstOrNull()?.let { order ->
@@ -1187,6 +1253,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
                     // This means the request was successful but response parsing failed
                     // Suppress the error and show success
                     Log.d("TravelController", "Request successful but response parsing failed - treating as success")
+                    
+                    // Show success toast message
+                    CustomToast.show(context, "Travel request submitted successfully!")
+                    
                     submissionError = null
                     // Refresh travel history to show the new request
                     loadCombinedTravelHistory()
@@ -1213,9 +1283,11 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Initialize with one destination
             destinations = listOf(
                 Destination(
+                    originCity = "",
                     destination = "",
                     departureDate = currentDate,
-                    returnDate = currentDate
+                    returnDate = currentDate,
+                    flightTimePreference = ""
                 )
             )
         }
@@ -1226,9 +1298,11 @@ class TravelController(private val navigator: Navigator, private val context: Co
      */
     fun addDestination() {
         destinations = destinations + Destination(
+            originCity = "",
             destination = "",
             departureDate = currentDate,
-            returnDate = currentDate
+            returnDate = currentDate,
+            flightTimePreference = ""
         )
     }
 
@@ -1237,6 +1311,32 @@ class TravelController(private val navigator: Navigator, private val context: Co
      */
     fun removeDestination(destinationId: String) {
         destinations = destinations.filter { it.id != destinationId }
+    }
+
+    /**
+     * Update origin city field for a specific destination
+     */
+    fun updateDestinationOriginCity(destinationId: String, value: String) {
+        destinations = destinations.map { destination ->
+            if (destination.id == destinationId) {
+                destination.copy(originCity = value)
+            } else {
+                destination
+            }
+        }
+    }
+
+    /**
+     * Update flight time preference for a specific destination
+     */
+    fun updateDestinationFlightTimePreference(destinationId: String, value: String) {
+        destinations = destinations.map { destination ->
+            if (destination.id == destinationId) {
+                destination.copy(flightTimePreference = value)
+            } else {
+                destination
+            }
+        }
     }
 
     /**
