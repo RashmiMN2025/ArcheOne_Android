@@ -11,12 +11,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -155,8 +157,8 @@ fun AdminDashboardCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .height(135.dp)
+            .fillMaxWidth(0.55f)
+            .height(230.dp)
             .clickable(enabled = item.isEnabled) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -174,41 +176,46 @@ fun AdminDashboardCard(
             ) {
                 // Icon
                 Box(
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier
+                        .size(70.dp)
+                        .offset(y = (-8).dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(id = getAdminIcon(item.iconName)),
                         contentDescription = item.title,
-                        modifier = Modifier.size(32.dp),
-                        contentScale = ContentScale.Fit
+                        modifier = Modifier.size(55.dp),
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(PrimaryRed)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 // Title
                 Text(
                     text = item.title,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp,
                     color = Color.Black,
                     textAlign = TextAlign.Center,
-                    maxLines = 1
+                    maxLines = 2,
+                    lineHeight = 19.sp
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Description
                 Text(
                     text = item.description,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
-                    maxLines = 2
+                    maxLines = 2,
+                    lineHeight = 17.sp
                 )
             }
 
@@ -217,21 +224,40 @@ fun AdminDashboardCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(20.dp)
-                        .background(
-                            color = PrimaryRed,
-                            shape = CircleShape
-                        ),
+                        .padding(top = 16.dp, end = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (item.badgeCount > 99) "99+" else item.badgeCount.toString(),
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = GraphikFontFamily
-                    )
+                    // Notification bell background
+                    Box(
+                        modifier = Modifier
+                            .width(46.dp)
+                            .height(32.dp)
+                            .background(
+                                color = PrimaryRed,
+                                shape = RoundedCornerShape(16.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = if (item.badgeCount > 99) "99+" else item.badgeCount.toString(),
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -241,9 +267,9 @@ fun AdminDashboardCard(
 @Composable
 private fun getAdminIcon(iconName: String): Int {
     return when (iconName) {
-        "ic_inventory" -> R.drawable.ic_it_asset // Box/inventory icon
-        "ic_order_received" -> R.drawable.ic_pdf_document // Clipboard/document icon
-        "ic_consumption_report" -> R.drawable.ic_doc // Chart/report icon
+        "ic_inventory" -> R.drawable.inventory
+        "ic_order_received" -> R.drawable.order_received
+        "ic_consumption_report" -> R.drawable.consumption_report
         else -> R.drawable.ic_file
     }
 }

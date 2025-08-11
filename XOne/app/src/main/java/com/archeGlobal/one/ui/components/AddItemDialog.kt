@@ -18,6 +18,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.archeGlobal.one.model.AddItemModel
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
+import com.archeGlobal.one.ui.theme.DialogBeige
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +45,7 @@ fun AddItemDialog(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = DialogBeige),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
@@ -215,8 +216,8 @@ private fun AddItemDropdown(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Gray,
                     unfocusedBorderColor = Color.Gray,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedContainerColor = Color(0xFFFFFFF8),
+                    unfocusedContainerColor = Color(0xFFFFFFF8)
                 )
             )
 
@@ -277,8 +278,8 @@ private fun AddItemTextField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Gray,
                 unfocusedBorderColor = Color.Gray,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
+                focusedContainerColor = Color(0xFFFFFFF8),
+                unfocusedContainerColor = Color(0xFFFFFFF8)
             )
         )
     }

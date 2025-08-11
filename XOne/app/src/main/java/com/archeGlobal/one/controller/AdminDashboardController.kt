@@ -69,8 +69,7 @@ class AdminDashboardController(
 
     private fun handleOrderReceivedClick() {
         Log.d("AdminDashboardController", "Order Received clicked")
-        Toast.makeText(context, "Order processing feature coming soon", Toast.LENGTH_SHORT).show()
-        // TODO: Navigate to order processing screen
+        navigator.navigateToOrderReceived()
 
         // Clear the badge count when clicked
         val updatedItems = model.dashboardItems.map {

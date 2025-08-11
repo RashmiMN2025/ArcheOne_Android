@@ -42,6 +42,11 @@ class InventoryController(
         filterItems()
     }
 
+    fun onSearchQueryChanged(query: String) {
+        model = model.copy(searchQuery = query)
+        filterItems()
+    }
+
     fun onItemClick(item: InventoryItem) {
         // Handle item click - could navigate to item detail/edit page
         // For now, just show a message or handle stock update
@@ -95,15 +100,19 @@ class InventoryController(
                         id = generateItemId(),
                         name = addItemModel.itemName,
                         itemNumber = addItemModel.itemNumber,
-                        totalStock = addItemModel.totalStock.toIntOrNull() ?: 0,
+                        unit = addItemModel.unit,
+                        closingStock = addItemModel.totalStock.toDoubleOrNull() ?: 0.0,
+                        updatedBy = "Current User", // Should come from user session
+                        suppliedDate = getCurrentDateTime(),
                         lastUpdated = getCurrentDateTime(),
                         iconName = "ic_file", // Default icon
                         category = addItemModel.selectedType
                     )
 
-                    // Add item to the current list
+                    // Add item to both the current list and all items list
                     val updatedItems = model.inventoryItems + newItem
-                    model = model.copy(inventoryItems = updatedItems)
+                    val updatedAllItems = model.allItems + newItem
+                    model = model.copy(inventoryItems = updatedItems, allItems = updatedAllItems)
 
                     // Close dialog and reset form
                     addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
@@ -137,11 +146,21 @@ class InventoryController(
     }
 
     private fun filterItems() {
-        val allItems = InventoryModel().inventoryItems
-        val filteredItems = when (model.selectedType) {
-            "All" -> allItems
-            else -> allItems.filter { it.category == model.selectedType }
+        var filteredItems = model.allItems
+
+        // Filter by search query
+        if (model.searchQuery.isNotBlank()) {
+            filteredItems = filteredItems.filter { item ->
+                item.name.contains(model.searchQuery, ignoreCase = true) ||
+                item.itemNumber.contains(model.searchQuery, ignoreCase = true)
+            }
         }
+
+        // Filter by type
+        if (model.selectedType != "All") {
+            filteredItems = filteredItems.filter { it.category == model.selectedType }
+        }
+
         // For now, we're not filtering by location, but you could add that logic here
         model = model.copy(inventoryItems = filteredItems)
     }

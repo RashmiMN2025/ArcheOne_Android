@@ -72,6 +72,8 @@ interface Navigator {
     fun navigateToIdeaVault()
     fun navigateToAdminDashboard()
     fun navigateToInventory()
+    fun navigateToOrderReceived()
+    fun navigateToOrderDetails(orderId: String)
 
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

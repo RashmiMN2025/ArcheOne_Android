@@ -125,6 +125,9 @@ interface ApiService {
 
     @POST("tickets")
     fun getTickets(@Body request: TicketsRequest): Call<TicketsResponse>
+
+    @POST("admin/orders")
+    fun getOrders(@Body request: com.archeGlobal.one.model.OrdersRequest): Call<com.archeGlobal.one.model.OrdersResponse>
 }
 
 data class FeedbackRequest(

@@ -300,6 +300,25 @@ class AndroidNavigator(
         activity.startActivity(intent)
     }
 
+    override fun navigateToOrderReceived() {
+        if (activity is HomeActivity) {
+            navigate("order_received")
+        } else {
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    putExtra("navigateTo", "order_received")
+                }
+            )
+        }
+    }
+
+    override fun navigateToOrderDetails(orderId: String) {
+        navController?.navigate("order_details/$orderId") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     override fun navigateToXConnect(initialTab: String) {
         startActivity(
             Intent(activity, XConnectActivity::class.java).apply {

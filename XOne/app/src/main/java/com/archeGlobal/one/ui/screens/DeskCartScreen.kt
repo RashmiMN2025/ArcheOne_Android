@@ -13,7 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,17 +95,13 @@ fun DeskCartScreen(
                         StoreFrontSection(
                             items = model.stationaryItems,
                             onIncreaseQuantity = controller::onIncreaseQuantity,
-                            onDecreaseQuantity = controller::onDecreaseQuantity
+                            onDecreaseQuantity = controller::onDecreaseQuantity,
+                            onPlaceOrder = controller::onPlaceOrder,
+                            isPlaceOrderEnabled = controller.getTotalItemsSelected() > 0
                         )
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
-
-                    // Place Order Button
-                    PlaceOrderButton(
-                        onClick = controller::onPlaceOrder,
-                        enabled = controller.getTotalItemsSelected() > 0
-                    )
 
                     Spacer(modifier = Modifier.height(20.dp))
                 }
@@ -150,11 +146,12 @@ fun DeskCartHeader(
             }
         },
         actions = {
-            IconButton(onClick = { /* Handle notification */ }) {
+            IconButton(onClick = { /* Handle history */ }) {
                 Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.Black
+                    imageVector = Icons.Filled.History,
+                    contentDescription = "History",
+                    tint = PrimaryRed,
+                    modifier = Modifier.size(32.dp)
                 )
             }
         },
@@ -172,17 +169,17 @@ fun EmployeeDetailsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(start = 24.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
         ) {
             Text(
                 text = "Employee Details",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -195,21 +192,28 @@ fun EmployeeDetailsSection(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Admin Dashboard Button
-            Button(
-                onClick = onAdminDashboardClick,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryRed
-                ),
-                shape = RoundedCornerShape(8.dp)
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "Admin Dashboard",
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    color = Color.White
-                )
+                Button(
+                    onClick = onAdminDashboardClick,
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(52.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryRed
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "Admin Dashboard",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
@@ -247,7 +251,9 @@ fun EmployeeInfoRow(label: String, value: String) {
 fun StoreFrontSection(
     items: List<StationaryItem>,
     onIncreaseQuantity: (StationaryItem) -> Unit,
-    onDecreaseQuantity: (StationaryItem) -> Unit
+    onDecreaseQuantity: (StationaryItem) -> Unit,
+    onPlaceOrder: () -> Unit,
+    isPlaceOrderEnabled: Boolean
 ) {
     Column(
         modifier = Modifier.padding(16.dp)
@@ -256,7 +262,7 @@ fun StoreFrontSection(
             text = "Store Front",
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 18.sp,
+            fontSize = 20.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -275,6 +281,14 @@ fun StoreFrontSection(
                 )
             }
         }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Place Order Button inside the card
+        PlaceOrderButton(
+            onClick = onPlaceOrder,
+            enabled = isPlaceOrderEnabled
+        )
     }
 }
 
@@ -287,7 +301,7 @@ fun StationaryItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp),
+            .height(175.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -299,6 +313,8 @@ fun StationaryItemCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            Spacer(modifier = Modifier.height(4.dp))
+            
             // Item Icon
             Image(
                 painter = painterResource(id = getStationaryIcon(item.iconName)),
@@ -307,12 +323,14 @@ fun StationaryItemCard(
                 contentScale = ContentScale.Fit
             )
 
+            Spacer(modifier = Modifier.height(4.dp))
+            
             // Item Name
             Text(
                 text = item.name,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center,
                 maxLines = 1
@@ -329,7 +347,7 @@ fun StationaryItemCard(
                     modifier = Modifier
                         .size(24.dp)
                         .background(
-                            color = Color.Gray.copy(alpha = 0.3f),
+                            color = Color.Gray.copy(alpha = 0.7f),
                             shape = CircleShape
                         )
                         .clickable(enabled = item.currentQuantity > 0) {
@@ -340,7 +358,7 @@ fun StationaryItemCard(
                     Text(
                         text = "−",
                         fontSize = 16.sp,
-                        color = if (item.currentQuantity > 0) Color.Black else Color.Gray,
+                        color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -390,9 +408,9 @@ fun PlaceOrderButton(
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = PrimaryRed,
-            disabledContainerColor = Color.Gray
+            disabledContainerColor = PrimaryRed
         ),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(24.dp)
     ) {
         Text(
             text = "Place Order",

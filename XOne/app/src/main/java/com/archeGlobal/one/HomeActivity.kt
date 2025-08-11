@@ -14,12 +14,19 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -63,6 +70,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var ideaVaultController: IdeaVaultController
     private lateinit var holidayOptionsController: HolidayOptionsController
     private lateinit var helpDeskController: HelpDeskController
+    private lateinit var orderController: OrderController
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -291,6 +299,9 @@ class HomeActivity : AppCompatActivity() {
                 helpDeskController.setNavigationCallback { route ->
                     navController.navigate(route)
                 }
+
+                // Initialize order controller
+                orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
                 var isLoading by remember { mutableStateOf(false) }
 
                 // Get the current intent (which might be updated by onNewIntent)
@@ -301,10 +312,10 @@ class HomeActivity : AppCompatActivity() {
                 val currentDestination = currentIntent.getStringExtra("destination")
 
                 // Determine start destination based on intent
-                val startDestination = if (currentNavigateTo == "track_tickets" && currentTicketCategory != null) {
-                    "track_tickets"
-                } else {
-                    "home"
+                val startDestination = when {
+                    currentNavigateTo == "track_tickets" && currentTicketCategory != null -> "track_tickets"
+                    currentNavigateTo == "order_received" -> "order_received"
+                    else -> "home"
                 }
 
                 // Handle data loading and navigation setup
@@ -1454,6 +1465,98 @@ class HomeActivity : AppCompatActivity() {
                     ) { backStackEntry ->
                         val faqId = backStackEntry.arguments?.getString("faqId") ?: ""
                         FAQDetailScreen(faqId = faqId, controller = helpDeskController)
+                    }
+
+                    // Order details route
+                    composable(
+                        route = "order_details/{orderId}",
+                        arguments = listOf(
+                            navArgument("orderId") {
+                                type = NavType.StringType
+                                nullable = false
+                            }
+                        ),
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) { backStackEntry ->
+                        val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+                        
+                        // Load order details when composable is created
+                        LaunchedEffect(orderId) {
+                            orderController.loadOrderDetails(orderId)
+                        }
+                        
+                        orderController.model.order?.let { orderDetails ->
+                            OrderDetailsScreen(
+                                controller = orderController,
+                                orderDetails = orderDetails
+                            )
+                        } ?: run {
+                            // Show loading or error state
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (orderController.model.isLoading) {
+                                    CircularProgressIndicator()
+                                } else if (orderController.model.error != null) {
+                                    Text(
+                                        text = "Error loading order details",
+                                        color = Color.Red
+                                    )
+                                } else {
+                                    Text("Loading...")
+                                }
+                            }
+                        }
+                    }
+
+                    // Order Received route - for admin dashboard
+                    composable(
+                        route = "order_received",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        val orderReceivedController = remember {
+                            OrderReceivedController(this@HomeActivity, navigator)
+                        }
+                        
+                        OrderReceivedScreen(
+                            model = orderReceivedController.model,
+                            controller = orderReceivedController
+                        )
                     }
                 }
             }

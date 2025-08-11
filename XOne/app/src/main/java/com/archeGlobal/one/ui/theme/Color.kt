@@ -25,3 +25,6 @@ val DividerColor = Color(0xFFEEEEEE)
 val WelcomeBackgroundTop = Color(0xFFE0DCD1)
 val WelcomeBackgroundMiddle = Color(0xFFC8C8CA)
 val WelcomeBackgroundBottom = Color(0xFF474749)
+
+// Dialog specific colors
+val DialogBeige = Color(0xFFF5F5DC)
