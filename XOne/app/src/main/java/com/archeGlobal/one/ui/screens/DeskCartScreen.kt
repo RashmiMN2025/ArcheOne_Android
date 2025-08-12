@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,6 +44,10 @@ fun DeskCartScreen(
     model: DeskCartModel,
     controller: DeskCartController
 ) {
+    // Handle back gesture navigation
+    BackHandler {
+        controller.onBackPressed()
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -281,9 +286,9 @@ fun StoreFrontSection(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Place Order Button inside the card
         PlaceOrderButton(
             onClick = onPlaceOrder,
@@ -314,7 +319,7 @@ fun StationaryItemCard(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             // Item Icon
             Image(
                 painter = painterResource(id = getStationaryIcon(item.iconName)),
@@ -324,7 +329,7 @@ fun StationaryItemCard(
             )
 
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             // Item Name
             Text(
                 text = item.name,

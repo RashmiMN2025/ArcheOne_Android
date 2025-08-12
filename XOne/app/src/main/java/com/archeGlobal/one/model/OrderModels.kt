@@ -1,7 +1,5 @@
 package com.archeGlobal.one.model
 
-import java.util.Date
-
 /**
  * Data models for order management system
  */
@@ -24,7 +22,6 @@ data class OrderDetails(
     val orderTime: String,
     val orderItems: List<OrderItem>
 )
-
 
 sealed class OrderApprovalActionState {
     object Idle : OrderApprovalActionState()

@@ -17,8 +17,12 @@ data class Order(
     val userName: String,
     @SerializedName("employee_id")
     val employeeId: String,
-    @SerializedName("date_time")
-    val dateTime: String,
+    @SerializedName("date")
+    val date: String,
+    @SerializedName("time")
+    val time: String,
+    @SerializedName("date_time") // Keep for backward compatibility
+    val dateTime: String = "$date $time",
     @SerializedName("is_new")
     val isNew: Boolean = true,
     @SerializedName("items")
@@ -67,8 +71,9 @@ fun getSampleOrders(): List<Order> {
             orderId = "ORD001",
             status = OrderStatus.PENDING,
             userName = "John Doe",
-            employeeId = "EMP001",
-            dateTime = "2024-01-15 10:30 AM",
+            employeeId = "EMP123",
+            date = "8 Aug 2025",
+            time = "12:03 PM",
             isNew = true,
             items = listOf(
                 OrderItem("Pen", 5, "ic_pen"),
@@ -78,10 +83,11 @@ fun getSampleOrders(): List<Order> {
         ),
         Order(
             orderId = "ORD002",
-            status = OrderStatus.PROCESSING,
+            status = OrderStatus.PENDING,
             userName = "Jane Smith",
-            employeeId = "EMP002",
-            dateTime = "2024-01-14 02:15 PM",
+            employeeId = "EMP456",
+            date = "7 Aug 2025",
+            time = "12:03 PM",
             isNew = false,
             items = listOf(
                 OrderItem("Stapler", 1, "ic_stapler"),
@@ -93,8 +99,9 @@ fun getSampleOrders(): List<Order> {
             orderId = "ORD003",
             status = OrderStatus.PENDING,
             userName = "Mike Johnson",
-            employeeId = "EMP003",
-            dateTime = "2024-01-14 09:45 AM",
+            employeeId = "EMP789",
+            date = "6 Aug 2025",
+            time = "11:45 AM",
             isNew = true,
             items = listOf(
                 OrderItem("Marker", 3, "ic_marker"),
@@ -107,8 +114,9 @@ fun getSampleOrders(): List<Order> {
             orderId = "ORD004",
             status = OrderStatus.COMPLETED,
             userName = "Sarah Wilson",
-            employeeId = "EMP004",
-            dateTime = "2024-01-13 11:20 AM",
+            employeeId = "EMP321",
+            date = "5 Aug 2025",
+            time = "10:20 AM",
             isNew = false,
             items = listOf(
                 OrderItem("Envelope DL", 20, "ic_envelope_dl"),
@@ -120,8 +128,9 @@ fun getSampleOrders(): List<Order> {
             orderId = "ORD005",
             status = OrderStatus.PENDING,
             userName = "Alex Brown",
-            employeeId = "EMP005",
-            dateTime = "2024-01-13 03:30 PM",
+            employeeId = "EMP654",
+            date = "4 Aug 2025",
+            time = "09:30 AM",
             isNew = true,
             items = listOf(
                 OrderItem("Punching Machine", 1, "ic_punching_machine"),

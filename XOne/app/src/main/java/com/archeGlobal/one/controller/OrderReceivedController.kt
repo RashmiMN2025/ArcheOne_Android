@@ -7,11 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.*
 import com.archeGlobal.one.navigation.Navigator
-import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class OrderReceivedController(
     private val context: Context,
@@ -28,11 +24,11 @@ class OrderReceivedController(
 
     private fun loadOrders() {
         model = model.copy(isLoading = true, error = null)
-        
+
         // For now, use sample data since we don't have the actual API endpoint
         // In production, you would call the actual API:
         // loadOrdersFromAPI()
-        
+
         // Simulate API delay
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             try {
@@ -51,7 +47,7 @@ class OrderReceivedController(
             }
         }, 1000) // 1 second delay to simulate network call
     }
-    
+
     private fun loadOrdersFromAPI() {
         val userData = userDataManager.getUserData()
         if (userData?.email == null) {
@@ -63,13 +59,13 @@ class OrderReceivedController(
         }
 
         val request = OrdersRequest(adminEmail = userData.email)
-        
+
         // Note: This endpoint doesn't exist yet in ApiService
         // You would need to add it to ApiService.kt:
         // @POST("admin/orders")
         // fun getOrders(@Body request: OrdersRequest): Call<OrdersResponse>
-        
-        /* 
+
+        /*
         RetrofitClient.apiService.getOrders(request)
             .enqueue(object : Callback<OrdersResponse> {
                 override fun onResponse(call: Call<OrdersResponse>, response: Response<OrdersResponse>) {
@@ -101,7 +97,8 @@ class OrderReceivedController(
     }
 
     fun onBackPressed() {
-        navigator.popBackStack()
+        Log.d("OrderReceivedController", "Back button pressed - navigating to admin dashboard")
+        navigator.navigateToAdminDashboard()
     }
 
     fun refreshOrders() {

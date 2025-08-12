@@ -131,6 +131,7 @@ fun PrideMonthTestScreen() {
             override fun navigateToInventory() {}
             override fun navigateToOrderReceived() {}
             override fun navigateToOrderDetails(orderId: String) {}
+            override fun navigateToConsumptionReport() {}
             override fun getCurrentRoute(): String? = null
             override fun refreshCurrentScreen() {}
             override fun popBackStack() {}

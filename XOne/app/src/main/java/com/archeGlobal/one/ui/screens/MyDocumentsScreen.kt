@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -531,27 +529,27 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         Spacer(modifier = Modifier.height(26.dp))
                         Button(
                             onClick = {
-                                    if (enteredMpin.isEmpty()) {
-                                        mpinError = "Please enter the MPIN"
-                                    } else if (enteredMpin.length < 4) {
-                                        mpinError = "Please enter the MPIN"
-                                    } else {
-                                        isVerifyingMpin = true
-                                        CoroutineScope(Dispatchers.Main).launch {
-                                            kotlinx.coroutines.delay(700)
-                                            if (mpinController.validateMpin(enteredMpin)) {
-                                                mpinError = null
-                                                enteredMpin = ""
-                                                showMpinPrompt = false
-                                                userDataManager.preferencesManager.setAppLockState(false)
-                                            } else {
-                                                mpinError = "Invalid MPIN"
-                                                enteredMpin = ""
-                                            }
-                                            isVerifyingMpin = false
+                                if (enteredMpin.isEmpty()) {
+                                    mpinError = "Please enter the MPIN"
+                                } else if (enteredMpin.length < 4) {
+                                    mpinError = "Please enter the MPIN"
+                                } else {
+                                    isVerifyingMpin = true
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        kotlinx.coroutines.delay(700)
+                                        if (mpinController.validateMpin(enteredMpin)) {
+                                            mpinError = null
+                                            enteredMpin = ""
+                                            showMpinPrompt = false
+                                            userDataManager.preferencesManager.setAppLockState(false)
+                                        } else {
+                                            mpinError = "Invalid MPIN"
+                                            enteredMpin = ""
                                         }
+                                        isVerifyingMpin = false
                                     }
-                                },
+                                }
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(54.dp),

@@ -127,7 +127,7 @@ class AndroidNavigator(
     ) {
         startActivity(
             Intent(activity, HomeActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra("FROM_OTP", fromOtp)
                 putExtra("showBiometricSetup", showBiometricSetup)
                 putExtra("email", email)
@@ -135,6 +135,7 @@ class AndroidNavigator(
                 putExtra("employeeId", employeeId)
                 putExtra("fromLogin", true)
                 putExtra("navigateTo", "home")
+                putExtra("clearBackStack", true) // Force clear navigation back stack
             },
             true,
             true
@@ -316,6 +317,18 @@ class AndroidNavigator(
         navController?.navigate("order_details/$orderId") {
             launchSingleTop = true
             restoreState = true
+        }
+    }
+
+    override fun navigateToConsumptionReport() {
+        if (activity is HomeActivity) {
+            navigate("consumption_report")
+        } else {
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    putExtra("navigateTo", "consumption_report")
+                }
+            )
         }
     }
 

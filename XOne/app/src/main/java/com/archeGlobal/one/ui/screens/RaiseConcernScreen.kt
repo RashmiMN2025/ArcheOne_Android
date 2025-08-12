@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -34,11 +33,10 @@ import com.archeGlobal.one.controller.HelpDeskController
 import com.archeGlobal.one.controller.SOSController
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.SOSRequest
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun RaiseConcernScreen(
@@ -103,29 +101,29 @@ fun RaiseConcernScreen(
     val subcategoryMap = if (isHelpDeskTicket) {
         // Extract subcategories from FAQ data by accessing the original FAQ structure
         val subcategoriesFromFAQ = mutableMapOf<String, MutableSet<String>>()
-        
+
         // Get the original FAQ data from UserDataManager to access FAQAnswer.cat fields
         val userDataManager = UserDataManager.getInstance(context)
         val originalFaqData = userDataManager.getFAQData()
-        
+
         originalFaqData?.forEach { faqCategory ->
             // Skip the default categories
             if (faqCategory.title != "General" && faqCategory.title != "Other Issues") {
                 val subcategorySet = subcategoriesFromFAQ.getOrPut(faqCategory.title) { mutableSetOf() }
-                
+
                 // Debug logging to see the actual FAQ structure
                 Log.d("RaiseConcern", "Processing FAQ Category: ${faqCategory.title}")
-                
+
                 // Use FAQ questions as subcategories (each question represents a subcategory)
                 faqCategory.items.forEach { faqItem ->
                     Log.d("RaiseConcern", "  Adding FAQ question as subcategory: ${faqItem.question}")
                     subcategorySet.add(faqItem.question)
                 }
-                
+
                 Log.d("RaiseConcern", "  Final subcategories for ${faqCategory.title}: ${subcategorySet.toList()}")
             }
         }
-        
+
         // Convert to Map<String, List<String>> without adding "Other" options
         val finalSubcategoryMap = subcategoriesFromFAQ.mapValues { (_, subcategories) ->
             subcategories.toList().sorted()
@@ -133,13 +131,13 @@ fun RaiseConcernScreen(
             // Add default subcategories for "Other Issue" category
             put("Other Issue", listOf("General Query", "Feature Request", "Training", "Documentation", "Other"))
         }
-        
+
         // Debug logging for final subcategory map
         Log.d("RaiseConcern", "Final subcategory map:")
         finalSubcategoryMap.forEach { (category, subcategories) ->
             Log.d("RaiseConcern", "  $category: ${subcategories.joinToString(", ")}")
         }
-        
+
         finalSubcategoryMap
     } else {
         // SOS categories - keep hardcoded as they don't come from FAQ API
@@ -217,7 +215,7 @@ fun RaiseConcernScreen(
                             // For helpdesk concerns, use hardcoded message
                             "Ticket raised successfully"
                         }
-                        
+
                         Toast.makeText(
                             context,
                             successMessage,
@@ -240,7 +238,7 @@ fun RaiseConcernScreen(
                             // For helpdesk concerns, use hardcoded message with API message
                             "Failed to submit ticket: ${response.message}"
                         }
-                        
+
                         Toast.makeText(
                             context,
                             errorMessage,
@@ -276,7 +274,7 @@ fun RaiseConcernScreen(
             } else {
                 "Unable to submit your ticket. Please check your internet connection and try again."
             }
-            
+
             Toast.makeText(
                 context,
                 exceptionMessage,
@@ -430,120 +428,122 @@ fun RaiseConcernScreen(
 
                 // Category dropdown (hide when pre-filled from FAQ)
                 if (!isCategoryLocked) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .padding(horizontal = 15.dp)
-                ) {
-                    OutlinedTextField(
-                        value = selectedCategory ?: "",
-                        onValueChange = { },
-                        readOnly = true,
-                        placeholder = {
-                            Text(
-                                "Select Issue category",
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                            .padding(horizontal = 15.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedCategory ?: "",
+                            onValueChange = { },
+                            readOnly = true,
+                            placeholder = {
+                                Text(
+                                    "Select Issue category",
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 16.sp
+                                )
+                            },
+                            trailingIcon = {
+                                if (!isCategoryLocked) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Dropdown",
+                                        tint = Color.Black
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.LightGray,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            textStyle = TextStyle(
+                                color = Color.Black,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = GraphikFontFamily,
                                 fontSize = 16.sp
-                            ) },
-                        trailingIcon = {
-                            if (!isCategoryLocked) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "Dropdown",
-                                    tint = Color.Black
-                                )
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.LightGray,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        textStyle = TextStyle(
-                            color = Color.Black,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily,
-                            fontSize = 16.sp
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-
-                    // Invisible clickable box over the TextField to trigger dropdown
-                    if (!isCategoryLocked) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .padding(horizontal = 15.dp)
-                                .clickable { expanded = true }
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         )
-                    }
 
-                    // This will position the dropdown below the TextField
-                    // with exact same width as parent
-                    if (expanded) {
-                        // Popup dialog instead of standard DropdownMenu to match the design
-                        Dialog(
-                            onDismissRequest = { expanded = false },
-                            properties = DialogProperties(
-                                dismissOnBackPress = true,
-                                dismissOnClickOutside = true,
-                                usePlatformDefaultWidth = false
-                            )
-                        ) {
-                            // The main container with padding to match the screen layout
+                        // Invisible clickable box over the TextField to trigger dropdown
+                        if (!isCategoryLocked) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.85f) // Make the dropdown width 85% of screen width
-                                    .padding(horizontal = 8.dp) // Reduce horizontal padding
+                                    .matchParentSize()
+                                    .padding(horizontal = 15.dp)
+                                    .clickable { expanded = true }
+                            )
+                        }
+
+                        // This will position the dropdown below the TextField
+                        // with exact same width as parent
+                        if (expanded) {
+                            // Popup dialog instead of standard DropdownMenu to match the design
+                            Dialog(
+                                onDismissRequest = { expanded = false },
+                                properties = DialogProperties(
+                                    dismissOnBackPress = true,
+                                    dismissOnClickOutside = true,
+                                    usePlatformDefaultWidth = false
+                                )
                             ) {
-                                // Dropdown menu card
-                                Card(
+                                // The main container with padding to match the screen layout
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color.White
-                                    )
+                                        .fillMaxWidth(0.85f) // Make the dropdown width 85% of screen width
+                                        .padding(horizontal = 8.dp) // Reduce horizontal padding
                                 ) {
-                                    Column(
+                                    // Dropdown menu card
+                                    Card(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = Color.White
+                                        )
                                     ) {
-                                        categories.forEach { category ->
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                            ) {
-                                                Text(
-                                                    text = category,
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                        ) {
+                                            categories.forEach { category ->
+                                                Column(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .clickable {
-                                                            selectedCategory = category
-                                                            expanded = false
-                                                        }
-                                                        .padding(
-                                                            vertical = 12.dp, // Reduce vertical padding
-                                                            horizontal = 12.dp // Reduce horizontal padding
-                                                        ),
-                                                    fontSize = 16.sp,
-                                                    color = Color.Black
-                                                )
-
-                                                // Add divider between items except for the last one
-                                                if (category != categories.last()) {
-                                                    Divider(
-                                                        color = Color.LightGray,
-                                                        thickness = 1.dp,
-                                                        modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Text(
+                                                        text = category,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clickable {
+                                                                selectedCategory = category
+                                                                expanded = false
+                                                            }
+                                                            .padding(
+                                                                vertical = 12.dp, // Reduce vertical padding
+                                                                horizontal = 12.dp // Reduce horizontal padding
+                                                            ),
+                                                        fontSize = 16.sp,
+                                                        color = Color.Black
                                                     )
+
+                                                    // Add divider between items except for the last one
+                                                    if (category != categories.last()) {
+                                                        Divider(
+                                                            color = Color.LightGray,
+                                                            thickness = 1.dp,
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -552,7 +552,6 @@ fun RaiseConcernScreen(
                             }
                         }
                     }
-                }
                 } // End of category dropdown conditional
 
                 // Subcategory dropdown (show when category is selected or pre-filled) - only for helpdesk tickets
@@ -665,12 +664,14 @@ fun RaiseConcernScreen(
                 OutlinedTextField(
                     value = issueDescription,
                     onValueChange = { issueDescription = it },
-                    placeholder = { Text(
-                        "Please describe your issue",
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily,
-                        fontSize = 16.sp
-                    ) },
+                    placeholder = {
+                        Text(
+                            "Please describe your issue",
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 16.sp
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 140.dp)
@@ -694,8 +695,7 @@ fun RaiseConcernScreen(
                     maxLines = 8,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
-                        if (issueDescription.isNotBlank() && selectedCategory != null && 
-                            (isHelpDeskTicket && (availableSubcategories.isEmpty() || selectedSubcategory != null) || !isHelpDeskTicket)) {
+                        if (issueDescription.isNotBlank() && selectedCategory != null && (isHelpDeskTicket && (availableSubcategories.isEmpty() || selectedSubcategory != null) || !isHelpDeskTicket)) {
                             if (isHelpDeskTicket) {
                                 coroutineScope.launch { submitHelpDeskTicket() }
                             } else {
@@ -729,7 +729,7 @@ fun RaiseConcernScreen(
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily,
+                        fontFamily = GraphikFontFamily
                     )
                 }
             }
@@ -802,7 +802,7 @@ fun RaiseConcernScreen(
                                     fontSize = 18.sp,
                                     color = Color.White,
                                     fontWeight = FontWeight.Medium,
-                                    fontFamily = GraphikFontFamily,
+                                    fontFamily = GraphikFontFamily
                                 )
                             }
 
@@ -825,7 +825,7 @@ fun RaiseConcernScreen(
                                     fontSize = 18.sp,
                                     color = Color.White,
                                     fontWeight = FontWeight.Medium,
-                                    fontFamily = GraphikFontFamily,
+                                    fontFamily = GraphikFontFamily
                                 )
                             }
                         }
@@ -851,7 +851,7 @@ fun RaiseConcernScreen(
                         }
                     }
                 }
-                
+
                 Dialog(
                     onDismissRequest = { /* Don't allow dismissing during timer */ },
                     properties = DialogProperties(
@@ -906,7 +906,7 @@ fun RaiseConcernScreen(
                                     strokeWidth = 4.dp,
                                     trackColor = Color.Transparent
                                 )
-                                
+
                                 // Timer text in center
                                 Text(
                                     text = String.format("%02d:%02d", 0, timerSeconds),

@@ -81,10 +81,12 @@ class PreviewNavigator : Navigator {
     override fun navigateToAdminDashboard() {}
 
     override fun navigateToInventory() {}
-    
+
     override fun navigateToOrderReceived() {}
-    
+
     override fun navigateToOrderDetails(orderId: String) {}
+
+    override fun navigateToConsumptionReport() {}
 
     override fun navigateToGlobalCelebration() {}
 

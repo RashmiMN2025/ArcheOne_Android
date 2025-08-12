@@ -1,5 +1,7 @@
 package com.archeGlobal.one.model
 
+import com.google.gson.annotations.SerializedName
+
 data class InventoryModel(
     val isLoading: Boolean = false,
     val selectedLocation: String = "Bengaluru",
@@ -7,8 +9,33 @@ data class InventoryModel(
     val searchQuery: String = "",
     val locations: List<String> = listOf("Bengaluru", "Chennai", "Coimbatore"),
     val types: List<String> = listOf("All", "Writing", "Paper", "Office Supplies", "Hygiene"),
-    val inventoryItems: List<InventoryItem> = getDefaultInventoryItems(),
-    val allItems: List<InventoryItem> = getDefaultInventoryItems()
+    val inventoryItems: List<InventoryItem> = emptyList(),
+    val allItems: List<InventoryItem> = emptyList(),
+    val errorMessage: String? = null
+)
+
+data class StockListResponse(
+    val status: Int,
+    val data: List<StockItem>
+)
+
+data class StockItem(
+    @SerializedName("Sl_No") val slNo: Int,
+    @SerializedName("Item/Material_Category") val category: String,
+    @SerializedName("Item/Material_ID") val itemId: String,
+    @SerializedName("Item/Material_Name") val itemName: String,
+    @SerializedName("Unit") val unit: String,
+    @SerializedName("Brand") val brand: String,
+    @SerializedName("Opening_Stock") val openingStock: String,
+    @SerializedName("New_Stock") val newStock: String,
+    @SerializedName("Total_Stock") val totalStock: String,
+    @SerializedName("Consumption") val consumption: String,
+    @SerializedName("Closing_Stock") val closingStock: String,
+    @SerializedName("Location") val location: String,
+    @SerializedName("Updated_By_") val updatedBy: String,
+    @SerializedName("Last_Updated_Date_Time") val lastUpdatedDateTime: String,
+    @SerializedName("stock_supplied_date") val stockSuppliedDate: String,
+    @SerializedName("Utilization") val utilization: String
 )
 
 data class InventoryItem(
@@ -22,166 +49,49 @@ data class InventoryItem(
     val lastUpdated: String,
     val iconName: String,
     val category: String,
+    val location: String,
+    val brand: String,
     val totalStock: Int = closingStock.toInt() // For backward compatibility
 )
 
-private fun getDefaultInventoryItems(): List<InventoryItem> {
-    return listOf(
-        InventoryItem(
-            id = "s1",
-            name = "S1",
-            itemNumber = "AGHK_001",
-            unit = "Litres",
-            closingStock = 5.0,
-            updatedBy = "Harish",
-            suppliedDate = "8 Sep 2025 at 8:00 AM",
-            lastUpdated = "8 Sep 2025 at 8:00 AM",
-            iconName = "ic_pen",
-            category = "Writing"
-        ),
-        InventoryItem(
-            id = "pen",
-            name = "Pen",
-            itemNumber = "ARSTATA001",
-            unit = "Pieces",
-            closingStock = 260.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_pen",
-            category = "Writing"
-        ),
-        InventoryItem(
-            id = "pencil",
-            name = "Pencil",
-            itemNumber = "ARSTATA002",
-            unit = "Pieces",
-            closingStock = 170.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_pencil",
-            category = "Writing"
-        ),
-        InventoryItem(
-            id = "marker",
-            name = "Marker",
-            itemNumber = "ARSTATA003",
-            unit = "Pieces",
-            closingStock = 90.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_marker",
-            category = "Writing"
-        ),
-        InventoryItem(
-            id = "notepad",
-            name = "Notepad",
-            itemNumber = "ARSTATA004",
-            unit = "Pieces",
-            closingStock = 60.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_notepad",
-            category = "Paper"
-        ),
-        InventoryItem(
-            id = "eraser",
-            name = "Eraser",
-            itemNumber = "ARSTATA005",
-            unit = "Pieces",
-            closingStock = 80.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_eraser",
-            category = "Writing"
-        ),
-        InventoryItem(
-            id = "sticky_note",
-            name = "Sticky Note",
-            itemNumber = "ARSTATA006",
-            unit = "Packs",
-            closingStock = 50.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_sticky_note",
-            category = "Paper"
-        ),
-        InventoryItem(
-            id = "envelope_dl",
-            name = "Envelope DL",
-            itemNumber = "ARSTATA007",
-            unit = "Pieces",
-            closingStock = 100.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_envelope_dl",
-            category = "Paper"
-        ),
-        InventoryItem(
-            id = "envelope_a4",
-            name = "Envelope A4",
-            itemNumber = "ARSTATA008",
-            unit = "Pieces",
-            closingStock = 75.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_envelope_a4",
-            category = "Paper"
-        ),
-        InventoryItem(
-            id = "tissues",
-            name = "Tissues",
-            itemNumber = "ARHK001",
-            unit = "Packs",
-            closingStock = 35.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_tissues",
-            category = "Hygiene"
-        ),
-        InventoryItem(
-            id = "handwash",
-            name = "Handwash",
-            itemNumber = "ARHK002",
-            unit = "Bottles",
-            closingStock = 6.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_handwash",
-            category = "Hygiene"
-        ),
-        InventoryItem(
-            id = "stapler",
-            name = "Stapler",
-            itemNumber = "ARBSSTA001",
-            unit = "Pieces",
-            closingStock = 4.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_stapler",
-            category = "Office Supplies"
-        ),
-        InventoryItem(
-            id = "tape",
-            name = "Tape",
-            itemNumber = "ARBSSTA002",
-            unit = "Rolls",
-            closingStock = 3.0,
-            updatedBy = "Admin",
-            suppliedDate = "8 Jul 2024 at 11:45 AM",
-            lastUpdated = "8 Jul 2024 at 11:45 AM",
-            iconName = "ic_tape",
-            category = "Office Supplies"
-        )
+// Extension function to convert StockItem to InventoryItem
+fun StockItem.toInventoryItem(): InventoryItem {
+    return InventoryItem(
+        id = itemId,
+        name = itemName,
+        itemNumber = itemId,
+        unit = unit,
+        closingStock = closingStock.toDoubleOrNull() ?: 0.0,
+        updatedBy = updatedBy,
+        suppliedDate = formatDateTime(stockSuppliedDate),
+        lastUpdated = formatDateTime(lastUpdatedDateTime),
+        iconName = getIconFromCategory(category),
+        category = category,
+        location = location,
+        brand = brand
     )
 }
+
+private fun formatDateTime(dateTimeString: String): String {
+    return try {
+        // Parse ISO date and format to readable format
+        val instant = java.time.Instant.parse(dateTimeString)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy 'at' hh:mm a")
+            .withZone(java.time.ZoneId.systemDefault())
+        formatter.format(instant)
+    } catch (e: Exception) {
+        dateTimeString // Return original if parsing fails
+    }
+}
+
+private fun getIconFromCategory(category: String): String {
+    return when (category.lowercase()) {
+        "hk_consumables" -> "ic_handwash"
+        "writing" -> "ic_pen"
+        "paper" -> "ic_notepad"
+        "office supplies" -> "ic_stapler"
+        "hygiene" -> "ic_tissues"
+        else -> "ic_file"
+    }
+}
+

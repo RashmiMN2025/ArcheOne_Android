@@ -5,17 +5,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.OrderController
 import com.archeGlobal.one.model.OrderDetails
-import com.archeGlobal.one.model.OrderItem
 import com.archeGlobal.one.model.OrderStatus
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
@@ -41,7 +38,7 @@ fun OrderDetailsScreen(
 ) {
     val context = LocalContext.current
     val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
-    
+
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
@@ -98,104 +95,65 @@ fun OrderDetailsScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(48.dp))
-
-                    TopAppBar(
-                        title = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Order ${orderDetails.orderId}",
-                                    color = Color.Black,
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.offset(x = (-24).dp) // Offset for header centering without actions
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { controller.onBackPressed() }) {
-                                Icon(
-                                    Icons.Default.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = Color.Black
-                                )
-                            }
-                        },
-                        backgroundColor = Color.Transparent,
-                        elevation = 0.dp
+                    // Header
+                    OrderDetailsHeader(
+                        orderId = orderDetails.orderId,
+                        onBackPressed = { controller.onBackPressed() }
                     )
 
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
                             .padding(16.dp)
                     ) {
-                        val scrollState = rememberScrollState()
-                        
-                        // Main content card
+                        // Order Details Section Title
+                        Text(
+                            text = "Order Details",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Order Details Card
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            elevation = 2.dp,
-                            backgroundColor = Color.White
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .verticalScroll(scrollState)
-                                    .padding(16.dp)
+                                modifier = Modifier.padding(16.dp)
                             ) {
-                                // Order Details Section
-                                OrderDetailsSectionHeader(title = "Order Details")
-                                
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
                                 OrderDetailRow(
-                                    iconRes = R.drawable.folder_3x,
-                                    label = "Order ID",
+                                    label = "Order ID:",
                                     value = orderDetails.orderId
                                 )
-                                
+
                                 OrderDetailRow(
-                                    iconRes = R.drawable.person_badge_clock,
-                                    label = "Employee ID",
+                                    label = "Employee ID:",
                                     value = orderDetails.employeeId
                                 )
-                                
+
                                 OrderDetailRow(
-                                    iconRes = R.drawable.person_3x,
-                                    label = "Name",
+                                    label = "Name:",
                                     value = orderDetails.employeeName
                                 )
-                                
+
                                 OrderDetailRow(
-                                    iconRes = R.drawable.building1,
-                                    label = "Department",
+                                    label = "Department:",
                                     value = orderDetails.department
                                 )
-                                
+
                                 OrderDetailRow(
-                                    iconRes = R.drawable.envelope_3x,
-                                    label = "Email",
+                                    label = "Email:",
                                     value = orderDetails.email
                                 )
-                                
+
                                 OrderDetailRow(
-                                    iconRes = when (orderDetails.orderStatus) {
-                                        OrderStatus.PENDING -> R.drawable.pending
-                                        OrderStatus.APPROVED -> R.drawable.approved
-                                        OrderStatus.REJECTED -> R.drawable.rejected
-                                        OrderStatus.PROCESSING -> R.drawable.pending
-                                        OrderStatus.COMPLETED -> R.drawable.approved
-                                        OrderStatus.CANCELLED -> R.drawable.rejected
-                                    },
-                                    label = "Order Status",
+                                    label = "Order Status:",
                                     value = when (orderDetails.orderStatus) {
                                         OrderStatus.PENDING -> "Pending"
                                         OrderStatus.APPROVED -> "Approved"
@@ -205,64 +163,95 @@ fun OrderDetailsScreen(
                                         OrderStatus.CANCELLED -> "Cancelled"
                                     }
                                 )
-                                
+
                                 OrderDetailRow(
-                                    iconRes = R.drawable.calendar_3x,
-                                    label = "Order Date",
+                                    label = "Order Date:",
                                     value = orderDetails.orderDate
                                 )
-                                
+
                                 OrderDetailRow(
-                                    iconRes = R.drawable.calendar_3x, // Using calendar icon for time as well
-                                    label = "Order Time",
+                                    label = "Order Time:",
                                     value = orderDetails.orderTime
                                 )
-                                
-                                Spacer(modifier = Modifier.height(24.dp))
-                                
-                                // Order Items Section
-                                OrderDetailsSectionHeader(title = "Order Items")
-                                
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
-                                orderDetails.orderItems.forEach { item ->
-                                    OrderItemRow(item = item)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-                                
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
-                                // Error/Success Messages
-                                errorMessage?.let { error ->
-                                    Text(
-                                        text = error,
-                                        color = Color.Red,
-                                        fontSize = 14.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
-                                    )
-                                }
+                            }
+                        }
 
-                                successMessage?.let { success ->
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Order Items Section Title
+                        Text(
+                            text = "Order Items",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Order Items Cards
+                        orderDetails.orderItems.forEach { item ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 12.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
-                                        text = success,
-                                        color = Color(0xFF4CAF50),
-                                        fontSize = 14.sp,
+                                        text = item.itemName,
+                                        fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Black
+                                    )
+                                    Text(
+                                        text = "Qty: ${item.quantity}",
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color.Gray
                                     )
                                 }
                             }
                         }
-                        
+
+                        // Error/Success Messages
+                        errorMessage?.let { error ->
+                            Text(
+                                text = error,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+
+                        successMessage?.let { success ->
+                            Text(
+                                text = success,
+                                color = Color(0xFF4CAF50),
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         // Action Buttons - Only show for pending orders
                         if (orderDetails.orderStatus == OrderStatus.PENDING) {
                             Row(
@@ -278,10 +267,10 @@ fun OrderDetailsScreen(
                                         .weight(1f)
                                         .height(56.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = PrimaryRed,
-                                        disabledBackgroundColor = Color.Gray
+                                        containerColor = PrimaryRed,
+                                        disabledContainerColor = Color.Gray
                                     ),
-                                    shape = RoundedCornerShape(28.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     enabled = !isLoading
                                 ) {
                                     if (isLoading) {
@@ -300,7 +289,7 @@ fun OrderDetailsScreen(
                                         )
                                     }
                                 }
-                                
+
                                 // Approve Button
                                 Button(
                                     onClick = {
@@ -310,10 +299,10 @@ fun OrderDetailsScreen(
                                         .weight(1f)
                                         .height(56.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = Color(0xFF4CAF50),
-                                        disabledBackgroundColor = Color.Gray
+                                        containerColor = Color(0xFF4CAF50),
+                                        disabledContainerColor = Color.Gray
                                     ),
-                                    shape = RoundedCornerShape(28.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     enabled = !isLoading
                                 ) {
                                     if (isLoading) {
@@ -334,7 +323,7 @@ fun OrderDetailsScreen(
                                 }
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
@@ -356,34 +345,26 @@ private fun OrderDetailsSectionHeader(title: String) {
 
 @Composable
 private fun OrderDetailRow(
-    iconRes: Int,
     label: String,
     value: String
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = label,
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
+            fontWeight = FontWeight.Medium
         )
         Text(
             text = value,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
             color = Color.Black,
@@ -392,45 +373,67 @@ private fun OrderDetailRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OrderItemRow(item: OrderItem) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(id = getItemIcon(item.itemName)),
-            contentDescription = item.itemName,
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
+private fun OrderDetailsHeader(
+    orderId: String,
+    onBackPressed: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Order $orderId",
+                    color = Color.Black,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.offset(x = (-12).dp)
+                )
+            }
+        },
+        navigationIcon = {
+            TextButton(
+                onClick = onBackPressed,
+                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF007AFF))
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "Back",
+                        tint = Color(0xFF007AFF),
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        text = "Back",
+                        fontSize = 17.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color(0xFF007AFF)
+                    )
+                }
+            }
+        },
+        actions = {
+            Spacer(modifier = Modifier.width(48.dp)) // Balance the navigation icon
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
         )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = item.itemName,
-            fontSize = 14.sp,
-            fontFamily = GraphikFontFamily,
-            color = Color.Black,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = "${item.quantity}",
-            fontSize = 14.sp,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
-            color = Color.Black,
-            textAlign = TextAlign.End
-        )
-    }
+    )
 }
 
 private fun getItemIcon(itemName: String): Int {
     return when (itemName.lowercase()) {
         "pen" -> R.drawable.ic_file
-        "notepad" -> R.drawable.ic_file  
-        "marker" -> R.drawable.ic_file
+        "notepad" -> R.drawable.ic_file "marker" -> R.drawable.ic_file
         "envelope dl" -> R.drawable.ic_file
         "scissor" -> R.drawable.ic_file
         "tape" -> R.drawable.ic_file

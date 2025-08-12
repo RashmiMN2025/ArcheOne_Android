@@ -125,10 +125,10 @@ fun LoginScreen(
     } else {
         preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
     }
-    
+
     // For session expiry, treat as returning user if we have preserved data
     val shouldTreatAsReturningUser = sessionExpired && !lastEmployeeName.isNullOrEmpty()
-    
+
     val isLoggedIn = userDataManager.isLoggedIn()
     val hasLoggedIn = userDataManager.hasUserLoggedIn()
     val biometricHelper = remember { BiometricHelper(context) }
@@ -143,14 +143,14 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         android.util.Log.d("LoginScreen", "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton")
     }
-    
+
     // Update firstTimeLogin when the screen is created, considering session expiry
     LaunchedEffect(Unit) {
         val calculatedFirstTime = forceOriginalLogin || (isFirstTimeLogin(context) && !shouldTreatAsReturningUser)
         firstTimeLogin = calculatedFirstTime
         android.util.Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
     }
-    
+
     var showFingerprint by remember { mutableStateOf(false) }
 
     // Update showFingerprint when relevant conditions change
@@ -807,27 +807,24 @@ fun LoginScreen(
                                             // Enhanced fallback to session expired data if available
                                             bioEmail = when {
                                                 effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
-                                                sessionExpired -> preferencesManager.getString("session_expired_email", "") 
-                                                    ?: preferencesManager.getString("last_user_email", "") ?: ""
+                                                sessionExpired -> preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "") ?: ""
                                                 else -> preferencesManager.getString("last_user_email", "") ?: ""
                                             }
-                                            
+
                                             bioMobile = when {
                                                 effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
-                                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") 
-                                                    ?: preferencesManager.getString("last_user_mobile", "") ?: ""
+                                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "") ?: ""
                                                 else -> preferencesManager.getString("last_user_mobile", "") ?: ""
                                             }
-                                            
+
                                             bioEmployeeId = when {
                                                 effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
-                                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") 
-                                                    ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
                                                 else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
                                             }
-                                            
+
                                             android.util.Log.d("LoginScreen", "Biometric fallback credentials: email=$bioEmail, mobile=$bioMobile, employeeId=$bioEmployeeId, sessionExpired=$sessionExpired")
-                                            
+
                                             if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
                                                 CustomToast.showErrorToast(context, "Biometric credentials not found. Please login with MPIN or OTP.")
                                                 return@showBiometricPrompt
@@ -1004,24 +1001,21 @@ fun LoginScreen(
                             val useEmail = when {
                                 email.isNotEmpty() -> email
                                 effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
-                                sessionExpired -> preferencesManager.getString("session_expired_email", "") 
-                                    ?: preferencesManager.getString("last_user_email", "") ?: ""
+                                sessionExpired -> preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "") ?: ""
                                 else -> preferencesManager.getString("last_user_email", "") ?: ""
                             }
-                            
+
                             val useMobile = when {
                                 mobile.isNotEmpty() -> mobile
                                 effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
-                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") 
-                                    ?: preferencesManager.getString("last_user_mobile", "") ?: ""
+                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "") ?: ""
                                 else -> preferencesManager.getString("last_user_mobile", "") ?: ""
                             }
-                            
+
                             val useEmployeeId = when {
                                 employeeId.isNotEmpty() -> employeeId
                                 effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
-                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") 
-                                    ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
                                 else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
                             }
 

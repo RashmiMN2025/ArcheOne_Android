@@ -235,7 +235,7 @@ fun TravelRequestCard(
                 // Single destination - show origin city and destination city separately
                 if (destinations.isNotEmpty()) {
                     val destination = destinations[0]
-                    
+
                     // Show origin city if available
                     if (!destination.originCity.isNullOrEmpty()) {
                         DetailItem(
@@ -244,12 +244,11 @@ fun TravelRequestCard(
                             value = destination.originCity
                         )
                     }
-                    
+
                     // Show destination city
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
-                        label = "Destination City", 
-                        value = destination.destinationCity
+                        label = "Destination City", value = destination.destinationCity
                     )
                 } else {
                     // Fallback for cases without travel details
@@ -290,7 +289,7 @@ fun TravelRequestCard(
                             value = destination.originCity
                         )
                     }
-                    
+
                     // Show destination city
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,

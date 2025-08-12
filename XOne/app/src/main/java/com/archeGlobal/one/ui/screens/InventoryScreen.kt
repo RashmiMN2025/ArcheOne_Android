@@ -15,17 +15,13 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -171,12 +167,15 @@ fun InventoryScreen(
                 onDismiss = controller::onAddItemDismiss,
                 onLocationSelected = controller::onAddItemLocationSelected,
                 onTypeSelected = controller::onAddItemTypeSelected,
-                onItemNameChanged = controller::onAddItemNameChanged,
-                onItemNumberChanged = controller::onAddItemNumberChanged,
-                onUnitChanged = controller::onAddItemUnitChanged,
+                onItemSelected = controller::onAddItemSelected,
+                onExistingStockChanged = controller::onAddItemExistingStockChanged,
+                onNewStockQuantityChanged = controller::onAddItemNewStockQuantityChanged,
+                onUpdatedByChanged = controller::onAddItemUpdatedByChanged,
                 onBrandChanged = controller::onAddItemBrandChanged,
-                onTotalStockChanged = controller::onAddItemTotalStockChanged,
-                onAddItem = controller::onAddItemSubmit
+                onUnitChanged = controller::onAddItemUnitChanged,
+                onStockSuppliedDateChanged = controller::onAddItemStockSuppliedDateChanged,
+                onStockSuppliedTimeChanged = controller::onAddItemStockSuppliedTimeChanged,
+                onUpdateStock = controller::onUpdateStock
             )
         }
     }
@@ -456,11 +455,12 @@ fun InventoryItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Tag,
+                Image(
+                    painter = painterResource(id = R.drawable.item_name),
                     contentDescription = "Item",
-                    tint = PrimaryRed,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(PrimaryRed)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -479,47 +479,47 @@ fun InventoryItemCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 InventoryItemDetail(
-                    icon = painterResource(id = R.drawable.ic_pdf_document), // Hash icon placeholder
+                    icon = painterResource(id = R.drawable.item_no),
                     label = "Item No:",
                     value = item.itemNumber
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 InventoryItemDetail(
-                    icon = painterResource(id = R.drawable.ic_it_asset), // Box icon placeholder
+                    icon = painterResource(id = R.drawable.unit),
                     label = "Unit:",
                     value = item.unit
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 InventoryItemDetail(
-                    icon = painterResource(id = R.drawable.ic_it_asset), // Container icon placeholder
+                    icon = painterResource(id = R.drawable.closing_stock),
                     label = "Closing Stock:",
                     value = item.closingStock.toString()
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 InventoryItemDetail(
-                    iconVector = Icons.Default.Person,
+                    icon = painterResource(id = R.drawable.updated_by),
                     label = "Updated By:",
                     value = item.updatedBy
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 InventoryItemDetail(
-                    iconVector = Icons.Default.DateRange,
+                    icon = painterResource(id = R.drawable.supplied_date),
                     label = "Supplied Date:",
                     value = item.suppliedDate
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 InventoryItemDetail(
-                    iconVector = Icons.Default.Schedule,
+                    icon = painterResource(id = R.drawable.last_updated),
                     label = "Last Updated:",
                     value = item.lastUpdated
                 )
@@ -533,7 +533,8 @@ fun InventoryItemDetail(
     icon: androidx.compose.ui.graphics.painter.Painter? = null,
     iconVector: androidx.compose.ui.graphics.vector.ImageVector? = null,
     label: String,
-    value: String
+    value: String,
+    iconTint: Color = Color.Gray
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -553,13 +554,14 @@ fun InventoryItemDetail(
                     painter = icon,
                     contentDescription = label,
                     modifier = Modifier.size(16.dp),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(iconTint)
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -583,21 +585,3 @@ fun InventoryItemDetail(
     }
 }
 
-@Composable
-private fun getInventoryIcon(iconName: String): Int {
-    return when (iconName) {
-        "ic_pen" -> R.drawable.ic_user // Placeholder - will map to actual icons
-        "ic_pencil" -> R.drawable.ic_user
-        "ic_marker" -> R.drawable.ic_user
-        "ic_notepad" -> R.drawable.ic_pdf_document
-        "ic_eraser" -> R.drawable.ic_user
-        "ic_sticky_note" -> R.drawable.ic_pdf_document
-        "ic_envelope_dl" -> R.drawable.ic_pdf_document
-        "ic_envelope_a4" -> R.drawable.ic_pdf_document
-        "ic_tissues" -> R.drawable.ic_user
-        "ic_handwash" -> R.drawable.ic_user
-        "ic_stapler" -> R.drawable.ic_it_asset
-        "ic_tape" -> R.drawable.ic_it_asset
-        else -> R.drawable.ic_file
-    }
-}

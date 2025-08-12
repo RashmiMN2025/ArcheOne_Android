@@ -111,7 +111,7 @@ data class TravelOrderHistoryItem(
         travelDetails?.forEachIndexed { index, detail ->
             android.util.Log.d("TravelCombinedHistory", "  Detail $index: origin=${detail.originCity}, destination=${detail.destinationCity}")
         }
-        
+
         val destinationDisplay = when {
             travelDetails != null && travelDetails.isNotEmpty() -> {
                 if (travelDetails.size == 1) {
@@ -241,7 +241,7 @@ data class TravelApprovalHistoryItem(
         travelDetails?.forEachIndexed { index, detail ->
             android.util.Log.d("TravelCombinedHistory", "  Detail $index: origin=${detail.originCity}, destination=${detail.destinationCity}")
         }
-        
+
         val destinationDisplay = when {
             travelDetails != null && travelDetails.isNotEmpty() -> {
                 if (travelDetails.size == 1) {

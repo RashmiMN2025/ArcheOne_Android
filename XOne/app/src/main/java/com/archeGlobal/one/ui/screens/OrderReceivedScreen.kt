@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +28,6 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.OrderReceivedController
 import com.archeGlobal.one.model.Order
 import com.archeGlobal.one.model.OrderReceivedModel
-import com.archeGlobal.one.model.OrderStatus
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
@@ -42,6 +41,11 @@ fun OrderReceivedScreen(
     model: OrderReceivedModel,
     controller: OrderReceivedController
 ) {
+    // Handle back gesture navigation
+    BackHandler {
+        controller.onBackPressed()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -120,8 +124,7 @@ fun OrderReceivedHeader(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.offset(x = 24.dp) // Positive offset for actions present
+                    textAlign = TextAlign.Center
                 )
             }
         },
@@ -135,13 +138,7 @@ fun OrderReceivedHeader(
             }
         },
         actions = {
-            IconButton(onClick = onRefresh) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Refresh",
-                    tint = PrimaryRed
-                )
-            }
+            Spacer(modifier = Modifier.width(48.dp)) // Balance the navigation icon
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
@@ -179,98 +176,95 @@ fun OrderCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
-            // Order ID and New Badge Row
+            // First Row: Order ID, New Badge, and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = order.orderId,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
+                // Left side: Order ID and New Badge
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Order ID: ${order.orderId}",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
 
-                if (order.isNew) {
-                    NewBadge()
+                    if (order.isNew) {
+                        NewBadge()
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Status Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // Right side: Status
                 Text(
-                    text = "Status: ",
+                    text = "Status: ${order.status.displayName}",
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = order.status.displayName,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     color = Color(android.graphics.Color.parseColor(order.status.colorHex))
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // User Info Row
-            OrderInfoRow(
-                label = "User:",
-                value = order.userName
-            )
-
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Employee ID Row
-            OrderInfoRow(
-                label = "Employee ID:",
-                value = order.employeeId
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Date Time Row
+            // Second Row: User and Employee ID
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = order.dateTime,
+                    text = "User: ${order.userName}",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     color = Color.Gray
                 )
 
-                if (order.totalItems > 0) {
-                    Text(
-                        text = "${order.totalItems} item${if (order.totalItems > 1) "s" else ""}",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        color = PrimaryRed
-                    )
-                }
+                Text(
+                    text = "Emp ID: ${order.employeeId}",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Third Row: Date and Time
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Date: ${order.date}",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+
+                Text(
+                    text = "Time: ${order.time}",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
             }
         }
     }
@@ -311,16 +305,16 @@ fun NewBadge() {
     Box(
         modifier = Modifier
             .background(
-                color = PrimaryRed,
-                shape = RoundedCornerShape(12.dp)
+                color = Color(0xFF4CAF50),
+                shape = RoundedCornerShape(8.dp)
             )
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 6.dp, vertical = 1.dp)
     ) {
         Text(
             text = "New",
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 10.sp,
+            fontSize = 9.sp,
             color = Color.White
         )
     }
@@ -355,7 +349,7 @@ fun EmptyOrdersContent() {
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "New stationary orders will appear here",
@@ -392,7 +386,7 @@ fun ErrorContent(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = error,

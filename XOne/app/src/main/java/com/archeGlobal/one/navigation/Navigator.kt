@@ -74,6 +74,7 @@ interface Navigator {
     fun navigateToInventory()
     fun navigateToOrderReceived()
     fun navigateToOrderDetails(orderId: String)
+    fun navigateToConsumptionReport()
 
     // New methods to support immediate UI updates
     fun getCurrentRoute(): String?

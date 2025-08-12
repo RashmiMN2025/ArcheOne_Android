@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.archeGlobal.one.DeskCartActivity
 import com.archeGlobal.one.model.DeskCartModel
 import com.archeGlobal.one.model.EmployeeDetails
 import com.archeGlobal.one.model.StationaryItem
@@ -50,11 +49,8 @@ class DeskCartController(
     }
 
     fun onBackPressed() {
-        if (context is DeskCartActivity) {
-            context.finishWithAnimation()
-        } else {
-            navigator.navigateToHome()
-        }
+        Log.d("DeskCartController", "Back pressed - navigating to Home")
+        navigator.navigateToHome()
     }
 
     fun onAdminDashboardClick() {

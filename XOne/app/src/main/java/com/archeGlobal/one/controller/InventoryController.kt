@@ -10,7 +10,9 @@ import com.archeGlobal.one.InventoryActivity
 import com.archeGlobal.one.model.AddItemModel
 import com.archeGlobal.one.model.InventoryItem
 import com.archeGlobal.one.model.InventoryModel
+import com.archeGlobal.one.model.toInventoryItem
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.RetrofitClient
 import kotlinx.coroutines.launch
 
 class InventoryController(
@@ -23,6 +25,10 @@ class InventoryController(
 
     var addItemModel by mutableStateOf(AddItemModel())
         private set
+
+    init {
+        loadInventoryData()
+    }
 
     fun onBackPressed() {
         if (context is InventoryActivity) {
@@ -69,49 +75,63 @@ class InventoryController(
         addItemModel = addItemModel.copy(selectedType = type)
     }
 
-    fun onAddItemNameChanged(name: String) {
-        addItemModel = addItemModel.copy(itemName = name)
+    fun onAddItemSelected(item: String) {
+        addItemModel = addItemModel.copy(selectedItem = item)
     }
 
-    fun onAddItemNumberChanged(number: String) {
-        addItemModel = addItemModel.copy(itemNumber = number)
+    fun onAddItemExistingStockChanged(stock: String) {
+        addItemModel = addItemModel.copy(existingStock = stock)
     }
 
-    fun onAddItemUnitChanged(unit: String) {
-        addItemModel = addItemModel.copy(unit = unit)
+    fun onAddItemNewStockQuantityChanged(quantity: String) {
+        addItemModel = addItemModel.copy(newStockQuantity = quantity)
+    }
+
+    fun onAddItemUpdatedByChanged(updatedBy: String) {
+        addItemModel = addItemModel.copy(updatedBy = updatedBy)
     }
 
     fun onAddItemBrandChanged(brand: String) {
         addItemModel = addItemModel.copy(brand = brand)
     }
 
-    fun onAddItemTotalStockChanged(stock: String) {
-        addItemModel = addItemModel.copy(totalStock = stock)
+    fun onAddItemUnitChanged(unit: String) {
+        addItemModel = addItemModel.copy(unit = unit)
     }
 
-    fun onAddItemSubmit() {
-        if (validateAddItemForm()) {
+    fun onAddItemStockSuppliedDateChanged(date: String) {
+        addItemModel = addItemModel.copy(stockSuppliedDate = date)
+    }
+
+    fun onAddItemStockSuppliedTimeChanged(time: String) {
+        addItemModel = addItemModel.copy(stockSuppliedTime = time)
+    }
+
+    fun onUpdateStock() {
+        if (validateUpdateStockForm()) {
             viewModelScope.launch {
                 addItemModel = addItemModel.copy(isLoading = true)
                 try {
-                    // Here you would typically call an API to add the item
-                    // For now, we'll simulate adding the item to the local list
-                    val newItem = InventoryItem(
+                    // Here you would typically call an API to update the stock
+                    // For now, we'll simulate updating the item stock
+                    val updatedItem = InventoryItem(
                         id = generateItemId(),
-                        name = addItemModel.itemName,
-                        itemNumber = addItemModel.itemNumber,
+                        name = addItemModel.selectedItem,
+                        itemNumber = addItemModel.selectedItem,
                         unit = addItemModel.unit,
-                        closingStock = addItemModel.totalStock.toDoubleOrNull() ?: 0.0,
-                        updatedBy = "Current User", // Should come from user session
-                        suppliedDate = getCurrentDateTime(),
+                        closingStock = addItemModel.newStockQuantity.toDoubleOrNull() ?: 0.0,
+                        updatedBy = addItemModel.updatedBy,
+                        suppliedDate = "${addItemModel.stockSuppliedDate} at ${addItemModel.stockSuppliedTime}",
                         lastUpdated = getCurrentDateTime(),
                         iconName = "ic_file", // Default icon
-                        category = addItemModel.selectedType
+                        category = addItemModel.selectedType,
+                        location = addItemModel.selectedLocation,
+                        brand = addItemModel.brand
                     )
 
                     // Add item to both the current list and all items list
-                    val updatedItems = model.inventoryItems + newItem
-                    val updatedAllItems = model.allItems + newItem
+                    val updatedItems = model.inventoryItems + updatedItem
+                    val updatedAllItems = model.allItems + updatedItem
                     model = model.copy(inventoryItems = updatedItems, allItems = updatedAllItems)
 
                     // Close dialog and reset form
@@ -125,11 +145,11 @@ class InventoryController(
         }
     }
 
-    private fun validateAddItemForm(): Boolean {
-        return addItemModel.itemName.isNotBlank() &&
-            addItemModel.itemNumber.isNotBlank() &&
-            addItemModel.totalStock.isNotBlank() &&
-            addItemModel.totalStock.toIntOrNull() != null
+    private fun validateUpdateStockForm(): Boolean {
+        return addItemModel.selectedItem.isNotBlank() &&
+            addItemModel.newStockQuantity.isNotBlank() &&
+            addItemModel.newStockQuantity.toDoubleOrNull() != null &&
+            addItemModel.updatedBy.isNotBlank()
     }
 
     private fun resetAddItemForm() {
@@ -152,7 +172,7 @@ class InventoryController(
         if (model.searchQuery.isNotBlank()) {
             filteredItems = filteredItems.filter { item ->
                 item.name.contains(model.searchQuery, ignoreCase = true) ||
-                item.itemNumber.contains(model.searchQuery, ignoreCase = true)
+                    item.itemNumber.contains(model.searchQuery, ignoreCase = true)
             }
         }
 
@@ -161,16 +181,62 @@ class InventoryController(
             filteredItems = filteredItems.filter { it.category == model.selectedType }
         }
 
-        // For now, we're not filtering by location, but you could add that logic here
+        // Filter by location
+        if (model.selectedLocation.isNotBlank()) {
+            filteredItems = filteredItems.filter { it.location == model.selectedLocation }
+        }
+
         model = model.copy(inventoryItems = filteredItems)
     }
 
-    fun refreshInventory() {
+    private fun loadInventoryData() {
         viewModelScope.launch {
             model = model.copy(isLoading = true)
-            // Simulate API call
-            kotlinx.coroutines.delay(1000)
-            model = model.copy(isLoading = false)
+            try {
+                val response = RetrofitClient.apiService.getStockList()
+                if (response.isSuccessful) {
+                    val stockListResponse = response.body()
+                    if (stockListResponse?.status == 200) {
+                        val inventoryItems = stockListResponse.data.map { it.toInventoryItem() }
+                        
+                        // Extract unique locations and categories from API data
+                        val locations = inventoryItems.map { it.location }.distinct().sorted()
+                        val categories = inventoryItems.map { it.category }.distinct().sorted()
+                        val types = listOf("All") + categories
+                        
+                        model = model.copy(
+                            inventoryItems = inventoryItems,
+                            allItems = inventoryItems,
+                            locations = locations,
+                            types = types,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                        
+                        // Apply initial filter
+                        filterItems()
+                    } else {
+                        model = model.copy(
+                            isLoading = false,
+                            errorMessage = "Failed to load inventory data"
+                        )
+                    }
+                } else {
+                    model = model.copy(
+                        isLoading = false,
+                        errorMessage = "Network error: ${response.code()}"
+                    )
+                }
+            } catch (e: Exception) {
+                model = model.copy(
+                    isLoading = false,
+                    errorMessage = "Error: ${e.message}"
+                )
+            }
         }
+    }
+
+    fun refreshInventory() {
+        loadInventoryData()
     }
 }

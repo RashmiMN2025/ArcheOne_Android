@@ -41,7 +41,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -1102,7 +1101,7 @@ fun TravelScreen(
                                     colors = androidx.compose.material.SwitchDefaults.colors(
                                         checkedThumbColor = Color(0xFFF6F4EE),
                                         checkedTrackColor = Color(0xFFADE1B6),
-                                        uncheckedThumbColor =  Color(0xFFF6F4EE),
+                                        uncheckedThumbColor = Color(0xFFF6F4EE),
                                         uncheckedTrackColor = Color.LightGray
                                     )
                                 )
@@ -1582,7 +1581,7 @@ fun MultiDestinationSection(controller: TravelController) {
                         // Flight Time Preference Dropdown
                         Box(modifier = Modifier.fillMaxWidth()) {
                             val isFlightTimeDropdownExpanded = datePickerStates["flightTime_${destination.id}"] ?: false
-                            
+
                             androidx.compose.material3.OutlinedTextField(
                                 value = destination.flightTimePreference,
                                 onValueChange = { },
@@ -1597,7 +1596,7 @@ fun MultiDestinationSection(controller: TravelController) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 16.dp)
-                                    .clickable(onClick = { 
+                                    .clickable(onClick = {
                                         datePickerStates["flightTime_${destination.id}"] = true
                                     }),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
@@ -1617,7 +1616,7 @@ fun MultiDestinationSection(controller: TravelController) {
                                         Icons.Default.KeyboardArrowDown,
                                         contentDescription = "Dropdown",
                                         tint = Color.Gray,
-                                        modifier = Modifier.clickable { 
+                                        modifier = Modifier.clickable {
                                             datePickerStates["flightTime_${destination.id}"] = true
                                         }
                                     )
@@ -1635,7 +1634,7 @@ fun MultiDestinationSection(controller: TravelController) {
                                 controller.flightTimeOptions.forEach { option ->
                                     DropdownMenuItem(
                                         text = { Text(text = option, color = Color.White, fontFamily = GraphikFontFamily) },
-                                        onClick = { 
+                                        onClick = {
                                             controller.updateDestinationFlightTimePreference(destination.id, option)
                                             datePickerStates["flightTime_${destination.id}"] = false
                                         }
@@ -1643,8 +1642,6 @@ fun MultiDestinationSection(controller: TravelController) {
                                 }
                             }
                         }
-
-
                     }
                 }
             }

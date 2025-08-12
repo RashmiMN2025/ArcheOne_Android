@@ -22,10 +22,10 @@ import com.archeGlobal.one.model.HomeModel
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.network.Service
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
-import com.archeGlobal.one.network.Service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,7 +105,7 @@ class HomeController(
 
         // Fetch celebration data
         fetchCelebrationData()
-        
+
         // Check if WhatsNew dialog should be shown
         checkWhatsNewDialog()
     }
@@ -426,28 +426,28 @@ class HomeController(
 
     private fun checkWhatsNewDialog() {
         Log.d("HomeController", "Checking if WhatsNew dialog should be shown")
-        
+
         // Check if dialog has already been shown
         val alreadyShown = preferencesManager.getBoolean(KEY_WHATS_NEW_SHOWN, false)
         if (alreadyShown) {
             Log.d("HomeController", "WhatsNew dialog already shown, skipping")
             return
         }
-        
+
         // Check if we have WhatsNew data from the login response
         val whatsNewData = UserDataManager.getInstance(context).getWhatsNewData()
         if (whatsNewData.isNullOrEmpty()) {
             Log.d("HomeController", "No WhatsNew data available, skipping dialog")
             return
         }
-        
+
         // Check install type - only show on fresh install
         val installType = preferencesManager.getInstallType()
         if (installType != "NEW") {
             Log.d("HomeController", "Not a fresh install (installType: $installType), skipping WhatsNew dialog")
             return
         }
-        
+
         Log.d("HomeController", "Showing WhatsNew dialog for fresh install with ${whatsNewData.size} items")
         _showWhatsNewDialog.value = true
     }
@@ -915,18 +915,18 @@ class HomeController(
             refreshUserData()
         }, 300) // Short delay to ensure the update propagates
     }
-    
+
     private fun shouldShowAsNew(service: Service): Boolean {
         val userHasntSeen = preferencesManager.isServiceNew(service.service)
         val installType = preferencesManager.getInstallType()
-        
+
         // Show New sticker when backend explicitly marks service as isNew: true
         val shouldShow = service.isNew
-        
+
         Log.d("HomeController", "Service '${service.service}': installType=$installType, backendSaysNew=${service.isNew}, userHasntSeen=$userHasntSeen, shouldShow=$shouldShow")
         return shouldShow
     }
-    
+
     private fun getStickerText(): String {
         val installType = preferencesManager.getInstallType()
         val stickerText = when (installType) {
@@ -937,13 +937,13 @@ class HomeController(
         Log.d("HomeController", "getStickerText: installType=$installType, returning '$stickerText'")
         return stickerText
     }
-    
+
     private fun checkAppVersionAndMarkServices() {
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             val currentVersion = packageInfo.versionName ?: "unknown"
             val storedVersion = preferencesManager.getAppVersion()
-            
+
             if (storedVersion.isEmpty()) {
                 // First time install - clear any existing seen services and store version
                 // This ensures New stickers will show for services marked as new by backend
@@ -965,7 +965,7 @@ class HomeController(
             Log.e("HomeController", "Error checking app version", e)
         }
     }
-    
+
     fun markServicesAsSeen(services: List<HomeItem>) {
         val serviceNames = services.map { it.title }
         Log.d("HomeController", "About to mark ${serviceNames.size} services as seen: $serviceNames")

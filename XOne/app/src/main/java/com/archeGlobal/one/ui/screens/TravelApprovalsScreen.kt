@@ -10,10 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -457,14 +454,14 @@ fun ApprovalRequestCard(
             // Show action buttons only for pending requests
             if (request.status == com.archeGlobal.one.model.TravelStatus.PENDING) {
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Light divider line above approve/reject buttons
                 Divider(
                     color = Color.LightGray.copy(alpha = 0.5f),
                     thickness = 1.dp,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -531,7 +528,7 @@ fun SingleDestinationTripDetails(
         // Get destinations for separate display
         val destinations = travelRequest.getAllDestinations()
         val destination = if (destinations.isNotEmpty()) destinations[0] else null
-        
+
         // Origin City
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -562,7 +559,7 @@ fun SingleDestinationTripDetails(
         }
 
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         // Destination City
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -674,7 +671,7 @@ fun MultiDestinationTripDetails(
             }
 
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             // Destination City
             Row(
                 modifier = Modifier.fillMaxWidth(),

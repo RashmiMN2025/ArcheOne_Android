@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.archeGlobal.one.AdminDashboardActivity
 import com.archeGlobal.one.model.AdminDashboardItem
 import com.archeGlobal.one.model.AdminDashboardModel
 import com.archeGlobal.one.navigation.Navigator
@@ -36,11 +35,8 @@ class AdminDashboardController(
     }
 
     fun onBackPressed() {
-        if (context is AdminDashboardActivity) {
-            context.finishWithAnimation()
-        } else {
-            navigator.navigateToHome()
-        }
+        Log.d("AdminDashboardController", "Back pressed - navigating to DeskCart")
+        navigator.navigateToDeskCart()
     }
 
     fun onDashboardItemClick(item: AdminDashboardItem) {
@@ -84,8 +80,7 @@ class AdminDashboardController(
 
     private fun handleConsumptionReportClick() {
         Log.d("AdminDashboardController", "Consumption Report clicked")
-        Toast.makeText(context, "Consumption report feature coming soon", Toast.LENGTH_SHORT).show()
-        // TODO: Navigate to consumption report screen
+        navigator.navigateToConsumptionReport()
     }
 
     fun updateBadgeCount(itemId: String, count: Int) {

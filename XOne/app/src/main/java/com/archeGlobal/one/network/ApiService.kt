@@ -19,6 +19,7 @@ import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
+import com.archeGlobal.one.model.StockListResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -128,6 +129,9 @@ interface ApiService {
 
     @POST("admin/orders")
     fun getOrders(@Body request: com.archeGlobal.one.model.OrdersRequest): Call<com.archeGlobal.one.model.OrdersResponse>
+
+    @GET("deskcart/stocklist")
+    suspend fun getStockList(): Response<StockListResponse>
 }
 
 data class FeedbackRequest(
@@ -359,7 +363,7 @@ data class TicketItem(
     val subcategory: String? = null,
     val closure_comments: String? = null,
     val resolved_time: String? = null,
-    val subject: String? = null  // Make subject optional since API doesn't always return it
+    val subject: String? = null // Make subject optional since API doesn't always return it
 )
 
 data class FAQCategory(

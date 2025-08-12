@@ -25,8 +25,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -130,8 +130,19 @@ class HomeActivity : AppCompatActivity() {
         val navigateTo = intent.getStringExtra("navigateTo")
         val ticketCategory = intent.getStringExtra("ticketCategory")
         val source = intent.getStringExtra("source")
+        val clearBackStack = intent.getBooleanExtra("clearBackStack", false)
 
-        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, ticketCategory=$ticketCategory, source=$source")
+        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, ticketCategory=$ticketCategory, source=$source, clearBackStack=$clearBackStack")
+
+        // Handle clear back stack and navigate to home
+        if (clearBackStack && navigateTo == "home") {
+            navigator.navController?.navigate("home") {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+            Log.d("HomeActivity", "Cleared back stack and navigated to home via onNewIntent")
+            return
+        }
 
         if (navigateTo == "track_tickets" && ticketCategory != null) {
             // Initialize helpdesk controller if not already done and navigate directly
@@ -310,16 +321,19 @@ class HomeActivity : AppCompatActivity() {
                 val currentTicketCategory = currentIntent.getStringExtra("ticketCategory")
                 val currentSource = currentIntent.getStringExtra("source")
                 val currentDestination = currentIntent.getStringExtra("destination")
+                val clearBackStack = currentIntent.getBooleanExtra("clearBackStack", false)
 
                 // Determine start destination based on intent
                 val startDestination = when {
+                    clearBackStack && currentNavigateTo == "home" -> "home" // Force home when clearing back stack
                     currentNavigateTo == "track_tickets" && currentTicketCategory != null -> "track_tickets"
                     currentNavigateTo == "order_received" -> "order_received"
+                    currentNavigateTo == "consumption_report" && !clearBackStack -> "consumption_report"
                     else -> "home"
                 }
 
                 // Handle data loading and navigation setup
-                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, currentSource, isEmergencyContact) {
+                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, currentSource, isEmergencyContact, clearBackStack) {
                     // Set up track_tickets controller FIRST if that's our destination
                     if (startDestination == "track_tickets" && currentTicketCategory != null) {
                         if (currentSource != null) {
@@ -1502,12 +1516,12 @@ class HomeActivity : AppCompatActivity() {
                         }
                     ) { backStackEntry ->
                         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-                        
+
                         // Load order details when composable is created
                         LaunchedEffect(orderId) {
                             orderController.loadOrderDetails(orderId)
                         }
-                        
+
                         orderController.model.order?.let { orderDetails ->
                             OrderDetailsScreen(
                                 controller = orderController,
@@ -1552,10 +1566,36 @@ class HomeActivity : AppCompatActivity() {
                         val orderReceivedController = remember {
                             OrderReceivedController(this@HomeActivity, navigator)
                         }
-                        
+
                         OrderReceivedScreen(
                             model = orderReceivedController.model,
                             controller = orderReceivedController
+                        )
+                    }
+
+                    // Consumption Report route - for admin dashboard
+                    composable(
+                        route = "consumption_report",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        val consumptionReportController = remember {
+                            ConsumptionReportController(this@HomeActivity, navigator)
+                        }
+
+                        ConsumptionReportScreen(
+                            model = consumptionReportController.model,
+                            controller = consumptionReportController
                         )
                     }
                 }
