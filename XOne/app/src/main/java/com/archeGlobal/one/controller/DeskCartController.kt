@@ -10,6 +10,13 @@ import com.archeGlobal.one.model.DeskCartModel
 import com.archeGlobal.one.model.EmployeeDetails
 import com.archeGlobal.one.model.StationaryItem
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.DeskCartEligibilityRequest
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DeskCartController(
     private val context: Context,
@@ -18,33 +25,81 @@ class DeskCartController(
     var model by mutableStateOf(DeskCartModel(isLoading = true))
         private set
 
+    private val userDataManager = UserDataManager.getInstance(context)
+
     init {
-        loadEmployeeData()
+        loadEligibilityData()
     }
 
-    private fun loadEmployeeData() {
-        try {
-            // Get user data from UserDataManager or OtpVerificationController
-            val userData = OtpVerificationController.getUserData()
+    private fun loadEligibilityData() {
+        val userData = userDataManager.getUserData()
+        val email = userData?.email ?: "biswajit.d@arche.global"
 
-            val employeeDetails = EmployeeDetails(
-                emailId = userData?.email ?: "biswajit.d@arche.global",
-                employeeId = userData?.employeeId ?: "NT1426",
-                department = userData?.department ?: "Project Department"
-            )
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d("DeskCartController", "Fetching eligibility data for email: $email")
+                val response = RetrofitClient.apiService.getDeskCartEligibility(
+                    DeskCartEligibilityRequest(email = email)
+                )
 
-            model = model.copy(
-                employeeDetails = employeeDetails,
-                isLoading = false
-            )
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val eligibilityResponse = response.body()!!
+                        
+                        // Convert API items to StationaryItem format
+                        val stationaryItems = eligibilityResponse.order.map { apiItem ->
+                            StationaryItem(
+                                id = apiItem.materialId,
+                                name = apiItem.name,
+                                iconName = getIconNameFromItem(apiItem.name),
+                                imageUrl = apiItem.imageUrl,
+                                currentQuantity = 0,
+                                maxQuantity = apiItem.limit
+                            )
+                        }
 
-            Log.d("DeskCartController", "Employee data loaded: ${employeeDetails.employeeId}")
-        } catch (e: Exception) {
-            Log.e("DeskCartController", "Error loading employee data", e)
-            model = model.copy(
-                isLoading = false,
-                error = "Failed to load employee data"
-            )
+                        val employeeDetails = EmployeeDetails(
+                            emailId = userData?.email ?: email,
+                            employeeId = userData?.employeeId ?: "NT1426",
+                            department = userData?.department ?: "Project Department"
+                        )
+
+                        model = model.copy(
+                            employeeDetails = employeeDetails,
+                            stationaryItems = stationaryItems,
+                            isAdmin = eligibilityResponse.isAdmin,
+                            isLoading = false
+                        )
+
+                        Log.d("DeskCartController", "Eligibility data loaded: ${stationaryItems.size} items, isAdmin: ${eligibilityResponse.isAdmin}")
+                    } else {
+                        handleError("Failed to load eligibility data: ${response.message()}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    handleError("Network error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun handleError(message: String) {
+        Log.e("DeskCartController", message)
+        model = model.copy(
+            isLoading = false,
+            error = message
+        )
+    }
+
+    // Map API item names to existing icon names
+    private fun getIconNameFromItem(itemName: String): String {
+        return when {
+            itemName.contains("Pen", ignoreCase = true) -> "ic_pen"
+            itemName.contains("Pencil", ignoreCase = true) -> "ic_pencil"
+            itemName.contains("Notepad", ignoreCase = true) -> "ic_notepad"
+            itemName.contains("Eraser", ignoreCase = true) -> "ic_eraser"
+            else -> "ic_pen" // Default icon
         }
     }
 
@@ -135,5 +190,10 @@ class DeskCartController(
 
     fun clearError() {
         model = model.copy(error = null)
+    }
+
+    fun onHistoryClick() {
+        Log.d("DeskCartController", "History clicked - navigating to order history")
+        navigator.navigateToOrderHistory()
     }
 }

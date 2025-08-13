@@ -49,6 +49,54 @@ enum class OrderStatus(val displayName: String, val colorHex: String) {
     CANCELLED("Cancelled", "#757575")
 }
 
+// API Request/Response models for Order History
+data class OrderHistoryResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("orders")
+    val orders: List<OrderHistoryItem>,
+    @SerializedName("message")
+    val message: String? = null
+)
+
+data class OrderHistoryItem(
+    @SerializedName("order_Id")
+    val orderId: String,
+    @SerializedName("Emp_Name")
+    val empName: String,
+    @SerializedName("Emp_ID")
+    val empId: String,
+    @SerializedName("Dept")
+    val dept: String,
+    @SerializedName("Location")
+    val location: String,
+    @SerializedName("items")
+    val items: List<OrderHistoryItemDetail>,
+    @SerializedName("Total_Items_in_Order")
+    val totalItemsInOrder: Int,
+    @SerializedName("Order_Placed_Time")
+    val orderPlacedTime: String,
+    @SerializedName("Order_Closed_time")
+    val orderClosedTime: String,
+    @SerializedName("Order_Processed_By_(Admin_team)")
+    val orderProcessedBy: String,
+    @SerializedName("Order_Status")
+    val orderStatus: String,
+    @SerializedName("Remarks")
+    val remarks: String,
+    @SerializedName("Emailid")
+    val emailId: String
+)
+
+data class OrderHistoryItemDetail(
+    @SerializedName("materialId")
+    val materialId: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("count")
+    val count: Int
+)
+
 // API Request/Response models
 data class OrdersRequest(
     @SerializedName("admin_email")

@@ -1,7 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,39 +15,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.archeGlobal.one.R
-import com.archeGlobal.one.controller.OrderReceivedController
-import com.archeGlobal.one.model.OrderHistoryItem
-import com.archeGlobal.one.model.OrderHistoryResponse
+import com.archeGlobal.one.controller.OrderHistoryController
+import com.archeGlobal.one.model.DeskCartOrderHistory
+import com.archeGlobal.one.model.OrderHistoryModel
 import com.archeGlobal.one.ui.components.UniversalLoader
-import java.text.SimpleDateFormat
-import java.util.Locale
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
-
-// Model for Order Received Screen State
-data class OrderReceivedModel(
-    val orders: List<OrderHistoryItem> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrderReceivedScreen(
-    model: OrderReceivedModel,
-    controller: OrderReceivedController
+fun OrderHistoryScreen(
+    model: OrderHistoryModel,
+    controller: OrderHistoryController
 ) {
     // Handle back gesture navigation
     BackHandler {
@@ -78,9 +65,9 @@ fun OrderReceivedScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 // Header
-                OrderReceivedHeader(
+                OrderHistoryHeader(
                     onBackPressed = controller::onBackPressed,
-                    onRefresh = controller::refreshOrders
+                    onRefresh = controller::refreshOrderHistory
                 )
 
                 // Content
@@ -89,17 +76,17 @@ fun OrderReceivedScreen(
                         // Loading will be handled by UniversalLoader overlay
                     }
                     model.error != null -> {
-                        OrderReceivedErrorContent(
+                        OrderHistoryErrorContent(
                             error = model.error,
-                            onRetry = controller::refreshOrders,
+                            onRetry = controller::refreshOrderHistory,
                             onDismiss = controller::clearError
                         )
                     }
                     model.orders.isEmpty() -> {
-                        EmptyOrdersContent()
+                        EmptyOrderHistoryContent()
                     }
                     else -> {
-                        OrdersList(
+                        OrderHistoryList(
                             orders = model.orders,
                             onOrderClick = controller::onOrderClick
                         )
@@ -117,7 +104,7 @@ fun OrderReceivedScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrderReceivedHeader(
+fun OrderHistoryHeader(
     onBackPressed: () -> Unit,
     onRefresh: () -> Unit
 ) {
@@ -128,12 +115,13 @@ fun OrderReceivedHeader(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Order Received",
+                    text = "Order History",
                     color = Color.Black,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.offset(x = (-24).dp) // Center accounting for back button
                 )
             }
         },
@@ -146,9 +134,6 @@ fun OrderReceivedHeader(
                 )
             }
         },
-        actions = {
-            Spacer(modifier = Modifier.width(48.dp)) // Balance the navigation icon
-        },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
         )
@@ -156,9 +141,9 @@ fun OrderReceivedHeader(
 }
 
 @Composable
-fun OrdersList(
-    orders: List<OrderHistoryItem>,
-    onOrderClick: (OrderHistoryItem) -> Unit
+fun OrderHistoryList(
+    orders: List<DeskCartOrderHistory>,
+    onOrderClick: (DeskCartOrderHistory) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -168,7 +153,7 @@ fun OrdersList(
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         items(orders) { order ->
-            OrderCard(
+            OrderHistoryCard(
                 order = order,
                 onClick = { onOrderClick(order) }
             )
@@ -177,8 +162,8 @@ fun OrdersList(
 }
 
 @Composable
-fun OrderCard(
-    order: OrderHistoryItem,
+fun OrderHistoryCard(
+    order: DeskCartOrderHistory,
     onClick: () -> Unit
 ) {
     Card(
@@ -202,174 +187,73 @@ fun OrderCard(
             ) {
                 // Left side: Order ID
                 Text(
-                    text = "#${order.orderId}",
+                    text = "#${order.order_Id}",
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color.Black
                 )
 
-                // Right side: Status Badge (smaller and less rounded)
-                OrderStatusBadge(status = order.orderStatus)
+                // Right side: Status Badge
+                OrderHistoryStatusBadge(status = order.Order_Status)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Second Row: User and Employee ID with reduced spacing
+            // Second Row: Order Placed date and Items count
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "User:",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = order.empName,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "Empl ID:",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = order.empId,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Third Row: Order Date and Items with reduced spacing
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "Order Date:",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = formatOrderDate(order.orderPlacedTime),
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "Items:",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = "Qty: ${order.totalItemsInOrder}",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
+                Text(
+                    text = "Order Placed: ${formatOrderDateHistory(order.Order_Placed_Time)}",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                
+                Text(
+                    text = "Items: Qty: ${order.Total_Items_in_Order}",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
             }
         }
     }
 }
 
 @Composable
-fun OrderInfoRow(
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            color = Color.Gray,
-            modifier = Modifier.weight(0.3f)
-        )
-        Text(
-            text = value,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            color = Color.Black,
-            modifier = Modifier.weight(0.7f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-fun OrderStatusBadge(status: String) {
+fun OrderHistoryStatusBadge(status: String) {
     val (backgroundColor, textColor) = when (status.lowercase()) {
         "pending" -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800)) // Light yellow background, orange text
         "approved" -> Pair(Color(0xFFD4EDDA), Color(0xFF28A745)) // Light green background, green text
         "rejected" -> Pair(Color(0xFFF8D7DA), Color(0xFFDC3545)) // Light red background, red text
-        "completed" -> Pair(Color(0xFFD4EDDA), Color(0xFF28A745)) // Light green background, green text
+        "completed", "closed" -> Pair(Color(0xFFE2E3E5), Color(0xFF6C757D)) // Light gray background, dark gray text
+        "cancelled" -> Pair(Color(0xFFF8D7DA), Color(0xFFDC3545)) // Light red background, red text
         else -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800)) // Default to pending style
     }
     
     Card(
-        shape = RoundedCornerShape(8.dp), // Less rounded (reduced from 16dp to 8dp)
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Text(
-            text = "Status: $status",
-            fontSize = 13.sp, // Smaller font size
+            text = "Status: ${status.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}",
+            fontSize = 13.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp) // Smaller padding for reduced size
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }
 }
 
-// Date formatting function for order history
-fun formatOrderDate(dateTimeString: String): String {
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-        val date = inputFormat.parse(dateTimeString)
-        outputFormat.format(date ?: return dateTimeString)
-    } catch (e: Exception) {
-        dateTimeString.substringBefore(" ")
-    }
-}
-
 @Composable
-fun EmptyOrdersContent() {
+fun EmptyOrderHistoryContent() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -378,18 +262,8 @@ fun EmptyOrdersContent() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.order_received),
-                contentDescription = "No orders",
-                modifier = Modifier.size(80.dp),
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(Color.Gray)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             Text(
-                text = "No Orders Received",
+                text = "No Order History",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 18.sp,
@@ -400,7 +274,7 @@ fun EmptyOrdersContent() {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "New stationary orders will appear here",
+                text = "Your order history will appear here",
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -412,7 +286,7 @@ fun EmptyOrdersContent() {
 }
 
 @Composable
-fun OrderReceivedErrorContent(
+fun OrderHistoryErrorContent(
     error: String,
     onRetry: () -> Unit,
     onDismiss: () -> Unit
@@ -473,5 +347,17 @@ fun OrderReceivedErrorContent(
                 }
             }
         }
+    }
+}
+
+// Date formatting function for order history
+private fun formatOrderDateHistory(dateTimeString: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val date = inputFormat.parse(dateTimeString)
+        outputFormat.format(date ?: return dateTimeString.substringBefore(" "))
+    } catch (e: Exception) {
+        dateTimeString.substringBefore(" ")
     }
 }

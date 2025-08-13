@@ -3,7 +3,8 @@
     "allow": [
       "Bash(./gradlew:*)",
       "Bash(adb:*)",
-      "Bash(ren:*)"
+      "Bash(ren:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

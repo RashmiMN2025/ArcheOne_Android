@@ -132,6 +132,15 @@ interface ApiService {
 
     @GET("deskcart/stocklist")
     suspend fun getStockList(): Response<StockListResponse>
+
+    @POST("deskcart/orderlist/allHistory")
+    suspend fun getOrderHistory(): Response<com.archeGlobal.one.model.OrderHistoryResponse>
+
+    @POST("deskcart/orderlist/eligibility")
+    suspend fun getDeskCartEligibility(@Body request: DeskCartEligibilityRequest): Response<DeskCartEligibilityResponse>
+
+    @POST("deskcart/orderlist/userHistory")
+    suspend fun getDeskCartUserHistory(@Body request: com.archeGlobal.one.model.DeskCartOrderHistoryRequest): Response<com.archeGlobal.one.model.DeskCartOrderHistoryResponse>
 }
 
 data class FeedbackRequest(
@@ -384,4 +393,21 @@ data class FAQAnswer(
 data class FAQDataResponse(
     val status: Int,
     val faqList: List<FAQCategory>
+)
+
+data class DeskCartEligibilityRequest(
+    val email: String
+)
+
+data class DeskCartEligibilityResponse(
+    val status: Int,
+    val isAdmin: Boolean,
+    val order: List<DeskCartItem>
+)
+
+data class DeskCartItem(
+    val name: String,
+    val materialId: String,
+    val imageUrl: String,
+    val limit: Int
 )

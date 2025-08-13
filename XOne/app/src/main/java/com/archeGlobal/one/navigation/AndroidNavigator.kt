@@ -320,6 +320,18 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToOrderHistory() {
+        if (activity is HomeActivity) {
+            navigate("order_history")
+        } else {
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    putExtra("navigateTo", "order_history")
+                }
+            )
+        }
+    }
+
     override fun navigateToConsumptionReport() {
         if (activity is HomeActivity) {
             navigate("consumption_report")

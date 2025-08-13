@@ -7,9 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.model.OrderApprovalActionState
 import com.archeGlobal.one.model.OrderDetailsModel
+import com.archeGlobal.one.model.OrderHistoryItem
 import com.archeGlobal.one.model.OrderStatus
 import com.archeGlobal.one.model.getSampleOrderDetails
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -21,6 +24,9 @@ class OrderController(
     private val coroutineScope: CoroutineScope
 ) {
     var model by mutableStateOf(OrderDetailsModel())
+        private set
+
+    var orderHistoryItem by mutableStateOf<OrderHistoryItem?>(null)
         private set
 
     var approvalActionState by mutableStateOf<OrderApprovalActionState>(OrderApprovalActionState.Idle)

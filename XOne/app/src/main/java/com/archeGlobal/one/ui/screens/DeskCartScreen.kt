@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.DeskCartController
 import com.archeGlobal.one.model.DeskCartModel
@@ -72,7 +73,8 @@ fun DeskCartScreen(
             ) {
                 // Header
                 DeskCartHeader(
-                    onBackPressed = controller::onBackPressed
+                    onBackPressed = controller::onBackPressed,
+                    onHistoryClick = controller::onHistoryClick
                 )
 
                 // Content
@@ -82,33 +84,45 @@ fun DeskCartScreen(
                         .padding(16.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // Employee Details Section
-                    EmployeeDetailsSection(
-                        model = model,
-                        onAdminDashboardClick = controller::onAdminDashboardClick
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Store Front Section
+                    // Combined Employee Details and Store Front Section
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
-                        StoreFrontSection(
-                            items = model.stationaryItems,
-                            onIncreaseQuantity = controller::onIncreaseQuantity,
-                            onDecreaseQuantity = controller::onDecreaseQuantity,
-                            onPlaceOrder = controller::onPlaceOrder,
-                            isPlaceOrderEnabled = controller.getTotalItemsSelected() > 0
-                        )
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            // Employee Details Section (without separate card)
+                            EmployeeDetailsSection(
+                                model = model,
+                                onAdminDashboardClick = controller::onAdminDashboardClick
+                            )
+
+                            Spacer(modifier = Modifier.height(20.dp)) // Increased space before divider
+
+                            // Divider with more space on both sides
+                            HorizontalDivider(
+                                color = Color.Gray.copy(alpha = 0.3f),
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(20.dp)) // Increased space after divider
+
+                            // Store Front Section (without separate card)
+                            StoreFrontSection(
+                                items = model.stationaryItems,
+                                onIncreaseQuantity = controller::onIncreaseQuantity,
+                                onDecreaseQuantity = controller::onDecreaseQuantity,
+                                onPlaceOrder = controller::onPlaceOrder,
+                                isPlaceOrderEnabled = controller.getTotalItemsSelected() > 0
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
-
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
 
@@ -123,7 +137,8 @@ fun DeskCartScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeskCartHeader(
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    onHistoryClick: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -137,7 +152,8 @@ fun DeskCartHeader(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.offset(x = 24.dp) // Standard offset for proper centering
                 )
             }
         },
@@ -151,12 +167,25 @@ fun DeskCartHeader(
             }
         },
         actions = {
-            IconButton(onClick = { /* Handle history */ }) {
+            Row(
+                modifier = Modifier
+                    .clickable { onHistoryClick() }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "History",
+                    color = PrimaryRed,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Filled.History,
                     contentDescription = "History",
                     tint = PrimaryRed,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         },
@@ -171,56 +200,53 @@ fun EmployeeDetailsSection(
     model: DeskCartModel,
     onAdminDashboardClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    Column(
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(start = 24.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+        // Header with Employee Details text and Admin Dashboard button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Employee Details",
                 fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 12.dp)
+                fontWeight = FontWeight.Medium,
+                fontSize = 18.sp,
+                color = Color.Black
             )
 
-            // Employee Info Rows
-            EmployeeInfoRow(label = "Email ID:", value = model.employeeDetails.emailId)
-            EmployeeInfoRow(label = "Employee ID:", value = model.employeeDetails.employeeId)
-            EmployeeInfoRow(label = "Department:", value = model.employeeDetails.department)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Admin Dashboard Button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
+            // Admin Dashboard Button (only show if isAdmin is true)
+            if (model.isAdmin) {
                 Button(
                     onClick = onAdminDashboardClick,
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(52.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PrimaryRed
                     ),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.height(32.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "Admin Dashboard",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         color = Color.White
                     )
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Employee Info Rows
+        EmployeeInfoRow(label = "Email:", value = model.employeeDetails.emailId)
+        EmployeeInfoRow(label = "Employee ID:", value = model.employeeDetails.employeeId)
+        EmployeeInfoRow(label = "Department:", value = model.employeeDetails.department)
+        
+        Spacer(modifier = Modifier.height(8.dp)) // Add space after Department
     }
 }
 
@@ -261,13 +287,13 @@ fun StoreFrontSection(
     isPlaceOrderEnabled: Boolean
 ) {
     Column(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp)
     ) {
         Text(
             text = "Store Front",
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp,
+            fontWeight = FontWeight.Medium,
+            fontSize = 18.sp,
             color = Color.Black,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -276,7 +302,8 @@ fun StoreFrontSection(
             columns = GridCells.Fixed(2),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.height(600.dp) // Fixed height to prevent scrolling issues
+            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp), // Add padding for edges
+            modifier = Modifier.height(420.dp) // Slightly increased height to accommodate padding
         ) {
             items(items) { item ->
                 StationaryItemCard(
@@ -287,7 +314,7 @@ fun StoreFrontSection(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(24.dp)) // Further increased spacing between cards and place order button
 
         // Place Order Button inside the card
         PlaceOrderButton(
@@ -306,7 +333,7 @@ fun StationaryItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(175.dp),
+            .height(200.dp), // Increased height from 175dp to 200dp
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -320,25 +347,37 @@ fun StationaryItemCard(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Item Icon
-            Image(
-                painter = painterResource(id = getStationaryIcon(item.iconName)),
-                contentDescription = item.name,
-                modifier = Modifier.size(40.dp),
-                contentScale = ContentScale.Fit
-            )
+            // Item Icon - Use AsyncImage for URL or fallback to drawable
+            if (!item.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = item.name,
+                    modifier = Modifier.size(50.dp), // Increased from 40dp to 50dp
+                    contentScale = ContentScale.Fit,
+                    fallback = painterResource(id = getStationaryIcon(item.iconName))
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = getStationaryIcon(item.iconName)),
+                    contentDescription = item.name,
+                    modifier = Modifier.size(50.dp), // Increased from 40dp to 50dp
+                    contentScale = ContentScale.Fit
+                )
+            }
 
             Spacer(modifier = Modifier.height(4.dp))
 
             // Item Name
             Text(
-                text = item.name,
+                text = item.name.replace("_", " "), // Convert underscores to spaces
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center,
-                maxLines = 1
+                maxLines = 2, // Changed from 1 to 2 lines
+                lineHeight = 16.sp, // Add line height for better readability
+                modifier = Modifier.height(32.dp) // Fixed height to accommodate 2 lines
             )
 
             // Quantity Section

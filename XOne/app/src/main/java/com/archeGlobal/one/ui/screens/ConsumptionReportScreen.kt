@@ -511,15 +511,55 @@ fun DrawScope.drawBarChart(
                 setColor(android.graphics.Color.BLACK)
             }
 
-            // Split long names into multiple lines
-            val words = name.split(" ")
-            if (words.size > 2) {
-                val line1 = words.take(2).joinToString(" ")
-                val line2 = words.drop(2).joinToString(" ")
-                drawText(line1, x + barWidth / 2, size.height - bottomPadding + 40, textPaint)
-                drawText(line2, x + barWidth / 2, size.height - bottomPadding + 75, textPaint)
-            } else {
-                drawText(name, x + barWidth / 2, size.height - bottomPadding + 40, textPaint)
+            // Function to split text into lines based on available width
+            fun splitTextIntoLines(text: String, maxCharsPerLine: Int): List<String> {
+                if (text.length <= maxCharsPerLine) {
+                    return listOf(text)
+                }
+                
+                val words = text.split(" ", "_", "\\", "/", "-")
+                val lines = mutableListOf<String>()
+                var currentLine = ""
+                
+                for (word in words) {
+                    val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
+                    if (testLine.length <= maxCharsPerLine) {
+                        currentLine = testLine
+                    } else {
+                        if (currentLine.isNotEmpty()) {
+                            lines.add(currentLine)
+                            currentLine = word
+                        } else {
+                            // Single word is too long, split it
+                            if (word.length > maxCharsPerLine) {
+                                var remainingWord = word
+                                while (remainingWord.length > maxCharsPerLine) {
+                                    lines.add(remainingWord.take(maxCharsPerLine))
+                                    remainingWord = remainingWord.drop(maxCharsPerLine)
+                                }
+                                if (remainingWord.isNotEmpty()) {
+                                    currentLine = remainingWord
+                                }
+                            } else {
+                                currentLine = word
+                            }
+                        }
+                    }
+                }
+                if (currentLine.isNotEmpty()) {
+                    lines.add(currentLine)
+                }
+                
+                return lines.take(3) // Limit to 3 lines maximum
+            }
+            
+            // Split the name into lines (approximately 12 characters per line for good readability)
+            val lines = splitTextIntoLines(name, 12)
+            
+            // Draw each line
+            lines.forEachIndexed { lineIndex, line ->
+                val yOffset = size.height - bottomPadding + 40 + (lineIndex * 35)
+                drawText(line, x + barWidth / 2, yOffset, textPaint)
             }
         }
     }

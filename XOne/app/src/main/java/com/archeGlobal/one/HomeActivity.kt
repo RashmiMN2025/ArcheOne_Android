@@ -14,10 +14,17 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,6 +47,7 @@ import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
 import com.archeGlobal.one.ui.screens.*
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.UserDataManager
@@ -1517,31 +1525,37 @@ class HomeActivity : AppCompatActivity() {
                     ) { backStackEntry ->
                         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
 
-                        // Load order details when composable is created
-                        LaunchedEffect(orderId) {
-                            orderController.loadOrderDetails(orderId)
-                        }
-
-                        orderController.model.order?.let { orderDetails ->
+                        // Get order details from companion object
+                        OrderReceivedController.selectedOrderForDetails?.let { orderItem ->
+                            val orderHistoryDetailsController = remember {
+                                OrderHistoryDetailsController(this@HomeActivity, navigator)
+                            }
                             OrderDetailsScreen(
-                                controller = orderController,
-                                orderDetails = orderDetails
+                                controller = orderHistoryDetailsController,
+                                orderItem = orderItem
                             )
                         } ?: run {
-                            // Show loading or error state
+                            // Show error state if no order found
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (orderController.model.isLoading) {
-                                    CircularProgressIndicator()
-                                } else if (orderController.model.error != null) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
                                     Text(
-                                        text = "Error loading order details",
-                                        color = Color.Red
+                                        text = "Order not found",
+                                        color = Color.Red,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 16.sp
                                     )
-                                } else {
-                                    Text("Loading...")
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(
+                                        onClick = { navigator.navigateToOrderReceived() }
+                                    ) {
+                                        Text("Go Back")
+                                    }
                                 }
                             }
                         }
@@ -1570,6 +1584,32 @@ class HomeActivity : AppCompatActivity() {
                         OrderReceivedScreen(
                             model = orderReceivedController.model,
                             controller = orderReceivedController
+                        )
+                    }
+
+                    // Order History route - for user's DeskCart order history
+                    composable(
+                        route = "order_history",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) {
+                        val orderHistoryController = remember {
+                            OrderHistoryController(this@HomeActivity, navigator)
+                        }
+
+                        OrderHistoryScreen(
+                            model = orderHistoryController.model,
+                            controller = orderHistoryController
                         )
                     }
 

@@ -1,5 +1,7 @@
 package com.archeGlobal.one.model
 
+import com.google.gson.annotations.SerializedName
+
 /**
  * Data models for order management system
  */
@@ -29,6 +31,45 @@ sealed class OrderApprovalActionState {
     data class Success(val message: String) : OrderApprovalActionState()
     data class Error(val message: String) : OrderApprovalActionState()
 }
+
+// DeskCart Order History Models
+data class DeskCartOrderHistoryRequest(
+    val email: String
+)
+
+data class DeskCartOrderHistoryResponse(
+    val status: Int,
+    val orders: List<DeskCartOrderHistory>
+)
+
+data class DeskCartOrderHistory(
+    val order_Id: String,
+    val Emp_Name: String,
+    val Emp_ID: String,
+    val Dept: String,
+    val Location: String,
+    val items: List<DeskCartOrderItem>,
+    val Total_Items_in_Order: Int,
+    val Order_Placed_Time: String,
+    val Order_Closed_time: String,
+    @SerializedName("Order_Processed_By_(Admin_team)")
+    val orderProcessedByAdminTeam: String,
+    val Order_Status: String,
+    val Remarks: String
+)
+
+data class DeskCartOrderItem(
+    val materialId: String,
+    val name: String,
+    val count: Int
+)
+
+// Model for Order History Screen State
+data class OrderHistoryModel(
+    val orders: List<DeskCartOrderHistory> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
 
 // Sample data for demonstration
 fun getSampleOrderDetails(orderId: String): OrderDetails {
