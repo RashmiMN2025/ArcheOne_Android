@@ -301,9 +301,9 @@ fun OtpVerificationScreen(
                             .padding(start = 8.dp)
                             .height(36.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE0B4AA),
+                            containerColor = Color(0xFFEFE0DF),
                             contentColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFE0B4AA),
+                            disabledContainerColor = Color(0xFFEFE0DF),
                             disabledContentColor = Color(0xFFDD3825)
                         ),
                         border = BorderStroke(1.dp, Color(0xFFDD3825)),
@@ -331,13 +331,13 @@ fun OtpVerificationScreen(
 
                         // ✅ Check if all OTP boxes are empty
                         if (otp.isBlank()) {
-                            CustomToast.showErrorToast(context, "Please enter an OTP")
+                            CustomToast.showErrorToast(context, "Please enter an OTP!")
                             isLoading = false
                             return@Button
                         }
 
                         if (otp.length < 6) {
-                            CustomToast.showErrorToast(context, "Please enter a valid 6-digit OTP")
+                            CustomToast.showErrorToast(context, "Please enter a valid OTP!")
                             isLoading = false
                             return@Button
                         }

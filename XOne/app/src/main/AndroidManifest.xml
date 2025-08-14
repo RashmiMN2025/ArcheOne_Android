@@ -369,6 +369,13 @@
             android:label="Set MPIN"
             android:theme="@style/Theme.XOne" />
 
+        <activity
+            android:name=".SmartCollateralActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Smart Collateral"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Keep only this FileProvider at the end -->
         <provider
             android:name="androidx.core.content.FileProvider"

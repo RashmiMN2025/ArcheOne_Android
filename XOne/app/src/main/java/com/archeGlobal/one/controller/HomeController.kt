@@ -756,7 +756,13 @@ class HomeController(
                 "ideavault", "idea vault" -> {
                     Log.d("HomeController", "Navigating to Idea Vault")
                     navigator.navigateToIdeaVault()
-                } else -> {
+                }
+                "smart collateral" -> {
+                    Log.d("HomeController", "Navigating to Smart Collateral")
+                    val intent = Intent(context, com.archeGlobal.one.SmartCollateralActivity::class.java)
+                    context.startActivity(intent)
+                }
+                else -> {
                     // Default case for any non-handled services
                     Log.d("HomeController", "Navigating to Service Not Available screen for ${item.title}")
                     navigate("service_not_available?serviceName=${Uri.encode(item.title)}")

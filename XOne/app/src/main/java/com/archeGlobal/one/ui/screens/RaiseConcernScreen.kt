@@ -556,7 +556,7 @@ fun RaiseConcernScreen(
                 } // End of category dropdown conditional
 
                 // Subcategory dropdown (show when category is selected or pre-filled) - only for helpdesk tickets
-                if (selectedCategory != null && isHelpDeskTicket) {
+                if (selectedCategory != null && (isHelpDeskTicket || source == "asset")) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

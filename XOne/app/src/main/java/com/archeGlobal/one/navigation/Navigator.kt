@@ -97,4 +97,5 @@ interface Navigator {
     fun navigateToMedicalWithUrl(url: String)
     fun navigateToAboutUsWithUrl(url: String)
     fun openPulseLoginWithUrl(url: String)
+    fun navigateToSmartCollateral()
 }

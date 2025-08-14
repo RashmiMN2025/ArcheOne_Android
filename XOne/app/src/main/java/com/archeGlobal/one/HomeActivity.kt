@@ -39,6 +39,7 @@ import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
+import com.archeGlobal.one.controller.SmartCollateralController
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -63,6 +64,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var ideaVaultController: IdeaVaultController
     private lateinit var holidayOptionsController: HolidayOptionsController
     private lateinit var helpDeskController: HelpDeskController
+    private lateinit var smartCollateralcontroller: SmartCollateralController
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -291,6 +293,9 @@ class HomeActivity : AppCompatActivity() {
                 helpDeskController.setNavigationCallback { route ->
                     navController.navigate(route)
                 }
+
+                smartCollateralcontroller = SmartCollateralController(this)
+
                 var isLoading by remember { mutableStateOf(false) }
 
                 // Get the current intent (which might be updated by onNewIntent)
@@ -872,7 +877,19 @@ class HomeActivity : AppCompatActivity() {
                                 type = NavType.BoolType
                                 defaultValue = true // Default to true if not provided
                             }
-                        )
+                        ),
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
                     ) { backStackEntry ->
                         val showHeader = backStackEntry.arguments?.getBoolean("showHeader") ?: true
 
@@ -936,7 +953,19 @@ class HomeActivity : AppCompatActivity() {
 
                     composable(
                         "sosDetail/{blog}",
-                        arguments = listOf(navArgument("blog") { type = NavType.StringType })
+                        arguments = listOf(navArgument("blog") { type = NavType.StringType }),
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
                     ) { backStackEntry ->
                         val json = backStackEntry.arguments?.getString("blog")
                         val blog = Gson().fromJson(json, SosBlogModel::class.java)
@@ -1028,6 +1057,12 @@ class HomeActivity : AppCompatActivity() {
                             fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) { backStackEntry ->
@@ -1165,28 +1200,16 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "travel_approval_detail",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         // Only show the detail screen if a travel request is selected
@@ -1207,28 +1230,16 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "travel_approval_confirm",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         // Only show the confirmation screen if a travel request is selected
@@ -1249,28 +1260,16 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "travel_approve",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         // Only show the approval screen if a travel request is selected
@@ -1291,28 +1290,16 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "travel_reject",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         // Only show the rejection screen if a travel request is selected
@@ -1333,28 +1320,16 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "travel_approval_details",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         travelController.selectedTravelRequest?.let { tr ->
@@ -1368,28 +1343,16 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "helpdesk",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         HelpDeskScreen(controller = helpDeskController)
@@ -1398,28 +1361,16 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "track_tickets",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) {
                         TicketTrackingScreen(controller = helpDeskController)
@@ -1428,32 +1379,41 @@ class HomeActivity : AppCompatActivity() {
                     composable(
                         route = "faq_detail/{faqId}",
                         enterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         exitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         },
                         popEnterTransition = {
-                            slideIntoContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeIn(animationSpec = tween(300))
                         },
                         popExitTransition = {
-                            slideOutOfContainer(
-                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
-                            )
+                            fadeOut(animationSpec = tween(300))
                         }
                     ) { backStackEntry ->
                         val faqId = backStackEntry.arguments?.getString("faqId") ?: ""
                         FAQDetailScreen(faqId = faqId, controller = helpDeskController)
+                    }
+
+                    composable(
+                        route = "smart_collateral",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ){
+                        SmartCollateralScreen(
+                            controller = smartCollateralcontroller,
+                            onBackPressed =  { navController.popBackStack() }
+                        )
                     }
                 }
             }

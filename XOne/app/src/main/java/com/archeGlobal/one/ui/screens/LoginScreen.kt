@@ -578,7 +578,7 @@ fun LoginScreen(
                                     CustomToast.showErrorToast(context, "Email ID is required!")
                                 }
                                 !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                                    CustomToast.showErrorToast(context, "Please enter a valid email address")
+                                    CustomToast.showErrorToast(context, "Please enter a valid Email ID!")
                                 }
                                 mobile.isBlank() -> {
                                     CustomToast.showErrorToast(context, "Mobile number is required!")

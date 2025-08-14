@@ -630,4 +630,9 @@ class AndroidNavigator(
     override fun openPulseLoginWithUrl(url: String) {
         openWebView(url, "Pulse")
     }
+
+    override fun navigateToSmartCollateral() {
+        val intent = Intent(activity, SmartCollateralActivity::class.java)
+        startActivity(intent)
+    }
 }

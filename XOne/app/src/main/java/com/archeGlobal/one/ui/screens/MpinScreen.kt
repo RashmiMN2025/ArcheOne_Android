@@ -44,6 +44,7 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.model.SecurityQuestion
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.CustomToast
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -142,6 +143,7 @@ fun OutlinedDropdownField(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .background(Color.White)
+                .padding(0.dp, 10.dp, 0.dp, 0.dp)
         ) {
             options.forEachIndexed { idx, option ->
                 Column(
@@ -223,7 +225,7 @@ fun MpinScreen(
 
     LaunchedEffect(error) {
         error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            CustomToast.showErrorToast(context, it)
         }
     }
 
@@ -272,7 +274,7 @@ fun MpinScreen(
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = if (isReset) "Reset Your MPIN" else "Set Your MPIN",
-                        fontSize = 22.sp,
+                        fontSize = 26.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black
@@ -282,19 +284,21 @@ fun MpinScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(30.dp, 20.dp, 30.dp, 28.dp)
+                        .padding(8.dp, 20.dp, 8.dp, 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = if (isReset) {
                             "Verify your identity to reset your MPIN"
                         } else {
-                            "Set security questions and a 4-digit PIN for secure access"
+                            "Set security questions and a 4-digit PIN for\n secure access"
                         },
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(horizontal = 12.dp),
+                        color = Color.Black.copy(alpha = 0.6f),
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp),
                         textAlign = TextAlign.Center,
                         lineHeight = 18.sp
                     )
@@ -381,12 +385,12 @@ fun MpinScreen(
                                 }
                             }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(
@@ -399,7 +403,7 @@ fun MpinScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
+                                text = "Answer must be under 20 characters, alphanumeric\n allowed. This field is case-sensitive",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -415,11 +419,11 @@ fun MpinScreen(
                                 val correctAnswer =
                                     savedQuestions[selectedResetQuestionIndex].answer
                                 if (resetAnswer.isBlank()) {
-                                    error = "Please enter the answer!"
+                                    CustomToast.showErrorToast(context, "Please enter the answer!")
                                 } else if (resetAnswer.trim() != correctAnswer.trim()) {
-                                    error = "Incorrect answer. Please try again."
+                                    CustomToast.showErrorToast(context, "Incorrect answer. Please try again.")
                                 } else {
-                                    error = "Verified Successfully"
+                                    CustomToast.showErrorToast(context, "Verified Successfully")
                                     resetVerified = true
                                 }
                             },
@@ -706,17 +710,13 @@ fun MpinScreen(
                                 val mpin = mpinDigits.joinToString("")
                                 val confirmMpin = confirmMpinDigits.joinToString("")
                                 if (mpin.length != 4 || confirmMpin.length != 4) {
-                                    error = "MPIN must be 4 digits!"
+                                    CustomToast.showErrorToast(context, "Please enter both MPIN fields!")
                                 } else if (mpin != confirmMpin) {
-                                    error = "MPINs do not match!"
+                                    CustomToast.showErrorToast(context, "MPINs do not match!")
                                 } else {
                                     error = null
                                     com.archeGlobal.one.utils.MpinManager.saveMpin(context, mpin)
-                                    Toast.makeText(
-                                        context,
-                                        "MPIN reset successfully!",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    CustomToast.showErrorToast(context, "Your MPIN reset successfully!")
                                     onMpinSet(mpin, savedQuestions)
                                 }
                             },
@@ -846,7 +846,7 @@ fun MpinScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(
@@ -859,7 +859,7 @@ fun MpinScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Answer must be up to 20 characters, can include letters or numbers, and is case sensitive.",
+                                text = "Answer must be under 20 characters, alphanumeric allowed. This field is case-sensitive",
                                 fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
@@ -868,14 +868,14 @@ fun MpinScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Button(
                             onClick = {
                                 if (selectedQuestions.any { it.isBlank() } || answers.any { it.isBlank() }) {
-                                    error = "Please select and answer both security questions!"
+                                    CustomToast.showErrorToast(context, "Please select and answer both security questions!")
                                 } else if (selectedQuestions[0] == selectedQuestions[1]) {
-                                    error = "Please select different security questions!"
+                                    CustomToast.showErrorToast(context, "Please select different security questions!")
                                 } else {
                                     error = null
                                     step = 1
@@ -1058,9 +1058,9 @@ fun MpinScreen(
                                 val mpin = mpinDigits.joinToString("")
                                 val confirmMpin = confirmMpinDigits.joinToString("")
                                 if (mpin.length != 4 || confirmMpin.length != 4) {
-                                    error = "MPIN must be 4 digits!"
+                                    CustomToast.showErrorToast(context, "Please enter both MPIN fields!")
                                 } else if (mpin != confirmMpin) {
-                                    error = "MPINs do not match!"
+                                    CustomToast.showErrorToast(context, "MPINs do not match!")
                                 } else {
                                     error = null
                                     onMpinSet(

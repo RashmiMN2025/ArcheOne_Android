@@ -27,7 +27,7 @@ object CustomToast {
 
                 val drawable = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 10f
+                    cornerRadius = 20f
                     setColor(Color.parseColor("#DC000000")) // Standard toast gray background (87% opacity)
                 }
                 background = drawable
