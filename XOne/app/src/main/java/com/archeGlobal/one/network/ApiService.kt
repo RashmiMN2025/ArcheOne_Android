@@ -20,6 +20,10 @@ import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
 import com.archeGlobal.one.model.StockListResponse
+import com.archeGlobal.one.model.AddInventoryItemRequest
+import com.archeGlobal.one.model.AddInventoryItemResponse
+import com.archeGlobal.one.model.UpdateInventoryItemRequest
+import com.archeGlobal.one.model.UpdateInventoryItemResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -34,7 +38,13 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.PartMap
 
+import okhttp3.ResponseBody
+import retrofit2.http.Url
+
 interface ApiService {
+    @GET
+    suspend fun downloadReport(@Url url: String): Response<ResponseBody>
+
     @POST("send-otp")
     fun sendOtp(@Body request: SendOtpRequest): Call<SendOtpResponse>
 
@@ -133,6 +143,12 @@ interface ApiService {
     @GET("deskcart/stocklist")
     suspend fun getStockList(): Response<StockListResponse>
 
+    @POST("deskcart/stocklist/add")
+    suspend fun addInventoryItem(@Body request: AddInventoryItemRequest): Response<AddInventoryItemResponse>
+
+    @POST("deskcart/stocklist/update")
+    suspend fun updateInventoryItem(@Body request: UpdateInventoryItemRequest): Response<UpdateInventoryItemResponse>
+
     @POST("deskcart/orderlist/allHistory")
     suspend fun getOrderHistory(): Response<com.archeGlobal.one.model.OrderHistoryResponse>
 
@@ -141,6 +157,12 @@ interface ApiService {
 
     @POST("deskcart/orderlist/userHistory")
     suspend fun getDeskCartUserHistory(@Body request: com.archeGlobal.one.model.DeskCartOrderHistoryRequest): Response<com.archeGlobal.one.model.DeskCartOrderHistoryResponse>
+
+    @POST("deskcart/orderlist/placeOrder")
+    suspend fun placeDeskCartOrder(@Body request: DeskCartPlaceOrderRequest): Response<DeskCartPlaceOrderResponse>
+
+    @POST("deskcart/orderlist/updateOrderStatus")
+    suspend fun updateDeskCartOrderStatus(@Body request: DeskCartUpdateOrderStatusRequest): Response<DeskCartUpdateOrderStatusResponse>
 }
 
 data class FeedbackRequest(
@@ -410,4 +432,71 @@ data class DeskCartItem(
     val materialId: String,
     val imageUrl: String,
     val limit: Int
+)
+
+data class DeskCartPlaceOrderRequest(
+    val email: String,
+    val employeeId: String,
+    val employeeName: String,
+    val department: String,
+    @SerializedName("Location")
+    val location: String,
+    val items: List<DeskCartOrderItem>
+)
+
+data class DeskCartOrderItem(
+    val materialId: String,
+    val count: Int
+)
+
+data class DeskCartPlaceOrderResponse(
+    val status: Int,
+    val message: String,
+    val orders: List<DeskCartOrder>
+)
+
+data class DeskCartOrder(
+    @SerializedName("order_Id")
+    val orderId: String,
+    @SerializedName("Emp_Name")
+    val empName: String,
+    @SerializedName("Emp_ID")
+    val empId: String,
+    @SerializedName("Dept")
+    val dept: String,
+    @SerializedName("Location")
+    val location: String,
+    val items: List<DeskCartOrderHistoryItem>,
+    @SerializedName("Total_Items_in_Order")
+    val totalItemsInOrder: Int,
+    @SerializedName("Order_Placed_Time")
+    val orderPlacedTime: String,
+    @SerializedName("Order_Closed_time")
+    val orderClosedTime: String,
+    @SerializedName("Order_Processed_By_(Admin_team)")
+    val orderProcessedBy: String,
+    @SerializedName("Order_Status")
+    val orderStatus: String,
+    @SerializedName("Remarks")
+    val remarks: String,
+    @SerializedName("Emailid")
+    val emailId: String
+)
+
+data class DeskCartOrderHistoryItem(
+    val materialId: String,
+    val name: String,
+    val count: Int
+)
+
+data class DeskCartUpdateOrderStatusRequest(
+    val orderId: String,
+    val newStatus: String, // approved, rejected, cancelled, closed
+    val processedBy: String, // name of admin
+    val rejectionRemarks: String
+)
+
+data class DeskCartUpdateOrderStatusResponse(
+    val status: Int,
+    val orders: List<DeskCartOrder>
 )

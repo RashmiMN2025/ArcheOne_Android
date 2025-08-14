@@ -28,6 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.request.CachePolicy
+import androidx.compose.ui.platform.LocalContext
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.DeskCartController
 import com.archeGlobal.one.model.DeskCartModel
@@ -127,7 +130,7 @@ fun DeskCartScreen(
             }
 
             // Loading overlay
-            if (model.isLoading) {
+            if (model.isLoading || model.isInitialLoading) {
                 UniversalLoader(isLoading = true)
             }
         }
@@ -305,7 +308,7 @@ fun StoreFrontSection(
             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp), // Add padding for edges
             modifier = Modifier.height(420.dp) // Slightly increased height to accommodate padding
         ) {
-            items(items) { item ->
+            items(items, key = { it.id }) { item ->
                 StationaryItemCard(
                     item = item,
                     onIncreaseQuantity = { onIncreaseQuantity(item) },
@@ -350,7 +353,12 @@ fun StationaryItemCard(
             // Item Icon - Use AsyncImage for URL or fallback to drawable
             if (!item.imageUrl.isNullOrEmpty()) {
                 AsyncImage(
-                    model = item.imageUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = item.name,
                     modifier = Modifier.size(50.dp), // Increased from 40dp to 50dp
                     contentScale = ContentScale.Fit,

@@ -1,6 +1,7 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,9 +9,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.InventoryActivity
 import com.archeGlobal.one.model.AddItemModel
+import com.archeGlobal.one.model.DialogMode
 import com.archeGlobal.one.model.InventoryItem
 import com.archeGlobal.one.model.InventoryModel
 import com.archeGlobal.one.model.toInventoryItem
+import com.archeGlobal.one.model.AddInventoryItemRequest
+import com.archeGlobal.one.model.UpdateInventoryItemRequest
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
 import kotlinx.coroutines.launch
@@ -54,12 +58,27 @@ class InventoryController(
     }
 
     fun onItemClick(item: InventoryItem) {
-        // Handle item click - could navigate to item detail/edit page
-        // For now, just show a message or handle stock update
+        // Open dialog in UPDATE mode with pre-filled data
+        addItemModel = addItemModel.copy(
+            showDialog = true,
+            mode = DialogMode.UPDATE,
+            selectedLocation = item.location.ifEmpty { "Bengaluru" },
+            selectedType = item.category.ifEmpty { "HK_Consumables" },
+            selectedItem = item.name,
+            existingStock = item.closingStock.toString(),
+            usedStockQuantity = "",
+            brand = item.brand.ifEmpty { "Schevaran" },
+            unit = item.unit,
+            updatedBy = "",
+            quantityUpdateType = "Update New Quantity"
+        )
     }
 
     fun onAddItemClick() {
-        addItemModel = addItemModel.copy(showDialog = true)
+        addItemModel = addItemModel.copy(
+            showDialog = true,
+            mode = DialogMode.ADD
+        )
     }
 
     fun onAddItemDismiss() {
@@ -75,8 +94,20 @@ class InventoryController(
         addItemModel = addItemModel.copy(selectedType = type)
     }
 
+    fun onAddItemAccessTypeSelected(accessType: String) {
+        addItemModel = addItemModel.copy(selectedAccessType = accessType)
+    }
+
     fun onAddItemSelected(item: String) {
         addItemModel = addItemModel.copy(selectedItem = item)
+    }
+
+    fun onAddItemQuantityUpdateTypeSelected(quantityUpdateType: String) {
+        addItemModel = addItemModel.copy(quantityUpdateType = quantityUpdateType)
+    }
+
+    fun onAddItemUsedStockQuantityChanged(quantity: String) {
+        addItemModel = addItemModel.copy(usedStockQuantity = quantity)
     }
 
     fun onAddItemExistingStockChanged(stock: String) {
@@ -108,52 +139,134 @@ class InventoryController(
     }
 
     fun onUpdateStock() {
-        if (validateUpdateStockForm()) {
+        when (addItemModel.mode) {
+            DialogMode.ADD -> addNewInventoryItem()
+            DialogMode.UPDATE -> updateExistingInventoryItem()
+        }
+    }
+
+    private fun addNewInventoryItem() {
+        if (validateAddItemForm()) {
             viewModelScope.launch {
                 addItemModel = addItemModel.copy(isLoading = true)
                 try {
-                    // Here you would typically call an API to update the stock
-                    // For now, we'll simulate updating the item stock
-                    val updatedItem = InventoryItem(
-                        id = generateItemId(),
-                        name = addItemModel.selectedItem,
-                        itemNumber = addItemModel.selectedItem,
-                        unit = addItemModel.unit,
-                        closingStock = addItemModel.newStockQuantity.toDoubleOrNull() ?: 0.0,
+                    val request = AddInventoryItemRequest(
                         updatedBy = addItemModel.updatedBy,
-                        suppliedDate = "${addItemModel.stockSuppliedDate} at ${addItemModel.stockSuppliedTime}",
-                        lastUpdated = getCurrentDateTime(),
-                        iconName = "ic_file", // Default icon
-                        category = addItemModel.selectedType,
+                        itemCategory = addItemModel.selectedType.lowercase(),
+                        view = addItemModel.selectedAccessType.lowercase(),
+                        itemName = addItemModel.selectedItem,
+                        unit = addItemModel.unit,
+                        brand = addItemModel.brand,
+                        openingStock = addItemModel.existingStock,
                         location = addItemModel.selectedLocation,
-                        brand = addItemModel.brand
+                        suppliedDate = getCurrentDate() // Use current date as default
                     )
 
-                    // Add item to both the current list and all items list
-                    val updatedItems = model.inventoryItems + updatedItem
-                    val updatedAllItems = model.allItems + updatedItem
-                    model = model.copy(inventoryItems = updatedItems, allItems = updatedAllItems)
-
-                    // Close dialog and reset form
-                    addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
-                    resetAddItemForm()
+                    val response = RetrofitClient.apiService.addInventoryItem(request)
+                    if (response.isSuccessful && response.body()?.status == 200) {
+                        // Success - refresh inventory list
+                        loadInventoryData()
+                        addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
+                        resetAddItemForm()
+                        // Could show success message here
+                    } else {
+                        addItemModel = addItemModel.copy(isLoading = false)
+                        // Handle API error
+                    }
                 } catch (e: Exception) {
                     addItemModel = addItemModel.copy(isLoading = false)
-                    // Handle error - could show toast or error message
+                    // Handle network error
                 }
             }
         }
     }
 
-    private fun validateUpdateStockForm(): Boolean {
-        return addItemModel.selectedItem.isNotBlank() &&
-            addItemModel.newStockQuantity.isNotBlank() &&
-            addItemModel.newStockQuantity.toDoubleOrNull() != null &&
-            addItemModel.updatedBy.isNotBlank()
+    private fun updateExistingInventoryItem() {
+        if (validateUpdateItemForm()) {
+            viewModelScope.launch {
+                addItemModel = addItemModel.copy(isLoading = true)
+                try {
+                    val request = UpdateInventoryItemRequest(
+                        updatedBy = addItemModel.updatedBy,
+                        itemName = addItemModel.selectedItem,
+                        itemCount = addItemModel.usedStockQuantity.toIntOrNull() ?: 0,
+                        brand = addItemModel.brand,
+                        unit = addItemModel.unit,
+                        suppliedDate = getCurrentDate(),
+                        updateUtilization = true,
+                        location = addItemModel.selectedLocation
+                    )
+
+                    val response = RetrofitClient.apiService.updateInventoryItem(request)
+                    if (response.isSuccessful && response.body()?.status == 200) {
+                        // Success - refresh inventory list
+                        loadInventoryData()
+                        addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
+                        resetAddItemForm()
+                        // Could show success message here
+                    } else {
+                        addItemModel = addItemModel.copy(isLoading = false)
+                        // Handle API error
+                    }
+                } catch (e: Exception) {
+                    addItemModel = addItemModel.copy(isLoading = false)
+                    // Handle network error
+                }
+            }
+        }
     }
+
+    private fun validateAddItemForm(): Boolean {
+    if (addItemModel.selectedItem.isBlank()) {
+        Toast.makeText(context, "Please enter item name", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (addItemModel.unit.isBlank()) {
+        Toast.makeText(context, "Please enter unit", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (addItemModel.existingStock.isBlank()) {
+        Toast.makeText(context, "Please enter opening stock", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (addItemModel.existingStock.toIntOrNull() == null) {
+        Toast.makeText(context, "Please enter a valid number for opening stock", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (addItemModel.updatedBy.isBlank()) {
+        Toast.makeText(context, "Please enter your name in 'Added By' field", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (addItemModel.brand.isBlank()) {
+        Toast.makeText(context, "Please enter brand name", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    return true
+}
+
+    private fun validateUpdateItemForm(): Boolean {
+    if (addItemModel.usedStockQuantity.isBlank()) {
+        Toast.makeText(context, "Please enter new stock quantity", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (addItemModel.usedStockQuantity.toIntOrNull() == null) {
+        Toast.makeText(context, "Please enter a valid number for new stock quantity", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    if (addItemModel.updatedBy.isBlank()) {
+        Toast.makeText(context, "Please enter your name in 'Updated By' field", Toast.LENGTH_SHORT).show()
+        return false
+    }
+    return true
+}
 
     private fun resetAddItemForm() {
         addItemModel = AddItemModel()
+    }
+
+    private fun getCurrentDate(): String {
+        return java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            .format(java.util.Date())
     }
 
     private fun generateItemId(): String {

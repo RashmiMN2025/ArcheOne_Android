@@ -152,7 +152,7 @@ fun OrderHistoryList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        items(orders) { order ->
+        items(orders, key = { it.order_Id }) { order ->
             OrderHistoryCard(
                 order = order,
                 onClick = { onOrderClick(order) }
@@ -189,7 +189,7 @@ fun OrderHistoryCard(
                 Text(
                     text = "#${order.order_Id}",
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp,
                     color = Color.Black
                 )
@@ -205,21 +205,39 @@ fun OrderHistoryCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Order Placed: ${formatOrderDateHistory(order.Order_Placed_Time)}",
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
+                Row {
+                    Text(
+                        text = "Order Placed",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = ": ${formatOrderDateHistory(order.Order_Placed_Time)}",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
                 
-                Text(
-                    text = "Items: Qty: ${order.Total_Items_in_Order}",
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
+                Row {
+                    Text(
+                        text = "Items",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = ": Qty: ${order.Total_Items_in_Order}",
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
             }
         }
     }
@@ -228,12 +246,11 @@ fun OrderHistoryCard(
 @Composable
 fun OrderHistoryStatusBadge(status: String) {
     val (backgroundColor, textColor) = when (status.lowercase()) {
-        "pending" -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800)) // Light yellow background, orange text
-        "approved" -> Pair(Color(0xFFD4EDDA), Color(0xFF28A745)) // Light green background, green text
-        "rejected" -> Pair(Color(0xFFF8D7DA), Color(0xFFDC3545)) // Light red background, red text
-        "completed", "closed" -> Pair(Color(0xFFE2E3E5), Color(0xFF6C757D)) // Light gray background, dark gray text
-        "cancelled" -> Pair(Color(0xFFF8D7DA), Color(0xFFDC3545)) // Light red background, red text
-        else -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800)) // Default to pending style
+        "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
+        "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000)) // Green
+        "rejected", "cancelled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000)) // Red
+        "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
+        else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
     }
     
     Card(
@@ -242,12 +259,12 @@ fun OrderHistoryStatusBadge(status: String) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Text(
-            text = "Status: ${status.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}",
-            fontSize = 13.sp,
+            text = "Status: $status",
+            fontSize = 13.sp, // Smaller font size
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp) // Smaller padding for reduced size
         )
     }
 }

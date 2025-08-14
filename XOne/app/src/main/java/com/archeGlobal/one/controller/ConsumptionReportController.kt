@@ -1,6 +1,9 @@
 package com.archeGlobal.one.controller
 
+import android.app.DownloadManager
 import android.content.Context
+import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -14,7 +17,10 @@ import com.archeGlobal.one.model.toConsumptionStockCategories
 import com.archeGlobal.one.model.toUsageCategories
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
 class ConsumptionReportController(
     private val context: Context,
@@ -28,8 +34,10 @@ class ConsumptionReportController(
     }
 
     private fun loadConsumptionData() {
-        viewModelScope.launch {
-            model = model.copy(isLoading = true)
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                model = model.copy(isLoading = true)
+            }
             try {
                 val response = RetrofitClient.apiService.getStockList()
                 if (response.isSuccessful) {
@@ -37,7 +45,7 @@ class ConsumptionReportController(
                     if (stockListResponse?.status == 200) {
                         val stockData = stockListResponse.data
                         
-                        // Filter by selected location if applicable
+                        // Process data on background thread
                         val filteredData = if (model.selectedLocation.isNotBlank()) {
                             stockData.filter { it.location == model.selectedLocation }
                         } else {
@@ -47,31 +55,40 @@ class ConsumptionReportController(
                         val stockCategories = filteredData.toConsumptionStockCategories()
                         val usageCategories = filteredData.toUsageCategories()
                         
-                        model = model.copy(
-                            stockCategories = stockCategories,
-                            usageCategories = usageCategories,
-                            isLoading = false,
-                            error = null
-                        )
+                        // Update UI on main thread
+                        withContext(Dispatchers.Main) {
+                            model = model.copy(
+                                stockCategories = stockCategories,
+                                usageCategories = usageCategories,
+                                isLoading = false,
+                                error = null
+                            )
+                        }
                         Log.d("ConsumptionReportController", "Consumption data loaded successfully")
                     } else {
-                        model = model.copy(
-                            isLoading = false,
-                            error = "Failed to load consumption data"
-                        )
+                        withContext(Dispatchers.Main) {
+                            model = model.copy(
+                                isLoading = false,
+                                error = "Failed to load consumption data"
+                            )
+                        }
                     }
                 } else {
-                    model = model.copy(
-                        isLoading = false,
-                        error = "Network error: ${response.code()}"
-                    )
+                    withContext(Dispatchers.Main) {
+                        model = model.copy(
+                            isLoading = false,
+                            error = "Network error: ${response.code()}"
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ConsumptionReportController", "Error loading consumption data", e)
-                model = model.copy(
-                    isLoading = false,
-                    error = "Error: ${e.message}"
-                )
+                withContext(Dispatchers.Main) {
+                    model = model.copy(
+                        isLoading = false,
+                        error = "Error: ${e.message}"
+                    )
+                }
             }
         }
     }
@@ -94,9 +111,24 @@ class ConsumptionReportController(
     }
 
     fun onDownloadReport(categoryId: String) {
-        Log.d("ConsumptionReportController", "Download report for category: $categoryId")
-        Toast.makeText(context, "Downloading report for $categoryId...", Toast.LENGTH_SHORT).show()
-        // TODO: Implement actual download functionality
+        val isUsage = model.selectedTab == ConsumptionTab.USAGE
+        val locationParam = URLEncoder.encode(model.selectedLocation, "UTF-8")
+        val url = "${RetrofitClient.BASE_URL}inventory/GetStockReport?location=${locationParam}&category=${categoryId}&isUsage=${isUsage}"
+
+        try {
+            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val request = DownloadManager.Request(Uri.parse(url))
+                .setTitle("Consumption Report")
+                .setDescription("Downloading report...")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "consumption_report_${categoryId}.csv")
+
+            downloadManager.enqueue(request)
+            Toast.makeText(context, "Downloading report...", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("ConsumptionReportController", "Error downloading report", e)
+            Toast.makeText(context, "Failed to start download", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun loadDataForLocation(location: String) {

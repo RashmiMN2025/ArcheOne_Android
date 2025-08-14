@@ -16,7 +16,8 @@ data class InventoryModel(
 
 data class StockListResponse(
     val status: Int,
-    val data: List<StockItem>
+    val data: List<StockItem>,
+    @SerializedName("orderpending") val orderPending: Int = 0
 )
 
 data class StockItem(

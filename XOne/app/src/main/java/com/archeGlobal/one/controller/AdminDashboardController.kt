@@ -6,14 +6,20 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.model.AdminDashboardItem
 import com.archeGlobal.one.model.AdminDashboardModel
 import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AdminDashboardController(
     private val context: Context,
     private val navigator: Navigator
-) {
+) : ViewModel() {
     var model by mutableStateOf(AdminDashboardModel())
         private set
 
@@ -22,15 +28,40 @@ class AdminDashboardController(
     }
 
     private fun loadDashboardData() {
-        try {
-            model = model.copy(isLoading = false)
-            Log.d("AdminDashboardController", "Dashboard data loaded successfully")
-        } catch (e: Exception) {
-            Log.e("AdminDashboardController", "Error loading dashboard data", e)
-            model = model.copy(
-                isLoading = false,
-                error = "Failed to load dashboard data"
-            )
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                model = model.copy(isLoading = true)
+            }
+            try {
+                val response = RetrofitClient.apiService.getStockList()
+                if (response.isSuccessful) {
+                    val stockListResponse = response.body()
+                    val orderPendingCount = stockListResponse?.orderPending ?: 0
+                    
+                    withContext(Dispatchers.Main) {
+                        // Update the "order_received" item's badge count
+                        updateBadgeCount("order_received", orderPendingCount)
+                        
+                        model = model.copy(isLoading = false)
+                    }
+                    Log.d("AdminDashboardController", "Dashboard data loaded successfully. Order pending count: $orderPendingCount")
+                } else {
+                    withContext(Dispatchers.Main) {
+                        model = model.copy(
+                            isLoading = false,
+                            error = "Failed to load dashboard data: ${response.message()}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("AdminDashboardController", "Error loading dashboard data", e)
+                withContext(Dispatchers.Main) {
+                    model = model.copy(
+                        isLoading = false,
+                        error = "Failed to load dashboard data: ${e.message}"
+                    )
+                }
+            }
         }
     }
 

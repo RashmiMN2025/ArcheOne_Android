@@ -86,6 +86,8 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToOrderDetails(orderId: String) {}
 
+    override fun navigateToOrderHistoryDetail(orderId: String) {}
+
     override fun navigateToOrderHistory() {}
 
     override fun navigateToConsumptionReport() {}

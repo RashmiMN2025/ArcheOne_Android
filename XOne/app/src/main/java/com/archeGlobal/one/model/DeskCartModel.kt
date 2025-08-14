@@ -2,9 +2,10 @@ package com.archeGlobal.one.model
 
 data class DeskCartModel(
     val employeeDetails: EmployeeDetails = EmployeeDetails(),
-    val stationaryItems: List<StationaryItem> = getDefaultStationaryItems(),
+    val stationaryItems: List<StationaryItem> = emptyList(),
     val isAdmin: Boolean = false,
     val isLoading: Boolean = false,
+    val isInitialLoading: Boolean = true,
     val error: String? = null,
     val orderPlaced: Boolean = false
 )

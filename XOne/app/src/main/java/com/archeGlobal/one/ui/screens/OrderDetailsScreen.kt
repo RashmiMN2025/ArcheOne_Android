@@ -1,6 +1,7 @@
 package com.archeGlobal.one.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.OrderHistoryDetailsController
 import com.archeGlobal.one.model.OrderHistoryItem
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -66,7 +69,8 @@ fun OrderDetailsScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.offset(x = (-24).dp) // Center align properly
                             )
                         }
                     },
@@ -113,7 +117,7 @@ fun OrderDetailsScreen(
                                 text = "Employee Details",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
+                                fontSize = 20.sp, // Increased from 18sp
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -139,7 +143,7 @@ fun OrderDetailsScreen(
                                 text = "Order Items",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
+                                fontSize = 20.sp, // Increased from 18sp
                                 color = Color.Black,
                                 modifier = Modifier.padding(bottom = 16.dp)
                             )
@@ -171,8 +175,10 @@ fun OrderDetailsScreen(
                         }
                     }
 
-                    // Remarks Card - Only show for pending orders or if not empty
-                    if (orderItem.orderStatus.lowercase() == "pending" || orderItem.remarks.isNotEmpty()) {
+                    // Remarks Card - Show for pending orders, approved orders, or if not empty
+                    if (orderItem.orderStatus.lowercase() == "pending" || 
+                        orderItem.orderStatus.lowercase() == "approved" || 
+                        orderItem.remarks.isNotEmpty()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -186,87 +192,200 @@ fun OrderDetailsScreen(
                                     text = "Remarks",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
+                                    fontSize = 20.sp, // Increased from 18sp
                                     color = Color.Black,
                                     modifier = Modifier.padding(bottom = 16.dp)
                                 )
 
-                                if (orderItem.orderStatus.lowercase() == "pending") {
-                                    // Show text field for pending orders
-                                    OutlinedTextField(
-                                        value = "",
-                                        onValueChange = { },
-                                        placeholder = {
-                                            Text(
-                                                "Enter remarks (mandatory)",
-                                                color = Color.Gray,
-                                                fontFamily = GraphikFontFamily
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(120.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = PrimaryRed,
-                                            unfocusedBorderColor = Color.Gray
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    // Action buttons for pending orders
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        Button(
-                                            onClick = { controller.onRejectOrder(orderItem.orderId) },
-                                            modifier = Modifier.weight(1f),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFDC3545)
+                                when (orderItem.orderStatus.lowercase()) {
+                                    "pending" -> {
+                                        // Show text field for pending orders
+                                        OutlinedTextField(
+                                            value = controller.remarks,
+                                            onValueChange = { controller.updateRemarks(it) },
+                                            placeholder = {
+                                                Text(
+                                                    "Enter remarks (optional)",
+                                                    color = Color.Gray,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(120.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = PrimaryRed,
+                                                unfocusedBorderColor = Color.Gray,
+                                                focusedTextColor = Color.Black,
+                                                unfocusedTextColor = Color.Black
                                             ),
-                                            shape = RoundedCornerShape(28.dp)
-                                        ) {
-                                            Text(
-                                                text = "Reject",
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Medium,
-                                                color = Color.White
-                                            )
-                                        }
+                                            shape = RoundedCornerShape(8.dp),
+                                            maxLines = 4
+                                        )
 
-                                        Button(
-                                            onClick = { controller.onApproveOrder(orderItem.orderId) },
-                                            modifier = Modifier.weight(1f),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFF28A745)
-                                            ),
-                                            shape = RoundedCornerShape(28.dp)
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        // Action buttons for pending orders
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Text(
-                                                text = "Approve",
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Medium,
-                                                color = Color.White
-                                            )
+                                            Button(
+                                                onClick = { controller.onRejectOrder(orderItem.orderId) },
+                                                modifier = Modifier.weight(1f),
+                                                enabled = !controller.isLoading,
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0xFFDC3545),
+                                                    disabledContainerColor = Color(0xFFDC3545).copy(alpha = 0.6f)
+                                                ),
+                                                shape = RoundedCornerShape(28.dp)
+                                            ) {
+                                                if (controller.isLoading) {
+                                                    CircularProgressIndicator(
+                                                        color = Color.White,
+                                                        modifier = Modifier.size(16.dp),
+                                                        strokeWidth = 2.dp
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        text = "Reject",
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = Color.White
+                                                    )
+                                                }
+                                            }
+
+                                            Button(
+                                                onClick = { controller.onApproveOrder(orderItem.orderId) },
+                                                modifier = Modifier.weight(1f),
+                                                enabled = !controller.isLoading,
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0xFF28A745),
+                                                    disabledContainerColor = Color(0xFF28A745).copy(alpha = 0.6f)
+                                                ),
+                                                shape = RoundedCornerShape(28.dp)
+                                            ) {
+                                                if (controller.isLoading) {
+                                                    CircularProgressIndicator(
+                                                        color = Color.White,
+                                                        modifier = Modifier.size(16.dp),
+                                                        strokeWidth = 2.dp
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        text = "Approve",
+                                                        fontFamily = GraphikFontFamily,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = Color.White
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
-                                } else {
-                                    // Show remarks text for approved/rejected orders
-                                    Text(
-                                        text = orderItem.remarks.ifEmpty { "No remarks provided" },
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = 14.sp,
-                                        color = Color.Black
-                                    )
+                                    
+                                    "approved" -> {
+                                        // Show text field for approved orders (mandatory remarks)
+                                        OutlinedTextField(
+                                            value = controller.remarks,
+                                            onValueChange = { controller.updateRemarks(it) },
+                                            placeholder = {
+                                                Text(
+                                                    "Enter remarks (mandatory)",
+                                                    color = Color.Gray,
+                                                    fontFamily = GraphikFontFamily
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(120.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = PrimaryRed,
+                                                unfocusedBorderColor = Color.Gray,
+                                                focusedTextColor = Color.Black,
+                                                unfocusedTextColor = Color.Black
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            maxLines = 4
+                                        )
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        // Switch for Collected/Cancelled
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Row {
+                                                CollectedCancelledTabButton(
+                                                    text = "Collected",
+                                                    isSelected = controller.selectedAction == "collected",
+                                                    onClick = { controller.updateSelectedAction("collected") },
+                                                    isFirst = true
+                                                )
+                                                CollectedCancelledTabButton(
+                                                    text = "Cancelled",
+                                                    isSelected = controller.selectedAction == "cancelled",
+                                                    onClick = { controller.updateSelectedAction("cancelled") },
+                                                    isLast = true
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        // Close Order button
+                                        Button(
+                                            onClick = { controller.onCloseOrder(orderItem.orderId) },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(50.dp), // Increased height
+                                            enabled = !controller.isLoading,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = PrimaryRed,
+                                                disabledContainerColor = PrimaryRed.copy(alpha = 0.6f)
+                                            ),
+                                            shape = RoundedCornerShape(28.dp)
+                                        ) {
+                                            if (controller.isLoading) {
+                                                CircularProgressIndicator(
+                                                    color = Color.White,
+                                                    modifier = Modifier.size(20.dp),
+                                                    strokeWidth = 2.dp
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = if (controller.selectedAction == "collected") "Close Order" else "Cancel Order",
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = Color.White,
+                                                    fontSize = 16.sp
+                                                )
+                                            }
+                                        }
+                                    }
+                                    
+                                    else -> {
+                                        // Show remarks text for other orders (rejected, closed, cancelled, etc.)
+                                        Text(
+                                            text = orderItem.remarks.ifEmpty { "No remarks provided" },
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 14.sp,
+                                            color = Color.Black
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+
+        // Loading overlay
+        if (controller.isLoading) {
+            UniversalLoader(isLoading = true)
         }
     }
 }
@@ -311,11 +430,11 @@ private fun OrderStatusCard(
                 
                 // Status Badge
                 val (backgroundColor, textColor) = when (orderStatus.lowercase()) {
-                    "pending" -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800))
-                    "approved" -> Pair(Color(0xFFD4EDDA), Color(0xFF28A745))
-                    "rejected" -> Pair(Color(0xFFF8D7DA), Color(0xFFDC3545))
-                    "completed" -> Pair(Color(0xFFD4EDDA), Color(0xFF28A745))
-                    else -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800))
+                    "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
+                    "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000)) // Green
+                    "rejected", "cancelled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000)) // Red
+                    "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
+                    else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
                 }
                 
                 Card(
@@ -354,7 +473,7 @@ private fun DetailRow(
             text = label,
             fontFamily = GraphikFontFamily,
             fontWeight = labelWeight,
-            fontSize = 14.sp,
+            fontSize = 16.sp, // Increased from 14sp
             color = Color.Gray,
             modifier = Modifier.weight(1f)
         )
@@ -363,7 +482,7 @@ private fun DetailRow(
             text = value,
             fontFamily = GraphikFontFamily,
             fontWeight = valueWeight,
-            fontSize = 14.sp,
+            fontSize = 16.sp, // Increased from 14sp
             color = Color.Black,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.End
@@ -388,7 +507,7 @@ private fun ItemRow(
             text = label,
             fontFamily = GraphikFontFamily,
             fontWeight = labelWeight,
-            fontSize = 14.sp,
+            fontSize = 16.sp, // Increased from 14sp
             color = Color.Black,
             modifier = Modifier.weight(1f)
         )
@@ -397,10 +516,44 @@ private fun ItemRow(
             text = value,
             fontFamily = GraphikFontFamily,
             fontWeight = valueWeight,
-            fontSize = 14.sp,
+            fontSize = 16.sp, // Increased from 14sp
             color = Color.Black,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.End
+        )
+    }
+}
+
+@Composable
+private fun CollectedCancelledTabButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    isFirst: Boolean = false,
+    isLast: Boolean = false
+) {
+    val shape = when {
+        isFirst -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+        isLast -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+        else -> RoundedCornerShape(0.dp)
+    }
+    
+    Box(
+        modifier = Modifier
+            .clip(shape)
+            .background(
+                if (isSelected) Color.White else Color(0xFFE0E0E0)
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            fontFamily = GraphikFontFamily,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            fontSize = 14.sp,
+            color = Color.Black
         )
     }
 }

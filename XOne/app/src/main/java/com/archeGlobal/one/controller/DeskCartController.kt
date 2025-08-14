@@ -6,14 +6,17 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.model.DeskCartModel
 import com.archeGlobal.one.model.EmployeeDetails
 import com.archeGlobal.one.model.StationaryItem
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.DeskCartEligibilityRequest
+import com.archeGlobal.one.network.DeskCartPlaceOrderRequest
+import com.archeGlobal.one.network.DeskCartOrderItem
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -21,8 +24,8 @@ import kotlinx.coroutines.withContext
 class DeskCartController(
     private val context: Context,
     private val navigator: Navigator
-) {
-    var model by mutableStateOf(DeskCartModel(isLoading = true))
+) : ViewModel() {
+    var model by mutableStateOf(DeskCartModel(isInitialLoading = true))
         private set
 
     private val userDataManager = UserDataManager.getInstance(context)
@@ -35,44 +38,48 @@ class DeskCartController(
         val userData = userDataManager.getUserData()
         val email = userData?.email ?: "biswajit.d@arche.global"
 
-        CoroutineScope(Dispatchers.IO).launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 Log.d("DeskCartController", "Fetching eligibility data for email: $email")
                 val response = RetrofitClient.apiService.getDeskCartEligibility(
                     DeskCartEligibilityRequest(email = email)
                 )
 
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null) {
-                        val eligibilityResponse = response.body()!!
-                        
-                        // Convert API items to StationaryItem format
-                        val stationaryItems = eligibilityResponse.order.map { apiItem ->
-                            StationaryItem(
-                                id = apiItem.materialId,
-                                name = apiItem.name,
-                                iconName = getIconNameFromItem(apiItem.name),
-                                imageUrl = apiItem.imageUrl,
-                                currentQuantity = 0,
-                                maxQuantity = apiItem.limit
-                            )
-                        }
-
-                        val employeeDetails = EmployeeDetails(
-                            emailId = userData?.email ?: email,
-                            employeeId = userData?.employeeId ?: "NT1426",
-                            department = userData?.department ?: "Project Department"
+                if (response.isSuccessful && response.body() != null) {
+                    val eligibilityResponse = response.body()!!
+                    
+                    // Process data on background thread
+                    val stationaryItems = eligibilityResponse.order.map { apiItem ->
+                        StationaryItem(
+                            id = apiItem.materialId,
+                            name = apiItem.name,
+                            iconName = getIconNameFromItem(apiItem.name),
+                            imageUrl = apiItem.imageUrl,
+                            currentQuantity = 0,
+                            maxQuantity = apiItem.limit
                         )
+                    }
 
+                    val employeeDetails = EmployeeDetails(
+                        emailId = userData?.email ?: email,
+                        employeeId = userData?.employeeId ?: "NT1426",
+                        department = userData?.department ?: "Project Department"
+                    )
+
+                    // Only update UI state on main thread
+                    withContext(Dispatchers.Main) {
                         model = model.copy(
                             employeeDetails = employeeDetails,
                             stationaryItems = stationaryItems,
                             isAdmin = eligibilityResponse.isAdmin,
-                            isLoading = false
+                            isLoading = false,
+                            isInitialLoading = false
                         )
 
                         Log.d("DeskCartController", "Eligibility data loaded: ${stationaryItems.size} items, isAdmin: ${eligibilityResponse.isAdmin}")
-                    } else {
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
                         handleError("Failed to load eligibility data: ${response.message()}")
                     }
                 }
@@ -88,6 +95,7 @@ class DeskCartController(
         Log.e("DeskCartController", message)
         model = model.copy(
             isLoading = false,
+            isInitialLoading = false,
             error = message
         )
     }
@@ -115,29 +123,25 @@ class DeskCartController(
 
     fun onIncreaseQuantity(item: StationaryItem) {
         if (item.currentQuantity < item.maxQuantity) {
-            val updatedItems = model.stationaryItems.map {
-                if (it.id == item.id) {
-                    it.copy(currentQuantity = it.currentQuantity + 1)
-                } else {
-                    it
-                }
+            val updatedItems = model.stationaryItems.toMutableList()
+            val index = updatedItems.indexOfFirst { it.id == item.id }
+            if (index != -1) {
+                updatedItems[index] = updatedItems[index].copy(currentQuantity = updatedItems[index].currentQuantity + 1)
+                model = model.copy(stationaryItems = updatedItems)
+                Log.d("DeskCartController", "Increased ${item.name} quantity to ${updatedItems[index].currentQuantity}")
             }
-            model = model.copy(stationaryItems = updatedItems)
-            Log.d("DeskCartController", "Increased ${item.name} quantity to ${item.currentQuantity + 1}")
         }
     }
 
     fun onDecreaseQuantity(item: StationaryItem) {
         if (item.currentQuantity > 0) {
-            val updatedItems = model.stationaryItems.map {
-                if (it.id == item.id) {
-                    it.copy(currentQuantity = it.currentQuantity - 1)
-                } else {
-                    it
-                }
+            val updatedItems = model.stationaryItems.toMutableList()
+            val index = updatedItems.indexOfFirst { it.id == item.id }
+            if (index != -1) {
+                updatedItems[index] = updatedItems[index].copy(currentQuantity = updatedItems[index].currentQuantity - 1)
+                model = model.copy(stationaryItems = updatedItems)
+                Log.d("DeskCartController", "Decreased ${item.name} quantity to ${updatedItems[index].currentQuantity}")
             }
-            model = model.copy(stationaryItems = updatedItems)
-            Log.d("DeskCartController", "Decreased ${item.name} quantity to ${item.currentQuantity - 1}")
         }
     }
 
@@ -151,37 +155,89 @@ class DeskCartController(
 
         model = model.copy(isLoading = true)
 
-        // Simulate order placement
-        try {
-            Log.d("DeskCartController", "Placing order for ${selectedItems.size} items")
-            selectedItems.forEach { item ->
-                Log.d("DeskCartController", "Ordering ${item.currentQuantity} x ${item.name}")
-            }
+        val userData = userDataManager.getUserData()
+        val email = userData?.email ?: model.employeeDetails.emailId
+        val employeeId = userData?.employeeId ?: model.employeeDetails.employeeId
+        val employeeName = userData?.name ?: "User"
+        val department = userData?.department ?: model.employeeDetails.department
+        val location = userData?.location ?: "Office"
 
-            // Reset quantities after successful order
-            val resetItems = model.stationaryItems.map {
-                it.copy(currentQuantity = 0)
-            }
-
-            model = model.copy(
-                stationaryItems = resetItems,
-                isLoading = false,
-                orderPlaced = true
+        // Create order items
+        val orderItems = selectedItems.map { item ->
+            DeskCartOrderItem(
+                materialId = item.id,
+                count = item.currentQuantity
             )
-
-            Toast.makeText(
-                context,
-                "Order placed successfully for ${selectedItems.size} items!",
-                Toast.LENGTH_LONG
-            ).show()
-        } catch (e: Exception) {
-            Log.e("DeskCartController", "Error placing order", e)
-            model = model.copy(
-                isLoading = false,
-                error = "Failed to place order. Please try again."
-            )
-            Toast.makeText(context, "Failed to place order. Please try again.", Toast.LENGTH_SHORT).show()
         }
+
+        // Create place order request
+        val placeOrderRequest = DeskCartPlaceOrderRequest(
+            email = email,
+            employeeId = employeeId,
+            employeeName = employeeName,
+            department = department,
+            location = location,
+            items = orderItems
+        )
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                Log.d("DeskCartController", "Placing order for ${selectedItems.size} items")
+                val response = RetrofitClient.apiService.placeDeskCartOrder(placeOrderRequest)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val orderResponse = response.body()!!
+                        
+                        // Reset quantities after successful order
+                        val resetItems = model.stationaryItems.map {
+                            it.copy(currentQuantity = 0)
+                        }
+
+                        model = model.copy(
+                            stationaryItems = resetItems,
+                            isLoading = false,
+                            orderPlaced = true
+                        )
+
+                        // Show success message with order ID
+                        val orderId = orderResponse.orders.firstOrNull()?.orderId ?: "N/A"
+                        Toast.makeText(
+                            context,
+                            "Order placed successfully with ID: $orderId",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        Log.d("DeskCartController", "Order placed successfully: ${orderResponse.message}")
+                        
+                        // Navigate to order details screen with the latest order ID
+                        val latestOrderId = orderResponse.orders.firstOrNull()?.orderId
+                        if (latestOrderId != null) {
+                            Log.d("DeskCartController", "Navigating to order details for order: $latestOrderId")
+                            navigator.navigateToOrderDetails(latestOrderId)
+                        } else {
+                            // Fallback to order history if no order ID available
+                            navigator.navigateToOrderHistory()
+                        }
+                    } else {
+                        handleOrderError("Failed to place order: ${response.message()}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    handleOrderError("Network error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun handleOrderError(message: String) {
+        Log.e("DeskCartController", message)
+        model = model.copy(
+            isLoading = false,
+            error = message
+        )
+        Toast.makeText(context, "Failed to place order. Please try again.", Toast.LENGTH_SHORT).show()
     }
 
     fun getTotalItemsSelected(): Int {
@@ -193,7 +249,21 @@ class DeskCartController(
     }
 
     fun onHistoryClick() {
-        Log.d("DeskCartController", "History clicked - navigating to order history")
-        navigator.navigateToOrderHistory()
+        Log.d("DeskCartController", "History button clicked - starting direct navigation")
+        // Create a simple intent to HomeActivity with explicit order_history destination
+        val intent = android.content.Intent(context, com.archeGlobal.one.HomeActivity::class.java).apply {
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("direct_navigate_to", "order_history")
+            putExtra("source_activity", "DeskCartActivity")
+        }
+        Log.d("DeskCartController", "Created intent with direct_navigate_to: order_history")
+        Log.d("DeskCartController", "Starting HomeActivity with intent")
+        context.startActivity(intent)
+        Log.d("DeskCartController", "Intent started successfully")
+        // Finish the current DeskCart activity
+        if (context is com.archeGlobal.one.DeskCartActivity) {
+            Log.d("DeskCartController", "Finishing DeskCartActivity")
+            context.finish()
+        }
     }
 }

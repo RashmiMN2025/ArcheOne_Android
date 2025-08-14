@@ -41,6 +41,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.archeGlobal.one.controller.*
+import com.archeGlobal.one.controller.ConsumptionReportController
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.navigation.AndroidNavigator
@@ -79,12 +80,14 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var holidayOptionsController: HolidayOptionsController
     private lateinit var helpDeskController: HelpDeskController
     private lateinit var orderController: OrderController
+    private lateinit var consumptionReportController: ConsumptionReportController
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
     private var isAuthenticating = mutableStateOf(false) // New state for biometric authentication
     private var isLocked = false
     private var biometricPromptShown = false
+    private var currentSourceActivity = mutableStateOf<String?>(null) // Track source activity for back navigation
 
     private fun refreshHomeData() {
         val userData = userDataManager.getUserData()
@@ -139,8 +142,25 @@ class HomeActivity : AppCompatActivity() {
         val ticketCategory = intent.getStringExtra("ticketCategory")
         val source = intent.getStringExtra("source")
         val clearBackStack = intent.getBooleanExtra("clearBackStack", false)
+        val directNavigateTo = intent.getStringExtra("direct_navigate_to")
+        val sourceActivity = intent.getStringExtra("source_activity")
+        
+        // Handle direct action-based navigation
+        val directAction = intent.action
 
-        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, ticketCategory=$ticketCategory, source=$source, clearBackStack=$clearBackStack")
+        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, directNavigateTo=$directNavigateTo, sourceActivity=$sourceActivity, ticketCategory=$ticketCategory, source=$source, clearBackStack=$clearBackStack")
+
+        // Handle direct navigation from DeskCart
+        if (directNavigateTo == "order_history") {
+            Log.d("HomeActivity", "Direct navigation to order_history via onNewIntent")
+            // Update the source activity state for proper back navigation
+            currentSourceActivity.value = sourceActivity
+            Log.d("HomeActivity", "Updated currentSourceActivity to: $sourceActivity")
+            navigator.navController?.navigate("order_history") {
+                launchSingleTop = true
+            }
+            return
+        }
 
         // Handle clear back stack and navigate to home
         if (clearBackStack && navigateTo == "home") {
@@ -170,6 +190,10 @@ class HomeActivity : AppCompatActivity() {
     @SuppressLint("ViewModelConstructorInComposable")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        Log.d("HomeActivity", "onCreate called")
+        Log.d("HomeActivity", "Intent extras: ${intent.extras?.keySet()?.joinToString()}")
+        Log.d("HomeActivity", "direct_navigate_to: ${intent.getStringExtra("direct_navigate_to")}")
 
         enableEdgeToEdge()
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -321,6 +345,7 @@ class HomeActivity : AppCompatActivity() {
 
                 // Initialize order controller
                 orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
+                consumptionReportController = ConsumptionReportController(this@HomeActivity, navigator)
                 var isLoading by remember { mutableStateOf(false) }
 
                 // Get the current intent (which might be updated by onNewIntent)
@@ -330,18 +355,37 @@ class HomeActivity : AppCompatActivity() {
                 val currentSource = currentIntent.getStringExtra("source")
                 val currentDestination = currentIntent.getStringExtra("destination")
                 val clearBackStack = currentIntent.getBooleanExtra("clearBackStack", false)
+                val currentAction = currentIntent.action
+                val directNavigateTo = currentIntent.getStringExtra("direct_navigate_to")
+                val sourceActivity = currentIntent.getStringExtra("source_activity")
+                // Use reactive state for source activity (updated by onNewIntent)
+                val reactiveSourceActivity by currentSourceActivity
+                val effectiveSourceActivity = reactiveSourceActivity ?: sourceActivity
+                
+                // Set initial source activity state if not already set
+                LaunchedEffect(sourceActivity) {
+                    if (currentSourceActivity.value == null && sourceActivity != null) {
+                        currentSourceActivity.value = sourceActivity
+                        Log.d("HomeActivity", "Set initial currentSourceActivity to: $sourceActivity")
+                    }
+                }
 
-                // Determine start destination based on intent
+                // Determine start destination based on intent - SIMPLE LOGIC
                 val startDestination = when {
+                    directNavigateTo == "order_history" -> "order_history" // NEW: Direct navigation from DeskCart
+                    currentAction == "navigate_to_order_history" -> "order_history" // Direct action navigation
                     clearBackStack && currentNavigateTo == "home" -> "home" // Force home when clearing back stack
                     currentNavigateTo == "track_tickets" && currentTicketCategory != null -> "track_tickets"
                     currentNavigateTo == "order_received" -> "order_received"
+                    currentNavigateTo == "order_history" -> "order_history"
                     currentNavigateTo == "consumption_report" && !clearBackStack -> "consumption_report"
                     else -> "home"
                 }
+                
+                Log.d("HomeActivity", "Intent parameters - navigateTo: $currentNavigateTo, directNavigateTo: $directNavigateTo, startDestination: $startDestination")
 
                 // Handle data loading and navigation setup
-                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, currentSource, isEmergencyContact, clearBackStack) {
+                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, currentSource, isEmergencyContact, clearBackStack, directNavigateTo) {
                     // Set up track_tickets controller FIRST if that's our destination
                     if (startDestination == "track_tickets" && currentTicketCategory != null) {
                         if (currentSource != null) {
@@ -350,6 +394,11 @@ class HomeActivity : AppCompatActivity() {
                         // Load tickets data directly without calling navigate()
                         helpDeskController.loadTicketsData(currentTicketCategory)
                         Log.d("HomeActivity", "Starting at track_tickets with category: $currentTicketCategory from source: $currentSource")
+                    }
+                    
+                    // Handle order_history destination
+                    if (startDestination == "order_history") {
+                        Log.d("HomeActivity", "Starting at order_history destination")
                     }
 
                     if (!fromOtp) {
@@ -391,6 +440,9 @@ class HomeActivity : AppCompatActivity() {
                                         // Load tickets with the specified category before navigating
                                         helpDeskController.navigateToTrackTickets(currentTicketCategory)
                                         Log.d("HomeActivity", "Navigating to track_tickets with category: $currentTicketCategory from source: $currentSource")
+                                    } else if (route == "order_history") {
+                                        navController.navigate("order_history")
+                                        Log.d("HomeActivity", "Navigating to order_history")
                                     } else {
                                         navController.navigate(route)
                                         Log.d("HomeActivity", "Navigating to: $route")
@@ -1561,6 +1613,78 @@ class HomeActivity : AppCompatActivity() {
                         }
                     }
 
+                    // Order History Detail route
+                    composable(
+                        route = "order_history_detail/{orderId}",
+                        arguments = listOf(
+                            navArgument("orderId") {
+                                type = NavType.StringType
+                                nullable = false
+                            }
+                        ),
+                        enterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideIntoContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        },
+                        popExitTransition = {
+                            slideOutOfContainer(
+                                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                                animationSpec = tween(300)
+                            )
+                        }
+                    ) { backStackEntry ->
+                        val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+
+                        // Get order details from OrderHistoryController companion object
+                        OrderHistoryController.selectedOrderForDetails?.let { orderItem ->
+                            val orderHistoryController = remember(effectiveSourceActivity) {
+                                OrderHistoryController(this@HomeActivity, navigator, effectiveSourceActivity)
+                            }
+                            OrderHistoryDetailScreen(
+                                controller = orderHistoryController,
+                                orderItem = orderItem
+                            )
+                        } ?: run {
+                            // Show error state if no order found
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = "Order not found",
+                                        color = Color.Red,
+                                        fontFamily = GraphikFontFamily,
+                                        fontSize = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(
+                                        onClick = { navigator.navigateToOrderHistory() }
+                                    ) {
+                                        Text("Go Back to Order History")
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Order Received route - for admin dashboard
                     composable(
                         route = "order_received",
@@ -1603,8 +1727,8 @@ class HomeActivity : AppCompatActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) {
-                        val orderHistoryController = remember {
-                            OrderHistoryController(this@HomeActivity, navigator)
+                        val orderHistoryController = remember(effectiveSourceActivity) {
+                            OrderHistoryController(this@HomeActivity, navigator, effectiveSourceActivity)
                         }
 
                         OrderHistoryScreen(
@@ -1629,10 +1753,6 @@ class HomeActivity : AppCompatActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) {
-                        val consumptionReportController = remember {
-                            ConsumptionReportController(this@HomeActivity, navigator)
-                        }
-
                         ConsumptionReportScreen(
                             model = consumptionReportController.model,
                             controller = consumptionReportController
@@ -1719,5 +1839,15 @@ class HomeActivity : AppCompatActivity() {
      */
     fun getChatController(): ChatController? {
         return if (::chatController.isInitialized) chatController else null
+    }
+    
+    /**
+     * Public method to navigate directly to order history
+     * Used by AndroidNavigator for cross-activity navigation
+     */
+    fun navigateToOrderHistory() {
+        navigator.navController?.navigate("order_history") {
+            launchSingleTop = true
+        }
     }
 }

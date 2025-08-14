@@ -320,15 +320,27 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToOrderHistoryDetail(orderId: String) {
+        navController?.navigate("order_history_detail/$orderId") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     override fun navigateToOrderHistory() {
         if (activity is HomeActivity) {
-            navigate("order_history")
+            // Direct navigation if already in HomeActivity
+            navController?.navigate("order_history") {
+                launchSingleTop = true
+            }
         } else {
-            startActivity(
-                Intent(activity, HomeActivity::class.java).apply {
-                    putExtra("navigateTo", "order_history")
-                }
-            )
+            // Simple approach: start HomeActivity and finish current activity
+            val intent = Intent(activity, HomeActivity::class.java).apply {
+                action = "navigate_to_order_history"
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            activity.startActivity(intent)
+            activity.finish()
         }
     }
 

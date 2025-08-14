@@ -10,10 +10,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.ui.res.painterResource
+import com.archeGlobal.one.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -85,7 +86,7 @@ fun ConsumptionReportScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp) // Increased from 16.dp to 24.dp
+                verticalArrangement = Arrangement.spacedBy(32.dp) // Increased spacing between cards
             ) {
                 item {
                     // Tab selector and location
@@ -216,8 +217,8 @@ fun TabButton(
     isLast: Boolean = false
 ) {
     val shape = when {
-        isFirst -> RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
-        isLast -> RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
+        isFirst -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+        isLast -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
         else -> RoundedCornerShape(0.dp)
     }
     
@@ -228,14 +229,14 @@ fun TabButton(
                 if (isSelected) Color.White else Color(0xFFE0E0E0)
             )
             .clickable { onClick() }
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 24.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             fontFamily = GraphikFontFamily,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            fontSize = 16.sp,
+            fontSize = 13.sp,
             color = Color.Black
         )
     }
@@ -251,16 +252,15 @@ fun LocationSelector(
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .clickable { /* TODO: Show location picker */ }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
+            Image(
+                painter = painterResource(id = R.drawable.location_selector),
                 contentDescription = "Location",
-                tint = Color.Black,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -288,11 +288,13 @@ fun StockCategoryCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = category.title,
+                text = category.title.replace("_", " "),
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.Black
+                color = Color.Black,
+                maxLines = 2,
+                modifier = Modifier.weight(1f, fill = false)
             )
 
             DownloadReportButton {
@@ -313,11 +315,16 @@ fun StockCategoryCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 4.dp)
             ) {
+                // Add more space before the chart to push it down further
+                Spacer(modifier = Modifier.height(24.dp))
                 // Bar chart
                 if (category.items.isNotEmpty()) {
-                    StockBarChart(items = category.items)
+                    StockBarChart(
+                        items = category.items.sortedBy { it.name },
+                        categoryName = category.title
+                    )
                 }
             }
         }
@@ -337,11 +344,13 @@ fun UsageCategoryCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = category.title,
+                text = category.title.replace("_", " "),
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.Black
+                color = Color.Black,
+                maxLines = 2,
+                modifier = Modifier.weight(1f, fill = false)
             )
 
             DownloadReportButton {
@@ -362,11 +371,16 @@ fun UsageCategoryCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 4.dp)
             ) {
+                // Add more space before the chart to push it down further
+                Spacer(modifier = Modifier.height(24.dp))
                 // Bar chart
                 if (category.items.isNotEmpty()) {
-                    UsageBarChart(items = category.items)
+                    UsageBarChart(
+                        items = category.items.sortedBy { it.name },
+                        categoryName = category.title
+                    )
                 }
             }
         }
@@ -385,25 +399,59 @@ fun DownloadReportButton(
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier.height(36.dp)
     ) {
-        Icon(
-            imageVector = Icons.Default.Download,
+        Image(
+            painter = painterResource(id = R.drawable.report_download),
             contentDescription = "Download",
-            tint = Color.White,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(16.dp),
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "Download Report",
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Normal,
             fontSize = 12.sp,
             color = Color.White
         )
     }
 }
 
+// Function to get color based on category name
+fun getCategoryColor(categoryName: String): Color {
+    android.util.Log.d("ConsumptionReport", "getCategoryColor called with: '$categoryName'")
+    
+    val color = when {
+        // Check for stationary/stationery first before stock (since "Stationary Stock" contains both)
+        categoryName.contains("stationary", ignoreCase = true) || 
+        categoryName.contains("stationery", ignoreCase = true) -> {
+            android.util.Log.d("ConsumptionReport", "Matched stationary/stationery - returning teal")
+            Color(0xFF4ECDC4) // Teal
+        }
+        categoryName.contains("party", ignoreCase = true) -> {
+            android.util.Log.d("ConsumptionReport", "Matched party - returning blue")
+            Color(0xFF45B7D1) // Blue
+        }
+        categoryName.contains("hk", ignoreCase = true) || 
+        categoryName.contains("housekeeping", ignoreCase = true) -> {
+            android.util.Log.d("ConsumptionReport", "Matched hk/housekeeping - returning green")
+            Color(0xFF96CEB4) // Green
+        }
+        categoryName.contains("all", ignoreCase = true) -> {
+            android.util.Log.d("ConsumptionReport", "Matched stock - returning red")
+            Color(0xFFFF6B6B) // Red
+        }
+        else -> {
+            android.util.Log.d("ConsumptionReport", "No match - returning default red")
+            Color(0xFFFF6B6B) // Default to red
+        }
+    }
+    
+    android.util.Log.d("ConsumptionReport", "Final color for '$categoryName': $color")
+    return color
+}
+
 @Composable
-fun StockBarChart(items: List<ConsumptionStockItem>) {
+fun StockBarChart(items: List<ConsumptionStockItem>, categoryName: String) {
     val maxValue = items.maxOfOrNull { it.quantity } ?: 1
     val scrollState = rememberScrollState()
     
@@ -422,7 +470,7 @@ fun StockBarChart(items: List<ConsumptionStockItem>) {
                 .fillMaxHeight()
         ) {
             drawBarChart(
-                items = items.map { Triple(it.name, it.quantity, Color(android.graphics.Color.parseColor(it.color))) },
+                items = items.map { Triple(it.name, it.quantity, getCategoryColor(categoryName)) },
                 maxValue = maxValue,
                 size = size
             )
@@ -431,7 +479,7 @@ fun StockBarChart(items: List<ConsumptionStockItem>) {
 }
 
 @Composable
-fun UsageBarChart(items: List<UsageItem>) {
+fun UsageBarChart(items: List<UsageItem>, categoryName: String) {
     val maxValue = items.maxOfOrNull { it.quantity } ?: 1
     val scrollState = rememberScrollState()
     
@@ -450,7 +498,7 @@ fun UsageBarChart(items: List<UsageItem>) {
                 .fillMaxHeight()
         ) {
             drawBarChart(
-                items = items.map { Triple(it.name, it.quantity, Color(android.graphics.Color.parseColor(it.color))) },
+                items = items.map { Triple(it.name, it.quantity, getCategoryColor(categoryName)) },
                 maxValue = maxValue,
                 size = size
             )
@@ -553,8 +601,8 @@ fun DrawScope.drawBarChart(
                 return lines.take(3) // Limit to 3 lines maximum
             }
             
-            // Split the name into lines (approximately 12 characters per line for good readability)
-            val lines = splitTextIntoLines(name, 12)
+            // Replace underscores with spaces and split the name into lines (approximately 12 characters per line for good readability)
+            val lines = splitTextIntoLines(name.replace("_", " "), 12)
             
             // Draw each line
             lines.forEachIndexed { lineIndex, line ->
@@ -574,28 +622,36 @@ fun DrawScope.drawBarChart(
     yAxisLabels.forEach { label ->
         val y = size.height - bottomPadding - (label.toFloat() / maxValue) * chartHeight
 
-        // Draw horizontal grid line segments (avoiding bars)
+        // Draw continuous horizontal grid line (avoiding bars that are taller than the line)
         if (label > 0) { // Don't draw line for 0
             var currentX = leftPadding
             val lineEndX = size.width - 10f
             
-            items.forEachIndexed { index, _ ->
+            items.forEachIndexed { index, (_, value, _) ->
                 val barX = leftPadding + index * (barWidth + barSpacing) + barSpacing / 2
                 val barEndX = barX + barWidth
+                val barHeight = (value.toFloat() / maxValue) * chartHeight
+                val barTopY = size.height - bottomPadding - barHeight
                 
-                // Draw line segment before bar
-                if (currentX < barX) {
-                    drawLine(
-                        color = Color(0xFFE0E0E0),
-                        start = Offset(currentX, y),
-                        end = Offset(barX, y),
-                        strokeWidth = 1.5f
-                    )
-                }
-                currentX = barEndX
+                // Only skip drawing through the bar if the bar is taller than this grid line
+                val barIsTallerThanLine = value > 0 && barTopY < y
+                
+                if (barIsTallerThanLine) {
+                    // Draw line segment before bar
+                    if (currentX < barX) {
+                        drawLine(
+                            color = Color(0xFFE0E0E0),
+                            start = Offset(currentX, y),
+                            end = Offset(barX, y),
+                            strokeWidth = 1.5f
+                        )
+                    }
+                    currentX = barEndX
+                } 
+                // If bar is shorter than line or no bar, continue the line
             }
             
-            // Draw final segment after last bar
+            // Draw final segment after last bar to end of chart
             if (currentX < lineEndX) {
                 drawLine(
                     color = Color(0xFFE0E0E0),

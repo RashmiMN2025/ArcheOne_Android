@@ -167,7 +167,7 @@ fun OrdersList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        items(orders) { order ->
+        items(orders, key = { it.orderId }) { order ->
             OrderCard(
                 order = order,
                 onClick = { onOrderClick(order) }
@@ -333,11 +333,11 @@ fun OrderInfoRow(
 @Composable
 fun OrderStatusBadge(status: String) {
     val (backgroundColor, textColor) = when (status.lowercase()) {
-        "pending" -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800)) // Light yellow background, orange text
-        "approved" -> Pair(Color(0xFFD4EDDA), Color(0xFF28A745)) // Light green background, green text
-        "rejected" -> Pair(Color(0xFFF8D7DA), Color(0xFFDC3545)) // Light red background, red text
-        "completed" -> Pair(Color(0xFFD4EDDA), Color(0xFF28A745)) // Light green background, green text
-        else -> Pair(Color(0xFFFFF3CD), Color(0xFFFF9800)) // Default to pending style
+        "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
+        "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000)) // Green
+        "rejected", "cancelled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000)) // Red
+        "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
+        else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
     }
     
     Card(

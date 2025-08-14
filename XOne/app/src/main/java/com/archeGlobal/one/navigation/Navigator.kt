@@ -74,6 +74,7 @@ interface Navigator {
     fun navigateToInventory()
     fun navigateToOrderReceived()
     fun navigateToOrderDetails(orderId: String)
+    fun navigateToOrderHistoryDetail(orderId: String)
     fun navigateToOrderHistory()
     fun navigateToConsumptionReport()
 

@@ -5,12 +5,13 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.model.*
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.ui.screens.OrderReceivedModel
 import com.archeGlobal.one.utils.UserDataManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -18,7 +19,7 @@ import kotlinx.coroutines.withContext
 class OrderReceivedController(
     private val context: Context,
     private val navigator: Navigator
-) {
+) : ViewModel() {
 
     companion object {
         var selectedOrderForDetails: OrderHistoryItem? = null
@@ -38,7 +39,7 @@ class OrderReceivedController(
     private fun loadOrders() {
         model = model.copy(isLoading = true, error = null)
         
-        CoroutineScope(Dispatchers.IO).launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 Log.d("OrderReceivedController", "Fetching order history from API...")
                 val response = RetrofitClient.apiService.getOrderHistory()

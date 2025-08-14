@@ -4,7 +4,8 @@
       "Bash(./gradlew:*)",
       "Bash(adb:*)",
       "Bash(ren:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
