@@ -70,7 +70,7 @@ class InventoryController(
             brand = item.brand.ifEmpty { "Schevaran" },
             unit = item.unit,
             updatedBy = "",
-            quantityUpdateType = "Update New Quantity"
+            quantityUpdateType = "Update Used Quantity" // Default to most common use case
         )
     }
 
@@ -152,8 +152,8 @@ class InventoryController(
                 try {
                     val request = AddInventoryItemRequest(
                         updatedBy = addItemModel.updatedBy,
-                        itemCategory = addItemModel.selectedType.lowercase(),
-                        view = addItemModel.selectedAccessType.lowercase(),
+                        itemCategory = addItemModel.selectedType, // Keep original case
+                        view = addItemModel.selectedAccessType, // Keep original case
                         itemName = addItemModel.selectedItem,
                         unit = addItemModel.unit,
                         brand = addItemModel.brand,
@@ -186,14 +186,27 @@ class InventoryController(
             viewModelScope.launch {
                 addItemModel = addItemModel.copy(isLoading = true)
                 try {
+                    // Calculate itemCount based on quantity update type
+                    val baseQuantity = addItemModel.newStockQuantity.toIntOrNull() ?: 0
+                    
+                    // Debug logging
+                    android.util.Log.d("InventoryController", "quantityUpdateType: '${addItemModel.quantityUpdateType}'")
+                    android.util.Log.d("InventoryController", "baseQuantity: $baseQuantity")
+                    
+                    val isUsedQuantityUpdate = addItemModel.quantityUpdateType == "Update Used Quantity"
+                    val itemCount = baseQuantity // Always send positive numbers
+                    
+                    android.util.Log.d("InventoryController", "Final itemCount: $itemCount")
+                    android.util.Log.d("InventoryController", "updateUtilization: ${!isUsedQuantityUpdate}")
+                    
                     val request = UpdateInventoryItemRequest(
                         updatedBy = addItemModel.updatedBy,
                         itemName = addItemModel.selectedItem,
-                        itemCount = addItemModel.usedStockQuantity.toIntOrNull() ?: 0,
+                        itemCount = itemCount,
                         brand = addItemModel.brand,
                         unit = addItemModel.unit,
                         suppliedDate = getCurrentDate(),
-                        updateUtilization = true,
+                        updateUtilization = !isUsedQuantityUpdate, // false for used quantity, true for new quantity
                         location = addItemModel.selectedLocation
                     )
 
@@ -245,11 +258,11 @@ class InventoryController(
 }
 
     private fun validateUpdateItemForm(): Boolean {
-    if (addItemModel.usedStockQuantity.isBlank()) {
+    if (addItemModel.newStockQuantity.isBlank()) {
         Toast.makeText(context, "Please enter new stock quantity", Toast.LENGTH_SHORT).show()
         return false
     }
-    if (addItemModel.usedStockQuantity.toIntOrNull() == null) {
+    if (addItemModel.newStockQuantity.toIntOrNull() == null) {
         Toast.makeText(context, "Please enter a valid number for new stock quantity", Toast.LENGTH_SHORT).show()
         return false
     }

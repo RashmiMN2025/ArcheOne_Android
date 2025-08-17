@@ -1,9 +1,6 @@
 package com.archeGlobal.one.controller
 
-import android.app.DownloadManager
 import android.content.Context
-import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -17,6 +14,8 @@ import com.archeGlobal.one.model.toConsumptionStockCategories
 import com.archeGlobal.one.model.toUsageCategories
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.FileDownloadHelper
+import com.archeGlobal.one.utils.PermissionHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,6 +27,8 @@ class ConsumptionReportController(
 ) : ViewModel() {
     var model by mutableStateOf(ConsumptionReportModel())
         private set
+    
+    private val fileDownloadHelper = FileDownloadHelper(context)
 
     init {
         loadConsumptionData()
@@ -111,23 +112,67 @@ class ConsumptionReportController(
     }
 
     fun onDownloadReport(categoryId: String) {
+        if (!PermissionHelper.hasStoragePermission(context)) {
+            Toast.makeText(context, "Storage permission required to download files", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val isUsage = model.selectedTab == ConsumptionTab.USAGE
-        val locationParam = URLEncoder.encode(model.selectedLocation, "UTF-8")
-        val url = "${RetrofitClient.BASE_URL}inventory/GetStockReport?location=${locationParam}&category=${categoryId}&isUsage=${isUsage}"
-
-        try {
-            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val request = DownloadManager.Request(Uri.parse(url))
-                .setTitle("Consumption Report")
-                .setDescription("Downloading report...")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "consumption_report_${categoryId}.csv")
-
-            downloadManager.enqueue(request)
-            Toast.makeText(context, "Downloading report...", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Log.e("ConsumptionReportController", "Error downloading report", e)
-            Toast.makeText(context, "Failed to start download", Toast.LENGTH_SHORT).show()
+        val location = model.selectedLocation.ifBlank { "Office" }
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // URL encode parameters
+                val encodedCategory = URLEncoder.encode(categoryId, "UTF-8")
+                val encodedLocation = URLEncoder.encode(location, "UTF-8")
+                val viewType = if (isUsage) "usage" else "stock"
+                
+                // Construct download URL matching iOS implementation
+                val downloadUrl = "https://dev.arche.global/deskcart/stocklist/csv?category=$encodedCategory&location=$encodedLocation&view=$viewType"
+                
+                Log.d("ConsumptionReportController", "Downloading report from: $downloadUrl")
+                
+                val response = RetrofitClient.apiService.downloadReport(downloadUrl)
+                
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseBody = response.body()!!
+                        
+                        // Save file using FileDownloadHelper
+                        val result = fileDownloadHelper.saveCSVFile(responseBody, categoryId, location, isUsage)
+                        
+                        if (result.success) {
+                            val reportType = if (isUsage) "Monthly Usage Report" else "Stock Report"
+                            Toast.makeText(
+                                context,
+                                "$reportType for $categoryId downloaded successfully to Downloads folder",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            
+                            Log.d("ConsumptionReportController", "File downloaded successfully: ${result.filePath}")
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Download failed: ${result.errorMessage}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Log.e("ConsumptionReportController", "Download error: ${result.errorMessage}")
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Failed to download report: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e("ConsumptionReportController", "API error: ${response.code()} - ${response.message()}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e("ConsumptionReportController", "Network error downloading report", e)
+                }
+            }
         }
     }
 

@@ -17,9 +17,12 @@ import com.archeGlobal.one.network.DeskCartPlaceOrderRequest
 import com.archeGlobal.one.network.DeskCartOrderItem
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
+import com.archeGlobal.one.utils.FileDownloadHelper
+import com.archeGlobal.one.utils.PermissionHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.URLEncoder
 
 class DeskCartController(
     private val context: Context,
@@ -29,6 +32,7 @@ class DeskCartController(
         private set
 
     private val userDataManager = UserDataManager.getInstance(context)
+    private val fileDownloadHelper = FileDownloadHelper(context)
 
     init {
         loadEligibilityData()
@@ -265,5 +269,112 @@ class DeskCartController(
             Log.d("DeskCartController", "Finishing DeskCartActivity")
             context.finish()
         }
+    }
+
+    fun downloadStockReport(category: String = "All", location: String? = null) {
+        if (!PermissionHelper.hasStoragePermission(context)) {
+            model = model.copy(downloadError = "Storage permission required to download files")
+            return
+        }
+
+        val userLocation = location ?: userDataManager.getUserData()?.location ?: "Office"
+        downloadReport(category, userLocation, isUsage = false)
+    }
+
+    fun downloadUsageReport(category: String = "All", location: String? = null) {
+        if (!PermissionHelper.hasStoragePermission(context)) {
+            model = model.copy(downloadError = "Storage permission required to download files")
+            return
+        }
+
+        val userLocation = location ?: userDataManager.getUserData()?.location ?: "Office"
+        downloadReport(category, userLocation, isUsage = true)
+    }
+
+    private fun downloadReport(category: String, location: String, isUsage: Boolean) {
+        // Update loading state
+        model = if (isUsage) {
+            model.copy(isDownloadingUsage = true, downloadError = null)
+        } else {
+            model.copy(isDownloadingStock = true, downloadError = null)
+        }
+
+        val viewType = if (isUsage) "usage" else "stock"
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // URL encode parameters
+                val encodedCategory = URLEncoder.encode(category, "UTF-8")
+                val encodedLocation = URLEncoder.encode(location, "UTF-8")
+                
+                // Construct download URL matching iOS implementation
+                val downloadUrl = "https://dev.arche.global/deskcart/stocklist/csv?category=$encodedCategory&location=$encodedLocation&view=$viewType"
+                
+                Log.d("DeskCartController", "Downloading report from: $downloadUrl")
+                
+                val response = RetrofitClient.apiService.downloadReport(downloadUrl)
+                
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseBody = response.body()!!
+                        
+                        // Save file using FileDownloadHelper
+                        val result = fileDownloadHelper.saveCSVFile(responseBody, category, location, isUsage)
+                        
+                        if (result.success) {
+                            model = model.copy(
+                                isDownloadingStock = false,
+                                isDownloadingUsage = false,
+                                lastDownloadedFile = result.filePath,
+                                downloadError = null
+                            )
+                            
+                            val reportType = if (isUsage) "Monthly Usage Report" else "Stock Report"
+                            Toast.makeText(
+                                context,
+                                "$reportType downloaded successfully to Downloads folder",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            
+                            Log.d("DeskCartController", "File downloaded successfully: ${result.filePath}")
+                        } else {
+                            handleDownloadError(result.errorMessage ?: "Failed to save file")
+                        }
+                    } else {
+                        handleDownloadError("Failed to download report: ${response.message()}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    handleDownloadError("Network error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun handleDownloadError(message: String) {
+        Log.e("DeskCartController", "Download error: $message")
+        model = model.copy(
+            isDownloadingStock = false,
+            isDownloadingUsage = false,
+            downloadError = message
+        )
+        Toast.makeText(context, "Download failed: $message", Toast.LENGTH_SHORT).show()
+    }
+
+    fun openDownloadedFile() {
+        model.lastDownloadedFile?.let { filePath ->
+            fileDownloadHelper.openFileLocation(filePath)
+        }
+    }
+
+    fun shareDownloadedFile() {
+        model.lastDownloadedFile?.let { filePath ->
+            fileDownloadHelper.shareFile(filePath)
+        }
+    }
+
+    fun clearDownloadError() {
+        model = model.copy(downloadError = null)
     }
 }

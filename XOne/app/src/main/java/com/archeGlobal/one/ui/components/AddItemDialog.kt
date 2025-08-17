@@ -526,15 +526,21 @@ private fun StockSuppliedDateField(
     val datePickerDialog = android.app.DatePickerDialog(
         context,
         { _, selectedYear, selectedMonth, selectedDay ->
-            onValueChange("$selectedDay/${selectedMonth + 1}/$selectedYear")
+            val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
+            onValueChange(formattedDate)
         },
         year,
         month,
         day
     )
-    datePickerDialog.datePicker.maxDate = calendar.timeInMillis
+    // Set minimum date to today (only present/future dates allowed)
+    datePickerDialog.datePicker.minDate = calendar.timeInMillis
 
-    Column {
+    Column(
+        modifier = Modifier.clickable {
+            datePickerDialog.show()
+        }
+    ) {
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
@@ -546,7 +552,7 @@ private fun StockSuppliedDateField(
 
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = { }, // Empty lambda since it's readOnly
             readOnly = true,
             trailingIcon = {
                 Icon(

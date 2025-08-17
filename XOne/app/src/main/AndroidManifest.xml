@@ -369,10 +369,21 @@
             android:label="Set MPIN"
             android:theme="@style/Theme.XOne" />
 
-        <!-- Keep only this FileProvider at the end -->
+        <!-- FileProvider for general file sharing -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- FileProvider for consumption report downloads -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.archeGlobal.one.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

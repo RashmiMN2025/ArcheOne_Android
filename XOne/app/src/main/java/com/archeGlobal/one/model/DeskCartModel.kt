@@ -7,7 +7,11 @@ data class DeskCartModel(
     val isLoading: Boolean = false,
     val isInitialLoading: Boolean = true,
     val error: String? = null,
-    val orderPlaced: Boolean = false
+    val orderPlaced: Boolean = false,
+    val isDownloadingStock: Boolean = false,
+    val isDownloadingUsage: Boolean = false,
+    val downloadError: String? = null,
+    val lastDownloadedFile: String? = null
 )
 
 data class EmployeeDetails(

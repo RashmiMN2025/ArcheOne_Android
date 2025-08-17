@@ -125,5 +125,7 @@ data class UpdatedInventoryItem(
     @SerializedName("Last_Updated_Date_Time")
     val lastUpdatedDateTime: String,
     @SerializedName("stock_supplied_date")
-    val stockSuppliedDate: String
+    val stockSuppliedDate: String,
+    @SerializedName("Utilization")
+    val utilization: String
 )
