@@ -188,6 +188,12 @@ class OtpVerificationController(
                 userDataManager.setIsLoggedIn(true)
                 userDataManager.setHasLoggedIn(true)
 
+                val smartCollateral = response.smartCollateral
+
+                smartCollateral?.let {
+                    UserDataManager.getInstance(context).saveSmartCollateral(it)  // persist
+                }
+
                 // Clear session expired preserved data after successful login
                 val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
                 preferencesManager.setString("session_expired_email", "")
@@ -414,6 +420,7 @@ class OtpVerificationController(
         fun getSosBlogsData(): List<SosBlogModel>? = UserDataManager.getInstance(XOneApplication.getInstance()).getSosBlogsData()
         fun getAssetDetails(): List<AssetDetail>? = UserDataManager.getInstance(XOneApplication.getInstance()).getAssetDetails()
         fun getCommuniquesData(): List<CommuniqueModel.Communique>? = UserDataManager.getInstance(XOneApplication.getInstance()).getCommuniqueData()
+        fun getSmartCollateralData(): List<SmartCollateralCategory>? = UserDataManager.getInstance(XOneApplication.getInstance()).getSmartCollateralList()
 
         fun clearUserData() {
             UserDataManager.getInstance(XOneApplication.getInstance()).clearUserData()

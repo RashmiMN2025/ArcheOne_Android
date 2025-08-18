@@ -214,22 +214,12 @@ fun PasswordResetScreen(navigator: Navigator) {
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "or",
-                    fontSize = 18.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
                 val goBackText = buildAnnotatedString {
                     val start = length
-                    append("go back")
+                    append("Go Back")
                     addStyle(
                         style = SpanStyle(
-                            color = Color(0xFFDD3825),
+                            color = Color.Black,
                             textDecoration = TextDecoration.Underline,
                             fontWeight = FontWeight.Medium
                         ),
@@ -246,8 +236,9 @@ fun PasswordResetScreen(navigator: Navigator) {
                 ClickableText(
                     text = goBackText,
                     style = TextStyle(
-                        fontSize = 18.sp,
+                        fontSize = 22.sp,
                         fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
                         color = Color.Black
                     ),
                     modifier = Modifier.align(Alignment.CenterHorizontally),

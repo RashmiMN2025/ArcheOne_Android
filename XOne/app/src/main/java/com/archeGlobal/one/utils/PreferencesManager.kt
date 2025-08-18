@@ -12,6 +12,7 @@ import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.network.AssetDetail
 import com.archeGlobal.one.network.FAQCategory
 import com.archeGlobal.one.network.Office
+import com.archeGlobal.one.network.SmartCollateralCategory
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -289,43 +290,43 @@ class PreferencesManager(context: Context) {
     fun getAppVersion(): String {
         return sharedPreferences.getString(KEY_APP_VERSION, "") ?: ""
     }
-    
+
     fun setAppVersion(version: String) {
         sharedPreferences.edit().putString(KEY_APP_VERSION, version).apply()
     }
-    
+
     fun getSeenServices(): Set<String> {
         return sharedPreferences.getStringSet(KEY_SEEN_SERVICES, emptySet()) ?: emptySet()
     }
-    
+
     fun addSeenService(serviceName: String) {
         val seenServices = getSeenServices().toMutableSet()
         seenServices.add(serviceName)
         sharedPreferences.edit().putStringSet(KEY_SEEN_SERVICES, seenServices).apply()
     }
-    
+
     fun markAllServicesAsSeen(serviceNames: List<String>) {
         val seenServices = getSeenServices().toMutableSet()
         seenServices.addAll(serviceNames)
         sharedPreferences.edit().putStringSet(KEY_SEEN_SERVICES, seenServices).apply()
     }
-    
+
     fun isServiceNew(serviceName: String): Boolean {
         return !getSeenServices().contains(serviceName)
     }
-    
+
     fun clearSeenServices() {
         sharedPreferences.edit().remove(KEY_SEEN_SERVICES).apply()
     }
-    
+
     fun setInstallType(type: String) {
         sharedPreferences.edit().putString(KEY_INSTALL_TYPE, type).apply()
     }
-    
+
     fun getInstallType(): String {
         return sharedPreferences.getString(KEY_INSTALL_TYPE, "NEW") ?: "NEW"
     }
-    
+
     fun clearInstallType() {
         sharedPreferences.edit().remove(KEY_INSTALL_TYPE).apply()
     }
@@ -354,6 +355,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_APP_VERSION = "app_version"
         private const val KEY_SEEN_SERVICES = "seen_services"
         private const val KEY_INSTALL_TYPE = "install_type"
+        private const val KEY_SMART_COLLATERAL_DATA = "smart_collateral_data"
     }
 
     fun setBoolean(key: String, value: Boolean) {
@@ -467,19 +469,30 @@ class PreferencesManager(context: Context) {
         }
     }
 
-    // Remove or comment out the old saveGreetings function if it's no longer needed
-    /*
-    fun saveGreetings(greetings: Map<String, String>?) {
-        if (greetings == null) {
-            sharedPreferences.edit().remove(KEY_GREETINGS_DATA).apply()
+    fun saveSmartCollateral(list: List<SmartCollateralCategory>) {
+        // Use Gson to serialize, save to SharedPreferences
+    }
+
+    fun saveSmartCollateralData(list: List<SmartCollateralCategory>?) {
+        if (list == null) {
+            sharedPreferences.edit().remove(KEY_SMART_COLLATERAL_DATA).apply()
         } else {
-            // Convert Map<String, String> to Map<String, List<String>>
-            val convertedGreetings = greetings.mapValues { (_, value) -> listOf(value) }
-            val json = gson.toJson(convertedGreetings)
-            sharedPreferences.edit().putString(KEY_GREETINGS_DATA, json).apply()
+            val json = gson.toJson(list)
+            sharedPreferences.edit().putString(KEY_SMART_COLLATERAL_DATA, json).apply()
         }
     }
-    */
+
+    fun getSmartCollateralData(): List<SmartCollateralCategory>? {
+        val json = sharedPreferences.getString(KEY_SMART_COLLATERAL_DATA, null)
+        return if (json != null) {
+            val type = object : TypeToken<List<SmartCollateralCategory>>() {}.type
+            gson.fromJson(json, type)
+        } else {
+            null
+        }
+    }
+
+
 
     // New methods for greeting categories with messages
     private val KEY_GREETING_CATEGORIES = "greeting_categories_data"

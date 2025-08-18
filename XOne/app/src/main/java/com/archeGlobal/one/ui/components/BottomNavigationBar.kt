@@ -22,11 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.model.FooterNavigationModel
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
 @Composable
 fun BottomNavigationBar(
@@ -75,7 +77,8 @@ fun BottomNavigationBar(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Home",
-                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
                         fontSize = 12.sp,
                         color = homeSelectedColor, // Always black
                         maxLines = 1,
@@ -112,7 +115,8 @@ fun BottomNavigationBar(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Chat",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = if (model.showChat) selectedColor else unselectedColor
                         )
@@ -148,7 +152,8 @@ fun BottomNavigationBar(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "SOS",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = if (model.showSOS) selectedColor else unselectedColor
                         )
@@ -176,7 +181,7 @@ fun BottomNavigationBar(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Person,
+                            painterResource(id = R.drawable.person_3x),
                             contentDescription = "Profile",
                             modifier = Modifier.size(24.dp),
                             tint = if (model.showProfile) selectedColor else unselectedColor
@@ -184,7 +189,8 @@ fun BottomNavigationBar(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Profile",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = if (model.showProfile) selectedColor else unselectedColor
                         )

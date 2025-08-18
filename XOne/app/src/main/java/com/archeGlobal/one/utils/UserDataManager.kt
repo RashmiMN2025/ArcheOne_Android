@@ -11,6 +11,7 @@ import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.network.AssetDetail
 import com.archeGlobal.one.network.FAQCategory
 import com.archeGlobal.one.network.Office
+import com.archeGlobal.one.network.SmartCollateralCategory
 import com.archeGlobal.one.network.VerifyOtpResponse
 import com.google.gson.Gson
 
@@ -36,8 +37,25 @@ class UserDataManager private constructor(context: Context) {
     private var faqData: List<FAQCategory>? = null
     private var whatsNewData: List<com.archeGlobal.one.network.WhatsNewItem>? = null
     private var lastUsername: String? = null
+    private var smartCollateralList: List<SmartCollateralCategory>? = null
+    private var smartCollateralData: List<SmartCollateralCategory>? = null
     // Private var isLoggedIn: Boolean = false
     // private var hasLoggedIn: Boolean = false
+
+    fun saveSmartCollateral(list: List<SmartCollateralCategory>) {
+        smartCollateralList = list
+        preferencesManager.saveSmartCollateral(list) // Optional: persist if desired
+    }
+
+    fun getSmartCollateralList(): List<SmartCollateralCategory>? = smartCollateralList
+
+//    fun getSmartCollateralData(): List<SmartCollateralCategory>? {
+//        // Assuming you have saved this data to preferences similarly
+//        return preferencesManager.getSmartCollateralData()
+//    }
+
+    fun getSmartCollateralData(): List<SmartCollateralCategory>? = smartCollateralData
+
 
     private val PREF_LAST_LOGIN_TIME = "last_login_time"
 
@@ -239,6 +257,8 @@ class UserDataManager private constructor(context: Context) {
             Log.d(TAG, "No event data found in login response")
         }
 
+        smartCollateralData = response.smartCollateral
+
         // Save to persistent storage
         preferencesManager.saveUserData(newUserData)
         preferencesManager.saveOfficesData(response.offices)
@@ -252,6 +272,7 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.saveGreetingCategories(greetingCategoriesData)
         // Save FAQ data to persistent storage
         preferencesManager.saveFAQData(faqData)
+        preferencesManager.saveSmartCollateralData(response.smartCollateral)
 
         Log.d(TAG, "Saved user data to preferences: ${newUserData?.name}")
         Log.d(TAG, "Saved greetings data with ${greetingsData?.size} categories.")
