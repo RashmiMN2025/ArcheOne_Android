@@ -202,6 +202,7 @@ class InventoryController(
                     val request = UpdateInventoryItemRequest(
                         updatedBy = addItemModel.updatedBy,
                         itemName = addItemModel.selectedItem,
+                        itemId = addItemModel.addItem,
                         itemCount = itemCount,
                         brand = addItemModel.brand,
                         unit = addItemModel.unit,

@@ -7,6 +7,7 @@ data class AddItemModel(
     val selectedType: String = "Stationery",
     val selectedAccessType: String = "Admin",
     val selectedItem: String = "",
+    val addItem: String = "",
     val quantityUpdateType: String = "Update New Quantity",
     val existingStock: String = "",
     val usedStockQuantity: String = "",
