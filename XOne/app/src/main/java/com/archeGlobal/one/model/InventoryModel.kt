@@ -64,8 +64,16 @@ fun StockItem.toInventoryItem(): InventoryItem {
         unit = unit,
         closingStock = closingStock.toDoubleOrNull() ?: 0.0,
         updatedBy = updatedBy,
-        suppliedDate = formatDateTime(stockSuppliedDate),
-        lastUpdated = formatDateTime(lastUpdatedDateTime),
+        suppliedDate = if (stockSuppliedDate.isNullOrBlank()) {
+            "N/A" // 👈 Display null if not available
+        } else {
+            formatDateTime(stockSuppliedDate)
+        },
+        lastUpdated = if (lastUpdatedDateTime.isNullOrBlank()) {
+            "N/A" // 👈 Display null if not available
+        } else {
+            formatDateTime(lastUpdatedDateTime)
+        },
         iconName = getIconFromCategory(category),
         category = category,
         location = location,

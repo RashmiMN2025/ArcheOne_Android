@@ -152,7 +152,7 @@ fun DeskCartHeader(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Stationary Order",
+                    text = "DeskCart",
                     color = Color.Black,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,

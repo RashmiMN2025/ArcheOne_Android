@@ -252,14 +252,23 @@ private fun OrderHistoryStatusCard(
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
-                    Text(
-                        text = orderDate,
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+
+                    Row(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(
+                            text = "Order Date: ",
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = orderDate,
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray
+                        )
+                    }
                 }
                 
                 // Status Badge
@@ -278,7 +287,7 @@ private fun OrderHistoryStatusCard(
                     border = BorderStroke(1.dp, borderColor)
                 ) {
                     Text(
-                        text = orderStatus.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                        text = "Status: $orderStatus",
                         fontSize = 13.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,

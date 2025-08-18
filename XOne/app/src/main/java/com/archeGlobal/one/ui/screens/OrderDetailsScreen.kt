@@ -418,14 +418,22 @@ private fun OrderStatusCard(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
-                    Text(
-                        text = orderDate,
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                    Row(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(
+                            text = "Order Date: ",
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = orderDate,
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray
+                        )
+                    }
                 }
                 
                 // Status Badge
@@ -443,7 +451,7 @@ private fun OrderStatusCard(
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Text(
-                        text = orderStatus.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
+                        text = "Status: $orderStatus",
                         fontSize = 13.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,

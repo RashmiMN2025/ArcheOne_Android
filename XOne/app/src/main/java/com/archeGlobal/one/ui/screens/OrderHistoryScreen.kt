@@ -207,7 +207,7 @@ fun OrderHistoryCard(
             ) {
                 Row {
                     Text(
-                        text = "Order Placed",
+                        text = "Order Date",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,

@@ -793,7 +793,8 @@ class HomeActivity : AppCompatActivity() {
                             },
                             onHolidayListClick = { pdfUrl ->
                                 // Use our PDFViewerScreen with navigator
-                                navigator.navigateToPDFViewer(pdfUrl, "Holiday Calendar PDF")
+                                val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                                navigator.navigateToPDFViewer(pdfUrl, "Holiday List $currentYear")
                                 Log.d("HomeActivity", "Opening holiday list PDF in PDFViewerScreen: $pdfUrl")
                             }
                         )

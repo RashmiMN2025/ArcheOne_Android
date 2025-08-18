@@ -230,13 +230,21 @@ fun AddItemDialog(
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // 6. New Stock Quantity (editable)
+                            // 6. Dynamic Stock Quantity (editable)
+                            val stockQuantityLabel =
+                                if (model.quantityUpdateType == "Update Used Quantity") "Used Stock Quantity"
+                                else "New Stock Quantity"
+
                             UpdateInventoryTextField(
-                                label = "New Stock Quantity",
+                                label = stockQuantityLabel,
                                 value = model.newStockQuantity,
                                 onValueChange = onNewStockQuantityChanged,
-                                placeholder = "Enter stock to add"
+                                placeholder = if (model.quantityUpdateType == "Update Used Quantity")
+                                    "Enter quantity used"
+                                else
+                                    "Enter stock to add"
                             )
+
 
                             Spacer(modifier = Modifier.height(24.dp))
 
