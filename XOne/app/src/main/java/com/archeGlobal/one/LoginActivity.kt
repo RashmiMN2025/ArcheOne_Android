@@ -122,7 +122,7 @@ fun UpdateRequiredDialog(
     ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = Color.White,
+            color = Color(0xFFF6F4EE),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)

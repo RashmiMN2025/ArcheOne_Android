@@ -63,8 +63,9 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
 
-private const val THUMBNAIL_WIDTH = 300
+private const val THUMBNAIL_WIDTH = 600
 private val collateralThumbnailCache = mutableStateMapOf<String, Bitmap?>()
 
 private suspend fun getPdfThumbnail(context: android.content.Context, pdfUrl: String): Bitmap? = withContext(Dispatchers.IO) {
@@ -149,21 +150,6 @@ fun CollateralDetailScreen(
     controller: CollateralController,
     onBackPressed: () -> Unit
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    var thumbnail by remember(file.fileUrl) { mutableStateOf<Bitmap?>(collateralThumbnailCache[file.fileUrl]) }
-    var isLoading by remember(file.fileUrl) { mutableStateOf(false) }
-
-// Whenever file changes, start the thumbnail loading if PDF
-    LaunchedEffect(file.fileUrl) {
-        if (file.fileUrl.endsWith(".pdf", ignoreCase = true) && thumbnail == null && !isLoading) {
-            isLoading = true
-            val thumbBmp = getPdfThumbnail(context, file.fileUrl)
-            thumbnail = thumbBmp
-            isLoading = false
-        }
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -220,63 +206,97 @@ fun CollateralDetailScreen(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Card(
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
-                        .clickable { controller.onFileClick(files) },
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(6.dp)
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(12.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        when {
-                            !file.thumbnailUrl.isNullOrEmpty() -> {
-                                AsyncImage(
-                                    model = file.thumbnailUrl,
-                                    contentDescription = file.fileName,
-                                    modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Crop,
-                                    placeholder = painterResource(id = R.drawable.ic_doc),
-                                    error = painterResource(id = R.drawable.ic_doc)
-                                )
-                            }
-                            thumbnail != null -> {
-                                Image(
-                                    bitmap = thumbnail!!.asImageBitmap(),
-                                    contentDescription = file.fileName,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp))
-                                )
-                            }
-                            isLoading -> {
-                                CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                            }
-                            else -> {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_doc),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = Color.Gray
-                                )
+                    items(files) { file ->
+                        val context = LocalContext.current
+                        var thumbnail by remember(file.fileUrl) { mutableStateOf(collateralThumbnailCache[file.fileUrl]) }
+                        var isLoading by remember(file.fileUrl) { mutableStateOf(false) }
+
+                        LaunchedEffect(file.fileUrl) {
+                            if (file.fileUrl.endsWith(".pdf", ignoreCase = true) && thumbnail == null && !isLoading) {
+                                isLoading = true
+                                val thumbBmp = getPdfThumbnail(context, file.fileUrl)
+                                thumbnail = thumbBmp
+                                isLoading = false
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = file.fileName,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Black,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        // OUTER Column to put Text below Card
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            // CARD: Thumbnail fills Card completely
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(220.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .clickable { controller.onFileClick(file) },
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(6.dp)
+                            ) {
+                                when {
+                                    !file.thumbnailUrl.isNullOrEmpty() -> {
+                                        AsyncImage(
+                                            model = file.thumbnailUrl,
+                                            contentDescription = file.fileName,
+                                            modifier = Modifier
+                                                .fillMaxSize(), // Fill Card (180.dp x full width)
+                                            contentScale = ContentScale.Crop,
+                                            placeholder = painterResource(id = R.drawable.ic_doc),
+                                            error = painterResource(id = R.drawable.ic_doc)
+                                        )
+                                    }
+                                    thumbnail != null -> {
+                                        Image(
+                                            bitmap = thumbnail!!.asImageBitmap(),
+                                            contentDescription = file.fileName,
+                                            contentScale = ContentScale.FillBounds,
+                                            modifier = Modifier.fillMaxSize() // Fill Card
+                                        )
+                                    }
+                                    isLoading -> {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
+                                    else -> {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_doc),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(64.dp),
+                                                tint = Color.Gray
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            // File name BELOW the Card
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = file.fileName ?: "",
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }

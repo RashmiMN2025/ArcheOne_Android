@@ -169,7 +169,7 @@ fun TravelRejectScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "ID: ${travelRequest.id}",
+                                    text = "#${travelRequest.id}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily,

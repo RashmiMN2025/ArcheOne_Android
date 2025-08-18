@@ -52,15 +52,6 @@ fun SmartCollateralScreen(
     val context = LocalContext.current
     val categories = controller.getSmartCollateralList()
 
-//    val menuItems = listOf(
-//        "Sales",
-//        "Marketing",
-//        "Reports",
-//        "Onboarding",
-//        "Case Studies",
-//        "Product Info"
-//    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -143,7 +134,7 @@ fun SmartCollateralScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.folder), // Same icon for all
                                     contentDescription = category.name,
-                                    tint = Color.Gray,
+                                    tint = Color.Black,
                                     modifier = Modifier.size(38.dp)
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
