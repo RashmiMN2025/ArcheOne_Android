@@ -181,7 +181,7 @@ fun BottomNavigationBar(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Icon(
-                            painterResource(id = R.drawable.person_3x),
+                            imageVector = Icons.Default.Person,
                             contentDescription = "Profile",
                             modifier = Modifier.size(24.dp),
                             tint = if (model.showProfile) selectedColor else unselectedColor
