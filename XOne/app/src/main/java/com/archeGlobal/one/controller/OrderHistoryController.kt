@@ -1,0 +1,104 @@
+package com.archeGlobal.one.controller
+
+import android.content.Context
+import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.archeGlobal.one.model.*
+import com.archeGlobal.one.navigation.Navigator
+import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+class OrderHistoryController(
+    private val context: Context,
+    private val navigator: Navigator,
+    private val sourceActivity: String? = null
+) : ViewModel() {
+
+    companion object {
+        var selectedOrderForDetails: DeskCartOrderHistory? = null
+    }
+
+    var model by mutableStateOf(OrderHistoryModel())
+        private set
+
+    private val userDataManager = UserDataManager.getInstance(context)
+
+    init {
+        loadOrderHistory()
+    }
+
+    private fun loadOrderHistory() {
+        model = model.copy(isLoading = true, error = null)
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val userEmail = userDataManager.getUserData()?.email ?: ""
+                Log.d("OrderHistoryController", "Fetching order history for email: $userEmail")
+                
+                val request = DeskCartOrderHistoryRequest(email = userEmail)
+                val response = RetrofitClient.apiService.getDeskCartUserHistory(request)
+                
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val orderHistoryResponse = response.body()!!
+                        model = model.copy(
+                            orders = orderHistoryResponse.orders,
+                            isLoading = false
+                        )
+                        Log.d("OrderHistoryController", "Order history loaded successfully: ${orderHistoryResponse.orders.size} orders")
+                    } else {
+                        handleError("Failed to load order history: ${response.message()}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    handleError("Network error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun handleError(message: String) {
+        Log.e("OrderHistoryController", message)
+        model = model.copy(
+            isLoading = false,
+            error = message
+        )
+    }
+
+    fun onBackPressed() {
+        Log.d("OrderHistoryController", "Back button pressed - source activity: $sourceActivity")
+        if (sourceActivity == "DeskCartActivity") {
+            // Navigate back to DeskCart activity
+            navigator.navigateToDeskCart()
+        } else {
+            // Default behavior - pop back stack within HomeActivity
+            navigator.popBackStack()
+        }
+    }
+
+    fun refreshOrderHistory() {
+        loadOrderHistory()
+    }
+
+    fun onOrderClick(order: DeskCartOrderHistory) {
+        Log.d("OrderHistoryController", "Order clicked: ${order.order_Id}")
+        selectedOrderForDetails = order
+        navigator.navigateToOrderHistoryDetail(order.order_Id)
+    }
+
+    fun clearError() {
+        model = model.copy(error = null)
+    }
+
+    fun popBackStack() {
+        navigator.popBackStack()
+    }
+}

@@ -7,18 +7,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -81,6 +84,14 @@ fun InventoryScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Search Bar
+                    InventorySearchBar(
+                        searchQuery = model.searchQuery,
+                        onSearchQueryChanged = controller::onSearchQueryChanged
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // Filters
                     InventoryFilters(
                         selectedLocation = model.selectedLocation,
@@ -91,7 +102,7 @@ fun InventoryScreen(
                         onTypeSelected = controller::onTypeSelected
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     // Items Grid
                     InventoryItemsGrid(
@@ -105,19 +116,34 @@ fun InventoryScreen(
             FloatingActionButton(
                 onClick = controller::onAddItemClick,
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 32.dp, end = 8.dp)
+                    .width(140.dp)
+                    .height(48.dp),
                 containerColor = PrimaryRed,
-                contentColor = Color.White
+                contentColor = Color.White,
+                shape = RoundedCornerShape(28.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Item"
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .background(
+                                color = Color.White,
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Item",
+                            tint = PrimaryRed,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Add Item",
@@ -141,12 +167,18 @@ fun InventoryScreen(
                 onDismiss = controller::onAddItemDismiss,
                 onLocationSelected = controller::onAddItemLocationSelected,
                 onTypeSelected = controller::onAddItemTypeSelected,
-                onItemNameChanged = controller::onAddItemNameChanged,
-                onItemNumberChanged = controller::onAddItemNumberChanged,
-                onUnitChanged = controller::onAddItemUnitChanged,
+                onAccessTypeSelected = controller::onAddItemAccessTypeSelected,
+                onItemSelected = controller::onAddItemSelected,
+                onQuantityUpdateTypeSelected = controller::onAddItemQuantityUpdateTypeSelected,
+                onExistingStockChanged = controller::onAddItemExistingStockChanged,
+                onUsedStockQuantityChanged = controller::onAddItemUsedStockQuantityChanged,
+                onNewStockQuantityChanged = controller::onAddItemNewStockQuantityChanged,
+                onUpdatedByChanged = controller::onAddItemUpdatedByChanged,
                 onBrandChanged = controller::onAddItemBrandChanged,
-                onTotalStockChanged = controller::onAddItemTotalStockChanged,
-                onAddItem = controller::onAddItemSubmit
+                onUnitChanged = controller::onAddItemUnitChanged,
+                onStockSuppliedDateChanged = controller::onAddItemStockSuppliedDateChanged,
+                onStockSuppliedTimeChanged = controller::onAddItemStockSuppliedTimeChanged,
+                onUpdateStock = controller::onUpdateStock
             )
         }
     }
@@ -191,36 +223,82 @@ fun InventoryHeader(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InventoryNotificationBanner() {
-    Card(
+fun InventorySearchBar(
+    searchQuery: String,
+    onSearchQueryChanged: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = searchQuery,
+        onValueChange = onSearchQueryChanged,
+        placeholder = {
+            Text(
+                text = "Search by item name",
+                fontFamily = GraphikFontFamily,
+                color = Color.Gray
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search",
+                tint = Color.Gray
+            )
+        },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+            .height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color.Transparent,
+            unfocusedBorderColor = Color.Transparent,
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black
+        ),
+        singleLine = true
+    )
+}
+
+@Composable
+fun InventoryNotificationBanner() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .background(
+                color = Color(0x1ADD3825),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        IconButton(
+            onClick = { /* Handle info click */ },
+            modifier = Modifier.size(28.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = "Info",
-                tint = PrimaryRed,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Tap an item to update stock",
-                color = PrimaryRed,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 14.sp
+                tint = Color(0xFFDD3825),
+                modifier = Modifier.size(22.dp)
             )
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = "Tap an item to update stock",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Normal,
+            fontFamily = GraphikFontFamily,
+            textAlign = TextAlign.Left,
+            color = Color.Black,
+            lineHeight = 17.sp,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -290,18 +368,28 @@ fun InventoryDropdown(
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Dropdown"
+                        contentDescription = "Dropdown",
+                        tint = PrimaryRed
                     )
                 },
                 modifier = Modifier
                     .menuAnchor()
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
-                    unfocusedBorderColor = Color.Gray,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
                     focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal
                 )
             )
 
@@ -334,9 +422,8 @@ fun InventoryItemsGrid(
     onItemClick: (InventoryItem) -> Unit
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        columns = GridCells.Fixed(1),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
@@ -356,92 +443,150 @@ fun InventoryItemCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp)
+            .fillMaxWidth(0.9f)
+            .height(310.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .fillMaxWidth()
+                .padding(top = 20.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
-            // Icon
-            Box(
-                modifier = Modifier.size(48.dp),
-                contentAlignment = Alignment.Center
+            // Header with red tag and item name
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = getInventoryIcon(item.iconName)),
-                    contentDescription = item.name,
-                    modifier = Modifier.size(36.dp),
-                    contentScale = ContentScale.Fit
+                    painter = painterResource(id = R.drawable.item_name),
+                    contentDescription = "Item",
+                    modifier = Modifier.size(24.dp),
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(PrimaryRed)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Item Name: ${item.name}",
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color.Black
                 )
             }
 
-            // Name
-            Text(
-                text = item.name,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color.Black,
-                textAlign = TextAlign.Center
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Item Number
-            Text(
-                text = "Item No: ${item.itemNumber}",
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 12.sp,
-                color = Color.Gray,
-                textAlign = TextAlign.Center
-            )
+            // Item details in single column
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                InventoryItemDetail(
+                    icon = painterResource(id = R.drawable.item_no),
+                    label = "Item No:",
+                    value = item.itemNumber
+                )
 
-            // Stock
-            Text(
-                text = "Total Stock: ${item.totalStock}",
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 14.sp,
-                color = Color.Black,
-                textAlign = TextAlign.Center
-            )
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // Last Updated
-            Text(
-                text = "Last Updated: ${item.lastUpdated}",
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 10.sp,
-                color = Color.Gray,
-                textAlign = TextAlign.Center,
-                maxLines = 2
-            )
+                InventoryItemDetail(
+                    icon = painterResource(id = R.drawable.unit),
+                    label = "Unit:",
+                    value = item.unit
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                InventoryItemDetail(
+                    icon = painterResource(id = R.drawable.closing_stock),
+                    label = "Total Stock:",
+                    value = item.closingStock.toString()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                InventoryItemDetail(
+                    icon = painterResource(id = R.drawable.updated_by),
+                    label = "Updated By:",
+                    value = item.updatedBy
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                InventoryItemDetail(
+                    icon = painterResource(id = R.drawable.supplied_date),
+                    label = "Supplied Date:",
+                    value = item.suppliedDate
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                InventoryItemDetail(
+                    icon = painterResource(id = R.drawable.last_updated),
+                    label = "Last Updated:",
+                    value = item.lastUpdated
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun getInventoryIcon(iconName: String): Int {
-    return when (iconName) {
-        "ic_pen" -> R.drawable.ic_user // Placeholder - will map to actual icons
-        "ic_pencil" -> R.drawable.ic_user
-        "ic_marker" -> R.drawable.ic_user
-        "ic_notepad" -> R.drawable.ic_pdf_document
-        "ic_eraser" -> R.drawable.ic_user
-        "ic_sticky_note" -> R.drawable.ic_pdf_document
-        "ic_envelope_dl" -> R.drawable.ic_pdf_document
-        "ic_envelope_a4" -> R.drawable.ic_pdf_document
-        "ic_tissues" -> R.drawable.ic_user
-        "ic_handwash" -> R.drawable.ic_user
-        "ic_stapler" -> R.drawable.ic_it_asset
-        "ic_tape" -> R.drawable.ic_it_asset
-        else -> R.drawable.ic_file
+fun InventoryItemDetail(
+    icon: androidx.compose.ui.graphics.painter.Painter? = null,
+    iconVector: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    label: String,
+    value: String,
+    iconTint: Color = Color.Gray
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        when {
+            iconVector != null -> {
+                Icon(
+                    imageVector = iconVector,
+                    contentDescription = label,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            icon != null -> {
+                Image(
+                    painter = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(16.dp),
+                    contentScale = ContentScale.Fit,
+                    colorFilter = ColorFilter.tint(iconTint)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = value,
+                fontFamily = GraphikFontFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color = Color.Gray,
+                maxLines = 1
+            )
+        }
     }
 }
+

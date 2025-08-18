@@ -2,10 +2,16 @@ package com.archeGlobal.one.model
 
 data class DeskCartModel(
     val employeeDetails: EmployeeDetails = EmployeeDetails(),
-    val stationaryItems: List<StationaryItem> = getDefaultStationaryItems(),
+    val stationaryItems: List<StationaryItem> = emptyList(),
+    val isAdmin: Boolean = false,
     val isLoading: Boolean = false,
+    val isInitialLoading: Boolean = true,
     val error: String? = null,
-    val orderPlaced: Boolean = false
+    val orderPlaced: Boolean = false,
+    val isDownloadingStock: Boolean = false,
+    val isDownloadingUsage: Boolean = false,
+    val downloadError: String? = null,
+    val lastDownloadedFile: String? = null
 )
 
 data class EmployeeDetails(
@@ -18,6 +24,7 @@ data class StationaryItem(
     val id: String,
     val name: String,
     val iconName: String, // For drawable resource mapping
+    val imageUrl: String? = null, // For API image URLs
     val currentQuantity: Int = 0,
     val maxQuantity: Int,
     val category: String = "stationary"

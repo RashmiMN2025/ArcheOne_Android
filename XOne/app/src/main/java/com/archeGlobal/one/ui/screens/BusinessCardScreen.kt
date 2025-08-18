@@ -9,9 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -706,7 +703,7 @@ fun BusinessCardScreen(
                                 // Override the container color to make it transparent black
                                 properties = PopupProperties(focusable = true),
                                 shape = RoundedCornerShape(12.dp),
-                                containerColor = Color(0xFFF6F4EE)  // 80% transparent black
+                                containerColor = Color(0xFFF6F4EE) // 80% transparent black
                             ) {
                                 locations.forEachIndexed { index, location ->
                                     Column {
@@ -773,7 +770,8 @@ fun BusinessCardScreen(
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 14.sp
-                                    ) },
+                                    )
+                                },
                                 singleLine = true,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -926,7 +924,7 @@ fun BusinessCardScreen(
                                 "Cancel",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
-                                fontFamily = GraphikFontFamily,
+                                fontFamily = GraphikFontFamily
                             )
                         }
 

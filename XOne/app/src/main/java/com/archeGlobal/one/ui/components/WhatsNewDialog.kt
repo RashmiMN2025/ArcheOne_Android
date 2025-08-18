@@ -53,9 +53,9 @@ fun WhatsNewDialog(
                     modifier = Modifier.size(42.dp),
                     tint = Color.Black
                 )
-                
+
                 Spacer(modifier = Modifier.height(10.dp))
-                
+
                 // Title
                 Text(
                     text = "What's New in Version $appVersion",
@@ -65,9 +65,9 @@ fun WhatsNewDialog(
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 // Subtitle
                 Text(
                     text = "Explore the latest updates to enhance your experience!",
@@ -78,9 +78,9 @@ fun WhatsNewDialog(
                     textAlign = TextAlign.Center,
                     lineHeight = 17.sp
                 )
-                
+
                 Spacer(modifier = Modifier.height(14.dp))
-                
+
                 // What's new items
                 whatsNewItems.forEach { item ->
                     Row(
@@ -100,9 +100,9 @@ fun WhatsNewDialog(
                                 )
                                 .padding(top = 4.dp)
                         )
-                        
+
                         Spacer(modifier = Modifier.width(10.dp))
-                        
+
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
@@ -114,9 +114,9 @@ fun WhatsNewDialog(
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.Black
                             )
-                            
+
                             Spacer(modifier = Modifier.height(2.dp))
-                            
+
                             // Description
                             Text(
                                 text = item.description,
@@ -128,7 +128,7 @@ fun WhatsNewDialog(
                             )
                         }
                     }
-                    
+
                     if (item != whatsNewItems.last()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Divider(
@@ -137,9 +137,9 @@ fun WhatsNewDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(14.dp))
-                
+
                 // Continue button
                 Button(
                     onClick = onDismiss,

@@ -434,7 +434,7 @@ fun HomeScreenContent(
         val isPrideMonth = controller.isPrideMonth.collectAsState().value
         val showPrideMonthDialog = controller.showPrideMonthDialog.collectAsState().value
         val isUsingPrideIcon = remember { mutableStateOf(controller.isUsingPrideIcon()) }
-        
+
         // Mark services as seen after a short delay to let user see New stickers
         LaunchedEffect(model.categories) {
             if (model.categories.isNotEmpty()) {
@@ -1558,7 +1558,7 @@ private fun AppItem(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-            
+
             // New sticker in top-right corner with straight right edge and curved left edge
             if (isNew) {
                 Box(

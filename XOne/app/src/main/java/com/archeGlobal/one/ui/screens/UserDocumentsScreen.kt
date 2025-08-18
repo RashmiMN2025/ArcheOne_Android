@@ -9,8 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -36,7 +34,7 @@ fun UserDocumentsScreen(
 ) {
     // Get documents from the controller
     val documents by controller.userDocuments.observeAsState(emptyList())
-    
+
     // Log when documents change to verify LiveData updates are received
     LaunchedEffect(documents) {
         Log.d("UserDocumentsScreen", "Documents updated: ${documents.size} documents received")

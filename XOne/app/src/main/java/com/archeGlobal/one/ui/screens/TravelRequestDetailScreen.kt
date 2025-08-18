@@ -178,14 +178,14 @@ fun TravelRequestDetailScreen(
 
                                 // Show separate origin and destination fields
                                 val destination = if (destinations.isNotEmpty()) destinations[0] else null
-                                
+
                                 // Origin City
                                 DetailRowWithDrawableIcon(
                                     iconRes = R.drawable.mappin_and_ellipse,
                                     label = "Origin City",
                                     value = destination?.originCity?.takeIf { it.isNotEmpty() } ?: "N/A"
                                 )
-                                
+
                                 // Destination City
                                 DetailRowWithDrawableIcon(
                                     iconRes = R.drawable.mappin_and_ellipse,
@@ -235,7 +235,7 @@ fun TravelRequestDetailScreen(
                                         label = "Origin City",
                                         value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A"
                                     )
-                                    
+
                                     // Destination City
                                     DetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
@@ -290,7 +290,6 @@ fun TravelRequestDetailScreen(
                                 label = "Created",
                                 value = formattedCreatedDate
                             )
-
                         }
                     }
                 }

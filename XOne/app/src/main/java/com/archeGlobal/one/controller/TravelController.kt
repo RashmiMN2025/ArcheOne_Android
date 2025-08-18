@@ -1070,7 +1070,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
                     dest.flightTimePreference.contains("Night") -> "Night"
                     else -> dest.flightTimePreference
                 }
-                
+
                 TravelDetail(
                     originCity = dest.originCity,
                     destinationCity = dest.destination,
@@ -1165,7 +1165,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
             Log.d("TravelController", "      Arrival Date: ${detail.arrivalDate}")
             Log.d("TravelController", "      Flight Time: ${detail.flightTime}")
         }
-        
+
         // Log the serialized JSON for debugging
         try {
             val gson = com.google.gson.Gson()
@@ -1253,10 +1253,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
                     // This means the request was successful but response parsing failed
                     // Suppress the error and show success
                     Log.d("TravelController", "Request successful but response parsing failed - treating as success")
-                    
+
                     // Show success toast message
                     CustomToast.show(context, "Travel request submitted successfully!")
-                    
+
                     submissionError = null
                     // Refresh travel history to show the new request
                     loadCombinedTravelHistory()

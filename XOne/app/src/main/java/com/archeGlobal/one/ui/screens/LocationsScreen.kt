@@ -129,7 +129,6 @@ fun LocationsScreen(
                     )
                 )
         ) {
-
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
                 containerColor = Color.Transparent,

@@ -22,7 +22,7 @@ class HelpDeskController(private val context: Context) {
     private val apiService = RetrofitClient.apiService
     private val userDataManager = UserDataManager.getInstance(context)
     private var navigationSource: String? = null
-    
+
     // Add navigation trigger counter for auto-refresh
     private val _navigationTrigger = MutableStateFlow(0L)
     val navigationTrigger: StateFlow<Long> = _navigationTrigger.asStateFlow()
@@ -193,10 +193,10 @@ class HelpDeskController(private val context: Context) {
     fun navigateToTrackTickets(category: String = "Helpdesk") {
         // Load tickets data when navigating to ticket tracking
         loadTicketsData(category)
-        
+
         // Trigger navigation counter to force refresh in TicketTrackingScreen
         _navigationTrigger.value = System.currentTimeMillis()
-        
+
         navigate("track_tickets")
     }
 
@@ -274,7 +274,7 @@ class HelpDeskController(private val context: Context) {
     fun refreshTickets() {
         loadTicketsData()
     }
-    
+
     fun triggerNavigationRefresh() {
         // Trigger navigation counter to force refresh
         _navigationTrigger.value = System.currentTimeMillis()

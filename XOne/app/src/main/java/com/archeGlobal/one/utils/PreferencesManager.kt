@@ -289,43 +289,43 @@ class PreferencesManager(context: Context) {
     fun getAppVersion(): String {
         return sharedPreferences.getString(KEY_APP_VERSION, "") ?: ""
     }
-    
+
     fun setAppVersion(version: String) {
         sharedPreferences.edit().putString(KEY_APP_VERSION, version).apply()
     }
-    
+
     fun getSeenServices(): Set<String> {
         return sharedPreferences.getStringSet(KEY_SEEN_SERVICES, emptySet()) ?: emptySet()
     }
-    
+
     fun addSeenService(serviceName: String) {
         val seenServices = getSeenServices().toMutableSet()
         seenServices.add(serviceName)
         sharedPreferences.edit().putStringSet(KEY_SEEN_SERVICES, seenServices).apply()
     }
-    
+
     fun markAllServicesAsSeen(serviceNames: List<String>) {
         val seenServices = getSeenServices().toMutableSet()
         seenServices.addAll(serviceNames)
         sharedPreferences.edit().putStringSet(KEY_SEEN_SERVICES, seenServices).apply()
     }
-    
+
     fun isServiceNew(serviceName: String): Boolean {
         return !getSeenServices().contains(serviceName)
     }
-    
+
     fun clearSeenServices() {
         sharedPreferences.edit().remove(KEY_SEEN_SERVICES).apply()
     }
-    
+
     fun setInstallType(type: String) {
         sharedPreferences.edit().putString(KEY_INSTALL_TYPE, type).apply()
     }
-    
+
     fun getInstallType(): String {
         return sharedPreferences.getString(KEY_INSTALL_TYPE, "NEW") ?: "NEW"
     }
-    
+
     fun clearInstallType() {
         sharedPreferences.edit().remove(KEY_INSTALL_TYPE).apply()
     }

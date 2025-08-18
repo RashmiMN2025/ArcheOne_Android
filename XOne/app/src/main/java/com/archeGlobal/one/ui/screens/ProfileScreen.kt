@@ -51,9 +51,6 @@ import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.preview.PreviewNavigator
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.ImageCache
-import com.google.type.TimeZone
-import java.text.SimpleDateFormat
-import java.util.Date
 
 @Composable
 fun ProfileScreen(

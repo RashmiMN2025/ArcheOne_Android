@@ -82,6 +82,16 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToInventory() {}
 
+    override fun navigateToOrderReceived() {}
+
+    override fun navigateToOrderDetails(orderId: String) {}
+
+    override fun navigateToOrderHistoryDetail(orderId: String) {}
+
+    override fun navigateToOrderHistory() {}
+
+    override fun navigateToConsumptionReport() {}
+
     override fun navigateToGlobalCelebration() {}
 
     override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {

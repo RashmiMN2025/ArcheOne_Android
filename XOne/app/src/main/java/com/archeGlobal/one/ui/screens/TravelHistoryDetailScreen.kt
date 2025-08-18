@@ -143,7 +143,7 @@ fun TravelHistoryDetailScreen(
                                 // Single destination - show origin city and destination city separately
                                 if (destinations.isNotEmpty()) {
                                     val destination = destinations[0]
-                                    
+
                                     // Show origin city if available
                                     if (!destination.originCity.isNullOrEmpty()) {
                                         TravelDetailRowWithDrawableIcon(
@@ -152,7 +152,7 @@ fun TravelHistoryDetailScreen(
                                             value = destination.originCity
                                         )
                                     }
-                                    
+
                                     // Show destination city
                                     TravelDetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
@@ -205,7 +205,7 @@ fun TravelHistoryDetailScreen(
                                             value = destination.originCity
                                         )
                                     }
-                                    
+
                                     // Show destination city
                                     TravelDetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,

@@ -1,7 +1,12 @@
 package com.archeGlobal.one.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
@@ -10,12 +15,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.archeGlobal.one.R
 import com.archeGlobal.one.model.AddItemModel
+import com.archeGlobal.one.model.DialogMode
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 
@@ -26,148 +35,351 @@ fun AddItemDialog(
     onDismiss: () -> Unit,
     onLocationSelected: (String) -> Unit,
     onTypeSelected: (String) -> Unit,
-    onItemNameChanged: (String) -> Unit,
-    onItemNumberChanged: (String) -> Unit,
-    onUnitChanged: (String) -> Unit,
+    onAccessTypeSelected: (String) -> Unit,
+    onItemSelected: (String) -> Unit,
+    onQuantityUpdateTypeSelected: (String) -> Unit,
+    onExistingStockChanged: (String) -> Unit,
+    onUsedStockQuantityChanged: (String) -> Unit,
+    onNewStockQuantityChanged: (String) -> Unit,
+    onUpdatedByChanged: (String) -> Unit,
     onBrandChanged: (String) -> Unit,
-    onTotalStockChanged: (String) -> Unit,
-    onAddItem: () -> Unit
+    onUnitChanged: (String) -> Unit,
+    onStockSuppliedDateChanged: (String) -> Unit,
+    onStockSuppliedTimeChanged: (String) -> Unit,
+    onUpdateStock: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+    val showCloseButton by remember {
+        derivedStateOf { scrollState.value <= 50 || scrollState.value > 100 }
+    }
+    val isScrolledDown by remember {
+        derivedStateOf { scrollState.value > 100 }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
             usePlatformDefaultWidth = false
         )
     ) {
-        Card(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                .fillMaxSize()
+                .background(Color(0xFFF6F4EE))
+                .systemBarsPadding()
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
             ) {
-                // Header with close button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Add New Inventory Item",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
+                // Header spacing
+                Spacer(modifier = Modifier.height(80.dp))
 
+                // Title based on mode
+                Text(
+                    text = when (model.mode) {
+                        DialogMode.ADD -> "Add New Inventory Item"
+                        DialogMode.UPDATE -> "Update Inventory"
+                    },
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 25.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
+                )
+
+                // Content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    when (model.mode) {
+                        DialogMode.ADD -> {
+                            // ADD MODE FIELDS in requested order:
+                            // 1. Location
+                            UpdateInventoryDropdown(
+                                label = "Location",
+                                selectedValue = model.selectedLocation,
+                                options = model.locations,
+                                onValueSelected = onLocationSelected
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 2. Category Type
+                            UpdateInventoryDropdown(
+                                label = "Category Type",
+                                selectedValue = model.selectedType,
+                                options = model.types,
+                                onValueSelected = onTypeSelected
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 3. Access Type
+                            UpdateInventoryDropdown(
+                                label = "Access Type",
+                                selectedValue = model.selectedAccessType,
+                                options = listOf("Admin", "User"),
+                                onValueSelected = onAccessTypeSelected
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 4. Item Name
+                            UpdateInventoryTextField(
+                                label = "Item Name",
+                                value = model.selectedItem,
+                                onValueChange = onItemSelected,
+                                placeholder = "Enter item name"
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 5. Unit
+                            UpdateInventoryTextField(
+                                label = "Unit",
+                                value = model.unit,
+                                onValueChange = onUnitChanged,
+                                placeholder = "Enter unit (e.g., Pieces, Kg)"
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 6. Brand
+                            UpdateInventoryTextField(
+                                label = "Brand",
+                                value = model.brand,
+                                onValueChange = onBrandChanged,
+                                placeholder = "Enter brand name"
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 7. Opening Stock
+                            UpdateInventoryTextField(
+                                label = "Opening Stock",
+                                value = model.existingStock,
+                                onValueChange = onExistingStockChanged,
+                                placeholder = "Enter opening stock quantity"
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 8. Added By
+                            UpdateInventoryTextField(
+                                label = "Added By",
+                                value = model.updatedBy,
+                                onValueChange = onUpdatedByChanged,
+                                placeholder = "Enter your name"
+                            )
+                        }
+                        DialogMode.UPDATE -> {
+                            // UPDATE MODE FIELDS in specified order:
+                            // 1. Location (read-only)
+                            UpdateInventoryTextField(
+                                label = "Location",
+                                value = model.selectedLocation,
+                                onValueChange = { },
+                                readOnly = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 2. Type (read-only)
+                            UpdateInventoryTextField(
+                                label = "Type",
+                                value = model.selectedType,
+                                onValueChange = { },
+                                readOnly = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 3. Item (read-only)
+                            UpdateInventoryTextField(
+                                label = "Item",
+                                value = model.selectedItem,
+                                onValueChange = { },
+                                readOnly = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 4. Quantity Update Type Dropdown
+                            UpdateInventoryDropdown(
+                                label = "Quantity Update Type",
+                                selectedValue = model.quantityUpdateType,
+                                options = model.quantityUpdateTypes,
+                                onValueSelected = onQuantityUpdateTypeSelected
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 5. Existing Stock (read-only)
+                            UpdateInventoryTextField(
+                                label = "Existing Stock",
+                                value = model.existingStock,
+                                onValueChange = { },
+                                readOnly = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 6. Dynamic Stock Quantity (editable)
+                            val stockQuantityLabel =
+                                if (model.quantityUpdateType == "Update Used Quantity") "Used Stock Quantity"
+                                else "New Stock Quantity"
+
+                            UpdateInventoryTextField(
+                                label = stockQuantityLabel,
+                                value = model.newStockQuantity,
+                                onValueChange = onNewStockQuantityChanged,
+                                placeholder = if (model.quantityUpdateType == "Update Used Quantity")
+                                    "Enter quantity used"
+                                else
+                                    "Enter stock to add"
+                            )
+
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 7. Brand (read-only)
+                            UpdateInventoryTextField(
+                                label = "Brand",
+                                value = model.brand,
+                                onValueChange = { },
+                                readOnly = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 8. Unit (read-only)
+                            UpdateInventoryTextField(
+                                label = "Unit",
+                                value = model.unit,
+                                onValueChange = { },
+                                readOnly = true
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 9. Stock Supplied Date (calendar selector)
+                            StockSuppliedDateField(
+                                label = "Stock Supplied Date",
+                                value = model.stockSuppliedDate,
+                                onValueChange = onStockSuppliedDateChanged
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 10. Updated By (editable)
+                            UpdateInventoryTextField(
+                                label = "Updated By",
+                                value = model.updatedBy,
+                                onValueChange = onUpdatedByChanged,
+                                placeholder = "Enter updated by"
+                            )
+                        }
+                    }
+
+
+                    Spacer(modifier = Modifier.height(40.dp))
+
+                    // Side by side buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Cancel Button (left)
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Gray,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp
+                            )
+                        }
+
+                        // Action Button (right) - text changes based on mode
+                        Button(
+                            onClick = onUpdateStock,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryRed,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = when (model.mode) {
+                                    DialogMode.ADD -> "Add Item"
+                                    DialogMode.UPDATE -> "Update Stock"
+                                },
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(48.dp))
+                }
+            }
+
+            // Floating close button - appears when scrolling
+            if (showCloseButton) {
+                // Horizontal background bar when scrolled down
+                if (isScrolledDown) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .height(65.dp)
+                            .background(
+                                color = Color.Gray.copy(alpha = 0.7f)
+                            )
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(20.dp)
+                        .size(35.dp)
+                        .background(
+                            color = if (isScrolledDown) Color.Gray.copy(alpha = 0.8f) else Color.Gray.copy(alpha = 0.3f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     IconButton(
                         onClick = onDismiss,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = Color.Gray
+                            tint = if (isScrolledDown) Color.White else Color.Gray,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Location Dropdown
-                AddItemDropdown(
-                    label = "Location",
-                    selectedValue = model.selectedLocation,
-                    options = model.locations,
-                    onValueSelected = onLocationSelected
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Type Dropdown
-                AddItemDropdown(
-                    label = "Type",
-                    selectedValue = model.selectedType,
-                    options = model.types,
-                    onValueSelected = onTypeSelected
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Item Name Field
-                AddItemTextField(
-                    label = "Item Name",
-                    value = model.itemName,
-                    onValueChange = onItemNameChanged,
-                    placeholder = ""
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Item Number Field
-                AddItemTextField(
-                    label = "Item Number",
-                    value = model.itemNumber,
-                    onValueChange = onItemNumberChanged,
-                    placeholder = ""
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Unit Field
-                AddItemTextField(
-                    label = "Unit",
-                    value = model.unit,
-                    onValueChange = onUnitChanged,
-                    placeholder = "NA"
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Brand Field
-                AddItemTextField(
-                    label = "Brand",
-                    value = model.brand,
-                    onValueChange = onBrandChanged,
-                    placeholder = "NA"
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Total Stock Field
-                AddItemTextField(
-                    label = "Total Stock",
-                    value = model.totalStock,
-                    onValueChange = onTotalStockChanged,
-                    placeholder = ""
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Add Item Button
-                Button(
-                    onClick = onAddItem,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryRed,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Text(
-                        text = "Add Item",
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
                 }
             }
         }
@@ -176,7 +388,7 @@ fun AddItemDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddItemDropdown(
+private fun UpdateInventoryDropdown(
     label: String,
     selectedValue: String,
     options: List<String>,
@@ -188,10 +400,10 @@ private fun AddItemDropdown(
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
         ExposedDropdownMenuBox(
@@ -205,18 +417,27 @@ private fun AddItemDropdown(
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Dropdown"
+                        contentDescription = "Dropdown",
+                        tint = PrimaryRed
                     )
                 },
                 modifier = Modifier
                     .menuAnchor()
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
-                    unfocusedBorderColor = Color.Gray,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
                     focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                ),
+                textStyle = TextStyle(
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
             )
 
@@ -229,7 +450,8 @@ private fun AddItemDropdown(
                         text = {
                             Text(
                                 text = option,
-                                fontFamily = GraphikFontFamily
+                                fontFamily = GraphikFontFamily,
+                                fontSize = 16.sp
                             )
                         },
                         onClick = {
@@ -244,42 +466,131 @@ private fun AddItemDropdown(
 }
 
 @Composable
-private fun AddItemTextField(
+private fun UpdateInventoryTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String
+    readOnly: Boolean = false,
+    placeholder: String = ""
 ) {
     Column {
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = {
-                if (placeholder.isNotEmpty()) {
+            readOnly = readOnly,
+            placeholder = if (placeholder.isNotEmpty()) {
+                {
                     Text(
                         text = placeholder,
+                        color = Color.Gray,
                         fontFamily = GraphikFontFamily,
-                        color = Color.Gray
+                        fontSize = 16.sp
                     )
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
+            } else null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Gray,
-                unfocusedBorderColor = Color.Gray,
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
                 focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White
-            )
+                unfocusedContainerColor = Color.White,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            ),
+            textStyle = TextStyle(
+                fontFamily = GraphikFontFamily,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            ),
+            singleLine = true
+        )
+    }
+}
+
+@Composable
+private fun StockSuppliedDateField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val calendar = java.util.Calendar.getInstance()
+    val year = calendar.get(java.util.Calendar.YEAR)
+    val month = calendar.get(java.util.Calendar.MONTH)
+    val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+
+    val datePickerDialog = android.app.DatePickerDialog(
+        context,
+        { _, selectedYear, selectedMonth, selectedDay ->
+            val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
+            onValueChange(formattedDate)
+        },
+        year,
+        month,
+        day
+    )
+    // Set minimum date to today (only present/future dates allowed)
+    datePickerDialog.datePicker.minDate = calendar.timeInMillis
+
+    Column(
+        modifier = Modifier.clickable {
+            datePickerDialog.show()
+        }
+    ) {
+        Text(
+            text = label,
+            fontFamily = GraphikFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        OutlinedTextField(
+            value = value,
+            onValueChange = { }, // Empty lambda since it's readOnly
+            readOnly = true,
+            trailingIcon = {
+                Icon(
+                    painter = painterResource(id = R.drawable.calendar_3x),
+                    contentDescription = "Calendar",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clickable {
+                    datePickerDialog.show()
+                },
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            ),
+            textStyle = TextStyle(
+                fontFamily = GraphikFontFamily,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            ),
+            singleLine = true
         )
     }
 }

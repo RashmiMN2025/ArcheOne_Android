@@ -29,7 +29,7 @@ fun getDefaultAdminDashboardItems(): List<AdminDashboardItem> {
             title = "Order Received",
             description = "View and process orders",
             iconName = "ic_order_received",
-            badgeCount = 1 // Sample notification badge
+            badgeCount = 0 // Will be updated from API
         ),
         AdminDashboardItem(
             id = "consumption_report",

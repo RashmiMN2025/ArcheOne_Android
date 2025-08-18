@@ -127,7 +127,7 @@ class AndroidNavigator(
     ) {
         startActivity(
             Intent(activity, HomeActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra("FROM_OTP", fromOtp)
                 putExtra("showBiometricSetup", showBiometricSetup)
                 putExtra("email", email)
@@ -135,6 +135,7 @@ class AndroidNavigator(
                 putExtra("employeeId", employeeId)
                 putExtra("fromLogin", true)
                 putExtra("navigateTo", "home")
+                putExtra("clearBackStack", true) // Force clear navigation back stack
             },
             true,
             true
@@ -298,6 +299,61 @@ class AndroidNavigator(
     override fun navigateToInventory() {
         val intent = Intent(activity, InventoryActivity::class.java)
         activity.startActivity(intent)
+    }
+
+    override fun navigateToOrderReceived() {
+        if (activity is HomeActivity) {
+            navigate("order_received")
+        } else {
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    putExtra("navigateTo", "order_received")
+                }
+            )
+        }
+    }
+
+    override fun navigateToOrderDetails(orderId: String) {
+        navController?.navigate("order_details/$orderId") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    override fun navigateToOrderHistoryDetail(orderId: String) {
+        navController?.navigate("order_history_detail/$orderId") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    override fun navigateToOrderHistory() {
+        if (activity is HomeActivity) {
+            // Direct navigation if already in HomeActivity
+            navController?.navigate("order_history") {
+                launchSingleTop = true
+            }
+        } else {
+            // Simple approach: start HomeActivity and finish current activity
+            val intent = Intent(activity, HomeActivity::class.java).apply {
+                action = "navigate_to_order_history"
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            activity.startActivity(intent)
+            activity.finish()
+        }
+    }
+
+    override fun navigateToConsumptionReport() {
+        if (activity is HomeActivity) {
+            navigate("consumption_report")
+        } else {
+            startActivity(
+                Intent(activity, HomeActivity::class.java).apply {
+                    putExtra("navigateTo", "consumption_report")
+                }
+            )
+        }
     }
 
     override fun navigateToXConnect(initialTab: String) {
