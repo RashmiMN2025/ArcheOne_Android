@@ -22,7 +22,6 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 @Composable
 fun WhatsNewDialog(
     whatsNewItems: List<WhatsNewItem>,
-    appVersion: String = "1.3",
     onDismiss: () -> Unit
 ) {
     Dialog(

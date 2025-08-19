@@ -755,7 +755,6 @@ fun HomeScreenContent(
         if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
             com.archeGlobal.one.ui.components.WhatsNewDialog(
                 whatsNewItems = whatsNewData,
-                appVersion = "1.3",
                 onDismiss = { controller.dismissWhatsNewDialog() }
             )
         }
