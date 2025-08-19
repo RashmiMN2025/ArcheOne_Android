@@ -272,7 +272,8 @@ data class VerifyOtpResponse(
     val greetingCategories1: List<ApiGreetingCategory>? = null, // changed from greetingCategories
     @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null,
     val faqList: List<FAQCategory>? = null,
-    val whatsNew: List<WhatsNewItem>? = null
+    val whatsNew: List<WhatsNewItem>? = null,
+    val smartCollateral: List<SmartCollateralCategory>? = emptyList(),
 )
 
 data class User(
@@ -499,4 +500,16 @@ data class DeskCartUpdateOrderStatusRequest(
 data class DeskCartUpdateOrderStatusResponse(
     val status: Int,
     val orders: List<DeskCartOrder>
+)
+data class SmartCollateralFile(
+    val id: Int,
+    val fileName: String,
+    val fileUrl: String,
+    val thumbnailUrl: String? = null
+)
+
+data class SmartCollateralCategory(
+    val id: Int,
+    val name: String,
+    val files: List<SmartCollateralFile>
 )

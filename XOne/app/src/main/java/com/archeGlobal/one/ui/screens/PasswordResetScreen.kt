@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -20,10 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.PasswordResetController
@@ -208,6 +212,48 @@ fun PasswordResetScreen(navigator: Navigator) {
                         fontWeight = FontWeight.Medium
                     )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                val goBackText = buildAnnotatedString {
+                    val start = length
+                    append("Go Back")
+                    addStyle(
+                        style = SpanStyle(
+                            color = Color.Black,
+                            textDecoration = TextDecoration.Underline,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        start = start,
+                        end = length
+                    )
+                    addStringAnnotation(
+                        tag = "go_back",
+                        annotation = "go_back",
+                        start = start,
+                        end = length
+                    )
+                }
+                ClickableText(
+                    text = goBackText,
+                    style = TextStyle(
+                        fontSize = 22.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    ),
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    onClick = { offset ->
+                        goBackText.getStringAnnotations(
+                            tag = "go_back",
+                            start = offset,
+                            end = offset
+                        )
+                            .firstOrNull()?.let {
+                                val activity = context as? android.app.Activity
+                                activity?.finish()
+                            }
+                    }
+                )
             }
 
             // Temporary Password Display Box

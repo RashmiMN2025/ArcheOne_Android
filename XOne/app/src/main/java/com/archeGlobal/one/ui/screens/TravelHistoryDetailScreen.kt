@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -33,8 +35,10 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import com.archeGlobal.one.utils.DateFormatter
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
+import androidx.compose.material3.Card
 
 @Composable
 fun TravelHistoryDetailScreen(
@@ -107,6 +111,19 @@ fun TravelHistoryDetailScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+
+                        val formattedCreatedDate = formatDate(
+                            java.text.SimpleDateFormat(
+                                "yyyy-MM-dd",
+                                java.util.Locale.getDefault()
+                            ).format(travelRequest.createdDate)
+                        )
+                        TravelSummaryCard(
+                            id = travelRequest.id,
+                            createdDate = formattedCreatedDate,
+                            status = travelRequest.status.name.replaceFirstChar { it.uppercase() } // e.g. Pending, Approved
+                        )
+
                         // Employee Details Card
                         TravelDetailCard(
                             title = "Employee Details"
@@ -255,17 +272,17 @@ fun TravelHistoryDetailScreen(
 
                         // Approval Details Card
                         TravelDetailCard(
-                            title = "Approval Details"
+                            title = "Approver Details"
                         ) {
-                            TravelDetailRowWithDrawableIcon(
-                                iconRes = when (travelRequest.status) {
-                                    com.archeGlobal.one.model.TravelStatus.APPROVED -> R.drawable.approved
-                                    com.archeGlobal.one.model.TravelStatus.REJECTED -> R.drawable.rejected
-                                    com.archeGlobal.one.model.TravelStatus.PENDING -> R.drawable.pending
-                                },
-                                label = "Status",
-                                value = travelRequest.status.name.lowercase().replaceFirstChar { it.uppercase() }
-                            )
+//                            TravelDetailRowWithDrawableIcon(
+//                                iconRes = when (travelRequest.status) {
+//                                    com.archeGlobal.one.model.TravelStatus.APPROVED -> R.drawable.approved
+//                                    com.archeGlobal.one.model.TravelStatus.REJECTED -> R.drawable.rejected
+//                                    com.archeGlobal.one.model.TravelStatus.PENDING -> R.drawable.pending
+//                                },
+//                                label = "Status",
+//                                value = travelRequest.status.name.lowercase().replaceFirstChar { it.uppercase() }
+//                            )
 
                             // Show rejection reason if the status is rejected and reason is available
                             if (travelRequest.status == com.archeGlobal.one.model.TravelStatus.REJECTED &&
@@ -288,19 +305,93 @@ fun TravelHistoryDetailScreen(
                                 value = travelRequest.approverEmail ?: "N/A"
                             )
 
-                            val formattedCreatedDate = formatDate(
-                                java.text.SimpleDateFormat(
-                                    "yyyy-MM-dd",
-                                    java.util.Locale.getDefault()
-                                ).format(travelRequest.createdDate)
-                            )
-                            TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.calendar_3x,
-                                label = "Created At",
-                                value = formattedCreatedDate
-                            )
+//                            val formattedCreatedDate = formatDate(
+//                                java.text.SimpleDateFormat(
+//                                    "yyyy-MM-dd",
+//                                    java.util.Locale.getDefault()
+//                                ).format(travelRequest.createdDate)
+//                            )
+//                            TravelDetailRowWithDrawableIcon(
+//                                iconRes = R.drawable.calendar_3x,
+//                                label = "Created At",
+//                                value = formattedCreatedDate
+//                            )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TravelSummaryCard(
+    id: String,
+    createdDate: String,
+    status: String
+) {
+    val (backgroundColor, textColor, borderColor) = when (status.lowercase()) {
+        "pending" -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), Color(0xFFFFA500))
+        "approved" -> Triple(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000), Color(0xFF008000))
+        "rejected", "cancelled" -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), Color(0xFFFF0000))
+        "closed" -> Triple(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080), Color(0xFF808080))
+        else -> Triple(Color.Gray.copy(alpha = 0.15f), Color.Gray, Color.Gray)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column {
+                    Text(
+                        text = "#$id",
+                        fontSize = 18.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                    Row(modifier = Modifier.padding(top = 8.dp)) {
+                        Text(
+                            text = "Created At: ",
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = createdDate,
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                Card(
+                    modifier = Modifier
+                        .height(20.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = backgroundColor),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    border = BorderStroke(1.dp, borderColor)
+                ) {
+                    Text(
+                        text = "Status: $status",
+                        fontSize = 13.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = textColor,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
                 }
             }
         }
@@ -316,7 +407,7 @@ fun TravelDetailCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = 1.dp,
-        backgroundColor = Color.White
+        backgroundColor = Color(0xFFF6F4EE)
     ) {
         Column(
             modifier = Modifier
@@ -334,44 +425,6 @@ fun TravelDetailCard(
 
             content()
         }
-    }
-}
-
-@Composable
-fun TravelDetailRowWithIcon(
-    icon: ImageVector,
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontFamily = GraphikFontFamily,
-            color = Color.Gray,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
-            color = Color.Black,
-            textAlign = TextAlign.End
-        )
     }
 }
 

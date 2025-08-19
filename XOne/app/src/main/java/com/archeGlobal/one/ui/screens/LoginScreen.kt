@@ -573,7 +573,40 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
                         onClick = {
-                            showOtpTermsDialog = true
+                            when {
+                                email.isBlank() -> {
+                                    CustomToast.showErrorToast(context, "Email ID is required!")
+                                }
+                                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                                    CustomToast.showErrorToast(context, "Please enter a valid Email ID!")
+                                }
+                                mobile.isBlank() -> {
+                                    CustomToast.showErrorToast(context, "Mobile number is required!")
+                                }
+                                mobile.length != 10 -> {
+                                    CustomToast.showErrorToast(context, "Mobile number must be 10 digits!")
+                                }
+                                employeeId.isBlank() -> {
+                                    CustomToast.showErrorToast(context, "Employee ID is required!")
+                                }
+                                else -> {
+                                    if (termsAccepted) {
+                                        // Skip popup - directly send OTP
+                                        isLoading = true
+                                        controller.sendOtp(email, mobile, employeeId) { message, isError ->
+                                            isLoading = false
+                                            if (!isError) {
+                                                navigator.navigateToOtpVerification(email, mobile, employeeId)
+                                            } else {
+                                                errorMessage = message
+                                            }
+                                        }
+                                    } else {
+                                        // Show popup for first time
+                                        showOtpTermsDialog = true
+                                    }
+                                }
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth(0.97f)
@@ -639,7 +672,7 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = mobile,
                         onValueChange = {
-                            if (it.all { char -> char.isDigit() }) {
+                            if (it.all { char -> char.isDigit() } && it.length <= 10) {
                                 mobile = it
                             }
                         },
@@ -709,7 +742,40 @@ fun LoginScreen(
                     // Login Button
                     Button(
                         onClick = {
-                            showOtpTermsDialog = true
+                            when {
+                                email.isBlank() -> {
+                                    CustomToast.showErrorToast(context, "Email ID is required!")
+                                }
+                                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                                    CustomToast.showErrorToast(context, "Please enter a valid email address")
+                                }
+                                mobile.isBlank() -> {
+                                    CustomToast.showErrorToast(context, "Mobile number is required!")
+                                }
+                                mobile.length != 10 -> {
+                                    CustomToast.showErrorToast(context, "Please enter a  10 digit Mobile Number!")
+                                }
+                                employeeId.isBlank() -> {
+                                    CustomToast.showErrorToast(context, "Employee ID is required!")
+                                }
+                                else -> {
+                                    if (termsAccepted) {
+                                        // Skip popup - directly send OTP
+                                        isLoading = true
+                                        controller.sendOtp(email, mobile, employeeId) { message, isError ->
+                                            isLoading = false
+                                            if (!isError) {
+                                                navigator.navigateToOtpVerification(email, mobile, employeeId)
+                                            } else {
+                                                errorMessage = message
+                                            }
+                                        }
+                                    } else {
+                                        // Show popup for first time
+                                        showOtpTermsDialog = true
+                                    }
+                                }
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth(0.97f)
@@ -1389,21 +1455,24 @@ fun LoginScreen(
                 onDismissRequest = {
                     if (showOtpTermsDialog) showOtpTermsDialog = false
                     if (showMfaTermsDialog) showMfaTermsDialog = false
-                }
+                },
+                properties = DialogProperties(
+                    usePlatformDefaultWidth = false // removes built-in margins
+                )
             ) {
                 Surface(
                     shape = RoundedCornerShape(18.dp),
-                    color = Color.White,
+                    color = Color(0xFFF6F4EE),
                     modifier = Modifier
-                        .fillMaxWidth(1f) // Increase width to 98% of the screen
-                        .padding(horizontal = 0.dp, vertical = 12.dp)
+                        .fillMaxWidth(0.94f) // 98% of actual screen width
+                        .padding(horizontal = 8.dp, vertical = 12.dp)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(20.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_policy_default), // Use your document icon
+                            painter = painterResource(id = R.drawable.busjust), // Use your document icon
                             contentDescription = "Document",
                             tint = Color(0xFFDD3825),
                             modifier = Modifier.size(48.dp)
@@ -1412,7 +1481,7 @@ fun LoginScreen(
                         Text(
                             "Terms and condition",
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontFamily = GraphikFontFamily,
                             color = Color.Black,
                             textAlign = TextAlign.Center
@@ -1420,12 +1489,20 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         Box(
                             modifier = Modifier
-                                .heightIn(min = 120.dp, max = 260.dp)
+                                .fillMaxWidth()
+                                .heightIn(min = 200.dp, max = 400.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.Gray,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
                                 .verticalScroll(rememberScrollState())
-                                .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
                                 .padding(12.dp)
                         ) {
-                            Column {
+                            Column(
+                                modifier = Modifier
+                                    .padding(6.dp)
+                            ) {
                                 Text(
                                     "Welcome to Arche's official application.\n\n" +
                                         "This application is the property of Arche Global Private Limited and is intended solely for authorized use by employees, contractors, or designated users. By accessing or using this application, you agree to the following terms:\n\n",
@@ -1433,7 +1510,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    lineHeight = 18.sp
+                                    lineHeight = 20.sp
                                 )
                                 Text(
                                     "✅ Usage Terms\n\n",
@@ -1441,7 +1518,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    lineHeight = 18.sp
+                                    lineHeight = 20.sp
                                 )
                                 Text(
                                     "- You acknowledge that this application is owned and managed by Arche Global Private Limited.\n" +
@@ -1452,7 +1529,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    lineHeight = 18.sp
+                                    lineHeight = 20.sp
                                 )
                                 Text(
                                     "🔐 Privacy & Security\n\n",
@@ -1460,7 +1537,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    lineHeight = 18.sp
+                                    lineHeight = 20.sp
                                 )
                                 Text(
                                     "- Your data is protected under applicable data protection laws and internal security protocols.\n" +
@@ -1470,7 +1547,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    lineHeight = 18.sp
+                                    lineHeight = 20.sp
                                 )
                             }
                         }
@@ -1484,21 +1561,23 @@ fun LoginScreen(
                                 onClick = {
                                     if (showOtpTermsDialog) showOtpTermsDialog = false
                                     if (showMfaTermsDialog) showMfaTermsDialog = false
+                                    CustomToast.showErrorToast(context, "Please accept the terms and condition")
                                 },
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(46.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.LightGray,
+                                    containerColor = Color(0x9ADED9D9),
                                     contentColor = Color.Black
                                 ),
+                                border = BorderStroke(1.dp, Color.LightGray),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
                                     "Cancel",
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 14.sp,
                                     color = Color.Black
                                 )
                             }
@@ -1534,8 +1613,8 @@ fun LoginScreen(
                                 Text(
                                     "Accept",
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
                                     color = Color.White
                                 )
                             }

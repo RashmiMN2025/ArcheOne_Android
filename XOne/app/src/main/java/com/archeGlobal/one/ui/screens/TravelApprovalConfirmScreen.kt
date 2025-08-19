@@ -155,7 +155,7 @@ fun TravelApprovalConfirmScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    "ID: ${selectedRequest.id}",
+                                    "#${selectedRequest.id}",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
@@ -179,7 +179,7 @@ fun TravelApprovalConfirmScreen(
                                         .padding(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
                                     Text(
-                                        selectedRequest.status.name,
+                                        text = "Status: $selectedRequest.status.name",
                                         color = Color.Black,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium

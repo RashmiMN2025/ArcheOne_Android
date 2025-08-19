@@ -13,6 +13,9 @@ class RaiseConcernActivity : ComponentActivity() {
 
         // Get the source from intent extras, default to "helpdesk" if not specified
         val source = intent.getStringExtra("source") ?: "helpdesk"
+        val prefilledCategory = intent.getStringExtra("prefilledCategory")
+
+        val title = if (source == "asset") "Raise a Ticket" else "Raise a Concern"
 
         enableEdgeToEdge()
         window.statusBarColor = android.graphics.Color.TRANSPARENT
@@ -21,12 +24,17 @@ class RaiseConcernActivity : ComponentActivity() {
         setContent {
             XOneTheme {
                 RaiseConcernScreen(
-                    onBackPressed = { // Return to the appropriate screen based on source
+                    onBackPressed = {
                         if (source == "asset") {
                             setResult(RESULT_OK)
+                            finish()
+                        } else {
+                            finish()
                         }
-                        finish()
-                    }
+                    },
+                    title = title,
+                    source = source,
+                    prefilledCategory = prefilledCategory // ✅ pass prefilled category
                 )
             }
         }

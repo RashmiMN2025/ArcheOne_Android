@@ -151,7 +151,7 @@ fun TravelApproveScreen(
                             .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
-                        backgroundColor = Color.White
+                        backgroundColor = Color(0xFFF6F4EE)
                     ) {
                         val scrollState = rememberScrollState()
                         Column(
@@ -167,7 +167,7 @@ fun TravelApproveScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "ID: ${travelRequest.id}",
+                                    text = "#${travelRequest.id}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily,
@@ -180,7 +180,7 @@ fun TravelApproveScreen(
                                     elevation = 0.dp
                                 ) {
                                     Text(
-                                        text = "Pending",
+                                        text = "Status: Pending",
                                         fontSize = 14.sp,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
@@ -287,7 +287,7 @@ fun TravelApproveScreen(
                                     unfocusedBorderColor = Color(0xFFE0E0E0),
                                     textColor = Color.Black,
                                     placeholderColor = Color.Gray,
-                                    backgroundColor = Color.White
+                                    backgroundColor = Color(0xFFF6F4EE)
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             )

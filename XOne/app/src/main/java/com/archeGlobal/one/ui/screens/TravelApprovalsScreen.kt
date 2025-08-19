@@ -312,7 +312,7 @@ fun ApprovalRequestCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = 4.dp,
-        backgroundColor = Color.White
+        backgroundColor = Color(0xFFF6F4EE)
     ) {
         Column(
             modifier = Modifier
@@ -326,7 +326,7 @@ fun ApprovalRequestCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Text(
-                    text = "ID: ${request.id}",
+                    text = "#${request.id}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = GraphikFontFamily,
@@ -748,12 +748,12 @@ fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
     }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor,
         elevation = 0.dp
     ) {
         Text(
-            text = text,
+            text = "Status: $text",
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,

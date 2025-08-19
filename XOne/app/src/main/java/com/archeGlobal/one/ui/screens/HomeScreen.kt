@@ -755,7 +755,6 @@ fun HomeScreenContent(
         if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
             com.archeGlobal.one.ui.components.WhatsNewDialog(
                 whatsNewItems = whatsNewData,
-                appVersion = "1.3",
                 onDismiss = { controller.dismissWhatsNewDialog() }
             )
         }
@@ -1451,6 +1450,7 @@ private fun formatServiceTitle(title: String): String {
         "Profile Connect" -> "Profile\nConnect"
         "Arche Odyssey" -> "Arche\nOdyssey"
         "Idea Vault", "IdeaVault" -> "IdeaVault"
+        "Smart Collateral" -> "Smart\nCollateral"
         else -> {
             // For any other multi-word titles, always split at a space
             if (title.contains(" ")) {
@@ -1574,18 +1574,17 @@ private fun AppItem(
                                 bottomEnd = 0.dp
                             )
                         )
-                        .padding(horizontal = 9.dp, vertical = 0.dp)
+                        .padding(horizontal = 9.dp, vertical = 2.dp)
                         .height(16.dp)
                 ) {
                     Text(
                         text = stickerText,
                         color = Color.White,
-                        fontSize = 8.sp,
+                        fontSize = 10.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .offset(y = (-1).dp)
                     )
                 }
             }
@@ -1601,7 +1600,7 @@ private fun AppIcon(
     Box(modifier = modifier) {
         // Check if it's a default app
         when (title) {
-            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart",
+            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart", "Smart Collateral",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
             "Locations", "TravelDesk", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse", "HelpDesk" -> {
@@ -1651,6 +1650,7 @@ private fun AppIcon(
                                 "ideavault" -> R.drawable.idea_vault
                                 "pulse" -> R.drawable.pulse
                                 "helpdesk" -> R.drawable.helpdesk
+                                "smartcollateral" -> R.drawable.smart
                                 else -> R.drawable.mydocuments
                             }
                         ),

@@ -37,6 +37,7 @@ class MpinActivity : ComponentActivity() {
                         val loginController = com.archeGlobal.one.controller.LoginController(this, com.archeGlobal.one.navigation.AndroidNavigator(this))
                         loginController.loginWithToken(token, email, mobile, employeeId) { msg, isError ->
                             if (!isError) {
+                                com.archeGlobal.one.utils.CustomToast.showErrorToast(this, "Your MPIN set successfully")
                                 // Only after successful login, save user data and set login state
                                 val userDataManager = com.archeGlobal.one.utils.UserDataManager.getInstance(this)
                                 userDataManager.setIsLoggedIn(true)
@@ -45,17 +46,23 @@ class MpinActivity : ComponentActivity() {
                                 // userDataManager.saveUserDataFromResponse(...) // If not already done in LoginController
                             }
                             // Pass all data to HomeActivity
-                            val intent = android.content.Intent(this, com.archeGlobal.one.HomeActivity::class.java).apply {
-                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                putExtra("email", email)
-                                putExtra("mobile", mobile)
-                                putExtra("employeeId", employeeId)
-                                putExtra("token", token)
-                                putExtra("mpin", mpin)
-                                putExtra("fromMpin", true)
-                            }
-                            startActivity(intent)
-                            finish()
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                val intent = android.content.Intent(
+                                    this,
+                                    com.archeGlobal.one.HomeActivity::class.java
+                                ).apply {
+                                    flags =
+                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    putExtra("email", email)
+                                    putExtra("mobile", mobile)
+                                    putExtra("employeeId", employeeId)
+                                    putExtra("token", token)
+                                    putExtra("mpin", mpin)
+                                    putExtra("fromMpin", true)
+                                }
+                                startActivity(intent)
+                                finish()
+                            }, 1200)
                         }
                     },
                     onForgotMpin = {

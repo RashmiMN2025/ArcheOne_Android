@@ -135,4 +135,7 @@ class PreviewNavigator : Navigator {
     override fun popBackStack() {
         // No-op for preview purposes
     }
+
+    override fun navigateToSmartCollateral() {
+    }
 }

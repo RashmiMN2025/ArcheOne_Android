@@ -125,7 +125,7 @@ fun TravelApprovalDetailsScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "ID: ${travelRequest.id}",
+                                        text = "#${travelRequest.id}",
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = GraphikFontFamily
@@ -213,6 +213,10 @@ private fun StatusBadge(status: TravelStatus) {
             .background(color = bgColor, shape = RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
-        Text(text = text, color = Color.White, fontSize = 12.sp, fontFamily = GraphikFontFamily)
+        Text(
+            text = "Status: $text",
+            color = Color.White,
+            fontSize = 12.sp,
+            fontFamily = GraphikFontFamily)
     }
 }

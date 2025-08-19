@@ -33,6 +33,7 @@ import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.utils.CustomToast
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -97,7 +98,7 @@ fun OtpVerificationScreen(
                 message
             }
 
-            Toast.makeText(context, formattedMessage, Toast.LENGTH_LONG).show()
+            CustomToast.showErrorToast(context, formattedMessage)
             errorMessage = null
         }
     }
@@ -288,7 +289,7 @@ fun OtpVerificationScreen(
                                 controller.resendOtp(email, mobile, employeeId) { message ->
                                     if (message.contains("success", ignoreCase = true)) {
                                         timeLeft = 60 // Restart timer
-                                        Toast.makeText(context, "OTP sent successfully", Toast.LENGTH_SHORT).show()
+                                        CustomToast.showErrorToast(context, "OTP sent successfully")
                                     } else {
                                         errorMessage = message
                                     }
@@ -300,9 +301,9 @@ fun OtpVerificationScreen(
                             .padding(start = 8.dp)
                             .height(36.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE0B4AA),
+                            containerColor = Color(0xFFEFE0DF),
                             contentColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFE0B4AA),
+                            disabledContainerColor = Color(0xFFEFE0DF),
                             disabledContentColor = Color(0xFFDD3825)
                         ),
                         border = BorderStroke(1.dp, Color(0xFFDD3825)),
@@ -325,11 +326,22 @@ fun OtpVerificationScreen(
                     onClick = {
                         isLoading = true
                         errorMessage = null
-                        if (otp.length != 6) {
-                            Toast.makeText(context, "Please enter a valid 6-digit OTP", Toast.LENGTH_SHORT).show()
+
+                        val otp = otpDigits.joinToString("")
+
+                        // ✅ Check if all OTP boxes are empty
+                        if (otp.isBlank()) {
+                            CustomToast.showErrorToast(context, "Please enter an OTP!")
                             isLoading = false
                             return@Button
                         }
+
+                        if (otp.length < 6) {
+                            CustomToast.showErrorToast(context, "Please enter a valid OTP!")
+                            isLoading = false
+                            return@Button
+                        }
+
                         controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
                             isLoading = false
                             if (isError) {
@@ -346,7 +358,7 @@ fun OtpVerificationScreen(
                         disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
                     ),
                     shape = MaterialTheme.shapes.medium,
-                    enabled = !isLoading && otp.length == 6
+                    enabled = !isLoading
                 ) {
                     Text(
                         "Verify OTP",

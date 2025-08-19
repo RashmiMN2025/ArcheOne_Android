@@ -62,7 +62,7 @@ fun AssetScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            modifier = Modifier.offset(x = 24.dp),
+                            modifier = Modifier.offset(x = 27.dp),
                             text = "Asset Information",
                             color = Color.Black,
                             fontFamily = GraphikFontFamily,
@@ -200,7 +200,7 @@ fun AssetScreen(
                                         )
                                         Spacer(modifier = Modifier.width(16.dp))
                                         Text(
-                                            text = "Report any issues you may have with your assigned asset using \"Raise an issue\" bar below.",
+                                            text = "Report any issues you may have with your assigned asset using \"Raise a Ticket\" bar below.",
                                             color = Color.Black,
                                             fontSize = 16.sp,
                                             fontFamily = GraphikFontFamily,
@@ -209,9 +209,18 @@ fun AssetScreen(
                                     }
                                 }
 
+                                val context = LocalContext.current
+
                                 // Raise an Issue Button
                                 Button(
-                                    onClick = { showIssueDialog = true },
+                                    onClick = {
+                                        // Navigate to RaiseConcernActivity with Asset prefilled
+                                        val intent = android.content.Intent(context, com.archeGlobal.one.RaiseConcernActivity::class.java).apply {
+                                            putExtra("source", "asset")
+                                            putExtra("prefilledCategory", "Asset") // asset category pre-selected
+                                        }
+                                        context.startActivity(intent)
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(top = 24.dp),
@@ -221,7 +230,7 @@ fun AssetScreen(
                                     shape = RoundedCornerShape(25.dp)
                                 ) {
                                     Text(
-                                        "Raise an Issue",
+                                        "Raise a Ticket",
                                         modifier = Modifier.padding(vertical = 8.dp),
                                         color = Color.White,
                                         fontSize = 18.sp,

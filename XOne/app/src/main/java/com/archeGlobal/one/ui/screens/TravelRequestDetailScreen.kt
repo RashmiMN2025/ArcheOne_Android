@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
+import com.archeGlobal.one.model.TravelStatus
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
@@ -109,7 +110,7 @@ fun TravelRequestDetailScreen(
                             .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
-                        backgroundColor = Color.White
+                        backgroundColor = Color(0xFFF6F4EE)
                     ) {
                         val scrollState = rememberScrollState()
                         Column(
@@ -125,7 +126,7 @@ fun TravelRequestDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "ID: ${travelRequest.id}",
+                                    text = "#${travelRequest.id}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily,
@@ -299,103 +300,6 @@ fun TravelRequestDetailScreen(
 }
 
 @Composable
-fun DetailCard(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = 1.dp,
-        backgroundColor = Color.White
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = GraphikFontFamily,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            content()
-        }
-    }
-}
-
-@Composable
-fun DetailRow(
-    label: String,
-    value: String,
-    valueColor: Color = Color.Black
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Text(
-            text = label,
-            fontSize = 14.sp, // Smaller font size
-            fontFamily = GraphikFontFamily,
-            color = Color.Gray,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.width(140.dp) // Fixed width for alignment
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp, // Smaller font size
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal, // Normal font weight
-            color = valueColor
-        )
-    }
-}
-
-@Composable
-fun DetailRowWithIcon(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = Color.Gray,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = label,
-            fontSize = 13.sp,
-            fontFamily = GraphikFontFamily,
-            color = Color.Gray,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.width(130.dp)
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = value,
-            fontSize = 13.sp,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Normal,
-            color = Color.Black,
-            textAlign = TextAlign.End
-        )
-    }
-}
-
-@Composable
 fun DetailRowWithDrawableIcon(
     iconRes: Int,
     label: String,
@@ -463,18 +367,18 @@ private fun String.capitalize(): String {
 @Composable
 fun TravelRequestStatusBadge(status: com.archeGlobal.one.model.TravelStatus) {
     val (backgroundColor, textColor, text) = when (status) {
-        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF155724), "Approved")
-        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFF721C24), "Rejected")
-        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
+        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFE6F4EA), Color(0xFF34A853), "Approved")
+        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFFCE8E6), Color(0xFFEA4335), "Rejected")
+        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFEF7E0), Color(0xFFFBBC05), "Pending")
     }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor,
         elevation = 0.dp
     ) {
         Text(
-            text = text,
+            text = "Status: $text",
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,

@@ -97,6 +97,15 @@ fun RaiseConcernScreen(
         )
     }
 
+    val assetSubcategories = listOf(
+        "Incorrect asset tagging",
+        "Asset return",
+        "Incorrect asset details",
+        "Asset malfunction",
+        "Asset not allocated",
+        "Asset transfer"
+    )
+
     // Subcategory mapping - extract from FAQ data for help desk, use hardcoded for SOS
     val subcategoryMap = if (isHelpDeskTicket) {
         // Extract subcategories from FAQ data by accessing the original FAQ structure
@@ -153,7 +162,8 @@ fun RaiseConcernScreen(
     }
 
     // Get available subcategories for selected category
-    val availableSubcategories = selectedCategory?.let { subcategoryMap[it] } ?: emptyList()
+    val availableSubcategories = if (source == "asset") assetSubcategories
+    else selectedCategory?.let { subcategoryMap[it] } ?: emptyList()
 
     // Reset subcategory when category changes (unless it's pre-filled)
     LaunchedEffect(selectedCategory) {
@@ -555,7 +565,7 @@ fun RaiseConcernScreen(
                 } // End of category dropdown conditional
 
                 // Subcategory dropdown (show when category is selected or pre-filled) - only for helpdesk tickets
-                if (selectedCategory != null && isHelpDeskTicket) {
+                if (selectedCategory != null && (isHelpDeskTicket || source == "asset")) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

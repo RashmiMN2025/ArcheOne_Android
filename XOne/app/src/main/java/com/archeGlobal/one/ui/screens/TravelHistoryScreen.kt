@@ -197,7 +197,7 @@ fun TravelRequestCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = 1.dp,
-        backgroundColor = Color.White
+        backgroundColor = Color(0xFFF6F4EE)
     ) {
         Column(
             modifier = Modifier
@@ -211,7 +211,7 @@ fun TravelRequestCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "ID: ${travelRequest.id}",
+                    text = "#${travelRequest.id}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = GraphikFontFamily
@@ -335,11 +335,11 @@ fun StatusTag(status: TravelStatus) {
 
     Surface(
         color = backgroundColor,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         modifier = Modifier.padding(4.dp)
     ) {
         Text(
-            text = text,
+            text = "Status: $text",
             color = textColor,
             fontSize = 12.sp,
             fontWeight = FontWeight.Normal,
@@ -363,46 +363,6 @@ fun DetailItem(
     ) {
         Icon(
             painter = painterResource(id = icon),
-            contentDescription = label,
-            tint = Color.Gray,
-            modifier = Modifier.size(18.dp)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = Color.Gray,
-            fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Normal,
-            fontFamily = GraphikFontFamily
-        )
-    }
-}
-
-@Composable
-fun DetailItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
             contentDescription = label,
             tint = Color.Gray,
             modifier = Modifier.size(18.dp)
