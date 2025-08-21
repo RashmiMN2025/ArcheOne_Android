@@ -80,9 +80,7 @@ fun BottomNavigationBar(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 12.sp,
-                        color = homeSelectedColor, // Always black
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        color = homeSelectedColor,
                     )
                 }
             },

@@ -83,6 +83,7 @@ import com.archeGlobal.one.ui.components.EventPopup
 import com.archeGlobal.one.ui.components.FooterScaffold
 import com.archeGlobal.one.ui.components.PrideMonthDialog
 import com.archeGlobal.one.ui.components.UniversalLoader
+import com.archeGlobal.one.ui.components.WhatsNewDialog
 import com.archeGlobal.one.ui.theme.*
 import com.archeGlobal.one.ui.theme.getColorForApp
 import com.archeGlobal.one.utils.BiometricHelper
@@ -279,7 +280,7 @@ fun ResponsiveHomeScreen(
         controller = controller,
         eventData = eventData,
         showEventPopup = showEventPopup,
-        onDismissEventPopup = onDismissEventPopup,
+        onDismissEventPopup = controller::dismissEventPopup,
         columns = columns, // Pass the column count
         navigator = navigator
     )
@@ -718,19 +719,19 @@ fun HomeScreenContent(
 
         // Show event popup if available and visibility is true
         // Only show regular event popup if it's not Pride Month
-        if (!isPrideMonth && eventData != null && showEventPopup) {
-            Log.d("HomeScreen", "Showing event popup with data: Title=${eventData.title}, Image=${eventData.image}")
-            Log.d("HomeScreen", "Event description: ${eventData.description}")
-            EventPopup(
-                event = eventData,
-                onDismiss = onDismissEventPopup
-            )
-        } else {
-            Log.d("HomeScreen", "Not showing event popup - eventData present: ${eventData != null}, showEventPopup: $showEventPopup")
-            if (eventData != null) {
-                Log.d("HomeScreen", "Event data exists but popup flag is false - Title: ${eventData.title}")
-            }
-        }
+//        if (!isPrideMonth && eventData != null && showEventPopup) {
+//            Log.d("HomeScreen", "Showing event popup with data: Title=${eventData.title}, Image=${eventData.image}")
+//            Log.d("HomeScreen", "Event description: ${eventData.description}")
+//            EventPopup(
+//                event = eventData,
+//                onDismiss = onDismissEventPopup
+//            )
+//        } else {
+//            Log.d("HomeScreen", "Not showing event popup - eventData present: ${eventData != null}, showEventPopup: $showEventPopup")
+//            if (eventData != null) {
+//                Log.d("HomeScreen", "Event data exists but popup flag is false - Title: ${eventData.title}")
+//            }
+//        }
 
         // Show celebration dialog
         val showCelebrationDialog = controller.showCelebrationDialog.collectAsState().value
@@ -750,12 +751,26 @@ fun HomeScreenContent(
         }
 
         // Show WhatsNew dialog
-        val showWhatsNewDialog = controller.showWhatsNewDialog.collectAsState().value
-        val whatsNewData = com.archeGlobal.one.utils.UserDataManager.getInstance(context).getWhatsNewData()
+        val showWhatsNewDialog by controller.showWhatsNewDialog.collectAsState()
+        val eventData = controller.eventData.collectAsState().value
+        val showEventPopup by controller.showEventPopup.collectAsState()
+
+        val whatsNewData = UserDataManager.getInstance(context).getWhatsNewData()
+
         if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
-            com.archeGlobal.one.ui.components.WhatsNewDialog(
+            WhatsNewDialog(
                 whatsNewItems = whatsNewData,
-                onDismiss = { controller.dismissWhatsNewDialog() }
+                onDismiss = {
+                    controller.dismissWhatsNewDialog()
+                    controller.showEventPopupDialog()  // Show event popup after dismiss
+                }
+            )
+        }
+
+        if (showEventPopup && eventData != null) {
+            EventPopup(
+                event = eventData,
+                onDismiss = { controller.dismissEventPopup() }
             )
         }
 
@@ -1451,6 +1466,7 @@ private fun formatServiceTitle(title: String): String {
         "Arche Odyssey" -> "Arche\nOdyssey"
         "Idea Vault", "IdeaVault" -> "IdeaVault"
         "Smart Collateral" -> "Smart\nCollateral"
+        "MeetSpace" -> "MeetSpace"
         else -> {
             // For any other multi-word titles, always split at a space
             if (title.contains(" ")) {
@@ -1600,7 +1616,7 @@ private fun AppIcon(
     Box(modifier = modifier) {
         // Check if it's a default app
         when (title) {
-            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart", "Smart Collateral",
+            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart", "Smart Collateral", "MeetSpace",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
             "Locations", "TravelDesk", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse", "HelpDesk" -> {
@@ -1651,6 +1667,7 @@ private fun AppIcon(
                                 "pulse" -> R.drawable.pulse
                                 "helpdesk" -> R.drawable.helpdesk
                                 "smartcollateral" -> R.drawable.smart
+                                "meetspace" -> R.drawable.meeting
                                 else -> R.drawable.mydocuments
                             }
                         ),

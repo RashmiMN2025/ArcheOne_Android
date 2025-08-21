@@ -284,7 +284,7 @@ fun MpinScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp, 20.dp, 8.dp, 28.dp),
+                        .padding(6.dp, 20.dp, 6.dp, 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -298,7 +298,7 @@ fun MpinScreen(
                         fontWeight = FontWeight.Normal,
                         color = Color.Black.copy(alpha = 0.6f),
                         modifier = Modifier
-                            .padding(horizontal = 4.dp),
+                            .padding(horizontal = 2.dp),
                         textAlign = TextAlign.Center,
                         lineHeight = 18.sp
                     )
@@ -390,7 +390,7 @@ fun MpinScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(

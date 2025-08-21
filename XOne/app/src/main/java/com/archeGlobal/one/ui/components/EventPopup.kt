@@ -37,7 +37,7 @@ fun EventPopup(
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = Color(0xFFF6F4EE)
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 8.dp

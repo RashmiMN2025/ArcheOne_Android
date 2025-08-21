@@ -266,6 +266,8 @@ class HomeController(
         // Hide the popup
         _showEventPopup.value = false
         Log.d("EventController", "Set showEventPopup to false")
+
+        _showEventPopup.value = false
     }
 
     // Format date as yyyy-MM-dd
@@ -422,6 +424,10 @@ class HomeController(
         _showWhatsNewDialog.value = false
         // Mark as shown so it doesn't show again
         preferencesManager.setBoolean(KEY_WHATS_NEW_SHOWN, true)
+    }
+
+    fun showEventPopupDialog() {
+        _showEventPopup.value = true
     }
 
     private fun checkWhatsNewDialog() {

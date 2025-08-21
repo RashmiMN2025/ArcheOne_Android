@@ -21,14 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
+import com.archeGlobal.one.ui.theme.GraphikFontFamily
 
-/**
- * A custom bottom navigation bar for the Chat screen that shows all tabs
- * but only highlights the Chat tab as selected.
- */
 @Composable
 fun ChatBottomNavigationBar(
     onHomeClick: () -> Unit,
@@ -58,7 +56,8 @@ fun ChatBottomNavigationBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        val homeIconRes = if (isUsingPrideIcon) R.drawable.homepride else R.drawable.arche_black2
+                        val homeIconRes = if (isUsingPrideIcon) R.drawable.homepride
+                        else R.drawable.arche_black2
                         Image(
                             painter = painterResource(id = homeIconRes),
                             contentDescription = "Home",
@@ -68,18 +67,19 @@ fun ChatBottomNavigationBar(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Home",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = unselectedColor
+                            color = homeSelectedColor
                         )
                     }
                 }
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = homeSelectedColor, // Black for home when selected
-                unselectedIconColor = unselectedColor,
+                unselectedIconColor = homeSelectedColor,
                 selectedTextColor = homeSelectedColor, // Black for home when selected
-                unselectedTextColor = unselectedColor,
+                unselectedTextColor = homeSelectedColor,
                 indicatorColor = Color.White
             ),
             alwaysShowLabel = false
@@ -104,7 +104,8 @@ fun ChatBottomNavigationBar(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Chat",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = selectedColor
                         )
@@ -140,7 +141,8 @@ fun ChatBottomNavigationBar(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "SOS",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = unselectedColor
                         )
@@ -176,7 +178,8 @@ fun ChatBottomNavigationBar(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Profile",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
                             color = unselectedColor
                         )

@@ -2,7 +2,9 @@ package com.archeGlobal.one.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,15 +36,17 @@ fun WhatsNewDialog(
     ) {
         Surface (
             modifier = Modifier
-                .fillMaxWidth(0.94f) // 98% of actual screen width
-                .padding(horizontal = 8.dp, vertical = 12.dp),
+                .fillMaxWidth(0.9f) // 98% of actual screen width
+//                .padding(horizontal = 8.dp, vertical = 14.dp),
+                .wrapContentHeight(),
             shape = RoundedCornerShape(24.dp),
             color = Color(0xFFF6F4EE)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(18.dp),
+                    .padding(18.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // App icon
@@ -58,7 +62,7 @@ fun WhatsNewDialog(
                 // Title
                 Text(
                     text = "What's New",
-                    fontSize = 19.sp,
+                    fontSize = 20.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
@@ -70,12 +74,12 @@ fun WhatsNewDialog(
                 // Subtitle
                 Text(
                     text = "Explore the latest updates to enhance your experience!",
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
-                    lineHeight = 17.sp
+                    lineHeight = 18.sp
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -104,7 +108,7 @@ fun WhatsNewDialog(
 
                             Text(
                                 text = item.category,
-                                fontSize = 14.sp,
+                                fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.Black
@@ -121,11 +125,11 @@ fun WhatsNewDialog(
                         ) {
                             Text(
                                 text = item.description,
-                                fontSize = 10.sp,
+                                fontSize = 12.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.Black,
-                                lineHeight = 22.sp
+                                lineHeight = 18.sp
                             )
                         }
 
@@ -156,9 +160,9 @@ fun WhatsNewDialog(
                 ) {
                     Text(
                         text = "Continue",
-                        fontSize = 15.sp,
+                        fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
