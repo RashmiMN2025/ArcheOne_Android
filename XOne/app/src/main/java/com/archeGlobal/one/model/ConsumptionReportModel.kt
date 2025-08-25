@@ -52,8 +52,8 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
                 items = this.map { stockItem ->
                     ConsumptionStockItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.totalStock.toIntOrNull() ?: 0,
-                        color = getStockColor(stockItem.totalStock.toIntOrNull() ?: 0)
+                        quantity = stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0,
+                        color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
                     )
                 }
             )
@@ -69,8 +69,8 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
                 items = items.map { stockItem ->
                     ConsumptionStockItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.totalStock.toIntOrNull() ?: 0,
-                        color = getStockColor(stockItem.totalStock.toIntOrNull() ?: 0)
+                        quantity = stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0,
+                        color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
                     )
                 }
             )

@@ -52,7 +52,7 @@ data class InventoryItem(
     val category: String,
     val location: String,
     val brand: String,
-    val totalStock: Int
+    val totalStock: Double
 )
 
 // Extension function to convert StockItem to InventoryItem
@@ -64,13 +64,21 @@ fun StockItem.toInventoryItem(): InventoryItem {
         unit = unit,
         closingStock = closingStock.toDoubleOrNull() ?: 0.0,
         updatedBy = updatedBy,
-        suppliedDate = formatDateTime(stockSuppliedDate),
-        lastUpdated = formatDateTime(lastUpdatedDateTime),
+        suppliedDate = if (stockSuppliedDate.isNullOrBlank()) {
+            "N/A" // 👈 Display null if not available
+        } else {
+            formatDateTime(stockSuppliedDate)
+        },
+        lastUpdated = if (lastUpdatedDateTime.isNullOrBlank()) {
+            "N/A" // 👈 Display null if not available
+        } else {
+            formatDateTime(lastUpdatedDateTime)
+        },
         iconName = getIconFromCategory(category),
         category = category,
         location = location,
         brand = brand,
-        totalStock = totalStock.toIntOrNull() ?: 0
+        totalStock = totalStock.toDoubleOrNull() ?: 0.0
     )
 }
 

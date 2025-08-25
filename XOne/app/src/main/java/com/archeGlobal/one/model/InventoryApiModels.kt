@@ -72,6 +72,8 @@ data class UpdateInventoryItemRequest(
     val updatedBy: String,
     @SerializedName("itemname")
     val itemName: String,
+    @SerializedName("itemid")
+    val itemId: String,
     @SerializedName("itemcount")
     val itemCount: Int,
     @SerializedName("brand")
