@@ -23,6 +23,9 @@ class OrderHistoryController(
 
     companion object {
         var selectedOrderForDetails: DeskCartOrderHistory? = null
+        private var cachedOrderHistory: List<DeskCartOrderHistory>? = null
+        private var lastLoadTime: Long = 0
+        private const val CACHE_DURATION = 5 * 60 * 1000L // 5 minutes cache
     }
 
     var model by mutableStateOf(OrderHistoryModel())
@@ -31,7 +34,26 @@ class OrderHistoryController(
     private val userDataManager = UserDataManager.getInstance(context)
 
     init {
-        loadOrderHistory()
+        loadOrderHistoryIfNeeded()
+    }
+
+    private fun loadOrderHistoryIfNeeded() {
+        val currentTime = System.currentTimeMillis()
+        val isCacheValid = cachedOrderHistory != null && 
+                          (currentTime - lastLoadTime) < CACHE_DURATION
+
+        if (isCacheValid) {
+            // Use cached data
+            model = model.copy(
+                orders = cachedOrderHistory!!,
+                isLoading = false,
+                error = null
+            )
+            Log.d("OrderHistoryController", "Using cached order history: ${cachedOrderHistory!!.size} orders")
+        } else {
+            // Load fresh data
+            loadOrderHistory()
+        }
     }
 
     private fun loadOrderHistory() {
@@ -48,6 +70,10 @@ class OrderHistoryController(
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val orderHistoryResponse = response.body()!!
+                        // Cache the results
+                        cachedOrderHistory = orderHistoryResponse.orders
+                        lastLoadTime = System.currentTimeMillis()
+                        
                         model = model.copy(
                             orders = orderHistoryResponse.orders,
                             isLoading = false
@@ -85,6 +111,9 @@ class OrderHistoryController(
     }
 
     fun refreshOrderHistory() {
+        // Force refresh by bypassing cache
+        cachedOrderHistory = null
+        lastLoadTime = 0
         loadOrderHistory()
     }
 

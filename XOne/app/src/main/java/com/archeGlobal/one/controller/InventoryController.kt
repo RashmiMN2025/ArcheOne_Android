@@ -30,8 +30,50 @@ class InventoryController(
     var addItemModel by mutableStateOf(AddItemModel())
         private set
 
+    companion object {
+        private var cachedStockData: List<com.archeGlobal.one.model.StockItem>? = null
+        private var lastLoadTime: Long = 0
+        private const val CACHE_DURATION = 5 * 60 * 1000L // 5 minutes cache
+    }
+
     init {
-        loadInventoryData()
+        loadInventoryDataIfNeeded()
+    }
+
+    private fun loadInventoryDataIfNeeded() {
+        val currentTime = System.currentTimeMillis()
+        val isCacheValid = cachedStockData != null && 
+                          (currentTime - lastLoadTime) < CACHE_DURATION
+
+        if (isCacheValid) {
+            // Use cached data
+            processInventoryData(cachedStockData!!)
+            //Log.d("InventoryController", "Using cached inventory data")
+        } else {
+            // Load fresh data
+            loadInventoryData()
+        }
+    }
+
+    private fun processInventoryData(stockData: List<com.archeGlobal.one.model.StockItem>) {
+        val inventoryItems = stockData.map { it.toInventoryItem() }
+        
+        // Extract unique locations and categories from API data
+        val locations = inventoryItems.map { it.location }.distinct().sorted()
+        val categories = inventoryItems.map { it.category }.distinct().sorted()
+        val types = listOf("All") + categories
+        
+        model = model.copy(
+            inventoryItems = inventoryItems,
+            allItems = inventoryItems,
+            locations = locations,
+            types = types,
+            isLoading = false,
+            errorMessage = null
+        )
+        
+        // Apply initial filter
+        filterItems()
     }
 
     fun onBackPressed() {
@@ -65,7 +107,7 @@ class InventoryController(
             selectedLocation = item.location.ifEmpty { "Bengaluru" },
             selectedType = item.category.ifEmpty { "HK_Consumables" },
             selectedItem = item.name,
-            existingStock = item.closingStock.toString(),
+            existingStock = item.totalStock.toString(),
             usedStockQuantity = "",
             brand = item.brand.ifEmpty { "Schevaran" },
             unit = item.unit,
@@ -323,24 +365,12 @@ class InventoryController(
                 if (response.isSuccessful) {
                     val stockListResponse = response.body()
                     if (stockListResponse?.status == 200) {
-                        val inventoryItems = stockListResponse.data.map { it.toInventoryItem() }
+                        // Cache the results
+                        cachedStockData = stockListResponse.data
+                        lastLoadTime = System.currentTimeMillis()
                         
-                        // Extract unique locations and categories from API data
-                        val locations = inventoryItems.map { it.location }.distinct().sorted()
-                        val categories = inventoryItems.map { it.category }.distinct().sorted()
-                        val types = listOf("All") + categories
-                        
-                        model = model.copy(
-                            inventoryItems = inventoryItems,
-                            allItems = inventoryItems,
-                            locations = locations,
-                            types = types,
-                            isLoading = false,
-                            errorMessage = null
-                        )
-                        
-                        // Apply initial filter
-                        filterItems()
+                        // Process the data
+                        processInventoryData(stockListResponse.data)
                     } else {
                         model = model.copy(
                             isLoading = false,

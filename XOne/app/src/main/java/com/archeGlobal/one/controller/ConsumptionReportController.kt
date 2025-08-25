@@ -30,8 +30,47 @@ class ConsumptionReportController(
     
     private val fileDownloadHelper = FileDownloadHelper(context)
 
+    companion object {
+        private var cachedStockData: List<com.archeGlobal.one.model.StockItem>? = null
+        private var lastLoadTime: Long = 0
+        private const val CACHE_DURATION = 5 * 60 * 1000L // 5 minutes cache
+    }
+
     init {
-        loadConsumptionData()
+        loadConsumptionDataIfNeeded()
+    }
+
+    private fun loadConsumptionDataIfNeeded() {
+        val currentTime = System.currentTimeMillis()
+        val isCacheValid = cachedStockData != null && 
+                          (currentTime - lastLoadTime) < CACHE_DURATION
+
+        if (isCacheValid) {
+            // Use cached data
+            processStockData(cachedStockData!!)
+            Log.d("ConsumptionReportController", "Using cached stock data")
+        } else {
+            // Load fresh data
+            loadConsumptionData()
+        }
+    }
+
+    private fun processStockData(stockData: List<com.archeGlobal.one.model.StockItem>) {
+        val filteredData = if (model.selectedLocation.isNotBlank()) {
+            stockData.filter { it.location == model.selectedLocation }
+        } else {
+            stockData
+        }
+        
+        val stockCategories = filteredData.toConsumptionStockCategories()
+        val usageCategories = filteredData.toUsageCategories()
+        
+        model = model.copy(
+            stockCategories = stockCategories,
+            usageCategories = usageCategories,
+            isLoading = false,
+            error = null
+        )
     }
 
     private fun loadConsumptionData() {
@@ -46,24 +85,13 @@ class ConsumptionReportController(
                     if (stockListResponse?.status == 200) {
                         val stockData = stockListResponse.data
                         
-                        // Process data on background thread
-                        val filteredData = if (model.selectedLocation.isNotBlank()) {
-                            stockData.filter { it.location == model.selectedLocation }
-                        } else {
-                            stockData
-                        }
+                        // Cache the results
+                        cachedStockData = stockData
+                        lastLoadTime = System.currentTimeMillis()
                         
-                        val stockCategories = filteredData.toConsumptionStockCategories()
-                        val usageCategories = filteredData.toUsageCategories()
-                        
-                        // Update UI on main thread
+                        // Process and update UI
                         withContext(Dispatchers.Main) {
-                            model = model.copy(
-                                stockCategories = stockCategories,
-                                usageCategories = usageCategories,
-                                isLoading = false,
-                                error = null
-                            )
+                            processStockData(stockData)
                         }
                         Log.d("ConsumptionReportController", "Consumption data loaded successfully")
                     } else {
