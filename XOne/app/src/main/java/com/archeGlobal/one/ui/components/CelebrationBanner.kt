@@ -135,7 +135,7 @@ fun CelebrationDialog(
                     )
                 },
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
         ) {
             Column(
                 modifier = Modifier

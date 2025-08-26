@@ -143,7 +143,7 @@ fun HolidayCalendarScreen(
                             pdfUrl.value?.let { url ->
                                 controller.onViewClick(
                                     context = context,
-                                    documentName = "Holiday Calendar PDF",
+                                    documentName = "Holiday list 2025",
                                     filePath = url
                                 )
                                 // onHolidayListClick(url)
@@ -436,7 +436,7 @@ fun PreviewHolidayCalendarScreen() {
                     }
 
                     Text(
-                        text = "Holiday Calendar PDF",
+                        text = "Holiday list 2025",
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,

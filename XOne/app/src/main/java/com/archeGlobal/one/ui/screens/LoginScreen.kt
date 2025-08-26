@@ -1,8 +1,11 @@
 package com.archeGlobal.one.ui.screens
 
 import MicrosoftLoginWebView
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
+import android.util.Patterns
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,6 +30,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
@@ -54,13 +58,20 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.fragment.app.FragmentActivity
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.LoginController
+import com.archeGlobal.one.controller.MpinController
+import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.model.AuthResponse
+import com.archeGlobal.one.model.UserData
+import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.BiometricHelper
 import com.archeGlobal.one.utils.CustomToast
+import com.archeGlobal.one.utils.DeviceInfoUtils
+import com.archeGlobal.one.utils.MpinManager
+import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.isFirstTimeLogin
 import com.archeGlobal.one.utils.setFirstTimeLogin
@@ -74,7 +85,7 @@ fun ResponsiveLoginScreen(
     forceDifferentUserMode: Boolean = false
 ) {
     val context = LocalContext.current
-    val activity = context as? android.app.Activity
+    val activity = context as? Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val contentPadding = when (windowSizeClass?.widthSizeClass) {
         WindowWidthSizeClass.Compact -> 16.dp // Phone
@@ -111,12 +122,15 @@ fun LoginScreen(
     var authResponse by remember { mutableStateOf<AuthResponse?>(null) }
     var showMfaTermsDialog by remember { mutableStateOf(false) }
     var showOtpTermsDialog by remember { mutableStateOf(false) }
+    // Inside your LoginScreen composable:
+    var stayLoggedIn by remember { mutableStateOf(false) }
+    var showDisableDialog by remember { mutableStateOf(false) }
 
     val userDataManager = UserDataManager.getInstance(context)
-    val preferencesManager = com.archeGlobal.one.utils.PreferencesManager(context)
+    val preferencesManager = PreferencesManager(context)
 
     // Get session expired status from intent
-    val activity = context as? android.app.Activity
+    val activity = context as? Activity
     val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
 
     // Get last user name from preserved data (works for both logout and session expiry)
@@ -141,14 +155,14 @@ fun LoginScreen(
 
     // Debug biometric state
     LaunchedEffect(Unit) {
-        android.util.Log.d("LoginScreen", "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton")
+        Log.d("LoginScreen", "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton")
     }
 
     // Update firstTimeLogin when the screen is created, considering session expiry
     LaunchedEffect(Unit) {
         val calculatedFirstTime = forceOriginalLogin || (isFirstTimeLogin(context) && !shouldTreatAsReturningUser)
         firstTimeLogin = calculatedFirstTime
-        android.util.Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+        Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
     }
 
     var showFingerprint by remember { mutableStateOf(false) }
@@ -163,21 +177,21 @@ fun LoginScreen(
         }
 
         // Debug logging
-        android.util.Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
-        android.util.Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
-        android.util.Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
+        Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+        Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
+        Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
     }
 
     // Removed policy WebView state variables - now using external browser
 
-    val mpinController = remember { com.archeGlobal.one.controller.MpinController(context) }
+    val mpinController = remember { MpinController(context) }
     // Make hasMpin reactive to changes - don't use remember so it re-evaluates
     val hasMpin = mpinController.isMpinSet()
     var selectedLoginMethod by remember { mutableStateOf("OTP") }
     var showOtpFields by remember { mutableStateOf(forceOriginalLogin || firstTimeLogin) }
     var enteredMpin by remember { mutableStateOf("") }
     var mpinError by remember { mutableStateOf<String?>(null) }
-    val focusRequesters = List(4) { remember { androidx.compose.ui.focus.FocusRequester() } }
+    val focusRequesters = List(4) { remember { FocusRequester() } }
     var focusedIndex by remember { mutableStateOf(-1) }
     var isVerifyingMpin by remember { mutableStateOf(false) }
 
@@ -210,7 +224,7 @@ fun LoginScreen(
     }
 
     val preservedUserData = if (!lastUserEmail.isNullOrBlank() && !lastUserMobile.isNullOrBlank() && !lastUserEmployeeId.isNullOrBlank()) {
-        com.archeGlobal.one.model.UserData(
+        UserData(
             name = lastEmployeeName ?: "",
             email = lastUserEmail,
             mobile = lastUserMobile,
@@ -247,20 +261,21 @@ fun LoginScreen(
         if (effectiveUserData != null && !isLoggedIn && !autoRefreshAttempted && !forceOriginalLogin && !forceDifferentUserMode) {
             autoRefreshAttempted = true
             isAutoRefreshing = true
-            android.util.Log.d("LoginScreen", "Attempting auto token refresh with preserved credentials")
+            Log.d("LoginScreen", "Attempting auto token refresh with preserved credentials")
 
             // Try to auto-refresh token using preserved credentials
-            val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+            val otpController = OtpVerificationController(
                 navigator = navigator,
                 context = context
             )
 
             // Create a special controller that doesn't auto-navigate
-            val backgroundOtpController = com.archeGlobal.one.controller.OtpVerificationController(
+            val backgroundOtpController = OtpVerificationController(
                 navigator = navigator,
                 context = context
             )
 
+            val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
             // Use backgroundRefresh flag to avoid auto-navigation
             backgroundOtpController.verifyOtp(
                 email = effectiveUserData.email ?: "",
@@ -268,16 +283,22 @@ fun LoginScreen(
                 employeeId = effectiveUserData.employeeId ?: "",
                 otpFromUser = "", // Empty OTP
                 isBiometric = true, // Skip OTP validation
-                backgroundRefresh = true // Don't navigate to home
+                backgroundRefresh = true,
+                appVersion = deviceInfo.appVersion,
+                deviceModel = deviceInfo.deviceModel,
+                deviceId = deviceInfo.deviceId,
+                platform = deviceInfo.platform,
+                osVersion = deviceInfo.osVersion,
+                stayLoggedIn = stayLoggedIn
             ) { message, isError ->
                 isAutoRefreshing = false
-                android.util.Log.d("LoginScreen", "Background token refresh result: isError=$isError, message=$message")
+                Log.d("LoginScreen", "Background token refresh result: isError=$isError, message=$message")
                 if (!isError) {
                     // Success: Fresh data loaded, but stay on login screen
-                    android.util.Log.d("LoginScreen", "Background token refresh successful - fresh data loaded, staying on login screen")
+                    Log.d("LoginScreen", "Background token refresh successful - fresh data loaded, staying on login screen")
                 } else {
                     // Failed: Continue with manual login methods
-                    android.util.Log.d("LoginScreen", "Background token refresh failed: $message")
+                    Log.d("LoginScreen", "Background token refresh failed: $message")
                 }
             }
         }
@@ -285,7 +306,7 @@ fun LoginScreen(
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
     LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData, sessionExpired) {
-        android.util.Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin")
+        Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin")
 
         // If we have preserved user data and user is not logged in (token expired/logout), prioritize MFA first
         if (effectiveUserData != null && !isLoggedIn) {
@@ -535,8 +556,8 @@ fun LoginScreen(
                         }
 
                         // Debug logging for fingerprint button condition
-                        android.util.Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
-                        android.util.Log.d("LoginScreen", "Fingerprint condition check: showFingerprint=$showFingerprint")
+                        Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+                        Log.d("LoginScreen", "Fingerprint condition check: showFingerprint=$showFingerprint")
 
                         // Show fingerprint button for returning users (including session expired) when biometric is available - third for returning users
                         if (showFingerprint && !isDifferentUserMode) {
@@ -577,7 +598,7 @@ fun LoginScreen(
                                 email.isBlank() -> {
                                     CustomToast.showErrorToast(context, "Email ID is required!")
                                 }
-                                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                                !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                                     CustomToast.showErrorToast(context, "Please enter a valid Email ID!")
                                 }
                                 mobile.isBlank() -> {
@@ -596,7 +617,7 @@ fun LoginScreen(
                                         controller.sendOtp(email, mobile, employeeId) { message, isError ->
                                             isLoading = false
                                             if (!isError) {
-                                                navigator.navigateToOtpVerification(email, mobile, employeeId)
+                                                navigator.navigateToOtpVerification(email, mobile, employeeId, stayLoggedIn)
                                             } else {
                                                 errorMessage = message
                                             }
@@ -739,6 +760,120 @@ fun LoginScreen(
                         shape = MaterialTheme.shapes.medium
                     )
 
+
+                    // UI under Employee ID field:
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            if (stayLoggedIn) showDisableDialog = true
+                            else stayLoggedIn = true
+                        }
+                    ) {
+                        Checkbox(
+                            checked = stayLoggedIn,
+                            onCheckedChange = { checked ->
+                                if (!checked) showDisableDialog = true
+                                else stayLoggedIn = true
+                            }
+                        )
+                        Text("Stay logged in for faster access")
+                    }
+
+                    // Info text
+                    Text(
+                        "Your credentials will be securely stored",
+                        modifier = Modifier.padding(top = 4.dp),
+                        color = Color.Gray
+                    )
+
+                    // Dialog for disabling
+                    if (showDisableDialog) {
+                        Dialog(
+                            onDismissRequest = { showDisableDialog = false },
+                            properties = DialogProperties(
+                                usePlatformDefaultWidth = false // removes built-in margins
+                            )
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(18.dp),
+                                color = Color(0xFFF6F4EE),
+                                modifier = Modifier
+                                    .fillMaxWidth(0.94f) // 98% of actual screen width
+                                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                            ) {
+                                Column (
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(20.dp)
+                                ) {
+                                    Icon (
+                                        painter = painterResource(id = R.drawable.busjust), // Use your document icon
+                                        contentDescription = "Document",
+                                        tint = Color(0xFFDD3825),
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Text(
+                                        "Disable Stay Logged In?",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Button(
+                                            onClick = { showDisableDialog = false },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(46.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0x9ADED9D9),
+                                                contentColor = Color.Black
+                                            ),
+                                            border = BorderStroke(1.dp, Color.LightGray),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Text(
+                                                "Cancel",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 14.sp,
+                                                color = Color.Black
+                                            )
+                                        }
+                                        Button(
+                                            onClick = {
+                                                stayLoggedIn = false
+                                                showDisableDialog = false
+                                            },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(46.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFDD3825),
+                                                contentColor = Color.White
+                                            ),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Text(
+                                                "Disable",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 14.sp,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
                     // Login Button
                     Button(
                         onClick = {
@@ -746,7 +881,7 @@ fun LoginScreen(
                                 email.isBlank() -> {
                                     CustomToast.showErrorToast(context, "Email ID is required!")
                                 }
-                                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                                !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                                     CustomToast.showErrorToast(context, "Please enter a valid email address")
                                 }
                                 mobile.isBlank() -> {
@@ -765,7 +900,7 @@ fun LoginScreen(
                                         controller.sendOtp(email, mobile, employeeId) { message, isError ->
                                             isLoading = false
                                             if (!isError) {
-                                                navigator.navigateToOtpVerification(email, mobile, employeeId)
+                                                navigator.navigateToOtpVerification(email, mobile, employeeId, stayLoggedIn)
                                             } else {
                                                 errorMessage = message
                                             }
@@ -889,7 +1024,7 @@ fun LoginScreen(
                                                 else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
                                             }
 
-                                            android.util.Log.d("LoginScreen", "Biometric fallback credentials: email=$bioEmail, mobile=$bioMobile, employeeId=$bioEmployeeId, sessionExpired=$sessionExpired")
+                                            Log.d("LoginScreen", "Biometric fallback credentials: email=$bioEmail, mobile=$bioMobile, employeeId=$bioEmployeeId, sessionExpired=$sessionExpired")
 
                                             if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
                                                 CustomToast.showErrorToast(context, "Biometric credentials not found. Please login with MPIN or OTP.")
@@ -904,17 +1039,25 @@ fun LoginScreen(
                                         }
 
                                         // Call OTP verify with isBiometric = true and empty OTP
-                                        val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+                                        val otpController = OtpVerificationController(
                                             navigator = navigator,
                                             context = context
                                         )
+
+                                        val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
                                         otpController.verifyOtp(
                                             email = bioEmail,
                                             mobile = bioMobile,
                                             employeeId = bioEmployeeId,
                                             otpFromUser = "", // Empty OTP
                                             isBiometric = true,
-                                            backgroundRefresh = false // Normal login with navigation
+                                            backgroundRefresh = false, // Normal login with navigation
+                                            appVersion = deviceInfo.appVersion,
+                                            deviceModel = deviceInfo.deviceModel,
+                                            deviceId = deviceInfo.deviceId,
+                                            platform = deviceInfo.platform,
+                                            osVersion = deviceInfo.osVersion,
+                                            stayLoggedIn = stayLoggedIn
                                         ) { message, isError ->
                                             if (isError) {
                                                 CustomToast.showErrorToast(context, message)
@@ -927,7 +1070,7 @@ fun LoginScreen(
                                         // Reset login method selection if needed
                                         if (error.contains("cancelled", ignoreCase = true)) {
                                             // User cancelled - they can try again or use another method
-                                            android.util.Log.d("LoginScreen", "Biometric authentication cancelled by user")
+                                            Log.d("LoginScreen", "Biometric authentication cancelled by user")
                                         }
                                     }
                                 )
@@ -1020,7 +1163,7 @@ fun LoginScreen(
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Number,
-                                    imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
+                                    imeAction = if (i == 3) ImeAction.Done else ImeAction.Next
                                 ),
                                 enabled = !isVerifyingMpin,
                                 shape = MaterialTheme.shapes.medium,
@@ -1049,17 +1192,17 @@ fun LoginScreen(
                             if (enteredMpin.isEmpty()) {
                                 mpinError = "Please enter the MPIN"
                                 isVerifyingMpin = false
-                                android.util.Log.d("LoginScreen", "MPIN validation failed: Empty MPIN")
+                                Log.d("LoginScreen", "MPIN validation failed: Empty MPIN")
                                 return@Button
                             }
-                            val mpinController = com.archeGlobal.one.controller.MpinController(context)
+                            val mpinController = MpinController(context)
                             if (!mpinController.validateMpin(enteredMpin)) {
                                 mpinError = "Invalid MPIN"
-                                android.util.Log.d("LoginScreen", "MPIN validation failed: Invalid MPIN")
+                                Log.d("LoginScreen", "MPIN validation failed: Invalid MPIN")
                                 isVerifyingMpin = false
                                 return@Button
                             }
-                            val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+                            val otpController = OtpVerificationController(
                                 navigator = navigator,
                                 context = context
                             )
@@ -1085,28 +1228,35 @@ fun LoginScreen(
                                 else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
                             }
 
-                            android.util.Log.d("LoginScreen", "MPIN credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId, sessionExpired=$sessionExpired")
+                            Log.d("LoginScreen", "MPIN credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId, sessionExpired=$sessionExpired")
 
                             if (useEmail.isBlank() || useMobile.isBlank() || useEmployeeId.isBlank()) {
                                 mpinError = "User credentials missing. Please use OTP login."
                                 isVerifyingMpin = false
-                                android.util.Log.e("LoginScreen", "Missing credentials after fallback: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
+                                Log.e("LoginScreen", "Missing credentials after fallback: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
                                 return@Button
                             }
 
+                            val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
                             otpController.verifyOtp(
                                 email = useEmail,
                                 mobile = useMobile,
                                 employeeId = useEmployeeId,
                                 otpFromUser = "",
                                 isBiometric = true,
-                                backgroundRefresh = false
+                                backgroundRefresh = false,
+                                appVersion = deviceInfo.appVersion,
+                                deviceModel = deviceInfo.deviceModel,
+                                deviceId = deviceInfo.deviceId,
+                                platform = deviceInfo.platform,
+                                osVersion = deviceInfo.osVersion,
+                                stayLoggedIn = stayLoggedIn
                             ) { message, isError ->
                                 isVerifyingMpin = false
                                 if (isError) {
                                     mpinError = message
                                 } else {
-                                    android.util.Log.d("LoginScreen", "MPIN authentication successful")
+                                    Log.d("LoginScreen", "MPIN authentication successful")
                                 }
                             }
                         },
@@ -1121,7 +1271,7 @@ fun LoginScreen(
                         enabled = !isVerifyingMpin
                     ) {
                         Icon(
-                            painter = painterResource(id = com.archeGlobal.one.R.drawable.lock),
+                            painter = painterResource(id = R.drawable.lock),
                             contentDescription = "Lock",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
@@ -1149,7 +1299,7 @@ fun LoginScreen(
                         text = buildAnnotatedString {
                             append("Reset MPIN")
                             addStyle(
-                                style = androidx.compose.ui.text.SpanStyle(
+                                style = SpanStyle(
                                     color = Color(0xFFDD3825),
                                     textDecoration = TextDecoration.Underline,
                                     fontWeight = FontWeight.Normal
@@ -1173,7 +1323,7 @@ fun LoginScreen(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                         onClick = { offset ->
                             // Navigate to MPIN reset screen
-                            val intent = android.content.Intent(context, com.archeGlobal.one.ui.screens.MpinActivity::class.java)
+                            val intent = Intent(context, MpinActivity::class.java)
                             intent.putExtra("resetMpin", true)
                             context.startActivity(intent)
                         }
@@ -1199,12 +1349,12 @@ fun LoginScreen(
                             MicrosoftLoginWebView(
                                 url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
                                 onReceiveAuth = { response ->
-                                    android.util.Log.d("LoginScreen", "MFA onReceiveAuth called with token: ${response.token}")
-                                    android.util.Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}")
+                                    Log.d("LoginScreen", "MFA onReceiveAuth called with token: ${response.token}")
+                                    Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}")
                                     authResponse = response
                                     isLoading = true
                                     // Use encrypted API call like OTP flow
-                                    val otpController = com.archeGlobal.one.controller.OtpVerificationController(
+                                    val otpController = OtpVerificationController(
                                         navigator = navigator,
                                         context = context
                                     )
@@ -1217,7 +1367,7 @@ fun LoginScreen(
                                         fromOtp = false,
                                         shouldNavigateToHome = false // Don't auto-navigate
                                     ) { message, isError ->
-                                        android.util.Log.d("LoginScreen", "loginWithToken callback: message=$message, isError=$isError")
+                                        Log.d("LoginScreen", "loginWithToken callback: message=$message, isError=$isError")
                                         isLoading = false
                                         if (!isError) {
                                             UserDataManager.getInstance(context).setHasLoggedIn(true)
@@ -1225,8 +1375,8 @@ fun LoginScreen(
                                             firstTimeLogin = false
 
                                             // Handle MPIN setup navigation like OTP flow
-                                            val mpinController = com.archeGlobal.one.controller.MpinController(context)
-                                            if (navigator is com.archeGlobal.one.navigation.AndroidNavigator) {
+                                            val mpinController = MpinController(context)
+                                            if (navigator is AndroidNavigator) {
                                                 if (mpinController.isMpinSet()) {
                                                     // MPIN already set, go directly to Home
                                                     navigator.navigateToHome(true, true, response.email, response.mobilePhone, response.employeeId)
@@ -1294,7 +1444,7 @@ fun LoginScreen(
                                     UserDataManager.getInstance(context).setIsLoggedIn(false)
                                     UserDataManager.getInstance(context).setHasLoggedIn(false)
                                     setFirstTimeLogin(context, true)
-                                    com.archeGlobal.one.utils.MpinManager.clearAllMpinData(context)
+                                    MpinManager.clearAllMpinData(context)
                                     BiometricHelper(context).disableBiometric() // Disable biometric
 
                                     // Clear preserved user data
@@ -1590,7 +1740,7 @@ fun LoginScreen(
                                         controller.sendOtp(email, mobile, employeeId) { message, isError ->
                                             isLoading = false
                                             if (!isError) {
-                                                navigator.navigateToOtpVerification(email, mobile, employeeId)
+                                                navigator.navigateToOtpVerification(email, mobile, employeeId, stayLoggedIn)
                                             } else {
                                                 errorMessage = message
                                             }

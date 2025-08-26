@@ -119,7 +119,7 @@ fun AssetScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.White
+                                containerColor = Color(0xFFF6F4EE)
                             )
                         ) {
                             Column(
@@ -366,7 +366,7 @@ fun AssetDetailCard(asset: AssetDetails) {
             .padding(vertical = 8.dp) // Add some spacing between assets
     ) {
         InfoRow("Asset Type:", asset.assetType)
-        InfoRow("Asset ID/Host Name:", asset.hostName)
+        InfoRow("Asset ID/\nHostName:", asset.hostName)
         InfoRow("Serial No:", asset.serialNo)
         InfoRow("Device Model:", asset.deviceModel)
         InfoRow("Date Of Issue:", asset.dateOfIssue)

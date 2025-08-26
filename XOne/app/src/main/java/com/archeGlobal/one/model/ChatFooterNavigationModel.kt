@@ -42,7 +42,7 @@ fun ChatBottomNavigationBar(
 
     NavigationBar(
         modifier = modifier.height(70.dp),
-        containerColor = Color.White,
+        containerColor = Color(0xFFF6F4EE),
         contentColor = selectedColor,
         tonalElevation = 4.dp
     ) {
@@ -80,7 +80,7 @@ fun ChatBottomNavigationBar(
                 unselectedIconColor = homeSelectedColor,
                 selectedTextColor = homeSelectedColor, // Black for home when selected
                 unselectedTextColor = homeSelectedColor,
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )
@@ -117,7 +117,7 @@ fun ChatBottomNavigationBar(
                 unselectedIconColor = unselectedColor,
                 selectedTextColor = selectedColor,
                 unselectedTextColor = unselectedColor,
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )
@@ -154,7 +154,7 @@ fun ChatBottomNavigationBar(
                 unselectedIconColor = unselectedColor,
                 selectedTextColor = selectedColor, // Red for SOS when selected
                 unselectedTextColor = unselectedColor,
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )
@@ -191,7 +191,7 @@ fun ChatBottomNavigationBar(
                 unselectedIconColor = unselectedColor,
                 selectedTextColor = selectedColor, // Red for Profile when selected
                 unselectedTextColor = unselectedColor,
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )

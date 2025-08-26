@@ -241,6 +241,32 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
+        if ((fromMpin || fromLogin) && !biometricPromptShown) {
+            biometricPromptShown = true
+            val biometricHelper = com.archeGlobal.one.utils.BiometricHelper(this)
+            if (biometricHelper.canUseBiometric() && !biometricHelper.isBiometricEnabled()) {
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("Enable Fingerprint Login")
+                    .setMessage("Would you like to use fingerprint for faster login next time?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        biometricHelper.showBiometricPrompt(
+                            activity = this,
+                            title = "Setup Fingerprint",
+                            subtitle = "Verify your fingerprint to enable quick login",
+                            onSuccess = {
+                                biometricHelper.saveCredentials(email, mobile, employeeId, token)
+                                userDataManager.preferencesManager.setBiometricEnabled(true)
+                                userDataManager.preferencesManager.setAppLockState(false)
+                            },
+                            onError = { _ -> }
+                        )
+                    }
+                    .setNegativeButton("No", null)
+                    .setCancelable(false)
+                    .show()
+            }
+        }
+
         // Disable back navigation to login
         onBackPressedDispatcher.addCallback(
             this,
@@ -284,65 +310,65 @@ class HomeActivity : AppCompatActivity() {
                 // Initialize controllers with correct parameter order
                 controller = HomeController(navigator, this@HomeActivity)
 
-                var showFingerprintDialog by remember { mutableStateOf(false) }
-                var showNativeBiometricPrompt by remember { mutableStateOf(false) }
-                var showWhatsNewPending by remember { mutableStateOf(false) }
-                val showWhatsNewDialog = controller.showWhatsNewDialog.collectAsState().value
-
-                LaunchedEffect(Unit) {
-                    // Only once, right after launch!
-                    val biometricHelper = BiometricHelper(this@HomeActivity)
-                    // EXAMPLE: put the same condition you wanted elsewhere, here!
-                    if ((intent.getBooleanExtra("fromMpin", false) || intent.getBooleanExtra("fromLogin", false))
-                        && biometricHelper.canUseBiometric()
-                        && !biometricHelper.isBiometricEnabled()
-                    ) {
-                        showFingerprintDialog = true
-                    }
-                }
-
-                if (showWhatsNewPending && !showWhatsNewDialog) {
-                // Call controller method to show dialog
-                LaunchedEffect(Unit) {
-                    controller.showWhatsNewDialog()
-                    showWhatsNewPending = false
-                }
-            }
-
-                if (showFingerprintDialog) {
-                    com.archeGlobal.one.ui.components.FingerprintEnableDialog(
-                        onEnable = {
-                            showFingerprintDialog = false
-                            showNativeBiometricPrompt = true
-                        },
-                        onSkip = {
-                            showFingerprintDialog = false
-                        }
-                    )
-                }
-
-                if (showNativeBiometricPrompt) {
-                    LaunchedEffect(Unit) {
-                        showNativeBiometricPrompt = false
-                        val biometricHelper = BiometricHelper(this@HomeActivity)
-                        if (biometricHelper.canUseBiometric()) {
-                            biometricHelper.showBiometricPrompt(
-                                activity = this@HomeActivity,
-                                title = "Setup Fingerprint",
-                                subtitle = "Verify your fingerprint to enable quick login",
-                                onSuccess = {
-                                    biometricHelper.saveCredentials(email, mobile, employeeId, token)
-                                    userDataManager.preferencesManager.setBiometricEnabled(true)
-                                    userDataManager.preferencesManager.setAppLockState(false)
-
-                                    runOnUiThread { showWhatsNewPending = true }
-                                },
-                                onError = { errorMessage ->
-                                }
-                            )
-                        }
-                    }
-                }
+//                var showFingerprintDialog by remember { mutableStateOf(false) }
+//                var showNativeBiometricPrompt by remember { mutableStateOf(false) }
+//                var showWhatsNewPending by remember { mutableStateOf(false) }
+//                val showWhatsNewDialog = controller.showWhatsNewDialog.collectAsState().value
+//
+//                LaunchedEffect(Unit) {
+//                    // Only once, right after launch!
+//                    val biometricHelper = BiometricHelper(this@HomeActivity)
+//                    // EXAMPLE: put the same condition you wanted elsewhere, here!
+//                    if ((intent.getBooleanExtra("fromMpin", false) || intent.getBooleanExtra("fromLogin", false))
+//                        && biometricHelper.canUseBiometric()
+//                        && !biometricHelper.isBiometricEnabled()
+//                    ) {
+//                        showFingerprintDialog = true
+//                    }
+//                }
+//
+//                if (showWhatsNewPending && !showWhatsNewDialog) {
+//                // Call controller method to show dialog
+//                LaunchedEffect(Unit) {
+//                    controller.showWhatsNewDialog()
+//                    showWhatsNewPending = false
+//                }
+//            }
+//
+//                if (showFingerprintDialog) {
+//                    com.archeGlobal.one.ui.components.FingerprintEnableDialog(
+//                        onEnable = {
+//                            showFingerprintDialog = false
+//                            showNativeBiometricPrompt = true
+//                        },
+//                        onSkip = {
+//                            showFingerprintDialog = false
+//                        }
+//                    )
+//                }
+//
+//                if (showNativeBiometricPrompt) {
+//                    LaunchedEffect(Unit) {
+//                        showNativeBiometricPrompt = false
+//                        val biometricHelper = BiometricHelper(this@HomeActivity)
+//                        if (biometricHelper.canUseBiometric()) {
+//                            biometricHelper.showBiometricPrompt(
+//                                activity = this@HomeActivity,
+//                                title = "Setup Fingerprint",
+//                                subtitle = "Verify your fingerprint to enable quick login",
+//                                onSuccess = {
+//                                    biometricHelper.saveCredentials(email, mobile, employeeId, token)
+//                                    userDataManager.preferencesManager.setBiometricEnabled(true)
+//                                    userDataManager.preferencesManager.setAppLockState(false)
+//
+//                                    runOnUiThread { showWhatsNewPending = true }
+//                                },
+//                                onError = { errorMessage ->
+//                                }
+//                            )
+//                        }
+//                    }
+//                }
 
                 // Initialize controllers that need context
                 holidayCalendarController = HolidayCalendarController(

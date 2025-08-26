@@ -16,6 +16,7 @@ import com.archeGlobal.one.network.LogoutRequest
 import com.archeGlobal.one.network.LogoutResponse
 import com.archeGlobal.one.network.ProfilePictureResponse
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.UserDataManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -392,7 +393,8 @@ class ProfileController(
         userDataManager.setLastUsername(employeeName) // Save for welcome text
 
         // Call logout API with encryption
-        val logoutRequest = LogoutRequest(email)
+        val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
+        val logoutRequest = LogoutRequest(email, deviceId = deviceInfo.deviceId)
         Log.d("ProfileController", "Calling encrypted logout API with email: $email")
 
         val encryptedAPIHelper = com.archeGlobal.one.utils.EncryptedAPIHelper(context)

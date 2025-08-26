@@ -719,19 +719,19 @@ fun HomeScreenContent(
 
         // Show event popup if available and visibility is true
         // Only show regular event popup if it's not Pride Month
-//        if (!isPrideMonth && eventData != null && showEventPopup) {
-//            Log.d("HomeScreen", "Showing event popup with data: Title=${eventData.title}, Image=${eventData.image}")
-//            Log.d("HomeScreen", "Event description: ${eventData.description}")
-//            EventPopup(
-//                event = eventData,
-//                onDismiss = onDismissEventPopup
-//            )
-//        } else {
-//            Log.d("HomeScreen", "Not showing event popup - eventData present: ${eventData != null}, showEventPopup: $showEventPopup")
-//            if (eventData != null) {
-//                Log.d("HomeScreen", "Event data exists but popup flag is false - Title: ${eventData.title}")
-//            }
-//        }
+        if (!isPrideMonth && eventData != null && showEventPopup) {
+            Log.d("HomeScreen", "Showing event popup with data: Title=${eventData.title}, Image=${eventData.image}")
+            Log.d("HomeScreen", "Event description: ${eventData.description}")
+            EventPopup(
+                event = eventData,
+                onDismiss = onDismissEventPopup
+            )
+        } else {
+            Log.d("HomeScreen", "Not showing event popup - eventData present: ${eventData != null}, showEventPopup: $showEventPopup")
+            if (eventData != null) {
+                Log.d("HomeScreen", "Event data exists but popup flag is false - Title: ${eventData.title}")
+            }
+        }
 
         // Show celebration dialog
         val showCelebrationDialog = controller.showCelebrationDialog.collectAsState().value
@@ -752,8 +752,6 @@ fun HomeScreenContent(
 
         // Show WhatsNew dialog
         val showWhatsNewDialog by controller.showWhatsNewDialog.collectAsState()
-        val eventData = controller.eventData.collectAsState().value
-        val showEventPopup by controller.showEventPopup.collectAsState()
 
         val whatsNewData = UserDataManager.getInstance(context).getWhatsNewData()
 
@@ -762,15 +760,7 @@ fun HomeScreenContent(
                 whatsNewItems = whatsNewData,
                 onDismiss = {
                     controller.dismissWhatsNewDialog()
-                    controller.showEventPopupDialog()  // Show event popup after dismiss
                 }
-            )
-        }
-
-        if (showEventPopup && eventData != null) {
-            EventPopup(
-                event = eventData,
-                onDismiss = { controller.dismissEventPopup() }
             )
         }
 
@@ -913,7 +903,7 @@ fun HomeScreenContent(
                                     containerColor = if (currentView == "All Apps") {
                                         Color(0xFFDD3825)
                                     } else {
-                                        CardBackground
+                                        Color(0xFFF6F4EE)
                                     },
                                     contentColor = if (currentView == "All Apps") {
                                         Color.White
@@ -949,7 +939,7 @@ fun HomeScreenContent(
                                     containerColor = if (currentView == "Favorites") {
                                         Color(0xFFDD3825)
                                     } else {
-                                        CardBackground
+                                        Color(0xFFF6F4EE)
                                     },
                                     contentColor = if (currentView == "Favorites") {
                                         Color.White
@@ -1139,7 +1129,7 @@ fun HomeScreenContent(
                                 .width(115.dp) // Set fixed width
                                 .height(115.dp), // Set fixed height
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Box(modifier = Modifier.fillMaxSize()) {
@@ -1465,7 +1455,7 @@ private fun formatServiceTitle(title: String): String {
         "Profile Connect" -> "Profile\nConnect"
         "Arche Odyssey" -> "Arche\nOdyssey"
         "Idea Vault", "IdeaVault" -> "IdeaVault"
-        "Smart Collateral" -> "Smart\nCollateral"
+        "Smart Collateral" -> "SmartCollateral"
         "MeetSpace" -> "MeetSpace"
         else -> {
             // For any other multi-word titles, always split at a space
@@ -1540,7 +1530,7 @@ private fun AppItem(
             defaultElevation = 2.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = Color(0xFFF6F4EE)
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -1623,7 +1613,7 @@ private fun AppIcon(
                 Surface(
                     modifier = Modifier.size(128.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White
+                    color = Color(0xFFF6F4EE)
                 ) {
                     Image(
                         painter = painterResource(

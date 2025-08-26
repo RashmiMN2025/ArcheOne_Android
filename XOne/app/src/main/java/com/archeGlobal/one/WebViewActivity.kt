@@ -20,9 +20,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -32,8 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -83,10 +78,6 @@ class WebViewActivity : ComponentActivity() {
         if (rawHtmlContent != null && rawHtmlContent.isNotBlank()) {
             setContent {
                 XOneTheme {
-                    var offsetX by remember { mutableStateOf(0f) }
-                    val swipeThreshold = with(LocalDensity.current) { 100.dp.toPx() } // Swipe distance to trigger navigation
-                    var isLoading by remember { mutableStateOf(true) }
-                    val context = LocalContext.current
 
                     Box(
                         modifier = Modifier
@@ -99,23 +90,6 @@ class WebViewActivity : ComponentActivity() {
                                         Color(0xFF474749) // Dark Grey
                                     )
                                 )
-                            )
-                            .draggable(
-                                orientation = Orientation.Horizontal,
-                                state = rememberDraggableState { delta ->
-                                    if (!isLoading) {
-                                        offsetX += delta
-                                        offsetX = offsetX.coerceIn(0f, swipeThreshold)
-                                    }
-                                },
-                                onDragStopped = {
-                                    if (!isLoading && offsetX >= swipeThreshold) {
-                                        finish()
-                                    } else if (isLoading) {
-                                        Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
-                                    }
-                                    offsetX = 0f
-                                }
                             )
                     ) {
                         Column(
@@ -131,20 +105,14 @@ class WebViewActivity : ComponentActivity() {
                                         Text(
                                             text = title,
                                             fontSize = 18.sp,
-                                            fontWeight = FontWeight.SemiBold,
+                                            fontWeight = FontWeight.Medium,
                                             fontFamily = GraphikFontFamily,
                                             color = Color.Black
                                         )
                                     }
                                 },
                                 navigationIcon = {
-                                    IconButton(onClick = {
-                                        if (!isLoading) {
-                                            finish()
-                                        } else {
-                                            Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }) {
+                                    IconButton(onClick = { finish() }) {
                                         Icon(
                                             imageVector = Icons.Default.ArrowBack,
                                             contentDescription = "Back",
@@ -167,20 +135,12 @@ class WebViewActivity : ComponentActivity() {
                                     WebView(ctx).apply {
                                         settings.defaultTextEncodingName = "utf-8"
                                         settings.javaScriptEnabled = true
-                                        webChromeClient = object : WebChromeClient() {
-                                            override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                                                isLoading = newProgress < 100
-                                            }
-                                        }
-                                        webViewClient = object : WebViewClient() {
-                                            override fun onPageFinished(view: WebView?, url: String?) {
-                                                isLoading = false
-                                            }
-                                        }
                                         loadDataWithBaseURL(null, rawHtmlContent, "text/html", "UTF-8", null)
                                     }
                                 },
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f)
                             )
                         }
                     }
@@ -193,10 +153,6 @@ class WebViewActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                var offsetX by remember { mutableStateOf(0f) }
-                val swipeThreshold = with(LocalDensity.current) { 100.dp.toPx() }
-                var isLoading by remember { mutableStateOf(true) }
-                val context = LocalContext.current
 
                 Box(
                     modifier = Modifier
@@ -209,23 +165,6 @@ class WebViewActivity : ComponentActivity() {
                                     Color(0xFF474749) // Dark Grey
                                 )
                             )
-                        )
-                        .draggable(
-                            orientation = Orientation.Horizontal,
-                            state = rememberDraggableState { delta ->
-                                if (!isLoading) {
-                                    offsetX += delta
-                                    offsetX = offsetX.coerceIn(0f, swipeThreshold)
-                                }
-                            },
-                            onDragStopped = {
-                                if (!isLoading && offsetX >= swipeThreshold) {
-                                    finish()
-                                } else if (isLoading) {
-                                    Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
-                                }
-                                offsetX = 0f
-                            }
                         )
                 ) {
                     // Main content
@@ -242,20 +181,14 @@ class WebViewActivity : ComponentActivity() {
                                     Text(
                                         text = title,
                                         fontSize = 18.sp,
-                                        fontWeight = FontWeight.SemiBold,
+                                        fontWeight = FontWeight.Medium,
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black
                                     )
                                 }
                             },
                             navigationIcon = {
-                                IconButton(onClick = {
-                                    if (!isLoading) {
-                                        finish()
-                                    } else {
-                                        Toast.makeText(context, "Please wait until content is loaded", Toast.LENGTH_SHORT).show()
-                                    }
-                                }) {
+                                IconButton(onClick = { finish() }) {
                                     Icon(
                                         imageVector = Icons.Default.ArrowBack,
                                         contentDescription = "Back",
@@ -304,7 +237,7 @@ class WebViewActivity : ComponentActivity() {
                                             Text(
                                                 text = "SOS",
                                                 color = Color.White,
-                                                fontWeight = FontWeight.SemiBold,
+                                                fontWeight = FontWeight.Medium,
                                                 fontFamily = GraphikFontFamily,
                                                 fontSize = 12.sp
                                             )
@@ -1055,7 +988,7 @@ class WebViewActivity : ComponentActivity() {
                                                                                 }
                                                                                 
                                                                                 // Set a timeout to check if PDF.js loaded
-                                                                                setTimeout(useFallback, 3000);
+                                                                                setTimeout(useFallback, 1500);
                                                                                 
                                                                                 try {
                                                                                     // Configure PDF.js worker
@@ -1332,7 +1265,7 @@ class WebViewActivity : ComponentActivity() {
                                                                     } catch (e: Exception) {
                                                                         Log.e("WebViewActivity", "Error in fallback PDF loading: ${e.message}", e)
                                                                     }
-                                                                }, 5000) // 5 seconds fallback timer
+                                                                }, 2000) // 5 seconds fallback timer
                                                             } else {
                                                                 Log.e("WebViewActivity", "PDF file doesn't exist at: $actualPath")
                                                                 Toast.makeText(context, "Error: PDF file not found", Toast.LENGTH_LONG).show()
@@ -1527,33 +1460,5 @@ class WebViewActivity : ComponentActivity() {
         }
 
         this.setTheme(R.style.Theme_XOne)
-    }
-
-    private fun openPdfInExternalViewer(context: Context) {
-        try {
-            // Rebuild the local content:// URI
-            val fileUri = Uri.parse(intent.getStringExtra("fileUrl"))
-            Log.d("WebViewActivity", "Falling back to external PDF viewer; URI=$fileUri")
-
-            // Create an Intent that prompts the user to open in any external PDF app
-            val externalIntent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(fileUri, "application/pdf")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-            }
-
-            // Verify there is at least one app that can handle this intent
-            val packageManager = context.packageManager
-            val activities = packageManager.queryIntentActivities(externalIntent, 0)
-            if (activities.isNotEmpty()) {
-                context.startActivity(externalIntent)
-            } else {
-                Toast.makeText(context, "No PDF viewer app found on this device.", Toast.LENGTH_LONG).show()
-                Log.e("WebViewActivity", "No external PDF viewer available.")
-            }
-        } catch (e: Exception) {
-            Log.e("WebViewActivity", "Failed to open PDF externally: ${e.message}", e)
-            Toast.makeText(context, "Failed to open PDF externally: ${e.message}", Toast.LENGTH_LONG).show()
-        }
     }
 }

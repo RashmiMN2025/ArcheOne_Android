@@ -121,4 +121,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+//    implementation(libs.x.x.x.beta.x)
+//    implementation(libs.okhttp.v493)
+//    implementation(libs.android.pdf.viewer)
+//    implementation(libs.repo)
 }

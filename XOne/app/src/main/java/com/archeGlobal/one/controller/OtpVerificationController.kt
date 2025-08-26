@@ -30,9 +30,27 @@ class OtpVerificationController(
         otpFromUser: String,
         isBiometric: Boolean = false,
         backgroundRefresh: Boolean = false,
+        appVersion: String,
+        deviceModel: String,
+        deviceId: String,
+        platform: String,
+        osVersion: String,
+        stayLoggedIn: Boolean,
         callback: (String, Boolean) -> Unit
     ) {
-        val request = VerifyOtpRequest(email, mobile, employeeId, otpFromUser, isBiometric)
+        val request = VerifyOtpRequest(
+            email = email,
+            mobile = mobile,
+            employeeId = employeeId,
+            otpFromUser = otpFromUser,
+            isBiometric = isBiometric,
+            appVersion = appVersion,
+            deviceModel = deviceModel,
+            deviceId = deviceId,
+            platform = platform,
+            osVersion = osVersion,
+            stayLoggedIn = stayLoggedIn
+        )
         Log.d("OtpVerification", "Sending encrypted OTP verification request: $request")
 
         encryptedAPIHelper.makeEncryptedCall(
@@ -114,17 +132,6 @@ class OtpVerificationController(
         }
     }
 
-    fun verifyWithBiometric(
-        email: String,
-        mobile: String,
-        employeeId: String,
-        callback: (String, Boolean) -> Unit
-    ) {
-        // Skip OTP and use biometric authentication
-        val dummyOtp = "000000" // This won't be validated server-side when isBiometric is true
-        verifyOtp(email, mobile, employeeId, dummyOtp, true, false, callback)
-    }
-
     fun loginWithToken(
         token: String,
         email: String,
@@ -143,7 +150,8 @@ class OtpVerificationController(
             platform = deviceInfo.platform,
             deviceModel = deviceInfo.deviceModel,
             osVersion = deviceInfo.osVersion,
-            appVersion = deviceInfo.appVersion
+            appVersion = deviceInfo.appVersion,
+            deviceId = deviceInfo.deviceId
         )
         Log.d("LoginProcess", "Sending encrypted login request with token: Bearer $token")
 

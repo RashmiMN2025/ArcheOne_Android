@@ -49,13 +49,14 @@ fun PrideMonthTestScreen() {
         object : Navigator {
             override fun openPulseLogin() {}
             override fun navigateToLoginScreen() {}
-            override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String) {}
+            override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String, stayLoggedIn: Boolean) {}
             override fun navigateToHome(
                 fromOtp: Boolean,
                 showBiometricSetup: Boolean,
                 email: String,
                 mobile: String,
-                employeeId: String
+                employeeId: String,
+                stayLoggedIn: Boolean
             ) {}
             override fun getHomeIntent(): android.content.Intent = android.content.Intent()
             override fun navigateToID() {}

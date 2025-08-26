@@ -98,12 +98,13 @@ fun RaiseConcernScreen(
     }
 
     val assetSubcategories = listOf(
-        "Incorrect asset tagging",
-        "Asset return",
-        "Incorrect asset details",
-        "Asset malfunction",
-        "Asset not allocated",
-        "Asset transfer"
+        "Asset Malfunction",
+        "Asset Not Allocated",
+        "Asset Return",
+        "Asset Transfer",
+        "Incorrect Asset Details",
+        "Incorrect Asset Tagging",
+        "Other Issue"
     )
 
     // Subcategory mapping - extract from FAQ data for help desk, use hardcoded for SOS

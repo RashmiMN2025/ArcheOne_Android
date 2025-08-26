@@ -25,6 +25,7 @@ class OtpVerificationActivity : AppCompatActivity() {
         val email = intent.getStringExtra("email") ?: ""
         val mobile = intent.getStringExtra("mobile") ?: ""
         val employeeId = intent.getStringExtra("employeeId") ?: ""
+        val stayLoggedIn = intent.getBooleanExtra("stayLoggedIn", false)
 
         val navigator = AndroidNavigator(this)
         val loginController = LoginController(this, navigator)
@@ -56,7 +57,8 @@ class OtpVerificationActivity : AppCompatActivity() {
                     controller = controller,
                     email = email,
                     mobile = mobile,
-                    employeeId = employeeId
+                    employeeId = employeeId,
+                    stayLoggedIn = stayLoggedIn
                 )
 
                 // Update Required Dialog

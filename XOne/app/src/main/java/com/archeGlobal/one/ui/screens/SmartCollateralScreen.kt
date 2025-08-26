@@ -80,7 +80,7 @@ fun SmartCollateralScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Smart Collateral",
+                                text = "SmartCollateral",
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,

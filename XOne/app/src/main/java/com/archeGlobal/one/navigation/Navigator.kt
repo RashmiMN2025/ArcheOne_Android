@@ -3,13 +3,14 @@ package com.archeGlobal.one.navigation
 interface Navigator {
     fun openPulseLogin()
     fun navigateToLoginScreen()
-    fun navigateToOtpVerification(email: String, mobile: String, employeeId: String)
+    fun navigateToOtpVerification(email: String, mobile: String, employeeId: String, stayLoggedIn: Boolean)
     fun navigateToHome(
         fromOtp: Boolean = false,
         showBiometricSetup: Boolean = false,
         email: String = "",
         mobile: String = "",
-        employeeId: String = ""
+        employeeId: String = "",
+        stayLoggedIn: Boolean = false
     )
     fun getHomeIntent(): android.content.Intent
     fun navigateToID()

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -210,29 +211,37 @@ fun CommuniqueScreen(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = "Search",
                                 tint = Color.Gray,
-                                modifier = Modifier.padding(start = 12.dp).size(24.dp)
+                                modifier = Modifier.size(24.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            TextField(
+                            BasicTextField(
                                 value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                placeholder = {
-                                    Text(
-                                        "Search communique...",
-                                        color = Color.Gray.copy(alpha = 0.6f)
-                                    )
+                                onValueChange = {
+                                    searchQuery = it
                                 },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp),
                                 singleLine = true,
-                                textStyle = TextStyle(color = Color.Black),
-                                colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
                                 ),
-                                modifier = Modifier.weight(1f)
+                                decorationBox = { innerTextField ->
+                                    Box {
+                                        if (searchQuery.isEmpty()) {
+                                            Text(
+                                                text = "Search Communique...",
+                                                color = Color.Gray.copy(alpha = 0.6f),
+                                                fontSize = 16.sp,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                }
                             )
                         }
                     }

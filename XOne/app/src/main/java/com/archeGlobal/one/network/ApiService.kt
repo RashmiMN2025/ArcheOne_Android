@@ -191,7 +191,8 @@ data class PolicyResponse(
 )
 
 data class LogoutRequest(
-    val email: String
+    val email: String,
+    val deviceId: String
 )
 
 data class LogoutResponse(
@@ -237,7 +238,13 @@ data class VerifyOtpRequest(
     val mobile: String,
     val employeeId: String,
     val otpFromUser: String,
-    val isBiometric: Boolean = false
+    val isBiometric: Boolean = false,
+    val appVersion: String,
+    val deviceModel: String,
+    val deviceId: String,
+    val platform: String,
+    val osVersion: String,
+    val stayLoggedIn: Boolean = false
 )
 
 data class OtpVerifyResponse(
@@ -253,7 +260,8 @@ data class LoginRequest(
     val platform: String,
     val deviceModel: String,
     val osVersion: String,
-    val appVersion: String
+    val appVersion: String,
+    val deviceId: String
 )
 
 data class VerifyOtpResponse(

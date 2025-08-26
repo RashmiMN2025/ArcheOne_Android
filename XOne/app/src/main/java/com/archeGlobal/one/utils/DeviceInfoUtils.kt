@@ -3,6 +3,7 @@ package com.archeGlobal.one.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 
 object DeviceInfoUtils {
 
@@ -21,19 +22,26 @@ object DeviceInfoUtils {
         }
     }
 
+    fun getDeviceId(context: Context): String {
+        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+    }
+
     fun getAllDeviceInfo(context: Context): DeviceInfo {
         return DeviceInfo(
             platform = getPlatform(),
             deviceModel = getDeviceModel(),
             osVersion = getOSVersion(),
-            appVersion = getAppVersion(context)
+            appVersion = getAppVersion(context),
+            deviceId = getDeviceId(context)
         )
     }
 }
+
 
 data class DeviceInfo(
     val platform: String,
     val deviceModel: String,
     val osVersion: String,
-    val appVersion: String
+    val appVersion: String,
+    val deviceId: String
 )

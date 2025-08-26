@@ -272,7 +272,7 @@ private fun LocationCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = Color(0xFFF6F4EE)
         ),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -491,7 +491,7 @@ private fun StateList(
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Row(
@@ -564,7 +564,7 @@ private fun LocationDetails(
 
     Card(
         modifier = modifier.fillMaxWidth().padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(

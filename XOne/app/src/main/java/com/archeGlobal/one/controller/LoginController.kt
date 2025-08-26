@@ -94,7 +94,8 @@ class LoginController(
                     platform = deviceInfo.platform,
                     deviceModel = deviceInfo.deviceModel,
                     osVersion = deviceInfo.osVersion,
-                    appVersion = deviceInfo.appVersion
+                    appVersion = deviceInfo.appVersion,
+                    deviceId = deviceInfo.deviceId
                 )
                 val response = RetrofitClient.apiService.login(token, request).execute()
                 val responseBody = response.body()

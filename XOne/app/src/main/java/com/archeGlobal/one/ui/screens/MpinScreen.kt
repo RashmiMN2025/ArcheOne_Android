@@ -291,7 +291,7 @@ fun MpinScreen(
                         text = if (isReset) {
                             "Verify your identity to reset your MPIN"
                         } else {
-                            "Set security questions and a 4-digit PIN for\n secure access"
+                            "Set security questions and a 4-digit PIN\n for secure access"
                         },
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,

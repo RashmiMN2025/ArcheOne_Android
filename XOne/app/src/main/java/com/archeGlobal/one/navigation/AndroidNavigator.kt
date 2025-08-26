@@ -73,12 +73,13 @@ class AndroidNavigator(
         activity.finish()
     }
 
-    override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String) {
+    override fun navigateToOtpVerification(email: String, mobile: String, employeeId: String, stayLoggedIn: Boolean) {
         startActivity(
             Intent(activity, OtpVerificationActivity::class.java).apply {
                 putExtra("email", email)
                 putExtra("mobile", mobile)
                 putExtra("employeeId", employeeId)
+                putExtra("stayLoggedIn", stayLoggedIn)
             }
         )
     }
@@ -88,7 +89,8 @@ class AndroidNavigator(
         showBiometricSetup: Boolean,
         email: String,
         mobile: String,
-        employeeId: String
+        employeeId: String,
+        stayLoggedIn: Boolean
     ) {
         Log.d("AndroidNavigator", "navigateToHome called with fromOtp=$fromOtp")
 

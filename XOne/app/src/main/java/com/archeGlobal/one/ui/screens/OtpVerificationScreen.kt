@@ -34,6 +34,8 @@ import com.archeGlobal.one.ui.components.CompanyLogo
 import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.utils.CustomToast
+import com.archeGlobal.one.utils.DeviceInfoUtils
+import kotlinx.coroutines.delay
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -41,7 +43,8 @@ fun OtpVerificationScreen(
     controller: OtpVerificationController,
     email: String,
     mobile: String,
-    employeeId: String
+    employeeId: String,
+    stayLoggedIn: Boolean
 ) {
     val otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
     val focusRequesters = List(6) { remember { FocusRequester() } }
@@ -342,7 +345,27 @@ fun OtpVerificationScreen(
                             return@Button
                         }
 
-                        controller.verifyOtp(email, mobile, employeeId, otp) { message, isError ->
+                        val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
+                        val appVersion = deviceInfo.appVersion
+                        val deviceModel = deviceInfo.deviceModel
+                        val osVersion = deviceInfo.osVersion
+                        val platform = deviceInfo.platform
+                        val deviceId = deviceInfo.deviceId
+
+                        controller.verifyOtp(
+                            email,
+                            mobile,
+                            employeeId,
+                            otp,
+                            isBiometric = false,
+                            backgroundRefresh = false,
+                            appVersion = appVersion,
+                            deviceModel = deviceModel,
+                            deviceId = deviceId,
+                            platform = platform,
+                            osVersion = osVersion,
+                            stayLoggedIn = stayLoggedIn,
+                        ) { message, isError ->
                             isLoading = false
                             if (isError) {
                                 errorMessage = message // This will trigger the Toast via LaunchedEffect

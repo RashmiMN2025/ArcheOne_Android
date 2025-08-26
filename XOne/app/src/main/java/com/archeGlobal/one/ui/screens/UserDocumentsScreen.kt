@@ -137,7 +137,7 @@ fun UserDocumentsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
@@ -156,7 +156,7 @@ fun UserDocumentsScreen(
                             )
                         }
 
-                        val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance Card")
+                        val requiredDocs = listOf("PAN Card", "ID Card", "Medical Insurance Card", "Company Name Change Letter")
                         val docMap = documents.associateBy { it.document_name }
                         val docsToShow = requiredDocs.map { docName ->
                             val existingDoc = docMap[docName]
@@ -270,7 +270,7 @@ fun DocumentItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_pdf_document),
+                painter = painterResource(id = R.drawable.busjust),
                 contentDescription = null,
                 tint = Color(0xFFDD3825),
                 modifier = Modifier.size(24.dp)

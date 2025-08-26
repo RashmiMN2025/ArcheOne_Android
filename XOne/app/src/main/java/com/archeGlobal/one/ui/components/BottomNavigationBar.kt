@@ -48,7 +48,7 @@ fun BottomNavigationBar(
         modifier = modifier
             .height(70.dp)
             .fillMaxWidth(),
-        containerColor = Color.White,
+        containerColor = Color(0xFFF6F4EE),
         contentColor = selectedColor,
         tonalElevation = 4.dp
     ) {
@@ -89,7 +89,7 @@ fun BottomNavigationBar(
                 unselectedIconColor = homeSelectedColor, // Always black
                 selectedTextColor = homeSelectedColor, // Always black
                 unselectedTextColor = homeSelectedColor, // Always black
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )
@@ -126,7 +126,7 @@ fun BottomNavigationBar(
                 unselectedIconColor = unselectedColor,
                 selectedTextColor = selectedColor,
                 unselectedTextColor = unselectedColor,
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )
@@ -163,7 +163,7 @@ fun BottomNavigationBar(
                 unselectedIconColor = unselectedColor,
                 selectedTextColor = selectedColor,
                 unselectedTextColor = unselectedColor,
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )
@@ -200,7 +200,7 @@ fun BottomNavigationBar(
                 unselectedIconColor = unselectedColor,
                 selectedTextColor = selectedColor,
                 unselectedTextColor = unselectedColor,
-                indicatorColor = Color.White
+                indicatorColor = Color(0xFFF6F4EE)
             ),
             alwaysShowLabel = false
         )

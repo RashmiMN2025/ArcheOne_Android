@@ -249,7 +249,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
                         ) {
                             Column(
                                 modifier = Modifier
