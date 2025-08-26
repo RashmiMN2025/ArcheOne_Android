@@ -145,7 +145,7 @@ fun AddItemDialog(
                                 label = "Unit",
                                 value = model.unit,
                                 onValueChange = onUnitChanged,
-                                placeholder = "Enter unit (e.g., Pieces, Kg)"
+                                placeholder = "Enter unit"
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))

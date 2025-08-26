@@ -234,7 +234,7 @@ fun InventorySearchBar(
         onValueChange = onSearchQueryChanged,
         placeholder = {
             Text(
-                text = "Search by item name",
+                text = "Search by item name...",
                 fontFamily = GraphikFontFamily,
                 color = Color.Gray
             )

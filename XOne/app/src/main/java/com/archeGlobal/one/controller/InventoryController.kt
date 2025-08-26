@@ -111,7 +111,7 @@ class InventoryController(
             selectedLocation = item.location.ifEmpty { "Bengaluru" },
             selectedType = item.category.ifEmpty { "HK_Consumables" },
             selectedItem = item.name,
-            itemId = item.id,
+            addItem = item.id,
             existingStock = item.totalStock.toString(),
             usedStockQuantity = "",
             brand = item.brand.ifEmpty { "Schevaran" },
@@ -238,7 +238,11 @@ class InventoryController(
                     val baseQuantity = addItemModel.newStockQuantity.toIntOrNull() ?: 0
                     
                     // Debug logging
+                    android.util.Log.d("InventoryController", "=== UPDATE DEBUG INFO ===")
+                    android.util.Log.d("InventoryController", "selectedItem: '${addItemModel.selectedItem}'")
+                    android.util.Log.d("InventoryController", "addItem (itemId): '${addItemModel.addItem}'")
                     android.util.Log.d("InventoryController", "quantityUpdateType: '${addItemModel.quantityUpdateType}'")
+                    android.util.Log.d("InventoryController", "newStockQuantity: '${addItemModel.newStockQuantity}'")
                     android.util.Log.d("InventoryController", "baseQuantity: $baseQuantity")
                     
                     val isUsedQuantityUpdate = addItemModel.quantityUpdateType == "Update Used Quantity"
@@ -246,11 +250,12 @@ class InventoryController(
                     
                     android.util.Log.d("InventoryController", "Final itemCount: $itemCount")
                     android.util.Log.d("InventoryController", "updateUtilization: $isUsedQuantityUpdate")
+                    android.util.Log.d("InventoryController", "=========================")
                     
                     val request = UpdateInventoryItemRequest(
                         updatedBy = addItemModel.updatedBy,
                         itemName = addItemModel.selectedItem,
-                        itemId = addItemModel.itemId,
+                        itemId = addItemModel.addItem,
                         itemCount = itemCount,
                         brand = addItemModel.brand,
                         unit = addItemModel.unit,
@@ -259,10 +264,14 @@ class InventoryController(
                         location = addItemModel.selectedLocation
                     )
 
+                    android.util.Log.d("InventoryController", "Sending API request...")
                     val response = RetrofitClient.apiService.updateInventoryItem(request)
+                    android.util.Log.d("InventoryController", "API Response Code: ${response.code()}")
+                    android.util.Log.d("InventoryController", "API Response Body: ${response.body()}")
+                    
                     if (response.isSuccessful && response.body()?.status == 200) {
                         // Get the actual total stock from API response
-                        val updatedTotalStock = response.body()?.data?.closingStock ?: "0"
+                        val updatedTotalStock = response.body()?.data?.totalStock ?: "0"
                         
                         // Success - refresh inventory list
                         loadInventoryData()
@@ -270,12 +279,14 @@ class InventoryController(
                         Toast.makeText(context, "The stock for ${addItemModel.selectedItem} item has been updated to $updatedTotalStock.", Toast.LENGTH_LONG).show()
                         resetAddItemForm()
                     } else {
+                        android.util.Log.e("InventoryController", "API Error - Response Code: ${response.code()}, Status: ${response.body()?.status}")
                         addItemModel = addItemModel.copy(isLoading = false)
-                        // Handle API error
+                        Toast.makeText(context, "Failed to update inventory: ${response.body()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
+                    android.util.Log.e("InventoryController", "Network Error: ${e.message}", e)
                     addItemModel = addItemModel.copy(isLoading = false)
-                    // Handle network error
+                    Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
