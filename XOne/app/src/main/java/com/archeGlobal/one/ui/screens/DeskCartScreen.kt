@@ -152,7 +152,7 @@ fun DeskCartHeader(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Stationary Order",
+                    text = "DeskCart",
                     color = Color.Black,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -401,7 +401,7 @@ fun StationaryItemCard(
                     modifier = Modifier
                         .size(24.dp)
                         .background(
-                            color = Color.Gray.copy(alpha = 0.7f),
+                            color = if (item.currentQuantity > 0) Color.Black else Color.Gray.copy(alpha = 0.7f),
                             shape = CircleShape
                         )
                         .clickable(enabled = item.currentQuantity > 0) {
@@ -431,7 +431,7 @@ fun StationaryItemCard(
                     modifier = Modifier
                         .size(24.dp)
                         .background(
-                            color = PrimaryRed,
+                            color = if (item.currentQuantity < item.maxQuantity) PrimaryRed else Color.Gray.copy(alpha = 0.7f),
                             shape = CircleShape
                         )
                         .clickable(enabled = item.currentQuantity < item.maxQuantity) {

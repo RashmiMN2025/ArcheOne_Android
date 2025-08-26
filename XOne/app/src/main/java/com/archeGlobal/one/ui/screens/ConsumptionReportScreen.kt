@@ -95,6 +95,7 @@ fun ConsumptionReportScreen(
                         TabAndLocationRow(
                             selectedTab = model.selectedTab,
                             selectedLocation = model.selectedLocation,
+                            locations = model.locations,
                             onTabSelected = controller::onTabSelected,
                             onLocationSelected = controller::onLocationSelected
                         )
@@ -176,6 +177,7 @@ fun ConsumptionReportHeader(
 fun TabAndLocationRow(
     selectedTab: ConsumptionTab,
     selectedLocation: String,
+    locations: List<String>,
     onTabSelected: (ConsumptionTab) -> Unit,
     onLocationSelected: (String) -> Unit
 ) {
@@ -185,7 +187,9 @@ fun TabAndLocationRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Tab buttons
-        Row {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
             TabButton(
                 text = "Stock",
                 isSelected = selectedTab == ConsumptionTab.STOCK,
@@ -203,6 +207,7 @@ fun TabAndLocationRow(
         // Location selector
         LocationSelector(
             selectedLocation = selectedLocation,
+            locations = locations,
             onLocationSelected = onLocationSelected
         )
     }
@@ -245,32 +250,61 @@ fun TabButton(
 @Composable
 fun LocationSelector(
     selectedLocation: String,
+    locations: List<String>,
     onLocationSelected: (String) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White)
-            .clickable { /* TODO: Show location picker */ }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+    var expanded by remember { mutableStateOf(false) }
+    
+    Box {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.location_selector),
-                contentDescription = "Location",
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = selectedLocation,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-                color = Color.Black
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.location_selector),
+                    contentDescription = "Location",
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = selectedLocation,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+            }
+        }
+        
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color.White)
+        ) {
+            locations.forEach { location ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = location,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                            color = Color.Black
+                        )
+                    },
+                    onClick = {
+                        onLocationSelected(location)
+                        expanded = false
+                    }
+                )
+            }
         }
     }
 }
@@ -452,7 +486,7 @@ fun getCategoryColor(categoryName: String): Color {
 
 @Composable
 fun StockBarChart(items: List<ConsumptionStockItem>, categoryName: String) {
-    val maxValue = items.maxOfOrNull { it.quantity } ?: 1
+    val maxValue = items.maxOfOrNull { it.quantity } ?: 1.0
     val scrollState = rememberScrollState()
     
     // Make the chart wider than the screen to enable scrolling when there are many items
@@ -480,7 +514,7 @@ fun StockBarChart(items: List<ConsumptionStockItem>, categoryName: String) {
 
 @Composable
 fun UsageBarChart(items: List<UsageItem>, categoryName: String) {
-    val maxValue = items.maxOfOrNull { it.quantity } ?: 1
+    val maxValue = items.maxOfOrNull { it.quantity } ?: 1.0
     val scrollState = rememberScrollState()
     
     // Make the chart wider than the screen to enable scrolling when there are many items
@@ -507,11 +541,11 @@ fun UsageBarChart(items: List<UsageItem>, categoryName: String) {
 }
 
 fun DrawScope.drawBarChart(
-    items: List<Triple<String, Int, Color>>,
-    maxValue: Int,
+    items: List<Triple<String, Double, Color>>,
+    maxValue: Double,
     size: Size
 ) {
-    if (items.isEmpty() || maxValue == 0) return
+    if (items.isEmpty() || maxValue == 0.0) return
 
     val leftPadding = 80f
     val chartWidth = size.width - leftPadding - 10f
@@ -521,7 +555,7 @@ fun DrawScope.drawBarChart(
     val bottomPadding = size.height * 0.3f
 
     items.forEachIndexed { index, (name, value, color) ->
-        val barHeight = (value.toFloat() / maxValue) * chartHeight
+        val barHeight = (value.toFloat() / maxValue.toFloat()) * chartHeight
         val x = leftPadding + index * (barWidth + barSpacing) + barSpacing / 2
         val y = size.height - bottomPadding - barHeight
 
@@ -538,7 +572,7 @@ fun DrawScope.drawBarChart(
         if (value > 0) {
             drawContext.canvas.nativeCanvas.apply {
                 drawText(
-                    value.toString(),
+                    if (value % 1.0 == 0.0) value.toInt().toString() else value.toString(),
                     x + barWidth / 2,
                     y - 10,
                     android.graphics.Paint().apply {
@@ -613,14 +647,14 @@ fun DrawScope.drawBarChart(
     }
 
     // Draw Y-axis labels and grid lines
-    val yAxisLabels = if (maxValue <= 10) {
-        (0..maxValue).toList()
+    val yAxisLabels = if (maxValue <= 10.0) {
+        (0..maxValue.toInt()).map { it.toDouble() }
     } else {
-        listOf(0, maxValue / 4, maxValue / 2, (maxValue * 3) / 4, maxValue)
+        listOf(0.0, maxValue / 4, maxValue / 2, (maxValue * 3) / 4, maxValue)
     }
     
     yAxisLabels.forEach { label ->
-        val y = size.height - bottomPadding - (label.toFloat() / maxValue) * chartHeight
+        val y = size.height - bottomPadding - (label.toFloat() / maxValue.toFloat()) * chartHeight
 
         // Draw continuous horizontal grid line (avoiding bars that are taller than the line)
         if (label > 0) { // Don't draw line for 0
@@ -630,7 +664,7 @@ fun DrawScope.drawBarChart(
             items.forEachIndexed { index, (_, value, _) ->
                 val barX = leftPadding + index * (barWidth + barSpacing) + barSpacing / 2
                 val barEndX = barX + barWidth
-                val barHeight = (value.toFloat() / maxValue) * chartHeight
+                val barHeight = (value.toFloat() / maxValue.toFloat()) * chartHeight
                 val barTopY = size.height - bottomPadding - barHeight
                 
                 // Only skip drawing through the bar if the bar is taller than this grid line
@@ -665,7 +699,7 @@ fun DrawScope.drawBarChart(
         // Draw Y-axis label
         drawContext.canvas.nativeCanvas.apply {
             drawText(
-                label.toString(),
+                if (label % 1.0 == 0.0) label.toInt().toString() else label.toString(),
                 leftPadding - 10f,
                 y + 8f,
                 android.graphics.Paint().apply {

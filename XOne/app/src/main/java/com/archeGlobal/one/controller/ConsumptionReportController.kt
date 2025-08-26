@@ -23,55 +23,49 @@ import java.net.URLEncoder
 
 class ConsumptionReportController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
+    private val sourceScreen: String? = null
 ) : ViewModel() {
+    
+    companion object {
+        private const val CACHE_DURATION_MS = 5 * 60 * 1000L // 5 minutes
+        private var cachedModel: ConsumptionReportModel? = null
+        private var cacheTimestamp: Long = 0L
+        
+        fun setCachedData(consumptionModel: ConsumptionReportModel) {
+            cachedModel = consumptionModel
+            cacheTimestamp = System.currentTimeMillis()
+            Log.d("ConsumptionReportController", "Cached consumption report data")
+        }
+        
+        private fun isCacheValid(): Boolean {
+            return cachedModel != null && 
+                   (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
+        }
+    }
+    
     var model by mutableStateOf(ConsumptionReportModel())
         private set
     
     private val fileDownloadHelper = FileDownloadHelper(context)
-
-    companion object {
-        private var cachedStockData: List<com.archeGlobal.one.model.StockItem>? = null
-        private var lastLoadTime: Long = 0
-        private const val CACHE_DURATION = 5 * 60 * 1000L // 5 minutes cache
-    }
 
     init {
         loadConsumptionDataIfNeeded()
     }
 
     private fun loadConsumptionDataIfNeeded() {
-        val currentTime = System.currentTimeMillis()
-        val isCacheValid = cachedStockData != null && 
-                          (currentTime - lastLoadTime) < CACHE_DURATION
-
-        if (isCacheValid) {
-            // Use cached data
-            processStockData(cachedStockData!!)
-            Log.d("ConsumptionReportController", "Using cached stock data")
-        } else {
-            // Load fresh data
+        // Only call API when coming from AdminDashboard or if cache is invalid
+        if (sourceScreen == "AdminDashboard" || !isCacheValid()) {
+            Log.d("ConsumptionReportController", "Loading fresh data from API (source: $sourceScreen, cache valid: ${isCacheValid()})")
             loadConsumptionData()
+        } else {
+            Log.d("ConsumptionReportController", "Using cached data (source: $sourceScreen)")
+            cachedModel?.let { cached ->
+                model = cached.copy(isLoading = false)
+            }
         }
     }
 
-    private fun processStockData(stockData: List<com.archeGlobal.one.model.StockItem>) {
-        val filteredData = if (model.selectedLocation.isNotBlank()) {
-            stockData.filter { it.location == model.selectedLocation }
-        } else {
-            stockData
-        }
-        
-        val stockCategories = filteredData.toConsumptionStockCategories()
-        val usageCategories = filteredData.toUsageCategories()
-        
-        model = model.copy(
-            stockCategories = stockCategories,
-            usageCategories = usageCategories,
-            isLoading = false,
-            error = null
-        )
-    }
 
     private fun loadConsumptionData() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -85,13 +79,32 @@ class ConsumptionReportController(
                     if (stockListResponse?.status == 200) {
                         val stockData = stockListResponse.data
                         
-                        // Cache the results
-                        cachedStockData = stockData
-                        lastLoadTime = System.currentTimeMillis()
+                        // Process data on background thread
+                        val filteredData = if (model.selectedLocation.isNotBlank()) {
+                            stockData.filter { it.location == model.selectedLocation }
+                        } else {
+                            stockData
+                        }
                         
-                        // Process and update UI
+                        val stockCategories = filteredData.toConsumptionStockCategories()
+                        val usageCategories = filteredData.toUsageCategories()
+                        
+                        // Extract unique locations from API data
+                        val locations = stockData.map { it.location }.distinct().sorted()
+                        
+                        // Update UI on main thread
                         withContext(Dispatchers.Main) {
-                            processStockData(stockData)
+                            val newModel = model.copy(
+                                stockCategories = stockCategories,
+                                usageCategories = usageCategories,
+                                locations = locations,
+                                isLoading = false,
+                                error = null
+                            )
+                            model = newModel
+                            
+                            // Cache the data
+                            setCachedData(newModel)
                         }
                         Log.d("ConsumptionReportController", "Consumption data loaded successfully")
                     } else {

@@ -3,6 +3,7 @@ package com.archeGlobal.one.model
 data class ConsumptionReportModel(
     val selectedTab: ConsumptionTab = ConsumptionTab.STOCK,
     val selectedLocation: String = "Bengaluru",
+    val locations: List<String> = emptyList(),
     val stockCategories: List<ConsumptionStockCategory> = emptyList(),
     val usageCategories: List<UsageCategory> = emptyList(),
     val isLoading: Boolean = false,
@@ -21,7 +22,7 @@ data class ConsumptionStockCategory(
 
 data class ConsumptionStockItem(
     val name: String,
-    val quantity: Int,
+    val quantity: Double,
     val color: String = "#4FC3F7" // Default blue color
 )
 
@@ -33,7 +34,7 @@ data class UsageCategory(
 
 data class UsageItem(
     val name: String,
-    val quantity: Int,
+    val quantity: Double,
     val color: String = "#F44336" // Default red color
 )
 
@@ -52,7 +53,7 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
                 items = this.map { stockItem ->
                     ConsumptionStockItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0,
+                        quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
                         color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
                     )
                 }
@@ -69,7 +70,7 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
                 items = items.map { stockItem ->
                     ConsumptionStockItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0,
+                        quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
                         color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
                     )
                 }
@@ -94,7 +95,7 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
                 items = this.map { stockItem ->
                     UsageItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.consumption.toIntOrNull() ?: 0,
+                        quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
                         color = "#F44336" // Red color for usage
                     )
                 }
@@ -111,7 +112,7 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
                 items = items.map { stockItem ->
                     UsageItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.consumption.toIntOrNull() ?: 0,
+                        quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
                         color = "#F44336" // Red color for usage
                     )
                 }
