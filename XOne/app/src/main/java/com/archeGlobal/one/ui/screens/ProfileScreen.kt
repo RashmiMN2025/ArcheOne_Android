@@ -673,7 +673,7 @@ fun ProfilePictureUploadDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 8.dp),
+                                .padding(top = 10.dp),
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Button(
@@ -691,7 +691,7 @@ fun ProfilePictureUploadDialog(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Delete,
+                                    painter = painterResource(id = R.drawable.delete),
                                     contentDescription = "Delete",
                                     tint = Color(0xFFDD3825),
                                     modifier = Modifier.size(22.dp)

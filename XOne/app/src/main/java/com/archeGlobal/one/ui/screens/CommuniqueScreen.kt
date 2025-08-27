@@ -208,7 +208,7 @@ fun CommuniqueScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Search,
+                                painter = painterResource(id = R.drawable.search11),
                                 contentDescription = "Search",
                                 tint = Color.Gray,
                                 modifier = Modifier.size(24.dp)

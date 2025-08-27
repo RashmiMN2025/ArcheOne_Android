@@ -31,12 +31,14 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.GreetingsController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -306,10 +308,10 @@ fun GreetingsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Search,
+                                    painter = painterResource(id = R.drawable.search11),
                                     contentDescription = "Search",
                                     tint = Color.Gray,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                                 BasicTextField(
                                     value = searchQuery,
@@ -331,7 +333,7 @@ fun GreetingsScreen(
                                         Box {
                                             if (searchQuery.isEmpty()) {
                                                 Text(
-                                                    text = "Search Greetings...",
+                                                    text = "Search celebration...",
                                                     color = Color.Gray.copy(alpha = 0.6f),
                                                     fontSize = 16.sp,
                                                     fontFamily = GraphikFontFamily,

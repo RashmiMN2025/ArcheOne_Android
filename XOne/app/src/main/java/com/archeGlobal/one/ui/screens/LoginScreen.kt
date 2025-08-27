@@ -644,7 +644,7 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_lock), // <-- Your lock icon
+                                painter = painterResource(id = R.drawable.login), // <-- Your lock icon
                                 contentDescription = "OTP",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)

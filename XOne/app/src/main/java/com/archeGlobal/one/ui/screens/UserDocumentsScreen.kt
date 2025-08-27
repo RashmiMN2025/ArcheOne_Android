@@ -270,7 +270,7 @@ fun DocumentItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.busjust),
+                painter = painterResource(id = R.drawable.profiledoc),
                 contentDescription = null,
                 tint = Color(0xFFDD3825),
                 modifier = Modifier.size(24.dp)
@@ -300,7 +300,7 @@ fun DocumentItem(
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_view_eye),
+                        painter = painterResource(id = R.drawable.view11),
                         contentDescription = "View",
                         tint = Color(0xFFDD3825),
                         modifier = Modifier.size(22.dp)

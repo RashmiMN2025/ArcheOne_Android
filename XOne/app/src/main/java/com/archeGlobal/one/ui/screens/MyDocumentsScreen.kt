@@ -402,7 +402,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
-                    color = Color(0xFFFEF7F2),
+                    color = Color(0xFFF6F4EE),
                     shadowElevation = 24.dp,
                     tonalElevation = 2.dp,
                     modifier = Modifier
@@ -439,7 +439,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            "Please enter your 4-digit MPIN to access your documents",
+                            "Please enter your 4-digit MPIN to\n unlock My Documents",
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 16.sp,
@@ -581,7 +581,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFE0B4AA),
                                 contentColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFE0B4AA),
+                                disabledContainerColor = Color(0xFFDD3825),
                                 disabledContentColor = Color(0xFFDD3825)
                             ),
                             border = BorderStroke(1.dp, Color(0xFFDD3825)),
@@ -832,7 +832,7 @@ fun DocumentCard(
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_view_eye),
+                        painter = painterResource(id = R.drawable.view11),
                         contentDescription = "View",
                         tint = Color(0xFFDD3825),
                         modifier = Modifier.size(24.dp)

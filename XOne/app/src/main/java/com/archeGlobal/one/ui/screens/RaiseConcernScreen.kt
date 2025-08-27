@@ -460,9 +460,9 @@ fun RaiseConcernScreen(
                             trailingIcon = {
                                 if (!isCategoryLocked) {
                                     Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
+                                        painter = painterResource(id = R.drawable.dropdown),
                                         contentDescription = "Dropdown",
-                                        tint = Color.Black
+                                        tint = Color.Gray
                                     )
                                 }
                             },
@@ -577,13 +577,13 @@ fun RaiseConcernScreen(
                             value = selectedSubcategory ?: "",
                             onValueChange = { },
                             readOnly = true,
-                            placeholder = { Text("Select Subcategory") },
+                            placeholder = { Text("Select Sub-Category") },
                             trailingIcon = {
                                 if (!isSubcategoryLocked) {
                                     Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
+                                        painter = painterResource(id = R.drawable.dropdown),
                                         contentDescription = "Dropdown",
-                                        tint = Color.Black
+                                        tint = Color.Gray
                                     )
                                 }
                             },

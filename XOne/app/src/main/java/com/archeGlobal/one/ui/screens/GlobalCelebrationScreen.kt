@@ -25,12 +25,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.GlobalCelebrationController
 import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
@@ -171,10 +173,10 @@ fun GlobalCelebrationScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Search,
+                                painter = painterResource(id = R.drawable.search11),
                                 contentDescription = "Search",
                                 tint = Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                             BasicTextField(
                                 value = searchQuery,

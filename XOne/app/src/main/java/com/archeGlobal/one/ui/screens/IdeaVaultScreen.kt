@@ -226,12 +226,19 @@ fun IdeaVaultScreen(
                                         value = selectedCategory,
                                         onValueChange = { },
                                         readOnly = true,
-                                        placeholder = { Text("Select Category") },
+                                        placeholder = {
+                                            Text(
+                                                "Select Category",
+                                            color = Color.LightGray,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal
+                                            ) },
                                         trailingIcon = {
                                             Icon(
-                                                imageVector = Icons.Default.ArrowDropDown,
+                                                painter = painterResource(id = R.drawable.dropdown),
                                                 contentDescription = "Dropdown",
-                                                tint = Color.Black
+                                                tint = Color.Gray,
+                                                modifier = Modifier.size(20.dp)
                                             )
                                         },
                                         modifier = Modifier
@@ -329,7 +336,12 @@ fun IdeaVaultScreen(
                                 OutlinedTextField(
                                     value = feedbackText,
                                     onValueChange = { feedbackText = it },
-                                    placeholder = { Text("Submit an idea or Feedback") },
+                                    placeholder = { Text(
+                                        "Submit an idea or Feedback",
+                                        color = Color.LightGray,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal
+                                    ) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(160.dp), // Taller text field for feedback

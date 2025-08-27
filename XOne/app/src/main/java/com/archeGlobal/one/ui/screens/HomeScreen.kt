@@ -2,6 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -87,6 +88,8 @@ import com.archeGlobal.one.ui.components.WhatsNewDialog
 import com.archeGlobal.one.ui.theme.*
 import com.archeGlobal.one.ui.theme.getColorForApp
 import com.archeGlobal.one.utils.BiometricHelper
+import com.archeGlobal.one.utils.DeviceInfo
+import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.UserDataManager
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -758,6 +761,7 @@ fun HomeScreenContent(
         if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
             WhatsNewDialog(
                 whatsNewItems = whatsNewData,
+                appVersion = "1.4",
                 onDismiss = {
                     controller.dismissWhatsNewDialog()
                 }

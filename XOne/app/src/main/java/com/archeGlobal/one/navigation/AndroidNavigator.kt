@@ -645,9 +645,6 @@ class AndroidNavigator(
             is com.archeGlobal.one.LoginActivity -> {
                 (activity as com.archeGlobal.one.LoginActivity).showUpdateDialog()
             }
-            is com.archeGlobal.one.OtpVerificationActivity -> {
-                (activity as com.archeGlobal.one.OtpVerificationActivity).showUpdateDialog()
-            }
             else -> {
                 // For other activities, navigate to LoginActivity and show update dialog
                 val intent = Intent(activity, com.archeGlobal.one.LoginActivity::class.java).apply {
