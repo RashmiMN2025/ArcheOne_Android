@@ -187,8 +187,8 @@ fun OrderHistoryDetailScreen(
                         }
                     }
 
-                    // Remarks Card - Show if remarks exist
-                    if (orderItem.Remarks.isNotEmpty()) {
+                    // Additional Details Card - Show if either processed by or remarks exist
+                    if (orderItem.orderProcessedByAdminTeam.isNotEmpty() || orderItem.Remarks.isNotEmpty()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -199,7 +199,7 @@ fun OrderHistoryDetailScreen(
                                 modifier = Modifier.padding(20.dp)
                             ) {
                                 Text(
-                                    text = "Remarks",
+                                    text = "Additional Details",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 19.sp,
@@ -207,13 +207,21 @@ fun OrderHistoryDetailScreen(
                                     modifier = Modifier.padding(bottom = 16.dp)
                                 )
 
-                                Text(
-                                    text = orderItem.Remarks,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 15.sp,
-                                    color = Color.Black
-                                )
+                                // Processed By field - show if not empty
+                                if (orderItem.orderProcessedByAdminTeam.isNotEmpty()) {
+                                    OrderHistoryDetailRow(
+                                        label = "Processed By:",
+                                        value = orderItem.orderProcessedByAdminTeam
+                                    )
+                                }
+
+                                // Remarks field - show if not empty
+                                if (orderItem.Remarks.isNotEmpty()) {
+                                    OrderHistoryDetailRow(
+                                        label = "Remarks:",
+                                        value = orderItem.Remarks
+                                    )
+                                }
                             }
                         }
                     }

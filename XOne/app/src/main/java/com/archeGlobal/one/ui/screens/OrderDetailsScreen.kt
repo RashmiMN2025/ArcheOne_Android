@@ -205,7 +205,7 @@ fun OrderDetailsScreen(
                                             onValueChange = { controller.updateRemarks(it) },
                                             placeholder = {
                                                 Text(
-                                                    "Enter remarks (optional)",
+                                                    "Enter remarks (Mandatory)",
                                                     color = Color.Gray,
                                                     fontFamily = GraphikFontFamily
                                                 )

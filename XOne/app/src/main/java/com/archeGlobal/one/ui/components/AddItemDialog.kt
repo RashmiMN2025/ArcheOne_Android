@@ -145,7 +145,7 @@ fun AddItemDialog(
                                 label = "Unit",
                                 value = model.unit,
                                 onValueChange = onUnitChanged,
-                                placeholder = "Enter unit (e.g., Pieces, Kg)"
+                                placeholder = "Enter unit"
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
@@ -295,27 +295,7 @@ fun AddItemDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Cancel Button (left)
-                        Button(
-                            onClick = onDismiss,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Gray,
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                text = "Cancel",
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp
-                            )
-                        }
-
-                        // Action Button (right) - text changes based on mode
+                        // Action Button (left) - text changes based on mode
                         Button(
                             onClick = onUpdateStock,
                             modifier = Modifier
@@ -332,6 +312,26 @@ fun AddItemDialog(
                                     DialogMode.ADD -> "Add Item"
                                     DialogMode.UPDATE -> "Update Stock"
                                 },
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp
+                            )
+                        }
+
+                        // Cancel Button (right)
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Gray,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "Cancel",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 18.sp

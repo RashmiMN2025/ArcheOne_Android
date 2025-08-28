@@ -3,6 +3,7 @@ package com.archeGlobal.one.model
 data class ConsumptionReportModel(
     val selectedTab: ConsumptionTab = ConsumptionTab.STOCK,
     val selectedLocation: String = "Bengaluru",
+    val locations: List<String> = emptyList(),
     val stockCategories: List<ConsumptionStockCategory> = emptyList(),
     val usageCategories: List<UsageCategory> = emptyList(),
     val isLoading: Boolean = false,
@@ -21,7 +22,7 @@ data class ConsumptionStockCategory(
 
 data class ConsumptionStockItem(
     val name: String,
-    val quantity: Int,
+    val quantity: Double,
     val color: String = "#4FC3F7" // Default blue color
 )
 
@@ -33,7 +34,7 @@ data class UsageCategory(
 
 data class UsageItem(
     val name: String,
-    val quantity: Int,
+    val quantity: Double,
     val color: String = "#F44336" // Default red color
 )
 
@@ -52,29 +53,75 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
                 items = this.map { stockItem ->
                     ConsumptionStockItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.totalStock.toIntOrNull() ?: 0,
-                        color = getStockColor(stockItem.totalStock.toIntOrNull() ?: 0)
+                        quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
+                        color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
                     )
                 }
             )
         )
     }
     
-    // Add categories by type
-    groupedByCategory.forEach { (category, items) ->
-        categories.add(
-            ConsumptionStockCategory(
-                id = category.lowercase().replace(" ", "_"),
-                title = "$category Stock",
-                items = items.map { stockItem ->
-                    ConsumptionStockItem(
-                        name = stockItem.itemName,
-                        quantity = stockItem.totalStock.toIntOrNull() ?: 0,
-                        color = getStockColor(stockItem.totalStock.toIntOrNull() ?: 0)
-                    )
-                }
+    // Add categories by type in specific order
+    // Map desired order to potential category name variations
+    val categoryOrder = listOf(
+        "Stationary" to listOf("stationary", "stationery"),
+        "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
+        "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables")
+    )
+    
+    categoryOrder.forEach { (displayName, searchNames) ->
+        // Find matching category (case-insensitive)
+        val matchingCategory = groupedByCategory.keys.find { categoryKey ->
+            searchNames.any { searchName ->
+                categoryKey.lowercase().contains(searchName.lowercase()) ||
+                searchName.lowercase().contains(categoryKey.lowercase())
+            }
+        }
+        
+        matchingCategory?.let { categoryKey ->
+            val items = groupedByCategory[categoryKey]!!
+            categories.add(
+                ConsumptionStockCategory(
+                    id = displayName.lowercase().replace(" ", "_"),
+                    title = "$displayName Stock",
+                    items = items.map { stockItem ->
+                        ConsumptionStockItem(
+                            name = stockItem.itemName,
+                            quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
+                            color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
+                        )
+                    }
+                )
             )
-        )
+        }
+    }
+    
+    // Add any remaining categories not in the specified order
+    val processedCategories = categoryOrder.flatMap { (_, searchNames) ->
+        groupedByCategory.keys.filter { categoryKey ->
+            searchNames.any { searchName ->
+                categoryKey.lowercase().contains(searchName.lowercase()) ||
+                searchName.lowercase().contains(categoryKey.lowercase())
+            }
+        }
+    }
+    
+    groupedByCategory.forEach { (category, items) ->
+        if (!processedCategories.contains(category)) {
+            categories.add(
+                ConsumptionStockCategory(
+                    id = category.lowercase().replace(" ", "_"),
+                    title = "$category Stock",
+                    items = items.map { stockItem ->
+                        ConsumptionStockItem(
+                            name = stockItem.itemName,
+                            quantity = stockItem.totalStock.toDoubleOrNull() ?: 0.0,
+                            color = getStockColor(stockItem.totalStock.toDoubleOrNull()?.toInt() ?: 0)
+                        )
+                    }
+                )
+            )
+        }
     }
     
     return categories
@@ -94,7 +141,7 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
                 items = this.map { stockItem ->
                     UsageItem(
                         name = stockItem.itemName,
-                        quantity = stockItem.consumption.toIntOrNull() ?: 0,
+                        quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
                         color = "#F44336" // Red color for usage
                     )
                 }
@@ -102,21 +149,67 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
         )
     }
     
-    // Add categories by type
-    groupedByCategory.forEach { (category, items) ->
-        categories.add(
-            UsageCategory(
-                id = category.lowercase().replace(" ", "_") + "_usage",
-                title = "$category Usage",
-                items = items.map { stockItem ->
-                    UsageItem(
-                        name = stockItem.itemName,
-                        quantity = stockItem.consumption.toIntOrNull() ?: 0,
-                        color = "#F44336" // Red color for usage
-                    )
-                }
+    // Add categories by type in specific order
+    // Map desired order to potential category name variations
+    val categoryOrder = listOf(
+        "Stationary" to listOf("stationary", "stationery"),
+        "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
+        "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables")
+    )
+    
+    categoryOrder.forEach { (displayName, searchNames) ->
+        // Find matching category (case-insensitive)
+        val matchingCategory = groupedByCategory.keys.find { categoryKey ->
+            searchNames.any { searchName ->
+                categoryKey.lowercase().contains(searchName.lowercase()) ||
+                searchName.lowercase().contains(categoryKey.lowercase())
+            }
+        }
+        
+        matchingCategory?.let { categoryKey ->
+            val items = groupedByCategory[categoryKey]!!
+            categories.add(
+                UsageCategory(
+                    id = displayName.lowercase().replace(" ", "_") + "_usage",
+                    title = "$displayName Usage",
+                    items = items.map { stockItem ->
+                        UsageItem(
+                            name = stockItem.itemName,
+                            quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
+                            color = "#F44336" // Red color for usage
+                        )
+                    }
+                )
             )
-        )
+        }
+    }
+    
+    // Add any remaining categories not in the specified order
+    val processedCategories = categoryOrder.flatMap { (_, searchNames) ->
+        groupedByCategory.keys.filter { categoryKey ->
+            searchNames.any { searchName ->
+                categoryKey.lowercase().contains(searchName.lowercase()) ||
+                searchName.lowercase().contains(categoryKey.lowercase())
+            }
+        }
+    }
+    
+    groupedByCategory.forEach { (category, items) ->
+        if (!processedCategories.contains(category)) {
+            categories.add(
+                UsageCategory(
+                    id = category.lowercase().replace(" ", "_") + "_usage",
+                    title = "$category Usage",
+                    items = items.map { stockItem ->
+                        UsageItem(
+                            name = stockItem.itemName,
+                            quantity = stockItem.utilization.toDoubleOrNull() ?: 0.0,
+                            color = "#F44336" // Red color for usage
+                        )
+                    }
+                )
+            )
+        }
     }
     
     return categories
