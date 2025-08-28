@@ -68,27 +68,23 @@ fun TravelRequestDetailScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Add space at the top to push everything down
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Travel Request Details",
-                                    color = Color.Black,
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                                    .offset(x = (-24).dp),
+                                text = "Travel Request Details",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center
+                            )
                         },
                         navigationIcon = {
-                            IconButton(onClick = { controller.onBackPressed(fromTravelDetail = true) }) {
+                            IconButton(onClick = { controller.onBackPressed() }) {
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
@@ -98,9 +94,7 @@ fun TravelRequestDetailScreen(
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {
-                            Spacer(modifier = Modifier.width(48.dp))
-                        }
+                        actions = {}
                     )
 
                     // Main content
