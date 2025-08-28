@@ -250,21 +250,21 @@ fun TravelRequestCard(
                         icon = R.drawable.mappin_and_ellipse,
                         label = "Destination City", value = destination.destinationCity
                     )
+
+                    // Show travel dates for single destination
+                    if (!destination.departureDate.isNullOrEmpty() && !destination.arrivalDate.isNullOrEmpty()) {
+                        DetailItem(
+                            icon = R.drawable.ic_calendar,
+                            label = "Travel Dates",
+                            value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate)
+                        )
+                    }
                 } else {
                     // Fallback for cases without travel details
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
                         label = "Destination",
                         value = travelRequest.destination
-                    )
-                }
-
-                // Show travel dates for single destination
-                if (!travelRequest.departureDate.isNullOrEmpty() && !travelRequest.arrivalDate.isNullOrEmpty()) {
-                    DetailItem(
-                        icon = R.drawable.ic_calendar,
-                        label = "Travel Dates",
-                        value = DateFormatter.formatTravelDateRange(travelRequest.departureDate, travelRequest.arrivalDate)
                     )
                 }
             } else {

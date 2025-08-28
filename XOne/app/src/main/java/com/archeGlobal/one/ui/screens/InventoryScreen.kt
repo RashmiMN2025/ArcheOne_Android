@@ -395,14 +395,18 @@ fun InventoryDropdown(
 
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(Color.White)
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
                         text = {
                             Text(
                                 text = option,
-                                fontFamily = GraphikFontFamily
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 14.sp,
+                                color = Color.Black
                             )
                         },
                         onClick = {
@@ -469,7 +473,7 @@ fun InventoryItemCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Item Name: ${item.name}",
+                    text = "Item Name: ${item.name.replace("_", " ")}",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
