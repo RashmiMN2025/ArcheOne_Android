@@ -46,6 +46,7 @@ class LoginActivity : AppCompatActivity() {
         val forceDifferentUserMode = intent.getBooleanExtra("forceDifferentUserMode", false)
         val shouldShowUpdateDialog = intent.getBooleanExtra("showUpdateDialog", false)
         val sessionExpired = intent.getBooleanExtra("session_expired", false)
+        val clearFields = intent.getBooleanExtra("clearFields", false)
 
         val mpinController = com.archeGlobal.one.controller.MpinController(this)
         val hasMpin = mpinController.isMpinSet()
@@ -85,7 +86,8 @@ class LoginActivity : AppCompatActivity() {
                     controller = loginController,
                     navigator = navigator,
                     forceOriginalLogin = forceOriginalLoginFinal,
-                    forceDifferentUserMode = forceDifferentUserMode
+                    forceDifferentUserMode = forceDifferentUserMode,
+                    clearFields = clearFields
                 )
 
                 // Update Required Dialog

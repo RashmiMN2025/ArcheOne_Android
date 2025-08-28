@@ -82,7 +82,8 @@ fun ResponsiveLoginScreen(
     controller: LoginController,
     navigator: Navigator,
     forceOriginalLogin: Boolean = false,
-    forceDifferentUserMode: Boolean = false
+    forceDifferentUserMode: Boolean = false,
+    clearFields: Boolean = false
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -98,7 +99,8 @@ fun ResponsiveLoginScreen(
         navigator = navigator,
         forceOriginalLogin = forceOriginalLogin,
         forceDifferentUserMode = forceDifferentUserMode,
-        contentPadding = contentPadding
+        contentPadding = contentPadding,
+        clearFields = clearFields
     )
 }
 
@@ -108,12 +110,16 @@ fun LoginScreen(
     navigator: Navigator,
     forceOriginalLogin: Boolean = false,
     forceDifferentUserMode: Boolean = false,
-    contentPadding: Dp = 16.dp // <-- Add this parameter
+    contentPadding: Dp = 16.dp, // <-- Add this parameter
+    clearFields: Boolean = false
 ) {
     val context = LocalContext.current
-    var email by remember { mutableStateOf("") }
-    var mobile by remember { mutableStateOf("") }
-    var employeeId by remember { mutableStateOf("") }
+    val userDataManager = UserDataManager.getInstance(context)
+    val preferencesManager = PreferencesManager(context)
+
+    var email by remember { mutableStateOf(if (clearFields) "" else preferencesManager.getString("lastEmail", "") ?: "") }
+    var mobile by remember { mutableStateOf(if (clearFields) "" else preferencesManager.getString("lastMobile", "") ?: "") }
+    var employeeId by remember { mutableStateOf(if (clearFields) "" else preferencesManager.getString("lastEmployeeId", "") ?: "") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var mobileVisible by remember { mutableStateOf(false) }
@@ -125,9 +131,6 @@ fun LoginScreen(
     // Inside your LoginScreen composable:
     var stayLoggedIn by remember { mutableStateOf(false) }
     var showDisableDialog by remember { mutableStateOf(false) }
-
-    val userDataManager = UserDataManager.getInstance(context)
-    val preferencesManager = PreferencesManager(context)
 
     // Get session expired status from intent
     val activity = context as? Activity

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material3.Button
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,16 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import com.archeGlobal.one.controller.SmartCollateralController
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.archeGlobal.one.ui.components.WhatsNewDialog
+import com.archeGlobal.one.utils.PreferencesManager
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -83,6 +94,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var orderController: OrderController
     private lateinit var consumptionReportController: ConsumptionReportController
     private lateinit var smartCollateralcontroller: SmartCollateralController
+    private lateinit var preferencesManager: PreferencesManager
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -90,6 +102,7 @@ class HomeActivity : AppCompatActivity() {
     private var isLocked = false
     private var biometricPromptShown = false
     private var currentSourceActivity = mutableStateOf<String?>(null) // Track source activity for back navigation
+    private var showUpdateDialog by mutableStateOf(false)
 
     private fun refreshHomeData() {
         val userData = userDataManager.getUserData()
@@ -204,6 +217,7 @@ class HomeActivity : AppCompatActivity() {
         userDataManager = UserDataManager.getInstance(this)
         navigator = AndroidNavigator(this)
         controller = HomeController(navigator, this)
+        preferencesManager = PreferencesManager(this)
 
         // Check if we're coming from login
         val fromLogin = intent.getBooleanExtra("fromLogin", false)
@@ -351,6 +365,10 @@ class HomeActivity : AppCompatActivity() {
                 orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
                 consumptionReportController = ConsumptionReportController(this@HomeActivity, navigator)
                 smartCollateralcontroller = SmartCollateralController(this)
+
+                if (intent.getBooleanExtra("showUpdateDialog", false) || preferencesManager.getBoolean("showUpdateDialog", false)) {
+                    showUpdateDialog = true
+                }
 
                 var isLoading by remember { mutableStateOf(false) }
 
@@ -1718,6 +1736,55 @@ class HomeActivity : AppCompatActivity() {
                         )
                     }
                 }
+
+                // Update Required Dialog
+                if (showUpdateDialog) {
+                    UpdateRequiredDialog(
+                        onUpdateClick = {
+                            preferencesManager.setBoolean("showUpdateDialog", true)
+
+                            // Open Play Store
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            try {
+                                startActivity(intent)
+                                Log.d("HomeActivity", "Play Store intent launched successfully for package: $packageName")
+                            } catch (e: Exception) {
+                                Log.e("HomeActivity", "Failed to launch Play Store intent: ${e.message}")
+                                // Fallback to web-based Play Store URL
+                                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                try {
+                                    startActivity(webIntent)
+                                    Log.d("HomeActivity", "Web Play Store intent launched successfully for package: $packageName")
+                                } catch (e: Exception) {
+                                    Log.e("HomeActivity", "Failed to open web Play Store: ${e.message}")
+                                    Toast.makeText(this@HomeActivity, "Unable to open Play Store. Please try again.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        onDismiss = {
+                            showUpdateDialog = false
+                            preferencesManager.setBoolean("showUpdateDialog", false)
+                        }
+                    )
+                }
+
+                val showWhatsNewDialog by controller.showWhatsNewDialog.collectAsState()
+
+                val whatsNewData = UserDataManager.getInstance(this).getWhatsNewData()
+
+                if (showWhatsNewDialog && !whatsNewData.isNullOrEmpty()) {
+                    WhatsNewDialog(
+                        whatsNewItems = whatsNewData,
+                        appVersion = "1.4",
+                        onDismiss = {
+                            controller.dismissWhatsNewDialog()
+                        }
+                    )
+                }
             }
         }
     }
@@ -1750,16 +1817,14 @@ class HomeActivity : AppCompatActivity() {
         val isLocked = userDataManager.preferencesManager.getAppLockState()
         val appLifecycleObserver = XOneApplication.getInstance().getAppLifecycleObserver()
 
+        showUpdateDialog = false
+        preferencesManager.setBoolean("showUpdateDialog", false)
+        preferencesManager.setString("preUpdateVersion", "")
+
         if (isLoggedIn) {
             refreshHomeData()
         }
 
-        // Only show biometric if:
-        // 1. User is logged in
-        // 2. Biometric is available and enabled
-        // 3. App is locked (this is set by AppLifecycleObserver when app goes to background)
-        // 4. Haven't already authenticated in this session
-        // 5. Not already showing authentication
         if (isLoggedIn &&
             biometricHelper.canUseBiometric() &&
             biometricHelper.isBiometricEnabled() &&
@@ -1801,6 +1866,92 @@ class HomeActivity : AppCompatActivity() {
     fun navigateToOrderHistory() {
         navigator.navController?.navigate("order_history") {
             launchSingleTop = true
+        }
+    }
+
+    fun showUpdateDialog() {
+        showUpdateDialog = true
+        preferencesManager.setBoolean("showUpdateDialog", true)
+    }
+
+    @Composable
+    fun UpdateRequiredDialog(
+        onUpdateClick: () -> Unit,
+        onDismiss: () -> Unit
+    ) {
+        Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            )
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFF6F4EE),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Download icon
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_download),
+                        contentDescription = "Update Required",
+                        tint = Color(0xFFDD3825),
+                        modifier = Modifier.size(48.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Title
+                    androidx.compose.material3.Text(
+                        text = "Update Required",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Description
+                    androidx.compose.material3.Text(
+                        text = "A new version of ArcheOne is available. You must update to continue using the app.",
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Update button
+                    Button(
+                        onClick = onUpdateClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        androidx.compose.material3.Text(
+                            text = "Update Now",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = GraphikFontFamily
+                        )
+                    }
+                }
+            }
         }
     }
 }
