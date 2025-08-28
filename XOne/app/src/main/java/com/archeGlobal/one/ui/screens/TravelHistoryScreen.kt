@@ -69,24 +69,19 @@ fun TravelHistoryScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Add space at the top to push everything down
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Travel History",
-                                    color = Color.Black,
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(Alignment.CenterHorizontally),
+                                text = "Travel History",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
                         },
                         navigationIcon = {
                             IconButton(onClick = { controller.onBackPressed() }) {
@@ -99,9 +94,7 @@ fun TravelHistoryScreen(
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {
-                            Spacer(modifier = Modifier.width(48.dp))
-                        }
+                        actions = {}
                     )
 
                     // Add more space after the TopAppBar

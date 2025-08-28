@@ -141,24 +141,19 @@ fun TravelApprovalsScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Add space at the top to push everything down
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Travel Approvals",
-                                    color = Color.Black,
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(Alignment.CenterHorizontally),
+                                text = "Travel Approvals",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center
+                            )
                         },
                         navigationIcon = {
                             IconButton(onClick = { controller.onBackPressed() }) {
@@ -171,9 +166,7 @@ fun TravelApprovalsScreen(
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {
-                            Spacer(modifier = Modifier.width(48.dp))
-                        }
+                        actions = {}
                     )
 
                     // Trigger loading of travel approval requests when the screen is shown

@@ -102,9 +102,6 @@ fun TravelScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Add space at the top to push everything down
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
                             Box(

@@ -69,23 +69,19 @@ fun TravelHistoryDetailScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Travel Request Details",
-                                    color = Color.Black,
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(Alignment.CenterHorizontally),
+                                text = "Travel Request Details",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
                         },
                         navigationIcon = {
                             IconButton(onClick = { controller.onBackPressed() }) {
@@ -98,9 +94,7 @@ fun TravelHistoryDetailScreen(
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {
-                            Spacer(modifier = Modifier.width(48.dp))
-                        }
+                        actions = {}
                     )
 
                     val scrollState = rememberScrollState()
