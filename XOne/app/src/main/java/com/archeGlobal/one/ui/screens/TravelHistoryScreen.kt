@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -212,14 +214,15 @@ fun TravelRequestCard(
             ) {
                 Text(
                     text = "#${travelRequest.id}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = GraphikFontFamily
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black
                 )
                 StatusTag(status = travelRequest.status)
             }
 
-            Divider(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())
+            Divider(modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth())
 
             // Project
             DetailItem(
@@ -275,7 +278,7 @@ fun TravelRequestCard(
                     Text(
                         text = "Trip ${index + 1}",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 4.dp)
@@ -328,23 +331,23 @@ fun TravelRequestCard(
 @Composable
 fun StatusTag(status: TravelStatus) {
     val (backgroundColor, textColor, text) = when (status) {
-        TravelStatus.APPROVED -> Triple(Color(0xFFE6F4EA), Color(0xFF34A853), "Approved")
-        TravelStatus.REJECTED -> Triple(Color(0xFFFCE8E6), Color(0xFFEA4335), "Rejected")
-        TravelStatus.PENDING -> Triple(Color(0xFFFEF7E0), Color(0xFFFBBC05), "Pending")
+        TravelStatus.APPROVED -> Triple(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000), "Approved")
+        TravelStatus.REJECTED -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), "Rejected")
+        TravelStatus.PENDING -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), "Pending")
     }
 
-    Surface(
-        color = backgroundColor,
+    Card(
         shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(4.dp)
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Text(
             text = "Status: $text",
-            color = textColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Normal,
+            fontSize = 15.sp,
             fontFamily = GraphikFontFamily,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+            fontWeight = FontWeight.Medium,
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
         )
     }
 }
@@ -372,7 +375,7 @@ fun DetailItem(
 
         Text(
             text = label,
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             color = Color.Gray,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium
@@ -382,9 +385,10 @@ fun DetailItem(
 
         Text(
             text = value,
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Normal,
-            fontFamily = GraphikFontFamily
+            fontFamily = GraphikFontFamily,
+            color = Color.Black
         )
     }
 }

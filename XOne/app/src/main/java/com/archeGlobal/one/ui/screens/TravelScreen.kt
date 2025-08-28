@@ -722,7 +722,7 @@ fun TravelScreen(
                                                 modifier = Modifier.weight(1f)
                                             ) {
                                                 Text(
-                                                    text = "Departure Date",
+                                                    text = "Departure Date *",
                                                     fontSize = 14.sp,
                                                     fontFamily = GraphikFontFamily,
                                                     color = Color.Black,
@@ -768,7 +768,7 @@ fun TravelScreen(
                                                 modifier = Modifier.weight(1f)
                                             ) {
                                                 Text(
-                                                    text = "Return Date",
+                                                    text = "Return Date *",
                                                     fontSize = 14.sp,
                                                     fontFamily = GraphikFontFamily,
                                                     color = Color.Black,
@@ -1425,7 +1425,7 @@ fun MultiDestinationSection(controller: TravelController) {
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Departure Date",
+                                text = "Departure Date *",
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
@@ -1516,7 +1516,7 @@ fun MultiDestinationSection(controller: TravelController) {
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Return Date",
+                                text = "Return Date *",
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,

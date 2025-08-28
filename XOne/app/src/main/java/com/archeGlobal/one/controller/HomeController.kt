@@ -941,11 +941,7 @@ class HomeController(
 
     private fun getStickerText(): String {
         val installType = preferencesManager.getInstallType()
-        val stickerText = when (installType) {
-            "NEW" -> "New"
-            "UPDATED" -> "Updated"
-            else -> "New"
-        }
+        val stickerText = "New" // Always show "New" regardless of install type
         Log.d("HomeController", "getStickerText: installType=$installType, returning '$stickerText'")
         return stickerText
     }
