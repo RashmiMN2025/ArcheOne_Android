@@ -75,7 +75,7 @@ class OtpVerificationController(
                 if (isForbiddenError) {
                     Log.d("OtpVerification", "Detected 403/update-related error in OTP verification - showing update dialog")
                     Log.d("OtpVerification", "Error check: is Forbidden=${error is APIError.Forbidden}, message='${error.errorMessage}'")
-                    showUpdateDialog()
+//                    showUpdateDialog()
                     callback("App update required", true)
                 } else {
                     Log.d("OtpVerification", "Not a 403 error, showing error message without navigation")
@@ -181,7 +181,7 @@ class OtpVerificationController(
                 if (isForbiddenError) {
                     Log.d("LoginProcess", "Detected 403/update-related error in login - showing update dialog")
                     Log.d("LoginProcess", "Error check: is Forbidden=${error is APIError.Forbidden}, message='${error.errorMessage}'")
-                    showUpdateDialog()
+//                    showUpdateDialog()
                     callback("App update required", true)
                 } else {
                     Log.d("LoginProcess", "Not a 403 error, showing error message without navigation")
@@ -242,181 +242,6 @@ class OtpVerificationController(
             } else {
                 callback("Failed to resend OTP")
             }
-        }
-    }
-
-    private fun showUpdateDialog() {
-        Log.d("OtpVerification", "showUpdateDialog called - thread: ${Thread.currentThread().name}")
-
-        // Always show Toast as immediate feedback
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            android.widget.Toast.makeText(context, "App Update Required - Please update from Play Store", android.widget.Toast.LENGTH_LONG).show()
-            Log.d("OtpVerification", "Toast shown")
-        }
-
-        // Ensure dialog creation happens on main thread
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            try {
-                Log.d("OtpVerification", "Creating custom update dialog")
-                showCustomUpdateDialog()
-            } catch (e: Exception) {
-                Log.e("OtpVerification", "Failed to create/show update dialog: ${e.message}", e)
-                // Fallback: Try to open Play Store directly
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    context.startActivity(intent)
-                    Log.d("OtpVerification", "Opened Play Store as fallback")
-                } catch (fallbackError: Exception) {
-                    Log.e("OtpVerification", "Fallback also failed: ${fallbackError.message}")
-                }
-            }
-        }
-    }
-
-    private fun showCustomUpdateDialog() {
-        // Use a simple, clean AlertDialog with custom styling
-        val builder = android.app.AlertDialog.Builder(context, android.R.style.Theme_Material_Light_Dialog_Alert)
-
-        // Create a clean white layout with rounded corners
-        val layout = android.widget.LinearLayout(context).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(48, 48, 48, 48)
-            // Create rounded white background
-            val drawable = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = 16f
-                setColor(android.graphics.Color.WHITE)
-            }
-            background = drawable
-            gravity = android.view.Gravity.CENTER
-            // Set fixed width to make it narrower
-            layoutParams = android.view.ViewGroup.LayoutParams(
-                (320 * context.resources.displayMetrics.density).toInt(), // 320dp width
-                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-        // Red circle with download icon
-        val iconContainer = android.widget.FrameLayout(context).apply {
-            val size = 120
-            layoutParams = android.widget.LinearLayout.LayoutParams(size, size).apply {
-                gravity = android.view.Gravity.CENTER
-                setMargins(0, 0, 0, 32)
-            }
-        }
-
-        val circleView = android.view.View(context).apply {
-            val drawable = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.OVAL
-                setColor(android.graphics.Color.parseColor("#E53E3E"))
-            }
-            background = drawable
-            layoutParams = android.widget.FrameLayout.LayoutParams(120, 120)
-        }
-
-        val arrowView = android.widget.TextView(context).apply {
-            text = "↓"
-            textSize = 28f
-            setTextColor(android.graphics.Color.WHITE)
-            gravity = android.view.Gravity.CENTER
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            layoutParams = android.widget.FrameLayout.LayoutParams(
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        }
-
-        iconContainer.addView(circleView)
-        iconContainer.addView(arrowView)
-        layout.addView(iconContainer)
-
-        // Title
-        val titleView = android.widget.TextView(context).apply {
-            text = "Update Required"
-            textSize = 24f
-            setTextColor(android.graphics.Color.parseColor("#1A1A1A"))
-            gravity = android.view.Gravity.CENTER
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 12)
-            }
-        }
-        layout.addView(titleView)
-
-        // Message
-        val messageView = android.widget.TextView(context).apply {
-            text = "A new version of ArcheOne is available. You must update to continue using the app."
-            textSize = 16f
-            setTextColor(android.graphics.Color.parseColor("#666666"))
-            gravity = android.view.Gravity.CENTER
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 40)
-            }
-        }
-        layout.addView(messageView)
-
-        // Update button
-        val updateButton = android.widget.Button(context).apply {
-            text = "Update Now"
-            textSize = 16f
-            setTextColor(android.graphics.Color.WHITE)
-            val drawable = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = 24f
-                setColor(android.graphics.Color.parseColor("#E53E3E"))
-            }
-            background = drawable
-            setPadding(80, 32, 80, 32)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = android.view.Gravity.CENTER
-            }
-            setOnClickListener {
-                Log.d("OtpVerification", "Update button clicked - opening Play Store")
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    context.startActivity(intent)
-                } catch (e: Exception) {
-                    Log.e("OtpVerification", "Failed to open Play Store: ${e.message}")
-                    // Fallback to web browser
-                    val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"))
-                    webIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    context.startActivity(webIntent)
-                }
-            }
-        }
-        layout.addView(updateButton)
-
-        builder.setView(layout)
-        builder.setCancelable(false)
-
-        val dialog = builder.create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        dialog.setOnKeyListener { _, keyCode, _ ->
-            keyCode == android.view.KeyEvent.KEYCODE_BACK
-        }
-
-        // Show dialog with safety checks
-        if (context is android.app.Activity) {
-            if (!context.isFinishing && !context.isDestroyed) {
-                dialog.show()
-                Log.d("OtpVerification", "Clean update dialog shown successfully")
-            } else {
-                Log.w("OtpVerification", "Activity is finishing/destroyed, cannot show dialog")
-            }
-        } else {
-            dialog.show()
-            Log.d("OtpVerification", "Clean update dialog shown (non-Activity context)")
         }
     }
 

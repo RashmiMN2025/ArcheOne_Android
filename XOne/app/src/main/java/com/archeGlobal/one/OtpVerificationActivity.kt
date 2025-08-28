@@ -3,6 +3,7 @@ package com.archeGlobal.one
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,9 +17,16 @@ import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.OtpVerificationScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
+import com.archeGlobal.one.utils.CustomToast
+import com.archeGlobal.one.utils.PreferencesManager
+import com.archeGlobal.one.utils.UserDataManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class OtpVerificationActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
+    private var shouldNavigateToLogin = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,13 +48,18 @@ class OtpVerificationActivity : AppCompatActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // Navigate back to login screen with extra to force original login form
-                    val intent = Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        putExtra("forceOriginalLogin", true) // Force original login state
+                    if (showUpdateDialog) {
+                        // Prevent back press when update dialog is shown
+                        CustomToast.show(this@OtpVerificationActivity, "Please update the app to continue.", android.widget.Toast.LENGTH_SHORT)
+                    } else {
+                        // Navigate back to login screen with extra to force original login form
+                        val intent = Intent(this@OtpVerificationActivity, LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            putExtra("forceOriginalLogin", true)
+                        }
+                        startActivity(intent)
+                        finish()
                     }
-                    startActivity(intent)
-                    finish()
                 }
             }
         )
@@ -65,14 +78,75 @@ class OtpVerificationActivity : AppCompatActivity() {
                 if (showUpdateDialog) {
                     UpdateRequiredDialog(
                         onUpdateClick = {
-                            // Open Play Store
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
-                            startActivity(intent)
+                            // Dismiss dialog immediately
+                            showUpdateDialog = false
+
+                            // Clear session data
+                            UserDataManager.getInstance(this).clearSessionData()
+                            PreferencesManager(this).clearSessionData()
+
+                            // Set flag to navigate to login on return
+                            shouldNavigateToLogin = true
+
+                            // Launch Play Store intent
+                            val packageName = packageName
+                            val playStoreIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+
+                            try {
+                                if (playStoreIntent.resolveActivity(packageManager) != null) {
+                                    startActivity(playStoreIntent)
+                                    Log.d("OtpVerificationActivity", "Play Store intent launched successfully for package: $packageName")
+                                    // Finish OtpVerificationActivity immediately to ensure Play Store is in foreground
+                                    finish()
+                                } else {
+                                    Log.w("OtpVerificationActivity", "No Play Store app found, falling back to web URL")
+                                    launchWebFallback()
+                                }
+                            } catch (e: Exception) {
+                                Log.e("OtpVerificationActivity", "Failed to launch Play Store intent: ${e.message}")
+                                launchWebFallback()
+                            }
                         },
-                        onDismiss = { showUpdateDialog = false }
+                        onDismiss = { }
                     )
                 }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // If returning from Play Store and shouldNavigateToLogin is true, navigate to LoginActivity
+        if (shouldNavigateToLogin) {
+            val loginIntent = Intent(this, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("forceOriginalLogin", true)
+            }
+            startActivity(loginIntent)
+            finish()
+        }
+    }
+
+    private fun launchWebFallback() {
+        val packageName = packageName
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            if (webIntent.resolveActivity(packageManager) != null) {
+                startActivity(webIntent)
+                Log.d("OtpVerificationActivity", "Web Play Store intent launched successfully for package: $packageName")
+                // Finish OtpVerificationActivity immediately to ensure browser is in foreground
+                finish()
+            } else {
+                Log.e("OtpVerificationActivity", "No browser found to open web Play Store")
+                CustomToast.show(this, "Unable to open Play Store. Please try again.", android.widget.Toast.LENGTH_SHORT)
+            }
+        } catch (e: Exception) {
+            Log.e("OtpVerificationActivity", "Failed to open web Play Store: ${e.message}")
+            CustomToast.show(this, "Unable to open Play Store. Please try again.", android.widget.Toast.LENGTH_SHORT)
         }
     }
 
