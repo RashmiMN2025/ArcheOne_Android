@@ -17,12 +17,33 @@ import com.archeGlobal.one.model.AddInventoryItemRequest
 import com.archeGlobal.one.model.UpdateInventoryItemRequest
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.launch
 
 class InventoryController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
+    private val sourceScreen: String? = null
 ) : ViewModel() {
+
+    private val userDataManager = UserDataManager.getInstance(context)
+
+    companion object {
+        private const val CACHE_DURATION_MS = 5 * 60 * 1000L // 5 minutes
+        private var cachedInventoryItems: List<InventoryItem>? = null
+        private var cacheTimestamp: Long = 0L
+        
+        fun setCachedData(inventoryItems: List<InventoryItem>) {
+            cachedInventoryItems = inventoryItems
+            cacheTimestamp = System.currentTimeMillis()
+            android.util.Log.d("InventoryController", "Cached ${inventoryItems.size} inventory items")
+        }
+        
+        private fun isCacheValid(): Boolean {
+            return cachedInventoryItems != null && 
+                   (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
+        }
+    }
 
     var model by mutableStateOf(InventoryModel())
         private set
@@ -31,7 +52,32 @@ class InventoryController(
         private set
 
     init {
-        loadInventoryData()
+        loadInventoryDataIfNeeded()
+    }
+    
+    private fun loadInventoryDataIfNeeded() {
+        // Only call API when coming from AdminDashboard or if cache is invalid
+        if (sourceScreen == "AdminDashboard" || !isCacheValid()) {
+            android.util.Log.d("InventoryController", "Loading fresh data from API (source: $sourceScreen, cache valid: ${isCacheValid()})")
+            loadInventoryData()
+        } else {
+            android.util.Log.d("InventoryController", "Using cached data (source: $sourceScreen)")
+            cachedInventoryItems?.let { inventoryItems ->
+                val locations = inventoryItems.map { it.location }.distinct().sorted()
+                val categories = inventoryItems.map { it.category }.distinct().sorted()
+                val types = listOf("All") + categories
+                
+                model = model.copy(
+                    inventoryItems = inventoryItems,
+                    allItems = inventoryItems,
+                    locations = locations,
+                    types = types,
+                    isLoading = false,
+                    errorMessage = null
+                )
+                filterItems()
+            }
+        }
     }
 
     fun onBackPressed() {
@@ -65,11 +111,12 @@ class InventoryController(
             selectedLocation = item.location.ifEmpty { "Bengaluru" },
             selectedType = item.category.ifEmpty { "HK_Consumables" },
             selectedItem = item.name,
-            existingStock = item.closingStock.toString(),
+            addItem = item.id,
+            existingStock = item.totalStock.toString(),
             usedStockQuantity = "",
             brand = item.brand.ifEmpty { "Schevaran" },
             unit = item.unit,
-            updatedBy = "",
+            updatedBy = userDataManager.getUserData()?.name ?: "",
             quantityUpdateType = "Update Used Quantity" // Default to most common use case
         )
     }
@@ -77,7 +124,8 @@ class InventoryController(
     fun onAddItemClick() {
         addItemModel = addItemModel.copy(
             showDialog = true,
-            mode = DialogMode.ADD
+            mode = DialogMode.ADD,
+            updatedBy = userDataManager.getUserData()?.name ?: ""
         )
     }
 
@@ -167,8 +215,8 @@ class InventoryController(
                         // Success - refresh inventory list
                         loadInventoryData()
                         addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
+                        Toast.makeText(context, "The item ${addItemModel.selectedItem} has been added to the inventory.", Toast.LENGTH_LONG).show()
                         resetAddItemForm()
-                        // Could show success message here
                     } else {
                         addItemModel = addItemModel.copy(isLoading = false)
                         // Handle API error
@@ -190,14 +238,19 @@ class InventoryController(
                     val baseQuantity = addItemModel.newStockQuantity.toIntOrNull() ?: 0
                     
                     // Debug logging
+                    android.util.Log.d("InventoryController", "=== UPDATE DEBUG INFO ===")
+                    android.util.Log.d("InventoryController", "selectedItem: '${addItemModel.selectedItem}'")
+                    android.util.Log.d("InventoryController", "addItem (itemId): '${addItemModel.addItem}'")
                     android.util.Log.d("InventoryController", "quantityUpdateType: '${addItemModel.quantityUpdateType}'")
+                    android.util.Log.d("InventoryController", "newStockQuantity: '${addItemModel.newStockQuantity}'")
                     android.util.Log.d("InventoryController", "baseQuantity: $baseQuantity")
                     
                     val isUsedQuantityUpdate = addItemModel.quantityUpdateType == "Update Used Quantity"
                     val itemCount = baseQuantity // Always send positive numbers
                     
                     android.util.Log.d("InventoryController", "Final itemCount: $itemCount")
-                    android.util.Log.d("InventoryController", "updateUtilization: ${!isUsedQuantityUpdate}")
+                    android.util.Log.d("InventoryController", "updateUtilization: $isUsedQuantityUpdate")
+                    android.util.Log.d("InventoryController", "=========================")
                     
                     val request = UpdateInventoryItemRequest(
                         updatedBy = addItemModel.updatedBy,
@@ -207,24 +260,33 @@ class InventoryController(
                         brand = addItemModel.brand,
                         unit = addItemModel.unit,
                         suppliedDate = getCurrentDate(),
-                        updateUtilization = !isUsedQuantityUpdate, // false for used quantity, true for new quantity
+                        updateUtilization = isUsedQuantityUpdate, // true for used quantity, false for new quantity
                         location = addItemModel.selectedLocation
                     )
 
+                    android.util.Log.d("InventoryController", "Sending API request...")
                     val response = RetrofitClient.apiService.updateInventoryItem(request)
+                    android.util.Log.d("InventoryController", "API Response Code: ${response.code()}")
+                    android.util.Log.d("InventoryController", "API Response Body: ${response.body()}")
+                    
                     if (response.isSuccessful && response.body()?.status == 200) {
+                        // Get the actual total stock from API response
+                        val updatedTotalStock = response.body()?.data?.totalStock ?: "0"
+                        
                         // Success - refresh inventory list
                         loadInventoryData()
                         addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
+                        Toast.makeText(context, "The stock for ${addItemModel.selectedItem} item has been updated to $updatedTotalStock.", Toast.LENGTH_LONG).show()
                         resetAddItemForm()
-                        // Could show success message here
                     } else {
+                        android.util.Log.e("InventoryController", "API Error - Response Code: ${response.code()}, Status: ${response.body()?.status}")
                         addItemModel = addItemModel.copy(isLoading = false)
-                        // Handle API error
+                        Toast.makeText(context, "Failed to update inventory: ${response.body()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
+                    android.util.Log.e("InventoryController", "Network Error: ${e.message}", e)
                     addItemModel = addItemModel.copy(isLoading = false)
-                    // Handle network error
+                    Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -326,6 +388,9 @@ class InventoryController(
                     if (stockListResponse?.status == 200) {
                         val inventoryItems = stockListResponse.data.map { it.toInventoryItem() }
                         
+                        // Cache the data
+                        setCachedData(inventoryItems)
+                        
                         // Extract unique locations and categories from API data
                         val locations = inventoryItems.map { it.location }.distinct().sorted()
                         val categories = inventoryItems.map { it.category }.distinct().sorted()
@@ -342,6 +407,7 @@ class InventoryController(
                         
                         // Apply initial filter
                         filterItems()
+                        android.util.Log.d("InventoryController", "Inventory data loaded and cached successfully: ${inventoryItems.size} items")
                     } else {
                         model = model.copy(
                             isLoading = false,

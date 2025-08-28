@@ -72,6 +72,8 @@ interface Navigator {
     fun navigateToTodo()
     fun navigateToIdeaVault()
     fun navigateToAdminDashboard()
+    fun navigateToOrderHistoryActivity()
+    fun navigateToOrderHistoryDetailActivity()
     fun navigateToInventory()
     fun navigateToOrderReceived()
     fun navigateToOrderDetails(orderId: String)

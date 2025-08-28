@@ -15,7 +15,7 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 16
-        versionName = "1.3"
+        versionName = "1.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters += listOf("armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -121,9 +121,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-//    implementation(libs.x.x.x.beta.x)
-//    implementation(libs.okhttp.v493)
-//    implementation(libs.android.pdf.viewer)
-//    implementation(libs.repo)
 }

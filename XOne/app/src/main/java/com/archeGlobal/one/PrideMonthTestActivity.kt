@@ -129,6 +129,8 @@ fun PrideMonthTestScreen() {
             override fun navigateToTodo() {}
             override fun navigateToIdeaVault() {}
             override fun navigateToAdminDashboard() {}
+            override fun navigateToOrderHistoryActivity() {}
+            override fun navigateToOrderHistoryDetailActivity() {}
             override fun navigateToInventory() {}
             override fun navigateToOrderReceived() {}
             override fun navigateToOrderDetails(orderId: String) {}

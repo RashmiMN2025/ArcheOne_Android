@@ -103,7 +103,7 @@ fun FAQDetailScreen(
                             Text(
                                 modifier = Modifier.offset(x = (-24).dp),
                                 text = "FAQ Details",
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center

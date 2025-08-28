@@ -45,6 +45,7 @@ import com.archeGlobal.one.controller.*
 import com.archeGlobal.one.controller.ConsumptionReportController
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.model.DeskCartOrderHistory
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
@@ -382,6 +383,19 @@ class HomeActivity : AppCompatActivity() {
                 val currentAction = currentIntent.action
                 val directNavigateTo = currentIntent.getStringExtra("direct_navigate_to")
                 val sourceActivity = currentIntent.getStringExtra("source_activity")
+                val orderData = currentIntent.getStringExtra("orderData")
+                
+                // Restore order data from intent if navigating to order_history_detail
+                if (currentNavigateTo == "order_history_detail" && orderData != null) {
+                    try {
+                        val order = Gson().fromJson(orderData, DeskCartOrderHistory::class.java)
+                        OrderHistoryController.selectedOrderForDetails = order
+                        Log.d("HomeActivity", "Restored order data from intent for order: ${order.order_Id}")
+                    } catch (e: Exception) {
+                        Log.e("HomeActivity", "Failed to parse order data from intent", e)
+                    }
+                }
+                
                 // Use reactive state for source activity (updated by onNewIntent)
                 val reactiveSourceActivity by currentSourceActivity
                 val effectiveSourceActivity = reactiveSourceActivity ?: sourceActivity
@@ -402,6 +416,7 @@ class HomeActivity : AppCompatActivity() {
                     currentNavigateTo == "track_tickets" && currentTicketCategory != null -> "track_tickets"
                     currentNavigateTo == "order_received" -> "order_received"
                     currentNavigateTo == "order_history" -> "order_history"
+                    currentNavigateTo == "order_history_detail" -> "home" // Start at home then navigate to detail
                     currentNavigateTo == "consumption_report" && !clearBackStack -> "consumption_report"
                     else -> "home"
                 }
@@ -420,9 +435,9 @@ class HomeActivity : AppCompatActivity() {
                         Log.d("HomeActivity", "Starting at track_tickets with category: $currentTicketCategory from source: $currentSource")
                     }
                     
-                    // Handle order_history destination
+                    // Handle order_history destination (similar to track_tickets setup)
                     if (startDestination == "order_history") {
-                        Log.d("HomeActivity", "Starting at order_history destination")
+                        Log.d("HomeActivity", "Starting at order_history destination from source: $currentSource")
                     }
 
                     if (!fromOtp) {
@@ -467,6 +482,10 @@ class HomeActivity : AppCompatActivity() {
                                     } else if (route == "order_history") {
                                         navController.navigate("order_history")
                                         Log.d("HomeActivity", "Navigating to order_history")
+                                    } else if (route == "order_history_detail") {
+                                        val orderId = currentIntent.getStringExtra("orderId") ?: ""
+                                        navController.navigate("order_history_detail/$orderId")
+                                        Log.d("HomeActivity", "Navigating to order_history_detail with orderId: $orderId")
                                     } else {
                                         navController.navigate(route)
                                         Log.d("HomeActivity", "Navigating to: $route")
@@ -487,6 +506,10 @@ class HomeActivity : AppCompatActivity() {
                                     // Load tickets with the specified category before navigating
                                     helpDeskController.navigateToTrackTickets(currentTicketCategory)
                                     Log.d("HomeActivity", "Navigating to track_tickets with category: $currentTicketCategory")
+                                } else if (route == "order_history_detail") {
+                                    val orderId = currentIntent.getStringExtra("orderId") ?: ""
+                                    navController.navigate("order_history_detail/$orderId")
+                                    Log.d("HomeActivity", "OTP flow: Navigating to order_history_detail with orderId: $orderId")
                                 } else {
                                     navController.navigate(route)
                                     Log.d("HomeActivity", "Navigating to: $route")

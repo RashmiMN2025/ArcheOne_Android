@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,15 +38,18 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
@@ -97,9 +102,6 @@ fun TravelScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Add space at the top to push everything down
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
                             Box(
@@ -112,7 +114,7 @@ fun TravelScreen(
                                     color = Color.Black,
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -139,7 +141,7 @@ fun TravelScreen(
                                     text = "History",
                                     color = PrimaryRed,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontWeight = FontWeight.Medium,
                                     fontSize = 16.sp
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -213,16 +215,16 @@ fun TravelScreen(
                                                 fontFamily = GraphikFontFamily
                                             )
 
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Notifications,
-                                                    contentDescription = "Pending approvals",
-                                                    tint = Color.White,
-                                                    modifier = Modifier.size(14.dp)
-                                                )
+                                            val count = controller.pendingApprovalCount
+                                            if (count > 0) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Notifications,
+                                                        contentDescription = "Pending approvals",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
 
-                                                val count = controller.pendingApprovalCount
-                                                if (count > 0) {
                                                     Spacer(modifier = Modifier.width(2.dp))
                                                     Text(
                                                         text = if (count > 99) "99+" else count.toString(),
@@ -281,7 +283,7 @@ fun TravelScreen(
                                 onValueChange = { controller.updateProjectName(it) },
                                 placeholder = {
                                     Text(
-                                        "Project Name",
+                                        "Project Name *",
                                         color = Color.Gray,
                                         fontWeight = FontWeight.Normal,
                                         fontFamily = GraphikFontFamily
@@ -289,13 +291,14 @@ fun TravelScreen(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
+                                    .padding(bottom = 16.dp)
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.Gray,
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedBorderColor = Color.Transparent,
                                     cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
-                                    focusedContainerColor = Color.White,
+                                    focusedContainerColor = Color(0xFFF5F5F5),
                                     unfocusedTextColor = Color.Black,
                                     focusedTextColor = Color.Black,
                                     unfocusedPlaceholderColor = Color(0xFFF6F4EE),
@@ -310,7 +313,7 @@ fun TravelScreen(
                                 onValueChange = { controller.updateBusinessJustification(it) },
                                 placeholder = {
                                     Text(
-                                        "Business Justification",
+                                        "Business Justification *",
                                         color = Color.Gray,
                                         fontWeight = FontWeight.Normal,
                                         fontFamily = GraphikFontFamily
@@ -319,13 +322,14 @@ fun TravelScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(100.dp)
-                                    .padding(bottom = 16.dp),
+                                    .padding(bottom = 16.dp)
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.Gray,
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedBorderColor = Color.Transparent,
                                     cursorColor = Color.Black,
                                     unfocusedContainerColor = Color(0xFFF5F5F5),
-                                    focusedContainerColor = Color.White,
+                                    focusedContainerColor = Color(0xFFF5F5F5),
                                     unfocusedTextColor = Color.Black,
                                     focusedTextColor = Color.Black,
                                     unfocusedPlaceholderColor = Color(0xFFF6F4EE),
@@ -336,12 +340,22 @@ fun TravelScreen(
 
                             // Mode of Transport
                             Box(modifier = Modifier.fillMaxWidth()) {
+                                val interactionSource = remember { MutableInteractionSource() }
+                                
+                                LaunchedEffect(interactionSource) {
+                                    interactionSource.interactions.collect { interaction ->
+                                        if (interaction is PressInteraction.Release) {
+                                            controller.toggleTransportDropdown()
+                                        }
+                                    }
+                                }
+                                
                                 OutlinedTextField(
                                     value = controller.modeOfTransport,
                                     onValueChange = { },
                                     placeholder = {
                                         Text(
-                                            "Mode of Transport",
+                                            "Mode of Transport *",
                                             color = Color.Gray,
                                             fontWeight = FontWeight.Normal,
                                             fontFamily = GraphikFontFamily
@@ -350,13 +364,13 @@ fun TravelScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp)
-                                        .clickable(onClick = { controller.toggleTransportDropdown() }),
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.Gray,
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
                                         cursorColor = Color.Black,
                                         unfocusedContainerColor = Color(0xFFF5F5F5),
-                                        focusedContainerColor = Color.White,
+                                        focusedContainerColor = Color(0xFFF5F5F5),
                                         unfocusedTextColor = Color.Black,
                                         focusedTextColor = Color.Black
                                     ),
@@ -365,11 +379,11 @@ fun TravelScreen(
                                         Icon(
                                             Icons.Default.KeyboardArrowDown,
                                             contentDescription = "Dropdown",
-                                            tint = Color.Gray,
-                                            modifier = Modifier.clickable { controller.toggleTransportDropdown() }
+                                            tint = Color.Gray
                                         )
                                     },
-                                    readOnly = true
+                                    readOnly = true,
+                                    interactionSource = interactionSource
                                 )
 
                                 DropdownMenu(
@@ -377,11 +391,12 @@ fun TravelScreen(
                                     onDismissRequest = { controller.dismissTransportDropdown() },
                                     modifier = Modifier
                                         .width(with(LocalDensity.current) { 300.dp })
-                                        .background(Color.White)
+                                        .background(Color.White, RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(8.dp))
                                 ) {
                                     controller.transportOptions.forEach { option ->
                                         DropdownMenuItem(
-                                            text = { Text(text = option, fontFamily = GraphikFontFamily) },
+                                            text = { Text(text = option, fontFamily = GraphikFontFamily, fontWeight = FontWeight.Medium) },
                                             onClick = { controller.updateModeOfTransport(option) }
                                         )
                                     }
@@ -420,13 +435,14 @@ fun TravelScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(bottom = 16.dp)
+                                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                                             .clickable(onClick = { controller.toggleFlightTypeDropdown() }),
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.Gray,
+                                            unfocusedBorderColor = Color.Transparent,
+                                            focusedBorderColor = Color.Transparent,
                                             cursorColor = Color.Black,
                                             unfocusedContainerColor = Color(0xFFF5F5F5),
-                                            focusedContainerColor = Color.White,
+                                            focusedContainerColor = Color(0xFFF5F5F5),
                                             unfocusedTextColor = Color.Black,
                                             focusedTextColor = Color.Black,
                                             unfocusedPlaceholderColor = Color(0xFFF6F4EE),
@@ -474,13 +490,14 @@ fun TravelScreen(
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(bottom = 16.dp),
+                                        .padding(bottom = 16.dp)
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.Gray,
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
                                         cursorColor = Color.Black,
                                         unfocusedContainerColor = Color(0xFFF5F5F5),
-                                        focusedContainerColor = Color.White,
+                                        focusedContainerColor = Color(0xFFF5F5F5),
                                         unfocusedTextColor = Color.Black,
                                         focusedTextColor = Color.Black,
                                         unfocusedPlaceholderColor = Color(0xFFF6F4EE),
@@ -506,13 +523,14 @@ fun TravelScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .padding(bottom = 16.dp)
+                                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                                                 .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
                                             colors = OutlinedTextFieldDefaults.colors(
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedBorderColor = Color.Gray,
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedBorderColor = Color.Transparent,
                                                 cursorColor = Color.Black,
                                                 unfocusedContainerColor = Color(0xFFF5F5F5),
-                                                focusedContainerColor = Color.White,
+                                                focusedContainerColor = Color(0xFFF5F5F5),
                                                 unfocusedTextColor = Color.Black,
                                                 focusedTextColor = Color.Black,
                                                 unfocusedPlaceholderColor = Color(0xFFF6F4EE),
@@ -637,7 +655,7 @@ fun TravelScreen(
                                             onValueChange = { controller.updateOriginCity(it) },
                                             placeholder = {
                                                 Text(
-                                                    "Origin City",
+                                                    "Origin City *",
                                                     color = Color.Gray,
                                                     fontWeight = FontWeight.Normal,
                                                     fontFamily = GraphikFontFamily
@@ -645,10 +663,11 @@ fun TravelScreen(
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(bottom = 16.dp),
+                                                .padding(bottom = 16.dp)
+                                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedBorderColor = Color.Gray,
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedBorderColor = Color.Transparent,
                                                 cursorColor = Color.Black,
                                                 unfocusedContainerColor = Color.White,
                                                 focusedContainerColor = Color.White,
@@ -666,7 +685,7 @@ fun TravelScreen(
                                             onValueChange = { controller.updateDestination(it) },
                                             placeholder = {
                                                 Text(
-                                                    "Destination City",
+                                                    "Destination City *",
                                                     color = Color.Gray,
                                                     fontWeight = FontWeight.Normal,
                                                     fontFamily = GraphikFontFamily
@@ -674,10 +693,11 @@ fun TravelScreen(
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(bottom = 16.dp),
+                                                .padding(bottom = 16.dp)
+                                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedBorderColor = Color.Gray,
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedBorderColor = Color.Transparent,
                                                 cursorColor = Color.Black,
                                                 unfocusedContainerColor = Color.White,
                                                 focusedContainerColor = Color.White,
@@ -699,7 +719,7 @@ fun TravelScreen(
                                                 modifier = Modifier.weight(1f)
                                             ) {
                                                 Text(
-                                                    text = "Departure Date",
+                                                    text = "Departure Date *",
                                                     fontSize = 14.sp,
                                                     fontFamily = GraphikFontFamily,
                                                     color = Color.Black,
@@ -745,7 +765,7 @@ fun TravelScreen(
                                                 modifier = Modifier.weight(1f)
                                             ) {
                                                 Text(
-                                                    text = "Return Date",
+                                                    text = "Return Date *",
                                                     fontSize = 14.sp,
                                                     fontFamily = GraphikFontFamily,
                                                     color = Color.Black,
@@ -810,10 +830,10 @@ fun TravelScreen(
                                                         .clickable(onClick = { controller.toggleFlightTimeDropdown() }),
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                         unfocusedBorderColor = Color.LightGray,
-                                                        focusedBorderColor = Color.Gray,
+                                                        focusedBorderColor = Color.LightGray,
                                                         cursorColor = Color.Black,
                                                         unfocusedContainerColor = Color.White,
-                                                        focusedContainerColor = Color.White,
+                                                        focusedContainerColor = Color(0xFFF5F5F5),
                                                         unfocusedTextColor = Color.Black,
                                                         focusedTextColor = Color.Black,
                                                         unfocusedPlaceholderColor = Color.Gray,
@@ -865,10 +885,10 @@ fun TravelScreen(
                                                         .clickable(onClick = { controller.toggleSeatPrefDropdown() }),
                                                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                                                         unfocusedBorderColor = Color.LightGray,
-                                                        focusedBorderColor = Color.Gray,
+                                                        focusedBorderColor = Color.LightGray,
                                                         cursorColor = Color.Black,
                                                         unfocusedContainerColor = Color.White,
-                                                        focusedContainerColor = Color.White,
+                                                        focusedContainerColor = Color(0xFFF5F5F5),
                                                         unfocusedTextColor = Color.Black,
                                                         focusedTextColor = Color.Black,
                                                         unfocusedPlaceholderColor = Color.Gray,
@@ -1036,13 +1056,14 @@ fun TravelScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .padding(bottom = 16.dp)
+                                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                                                 .clickable(onClick = { controller.toggleMealPrefDropdown() }),
                                             colors = OutlinedTextFieldDefaults.colors(
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedBorderColor = Color.Gray,
+                                                unfocusedBorderColor = Color.Transparent,
+                                                focusedBorderColor = Color.Transparent,
                                                 cursorColor = Color.Black,
                                                 unfocusedContainerColor = Color(0xFFF5F5F5),
-                                                focusedContainerColor = Color.White,
+                                                focusedContainerColor = Color(0xFFF5F5F5),
                                                 unfocusedTextColor = Color.Black,
                                                 focusedTextColor = Color.Black,
                                                 unfocusedLabelColor = Color.Gray,
@@ -1262,13 +1283,16 @@ fun MultiDestinationSection(controller: TravelController) {
                 onClick = { controller.addDestination() },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF2196F3),
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFFB0B0B0),
+                    disabledContentColor = Color(0xFF888888)
                 ),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .height(40.dp)
                     .width(140.dp),
-                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 3.dp)
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 3.dp),
+                enabled = controller.destinations.size < 3
             ) {
                 Text(
                     text = "Add Destination",
@@ -1319,7 +1343,7 @@ fun MultiDestinationSection(controller: TravelController) {
                                 modifier = Modifier.size(24.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Delete,
+                                    painter = painterResource(id = R.drawable.bin),
                                     contentDescription = "Delete Destination",
                                     tint = Color.Red,
                                     modifier = Modifier.size(18.dp)
@@ -1334,7 +1358,7 @@ fun MultiDestinationSection(controller: TravelController) {
                         onValueChange = { controller.updateDestinationOriginCity(destination.id, it) },
                         placeholder = {
                             Text(
-                                "Origin City",
+                                "Origin City *",
                                 color = Color.Gray,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily
@@ -1342,10 +1366,11 @@ fun MultiDestinationSection(controller: TravelController) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp),
+                            .padding(bottom = 16.dp)
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.LightGray,
-                            focusedBorderColor = Color.Gray,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.Transparent,
                             cursorColor = Color.Black,
                             unfocusedContainerColor = Color.White,
                             focusedContainerColor = Color.White,
@@ -1363,7 +1388,7 @@ fun MultiDestinationSection(controller: TravelController) {
                         onValueChange = { controller.updateDestinationField(destination.id, it) },
                         placeholder = {
                             Text(
-                                "Destination City",
+                                "Destination City *",
                                 color = Color.Gray,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily
@@ -1371,10 +1396,11 @@ fun MultiDestinationSection(controller: TravelController) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp),
+                            .padding(bottom = 16.dp)
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.LightGray,
-                            focusedBorderColor = Color.Gray,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.Transparent,
                             cursorColor = Color.Black,
                             unfocusedContainerColor = Color.White,
                             focusedContainerColor = Color.White,
@@ -1396,7 +1422,7 @@ fun MultiDestinationSection(controller: TravelController) {
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Departure Date",
+                                text = "Departure Date *",
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
@@ -1487,7 +1513,7 @@ fun MultiDestinationSection(controller: TravelController) {
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Return Date",
+                                text = "Return Date *",
                                 fontSize = 14.sp,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
@@ -1596,15 +1622,16 @@ fun MultiDestinationSection(controller: TravelController) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 16.dp)
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                                     .clickable(onClick = {
                                         datePickerStates["flightTime_${destination.id}"] = true
                                     }),
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.Gray,
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedBorderColor = Color.Transparent,
                                     cursorColor = Color.Black,
                                     unfocusedContainerColor = Color.White,
-                                    focusedContainerColor = Color.White,
+                                    focusedContainerColor = Color(0xFFF5F5F5),
                                     unfocusedTextColor = Color.Black,
                                     focusedTextColor = Color.Black,
                                     unfocusedPlaceholderColor = Color.Gray,

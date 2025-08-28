@@ -69,23 +69,19 @@ fun TravelHistoryDetailScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Travel Request Details",
-                                    color = Color.Black,
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(Alignment.CenterHorizontally),
+                                text = "Travel Request Details",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
                         },
                         navigationIcon = {
                             IconButton(onClick = { controller.onBackPressed() }) {
@@ -98,9 +94,7 @@ fun TravelHistoryDetailScreen(
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {
-                            Spacer(modifier = Modifier.width(48.dp))
-                        }
+                        actions = {}
                     )
 
                     val scrollState = rememberScrollState()
@@ -121,7 +115,11 @@ fun TravelHistoryDetailScreen(
                         TravelSummaryCard(
                             id = travelRequest.id,
                             createdDate = formattedCreatedDate,
-                            status = travelRequest.status.name.replaceFirstChar { it.uppercase() } // e.g. Pending, Approved
+                            status = when (travelRequest.status) {
+                                com.archeGlobal.one.model.TravelStatus.APPROVED -> "Approved"
+                                com.archeGlobal.one.model.TravelStatus.REJECTED -> "Rejected"
+                                com.archeGlobal.one.model.TravelStatus.PENDING -> "Pending"
+                            }
                         )
 
                         // Employee Details Card
@@ -268,6 +266,21 @@ fun TravelHistoryDetailScreen(
                                 label = "Stay Required",
                                 value = "Yes" // This could be dynamic based on your data model
                             )
+                            TravelDetailRowWithDrawableIcon(
+                                iconRes = R.drawable.meal,
+                                label = "Meal Preference",
+                                value = travelRequest.mealPreference ?: "N/A"
+                            )
+                            TravelDetailRowWithDrawableIcon(
+                                iconRes = R.drawable.seat,
+                                label = "Seat Preference",
+                                value = travelRequest.seatPreference ?: "N/A"
+                            )
+                            TravelDetailRowWithDrawableIcon(
+                                iconRes = R.drawable.noimage,
+                                label = "Frequent Flyer Number",
+                                value = travelRequest.frequentFlyerNumber ?: "N/A"
+                            )
                         }
 
                         // Approval Details Card
@@ -358,7 +371,7 @@ fun TravelSummaryCard(
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
-                    Row(modifier = Modifier.padding(top = 8.dp)) {
+                    Row(modifier = Modifier.padding(top = 12.dp)) {
                         Text(
                             text = "Created At: ",
                             fontSize = 14.sp,
@@ -377,20 +390,17 @@ fun TravelSummaryCard(
                 }
 
                 Card(
-                    modifier = Modifier
-                        .height(20.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(containerColor = backgroundColor),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    border = BorderStroke(1.dp, borderColor)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Text(
                         text = "Status: $status",
-                        fontSize = 13.sp,
+                        fontSize = 15.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         color = textColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                     )
                 }
             }

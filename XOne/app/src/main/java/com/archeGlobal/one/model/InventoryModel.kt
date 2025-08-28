@@ -52,7 +52,7 @@ data class InventoryItem(
     val category: String,
     val location: String,
     val brand: String,
-    val totalStock: Int = closingStock.toInt() // For backward compatibility
+    val totalStock: Double
 )
 
 // Extension function to convert StockItem to InventoryItem
@@ -77,7 +77,8 @@ fun StockItem.toInventoryItem(): InventoryItem {
         iconName = getIconFromCategory(category),
         category = category,
         location = location,
-        brand = brand
+        brand = brand,
+        totalStock = totalStock.toDoubleOrNull() ?: 0.0
     )
 }
 

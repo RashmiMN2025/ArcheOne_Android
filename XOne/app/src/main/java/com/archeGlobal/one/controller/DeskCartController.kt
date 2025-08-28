@@ -253,22 +253,8 @@ class DeskCartController(
     }
 
     fun onHistoryClick() {
-        Log.d("DeskCartController", "History button clicked - starting direct navigation")
-        // Create a simple intent to HomeActivity with explicit order_history destination
-        val intent = android.content.Intent(context, com.archeGlobal.one.HomeActivity::class.java).apply {
-            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("direct_navigate_to", "order_history")
-            putExtra("source_activity", "DeskCartActivity")
-        }
-        Log.d("DeskCartController", "Created intent with direct_navigate_to: order_history")
-        Log.d("DeskCartController", "Starting HomeActivity with intent")
-        context.startActivity(intent)
-        Log.d("DeskCartController", "Intent started successfully")
-        // Finish the current DeskCart activity
-        if (context is com.archeGlobal.one.DeskCartActivity) {
-            Log.d("DeskCartController", "Finishing DeskCartActivity")
-            context.finish()
-        }
+        Log.d("DeskCartController", "History button clicked - navigating to OrderHistoryActivity (like admin dashboard)")
+        navigator.navigateToOrderHistoryActivity()
     }
 
     fun downloadStockReport(category: String = "All", location: String? = null) {

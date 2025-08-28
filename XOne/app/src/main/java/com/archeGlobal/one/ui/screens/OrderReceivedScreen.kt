@@ -246,7 +246,7 @@ fun OrderCard(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Empl ID:",
+                        text = "Emp ID:",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,

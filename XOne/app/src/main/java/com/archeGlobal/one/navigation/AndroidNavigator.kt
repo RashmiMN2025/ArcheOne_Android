@@ -12,6 +12,8 @@ import com.archeGlobal.one.*
 import com.archeGlobal.one.GlobalCelebrationDetailActivity
 import com.archeGlobal.one.ui.screens.CoreValuesActivity
 import com.archeGlobal.one.ui.screens.IdeaVaultActivity
+import com.archeGlobal.one.controller.OrderHistoryController
+import com.google.gson.Gson
 import java.net.URLEncoder
 
 class AndroidNavigator(
@@ -298,6 +300,16 @@ class AndroidNavigator(
         activity.startActivity(intent)
     }
 
+    override fun navigateToOrderHistoryActivity() {
+        val intent = Intent(activity, OrderHistoryActivity::class.java)
+        activity.startActivity(intent)
+    }
+
+    override fun navigateToOrderHistoryDetailActivity() {
+        val intent = Intent(activity, OrderHistoryDetailActivity::class.java)
+        activity.startActivity(intent)
+    }
+
     override fun navigateToInventory() {
         val intent = Intent(activity, InventoryActivity::class.java)
         activity.startActivity(intent)
@@ -323,27 +335,26 @@ class AndroidNavigator(
     }
 
     override fun navigateToOrderHistoryDetail(orderId: String) {
-        navController?.navigate("order_history_detail/$orderId") {
-            launchSingleTop = true
-            restoreState = true
+        if (activity is HomeActivity) {
+            // We're in HomeActivity - use NavController for backward compatibility
+            navController?.navigate("order_history_detail/$orderId") {
+                launchSingleTop = true
+                restoreState = true
+            }
+        } else {
+            // For other activities, use the new direct approach
+            navigateToOrderHistoryDetailActivity()
         }
     }
 
     override fun navigateToOrderHistory() {
-        if (activity is HomeActivity) {
-            // Direct navigation if already in HomeActivity
-            navController?.navigate("order_history") {
-                launchSingleTop = true
-            }
-        } else {
-            // Simple approach: start HomeActivity and finish current activity
-            val intent = Intent(activity, HomeActivity::class.java).apply {
-                action = "navigate_to_order_history"
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-            activity.startActivity(intent)
-            activity.finish()
+        // Simple direct navigation like admin dashboard
+        val intent = Intent(activity, HomeActivity::class.java).apply {
+            action = "navigate_to_order_history"
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
+        activity.startActivity(intent)
+        activity.finish()
     }
 
     override fun navigateToConsumptionReport() {

@@ -23,16 +23,49 @@ import java.net.URLEncoder
 
 class ConsumptionReportController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
+    private val sourceScreen: String? = null
 ) : ViewModel() {
+    
+    companion object {
+        private const val CACHE_DURATION_MS = 5 * 60 * 1000L // 5 minutes
+        private var cachedModel: ConsumptionReportModel? = null
+        private var cacheTimestamp: Long = 0L
+        
+        fun setCachedData(consumptionModel: ConsumptionReportModel) {
+            cachedModel = consumptionModel
+            cacheTimestamp = System.currentTimeMillis()
+            Log.d("ConsumptionReportController", "Cached consumption report data")
+        }
+        
+        private fun isCacheValid(): Boolean {
+            return cachedModel != null && 
+                   (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
+        }
+    }
+    
     var model by mutableStateOf(ConsumptionReportModel())
         private set
     
     private val fileDownloadHelper = FileDownloadHelper(context)
 
     init {
-        loadConsumptionData()
+        loadConsumptionDataIfNeeded()
     }
+
+    private fun loadConsumptionDataIfNeeded() {
+        // Only call API when coming from AdminDashboard or if cache is invalid
+        if (sourceScreen == "AdminDashboard" || !isCacheValid()) {
+            Log.d("ConsumptionReportController", "Loading fresh data from API (source: $sourceScreen, cache valid: ${isCacheValid()})")
+            loadConsumptionData()
+        } else {
+            Log.d("ConsumptionReportController", "Using cached data (source: $sourceScreen)")
+            cachedModel?.let { cached ->
+                model = cached.copy(isLoading = false)
+            }
+        }
+    }
+
 
     private fun loadConsumptionData() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -56,14 +89,22 @@ class ConsumptionReportController(
                         val stockCategories = filteredData.toConsumptionStockCategories()
                         val usageCategories = filteredData.toUsageCategories()
                         
+                        // Extract unique locations from API data
+                        val locations = stockData.map { it.location }.distinct().sorted()
+                        
                         // Update UI on main thread
                         withContext(Dispatchers.Main) {
-                            model = model.copy(
+                            val newModel = model.copy(
                                 stockCategories = stockCategories,
                                 usageCategories = usageCategories,
+                                locations = locations,
                                 isLoading = false,
                                 error = null
                             )
+                            model = newModel
+                            
+                            // Cache the data
+                            setCachedData(newModel)
                         }
                         Log.d("ConsumptionReportController", "Consumption data loaded successfully")
                     } else {
