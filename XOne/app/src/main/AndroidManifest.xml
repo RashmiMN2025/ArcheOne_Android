@@ -293,6 +293,20 @@
             android:theme="@style/Theme.XOne" />
 
         <activity
+            android:name=".OrderHistoryActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Order History"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".OrderHistoryDetailActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Order Details"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
             android:name=".InventoryActivity"
             android:exported="true"
             android:screenOrientation="portrait"

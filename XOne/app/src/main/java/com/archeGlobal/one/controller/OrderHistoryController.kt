@@ -118,9 +118,9 @@ class OrderHistoryController(
     }
 
     fun onOrderClick(order: DeskCartOrderHistory) {
-        Log.d("OrderHistoryController", "Order clicked: ${order.order_Id}")
+        Log.d("OrderHistoryController", "Order clicked: ${order.order_Id} - navigating to OrderHistoryDetailActivity")
         selectedOrderForDetails = order
-        navigator.navigateToOrderHistoryDetail(order.order_Id)
+        navigator.navigateToOrderHistoryDetailActivity()
     }
 
     fun clearError() {

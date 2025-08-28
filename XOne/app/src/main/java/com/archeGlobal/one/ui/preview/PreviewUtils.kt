@@ -87,6 +87,10 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToAdminDashboard() {}
 
+    override fun navigateToOrderHistoryActivity() {}
+
+    override fun navigateToOrderHistoryDetailActivity() {}
+
     override fun navigateToInventory() {}
 
     override fun navigateToOrderReceived() {}
