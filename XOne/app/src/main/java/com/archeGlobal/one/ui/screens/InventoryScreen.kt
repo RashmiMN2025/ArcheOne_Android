@@ -199,7 +199,7 @@ fun InventoryHeader(
                     text = "Inventory",
                     color = Color.Black,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center
                 )

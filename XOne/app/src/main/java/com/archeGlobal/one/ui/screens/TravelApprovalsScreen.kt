@@ -155,7 +155,7 @@ fun TravelApprovalsScreen(
                                     color = Color.Black,
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Center
                                 )
                             }

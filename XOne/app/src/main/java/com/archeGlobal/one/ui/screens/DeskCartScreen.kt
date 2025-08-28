@@ -155,7 +155,7 @@ fun DeskCartHeader(
                     text = "DeskCart",
                     color = Color.Black,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.offset(x = 24.dp) // Standard offset for proper centering
