@@ -545,7 +545,10 @@ fun DrawScope.drawBarChart(
     maxValue: Double,
     size: Size
 ) {
-    if (items.isEmpty() || maxValue == 0.0) return
+    if (items.isEmpty()) return
+    
+    // Use minimum value of 1.0 to ensure chart shows even when all values are 0
+    val effectiveMaxValue = if (maxValue == 0.0) 1.0 else maxValue
 
     val leftPadding = 80f
     val chartWidth = size.width - leftPadding - 10f
@@ -555,34 +558,42 @@ fun DrawScope.drawBarChart(
     val bottomPadding = size.height * 0.3f
 
     items.forEachIndexed { index, (name, value, color) ->
-        val barHeight = (value.toFloat() / maxValue.toFloat()) * chartHeight
+        val barHeight = (value.toFloat() / effectiveMaxValue.toFloat()) * chartHeight
         val x = leftPadding + index * (barWidth + barSpacing) + barSpacing / 2
         val y = size.height - bottomPadding - barHeight
 
-        // Draw bar
+        // Draw bar (even for zero values, show a minimal bar)
         if (value > 0) {
             drawRect(
                 color = color,
                 topLeft = Offset(x, y),
                 size = Size(barWidth, barHeight)
             )
+        } else {
+            // Draw minimal placeholder bar for zero values
+            drawRect(
+                color = Color.LightGray,
+                topLeft = Offset(x, size.height - bottomPadding - 2f),
+                size = Size(barWidth, 2f)
+            )
         }
 
-        // Draw value on top of bar
-        if (value > 0) {
-            drawContext.canvas.nativeCanvas.apply {
-                drawText(
-                    if (value % 1.0 == 0.0) value.toInt().toString() else value.toString(),
-                    x + barWidth / 2,
-                    y - 10,
-                    android.graphics.Paint().apply {
-                        textAlign = android.graphics.Paint.Align.CENTER
-                        textSize = 32f
-                        setColor(android.graphics.Color.BLACK)
-                        isFakeBoldText = true
-                    }
-                )
-            }
+        // Always draw value on top of bar (show 0 for zero values)
+        drawContext.canvas.nativeCanvas.apply {
+            val displayValue = if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
+            val textY = if (value > 0) y - 10 else size.height - bottomPadding - 15f
+            
+            drawText(
+                displayValue,
+                x + barWidth / 2,
+                textY,
+                android.graphics.Paint().apply {
+                    textAlign = android.graphics.Paint.Align.CENTER
+                    textSize = 32f
+                    setColor(android.graphics.Color.BLACK)
+                    isFakeBoldText = true
+                }
+            )
         }
 
         // Draw item name at bottom
@@ -647,14 +658,14 @@ fun DrawScope.drawBarChart(
     }
 
     // Draw Y-axis labels and grid lines
-    val yAxisLabels = if (maxValue <= 10.0) {
-        (0..maxValue.toInt()).map { it.toDouble() }
+    val yAxisLabels = if (effectiveMaxValue <= 10.0) {
+        (0..effectiveMaxValue.toInt()).map { it.toDouble() }
     } else {
-        listOf(0.0, maxValue / 4, maxValue / 2, (maxValue * 3) / 4, maxValue)
+        listOf(0.0, effectiveMaxValue / 4, effectiveMaxValue / 2, (effectiveMaxValue * 3) / 4, effectiveMaxValue)
     }
     
     yAxisLabels.forEach { label ->
-        val y = size.height - bottomPadding - (label.toFloat() / maxValue.toFloat()) * chartHeight
+        val y = size.height - bottomPadding - (label.toFloat() / effectiveMaxValue.toFloat()) * chartHeight
 
         // Draw continuous horizontal grid line (avoiding bars that are taller than the line)
         if (label > 0) { // Don't draw line for 0
@@ -664,7 +675,7 @@ fun DrawScope.drawBarChart(
             items.forEachIndexed { index, (_, value, _) ->
                 val barX = leftPadding + index * (barWidth + barSpacing) + barSpacing / 2
                 val barEndX = barX + barWidth
-                val barHeight = (value.toFloat() / maxValue.toFloat()) * chartHeight
+                val barHeight = (value.toFloat() / effectiveMaxValue.toFloat()) * chartHeight
                 val barTopY = size.height - bottomPadding - barHeight
                 
                 // Only skip drawing through the bar if the bar is taller than this grid line
