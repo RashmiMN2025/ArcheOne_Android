@@ -83,6 +83,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
     var selectedTravelRequest by mutableStateOf<TravelRequest?>(null)
         private set
 
+    // Track if we navigated to detail screen from approvals
+    var isFromTravelApprovals by mutableStateOf(false)
+        private set
+
     // Travel approval action state
     var approvalActionState by mutableStateOf<TravelApprovalActionState>(TravelApprovalActionState.Idle)
         private set
@@ -362,8 +366,16 @@ class TravelController(private val navigator: Navigator, private val context: Co
         resetApprovalActionState()
 
         if (fromTravelDetail) {
-            // When in travel request detail, navigate back to travel history
-            navigator.navigateToTravel()
+            if (isFromTravelApprovals) {
+                // If we came from travel approvals, go back to approvals
+                isFromTravelApprovals = false // Reset the flag
+                selectedTravelRequest = null // Clear selected request
+                navigator.navigateToTravelApprovals()
+            } else {
+                // When in travel request detail from history, navigate back to travel screen
+                selectedTravelRequest = null // Clear selected request
+                navigator.navigateToTravel()
+            }
         } else {
             // When in travel or travel history screen, navigate back to home
             navigator.navigateToHome()
@@ -393,6 +405,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
             if (request != null) {
                 // Store the selected travel request
                 selectedTravelRequest = request
+                // Clear the approvals flag since we're coming from history
+                isFromTravelApprovals = false
                 // Navigate to the travel history detail screen
                 navigator.navigateToTravelHistoryDetail()
             } else {
@@ -439,6 +453,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
     fun navigateToTravelApprovalDetail(travelRequest: TravelRequest) {
         // Store the selected request so the destination screen can read it
         selectedTravelRequest = travelRequest
+        
+        // Mark that we're navigating from approvals
+        isFromTravelApprovals = true
 
         // If the request is already processed (approved / rejected) just show the read-only
         // details page for travel approvals. Otherwise open the approval page

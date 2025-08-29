@@ -74,12 +74,13 @@ fun TravelHistoryScreen(
                             Text(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally),
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                                    .offset(x = (-24).dp),
                                 text = "Travel History",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center
                             )
                         },

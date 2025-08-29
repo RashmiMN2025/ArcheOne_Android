@@ -257,13 +257,16 @@ fun TicketCard(
                         fontFamily = GraphikFontFamily,
                         color = Color.Black
                     )
-                    Text(
-                        text = ticket.title,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        fontFamily = GraphikFontFamily,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
+                    // Show category for closed tickets, nothing for open tickets
+                    if (ticket.status == TicketStatus.CLOSED) {
+                        Text(
+                            text = ticket.category,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            fontFamily = GraphikFontFamily,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
                 }
 
                 Row(
@@ -297,54 +300,274 @@ fun TicketCard(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Created Date",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Created: ${ticket.createdDate}",
-                            fontSize = 12.sp,
-                            fontFamily = GraphikFontFamily,
-                            color = Color.Gray
-                        )
-                    }
+                    // Show different content based on ticket status
+                    if (ticket.status == TicketStatus.CLOSED) {
+                        // For closed tickets, show detailed information
+                        
+                        // Sub-Category
+                        ticket.subCategory?.let { subCategory ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.sub),
+                                        contentDescription = "Sub-Category",
+                                        modifier = Modifier.size(14.dp),
+                                        colorFilter = ColorFilter.tint(Color.Black)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Sub-Category:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = subCategory,
+                                    fontSize = 13.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Gray
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.Top,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentAlignment = Alignment.Center
+                        // Created Date
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.description),
-                                contentDescription = "Description",
-                                modifier = Modifier.size(12.dp),
-                                colorFilter = ColorFilter.tint(Color.Gray)
+                            Box(
+                                modifier = Modifier
+                                    .size(18.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.created),
+                                    contentDescription = "Created Date",
+                                    modifier = Modifier.size(14.dp),
+                                    colorFilter = ColorFilter.tint(Color.Black)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Created:",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = ticket.createdDate,
+                                fontSize = 13.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Gray
                             )
                         }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = ticket.description,
-                            fontSize = 14.sp,
-                            color = Color.Black,
-                            fontFamily = GraphikFontFamily,
-                            lineHeight = 20.sp,
-                            modifier = Modifier.weight(1f)
-                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Issue (Description)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(18.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.issue),
+                                    contentDescription = "Issue",
+                                    modifier = Modifier.size(14.dp),
+                                    colorFilter = ColorFilter.tint(Color.Black)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Issue:",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = ticket.description,
+                                fontSize = 13.sp,
+                                color = Color.Gray,
+                                fontFamily = GraphikFontFamily,
+                                lineHeight = 18.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Resolution (Closure Comments)
+                        ticket.closureComments?.let { resolution ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.approved),
+                                        contentDescription = "Resolution",
+                                        modifier = Modifier.size(14.dp),
+                                        colorFilter = ColorFilter.tint(Color.Black)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Resolution:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = resolution,
+                                    fontSize = 13.sp,
+                                    color = Color.Gray,
+                                    fontFamily = GraphikFontFamily,
+                                    lineHeight = 18.sp,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+
+                        // Closed Date
+                        ticket.resolvedTime?.let { closedDate ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.closed),
+                                        contentDescription = "Closed Date",
+                                        modifier = Modifier.size(14.dp),
+                                        colorFilter = ColorFilter.tint(Color.Black)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Closed:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = closedDate,
+                                    fontSize = 13.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                        
+                    } else {
+                        // For open tickets, show Created and Issue
+                        
+                        // Created Date
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(18.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.created),
+                                    contentDescription = "Created Date",
+                                    modifier = Modifier.size(14.dp),
+                                    colorFilter = ColorFilter.tint(Color.Black)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Created:",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = ticket.createdDate,
+                                fontSize = 13.sp,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Gray
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Issue
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(18.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.issue),
+                                    contentDescription = "Issue",
+                                    modifier = Modifier.size(14.dp),
+                                    colorFilter = ColorFilter.tint(Color.Black)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Issue:",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                                color = Color.Black
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = ticket.description,
+                                fontSize = 13.sp,
+                                color = Color.Gray,
+                                fontFamily = GraphikFontFamily,
+                                lineHeight = 18.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
 
                     ticket.details?.let { details ->

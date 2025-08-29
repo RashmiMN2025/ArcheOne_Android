@@ -214,15 +214,9 @@ class DeskCartController(
 
                         Log.d("DeskCartController", "Order placed successfully: ${orderResponse.message}")
                         
-                        // Navigate to order details screen with the latest order ID
-                        val latestOrderId = orderResponse.orders.firstOrNull()?.orderId
-                        if (latestOrderId != null) {
-                            Log.d("DeskCartController", "Navigating to order details for order: $latestOrderId")
-                            navigator.navigateToOrderDetails(latestOrderId)
-                        } else {
-                            // Fallback to order history if no order ID available
-                            navigator.navigateToOrderHistory()
-                        }
+                        // Navigate to order history activity after successful order
+                        Log.d("DeskCartController", "Navigating to Order History Activity after successful order placement")
+                        navigator.navigateToOrderHistoryActivity()
                     } else {
                         handleOrderError("Failed to place order: ${response.message()}")
                     }
