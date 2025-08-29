@@ -443,7 +443,8 @@ private fun UpdateInventoryDropdown(
 
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(Color.White)
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
@@ -451,7 +452,8 @@ private fun UpdateInventoryDropdown(
                             Text(
                                 text = option,
                                 fontFamily = GraphikFontFamily,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
+                                color = Color.Black
                             )
                         },
                         onClick = {
@@ -544,11 +546,7 @@ private fun StockSuppliedDateField(
     // Set minimum date to today (only present/future dates allowed)
     datePickerDialog.datePicker.minDate = calendar.timeInMillis
 
-    Column(
-        modifier = Modifier.clickable {
-            datePickerDialog.show()
-        }
-    ) {
+    Column {
         Text(
             text = label,
             fontFamily = GraphikFontFamily,
@@ -558,39 +556,41 @@ private fun StockSuppliedDateField(
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        OutlinedTextField(
-            value = value,
-            onValueChange = { }, // Empty lambda since it's readOnly
-            readOnly = true,
-            trailingIcon = {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .clickable {
+                    datePickerDialog.show()
+                }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = if (value.isNotEmpty()) value else "Select date",
+                    fontFamily = GraphikFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (value.isNotEmpty()) Color.Black else Color.Gray,
+                    modifier = Modifier.weight(1f)
+                )
+                
                 Icon(
                     painter = painterResource(id = R.drawable.calendar_3x),
                     contentDescription = "Calendar",
                     tint = Color.Gray,
                     modifier = Modifier.size(20.dp)
                 )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .clickable {
-                    datePickerDialog.show()
-                },
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
-            textStyle = TextStyle(
-                fontFamily = GraphikFontFamily,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            ),
-            singleLine = true
-        )
+            }
+        }
     }
 }

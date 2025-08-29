@@ -580,7 +580,8 @@ fun DrawScope.drawBarChart(
 
         // Always draw value on top of bar (show 0 for zero values)
         drawContext.canvas.nativeCanvas.apply {
-            val displayValue = if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
+            // Round to nearest whole number and display as integer
+            val displayValue = kotlin.math.round(value).toInt().toString()
             val textY = if (value > 0) y - 10 else size.height - bottomPadding - 15f
             
             drawText(

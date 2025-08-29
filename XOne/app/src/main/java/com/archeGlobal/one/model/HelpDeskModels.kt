@@ -10,7 +10,10 @@ data class SupportTicket(
     val description: String,
     val status: TicketStatus,
     val category: String,
+    val subCategory: String? = null,
     val createdDate: String,
+    val closureComments: String? = null,
+    val resolvedTime: String? = null,
     val lastUpdate: String? = null,
     val details: TicketDetails? = null
 )
@@ -59,7 +62,10 @@ fun TicketItem.toSupportTicket(): SupportTicket {
         description = description,
         status = ticketStatus,
         category = category ?: "Helpdesk", // Use API category or default to Helpdesk
+        subCategory = subcategory,
         createdDate = created_time,
+        closureComments = closure_comments,
+        resolvedTime = resolved_time,
         lastUpdate = null,
         details = null
     )

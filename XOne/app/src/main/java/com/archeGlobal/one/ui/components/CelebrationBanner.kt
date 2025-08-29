@@ -35,6 +35,7 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.model.CelebrationItem
 import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
+import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 @Composable
@@ -134,8 +135,9 @@ fun CelebrationDialog(
                         }
                     )
                 },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -154,7 +156,7 @@ fun CelebrationDialog(
                     Text(
                         text = "Cheers For Peers!",
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         fontFamily = GraphikFontFamily,
                         color = Color.Black,
                         modifier = Modifier.weight(1f),
@@ -206,12 +208,33 @@ fun CelebrationDialog(
                     // Show only first 3 items
                     val itemsToShow = allItemsForTab.take(3)
 
-                    items(itemsToShow) { item ->
-                        CelebrationItem(
-                            item = item,
-                            onWishesClick = { onWishesClick(item.email, item.employeeName, item.celebrationType) },
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+                    if (itemsToShow.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (selectedTab == "Today") "No events today" else "No events tomorrow",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        items(itemsToShow) { item ->
+                            CelebrationItem(
+                                item = item,
+                                onWishesClick = { onWishesClick(item.email, item.employeeName, item.celebrationType) },
+                                isFromSelectedTab = true,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
                     }
                 }
 
@@ -289,15 +312,15 @@ private fun TabButton(
         onClick = onClick,
         modifier = modifier,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFFFF6B6B) else Color.Transparent,
-            contentColor = if (isSelected) Color.White else Color.Gray
+            containerColor = if (isSelected) Color(0xFFFF6B6B) else Color(0xFFE5E5E5),
+            contentColor = if (isSelected) Color.White else Color.Black
         ),
         shape = RoundedCornerShape(20.dp)
     ) {
         Text(
             text = text,
             fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
             fontFamily = GraphikFontFamily
         )
     }
@@ -307,12 +330,15 @@ private fun TabButton(
 fun CelebrationItem(
     item: CelebrationItem,
     onWishesClick: () -> Unit,
+    isFromSelectedTab: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
-        shape = RoundedCornerShape(8.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFromSelectedTab) Color(0xFFF8F9FA) else Color.Gray.copy(alpha = 0.15f)
+        ),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
             modifier = Modifier
