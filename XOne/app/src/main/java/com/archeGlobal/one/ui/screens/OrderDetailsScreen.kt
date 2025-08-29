@@ -240,20 +240,12 @@ fun OrderDetailsScreen(
                                                 ),
                                                 shape = RoundedCornerShape(28.dp)
                                             ) {
-                                                if (controller.isLoading) {
-                                                    CircularProgressIndicator(
-                                                        color = Color.White,
-                                                        modifier = Modifier.size(16.dp),
-                                                        strokeWidth = 2.dp
-                                                    )
-                                                } else {
-                                                    Text(
-                                                        text = "Reject",
-                                                        fontFamily = GraphikFontFamily,
-                                                        fontWeight = FontWeight.Medium,
-                                                        color = Color.White
-                                                    )
-                                                }
+                                                Text(
+                                                    text = "Reject",
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = Color.White
+                                                )
                                             }
 
                                             Button(
@@ -266,20 +258,12 @@ fun OrderDetailsScreen(
                                                 ),
                                                 shape = RoundedCornerShape(28.dp)
                                             ) {
-                                                if (controller.isLoading) {
-                                                    CircularProgressIndicator(
-                                                        color = Color.White,
-                                                        modifier = Modifier.size(16.dp),
-                                                        strokeWidth = 2.dp
-                                                    )
-                                                } else {
-                                                    Text(
-                                                        text = "Approve",
-                                                        fontFamily = GraphikFontFamily,
-                                                        fontWeight = FontWeight.Medium,
-                                                        color = Color.White
-                                                    )
-                                                }
+                                                Text(
+                                                    text = "Approve",
+                                                    fontFamily = GraphikFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = Color.White
+                                                )
                                             }
                                         }
                                     }
@@ -347,21 +331,13 @@ fun OrderDetailsScreen(
                                             ),
                                             shape = RoundedCornerShape(28.dp)
                                         ) {
-                                            if (controller.isLoading) {
-                                                CircularProgressIndicator(
-                                                    color = Color.White,
-                                                    modifier = Modifier.size(20.dp),
-                                                    strokeWidth = 2.dp
-                                                )
-                                            } else {
-                                                Text(
-                                                    text = if (controller.selectedAction == "collected") "Close Order" else "Cancel Order",
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = Color.White,
-                                                    fontSize = 16.sp
-                                                )
-                                            }
+                                            Text(
+                                                text = if (controller.selectedAction == "collected") "Close Order" else "Cancel Order",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.White,
+                                                fontSize = 16.sp
+                                            )
                                         }
                                     }
                                     
