@@ -899,104 +899,111 @@ fun MonthCalendarView(
 fun HolidayDetailsBox(
     holiday: Holiday
 ) {
-    Card(
+    val context = LocalContext.current
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            // Keep the clickable to prevent clicks from propagating to parent
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = { /* Prevent click from reaching background */ }
-            ),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+            .padding(horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+        Card(
             modifier = Modifier
-                .padding(vertical = 16.dp, horizontal = 12.dp)
-                .heightIn(min = 100.dp), // Increased minimum height
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            shape = RoundedCornerShape(8.dp)
         ) {
-            // Replace the header row containing title and close button with just the title
-            Text(
-                text = "Holiday Details",
-                fontSize = 14.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(12.dp)) // Increased spacing
-
-            // Icon and holiday name in a row - centered
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center, // Center the row content
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 90.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Load holiday icon from URL
-                if (holiday.icon != null) {
-                    SubcomposeAsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(holiday.icon)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "${holiday.name} icon",
-                        modifier = Modifier
-                            .size(45.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        loading = {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    color = Color(0xFFDD3825),
-                                    strokeWidth = 2.dp
-                                )
+// Holiday image on the left
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color(0xFFFEF7F2))
+                ) {
+                    if (!holiday.icon.isNullOrEmpty()) {
+                        SubcomposeAsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(holiday.icon)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "${holiday.name} icon",
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            loading = {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    CircularProgressIndicator(color = Color(0xFFDD3825))
+                                }
+                            },
+                            error = {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    DefaultIndianFlag()
+                                }
                             }
-                        },
-                        error = {
-                            // Fallback to Indian flag if icon fails to load
+                        )
+                    } else {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
                             DefaultIndianFlag()
                         }
-                    )
-                } else {
-                    // Fallback to Indian flag if no icon URL is available
-                    Box(
-                        modifier = Modifier.size(45.dp)
-                    ) {
-                        DefaultIndianFlag()
                     }
                 }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Holiday name and date in a column - centered
+                Spacer(modifier = Modifier.width(16.dp))
+// Holiday information on the right
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.Start
                 ) {
+// Holiday name
                     Text(
                         text = holiday.name,
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal,
+                        fontWeight = FontWeight.Bold,
                         color = Color.Black,
+                        modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(modifier = Modifier.height(2.dp))
-
+// Holiday date
                     Text(
                         text = formatDetailDate(holiday.date),
                         fontSize = 12.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Gray,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    // Event description
+                    Text(
+                        text = holiday.description,
+                        fontSize = 12.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -1047,65 +1054,6 @@ private fun DefaultIndianFlag() {
     }
 }
 
-@Composable
-fun HolidayDetailItem(
-    holiday: Holiday,
-    onItemClick: (Holiday) -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onItemClick(holiday) },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(2f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when (holiday.holidayType) {
-                                "Yes" -> Color(0xFFDD3825) // Red for mandatory holidays
-                                "RH" -> Color(0xFF2196F3) // Blue for RH holidays
-                                else -> Color.Gray // Gray for others
-                            }
-                        )
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = holiday.name,
-                    color = Color.Black,
-                    fontSize = 14.sp
-                )
-            }
-
-            Text(
-                text = formatDetailDate(holiday.date),
-                color = Color.DarkGray,
-                fontSize = 14.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End
-            )
-        }
-    }
-}
-
 private fun formatDetailDate(dateStr: String): String {
     return try {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -1150,125 +1098,133 @@ fun MilestoneDetailsBox(
         date
     }
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = { /* Prevent click from reaching background */ }
-            ),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+            .padding(horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+        Card(
             modifier = Modifier
-                .padding(vertical = 12.dp, horizontal = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth(0.9f)
+                .padding(horizontal = 12.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { /* Prevent click from reaching background */ }
+                ),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            // Title with formatted date
-            Text(
-                text = "Milestones of $formattedDate",
-                fontSize = 14.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center
-            )
+            Column(
+                modifier = Modifier
+                    .padding(vertical = 12.dp, horizontal = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Title with formatted date
+                Text(
+                    text = "Milestones of $formattedDate",
+                    fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // Display milestone information
-            milestones.forEach { milestone ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                ) {
-                    // Milestone bullet point in orange color
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 2.dp)
+                // Display milestone information
+                milestones.forEach { milestone ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .background(Color(0xFFF5A623), CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = milestone.event,
-                            color = Color.Black,
-                            fontSize = 14.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                        // Milestone bullet point in orange color
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Color(0xFFF5A623), CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                    // Customer information with left padding to align with the event text
-                    Row(
-                        modifier = Modifier.padding(start = 12.dp)
-                    ) {
-                        Text(
-                            text = "Customer: ",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = milestone.customer,
-                            color = Color.Black,
-                            fontSize = 12.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                            Text(
+                                text = milestone.event,
+                                color = Color.Black,
+                                fontSize = 14.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
 
-                    // Project information
-                    Row(
-                        modifier = Modifier.padding(start = 12.dp)
-                    ) {
-                        Text(
-                            text = "Project: ",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = milestone.project,
-                            color = Color.Black,
-                            fontSize = 12.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                        // Customer information with left padding to align with the event text
+                        Row(
+                            modifier = Modifier.padding(start = 12.dp)
+                        ) {
+                            Text(
+                                text = "Customer: ",
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = milestone.customer,
+                                color = Color.Black,
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
 
-                    // Show original date (includes year)
-                    Row(
-                        modifier = Modifier.padding(start = 12.dp)
-                    ) {
-                        Text(
-                            text = "Milestone Date: ",
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = formatMilestoneDate(milestone.poDate),
-                            color = Color.Black,
-                            fontSize = 12.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                        // Project information
+                        Row(
+                            modifier = Modifier.padding(start = 12.dp)
+                        ) {
+                            Text(
+                                text = "Project: ",
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = milestone.project,
+                                color = Color.Black,
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
 
-                    if (milestone != milestones.last()) {
-                        HorizontalDivider(
-                            color = Color.LightGray,
-                            thickness = 0.5.dp,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+                        // Show original date (includes year)
+                        Row(
+                            modifier = Modifier.padding(start = 12.dp)
+                        ) {
+                            Text(
+                                text = "Milestone Date: ",
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = formatMilestoneDate(milestone.poDate),
+                                color = Color.Black,
+                                fontSize = 12.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        if (milestone != milestones.last()) {
+                            HorizontalDivider(
+                                color = Color.LightGray,
+                                thickness = 0.5.dp,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -1344,7 +1300,7 @@ fun GlobalEventItem(
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(0.9f)
             .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -1361,7 +1317,6 @@ fun GlobalEventItem(
             Box(
                 modifier = Modifier
                     .size(60.dp)
-                    .clip(CircleShape)
                     .background(Color(0xFFFEF7F2))
             ) {
                 if (!event.image.isNullOrEmpty()) {
@@ -1372,8 +1327,7 @@ fun GlobalEventItem(
                             .build(),
                         contentDescription = "${event.name} image",
                         modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
+                            .fillMaxSize(),
                         contentScale = ContentScale.Crop,
                         loading = {
                             Box(

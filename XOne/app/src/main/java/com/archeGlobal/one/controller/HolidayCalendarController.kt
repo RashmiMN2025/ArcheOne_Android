@@ -334,27 +334,32 @@ class HolidayCalendarController(
             Holiday(
                 name = "New Year Day",
                 date = "01-01-2025",
-                holidayType = "Yes"
+                holidayType = "Yes",
+                description = ""
             ),
             Holiday(
                 name = "Republic Day",
                 date = "26-01-2025",
-                holidayType = "Yes"
+                holidayType = "Yes",
+                description = ""
             ),
             Holiday(
                 name = "Independence Day",
                 date = "15-08-2025",
-                holidayType = "Yes"
+                holidayType = "Yes",
+                description = ""
             ),
             Holiday(
                 name = "Gandhi Jayanthi",
                 date = "02-10-2025",
-                holidayType = "Yes"
+                holidayType = "Yes",
+                description = ""
             ),
             Holiday(
                 name = "Christmas",
                 date = "25-12-2025",
-                holidayType = "Yes"
+                holidayType = "Yes",
+                description = ""
             )
         )
     }

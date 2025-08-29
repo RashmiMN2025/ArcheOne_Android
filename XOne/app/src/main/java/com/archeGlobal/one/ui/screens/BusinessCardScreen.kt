@@ -624,11 +624,9 @@ fun BusinessCardScreen(
 
                         // Get all available locations
                         val locations = mutableListOf<String>()
-                        offices?.forEach { office ->
-                            locations.add(office.country)
-                            office.regionaloffice?.forEach { regional ->
-                                locations.add(regional.region)
-                            }
+                        val indiaOffice = offices?.find { office -> office.country.equals("India", ignoreCase = true) }
+                        indiaOffice?.regionaloffice?.forEach { regional ->
+                            locations.add(regional.region)
                         }
 
                         // Add "Other" option
