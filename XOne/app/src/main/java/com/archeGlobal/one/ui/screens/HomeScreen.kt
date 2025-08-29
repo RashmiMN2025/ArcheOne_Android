@@ -1426,7 +1426,7 @@ private fun formatServiceTitle(title: String): String {
     return when (title) {
         "DeskCart" -> "DeskCart"
         "Vision" -> "Vision"
-        "Core Values" -> "CoreValues"
+        "Core Values" -> "Core Values"
         "Communique" -> "Communique"
         "About Us" -> "AboutUs"
         "Calendar" -> "Calendar"

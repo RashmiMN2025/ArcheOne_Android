@@ -151,7 +151,7 @@ fun CoreValuesScreen(
                 }
 
                 Text(
-                    text = "CoreValues",
+                    text = "Core Values",
                     color = Color.Black,
                     fontSize = 20.sp,
                     fontFamily = GraphikFontFamily,
