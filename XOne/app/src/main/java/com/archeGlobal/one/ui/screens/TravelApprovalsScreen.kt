@@ -146,7 +146,8 @@ fun TravelApprovalsScreen(
                             Text(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally),
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                                    .offset(x = (-24).dp),
                                 text = "Travel Approvals",
                                 color = Color.Black,
                                 fontSize = 20.sp,
