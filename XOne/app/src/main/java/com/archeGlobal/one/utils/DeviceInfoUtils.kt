@@ -32,6 +32,7 @@ object DeviceInfoUtils {
             deviceModel = getDeviceModel(),
             osVersion = getOSVersion(),
             appVersion = getAppVersion(context),
+//            appVersion = "1.4",
             deviceId = getDeviceId(context)
         )
     }
