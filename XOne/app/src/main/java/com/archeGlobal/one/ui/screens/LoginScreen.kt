@@ -777,16 +777,30 @@ fun LoginScreen(
                             onCheckedChange = { checked ->
                                 if (!checked) showDisableDialog = true
                                 else stayLoggedIn = true
-                            }
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Color(0xFFDD3825),
+                                uncheckedColor = Color.Gray
+                            )
                         )
-                        Text("Stay logged in for faster access")
+                        Text(
+                            "Stay logged in for faster access",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
                     }
 
                     // Info text
                     Text(
                         "Your credentials will be securely stored",
-                        modifier = Modifier.padding(top = 4.dp),
-                        color = Color.Gray
+                        modifier = Modifier
+                            .padding(top = 1.dp),
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal
                     )
 
                     // Dialog for disabling
@@ -951,9 +965,52 @@ fun LoginScreen(
                 if (selectedLoginMethod == "MFA") {
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            if (stayLoggedIn) showDisableDialog = true
+                            else stayLoggedIn = true
+                        }
+                    ) {
+                        Checkbox(
+                            checked = stayLoggedIn,
+                            onCheckedChange = { checked ->
+                                if (!checked) showDisableDialog = true
+                                else stayLoggedIn = true
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Color(0xFFDD3825),
+                                uncheckedColor = Color.Gray
+                            )
+                        )
+                        Text(
+                            "Stay logged in for faster access",
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
+                    }
+
+                    Text(
+                        "Your credentials will be securely stored",
+                        modifier = Modifier
+                            .padding(top = 1.dp),
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     Button(
                         onClick = {
-                            showMfaTermsDialog = true
+                            if (termsAccepted) {
+                                showWebView = true  // Show MicrosoftLoginWebView for MFA
+                            } else {
+                                showMfaTermsDialog = true  // Or handle terms
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth(0.97f)
@@ -1353,7 +1410,7 @@ fun LoginScreen(
                                 url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
                                 onReceiveAuth = { response ->
                                     Log.d("LoginScreen", "MFA onReceiveAuth called with token: ${response.token}")
-                                    Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}")
+                                    Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}, Mobile: ${response.mobilePhone}")
                                     authResponse = response
                                     isLoading = true
                                     // Use encrypted API call like OTP flow
@@ -1361,14 +1418,21 @@ fun LoginScreen(
                                         navigator = navigator,
                                         context = context
                                     )
-                                    otpController.loginWithToken(
-                                        token = response.token,
+                                    val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
+
+                                    otpController.verifyOtp(
                                         email = response.email,
                                         mobile = response.mobilePhone,
                                         employeeId = response.employeeId,
-                                        fromHome = false,
-                                        fromOtp = false,
-                                        shouldNavigateToHome = false // Don't auto-navigate
+                                        otpFromUser = "",  // Empty for MFA (assume backend handles)
+                                        isBiometric = true,  // Not biometric
+                                        backgroundRefresh = false,
+                                        appVersion = deviceInfo.appVersion,
+                                        deviceModel = deviceInfo.deviceModel,
+                                        deviceId = deviceInfo.deviceId,
+                                        platform = deviceInfo.platform,
+                                        osVersion = deviceInfo.osVersion,
+                                        stayLoggedIn = stayLoggedIn
                                     ) { message, isError ->
                                         Log.d("LoginScreen", "loginWithToken callback: message=$message, isError=$isError")
                                         isLoading = false

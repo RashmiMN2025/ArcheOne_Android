@@ -59,6 +59,7 @@ class ProfileController(
             email = userData?.email ?: "",
             profilePicture = userData?.profilePic,
             version = getAppVersion(),
+//            version = "1.4",
             lastLoginTime = userDataManager.getLastLoginTime()?.let { formatLastLoginTime(it) } ?: ""
         )
     )
