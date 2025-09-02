@@ -34,13 +34,19 @@ class DeskCartController(
     private val userDataManager = UserDataManager.getInstance(context)
     private val fileDownloadHelper = FileDownloadHelper(context)
 
+    private var hasInitialLoadCompleted = false
+
     init {
-        loadEligibilityData()
+        // Don't load data immediately - wait for user data to be ready
+        // This prevents the "slow first login" issue
+        Log.d("DeskCartController", "Controller initialized, data loading will be triggered when ready")
     }
 
     private fun loadEligibilityData() {
         val userData = userDataManager.getUserData()
         val email = userData?.email ?: "biswajit.d@arche.global"
+
+        Log.d("DeskCartController", "Starting loadEligibilityData for email: $email (userData ready: ${userDataManager.isUserDataReady()})")
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -356,5 +362,35 @@ class DeskCartController(
 
     fun clearDownloadError() {
         model = model.copy(downloadError = null)
+    }
+
+    // Trigger initial load when user data becomes ready
+    fun onLoginCompleted() {
+        Log.d("DeskCartController", "onLoginCompleted - checking if user data is ready")
+        if (userDataManager.isUserDataReady()) {
+            Log.d("DeskCartController", "User data is ready, starting initial load")
+            startInitialLoad()
+        } else {
+            Log.d("DeskCartController", "User data not ready yet, will load with fallback data")
+            startInitialLoad() // Load anyway with fallback data
+        }
+    }
+
+    // Start initial load (can be called from onLoginCompleted or when screen becomes visible)
+    fun startInitialLoad() {
+        if (!hasInitialLoadCompleted) {
+            Log.d("DeskCartController", "Starting initial data load")
+            hasInitialLoadCompleted = true
+            loadEligibilityData()
+        } else {
+            Log.d("DeskCartController", "Initial load already completed, skipping")
+        }
+    }
+
+    // Add method to refresh all data (for manual refresh)
+    fun refreshData() {
+        Log.d("DeskCartController", "Manually refreshing DeskCart data")
+        model = model.copy(isInitialLoading = true)
+        loadEligibilityData()
     }
 }

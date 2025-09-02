@@ -45,6 +45,9 @@ fun CelebrationBanner(
     modifier: Modifier = Modifier
 ) {
     val totalCelebrations = (celebrationData?.today?.size ?: 0) + (celebrationData?.tomorrow?.size ?: 0)
+    
+    // Debug logging
+    android.util.Log.d("CelebrationBanner", "Received data - Today: ${celebrationData?.today?.size ?: 0}, Tomorrow: ${celebrationData?.tomorrow?.size ?: 0}, Total: $totalCelebrations")
 
     if (totalCelebrations > 0) {
         Row(

@@ -736,7 +736,7 @@ fun HomeScreenContent(
             }
         }
 
-        // Show celebration dialog
+        // Show celebration dialog and get celebration data (single collection point)
         val showCelebrationDialog = controller.showCelebrationDialog.collectAsState().value
         val celebrationData = controller.celebrationData.collectAsState().value
         if (showCelebrationDialog) {
@@ -826,8 +826,7 @@ fun HomeScreenContent(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Celebration banner
-                        val celebrationData = controller.celebrationData.collectAsState().value
+                        // Celebration banner (using same celebrationData from above)
                         CelebrationBanner(
                             celebrationData = celebrationData,
                             onClick = { controller.showCelebrationDialog() }

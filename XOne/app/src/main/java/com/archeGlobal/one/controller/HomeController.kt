@@ -65,7 +65,9 @@ class HomeController(
 
     // Celebration state
     private val _celebrationData = MutableStateFlow<CelebrationResponse?>(null)
-    val celebrationData: StateFlow<CelebrationResponse?> = _celebrationData.asStateFlow()
+    val celebrationData: StateFlow<CelebrationResponse?> = _celebrationData.asStateFlow().also {
+        Log.d("CelebrationController", "CelebrationData StateFlow created")
+    }
 
     private val _showCelebrationDialog = MutableStateFlow(false)
     val showCelebrationDialog: StateFlow<Boolean> = _showCelebrationDialog.asStateFlow()
@@ -73,6 +75,7 @@ class HomeController(
     // WhatsNew dialog state management
     private val _showWhatsNewDialog = MutableStateFlow(false)
     val showWhatsNewDialog: StateFlow<Boolean> = _showWhatsNewDialog.asStateFlow()
+
 
     // Initialize PreferencesManager early to avoid null pointer exceptions
     private val preferencesManager by lazy { PreferencesManager(context) }
@@ -88,6 +91,7 @@ class HomeController(
 
     // Initialize event handling
     init {
+        Log.d("EventController", "HomeController INIT BLOCK 1 - ${this.hashCode()}")
         Log.d("EventController", "Initializing HomeController and fetching daily event")
         Log.d("EventController", "UserDataManager instance: ${UserDataManager.getInstance(context)}")
 
@@ -103,14 +107,21 @@ class HomeController(
             fetchEventFromLoginData()
         }
 
-        // Fetch celebration data
-        fetchCelebrationData()
+        // Fetch celebration data only if auth token exists (user is already logged in)
+        val preferencesManager = PreferencesManager(context)
+        if (preferencesManager.getAuthToken() != null) {
+            Log.d("CelebrationController", "Auth token exists, fetching celebration data immediately")
+            fetchCelebrationData()
+        } else {
+            Log.d("CelebrationController", "No auth token found, will fetch celebration data after login")
+        }
 
         // Check if WhatsNew dialog should be shown
         checkWhatsNewDialog()
     }
 
     init {
+        Log.d("EventController", "HomeController INIT BLOCK 2 - ${this.hashCode()}")
         // Check app version and handle first install vs updates vs returning users
         checkAppVersionAndMarkServices()
     }
@@ -382,9 +393,10 @@ class HomeController(
         return sharedPref.getBoolean(KEY_USING_PRIDE_ICON, false)
     }
 
-    // Celebration methods
+    // Celebration methods - restored to original working version
     private fun fetchCelebrationData() {
-        Log.d("CelebrationController", "Fetching celebration data")
+        val userData = OtpVerificationController.getUserData()
+        Log.d("CelebrationController", "Fetching celebration data - User data available: ${userData != null}, Email: ${userData?.email}")
         val scope = CoroutineScope(Dispatchers.IO)
 
         scope.launch {
@@ -392,8 +404,13 @@ class HomeController(
                 val response = RetrofitClient.apiService.getEmployeeCelebration()
                 if (response.isSuccessful) {
                     val celebrationData = response.body()
-                    Log.d("CelebrationController", "Celebration data fetched successfully")
+                    val todayCount = celebrationData?.today?.size ?: 0
+                    val tomorrowCount = celebrationData?.tomorrow?.size ?: 0
+                    Log.d("CelebrationController", "Celebration data fetched successfully - Today: $todayCount, Tomorrow: $tomorrowCount")
+                    Log.d("CelebrationController", "Setting celebration data to StateFlow...")
                     _celebrationData.value = celebrationData
+                    Log.d("CelebrationController", "StateFlow updated. Current value not null: ${_celebrationData.value != null}")
+                    Log.d("CelebrationController", "StateFlow celebration count: Today=${_celebrationData.value?.today?.size}, Tomorrow=${_celebrationData.value?.tomorrow?.size}")
                 } else {
                     Log.e("CelebrationController", "Failed to fetch celebration data: ${response.errorBody()?.string()}")
                 }
@@ -899,6 +916,7 @@ class HomeController(
             } ?: emptyMap(),
             favorites = preferencesManager.getFavorites()
         )
+        
     }
 
     fun getCurrentViewItems(): List<HomeItem> {
@@ -980,4 +998,12 @@ class HomeController(
         preferencesManager.markAllServicesAsSeen(serviceNames)
         Log.d("HomeController", "Marked ${serviceNames.size} services as seen")
     }
+
+    // Call this after login completes to fetch celebration data
+    fun onLoginCompleted() {
+        Log.d("CelebrationController", "onLoginCompleted called on HomeController ${this.hashCode()}")
+        Log.d("CelebrationController", "Current celebration data before fetch: ${_celebrationData.value != null}")
+        fetchCelebrationData()
+    }
+
 }

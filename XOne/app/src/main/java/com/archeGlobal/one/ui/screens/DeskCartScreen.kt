@@ -54,6 +54,12 @@ fun DeskCartScreen(
     BackHandler {
         controller.onBackPressed()
     }
+
+    // Ensure initial load is triggered when screen becomes visible
+    LaunchedEffect(Unit) {
+        android.util.Log.d("DeskCartScreen", "Screen became visible, ensuring initial load")
+        controller.startInitialLoad()
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()

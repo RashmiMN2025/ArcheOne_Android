@@ -45,7 +45,7 @@ class PreferencesManager(context: Context) {
 
     // Save the authentication token
     fun saveAuthToken(token: String) {
-        sharedPreferences.edit().putString(KEY_AUTH_TOKEN, token).apply()
+        sharedPreferences.edit().putString(KEY_AUTH_TOKEN, token).commit()
     }
 
     // Get the saved authentication token
@@ -71,10 +71,10 @@ class PreferencesManager(context: Context) {
     // Save user data
     fun saveUserData(userData: UserData?) {
         if (userData == null) {
-            sharedPreferences.edit().remove(KEY_USER_DATA).apply()
+            sharedPreferences.edit().remove(KEY_USER_DATA).commit()
         } else {
             val json = gson.toJson(userData)
-            sharedPreferences.edit().putString(KEY_USER_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_USER_DATA, json).commit()
         }
     }
 
@@ -92,10 +92,10 @@ class PreferencesManager(context: Context) {
     // Save offices data
     fun saveOfficesData(offices: List<Office>?) {
         if (offices == null) {
-            sharedPreferences.edit().remove(KEY_OFFICES_DATA).apply()
+            sharedPreferences.edit().remove(KEY_OFFICES_DATA).commit()
         } else {
             val json = gson.toJson(offices)
-            sharedPreferences.edit().putString(KEY_OFFICES_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_OFFICES_DATA, json).commit()
         }
     }
 
@@ -113,10 +113,10 @@ class PreferencesManager(context: Context) {
     // Save policies data
     fun savePoliciesData(policies: List<PolicyModel.Policy>?) {
         if (policies == null) {
-            sharedPreferences.edit().remove(KEY_POLICIES_DATA).apply()
+            sharedPreferences.edit().remove(KEY_POLICIES_DATA).commit()
         } else {
             val json = gson.toJson(policies)
-            sharedPreferences.edit().putString(KEY_POLICIES_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_POLICIES_DATA, json).commit()
         }
     }
 
@@ -134,10 +134,10 @@ class PreferencesManager(context: Context) {
     // Save SOS blogs data
     fun saveSosBlogsData(sosBlogs: List<SosBlogModel>?) {
         if (sosBlogs == null) {
-            sharedPreferences.edit().remove(KEY_SOS_BLOGS_DATA).apply()
+            sharedPreferences.edit().remove(KEY_SOS_BLOGS_DATA).commit()
         } else {
             val json = gson.toJson(sosBlogs)
-            sharedPreferences.edit().putString(KEY_SOS_BLOGS_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_SOS_BLOGS_DATA, json).commit()
         }
     }
 
@@ -155,10 +155,10 @@ class PreferencesManager(context: Context) {
     // Save asset details
     fun saveAssetDetails(assetDetails: List<AssetDetail>?) {
         if (assetDetails == null) {
-            sharedPreferences.edit().remove(KEY_ASSET_DETAILS).apply()
+            sharedPreferences.edit().remove(KEY_ASSET_DETAILS).commit()
         } else {
             val json = gson.toJson(assetDetails)
-            sharedPreferences.edit().putString(KEY_ASSET_DETAILS, json).apply()
+            sharedPreferences.edit().putString(KEY_ASSET_DETAILS, json).commit()
         }
     }
 
@@ -176,10 +176,10 @@ class PreferencesManager(context: Context) {
     // Save communique data
     fun saveCommuniqueData(communique: List<CommuniqueModel.Communique>?) {
         if (communique == null) {
-            sharedPreferences.edit().remove(KEY_COMMUNIQUE_DATA).apply()
+            sharedPreferences.edit().remove(KEY_COMMUNIQUE_DATA).commit()
         } else {
             val json = gson.toJson(communique)
-            sharedPreferences.edit().putString(KEY_COMMUNIQUE_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_COMMUNIQUE_DATA, json).commit()
         }
     }
 
@@ -197,10 +197,10 @@ class PreferencesManager(context: Context) {
     // Save FAQ data
     fun saveFAQData(faqData: List<FAQCategory>?) {
         if (faqData == null) {
-            sharedPreferences.edit().remove(KEY_FAQ_DATA).apply()
+            sharedPreferences.edit().remove(KEY_FAQ_DATA).commit()
         } else {
             val json = gson.toJson(faqData)
-            sharedPreferences.edit().putString(KEY_FAQ_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_FAQ_DATA, json).commit()
         }
     }
 
@@ -451,10 +451,10 @@ class PreferencesManager(context: Context) {
 
     fun saveGreetingsList(greetings: Map<String, List<String>>?) {
         if (greetings == null) {
-            sharedPreferences.edit().remove(KEY_GREETINGS_DATA).apply()
+            sharedPreferences.edit().remove(KEY_GREETINGS_DATA).commit()
         } else {
             val json = gson.toJson(greetings)
-            sharedPreferences.edit().putString(KEY_GREETINGS_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_GREETINGS_DATA, json).commit()
         }
     }
 
@@ -475,10 +475,10 @@ class PreferencesManager(context: Context) {
 
     fun saveSmartCollateralData(list: List<SmartCollateralCategory>?) {
         if (list == null) {
-            sharedPreferences.edit().remove(KEY_SMART_COLLATERAL_DATA).apply()
+            sharedPreferences.edit().remove(KEY_SMART_COLLATERAL_DATA).commit()
         } else {
             val json = gson.toJson(list)
-            sharedPreferences.edit().putString(KEY_SMART_COLLATERAL_DATA, json).apply()
+            sharedPreferences.edit().putString(KEY_SMART_COLLATERAL_DATA, json).commit()
         }
     }
 
@@ -499,10 +499,10 @@ class PreferencesManager(context: Context) {
 
     fun saveGreetingCategories(categories: List<ApiGreetingCategory>?) {
         if (categories == null) {
-            sharedPreferences.edit().remove(KEY_GREETING_CATEGORIES).apply()
+            sharedPreferences.edit().remove(KEY_GREETING_CATEGORIES).commit()
         } else {
             val json = gson.toJson(categories)
-            sharedPreferences.edit().putString(KEY_GREETING_CATEGORIES, json).apply()
+            sharedPreferences.edit().putString(KEY_GREETING_CATEGORIES, json).commit()
         }
     }
 

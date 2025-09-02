@@ -42,12 +42,22 @@ class UserDataManager private constructor(context: Context) {
     // Private var isLoggedIn: Boolean = false
     // private var hasLoggedIn: Boolean = false
 
+    // Callback for when user data becomes ready
+    private var onUserDataReadyCallbacks: MutableList<() -> Unit> = mutableListOf()
+
     fun saveSmartCollateral(list: List<SmartCollateralCategory>) {
         smartCollateralList = list
         preferencesManager.saveSmartCollateral(list) // Optional: persist if desired
     }
 
     fun getSmartCollateralList(): List<SmartCollateralCategory>? = smartCollateralList
+
+    // Check if user data is ready and available
+    fun isUserDataReady(): Boolean {
+        val isReady = userData?.name?.isNotBlank() == true
+        Log.d(TAG, "UserDataManager.isUserDataReady(): $isReady (userData.name: '${userData?.name}')")
+        return isReady
+    }
 
 //    fun getSmartCollateralData(): List<SmartCollateralCategory>? {
 //        // Assuming you have saved this data to preferences similarly
@@ -177,6 +187,8 @@ class UserDataManager private constructor(context: Context) {
             preferencesManager.setString("last_user_name", user.name ?: "")
         }
 
+        Log.d(TAG, "UserDataManager: Refreshing in-memory cache after data save")
+
         // Process the greeting categories with messages from the new API format
         val apiGreetingCategories = response.greetingCategories1?.map { category ->
             ApiGreetingCategory(
@@ -280,6 +292,23 @@ class UserDataManager private constructor(context: Context) {
             Log.d(TAG, "Category '$category' has ${urls.size} greetings.")
         }
         Log.d(TAG, "Saved greeting categories with ${greetingCategoriesData?.size} items with messages.")
+        
+        // CRITICAL: Reload data from preferences to refresh in-memory cache
+        // This ensures getUserData() immediately returns the fresh data on fresh install
+        loadDataFromPreferences()
+        Log.d(TAG, "UserDataManager: In-memory cache refreshed. getUserData() now returns: ${userData?.name}")
+        
+        // Notify all registered callbacks that user data is now ready
+        if (isUserDataReady()) {
+            Log.d(TAG, "User data is ready, notifying ${onUserDataReadyCallbacks.size} callbacks")
+            onUserDataReadyCallbacks.forEach { callback ->
+                try {
+                    callback()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in user data ready callback", e)
+                }
+            }
+        }
     }
 
     fun clearUserData() {
@@ -401,6 +430,34 @@ class UserDataManager private constructor(context: Context) {
         preferencesManager.clearAllUserData()
         preferencesManager.clearAuthToken()
         preferencesManager.saveEventData(null) // Clear event data from preferences
+        // Clear callbacks on logout
+        onUserDataReadyCallbacks.clear()
         Log.d(TAG, "Cleared all user data on logout")
+    }
+
+    // Methods to manage user data ready callbacks
+    fun addUserDataReadyCallback(callback: () -> Unit) {
+        onUserDataReadyCallbacks.add(callback)
+        Log.d(TAG, "Added user data ready callback. Total callbacks: ${onUserDataReadyCallbacks.size}")
+        
+        // If user data is already ready, call the callback immediately
+        if (isUserDataReady()) {
+            Log.d(TAG, "User data is already ready, calling callback immediately")
+            try {
+                callback()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in immediate callback", e)
+            }
+        }
+    }
+
+    fun removeUserDataReadyCallback(callback: () -> Unit) {
+        onUserDataReadyCallbacks.remove(callback)
+        Log.d(TAG, "Removed user data ready callback. Total callbacks: ${onUserDataReadyCallbacks.size}")
+    }
+
+    fun clearUserDataReadyCallbacks() {
+        onUserDataReadyCallbacks.clear()
+        Log.d(TAG, "Cleared all user data ready callbacks")
     }
 }

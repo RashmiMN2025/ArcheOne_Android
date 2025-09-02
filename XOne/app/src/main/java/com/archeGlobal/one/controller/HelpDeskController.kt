@@ -1,6 +1,7 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.*
 import com.archeGlobal.one.model.*
 import com.archeGlobal.one.network.RetrofitClient
@@ -285,4 +286,17 @@ class HelpDeskController(private val context: Context) {
     fun refreshFAQData() {
         loadFAQFromLogin()
     }
+
+    // Call this after login completes to ensure user data is ready
+    fun onLoginCompleted() {
+        Log.d("HelpDeskController", "onLoginCompleted - checking if user data is ready")
+        val userDataManager = UserDataManager.getInstance(context)
+        if (userDataManager.isUserDataReady()) {
+            Log.d("HelpDeskController", "User data is ready, loading tickets")
+            loadTicketsData()
+        } else {
+            Log.d("HelpDeskController", "User data not ready yet, will load tickets when navigated to")
+        }
+    }
+
 }

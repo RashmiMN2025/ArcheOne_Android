@@ -188,6 +188,14 @@
             android:screenOrientation="portrait"
             android:exported="false"
             android:theme="@style/Theme.XOne" />
+
+        <!-- Track Tickets Activity -->
+        <activity
+            android:name=".TrackTicketsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Track Your Tickets"
+            android:theme="@style/Theme.XOne" />
             
         <!-- Pride Month Test Activity -->
         <activity

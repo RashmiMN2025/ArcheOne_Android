@@ -382,11 +382,10 @@ class AndroidNavigator(
     }
 
     override fun navigateToTrackTickets(category: String) {
-        // Use NavController to navigate while preserving back stack
-        navController?.navigate("track_tickets") {
-            launchSingleTop = true
-            restoreState = true
+        val intent = Intent(activity, TrackTicketsActivity::class.java).apply {
+            putExtra("ticketCategory", category)
         }
+        startActivity(intent)
     }
 
     override fun navigateToAnnouncements() {

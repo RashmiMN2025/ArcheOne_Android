@@ -146,6 +146,15 @@ class HomeActivity : AppCompatActivity() {
                 }
                 // Update the home controller's data
                 controller.refreshUserData()
+                // Trigger celebration data fetch after login completion
+                controller.onLoginCompleted()
+                // Trigger help desk data loading after login completion
+                if (::helpDeskController.isInitialized) {
+                    Log.d("HomeActivity", "HelpDeskController is initialized, calling onLoginCompleted()")
+                    helpDeskController.onLoginCompleted()
+                } else {
+                    Log.d("HomeActivity", "HelpDeskController is NOT initialized yet")
+                }
             }
         }
     }
@@ -218,6 +227,7 @@ class HomeActivity : AppCompatActivity() {
         userDataManager = UserDataManager.getInstance(this)
         navigator = AndroidNavigator(this)
         controller = HomeController(navigator, this)
+        helpDeskController = HelpDeskController(this)
         preferencesManager = PreferencesManager(this)
 
         // Check if we're coming from login
@@ -322,8 +332,7 @@ class HomeActivity : AppCompatActivity() {
                 // Use the class-level navigator instead of creating a new one
                 navigator.setNavController(navController)
 
-                // Initialize controllers with correct parameter order
-                controller = HomeController(navigator, this@HomeActivity)
+                // HomeController already initialized in onCreate() - don't recreate it!
 
 
                 // Initialize controllers that need context
@@ -356,8 +365,7 @@ class HomeActivity : AppCompatActivity() {
                 // Log that the travel controller was initialized
                 android.util.Log.d("HomeActivity", "TravelController initialized with navigator: ${navigator.hashCode()}")
 
-                // Initialize helpdesk controller
-                helpDeskController = HelpDeskController(this@HomeActivity)
+                // Set navigation callback for helpdesk controller (already initialized in onCreate)
                 helpDeskController.setNavigationCallback { route ->
                     navController.navigate(route)
                 }
@@ -461,6 +469,15 @@ class HomeActivity : AppCompatActivity() {
                             } else {
                                 // Successful token refresh, update user data silently
                                 controller.refreshUserData()
+                                // Trigger celebration data fetch after token refresh
+                                controller.onLoginCompleted()
+                                // Trigger help desk data loading after token refresh
+                                if (::helpDeskController.isInitialized) {
+                                    Log.d("HomeActivity", "Token refresh: HelpDeskController is initialized, calling onLoginCompleted()")
+                                    helpDeskController.onLoginCompleted()
+                                } else {
+                                    Log.d("HomeActivity", "Token refresh: HelpDeskController is NOT initialized yet")
+                                }
                             }
 
                             // Handle navigation after token refresh - only if not already at the destination
