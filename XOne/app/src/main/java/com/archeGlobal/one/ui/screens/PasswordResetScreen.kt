@@ -213,7 +213,8 @@ fun PasswordResetScreen(navigator: Navigator) {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(22.dp))
+
                 val goBackText = buildAnnotatedString {
                     val start = length
                     append("Go Back")
@@ -221,7 +222,8 @@ fun PasswordResetScreen(navigator: Navigator) {
                         style = SpanStyle(
                             color = Color.Black,
                             textDecoration = TextDecoration.Underline,
-                            fontWeight = FontWeight.Medium
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal
                         ),
                         start = start,
                         end = length
@@ -236,9 +238,9 @@ fun PasswordResetScreen(navigator: Navigator) {
                 ClickableText(
                     text = goBackText,
                     style = TextStyle(
-                        fontSize = 22.sp,
+                        fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.Normal,
                         color = Color.Black
                     ),
                     modifier = Modifier.align(Alignment.CenterHorizontally),

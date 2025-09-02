@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -22,11 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.controller.OtpVerificationController
@@ -392,7 +396,49 @@ fun OtpVerificationScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(22.dp))
+
+                val goBackText = buildAnnotatedString {
+                    val start = length
+                    append("Go Back")
+                    addStyle(
+                        style = SpanStyle(
+                            color = Color.Black,
+                            textDecoration = TextDecoration.Underline,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Normal
+                        ),
+                        start = start,
+                        end = length
+                    )
+                    addStringAnnotation(
+                        tag = "go_back",
+                        annotation = "go_back",
+                        start = start,
+                        end = length
+                    )
+                }
+                ClickableText(
+                    text = goBackText,
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    ),
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    onClick = { offset ->
+                        goBackText.getStringAnnotations(
+                            tag = "go_back",
+                            start = offset,
+                            end = offset
+                        )
+                            .firstOrNull()?.let {
+                                val activity = context as? android.app.Activity
+                                activity?.finish()
+                            }
+                    }
+                )
             }
             // Replace the existing loading indicator with UniversalLoader
             UniversalLoader(isLoading = isLoading)

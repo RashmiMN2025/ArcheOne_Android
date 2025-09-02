@@ -18,6 +18,8 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +32,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -104,6 +107,7 @@ fun ResponsiveLoginScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     controller: LoginController,
@@ -763,8 +767,6 @@ fun LoginScreen(
                         shape = MaterialTheme.shapes.medium
                     )
 
-
-                    // UI under Employee ID field:
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -781,30 +783,39 @@ fun LoginScreen(
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Color(0xFFDD3825),
-                                    uncheckedColor = Color.Gray
-                                )
+                                    uncheckedColor = Color.Gray,
+                                    checkmarkColor = Color.White
+                                ),
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(6.dp))
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+
                             Column(
-                                modifier = Modifier.weight(0.9f) // Takes available space on the left
+                                modifier = Modifier.weight(1f) // Takes available space on the left
                             ) {
                                 Text(
                                     "Stay logged in for faster access",
+                                    modifier = Modifier.padding(bottom = 0.dp),
                                     fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black
                                 )
                                 Text(
                                     "Your credentials will be securely stored",
-                                    modifier = Modifier.padding(top = 1.dp),
+                                    modifier = Modifier.padding(top = 0.dp),
                                     color = Color.Gray,
-                                    fontSize = 14.sp,
+                                    fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal
                                 )
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Dialog for disabling
                     if (showDisableDialog) {
@@ -907,7 +918,6 @@ fun LoginScreen(
                         }
                     }
 
-
                     // Login Button
                     Button(
                         onClick = {
@@ -998,24 +1008,31 @@ fun LoginScreen(
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Color(0xFFDD3825),
-                                    uncheckedColor = Color.Gray
-                                )
+                                    uncheckedColor = Color.Gray,
+                                    checkmarkColor = Color.White
+                                ),
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(6.dp))
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+
                             Column(
-                                modifier = Modifier.weight(0.9f) // Takes available space on the left
+                                modifier = Modifier.weight(1f) // Takes available space on the left
                             ) {
                                 Text(
                                     "Stay logged in for faster access",
+                                    modifier = Modifier.padding(bottom = 0.dp),
                                     fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.Normal,
                                     color = Color.Black
                                 )
                                 Text(
                                     "Your credentials will be securely stored",
-                                    modifier = Modifier.padding(top = 1.dp),
+                                    modifier = Modifier.padding(top = 0.dp),
                                     color = Color.Gray,
-                                    fontSize = 14.sp,
+                                    fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal
                                 )
@@ -1023,7 +1040,107 @@ fun LoginScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    if (showDisableDialog) {
+                        Dialog(
+                            onDismissRequest = { showDisableDialog = false },
+                            properties = DialogProperties(
+                                usePlatformDefaultWidth = false // removes built-in margins
+                            )
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(18.dp),
+                                color = Color(0xFFF6F4EE),
+                                modifier = Modifier
+                                    .fillMaxWidth(0.94f) // 98% of actual screen width
+                                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                            ) {
+                                Column (
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(20.dp)
+                                ) {
+                                    Icon (
+                                        painter = painterResource(id = R.drawable.warning), // Use your document icon
+                                        contentDescription = "Document",
+                                        tint = Color(0xFFDD3825),
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    Text(
+                                        "Disable Stay Logged In?",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    Text(
+                                        "Disabling this option will require you to enter your credentials each time you log in. Are you sure?",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(18.dp))
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Button(
+                                            onClick = { showDisableDialog = false },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(46.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0x9ADED9D9),
+                                                contentColor = Color.Black
+                                            ),
+                                            border = BorderStroke(1.dp, Color.LightGray),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Text(
+                                                "Cancel",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 14.sp,
+                                                color = Color.Black
+                                            )
+                                        }
+                                        Button(
+                                            onClick = {
+                                                stayLoggedIn = false
+                                                showDisableDialog = false
+                                            },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(46.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFDD3825),
+                                                contentColor = Color.White
+                                            ),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Text(
+                                                "Disable",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 14.sp,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     Button(
                         onClick = {
@@ -1421,65 +1538,114 @@ fun LoginScreen(
                         )
                     ) {
                         Surface(
-                            shape = MaterialTheme.shapes.medium,
                             color = Color.White,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight() // Almost full screen, adjust as needed
                         ) {
-                            MicrosoftLoginWebView(
-                                url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
-                                onReceiveAuth = { response ->
-                                    Log.d("LoginScreen", "MFA onReceiveAuth called with token: ${response.token}")
-                                    Log.d("LoginScreen", "Email: ${response.email}, EmployeeId: ${response.employeeId}, Mobile: ${response.mobilePhone}")
-                                    authResponse = response
-                                    isLoading = true
-                                    // Use encrypted API call like OTP flow
-                                    val otpController = OtpVerificationController(
-                                        navigator = navigator,
-                                        context = context
+                            Column (
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                TopAppBar(
+                                    title = {
+                                        Text(
+                                            "Login with MFA",
+                                            modifier = Modifier.fillMaxWidth(),
+                                            fontSize = 20.sp,
+                                            textAlign = TextAlign.Center,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    navigationIcon = {
+                                        IconButton(onClick = { showWebView = false }) {
+                                            Icon(
+                                                Icons.Default.ArrowBack,
+                                                contentDescription = "Back"
+                                            )
+                                        }
+                                    },
+                                    colors = TopAppBarDefaults.topAppBarColors(
+                                        containerColor = Color.White,
+                                        titleContentColor = Color.Black,
+                                        navigationIconContentColor = Color.Black
                                     )
-                                    val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
+                                )
+                                MicrosoftLoginWebView(
+                                    url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
+                                    onReceiveAuth = { response ->
+                                        Log.d(
+                                            "LoginScreen",
+                                            "MFA onReceiveAuth called with token: ${response.token}"
+                                        )
+                                        Log.d(
+                                            "LoginScreen",
+                                            "Email: ${response.email}, EmployeeId: ${response.employeeId}, Mobile: ${response.mobilePhone}"
+                                        )
+                                        authResponse = response
+                                        isLoading = true
+                                        // Use encrypted API call like OTP flow
+                                        val otpController = OtpVerificationController(
+                                            navigator = navigator,
+                                            context = context
+                                        )
+                                        val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
 
-                                    otpController.verifyOtp(
-                                        email = response.email,
-                                        mobile = response.mobilePhone,
-                                        employeeId = response.employeeId,
-                                        otpFromUser = "",  // Empty for MFA (assume backend handles)
-                                        isBiometric = true,  // Not biometric
-                                        backgroundRefresh = false,
-                                        appVersion = deviceInfo.appVersion,
-                                        deviceModel = deviceInfo.deviceModel,
-                                        deviceId = deviceInfo.deviceId,
-                                        platform = deviceInfo.platform,
-                                        osVersion = deviceInfo.osVersion,
-                                        stayLoggedIn = stayLoggedIn
-                                    ) { message, isError ->
-                                        Log.d("LoginScreen", "loginWithToken callback: message=$message, isError=$isError")
-                                        isLoading = false
-                                        if (!isError) {
-                                            UserDataManager.getInstance(context).setHasLoggedIn(true)
-                                            setFirstTimeLogin(context, false)
-                                            firstTimeLogin = false
+                                        otpController.verifyOtp(
+                                            email = response.email,
+                                            mobile = response.mobilePhone,
+                                            employeeId = response.employeeId,
+                                            otpFromUser = "",  // Empty for MFA (assume backend handles)
+                                            isBiometric = true,  // Not biometric
+                                            backgroundRefresh = false,
+                                            appVersion = deviceInfo.appVersion,
+                                            deviceModel = deviceInfo.deviceModel,
+                                            deviceId = deviceInfo.deviceId,
+                                            platform = deviceInfo.platform,
+                                            osVersion = deviceInfo.osVersion,
+                                            stayLoggedIn = stayLoggedIn
+                                        ) { message, isError ->
+                                            Log.d(
+                                                "LoginScreen",
+                                                "loginWithToken callback: message=$message, isError=$isError"
+                                            )
+                                            isLoading = false
+                                            if (!isError) {
+                                                UserDataManager.getInstance(context)
+                                                    .setHasLoggedIn(true)
+                                                setFirstTimeLogin(context, false)
+                                                firstTimeLogin = false
 
-                                            // Handle MPIN setup navigation like OTP flow
-                                            val mpinController = MpinController(context)
-                                            if (navigator is AndroidNavigator) {
-                                                if (mpinController.isMpinSet()) {
-                                                    // MPIN already set, go directly to Home
-                                                    navigator.navigateToHome(true, true, response.email, response.mobilePhone, response.employeeId)
-                                                } else {
-                                                    // MPIN not set, go to MPIN setup
-                                                    navigator.navigateToMpinSetup(response.email, response.mobilePhone, response.employeeId, response.token)
+                                                // Handle MPIN setup navigation like OTP flow
+                                                val mpinController = MpinController(context)
+                                                if (navigator is AndroidNavigator) {
+                                                    if (mpinController.isMpinSet()) {
+                                                        // MPIN already set, go directly to Home
+                                                        navigator.navigateToHome(
+                                                            true,
+                                                            true,
+                                                            response.email,
+                                                            response.mobilePhone,
+                                                            response.employeeId
+                                                        )
+                                                    } else {
+                                                        // MPIN not set, go to MPIN setup
+                                                        navigator.navigateToMpinSetup(
+                                                            response.email,
+                                                            response.mobilePhone,
+                                                            response.employeeId,
+                                                            response.token
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
+                                    },
+                                    onClose = {
+                                        showWebView = false
                                     }
-                                },
-                                onClose = {
-                                    showWebView = false
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }

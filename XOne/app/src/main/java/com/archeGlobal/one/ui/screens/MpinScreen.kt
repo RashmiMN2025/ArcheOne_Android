@@ -511,11 +511,12 @@ fun MpinScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             val goBackText = buildAnnotatedString {
                                 val start = length
-                                append("go back")
+                                append("Go Back")
                                 addStyle(
                                     style = SpanStyle(
                                         color = Color(0xFFDD3825),
                                         textDecoration = TextDecoration.Underline,
+                                        fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium
                                     ),
                                     start = start,
