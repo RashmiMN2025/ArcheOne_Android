@@ -163,6 +163,7 @@ class HelpDeskController(private val context: Context) {
             subcategory = null // Currently not filtering by subcategory when loading tickets
         )
 
+        Log.d("HelpDeskController", "Starting API call for tickets with category: $category")
         apiService.getTickets(request).enqueue(object : Callback<TicketsResponse> {
             override fun onResponse(call: Call<TicketsResponse>, response: Response<TicketsResponse>) {
                 if (response.isSuccessful && response.body() != null) {

@@ -16,11 +16,15 @@ import com.archeGlobal.one.utils.UserDataManager
 class TrackTicketsActivity : AppCompatActivity() {
     
     private lateinit var helpDeskController: HelpDeskController
+    private lateinit var userDataManager: UserDataManager
+    private lateinit var userDataReadyCallback: () -> Unit
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         Log.d("TrackTicketsActivity", "Activity created")
+        
+        userDataManager = UserDataManager.getInstance(this)
         
         // Initialize HelpDeskController
         helpDeskController = HelpDeskController(this)
@@ -36,14 +40,17 @@ class TrackTicketsActivity : AppCompatActivity() {
             helpDeskController.setNavigationSource(source)
         }
         
-        // Check if user data is ready and load tickets
-        val userDataManager = UserDataManager.getInstance(this)
-        if (userDataManager.isUserDataReady()) {
-            Log.d("TrackTicketsActivity", "User data is ready, loading tickets immediately")
+        // Register callback to load tickets when user data becomes ready (for fresh installs)
+        userDataReadyCallback = {
+            Log.d("TrackTicketsActivity", "User data ready callback triggered, loading tickets (connection should be warmed)")
             helpDeskController.loadTicketsData(ticketCategory)
-        } else {
-            Log.d("TrackTicketsActivity", "User data not ready, tickets will load when available")
-            // Tickets will load when user navigates or when data becomes available
+        }
+        userDataManager.addUserDataReadyCallback(userDataReadyCallback)
+        
+        // Also try to load tickets immediately if data is already ready
+        if (userDataManager.isUserDataReady()) {
+            Log.d("TrackTicketsActivity", "User data already ready, loading tickets immediately")
+            helpDeskController.loadTicketsData(ticketCategory) // No delay needed if data is already ready (app restart case)
         }
         
         setContent {
@@ -62,6 +69,11 @@ class TrackTicketsActivity : AppCompatActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
+        // Clean up callback to prevent memory leaks
+        if (::userDataManager.isInitialized && ::userDataReadyCallback.isInitialized) {
+            userDataManager.removeUserDataReadyCallback(userDataReadyCallback)
+            Log.d("TrackTicketsActivity", "Cleaned up user data ready callback")
+        }
         Log.d("TrackTicketsActivity", "Activity destroyed")
     }
 }
