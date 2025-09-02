@@ -765,43 +765,46 @@ fun LoginScreen(
 
 
                     // UI under Employee ID field:
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable {
-                            if (stayLoggedIn) showDisableDialog = true
-                            else stayLoggedIn = true
-                        }
-                    ) {
-                        Checkbox(
-                            checked = stayLoggedIn,
-                            onCheckedChange = { checked ->
-                                if (!checked) showDisableDialog = true
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable {
+                                if (stayLoggedIn) showDisableDialog = true
                                 else stayLoggedIn = true
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Color(0xFFDD3825),
-                                uncheckedColor = Color.Gray
+                            }
+                        ) {
+                            Checkbox(
+                                checked = stayLoggedIn,
+                                onCheckedChange = { checked ->
+                                    if (!checked) showDisableDialog = true
+                                    else stayLoggedIn = true
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFFDD3825),
+                                    uncheckedColor = Color.Gray
+                                )
                             )
-                        )
-                        Text(
-                            "Stay logged in for faster access",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        )
+                            Column(
+                                modifier = Modifier.weight(0.9f) // Takes available space on the left
+                            ) {
+                                Text(
+                                    "Stay logged in for faster access",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    "Your credentials will be securely stored",
+                                    modifier = Modifier.padding(top = 1.dp),
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            }
+                        }
                     }
-
-                    // Info text
-                    Text(
-                        "Your credentials will be securely stored",
-                        modifier = Modifier
-                            .padding(top = 1.dp),
-                        color = Color.Gray,
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal
-                    )
 
                     // Dialog for disabling
                     if (showDisableDialog) {
@@ -823,12 +826,13 @@ fun LoginScreen(
                                     modifier = Modifier.padding(20.dp)
                                 ) {
                                     Icon (
-                                        painter = painterResource(id = R.drawable.busjust), // Use your document icon
+                                        painter = painterResource(id = R.drawable.warning), // Use your document icon
                                         contentDescription = "Document",
                                         tint = Color(0xFFDD3825),
                                         modifier = Modifier.size(48.dp)
                                     )
                                     Spacer(modifier = Modifier.height(14.dp))
+
                                     Text(
                                         "Disable Stay Logged In?",
                                         fontSize = 20.sp,
@@ -837,6 +841,19 @@ fun LoginScreen(
                                         color = Color.Black,
                                         textAlign = TextAlign.Center
                                     )
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    Text(
+                                        "Disabling this option will require you to enter your credentials each time you log in. Are you sure?",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(18.dp))
+
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth(),
@@ -965,42 +982,46 @@ fun LoginScreen(
                 if (selectedLoginMethod == "MFA") {
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable {
-                            if (stayLoggedIn) showDisableDialog = true
-                            else stayLoggedIn = true
-                        }
-                    ) {
-                        Checkbox(
-                            checked = stayLoggedIn,
-                            onCheckedChange = { checked ->
-                                if (!checked) showDisableDialog = true
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable {
+                                if (stayLoggedIn) showDisableDialog = true
                                 else stayLoggedIn = true
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Color(0xFFDD3825),
-                                uncheckedColor = Color.Gray
+                            }
+                        ) {
+                            Checkbox(
+                                checked = stayLoggedIn,
+                                onCheckedChange = { checked ->
+                                    if (!checked) showDisableDialog = true
+                                    else stayLoggedIn = true
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFFDD3825),
+                                    uncheckedColor = Color.Gray
+                                )
                             )
-                        )
-                        Text(
-                            "Stay logged in for faster access",
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        )
+                            Column(
+                                modifier = Modifier.weight(0.9f) // Takes available space on the left
+                            ) {
+                                Text(
+                                    "Stay logged in for faster access",
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                )
+                                Text(
+                                    "Your credentials will be securely stored",
+                                    modifier = Modifier.padding(top = 1.dp),
+                                    color = Color.Gray,
+                                    fontSize = 14.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            }
+                        }
                     }
-
-                    Text(
-                        "Your credentials will be securely stored",
-                        modifier = Modifier
-                            .padding(top = 1.dp),
-                        color = Color.Gray,
-                        fontSize = 14.sp,
-                        fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal
-                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
