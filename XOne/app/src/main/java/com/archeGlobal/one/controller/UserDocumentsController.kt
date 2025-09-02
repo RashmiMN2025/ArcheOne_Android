@@ -24,6 +24,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
+import androidx.core.content.FileProvider
 
 class UserDocumentsController(private val context: Context) {
 
@@ -366,18 +368,58 @@ class UserDocumentsController(private val context: Context) {
         }
     }
 
-    /**
-     * Force process API response even if validation would normally reject it
-     * Used after successful upload/delete operations to ensure UI updates
-     */
+    fun shareDocument(document: UserDocument) {
+        if (document.doc_data.isBlank()) {
+            Toast.makeText(context, "No document to share", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        ioScope.launch {
+            try {
+                val url = document.doc_data
+                val client = OkHttpClient()
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
+
+                if (!response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Failed to download document", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+
+                val bytes = response.body?.bytes() ?: return@launch
+                val fileName = "${document.document_name.replace(" ", "_")}.pdf"
+                val file = File(context.cacheDir, fileName)
+                file.writeBytes(bytes)
+
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",  // Assume FileProvider is set up in manifest
+                    file
+                )
+
+                withContext(Dispatchers.Main) {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share ${document.document_name}"))
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Error sharing document: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun forceProcessApiResponse(response: DocumentListResponse) {
         Log.d(TAG, "Force processing API response for immediate UI update")
         processApiResponse(response)
     }
 
-    /**
-     * Update user data after successful upload to reflect the change immediately
-     */
     private fun updateUserDataAfterUpload(documentName: String, response: DocumentListResponse) {
         val currentDocs = _userDocuments.value?.map { it.copy() }?.toMutableList() ?: mutableListOf()
 
@@ -416,9 +458,6 @@ class UserDocumentsController(private val context: Context) {
         }
     }
 
-    /**
-     * Update document data after successful deletion to reflect the change immediately
-     */
     private fun updateDocumentAfterDelete(documentName: String) {
         val currentDocs = _userDocuments.value?.map { it.copy() }?.toMutableList() ?: mutableListOf()
 
@@ -440,9 +479,6 @@ class UserDocumentsController(private val context: Context) {
         }
     }
 
-    /**
-     * Update the user data in storage with the new document list
-     */
     private fun updateUserDataDocuments(updatedDocs: List<UserDocument>) {
         try {
             // For now, we just update the LiveData which is sufficient for UI updates

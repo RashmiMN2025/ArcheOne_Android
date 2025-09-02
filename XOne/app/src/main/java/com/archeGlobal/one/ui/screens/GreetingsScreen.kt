@@ -333,7 +333,7 @@ fun GreetingsScreen(
                                         Box {
                                             if (searchQuery.isEmpty()) {
                                                 Text(
-                                                    text = "Search celebration...",
+                                                    text = "Search for a greeting...",
                                                     color = Color.Gray.copy(alpha = 0.6f),
                                                     fontSize = 16.sp,
                                                     fontFamily = GraphikFontFamily,

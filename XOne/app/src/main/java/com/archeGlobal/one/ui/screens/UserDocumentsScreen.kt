@@ -187,6 +187,9 @@ fun UserDocumentsScreen(
                                             Toast.makeText(context, "Failed to delete ${document.document_name}", Toast.LENGTH_SHORT).show()
                                         }
                                     }
+                                },
+                                onShareClick = {
+                                    controller.shareDocument(document)
                                 }
                             )
 
@@ -258,7 +261,8 @@ fun DocumentItem(
     isUploaded: Boolean,
     onViewClick: () -> Unit,
     onUploadClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onShareClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -317,27 +321,52 @@ fun DocumentItem(
             }
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                onClick = if (isUploaded) onDeleteClick else onUploadClick
+                onClick = if (isUploaded) {
+                    if (document.document_name in listOf("Medical Insurance Card", "Company Name Change Letter")) {
+                        onShareClick
+                    } else {
+                        onDeleteClick
+                    }
+                } else {
+                    onUploadClick
+                }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
                 ) {
-                    if (isUploaded) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.delete),
-                            contentDescription = "Delete",
-                            tint = Color(0xFFDD3825),
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Text(
-                            text = "Delete",
-                            modifier = Modifier.padding(start = 8.dp),
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        )
+                    if (isUploaded){
+                        if (document.document_name in listOf("Medical Insurance Card", "Company Name Change Letter")) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.share2),  // Assume you have a share icon in drawable
+                                contentDescription = "Share",
+                                tint = Color(0xFFDD3825),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                text = "Share",
+                                modifier = Modifier.padding(start = 8.dp),
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                        } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.delete),
+                                contentDescription = "Delete",
+                                tint = Color(0xFFDD3825),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                text = "Delete",
+                                modifier = Modifier.padding(start = 8.dp),
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                        }
                     } else {
                         Box(
                             modifier = Modifier

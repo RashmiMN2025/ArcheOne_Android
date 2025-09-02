@@ -174,7 +174,7 @@ fun RegionalFestivalsScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.search11),
-                                contentDescription = "Search",
+                                contentDescription = "Search celebration...",
                                 tint = Color.Gray,
                                 modifier = Modifier.size(20.dp)
                             )
