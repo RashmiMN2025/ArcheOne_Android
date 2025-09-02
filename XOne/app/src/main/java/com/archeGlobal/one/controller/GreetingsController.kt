@@ -64,17 +64,17 @@ class GreetingsController(
         // This ensures it appears in the UI
         val categoriesWithGlobal = if (greetings != null) {
             val mutable = greetings.toMutableMap()
-            // Always add Global Celebration category
-            if (!mutable.containsKey("Global Celebration")) {
+            // Always add Global Celebration category (check both singular and plural forms)
+            if (!mutable.containsKey("Global Celebrations") && !mutable.containsKey("Global Celebration")) {
                 // Use first image from subcategories if available, otherwise empty list
                 val firstImage = subcategories.firstOrNull()?.files?.firstOrNull()?.let { listOf(it) } ?: emptyList()
-                mutable["Global Celebration"] = firstImage
-                Log.d("GreetingsController", "Added Global Celebration category with ${firstImage.size} images")
+                mutable["Global Celebrations"] = firstImage
+                Log.d("GreetingsController", "Added Global Celebrations category with ${firstImage.size} images")
             }
             mutable.toMap()
         } else {
-            // If no categories at all, at least add Global Celebration
-            mapOf("Global Celebration" to emptyList<String>())
+            // If no categories at all, at least add Global Celebrations
+            mapOf("Global Celebrations" to emptyList<String>())
         }
 
         model = model.copy(categories = categoriesWithGlobal, subcategories = subcategories)
@@ -85,9 +85,9 @@ class GreetingsController(
             greetingCategories.forEach { category ->
                 messages[category.name] = category.message
             }
-            // Add special message for Global Celebration if not present
-            if (!messages.containsKey("Global Celebration")) {
-                messages["Global Celebration"] = "Global celebration greetings for special occasions around the world."
+            // Add special message for Global Celebrations if not present
+            if (!messages.containsKey("Global Celebrations") && !messages.containsKey("Global Celebration")) {
+                messages["Global Celebrations"] = "Global celebration greetings for special occasions around the world."
             }
             model = model.copy(categoryMessages = messages)
             Log.d("GreetingsController", "Loaded ${messages.size} greeting category messages")
@@ -104,7 +104,7 @@ class GreetingsController(
     fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
         try {
             // For Global Celebration, just select the category and show subcategories
-            if (category == "Global Celebration" && model.subcategories.isNotEmpty()) {
+            if ((category == "Global Celebrations" || category == "Global Celebration") && model.subcategories.isNotEmpty()) {
                 Log.d("GreetingsController", "Selected parent category: $category with ${model.subcategories.size} subcategories")
                 model = model.copy(
                     selectedCategory = category,
@@ -328,7 +328,7 @@ class GreetingsController(
 
     // Get subcategories for a category (for now, only for Global Celebration)
     fun getSubcategoriesForCategory(category: String): List<GreetingSubcategory> {
-        return if (category == "Global Celebration") model.subcategories else emptyList()
+        return if (category == "Global Celebrations" || category == "Global Celebration") model.subcategories else emptyList()
     }
 
     // Select a subcategory (now expects a GreetingSubcategory)
@@ -375,10 +375,14 @@ class GreetingsController(
     }
 
     fun onCategoryClick(category: String) {
-        if (category == "Global Celebration") {
+        if (category == "Global Celebrations" || category == "Global Celebration") {
             // Navigate to the Global Celebration screen instead of showing subcategories inline
             navigator.navigateToGlobalCelebration()
             Log.d("GreetingsController", "Global Celebration clicked, navigating to GlobalCelebrationScreen")
+        } else if (category == "Regional Festivals") {
+            // Navigate to the Regional Festivals screen
+            navigator.navigateToRegionalFestivals()
+            Log.d("GreetingsController", "Regional Festivals clicked, navigating to RegionalFestivalsScreen")
         } else {
             // For other categories, call onCategorySelected with navigateToDetail=true
             // to navigate directly to the greeting detail screen
@@ -393,9 +397,9 @@ class GreetingsController(
 
     fun getCategoryThumbnail(category: String): String {
         // Special handling for Global Celebration category - use image from API
-        if (category == "Global Celebration") {
+        if (category == "Global Celebrations" || category == "Global Celebration") {
             val greetingCategories = userDataManager.getGreetingCategoriesData()
-            val globalCelebration = greetingCategories?.find { it.name == "Global Celebration" }
+            val globalCelebration = greetingCategories?.find { it.name == "Global Celebrations" || it.name == "Global Celebration" }
 
             // Use the files from the main Global Celebration category as provided by API
             return globalCelebration?.files?.firstOrNull() ?: ""

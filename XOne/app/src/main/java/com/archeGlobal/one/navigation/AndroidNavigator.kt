@@ -281,6 +281,11 @@ class AndroidNavigator(
         activity.startActivity(intent)
     }
 
+    override fun navigateToRegionalFestivals() {
+        val intent = Intent(activity, RegionalFestivalsActivity::class.java)
+        activity.startActivity(intent)
+    }
+
     override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {
         val gson = com.google.gson.Gson()
         val subcategoryJson = gson.toJson(subcategory)

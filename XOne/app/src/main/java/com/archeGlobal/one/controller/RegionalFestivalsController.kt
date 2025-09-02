@@ -6,20 +6,19 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.archeGlobal.one.GlobalCelebrationDetailActivity
-import com.archeGlobal.one.model.GlobalCelebrationModel
+import com.archeGlobal.one.GreetingDetailActivity
+import com.archeGlobal.one.model.RegionalFestivalsModel
 import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.utils.UserDataManager
 
-class GlobalCelebrationController(
+class RegionalFestivalsController(
     private val context: Context,
-    private val navigator: Navigator,
-    private val parentController: GreetingsController? = null
+    private val navigator: Navigator
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
 
-    var model by mutableStateOf(GlobalCelebrationModel())
+    var model by mutableStateOf(RegionalFestivalsModel())
         private set
 
     init {
@@ -29,19 +28,19 @@ class GlobalCelebrationController(
     private fun loadSubcategories() {
         val greetingCategories = userDataManager.getGreetingCategoriesData()
         if (greetingCategories == null) {
-            Log.e("GlobalCelebrationController", "No greeting categories data available (null)")
+            Log.e("RegionalFestivalsController", "No greeting categories data available (null)")
             model = model.copy(subcategories = emptyList())
             return
         }
         if (greetingCategories.isEmpty()) {
-            Log.e("GlobalCelebrationController", "Greeting categories data is empty")
+            Log.e("RegionalFestivalsController", "Greeting categories data is empty")
             model = model.copy(subcategories = emptyList())
             return
         }
-        // Find the Global Celebration category and use its subfolder as subcategories
-        val globalCelebration = greetingCategories.find { it.name == "Global Celebrations" || it.name == "Global Celebration" }
-        val subcategories = globalCelebration?.subfolder ?: emptyList()
-        Log.d("GlobalCelebrationController", "Loaded ${subcategories.size} subcategories for Global Celebration (from subfolder)")
+        // Find the Regional Festivals category and use its subfolder as subcategories
+        val regionalFestivals = greetingCategories.find { it.name == "Regional Festivals" }
+        val subcategories = regionalFestivals?.subfolder ?: emptyList()
+        Log.d("RegionalFestivalsController", "Loaded ${subcategories.size} subcategories for Regional Festivals (from subfolder)")
         model = model.copy(subcategories = subcategories)
     }
 
@@ -64,7 +63,7 @@ class GlobalCelebrationController(
         val allImages = ArrayList<String>(subcategory.files)
         val message = subcategory.message
         val category = subcategory.name
-        val intent = Intent(context, GlobalCelebrationDetailActivity::class.java).apply {
+        val intent = Intent(context, GreetingDetailActivity::class.java).apply {
             putExtra("imageUrl", firstImage)
             putStringArrayListExtra("allGreetings", allImages)
             putExtra("message", message)
@@ -73,22 +72,13 @@ class GlobalCelebrationController(
         context.startActivity(intent)
     }
 
-    private fun navigateToGreetingDetail(
-        greetingUrl: String,
-        allGreetings: List<String>,
-        message: String,
-        category: String
-    ) {
-        navigator.navigateToGreetingDetail(greetingUrl, allGreetings, message, category)
-    }
-
     fun onBackPressed() {
         if (model.selectedSubcategory != null) {
             // Clear selection if a subcategory is selected
             model = model.copy(selectedSubcategory = null)
         } else {
             // Otherwise, go back to the main greetings screen
-            navigator.navigateToGreetings() // Use navigateToGreetings instead of navigateBack
+            navigator.navigateToGreetings()
         }
     }
 

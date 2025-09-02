@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.archeGlobal.one.R
-import com.archeGlobal.one.controller.GlobalCelebrationController
+import com.archeGlobal.one.controller.RegionalFestivalsController
 import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
@@ -42,8 +42,8 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun ResponsiveGlobalCelebrationScreen(
-    controller: GlobalCelebrationController,
+fun ResponsiveRegionalFestivalsScreen(
+    controller: RegionalFestivalsController,
     onBackPressed: () -> Unit
 ) {
     val context = LocalContext.current
@@ -55,7 +55,7 @@ fun ResponsiveGlobalCelebrationScreen(
         WindowWidthSizeClass.Expanded -> 4 to 220.dp // Tablet
         else -> 2 to 160.dp
     }
-    GlobalCelebrationScreen(
+    RegionalFestivalsScreen(
         controller = controller,
         onBackPressed = onBackPressed,
         columns = columns,
@@ -65,8 +65,8 @@ fun ResponsiveGlobalCelebrationScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GlobalCelebrationScreen(
-    controller: GlobalCelebrationController,
+fun RegionalFestivalsScreen(
+    controller: RegionalFestivalsController,
     onBackPressed: () -> Unit,
     columns: Int = 2,
     cardWidth: Dp = 160.dp
@@ -128,7 +128,7 @@ fun GlobalCelebrationScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Global Celebration",
+                                text = "Regional Festivals",
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
@@ -198,7 +198,7 @@ fun GlobalCelebrationScreen(
                                     Box {
                                         if (searchQuery.isEmpty()) {
                                             Text(
-                                                text = "Search celebration...",
+                                                text = "Search festivals...",
                                                 color = Color.Gray.copy(alpha = 0.6f),
                                                 fontSize = 16.sp,
                                                 fontFamily = GraphikFontFamily,
@@ -219,7 +219,7 @@ fun GlobalCelebrationScreen(
                         it.name.contains(searchQuery.orEmpty(), ignoreCase = true)
                     }
                 }
-                GlobalCelebrationSubcategoriesGrid(
+                RegionalFestivalsSubcategoriesGrid(
                     subcategories = filteredSubcategories,
                     onSubcategoryClick = { subcategory ->
                         controller.onSubcategorySelected(subcategory)
@@ -233,7 +233,7 @@ fun GlobalCelebrationScreen(
 }
 
 @Composable
-fun GlobalCelebrationSubcategoriesGrid(
+fun RegionalFestivalsSubcategoriesGrid(
     subcategories: List<GreetingSubcategory>,
     onSubcategoryClick: (GreetingSubcategory) -> Unit,
     columns: Int = 2,
@@ -246,7 +246,7 @@ fun GlobalCelebrationSubcategoriesGrid(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(subcategories) { subcategory ->
-            GlobalCelebrationSubcategoryCard(
+            RegionalFestivalsSubcategoryCard(
                 subcategory = subcategory,
                 onClick = { onSubcategoryClick(subcategory) },
                 cardWidth = cardWidth
@@ -256,7 +256,7 @@ fun GlobalCelebrationSubcategoriesGrid(
 }
 
 @Composable
-fun GlobalCelebrationSubcategoryCard(
+fun RegionalFestivalsSubcategoryCard(
     subcategory: GreetingSubcategory,
     onClick: () -> Unit,
     cardWidth: Dp = 160.dp

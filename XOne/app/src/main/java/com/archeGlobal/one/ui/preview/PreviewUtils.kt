@@ -105,6 +105,8 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToGlobalCelebration() {}
 
+    override fun navigateToRegionalFestivals() {}
+
     override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {
         // No-op for preview purposes
     }

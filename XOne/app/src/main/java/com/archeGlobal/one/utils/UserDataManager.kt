@@ -208,8 +208,17 @@ class UserDataManager private constructor(context: Context) {
         } ?: emptyList()
 
         // Create a map of greeting categories from the greetingCategories API response
+        // For categories with subfolders, use combined files from all subfolders
+        // For categories without subfolders, use the main category files
         val fullGreetingsData = apiGreetingCategories.associate { category ->
-            category.name to category.files
+            val allFiles = if (category.subfolder?.isNotEmpty() == true) {
+                // Combine files from all subfolders
+                category.subfolder.flatMap { subfolder -> subfolder.files }
+            } else {
+                // Use main category files if no subfolders
+                category.files
+            }
+            category.name to allFiles
         }
 
         val newUserData = response.user?.let {

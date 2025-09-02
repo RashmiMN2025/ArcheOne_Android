@@ -34,6 +34,7 @@ interface Navigator {
     fun navigateToClientCalendar()
     fun navigateToGreetings()
     fun navigateToGlobalCelebration()
+    fun navigateToRegionalFestivals()
     fun navigateToXConnect(initialTab: String = "All Posts")
     fun navigateToLocations(showHeader: Boolean = true)
     fun navigateToHelpdesk()

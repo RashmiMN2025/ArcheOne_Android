@@ -364,6 +364,13 @@
             android:theme="@style/Theme.XOne" />
 
         <activity
+            android:name=".RegionalFestivalsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Regional Festivals"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
             android:name=".AllCelebrationActivity"
             android:exported="true"
             android:screenOrientation="portrait"
