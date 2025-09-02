@@ -46,6 +46,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToHolidayCalendar() {}
     override fun navigateToClientCalendar() {}
     override fun navigateToGreetings() {}
+    override fun navigateToGreetingsActivity() {}
     override fun navigateToXConnect(initialTab: String) {}
     override fun navigateToLocations(showHeader: Boolean) {}
     override fun navigateToHelpdesk() {}

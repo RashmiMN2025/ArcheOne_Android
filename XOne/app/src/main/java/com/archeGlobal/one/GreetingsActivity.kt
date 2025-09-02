@@ -1,5 +1,6 @@
 package com.archeGlobal.one
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,7 +25,21 @@ class GreetingsActivity : ComponentActivity() {
             XOneTheme {
                 ResponsiveGreetingsScreen(
                     controller = controller,
-                    onBackPressed = { finish() }
+                    onBackPressed = { 
+                        // Check if we came from a child screen (Global Celebration/Regional Festivals)
+                        val parentActivity = intent.getStringExtra("parent_activity")
+                        if (parentActivity == "home") {
+                            // Navigate back to Home instead of previous activity
+                            val homeIntent = Intent(this@GreetingsActivity, HomeActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                            }
+                            startActivity(homeIntent)
+                            finish()
+                        } else {
+                            // Normal back behavior
+                            finish()
+                        }
+                    }
                 )
             }
         }

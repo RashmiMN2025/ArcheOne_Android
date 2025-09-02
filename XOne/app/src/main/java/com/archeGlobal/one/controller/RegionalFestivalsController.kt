@@ -78,7 +78,7 @@ class RegionalFestivalsController(
             model = model.copy(selectedSubcategory = null)
         } else {
             // Otherwise, go back to the main greetings screen
-            navigator.navigateToGreetings()
+            navigator.navigateToGreetingsActivity()
         }
     }
 

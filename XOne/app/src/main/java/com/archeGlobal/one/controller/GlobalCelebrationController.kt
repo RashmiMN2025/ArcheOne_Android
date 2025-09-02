@@ -88,7 +88,7 @@ class GlobalCelebrationController(
             model = model.copy(selectedSubcategory = null)
         } else {
             // Otherwise, go back to the main greetings screen
-            navigator.navigateToGreetings() // Use navigateToGreetings instead of navigateBack
+            navigator.navigateToGreetingsActivity() // Use navigateToGreetingsActivity instead of navigateToGreetings
         }
     }
 

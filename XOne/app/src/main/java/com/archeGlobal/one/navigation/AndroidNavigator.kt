@@ -276,6 +276,16 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToGreetingsActivity() {
+        val intent = Intent(activity, GreetingsActivity::class.java).apply {
+            // Clear the activity stack and make this the new root
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            // Add parent activity info so back goes to Home
+            putExtra("parent_activity", "home")
+        }
+        activity.startActivity(intent)
+    }
+
     override fun navigateToGlobalCelebration() {
         val intent = Intent(activity, GlobalCelebrationActivity::class.java)
         activity.startActivity(intent)
