@@ -19,10 +19,6 @@ import com.archeGlobal.one.ui.components.EventPopup
 import com.archeGlobal.one.ui.theme.XOneTheme
 import java.util.Calendar
 
-/**
- * Test activity to verify the Pride Month feature works correctly.
- * This allows testing both June and non-June behavior without waiting for the actual month to change.
- */
 class PrideMonthTestActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +86,11 @@ fun PrideMonthTestScreen() {
             override fun navigateToHolidayCalendar() {}
             override fun navigateToClientCalendar() {}
             override fun navigateToGreetings() {}
+            override fun navigateToGreetingsActivity() {
+            }
             override fun navigateToGlobalCelebration() {}
+            override fun navigateToRegionalFestivals() {
+            }
             override fun navigateToXConnect(initialTab: String) {}
             override fun navigateToLocations(showHeader: Boolean) {}
             override fun navigateToHelpdesk() {}
