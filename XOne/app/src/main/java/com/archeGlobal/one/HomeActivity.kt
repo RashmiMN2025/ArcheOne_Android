@@ -72,30 +72,96 @@ import com.archeGlobal.one.utils.PreferencesManager
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
     private lateinit var otpVerificationController: OtpVerificationController
-    private lateinit var locationsController: LocationsController
-    private lateinit var businessCardController: BusinessCardControllerImpl
-    private lateinit var policyController: PolicyController
-    private lateinit var assetController: AssetController
-    private lateinit var profileController: ProfileController
-    private lateinit var sosController: SOSController
-    private lateinit var holidayCalendarController: HolidayCalendarController
-    private lateinit var aboutMeController: AboutMeController
-    private lateinit var addressController: AddressController
-    private lateinit var emergencyContactController: EmergencyContactController
-    private lateinit var chatController: ChatController
-    private lateinit var communiqueController: CommuniqueController
-    private lateinit var archeOdysseyController: ArcheOdysseyController
-    private lateinit var travelController: TravelController
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
-    private lateinit var greetingsController: GreetingsController
-    private lateinit var ideaVaultController: IdeaVaultController
-    private lateinit var holidayOptionsController: HolidayOptionsController
     private lateinit var helpDeskController: HelpDeskController
-    private lateinit var orderController: OrderController
-    private lateinit var consumptionReportController: ConsumptionReportController
-    private lateinit var smartCollateralcontroller: SmartCollateralController
     private lateinit var preferencesManager: PreferencesManager
+    
+    // Lazy-loaded controllers - only initialized when actually needed
+    internal val locationsController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing LocationsController")
+        LocationsController(this@HomeActivity)
+    }
+    internal val businessCardController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing BusinessCardController")
+        BusinessCardControllerImpl(this@HomeActivity, navigator) 
+    }
+    internal val policyController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing PolicyController")
+        PolicyController(this@HomeActivity, navigator) 
+    }
+    internal val assetController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing AssetController")
+        AssetController(this@HomeActivity, navigator) 
+    }
+    internal val profileController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing ProfileController")
+        ProfileController(this@HomeActivity, navigator) 
+    }
+    private val sosController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing SOSController")
+        SOSController(application) 
+    }
+    private val holidayCalendarController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing HolidayCalendarController")
+        HolidayCalendarController(RetrofitClient.apiService, UserRepository(this@HomeActivity), this@HomeActivity) 
+    }
+    private val aboutMeController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing AboutMeController")
+        AboutMeController(navigator) 
+    }
+    private val addressController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing AddressController")
+        AddressController(navigator) 
+    }
+    private val emergencyContactController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing EmergencyContactController")
+        EmergencyContactController(navigator) 
+    }
+    internal val chatController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing ChatController")
+        ChatController(this@HomeActivity, navigator) 
+    }
+    private val communiqueController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing CommuniqueController")
+        CommuniqueController(this@HomeActivity, navigator) 
+    }
+    private val archeOdysseyController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing ArcheOdysseyController")
+        ArcheOdysseyController(navigator) 
+    }
+    internal val travelController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing TravelController")
+        TravelController(navigator, this@HomeActivity) 
+    }
+    private val greetingsController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing GreetingsController")
+        GreetingsController(this@HomeActivity, navigator) 
+    }
+    private val ideaVaultController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing IdeaVaultController")
+        IdeaVaultController(this@HomeActivity, navigator) 
+    }
+    private val holidayOptionsController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing HolidayOptionsController")
+        HolidayOptionsController(this@HomeActivity, navigator) 
+    }
+    private val orderController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing OrderController")
+        OrderController(this@HomeActivity, navigator, lifecycleScope) 
+    }
+    private val consumptionReportController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing ConsumptionReportController")
+        ConsumptionReportController(this@HomeActivity, navigator) 
+    }
+    private val smartCollateralcontroller by lazy { 
+        Log.d("HomeActivity", "Lazy initializing SmartCollateralController")
+        SmartCollateralController(this@HomeActivity) 
+    }
+    
+    // Lazy controllers can be accessed directly by property name
+    // No explicit getter methods needed - Kotlin generates them automatically
+    
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -148,13 +214,7 @@ class HomeActivity : AppCompatActivity() {
                 controller.refreshUserData()
                 // Trigger celebration data fetch after login completion
                 controller.onLoginCompleted()
-                // Trigger help desk data loading after login completion
-                if (::helpDeskController.isInitialized) {
-                    Log.d("HomeActivity", "HelpDeskController is initialized, calling onLoginCompleted()")
-                    helpDeskController.onLoginCompleted()
-                } else {
-                    Log.d("HomeActivity", "HelpDeskController is NOT initialized yet")
-                }
+                // Note: HelpDesk data will be loaded only when user navigates to HelpDesk screen
             }
         }
     }
@@ -335,45 +395,14 @@ class HomeActivity : AppCompatActivity() {
                 // HomeController already initialized in onCreate() - don't recreate it!
 
 
-                // Initialize controllers that need context
-                holidayCalendarController = HolidayCalendarController(
-                    RetrofitClient.apiService,
-                    UserRepository(this@HomeActivity),
-                    this@HomeActivity
-                )
-
-                // Initialize holiday options controller
-                holidayOptionsController = HolidayOptionsController(this@HomeActivity, navigator)
-
-                // Initialize greetings controller
-                greetingsController = GreetingsController(this@HomeActivity, navigator)
-                ideaVaultController = IdeaVaultController(this@HomeActivity, navigator)
-                locationsController = LocationsController(this@HomeActivity)
-                businessCardController = BusinessCardControllerImpl(this@HomeActivity, navigator)
-                policyController = PolicyController(this@HomeActivity, navigator)
-                assetController = AssetController(this@HomeActivity, navigator)
-                profileController = ProfileController(this@HomeActivity, navigator)
-                sosController = SOSController(application)
-                aboutMeController = AboutMeController(navigator)
-                addressController = AddressController(navigator)
-                emergencyContactController = EmergencyContactController(navigator)
-                chatController = ChatController(this@HomeActivity, navigator)
-                communiqueController = CommuniqueController(this@HomeActivity, navigator)
-                archeOdysseyController = ArcheOdysseyController(navigator)
-                // Initialize travel controller as class-level property
-                travelController = TravelController(navigator, this@HomeActivity)
-                // Log that the travel controller was initialized
-                android.util.Log.d("HomeActivity", "TravelController initialized with navigator: ${navigator.hashCode()}")
+                // Controllers are now lazy-loaded - they will be initialized only when accessed
+                // This prevents bulk API calls on app startup
+                android.util.Log.d("HomeActivity", "Controllers converted to lazy initialization - no bulk loading!")
 
                 // Set navigation callback for helpdesk controller (already initialized in onCreate)
                 helpDeskController.setNavigationCallback { route ->
                     navController.navigate(route)
                 }
-
-                // Initialize order controller
-                orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
-                consumptionReportController = ConsumptionReportController(this@HomeActivity, navigator)
-                smartCollateralcontroller = SmartCollateralController(this)
 
                 if (intent.getBooleanExtra("showUpdateDialog", false) || preferencesManager.getBoolean("showUpdateDialog", false)) {
                     showUpdateDialog = true
@@ -471,13 +500,7 @@ class HomeActivity : AppCompatActivity() {
                                 controller.refreshUserData()
                                 // Trigger celebration data fetch after token refresh
                                 controller.onLoginCompleted()
-                                // Trigger help desk data loading after token refresh
-                                if (::helpDeskController.isInitialized) {
-                                    Log.d("HomeActivity", "Token refresh: HelpDeskController is initialized, calling onLoginCompleted()")
-                                    helpDeskController.onLoginCompleted()
-                                } else {
-                                    Log.d("HomeActivity", "Token refresh: HelpDeskController is NOT initialized yet")
-                                }
+                                // Note: HelpDesk data will be loaded only when user navigates to HelpDesk screen
                             }
 
                             // Handle navigation after token refresh - only if not already at the destination
@@ -1845,9 +1868,8 @@ class HomeActivity : AppCompatActivity() {
         super.onDestroy()
 
         // Clean up controllers that need to clear resources
-        if (::policyController.isInitialized) {
-            policyController.onCleared()
-        }
+        // policyController is now lazy-loaded, so we can call onCleared directly if needed
+        // policyController.onCleared()
     }
 
     override fun onResume() {
@@ -1895,9 +1917,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    fun getChatController(): ChatController? {
-        return if (::chatController.isInitialized) chatController else null
-    }
     
     /**
      * Public method to navigate directly to order history

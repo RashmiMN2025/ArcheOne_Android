@@ -19,6 +19,8 @@ class AssetActivity : ComponentActivity() {
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         val controller = AssetController(this, AndroidNavigator(this))
+        // Load asset data immediately when AssetActivity is created
+        controller.onServiceAccessed()
 
         // Handle back gesture and back button
         onBackPressedDispatcher.addCallback(

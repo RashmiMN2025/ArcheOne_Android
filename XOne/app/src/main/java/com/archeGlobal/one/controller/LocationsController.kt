@@ -15,9 +15,28 @@ import com.archeGlobal.one.network.RegionalOffice as NetworkRegionalOffice
 class LocationsController(private val context: Context) {
     private var _locationState by mutableStateOf(LocationScreenState())
     private var isEmergencyContact = false
+    private var isDataLoaded = false
 
     init {
-        // Initialize locations from login response
+        Log.d("LocationsController", "LocationsController created - data will be loaded on first access")
+    }
+    
+    /**
+     * Call this method when the Locations service is actually accessed by the user
+     * This ensures data is processed only when needed
+     */
+    fun onServiceAccessed() {
+        Log.d("LocationsController", "Locations service accessed - processing data")
+        if (!isDataLoaded) {
+            loadLocationsData()
+            isDataLoaded = true
+        } else {
+            Log.d("LocationsController", "Locations data already loaded, skipping processing")
+        }
+    }
+    
+    private fun loadLocationsData() {
+        // Initialize locations from login response (cached data, not API call)
         val offices = OtpVerificationController.getOfficesData()
         Log.d("LocationsController", "Received offices data: $offices")
 

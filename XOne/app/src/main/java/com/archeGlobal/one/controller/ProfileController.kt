@@ -34,12 +34,42 @@ class ProfileController(
     private val navigator: Navigator
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
-    private val userData = userDataManager.getUserData()
+    private var isDataLoaded = false
+    
+    // Initialize with empty model - data will be loaded on first access
+    var model by mutableStateOf(ProfileModel(name = "", email = ""))
+        internal set
 
-    // Initialize with debug logging
     init {
-        Log.d("ProfileController", "Initializing with userData: $userData")
+        Log.d("ProfileController", "ProfileController created - data will be loaded on first access")
+    }
+    
+    /**
+     * Call this method when the Profile service is actually accessed by the user
+     * This ensures data is processed only when needed
+     */
+    fun onServiceAccessed() {
+        Log.d("ProfileController", "Profile service accessed - processing data")
+        if (!isDataLoaded) {
+            loadProfileData()
+            isDataLoaded = true
+        } else {
+            Log.d("ProfileController", "Profile data already loaded, skipping processing")
+        }
+    }
+    
+    private fun loadProfileData() {
+        val userData = userDataManager.getUserData()
+        Log.d("ProfileController", "Loading profile data: $userData")
         Log.d("ProfileController", "Profile picture URL: ${userData?.profilePic}")
+        
+        model = ProfileModel(
+            name = userData?.name ?: "",
+            email = userData?.email ?: "",
+            profilePicture = userData?.profilePic,
+            version = getAppVersion(),
+            lastLoginTime = userDataManager.getLastLoginTime()?.let { formatLastLoginTime(it) } ?: ""
+        )
     }
 
     // Function to get the app version dynamically
@@ -52,18 +82,6 @@ class ProfileController(
             "Version 1.0" // Fallback version
         }
     }
-
-    var model by mutableStateOf(
-        ProfileModel(
-            name = userData?.name ?: "",
-            email = userData?.email ?: "",
-            profilePicture = userData?.profilePic,
-            version = getAppVersion(),
-//            version = "1.4",
-            lastLoginTime = userDataManager.getLastLoginTime()?.let { formatLastLoginTime(it) } ?: ""
-        )
-    )
-        internal set
 
     private fun formatLastLoginTime(timestamp: Long): String {
         return try {
@@ -96,6 +114,7 @@ class ProfileController(
 
     fun uploadProfilePicture(imageUri: Uri) {
         // Get employeeId from userDataManager
+        val userData = userDataManager.getUserData()
         val employeeId = userData?.employeeId ?: ""
 
         if (employeeId.isEmpty()) {
@@ -310,6 +329,7 @@ class ProfileController(
     }
 
     fun deleteProfilePhoto(onSuccess: () -> Unit = {}) {
+        val userData = userDataManager.getUserData()
         val email = userData?.email ?: ""
         val employeeId = userData?.employeeId ?: ""
         if (email.isEmpty() || employeeId.isEmpty()) {

@@ -558,9 +558,9 @@ class AndroidNavigator(
     override fun navigateToChat() {
         // Get reference to ChatController to clear history before navigation
         if (activity is HomeActivity) {
-            val chatController = (activity as HomeActivity).getChatController()
+            val chatController = (activity as HomeActivity).chatController
             // Clear chat history before navigating
-            chatController?.clearChatHistory()
+            chatController.clearChatHistory()
             navigate("chat")
         } else {
             startActivity(Intent(activity, ChatActivity::class.java))

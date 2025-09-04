@@ -218,9 +218,13 @@ class TravelController(private val navigator: Navigator, private val context: Co
     var showFrequentFlyerDialog by mutableStateOf(false)
         private set
 
+    // Flag to track if data has been loaded to prevent duplicate API calls
+    private var isDataLoaded = false
+    
     init {
+        // Only load essential data (employee details) - no API calls
         loadEmployeeDetails()
-        loadCombinedTravelHistory()
+        
         // Initialize with one destination for multi-destination mode
         destinations = listOf(
             Destination(
@@ -231,6 +235,21 @@ class TravelController(private val navigator: Navigator, private val context: Co
                 flightTimePreference = ""
             )
         )
+        Log.d("TravelController", "TravelController created - data will be loaded on first access")
+    }
+    
+    /**
+     * Call this method when the Travel service is actually accessed by the user
+     * This ensures data is loaded only when needed
+     */
+    fun onServiceAccessed() {
+        Log.d("TravelController", "Travel service accessed - loading data")
+        if (!isDataLoaded) {
+            loadCombinedTravelHistory()
+            isDataLoaded = true
+        } else {
+            Log.d("TravelController", "Travel data already loaded, skipping API call")
+        }
     }
 
     /**

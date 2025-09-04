@@ -29,12 +29,26 @@ class AssetController(
 ) {
     var model by mutableStateOf(AssetModel(isLoading = true))
         private set
-
+    
+    private var isDataLoaded = false
     private val encryptedApiService = EncryptedAPIService.getInstance(context)
 
     init {
-        // Get user data and asset details from UserDataManager instead of making API call
-        loadAssetDetails()
+        Log.d("AssetController", "AssetController created - data will be loaded on first access")
+    }
+    
+    /**
+     * Call this method when the Asset service is actually accessed by the user
+     * This ensures data is processed only when needed
+     */
+    fun onServiceAccessed() {
+        Log.d("AssetController", "Asset service accessed - processing data")
+        if (!isDataLoaded) {
+            loadAssetDetails()
+            isDataLoaded = true
+        } else {
+            Log.d("AssetController", "Asset data already loaded, skipping processing")
+        }
     }
 
     private fun loadAssetDetails() {

@@ -21,6 +21,8 @@ class LocationsActivity : ComponentActivity() {
             XOneTheme {
                 val navController = rememberNavController()
                 val controller = LocationsController(this)
+                // Load locations data immediately when LocationsActivity is created
+                controller.onServiceAccessed()
                 // You can pass showHeader and isEmergencyContact as needed
                 LocationsScreen(
                     navController = navController,

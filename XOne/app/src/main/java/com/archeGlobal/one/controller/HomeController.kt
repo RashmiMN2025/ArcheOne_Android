@@ -581,14 +581,26 @@ class HomeController(
             Log.d("HomeController", "onItemClick lowercase: ${item.title.lowercase()}")
             when (item.title.lowercase()) {
                 "locations" -> {
+                    // Load locations data on-demand before navigating
+                    if (context is com.archeGlobal.one.HomeActivity) {
+                        Log.d("HomeController", "Loading locations data on-demand")
+                        context.locationsController.onServiceAccessed()
+                    }
                     val intent = Intent(context, LocationsActivity::class.java)
                     context.startActivity(intent)
                 }
                 "business card" -> {
+                    // Business card doesn't require data loading - navigate directly
+                    Log.d("HomeController", "Navigating to Business Card")
                     val intent = Intent(context, BusinessCardActivity::class.java)
                     context.startActivity(intent)
                 }
                 "asset" -> {
+                    // Load asset data on-demand before navigating
+                    if (context is com.archeGlobal.one.HomeActivity) {
+                        Log.d("HomeController", "Loading asset data on-demand")
+                        context.assetController.onServiceAccessed()
+                    }
                     val intent = Intent(context, AssetActivity::class.java)
                     context.startActivity(intent)
                 }
@@ -613,6 +625,11 @@ class HomeController(
                     navigate("service_not_available?serviceName=Profile Connect")
                 }
                 "profile" -> {
+                    // Load profile data on-demand before navigating
+                    if (context is com.archeGlobal.one.HomeActivity) {
+                        Log.d("HomeController", "Loading profile data on-demand")
+                        context.profileController.onServiceAccessed()
+                    }
                     Log.d("HomeController", "Navigating to Profile")
                     navigator.navigateToProfile()
                 }
@@ -713,6 +730,11 @@ class HomeController(
                     navigator.navigateToSOS(false)
                 }
                 "travel", "traveldesk", "travel desk" -> {
+                    // Load travel data on-demand before navigating
+                    if (context is com.archeGlobal.one.HomeActivity) {
+                        Log.d("HomeController", "Loading travel data on-demand")
+                        context.travelController.onServiceAccessed()
+                    }
                     Log.d("HomeController", "Navigating to Travel Screen")
                     navigator.navigateToTravel()
                 }
