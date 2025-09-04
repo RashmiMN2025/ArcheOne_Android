@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.AssetActivity
 import com.archeGlobal.one.HomeActivity
+import com.archeGlobal.one.TrackTicketsActivity
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.AssetDetails
 import com.archeGlobal.one.model.AssetModel
@@ -247,14 +248,12 @@ class AssetController(
     }
 
     fun navigateToTrackTickets() {
-        // Navigate directly to HomeActivity with track_tickets as the target
-        val intent = Intent(context, HomeActivity::class.java).apply {
-            putExtra("navigateTo", "track_tickets")
+        // Navigate directly to TrackTicketsActivity to avoid home screen flash
+        val intent = Intent(context, TrackTicketsActivity::class.java).apply {
             putExtra("ticketCategory", "Asset Related Issue")
             putExtra("source", "asset") // Add source to track navigation origin
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-        Log.d("AssetController", "Starting HomeActivity with navigateTo=track_tickets, ticketCategory=Asset Related Issue")
+        Log.d("AssetController", "Starting TrackTicketsActivity directly with ticketCategory=Asset Related Issue")
         context.startActivity(intent)
 
         // Finish AssetActivity to prevent going back to it

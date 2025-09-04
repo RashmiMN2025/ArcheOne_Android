@@ -1021,11 +1021,10 @@ class HomeController(
         Log.d("HomeController", "Marked ${serviceNames.size} services as seen")
     }
 
-    // Call this after login completes to fetch celebration data
+    // Call this after login completes - celebration data fetch removed
     fun onLoginCompleted() {
         Log.d("CelebrationController", "onLoginCompleted called on HomeController ${this.hashCode()}")
-        Log.d("CelebrationController", "Current celebration data before fetch: ${_celebrationData.value != null}")
-        fetchCelebrationData()
+        // Celebration data fetch removed to avoid unnecessary API calls
     }
 
 }

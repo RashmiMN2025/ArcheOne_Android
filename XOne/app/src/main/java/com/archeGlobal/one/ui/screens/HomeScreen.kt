@@ -70,6 +70,7 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HomeController
 import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.controller.MpinController
+import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.model.AboutMeModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.HomeItem
@@ -320,9 +321,9 @@ fun HomeScreenContent(
     ) {
         val context = LocalContext.current
 
-        // Initialize UserDataManager and LoginController for refresh functionality
+        // Initialize UserDataManager and OtpVerificationController for refresh functionality
         val userDataManager = remember { UserDataManager.getInstance(context) }
-        val loginController = remember { navigator?.let { LoginController(context, it) } }
+        val otpVerificationController = remember { navigator?.let { OtpVerificationController(it, context) } }
 
         // Observe the locked state
         val lockedState = userDataManager.preferencesManager.lockedState.collectAsState().value
@@ -362,7 +363,7 @@ fun HomeScreenContent(
             controller.onShowRatingDialog = { showRatingDialog = true }
         }
 
-        // Handle refresh functionality with login API call
+        // Handle refresh functionality with login API call for swipe refresh
         fun performRefresh() {
             isRefreshing = true
             val refreshStartTime = System.currentTimeMillis()
@@ -373,14 +374,15 @@ fun HomeScreenContent(
             val lastEmployeeId = userDataManager.preferencesManager.getString("last_user_employee_id", "") ?: ""
             val currentToken = userDataManager.preferencesManager.getAuthToken()
 
-            if (currentToken != null && loginController != null && lastEmail.isNotEmpty()) {
-                Log.d("HomeScreen", "Refreshing with stored credentials - Email: $lastEmail")
+            if (currentToken != null && otpVerificationController != null && lastEmail.isNotEmpty()) {
+                Log.d("HomeScreen", "Swipe refresh - calling login API")
 
-                loginController.loginWithToken(
+                otpVerificationController.loginWithToken(
                     token = currentToken,
                     email = lastEmail,
                     mobile = lastMobile,
-                    employeeId = lastEmployeeId
+                    employeeId = lastEmployeeId,
+                    fromHome = true
                 ) { message, isError ->
                     // Calculate elapsed time and ensure minimum 2-second loading
                     val elapsedTime = System.currentTimeMillis() - refreshStartTime
@@ -393,16 +395,16 @@ fun HomeScreenContent(
                         }
 
                         if (isError) {
-                            Log.e("HomeScreen", "Refresh failed: $message")
+                            Log.e("HomeScreen", "Swipe refresh failed: $message")
                             // Check if token expired (should navigate to login)
                             if (message.contains("token", ignoreCase = true) || message.contains("unauthorized", ignoreCase = true) ||
                                 message.contains("expired", ignoreCase = true)
                             ) {
-                                Log.d("HomeScreen", "Token expired during refresh, navigating to login")
+                                Log.d("HomeScreen", "Token expired during swipe refresh, navigating to login")
                                 navigator?.navigateToLoginScreen()
                             }
                         } else {
-                            Log.d("HomeScreen", "Refresh successful: $message")
+                            Log.d("HomeScreen", "Swipe refresh successful: $message")
                             // Refresh the home screen data
                             controller.refreshUserData()
                             onRefresh()
@@ -411,7 +413,7 @@ fun HomeScreenContent(
                     }
                 }
             } else {
-                Log.e("HomeScreen", "Cannot refresh - missing credentials or controller")
+                Log.e("HomeScreen", "Cannot perform swipe refresh - missing credentials or controller")
                 // Ensure minimum 2-second loading even for error case
                 CoroutineScope(Dispatchers.Main).launch {
                     val elapsedTime = System.currentTimeMillis() - refreshStartTime
@@ -426,8 +428,8 @@ fun HomeScreenContent(
 
         // Effect to handle refresh completion
         LaunchedEffect(isRefreshing) {
-            if (isRefreshing && loginController == null) {
-                // Fallback to original refresh if no login controller available
+            if (isRefreshing && otpVerificationController == null) {
+                // Fallback to original refresh if no otp verification controller available
                 onRefresh()
                 kotlinx.coroutines.delay(1000)
                 isRefreshing = false

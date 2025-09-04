@@ -172,51 +172,11 @@ class HomeActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)
 
     private fun refreshHomeData() {
-        val userData = userDataManager.getUserData()
-        val token = userDataManager.getAuthToken() ?: return
-        val email = userData?.email ?: return
-        val mobile = userData?.mobile ?: return
-        val employeeId = userData?.employeeId ?: return
-
-        lifecycleScope.launch {
-            otpVerificationController.loginWithToken(
-                token = token,
-                email = email,
-                mobile = mobile,
-                employeeId = employeeId,
-                fromHome = true
-            ) { message, isError ->
-                if (isError) {
-                    if (message.contains("Invalid Token", ignoreCase = true) ||
-                        message.contains("Token Expired", ignoreCase = true) ||
-                        message.contains("401", ignoreCase = true)
-                    ) {
-                        Toast.makeText(this@HomeActivity, "Session expired. Please authenticate to continue.", Toast.LENGTH_SHORT).show()
-
-                        // Preserve that this is not a first-time user for session expiry
-                        com.archeGlobal.one.utils.setFirstTimeLogin(this@HomeActivity, false)
-
-                        // Clear session data but preserve MPIN and biometric for re-auth
-                        userDataManager.clearSessionData()
-
-                        // Navigate to login with session expired flag
-                        val intent = Intent(this@HomeActivity, LoginActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            putExtra("session_expired", true)
-                        }
-                        startActivity(intent)
-                        finish()
-                    } else {
-                        Toast.makeText(this@HomeActivity, message, Toast.LENGTH_SHORT).show()
-                    }
-                }
-                // Update the home controller's data
-                controller.refreshUserData()
-                // Trigger celebration data fetch after login completion
-                controller.onLoginCompleted()
-                // Note: HelpDesk data will be loaded only when user navigates to HelpDesk screen
-            }
-        }
+        // Refresh home screen data without API calls
+        Log.d("HomeActivity", "Refreshing home screen data without API calls")
+        
+        // Update the home controller's data
+        controller.refreshUserData()
     }
 
     override fun onNewIntent(intent: Intent) {
