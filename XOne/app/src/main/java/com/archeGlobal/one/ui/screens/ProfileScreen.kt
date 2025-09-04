@@ -66,6 +66,12 @@ fun ProfileScreen(
     var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    // Ensure profile data is loaded when screen is displayed
+    LaunchedEffect(Unit) {
+        Log.d("ProfileScreen", "ProfileScreen composed - ensuring data is loaded")
+        controller.onServiceAccessed()
+    }
+
     BackHandler(enabled = true) {
         // Handle back press manually
     }
