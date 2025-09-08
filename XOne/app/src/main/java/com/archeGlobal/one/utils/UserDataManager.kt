@@ -325,9 +325,8 @@ class UserDataManager private constructor(context: Context) {
                 }
             }
             
-            // Pre-warm network connections for DeskCart and TrackTickets APIs
-            // This simulates the app restart behavior where connections are already established
-            warmUpConnections()
+            // Pre-warm network connections removed - data will load lazily when services are accessed
+            // TrackTickets warmup removed - data will load lazily when service is accessed
         }
     }
 
@@ -481,84 +480,25 @@ class UserDataManager private constructor(context: Context) {
         Log.d(TAG, "Cleared all user data ready callbacks")
     }
     
+    // Deprecated methods - kept for compatibility but no longer called automatically
+    @Deprecated("Connection warmup removed - data will load lazily when services are accessed")
     private fun warmUpConnections() {
-        // Background thread to pre-warm network connections
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            warmUpConnectionsAsync()
-        }, 200) // Small delay to let login complete fully
+        Log.d(TAG, "warmUpConnections - deprecated, connections no longer warmed up automatically")
+        // Don't warm up connections automatically anymore
     }
     
+    @Deprecated("Connection warmup removed - data will load lazily when services are accessed")
     private fun warmUpConnectionsAsync() {
-        try {
-            Log.d(TAG, "Starting connection warm-up for DeskCart and TrackTickets APIs")
-            
-            // Use coroutine for async network calls
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val userData = getUserData()
-                    if (userData != null) {
-                        // Warm up connections concurrently
-                        val deskCartJob = async {
-                            warmUpDeskCartConnection(userData.email ?: "")
-                        }
-                        val ticketsJob = async {
-                            warmUpTrackTicketsConnection(userData.name ?: "")
-                        }
-                        
-                        // Wait for both to complete (or timeout quickly)
-                        withTimeoutOrNull(2000) {
-                            deskCartJob.await()
-                            ticketsJob.await()
-                        }
-                        Log.d(TAG, "Connection warm-up completed")
-                    }
-                } catch (e: Exception) {
-                    Log.d(TAG, "Connection warm-up completed with minor issues (expected): ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            Log.d(TAG, "Connection warm-up failed (not critical): ${e.message}")
-        }
+        Log.d(TAG, "warmUpConnectionsAsync - deprecated, connections no longer warmed up automatically")
+        // Don't warm up connections automatically anymore
     }
     
-    private suspend fun warmUpDeskCartConnection(email: String) {
-        try {
-            Log.d(TAG, "Warming up DeskCart connection...")
-            val request = com.archeGlobal.one.network.DeskCartEligibilityRequest(email = email)
-            // Make the API call to establish HTTP connection (result doesn't matter)
-            com.archeGlobal.one.network.RetrofitClient.apiService.getDeskCartEligibility(request)
-            Log.d(TAG, "DeskCart connection warm-up completed")
-        } catch (e: Exception) {
-            Log.d(TAG, "DeskCart warm-up established connection: ${e.message}")
-        }
-    }
+    // DeskCart warmup removed - data will load lazily when service is accessed
+    // private suspend fun warmUpDeskCartConnection(email: String) { ... }
     
+    @Deprecated("TrackTickets warmup removed - data will load lazily when service is accessed")
     private suspend fun warmUpTrackTicketsConnection(userName: String) {
-        try {
-            Log.d(TAG, "Warming up TrackTickets connection...")
-            val request = com.archeGlobal.one.network.TicketsRequest(
-                name = userName,
-                category = "Helpdesk",
-                subcategory = null
-            )
-            
-            // TrackTickets uses callback-based Retrofit, so we need to convert to coroutine
-            suspendCancellableCoroutine<Unit> { continuation ->
-                com.archeGlobal.one.network.RetrofitClient.apiService.getTickets(request).enqueue(
-                    object : retrofit2.Callback<com.archeGlobal.one.network.TicketsResponse> {
-                        override fun onResponse(call: retrofit2.Call<com.archeGlobal.one.network.TicketsResponse>, response: retrofit2.Response<com.archeGlobal.one.network.TicketsResponse>) {
-                            Log.d(TAG, "TrackTickets connection warm-up completed")
-                            continuation.resume(Unit)
-                        }
-                        override fun onFailure(call: retrofit2.Call<com.archeGlobal.one.network.TicketsResponse>, t: Throwable) {
-                            Log.d(TAG, "TrackTickets warm-up established connection: ${t.message}")
-                            continuation.resume(Unit)
-                        }
-                    }
-                )
-            }
-        } catch (e: Exception) {
-            Log.d(TAG, "TrackTickets warm-up completed: ${e.message}")
-        }
+        Log.d(TAG, "warmUpTrackTicketsConnection - deprecated, tickets now loaded only when needed")
+        // Don't warm up TrackTickets connection automatically anymore
     }
 }

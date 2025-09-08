@@ -288,16 +288,11 @@ class HelpDeskController(private val context: Context) {
         loadFAQFromLogin()
     }
 
-    // Call this after login completes to ensure user data is ready
+    // Deprecated methods - kept for compatibility but no longer called automatically
+    @Deprecated("Use navigateToTrackTickets() for on-demand loading")
     fun onLoginCompleted() {
-        Log.d("HelpDeskController", "onLoginCompleted - checking if user data is ready")
-        val userDataManager = UserDataManager.getInstance(context)
-        if (userDataManager.isUserDataReady()) {
-            Log.d("HelpDeskController", "User data is ready, loading tickets")
-            loadTicketsData()
-        } else {
-            Log.d("HelpDeskController", "User data not ready yet, will load tickets when navigated to")
-        }
+        Log.d("HelpDeskController", "onLoginCompleted - deprecated, tickets now loaded only when needed")
+        // Don't load tickets automatically anymore
     }
 
 }

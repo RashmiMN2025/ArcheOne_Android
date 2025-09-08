@@ -158,6 +158,11 @@ class HomeActivity : AppCompatActivity() {
         Log.d("HomeActivity", "Lazy initializing SmartCollateralController")
         SmartCollateralController(this@HomeActivity) 
     }
+    internal val deskCartController by lazy { 
+        Log.d("HomeActivity", "Lazy initializing DeskCartController")
+        Log.d("HomeActivity", "DeskCartController access stack trace: ${Thread.currentThread().stackTrace.take(10).joinToString("\n")}")
+        DeskCartController(this@HomeActivity, navigator) 
+    }
     
     // Lazy controllers can be accessed directly by property name
     // No explicit getter methods needed - Kotlin generates them automatically

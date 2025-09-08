@@ -28,18 +28,20 @@ class DeskCartController(
     private val context: Context,
     private val navigator: Navigator
 ) : ViewModel() {
-    var model by mutableStateOf(DeskCartModel(isInitialLoading = true))
+    var model by mutableStateOf(DeskCartModel(isInitialLoading = false))
         private set
 
     private val userDataManager = UserDataManager.getInstance(context)
     private val fileDownloadHelper = FileDownloadHelper(context)
 
     private var hasInitialLoadCompleted = false
+    private var isDataLoaded = false
 
     init {
-        // Don't load data immediately - wait for user data to be ready
-        // This prevents the "slow first login" issue
-        Log.d("DeskCartController", "Controller initialized, data loading will be triggered when ready")
+        // Lazy loading - don't load data on initialization
+        // Data will only load when onServiceAccessed() is called
+        Log.d("DeskCartController", "Controller initialized with lazy loading - no data loaded yet")
+        Log.d("DeskCartController", "Stack trace: ${Thread.currentThread().stackTrace.take(10).joinToString("\n")}")
     }
 
     private fun loadEligibilityData() {
@@ -364,27 +366,29 @@ class DeskCartController(
         model = model.copy(downloadError = null)
     }
 
-    // Trigger initial load when user data becomes ready
-    fun onLoginCompleted() {
-        Log.d("DeskCartController", "onLoginCompleted - checking if user data is ready")
-        if (userDataManager.isUserDataReady()) {
-            Log.d("DeskCartController", "User data is ready, starting initial load")
-            startInitialLoad()
+    // Lazy loading method - called when DeskCart service is accessed
+    fun onServiceAccessed() {
+        if (!isDataLoaded) {
+            Log.d("DeskCartController", "DeskCart service accessed - loading data on demand")
+            isDataLoaded = true
+            model = model.copy(isInitialLoading = true)
+            loadEligibilityData()
         } else {
-            Log.d("DeskCartController", "User data not ready yet, will load with fallback data")
-            startInitialLoad() // Load anyway with fallback data
+            Log.d("DeskCartController", "DeskCart data already loaded, skipping")
         }
     }
 
-    // Start initial load (can be called from onLoginCompleted or when screen becomes visible)
+    // Deprecated methods - kept for compatibility but no longer called automatically
+    @Deprecated("Use onServiceAccessed() for lazy loading")
+    fun onLoginCompleted() {
+        Log.d("DeskCartController", "onLoginCompleted - deprecated, use onServiceAccessed() instead")
+        // Don't load data automatically anymore
+    }
+
+    @Deprecated("Use onServiceAccessed() for lazy loading")
     fun startInitialLoad() {
-        if (!hasInitialLoadCompleted) {
-            Log.d("DeskCartController", "Starting initial data load")
-            hasInitialLoadCompleted = true
-            loadEligibilityData()
-        } else {
-            Log.d("DeskCartController", "Initial load already completed, skipping")
-        }
+        Log.d("DeskCartController", "startInitialLoad - deprecated, use onServiceAccessed() instead")
+        // Don't load data automatically anymore
     }
 
     // Add method to refresh all data (for manual refresh)

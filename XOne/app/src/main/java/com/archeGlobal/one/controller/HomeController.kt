@@ -605,6 +605,11 @@ class HomeController(
                     context.startActivity(intent)
                 }
                 "deskcart" -> {
+                    // Load DeskCart data on-demand before navigating
+                    if (context is com.archeGlobal.one.HomeActivity) {
+                        Log.d("HomeController", "Loading DeskCart data on-demand")
+                        context.deskCartController.onServiceAccessed()
+                    }
                     Log.d("HomeController", "Navigating to DeskCart")
                     navigator.navigateToDeskCart()
                 }
