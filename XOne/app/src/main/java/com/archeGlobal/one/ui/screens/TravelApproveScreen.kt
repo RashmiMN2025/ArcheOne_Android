@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -73,7 +74,11 @@ fun TravelApproveScreen(
                 errorMessage = null
                 successMessage = approvalActionState.message
                 delay(1500) // Give user time to see the success state
-                controller.navigateBack()
+                // Set result to indicate success and finish activity
+                (context as? Activity)?.let { activity ->
+                    activity.setResult(Activity.RESULT_OK)
+                    activity.finish()
+                }
             }
 
             is TravelController.TravelApprovalActionState.Error -> {
@@ -112,8 +117,6 @@ fun TravelApproveScreen(
                     )
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
                             Box(
@@ -125,7 +128,7 @@ fun TravelApproveScreen(
                                     color = Color.Black,
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.offset(x = (-24).dp)
                                 )
@@ -220,25 +223,25 @@ fun TravelApproveScreen(
                             ApprovalDetailRow(
                                 iconRes = R.drawable.mappin_and_ellipse,
                                 label = "Origin City",
-                                value = "Hyd"
+                                value = travelRequest.getAllDestinations().firstOrNull()?.originCity ?: "N/A"
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.mappin_and_ellipse,
                                 label = "Destination City",
-                                value = "BBI"
+                                value = travelRequest.getAllDestinations().firstOrNull()?.destinationCity ?: travelRequest.destination
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.airplane_departure,
                                 label = "Date of Departure",
-                                value = travelRequest.departureDate ?: "11 Aug 2025"
+                                value = travelRequest.getAllDestinations().firstOrNull()?.departureDate ?: travelRequest.departureDate ?: "N/A"
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.airplane_arrival,
                                 label = "Date of Arrival",
-                                value = travelRequest.arrivalDate ?: "11 Aug 2025"
+                                value = travelRequest.getAllDestinations().firstOrNull()?.arrivalDate ?: travelRequest.arrivalDate ?: "N/A"
                             )
 
                             ApprovalDetailRow(
@@ -287,7 +290,7 @@ fun TravelApproveScreen(
                                     unfocusedBorderColor = Color(0xFFE0E0E0),
                                     textColor = Color.Black,
                                     placeholderColor = Color.Gray,
-                                    backgroundColor = Color(0xFFF6F4EE)
+                                    backgroundColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             )

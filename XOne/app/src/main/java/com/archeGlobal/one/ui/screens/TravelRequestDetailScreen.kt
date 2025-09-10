@@ -189,7 +189,7 @@ fun TravelRequestDetailScreen(
                                 )
 
                                 // Format departure date
-                                val formattedDepartureDate = formatDate(travelRequest.departureDate)
+                                val formattedDepartureDate = formatDate(destination?.departureDate ?: travelRequest.departureDate)
                                 DetailRowWithDrawableIcon(
                                     iconRes = R.drawable.airplane_departure,
                                     label = "Date of Departure",
@@ -197,7 +197,7 @@ fun TravelRequestDetailScreen(
                                 )
 
                                 // Format arrival date
-                                val formattedArrivalDate = formatDate(travelRequest.arrivalDate)
+                                val formattedArrivalDate = formatDate(destination?.arrivalDate ?: travelRequest.arrivalDate)
                                 DetailRowWithDrawableIcon(
                                     iconRes = R.drawable.airplane_arrival,
                                     label = "Date of Arrival",

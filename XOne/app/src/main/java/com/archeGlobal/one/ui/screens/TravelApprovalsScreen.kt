@@ -13,6 +13,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -173,6 +176,21 @@ fun TravelApprovalsScreen(
                     // Trigger loading of travel approval requests when the screen is shown
                     LaunchedEffect(Unit) {
                         controller.loadTravelApprovals()
+                    }
+
+                    // Refresh data when returning from Activities (onResume equivalent)
+                    val lifecycleOwner = LocalLifecycleOwner.current
+                    DisposableEffect(lifecycleOwner) {
+                        val observer = LifecycleEventObserver { _, event ->
+                            if (event == Lifecycle.Event.ON_RESUME) {
+                                // Refresh travel approvals data when screen resumes
+                                controller.loadTravelApprovals()
+                            }
+                        }
+                        lifecycleOwner.lifecycle.addObserver(observer)
+                        onDispose {
+                            lifecycleOwner.lifecycle.removeObserver(observer)
+                        }
                     }
 
                     // Main content based on state
@@ -606,7 +624,7 @@ fun SingleDestinationTripDetails(
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "${travelRequest.departureDate ?: "N/A"} - ${travelRequest.arrivalDate ?: "N/A"}",
+                text = "${destination?.departureDate ?: travelRequest.departureDate ?: "N/A"} - ${destination?.arrivalDate ?: travelRequest.arrivalDate ?: "N/A"}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = GraphikFontFamily,
