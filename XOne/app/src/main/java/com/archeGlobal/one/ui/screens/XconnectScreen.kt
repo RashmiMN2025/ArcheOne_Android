@@ -133,6 +133,7 @@ fun XConnectScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -163,7 +164,7 @@ fun XConnectScreen(
                             color = Color.Black,
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 

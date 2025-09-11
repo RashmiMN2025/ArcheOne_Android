@@ -1460,7 +1460,7 @@ private fun formatServiceTitle(title: String): String {
         "Profile Connect" -> "Profile\nConnect"
         "Arche Odyssey" -> "Arche\nOdyssey"
         "Idea Vault", "IdeaVault" -> "IdeaVault"
-        "Smart Collateral" -> "SmartCollateral"
+        "Smart Collateral" -> "Smart\nCollateral"
         "MeetSpace" -> "MeetSpace"
         else -> {
             // For any other multi-word titles, always split at a space
@@ -1579,23 +1579,23 @@ private fun AppItem(
                         .background(
                             color = Color(0xFFDD3825),
                             shape = RoundedCornerShape(
-                                topStart = 12.dp,
+                                topStart = 8.dp,
                                 topEnd = 0.dp,
-                                bottomStart = 12.dp,
+                                bottomStart = 8.dp,
                                 bottomEnd = 0.dp
                             )
                         )
-                        .padding(horizontal = 9.dp, vertical = 2.dp)
-                        .height(16.dp)
+                        .padding(horizontal = 6.dp, vertical = 1.dp)
+                        .height(14.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = stickerText,
                         color = Color.White,
-                        fontSize = 10.sp,
+                        fontSize = 8.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .align(Alignment.Center)
+                        modifier = Modifier.offset(y = (-3.1).dp)
                     )
                 }
             }
