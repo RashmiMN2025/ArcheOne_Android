@@ -121,7 +121,7 @@ fun TravelRequestDetailScreen(
                             ) {
                                 Text(
                                     text = "#${travelRequest.id}",
-                                    fontSize = 20.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     fontFamily = GraphikFontFamily,
                                     color = Color.Black
@@ -131,47 +131,53 @@ fun TravelRequestDetailScreen(
                                 TravelRequestStatusBadge(status = travelRequest.status)
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            // Employee Details
+                            // Divider line below ticket number/status
+                            androidx.compose.material3.HorizontalDivider(
+                                thickness = 1.dp,
+                                color = Color.LightGray.copy(alpha = 0.5f)
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Employee Details - Show sender's details from travelRequest, not current user
                             DetailRowWithDrawableIcon(
                                 iconRes = R.drawable.person_3x,
                                 label = "Employee",
-                                value = controller.employeeName
+                                value = travelRequest.employeeName ?: "N/A"
                             )
                             DetailRowWithDrawableIcon(
                                 iconRes = R.drawable.person_badge_clock,
                                 label = "Employee ID",
-                                value = controller.employeeId
+                                value = travelRequest.employeeId ?: "N/A"
                             )
                             DetailRowWithDrawableIcon(
                                 iconRes = R.drawable.envelope_3x,
                                 label = "Email",
-                                value = controller.employeeEmail
+                                value = travelRequest.employeeEmail ?: "N/A"
                             )
                             DetailRowWithDrawableIcon(
                                 iconRes = R.drawable.phone_3x,
                                 label = "Mobile",
-                                value = controller.mobileNumber
+                                value = travelRequest.employeeMobile ?: "N/A"
                             )
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Divider line above travel details
+                            androidx.compose.material3.HorizontalDivider(
+                                thickness = 1.dp,
+                                color = Color.LightGray.copy(alpha = 0.5f)
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             // Travel Details - Handle multi-destination vs single destination
                             val destinations = travelRequest.getAllDestinations()
 
                             if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination - show Trip 1
-                                Text(
-                                    text = "Trip 1",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
-                                )
-
-                                // Show separate origin and destination fields
+                                // Single destination - show separate origin and destination fields
                                 val destination = if (destinations.isNotEmpty()) destinations[0] else null
 
                                 // Origin City
@@ -253,8 +259,6 @@ fun TravelRequestDetailScreen(
                                     )
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(8.dp))
 
                             // Project and other details
                             DetailRowWithDrawableIcon(

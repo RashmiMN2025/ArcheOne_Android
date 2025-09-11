@@ -126,7 +126,19 @@ fun TravelApprovalDetailScreen(
 
                             // Request details
                             DetailRow(label = "Request ID:", value = travelRequest.id)
-                            DetailRow(label = "Employee:", value = travelRequest.approver)
+                            
+                            // Debug logging
+                            android.util.Log.d("TravelApprovalDetail", "Showing details for ${travelRequest.id}:")
+                            android.util.Log.d("TravelApprovalDetail", "  employeeName: ${travelRequest.employeeName}")
+                            android.util.Log.d("TravelApprovalDetail", "  employeeId: ${travelRequest.employeeId}")
+                            android.util.Log.d("TravelApprovalDetail", "  employeeEmail: ${travelRequest.employeeEmail}")
+                            android.util.Log.d("TravelApprovalDetail", "  employeeMobile: ${travelRequest.employeeMobile}")
+                            android.util.Log.d("TravelApprovalDetail", "  approver: ${travelRequest.approver}")
+                            
+                            DetailRow(label = "Employee:", value = travelRequest.employeeName ?: "N/A")
+                            DetailRow(label = "Employee ID:", value = travelRequest.employeeId ?: "N/A")
+                            DetailRow(label = "Email:", value = travelRequest.employeeEmail ?: "N/A")
+                            DetailRow(label = "Mobile:", value = travelRequest.employeeMobile ?: "N/A")
                             // Show origin → destination format
                             val destinationValue = run {
                                 val destinations = travelRequest.getAllDestinations()

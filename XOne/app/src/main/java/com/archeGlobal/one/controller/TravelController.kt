@@ -50,6 +50,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Sealed class representing the state of travel approvals
      */
     sealed class TravelApprovalsState {
+        object Idle : TravelApprovalsState()
         object Loading : TravelApprovalsState()
         data class Success(val approvalRequests: List<TravelRequest>) : TravelApprovalsState()
         data class Error(val message: String) : TravelApprovalsState()
@@ -76,7 +77,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
 
     // Travel approvals state
-    var travelApprovalsState by mutableStateOf<TravelApprovalsState>(TravelApprovalsState.Loading)
+    var travelApprovalsState by mutableStateOf<TravelApprovalsState>(TravelApprovalsState.Idle)
         private set
 
     // Selected travel request for detail view
@@ -94,6 +95,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
     // Count of pending travel approvals
     var pendingApprovalCount by mutableStateOf(0)
         private set
+    
+    // Flag to prevent concurrent API calls for travel approvals
+    private var isLoadingTravelApprovals = false
 
     // Employee data for travel form
     var employeeName by mutableStateOf("")
@@ -592,23 +596,37 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Load travel approval requests from the API
      */
     fun loadTravelApprovals() {
-        // Set state to loading
-        travelApprovalsState = TravelApprovalsState.Loading
+        // Prevent concurrent API calls
+        if (isLoadingTravelApprovals) {
+            return
+        }
+        
+        isLoadingTravelApprovals = true
+        
+        // Set state to loading only if not already in a success state with data
+        if (travelApprovalsState is TravelApprovalsState.Idle) {
+            travelApprovalsState = TravelApprovalsState.Loading
+        }
 
         // Get the user's email from UserDataManager
         val userEmail = userDataManager.getUserData()?.email?.takeIf { it.isNotBlank() } ?: reportingManagerEmail
 
         if (userEmail.isBlank()) {
             travelApprovalsState = TravelApprovalsState.Error("User email not found")
+            isLoadingTravelApprovals = false
             return
         }
 
         // Create the request body for combined history
         val request = TravelHistoryRequest(employeeId = "", employeeEmail = userEmail)
+        
+        // Debug logging to see what user we're sending
+        android.util.Log.d("TravelController", "Making API call with userEmail: $userEmail")
 
         // Make the API call using combined history endpoint
         RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(object : Callback<TravelCombinedHistoryResponse> {
             override fun onResponse(call: Call<TravelCombinedHistoryResponse>, response: Response<TravelCombinedHistoryResponse>) {
+                isLoadingTravelApprovals = false
                 if (response.isSuccessful) {
                     val combinedResponse = response.body()
                     if (combinedResponse != null && combinedResponse.status == 200) {
@@ -627,6 +645,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
             }
 
             override fun onFailure(call: Call<TravelCombinedHistoryResponse>, t: Throwable) {
+                isLoadingTravelApprovals = false
                 Log.e("TravelController", "Error loading travel approvals", t)
                 travelApprovalsState = TravelApprovalsState.Error("Network error: ${t.message}")
             }

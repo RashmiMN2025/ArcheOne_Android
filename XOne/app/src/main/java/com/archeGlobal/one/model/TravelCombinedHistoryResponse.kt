@@ -152,7 +152,11 @@ data class TravelOrderHistoryItem(
             seatPreference = seatPreference,
             flightTime = flightTime,
             frequentFlyerNumber = frequentFlyerNumber,
-            travelDestinations = travelDetails
+            travelDestinations = travelDetails,
+            employeeName = employeeName,
+            employeeEmail = employeeEmail,
+            employeeId = employeeId,
+            employeeMobile = mobile
         )
     }
 }
@@ -191,6 +195,12 @@ data class TravelApprovalHistoryItem(
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
 
+    @SerializedName("reporting_manager_name")
+    val reportingManagerName: String,
+
+    @SerializedName("reporting_manager_email")
+    val reportingManagerEmail: String,
+
     @SerializedName("status")
     val status: String,
 
@@ -225,6 +235,7 @@ data class TravelApprovalHistoryItem(
      * Convert to TravelRequest model for UI display
      */
     fun toTravelRequest(): TravelRequest {
+        android.util.Log.d("DEBUG_BUILD_CHECK", "NEW TravelApprovalHistoryItem.toTravelRequest() called for $requestId")
         // Parse the created date using DateFormatter utility
         val createdDate = DateFormatter.parseApiDate(createdAt)
 
@@ -264,12 +275,21 @@ data class TravelApprovalHistoryItem(
             }
         }
 
-        return TravelRequest(
+        // Debug logging to understand what data we're receiving and mapping
+        android.util.Log.d("TravelApprovalMapping", "=== MAPPING REQUEST $requestId ===")
+        android.util.Log.d("TravelApprovalMapping", "API employee_name: $employeeName")
+        android.util.Log.d("TravelApprovalMapping", "API employee_email: $employeeEmail")
+        android.util.Log.d("TravelApprovalMapping", "API employee_id: $employeeId")
+        android.util.Log.d("TravelApprovalMapping", "API mobile: $mobile")
+        android.util.Log.d("TravelApprovalMapping", "API reporting_manager_name: $reportingManagerName")
+        android.util.Log.d("TravelApprovalMapping", "API reporting_manager_email: $reportingManagerEmail")
+        
+        val travelRequest = TravelRequest(
             id = requestId,
             project = projectName,
             destination = destinationDisplay,
-            approver = employeeName,
-            approverEmail = null, // Approval history doesn't have manager email field
+            approver = reportingManagerName, // The actual approver from API
+            approverEmail = reportingManagerEmail, // The actual approver email from API
             createdDate = createdDate ?: Date(),
             status = travelStatus,
             businessJustification = businessJustification,
@@ -283,7 +303,22 @@ data class TravelApprovalHistoryItem(
             seatPreference = seatPreference,
             flightTime = flightTime,
             frequentFlyerNumber = frequentFlyerNumber,
-            travelDestinations = travelDetails
+            travelDestinations = travelDetails,
+            employeeName = employeeName,
+            employeeEmail = employeeEmail,
+            employeeId = employeeId,
+            employeeMobile = mobile
         )
+        
+        // Log what we're actually putting in the TravelRequest
+        android.util.Log.d("TravelApprovalMapping", "CREATED TravelRequest:")
+        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeName: ${travelRequest.employeeName}")
+        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeEmail: ${travelRequest.employeeEmail}")
+        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeId: ${travelRequest.employeeId}")
+        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeMobile: ${travelRequest.employeeMobile}")
+        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.approver: ${travelRequest.approver}")
+        android.util.Log.d("TravelApprovalMapping", "=== END MAPPING ===")
+        
+        return travelRequest
     }
 }

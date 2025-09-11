@@ -173,21 +173,20 @@ fun TravelApprovalsScreen(
                         actions = {}
                     )
 
-                    // Trigger loading of travel approval requests when the screen is shown
-                    LaunchedEffect(Unit) {
-                        controller.loadTravelApprovals()
-                    }
-
-                    // Refresh data when returning from Activities (onResume equivalent)
+                    // Load travel approvals when screen is first shown and on resume
                     val lifecycleOwner = LocalLifecycleOwner.current
                     DisposableEffect(lifecycleOwner) {
                         val observer = LifecycleEventObserver { _, event ->
                             if (event == Lifecycle.Event.ON_RESUME) {
-                                // Refresh travel approvals data when screen resumes
+                                // Load travel approvals data when screen resumes
                                 controller.loadTravelApprovals()
                             }
                         }
                         lifecycleOwner.lifecycle.addObserver(observer)
+                        
+                        // Initial load when screen is first created
+                        controller.loadTravelApprovals()
+                        
                         onDispose {
                             lifecycleOwner.lifecycle.removeObserver(observer)
                         }
@@ -195,6 +194,10 @@ fun TravelApprovalsScreen(
 
                     // Main content based on state
                     when (val state = controller.travelApprovalsState) {
+                        is TravelController.TravelApprovalsState.Idle -> {
+                            // Show nothing initially
+                        }
+                        
                         is TravelController.TravelApprovalsState.Loading -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
@@ -381,7 +384,7 @@ fun ApprovalRequestCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = request.approver,
+                    text = request.employeeName ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = GraphikFontFamily,
@@ -528,15 +531,6 @@ fun SingleDestinationTripDetails(
     travelRequest: TravelRequest
 ) {
     Column {
-        Text(
-            text = "Trip 1",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            fontFamily = GraphikFontFamily,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-
         // Get destinations for separate display
         val destinations = travelRequest.getAllDestinations()
         val destination = if (destinations.isNotEmpty()) destinations[0] else null

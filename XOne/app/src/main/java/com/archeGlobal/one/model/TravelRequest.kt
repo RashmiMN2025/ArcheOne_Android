@@ -24,7 +24,12 @@ data class TravelRequest(
     val seatPreference: String? = null, // Seat preference
     val flightTime: String? = null, // Preferred flight time
     val frequentFlyerNumber: String? = null, // Frequent flyer number if applicable
-    val travelDestinations: List<TravelDestination>? = null // Multi-destination support
+    val travelDestinations: List<TravelDestination>? = null, // Multi-destination support
+    // Employee/Sender details
+    val employeeName: String? = null, // Name of the employee who requested the travel
+    val employeeEmail: String? = null, // Email of the employee who requested the travel
+    val employeeId: String? = null, // ID of the employee who requested the travel
+    val employeeMobile: String? = null // Mobile number of the employee who requested the travel
 ) {
     /**
      * Check if this is a multi-destination travel request
