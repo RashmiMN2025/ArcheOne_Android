@@ -2,13 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
 
 android {
 
     namespace = "com.archeGlobal.one"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.archeGlobal.one"
@@ -112,6 +112,9 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.protolite.well.known.types)
+    implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.ui.unit)
 
     // Testing
     testImplementation(libs.junit)

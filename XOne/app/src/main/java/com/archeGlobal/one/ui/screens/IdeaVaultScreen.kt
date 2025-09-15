@@ -231,14 +231,14 @@ fun IdeaVaultScreen(
                                                 "Select Category",
                                             color = Color.LightGray,
                                             fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal
+                                            fontWeight = FontWeight.Normal,
                                             ) },
                                         trailingIcon = {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.dropdown),
                                                 contentDescription = "Dropdown",
                                                 tint = Color.Gray,
-                                                modifier = Modifier.size(20.dp)
+                                                modifier = Modifier.size(15.dp)
                                             )
                                         },
                                         modifier = Modifier
@@ -256,8 +256,8 @@ fun IdeaVaultScreen(
                                         textStyle = TextStyle(
                                             fontSize = 16.sp,
                                             fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            color = if (selectedCategory == "Select Category") Color.Gray else Color.Black // Gray for placeholder, black for selected text
+                                            fontWeight = FontWeight.Normal,
+                                            color = if (selectedCategory == "Select Category") Color.LightGray else Color.Black // Gray for placeholder, black for selected text
                                         )
                                     )
 

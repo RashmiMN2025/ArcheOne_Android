@@ -715,4 +715,9 @@ class AndroidNavigator(
         val intent = Intent(activity, SmartCollateralActivity::class.java)
         startActivity(intent)
     }
+
+    override fun navigateToMeetSpace() {
+        val intent = Intent(activity, MeetSpaceActivity::class.java)
+        startActivity(intent)
+    }
 }

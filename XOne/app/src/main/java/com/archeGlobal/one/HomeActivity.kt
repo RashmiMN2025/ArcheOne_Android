@@ -95,6 +95,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var orderController: OrderController
     private lateinit var consumptionReportController: ConsumptionReportController
     private lateinit var smartCollateralcontroller: SmartCollateralController
+    private lateinit var meetSpaceController: MeetSpaceController
     private lateinit var preferencesManager: PreferencesManager
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
@@ -374,6 +375,7 @@ class HomeActivity : AppCompatActivity() {
                 orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
                 consumptionReportController = ConsumptionReportController(this@HomeActivity, navigator)
                 smartCollateralcontroller = SmartCollateralController(this)
+                meetSpaceController = MeetSpaceController(this)
 
                 if (intent.getBooleanExtra("showUpdateDialog", false) || preferencesManager.getBoolean("showUpdateDialog", false)) {
                     showUpdateDialog = true
@@ -1772,6 +1774,27 @@ class HomeActivity : AppCompatActivity() {
                         ){
                         SmartCollateralScreen(
                             controller = smartCollateralcontroller,
+                            onBackPressed =  { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        route = "meetspace",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ){
+                        MeetSpaceScreen(
+                            controller = meetSpaceController,
                             onBackPressed =  { navController.popBackStack() }
                         )
                     }

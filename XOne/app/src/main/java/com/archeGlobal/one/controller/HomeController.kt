@@ -13,6 +13,7 @@ import com.archeGlobal.one.CommuniqueActivity
 import com.archeGlobal.one.GreetingsActivity
 import com.archeGlobal.one.HolidayCalendarActivity
 import com.archeGlobal.one.LocationsActivity
+import com.archeGlobal.one.MeetSpaceActivity
 import com.archeGlobal.one.PolicyActivity
 import com.archeGlobal.one.model.AboutMeModel
 import com.archeGlobal.one.model.CelebrationResponse
@@ -783,6 +784,11 @@ class HomeController(
                 "smart collateral" -> {
                     Log.d("HomeController", "Navigating to Smart Collateral")
                     val intent = Intent(context, com.archeGlobal.one.SmartCollateralActivity::class.java)
+                    context.startActivity(intent)
+                }
+                "meetspace" -> {
+                    Log.d("HomeController", "Navigating to MeetSpace")
+                    val intent = Intent(context, MeetSpaceActivity::class.java)
                     context.startActivity(intent)
                 }
                 else -> {
