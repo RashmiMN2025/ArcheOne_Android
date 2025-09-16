@@ -40,6 +40,7 @@
         <activity
             android:name=".ui.screens.SplashActivity"
             android:theme="@style/Theme.XOne.Splash"
+            android:screenOrientation="portrait"
             android:exported="true"/>
 
         <!-- Launcher alias for default icon -->
@@ -75,6 +76,7 @@
         <activity
             android:name=".OnboardingActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne">
         </activity>
         
@@ -82,6 +84,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne">
         </activity>
 
@@ -90,6 +93,7 @@
             android:name=".LoginActivity"
             android:exported="true"
             android:label="Login"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne">
         </activity>
 
@@ -98,6 +102,7 @@
             android:name=".OtpVerificationActivity"
             android:exported="true"
             android:label="OTP Verification"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne">
         </activity>
 
@@ -106,6 +111,7 @@
             android:name=".MyDocumentsActivity"
             android:exported="true"
             android:label="My Documents"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" >
         </activity>
 
@@ -114,6 +120,7 @@
             android:name=".UserDocumentsActivity"
             android:exported="true"
             android:label="Documents"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" >
         </activity>
 
@@ -122,6 +129,7 @@
             android:name=".NoDocumentFoundActivity"
             android:exported="false"
             android:label="No Document Found"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" >
         </activity>
 
@@ -130,6 +138,7 @@
             android:name=".HomeActivity"
             android:exported="true"
             android:label="Home"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne"
             android:launchMode="singleTop">
             <intent-filter>
@@ -143,6 +152,7 @@
             android:name=".ChatActivity"
             android:exported="true"
             android:label="Chat Support"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Add WebViewActivity -->
@@ -150,6 +160,7 @@
             android:name=".WebViewActivity"
             android:exported="true"
             android:label="Document Viewer"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Add XConnectActivity -->
@@ -157,6 +168,7 @@
             android:name=".XConnectActivity"
             android:exported="true"
             android:label="XConnect"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Update the SOSActivity declaration - Keep portrait for emergency -->
@@ -172,6 +184,7 @@
             android:name=".SOSDetailActivity"
             android:exported="true"
             android:label="SOS Details"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Add RaiseConcernActivity -->
@@ -179,12 +192,14 @@
             android:name=".RaiseConcernActivity"
             android:exported="true"
             android:label="Raise a Concern"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Add ImageViewerActivity -->
         <activity
             android:name=".ImageViewerActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Track Tickets Activity -->
@@ -192,6 +207,7 @@
             android:name=".TrackTicketsActivity"
             android:exported="true"
             android:label="Track Your Tickets"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
             
         <!-- Pride Month Test Activity -->
@@ -199,6 +215,7 @@
             android:name=".PrideMonthTestActivity"
             android:exported="true"
             android:label="Pride Month Test"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Add TravelApproveActivity -->
@@ -206,6 +223,7 @@
             android:name=".ui.activities.TravelApproveActivity"
             android:exported="false"
             android:label="Approve Travel Request"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Add TravelRejectActivity -->
@@ -213,6 +231,7 @@
             android:name=".ui.activities.TravelRejectActivity"
             android:exported="false"
             android:label="Reject Travel Request"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Add TodoActivity -->
@@ -220,36 +239,42 @@
             android:name=".TodoActivity"
             android:exported="true"
             android:label="Todo"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".ui.screens.CoreValuesActivity"
             android:exported="true"
             android:label="Core value"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".VisionActivity"
             android:exported="true"
             android:label="Vision"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne"  />
 
         <activity
             android:name=".ui.screens.IdeaVaultActivity"
             android:exported="true"
             android:label="idea_vault"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne"/>
             
         <activity
             android:name=".GreetingDetailActivity"
             android:exported="true"
             android:label="Greeting Detail"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne"/>
 
         <activity
             android:name=".GlobalCelebrationDetailActivity"
             android:exported="true"
             android:label="Global Celebration Detail"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
             
         <!-- Add PasswordResetActivity -->
@@ -257,108 +282,126 @@
             android:name=".PasswordResetActivity"
             android:exported="true"
             android:label="Reset Password"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".BusinessCardActivity"
             android:exported="true"
             android:label="Business Card"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".AssetActivity"
             android:exported="true"
             android:label="Asset"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".DeskCartActivity"
             android:exported="true"
             android:label="Stationary Order"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".AdminDashboardActivity"
             android:exported="true"
             android:label="Admin Dashboard"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".OrderHistoryActivity"
             android:exported="true"
             android:label="Order History"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".OrderHistoryDetailActivity"
             android:exported="true"
             android:label="Order Details"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".InventoryActivity"
             android:exported="true"
             android:label="Inventory"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".HolidayCalendarActivity"
             android:exported="true"
             android:label="Holiday Calendar"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".HolidayOptionsActivity"
             android:exported="true"
             android:label="Holiday Options"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".MonthDetailActivity"
             android:exported="true"
             android:label="Month Details"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".CommuniqueActivity"
             android:exported="true"
             android:label="Communique"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".GreetingsActivity"
             android:exported="true"
             android:label="Greetings"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".GlobalCelebrationActivity"
             android:exported="true"
             android:label="Global Celebration"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".RegionalFestivalsActivity"
             android:exported="true"
             android:label="Regional Festivals"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".AllCelebrationActivity"
             android:exported="true"
             android:label="All Celebrations"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".LocationsActivity"
             android:exported="true"
             android:label="Locations"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".PolicyActivity"
             android:exported="true"
             android:label="Policies"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Keep MPIN in portrait for security PIN entry -->
@@ -373,12 +416,14 @@
             android:name=".SmartCollateralActivity"
             android:exported="true"
             android:label="Smart Collateral"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <activity
             android:name=".CollateralDetailActivity"
             android:exported="true"
             android:label="Collateral Detail"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
         <!-- Keep only this FileProvider at the end -->
