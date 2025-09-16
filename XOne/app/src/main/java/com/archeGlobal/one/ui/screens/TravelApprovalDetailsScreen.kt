@@ -217,6 +217,7 @@ private fun StatusBadge(status: TravelStatus) {
             text = "Status: $text",
             color = Color.White,
             fontSize = 12.sp,
-            fontFamily = GraphikFontFamily)
+            fontFamily = GraphikFontFamily
+        )
     }
 }

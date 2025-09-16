@@ -104,4 +104,3 @@ private fun getIconFromCategory(category: String): String {
         else -> "ic_file"
     }
 }
-

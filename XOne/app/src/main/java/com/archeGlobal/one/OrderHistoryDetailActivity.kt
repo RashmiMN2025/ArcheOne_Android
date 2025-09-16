@@ -2,9 +2,9 @@ package com.archeGlobal.one
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
@@ -26,7 +26,7 @@ class OrderHistoryDetailActivity : ComponentActivity() {
 
         // Create AndroidNavigator
         val androidNavigator = AndroidNavigator(this)
-        
+
         // Create a custom navigator that properly handles back navigation for this activity
         navigator = object : Navigator by androidNavigator {
             override fun popBackStack() {
@@ -37,11 +37,14 @@ class OrderHistoryDetailActivity : ComponentActivity() {
         controller = OrderHistoryController(this, navigator, "OrderHistoryActivity")
 
         // Handle back button to return to OrderHistoryActivity
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                finishWithAnimation()
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    finishWithAnimation()
+                }
             }
-        })
+        )
 
         // Get the selected order from the companion object (set by OrderHistoryActivity)
         val orderItem = OrderHistoryController.selectedOrderForDetails

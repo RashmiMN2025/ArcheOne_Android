@@ -2,7 +2,6 @@ package com.archeGlobal.one
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.net.http.SslError
@@ -78,7 +77,6 @@ class WebViewActivity : ComponentActivity() {
         if (rawHtmlContent != null && rawHtmlContent.isNotBlank()) {
             setContent {
                 XOneTheme {
-
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -153,7 +151,6 @@ class WebViewActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -218,7 +215,6 @@ class WebViewActivity : ComponentActivity() {
                                             // Force current activity to have proper display settings
                                             window.statusBarColor = android.graphics.Color.TRANSPARENT
                                             androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-                                            window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
                                             // Start activity with no animation
                                             startActivity(intent)

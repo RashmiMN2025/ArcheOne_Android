@@ -37,11 +37,11 @@ class AdminDashboardController(
                 if (response.isSuccessful) {
                     val stockListResponse = response.body()
                     val orderPendingCount = stockListResponse?.orderPending ?: 0
-                    
+
                     withContext(Dispatchers.Main) {
                         // Update the "order_received" item's badge count
                         updateBadgeCount("order_received", orderPendingCount)
-                        
+
                         model = model.copy(isLoading = false)
                     }
                     Log.d("AdminDashboardController", "Dashboard data loaded successfully. Order pending count: $orderPendingCount")

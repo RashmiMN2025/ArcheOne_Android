@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.archeGlobal.one.WebViewActivity
@@ -25,7 +26,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
-import androidx.core.content.FileProvider
 
 class UserDocumentsController(private val context: Context) {
 
@@ -395,7 +395,7 @@ class UserDocumentsController(private val context: Context) {
 
                 val uri = FileProvider.getUriForFile(
                     context,
-                    "${context.packageName}.provider",  // Assume FileProvider is set up in manifest
+                    "${context.packageName}.provider", // Assume FileProvider is set up in manifest
                     file
                 )
 

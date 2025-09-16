@@ -35,7 +35,6 @@ import com.archeGlobal.one.R
 import com.archeGlobal.one.model.CelebrationItem
 import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
-import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.XOneTheme
 
 @Composable
@@ -45,7 +44,7 @@ fun CelebrationBanner(
     modifier: Modifier = Modifier
 ) {
     val totalCelebrations = (celebrationData?.today?.size ?: 0) + (celebrationData?.tomorrow?.size ?: 0)
-    
+
     // Debug logging
     android.util.Log.d("CelebrationBanner", "Received data - Today: ${celebrationData?.today?.size ?: 0}, Tomorrow: ${celebrationData?.tomorrow?.size ?: 0}, Total: $totalCelebrations")
 
@@ -341,7 +340,7 @@ fun CelebrationItem(
         colors = CardDefaults.cardColors(
             containerColor = if (isFromSelectedTab) Color(0xFFF8F9FA) else Color.Gray.copy(alpha = 0.15f)
         ),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
         Row(
             modifier = Modifier

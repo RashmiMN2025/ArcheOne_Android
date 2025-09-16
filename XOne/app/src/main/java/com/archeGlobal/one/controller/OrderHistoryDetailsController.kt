@@ -22,20 +22,20 @@ class OrderHistoryDetailsController(
 ) : ViewModel() {
     var remarks by mutableStateOf("")
         private set
-    
+
     var isLoading by mutableStateOf(false)
         private set
-    
+
     var selectedAction by mutableStateOf("collected") // "collected" or "cancelled"
         private set
-    
+
     private val userDataManager = UserDataManager.getInstance(context)
 
     fun updateRemarks(newRemarks: String) {
         remarks = newRemarks
         Log.d("OrderHistoryDetailsController", "Remarks updated: $newRemarks")
     }
-    
+
     fun updateSelectedAction(action: String) {
         selectedAction = action
         Log.d("OrderHistoryDetailsController", "Selected action: $action")
@@ -59,34 +59,34 @@ class OrderHistoryDetailsController(
         }
         updateOrderStatus(orderId, "rejected", remarks)
     }
-    
+
     private fun updateOrderStatus(orderId: String, status: String, rejectionRemarks: String) {
         val userData = userDataManager.getUserData()
         val adminName = userData?.name ?: "Admin"
-        
+
         isLoading = true
-        
+
         val request = DeskCartUpdateOrderStatusRequest(
             orderId = orderId,
             newStatus = status,
             processedBy = adminName,
             rejectionRemarks = rejectionRemarks
         )
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 Log.d("OrderHistoryDetailsController", "Updating order status to $status for order $orderId")
                 val response = RetrofitClient.apiService.updateDeskCartOrderStatus(request)
-                
+
                 withContext(Dispatchers.Main) {
                     isLoading = false
-                    
+
                     if (response.isSuccessful && response.body() != null) {
                         val message = if (status == "approved") "Order approved successfully" else "Order rejected successfully"
                         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                        
+
                         Log.d("OrderHistoryDetailsController", "Order $orderId $status successfully")
-                        
+
                         // Navigate back to order received screen
                         navigator.navigateToOrderReceived()
                     } else {
@@ -101,18 +101,18 @@ class OrderHistoryDetailsController(
             }
         }
     }
-    
+
     fun onCloseOrder(orderId: String) {
         Log.d("OrderHistoryDetailsController", "Close order clicked: $orderId with remarks: $remarks")
         if (remarks.isEmpty()) {
             Toast.makeText(context, "Please enter remarks", Toast.LENGTH_SHORT).show()
             return
         }
-        
+
         val status = if (selectedAction == "collected") "closed" else "cancelled"
         updateOrderStatus(orderId, status, remarks)
     }
-    
+
     private fun handleError(message: String) {
         Log.e("OrderHistoryDetailsController", message)
         Toast.makeText(context, "Failed to update order. Please try again.", Toast.LENGTH_SHORT).show()

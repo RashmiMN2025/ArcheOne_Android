@@ -20,7 +20,7 @@ class LocationsController(private val context: Context) {
     init {
         Log.d("LocationsController", "LocationsController created - data will be loaded on first access")
     }
-    
+
     /**
      * Call this method when the Locations service is actually accessed by the user
      * This ensures data is processed only when needed
@@ -34,7 +34,7 @@ class LocationsController(private val context: Context) {
             Log.d("LocationsController", "Locations data already loaded, skipping processing")
         }
     }
-    
+
     private fun loadLocationsData() {
         // Initialize locations from login response (cached data, not API call)
         val offices = OtpVerificationController.getOfficesData()

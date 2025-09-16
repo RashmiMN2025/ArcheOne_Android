@@ -26,27 +26,26 @@ class ConsumptionReportController(
     private val navigator: Navigator,
     private val sourceScreen: String? = null
 ) : ViewModel() {
-    
+
     companion object {
         private const val CACHE_DURATION_MS = 5 * 60 * 1000L // 5 minutes
         private var cachedModel: ConsumptionReportModel? = null
         private var cacheTimestamp: Long = 0L
-        
+
         fun setCachedData(consumptionModel: ConsumptionReportModel) {
             cachedModel = consumptionModel
             cacheTimestamp = System.currentTimeMillis()
             Log.d("ConsumptionReportController", "Cached consumption report data")
         }
-        
+
         private fun isCacheValid(): Boolean {
-            return cachedModel != null && 
-                   (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
+            return cachedModel != null && (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
         }
     }
-    
+
     var model by mutableStateOf(ConsumptionReportModel())
         private set
-    
+
     private val fileDownloadHelper = FileDownloadHelper(context)
 
     init {
@@ -66,7 +65,6 @@ class ConsumptionReportController(
         }
     }
 
-
     private fun loadConsumptionData() {
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
@@ -78,20 +76,20 @@ class ConsumptionReportController(
                     val stockListResponse = response.body()
                     if (stockListResponse?.status == 200) {
                         val stockData = stockListResponse.data
-                        
+
                         // Process data on background thread
                         val filteredData = if (model.selectedLocation.isNotBlank()) {
                             stockData.filter { it.location == model.selectedLocation }
                         } else {
                             stockData
                         }
-                        
+
                         val stockCategories = filteredData.toConsumptionStockCategories()
                         val usageCategories = filteredData.toUsageCategories()
-                        
+
                         // Extract unique locations from API data
                         val locations = stockData.map { it.location }.distinct().sorted()
-                        
+
                         // Update UI on main thread
                         withContext(Dispatchers.Main) {
                             val newModel = model.copy(
@@ -102,7 +100,7 @@ class ConsumptionReportController(
                                 error = null
                             )
                             model = newModel
-                            
+
                             // Cache the data
                             setCachedData(newModel)
                         }
@@ -160,28 +158,28 @@ class ConsumptionReportController(
 
         val isUsage = model.selectedTab == ConsumptionTab.USAGE
         val location = model.selectedLocation.ifBlank { "Office" }
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // URL encode parameters
                 val encodedCategory = URLEncoder.encode(categoryId, "UTF-8")
                 val encodedLocation = URLEncoder.encode(location, "UTF-8")
                 val viewType = if (isUsage) "usage" else "stock"
-                
+
                 // Construct download URL matching iOS implementation
                 val downloadUrl = "https://dev.arche.global/deskcart/stocklist/csv?category=$encodedCategory&location=$encodedLocation&view=$viewType"
-                
+
                 Log.d("ConsumptionReportController", "Downloading report from: $downloadUrl")
-                
+
                 val response = RetrofitClient.apiService.downloadReport(downloadUrl)
-                
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val responseBody = response.body()!!
-                        
+
                         // Save file using FileDownloadHelper
                         val result = fileDownloadHelper.saveCSVFile(responseBody, categoryId, location, isUsage)
-                        
+
                         if (result.success) {
                             val reportType = if (isUsage) "Monthly Usage Report" else "Stock Report"
                             Toast.makeText(
@@ -189,7 +187,7 @@ class ConsumptionReportController(
                                 "$reportType for $categoryId downloaded successfully to Downloads folder",
                                 Toast.LENGTH_LONG
                             ).show()
-                            
+
                             Log.d("ConsumptionReportController", "File downloaded successfully: ${result.filePath}")
                         } else {
                             Toast.makeText(

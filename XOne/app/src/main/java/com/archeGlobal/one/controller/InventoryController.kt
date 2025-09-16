@@ -8,13 +8,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archeGlobal.one.InventoryActivity
+import com.archeGlobal.one.model.AddInventoryItemRequest
 import com.archeGlobal.one.model.AddItemModel
 import com.archeGlobal.one.model.DialogMode
 import com.archeGlobal.one.model.InventoryItem
 import com.archeGlobal.one.model.InventoryModel
-import com.archeGlobal.one.model.toInventoryItem
-import com.archeGlobal.one.model.AddInventoryItemRequest
 import com.archeGlobal.one.model.UpdateInventoryItemRequest
+import com.archeGlobal.one.model.toInventoryItem
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.utils.UserDataManager
@@ -32,16 +32,15 @@ class InventoryController(
         private const val CACHE_DURATION_MS = 5 * 60 * 1000L // 5 minutes
         private var cachedInventoryItems: List<InventoryItem>? = null
         private var cacheTimestamp: Long = 0L
-        
+
         fun setCachedData(inventoryItems: List<InventoryItem>) {
             cachedInventoryItems = inventoryItems
             cacheTimestamp = System.currentTimeMillis()
             android.util.Log.d("InventoryController", "Cached ${inventoryItems.size} inventory items")
         }
-        
+
         private fun isCacheValid(): Boolean {
-            return cachedInventoryItems != null && 
-                   (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
+            return cachedInventoryItems != null && (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
         }
     }
 
@@ -54,7 +53,7 @@ class InventoryController(
     init {
         loadInventoryDataIfNeeded()
     }
-    
+
     private fun loadInventoryDataIfNeeded() {
         // Only call API when coming from AdminDashboard or if cache is invalid
         if (sourceScreen == "AdminDashboard" || !isCacheValid()) {
@@ -66,7 +65,7 @@ class InventoryController(
                 val locations = inventoryItems.map { it.location }.distinct().sorted()
                 val categories = inventoryItems.map { it.category }.distinct().sorted()
                 val types = listOf("All") + categories
-                
+
                 model = model.copy(
                     inventoryItems = inventoryItems,
                     allItems = inventoryItems,
@@ -236,7 +235,7 @@ class InventoryController(
                 try {
                     // Calculate itemCount based on quantity update type
                     val baseQuantity = addItemModel.newStockQuantity.toIntOrNull() ?: 0
-                    
+
                     // Debug logging
                     android.util.Log.d("InventoryController", "=== UPDATE DEBUG INFO ===")
                     android.util.Log.d("InventoryController", "selectedItem: '${addItemModel.selectedItem}'")
@@ -244,14 +243,14 @@ class InventoryController(
                     android.util.Log.d("InventoryController", "quantityUpdateType: '${addItemModel.quantityUpdateType}'")
                     android.util.Log.d("InventoryController", "newStockQuantity: '${addItemModel.newStockQuantity}'")
                     android.util.Log.d("InventoryController", "baseQuantity: $baseQuantity")
-                    
+
                     val isUsedQuantityUpdate = addItemModel.quantityUpdateType == "Update Used Quantity"
                     val itemCount = baseQuantity // Always send positive numbers
-                    
+
                     android.util.Log.d("InventoryController", "Final itemCount: $itemCount")
                     android.util.Log.d("InventoryController", "updateUtilization: $isUsedQuantityUpdate")
                     android.util.Log.d("InventoryController", "=========================")
-                    
+
                     val request = UpdateInventoryItemRequest(
                         updatedBy = addItemModel.updatedBy,
                         itemName = addItemModel.selectedItem,
@@ -268,11 +267,11 @@ class InventoryController(
                     val response = RetrofitClient.apiService.updateInventoryItem(request)
                     android.util.Log.d("InventoryController", "API Response Code: ${response.code()}")
                     android.util.Log.d("InventoryController", "API Response Body: ${response.body()}")
-                    
+
                     if (response.isSuccessful && response.body()?.status == 200) {
                         // Get the actual total stock from API response
                         val updatedTotalStock = response.body()?.data?.totalStock ?: "0"
-                        
+
                         // Success - refresh inventory list
                         loadInventoryData()
                         addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
@@ -293,48 +292,48 @@ class InventoryController(
     }
 
     private fun validateAddItemForm(): Boolean {
-    if (addItemModel.selectedItem.isBlank()) {
-        Toast.makeText(context, "Please enter item name", Toast.LENGTH_SHORT).show()
-        return false
+        if (addItemModel.selectedItem.isBlank()) {
+            Toast.makeText(context, "Please enter item name", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (addItemModel.unit.isBlank()) {
+            Toast.makeText(context, "Please enter unit", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (addItemModel.existingStock.isBlank()) {
+            Toast.makeText(context, "Please enter opening stock", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (addItemModel.existingStock.toIntOrNull() == null) {
+            Toast.makeText(context, "Please enter a valid number for opening stock", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (addItemModel.updatedBy.isBlank()) {
+            Toast.makeText(context, "Please enter your name in 'Added By' field", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (addItemModel.brand.isBlank()) {
+            Toast.makeText(context, "Please enter brand name", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        return true
     }
-    if (addItemModel.unit.isBlank()) {
-        Toast.makeText(context, "Please enter unit", Toast.LENGTH_SHORT).show()
-        return false
-    }
-    if (addItemModel.existingStock.isBlank()) {
-        Toast.makeText(context, "Please enter opening stock", Toast.LENGTH_SHORT).show()
-        return false
-    }
-    if (addItemModel.existingStock.toIntOrNull() == null) {
-        Toast.makeText(context, "Please enter a valid number for opening stock", Toast.LENGTH_SHORT).show()
-        return false
-    }
-    if (addItemModel.updatedBy.isBlank()) {
-        Toast.makeText(context, "Please enter your name in 'Added By' field", Toast.LENGTH_SHORT).show()
-        return false
-    }
-    if (addItemModel.brand.isBlank()) {
-        Toast.makeText(context, "Please enter brand name", Toast.LENGTH_SHORT).show()
-        return false
-    }
-    return true
-}
 
     private fun validateUpdateItemForm(): Boolean {
-    if (addItemModel.newStockQuantity.isBlank()) {
-        Toast.makeText(context, "Please enter new stock quantity", Toast.LENGTH_SHORT).show()
-        return false
+        if (addItemModel.newStockQuantity.isBlank()) {
+            Toast.makeText(context, "Please enter new stock quantity", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (addItemModel.newStockQuantity.toIntOrNull() == null) {
+            Toast.makeText(context, "Please enter a valid number for new stock quantity", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (addItemModel.updatedBy.isBlank()) {
+            Toast.makeText(context, "Please enter your name in 'Updated By' field", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        return true
     }
-    if (addItemModel.newStockQuantity.toIntOrNull() == null) {
-        Toast.makeText(context, "Please enter a valid number for new stock quantity", Toast.LENGTH_SHORT).show()
-        return false
-    }
-    if (addItemModel.updatedBy.isBlank()) {
-        Toast.makeText(context, "Please enter your name in 'Updated By' field", Toast.LENGTH_SHORT).show()
-        return false
-    }
-    return true
-}
 
     private fun resetAddItemForm() {
         addItemModel = AddItemModel()
@@ -387,15 +386,15 @@ class InventoryController(
                     val stockListResponse = response.body()
                     if (stockListResponse?.status == 200) {
                         val inventoryItems = stockListResponse.data.map { it.toInventoryItem() }
-                        
+
                         // Cache the data
                         setCachedData(inventoryItems)
-                        
+
                         // Extract unique locations and categories from API data
                         val locations = inventoryItems.map { it.location }.distinct().sorted()
                         val categories = inventoryItems.map { it.category }.distinct().sorted()
                         val types = listOf("All") + categories
-                        
+
                         model = model.copy(
                             inventoryItems = inventoryItems,
                             allItems = inventoryItems,
@@ -404,7 +403,7 @@ class InventoryController(
                             isLoading = false,
                             errorMessage = null
                         )
-                        
+
                         // Apply initial filter
                         filterItems()
                         android.util.Log.d("InventoryController", "Inventory data loaded and cached successfully: ${inventoryItems.size} items")

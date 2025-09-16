@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -245,7 +244,8 @@ fun TravelRequestCard(
                     // Show destination city
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
-                        label = "Destination City", value = destination.destinationCity
+                        label = "Destination City",
+                        value = destination.destinationCity
                     )
 
                     // Show travel dates for single destination

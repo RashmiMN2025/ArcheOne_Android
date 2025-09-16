@@ -492,8 +492,6 @@ class PreferencesManager(context: Context) {
         }
     }
 
-
-
     // New methods for greeting categories with messages
     private val KEY_GREETING_CATEGORIES = "greeting_categories_data"
 

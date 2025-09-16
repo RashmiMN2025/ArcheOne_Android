@@ -9,9 +9,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 object PermissionHelper {
-    
+
     const val REQUEST_STORAGE_PERMISSION = 1001
-    
+
     private val STORAGE_PERMISSIONS = arrayOf(
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE

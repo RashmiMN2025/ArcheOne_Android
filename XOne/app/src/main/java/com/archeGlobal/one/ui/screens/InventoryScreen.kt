@@ -593,4 +593,3 @@ fun InventoryItemDetail(
         }
     }
 }
-

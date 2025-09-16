@@ -283,7 +283,7 @@ data class TravelApprovalHistoryItem(
         android.util.Log.d("TravelApprovalMapping", "API mobile: $mobile")
         android.util.Log.d("TravelApprovalMapping", "API reporting_manager_name: $reportingManagerName")
         android.util.Log.d("TravelApprovalMapping", "API reporting_manager_email: $reportingManagerEmail")
-        
+
         val travelRequest = TravelRequest(
             id = requestId,
             project = projectName,
@@ -309,7 +309,7 @@ data class TravelApprovalHistoryItem(
             employeeId = employeeId,
             employeeMobile = mobile
         )
-        
+
         // Log what we're actually putting in the TravelRequest
         android.util.Log.d("TravelApprovalMapping", "CREATED TravelRequest:")
         android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeName: ${travelRequest.employeeName}")
@@ -318,7 +318,7 @@ data class TravelApprovalHistoryItem(
         android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeMobile: ${travelRequest.employeeMobile}")
         android.util.Log.d("TravelApprovalMapping", "  TravelRequest.approver: ${travelRequest.approver}")
         android.util.Log.d("TravelApprovalMapping", "=== END MAPPING ===")
-        
+
         return travelRequest
     }
 }

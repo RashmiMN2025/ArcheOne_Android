@@ -1,9 +1,9 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
-import com.archeGlobal.one.network.SmartCollateralCategory
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import com.archeGlobal.one.network.SmartCollateralCategory
 
 class SmartCollateralController(private val context: Context) {
 
@@ -29,4 +29,3 @@ class SmartCollateralController(private val context: Context) {
         context.startActivity(intent)
     }
 }
-

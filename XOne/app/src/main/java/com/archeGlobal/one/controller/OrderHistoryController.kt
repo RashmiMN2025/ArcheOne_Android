@@ -39,8 +39,7 @@ class OrderHistoryController(
 
     private fun loadOrderHistoryIfNeeded() {
         val currentTime = System.currentTimeMillis()
-        val isCacheValid = cachedOrderHistory != null && 
-                          (currentTime - lastLoadTime) < CACHE_DURATION
+        val isCacheValid = cachedOrderHistory != null && (currentTime - lastLoadTime) < CACHE_DURATION
 
         if (isCacheValid) {
             // Use cached data
@@ -58,22 +57,22 @@ class OrderHistoryController(
 
     private fun loadOrderHistory() {
         model = model.copy(isLoading = true, error = null)
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val userEmail = userDataManager.getUserData()?.email ?: ""
                 Log.d("OrderHistoryController", "Fetching order history for email: $userEmail")
-                
+
                 val request = DeskCartOrderHistoryRequest(email = userEmail)
                 val response = RetrofitClient.apiService.getDeskCartUserHistory(request)
-                
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val orderHistoryResponse = response.body()!!
                         // Cache the results
                         cachedOrderHistory = orderHistoryResponse.orders
                         lastLoadTime = System.currentTimeMillis()
-                        
+
                         model = model.copy(
                             orders = orderHistoryResponse.orders,
                             isLoading = false

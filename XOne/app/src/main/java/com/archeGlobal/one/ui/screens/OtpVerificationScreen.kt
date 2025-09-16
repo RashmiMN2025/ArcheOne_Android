@@ -1,7 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
 import android.annotation.SuppressLint
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -368,7 +367,7 @@ fun OtpVerificationScreen(
                             deviceId = deviceId,
                             platform = platform,
                             osVersion = osVersion,
-                            stayLoggedIn = stayLoggedIn,
+                            stayLoggedIn = stayLoggedIn
                         ) { message, isError ->
                             isLoading = false
                             if (isError) {

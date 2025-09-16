@@ -294,5 +294,4 @@ class HelpDeskController(private val context: Context) {
         Log.d("HelpDeskController", "onLoginCompleted - deprecated, tickets now loaded only when needed")
         // Don't load tickets automatically anymore
     }
-
 }

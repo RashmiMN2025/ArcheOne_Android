@@ -145,7 +145,7 @@ fun LocationsScreen(
                                 fontSize = 20.sp,
                                 color = Color.Black,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center
                             )
                         },

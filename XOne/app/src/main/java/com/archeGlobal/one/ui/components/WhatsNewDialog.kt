@@ -35,7 +35,7 @@ fun WhatsNewDialog(
             usePlatformDefaultWidth = false
         )
     ) {
-        Surface (
+        Surface(
             modifier = Modifier
                 .fillMaxWidth(0.9f) // 98% of actual screen width
 //                .padding(horizontal = 8.dp, vertical = 14.dp),
@@ -57,9 +57,9 @@ fun WhatsNewDialog(
                     modifier = Modifier.size(46.dp),
                     tint = Color.Black
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 // Title
                 Text(
                     text = "What's New",
@@ -69,9 +69,9 @@ fun WhatsNewDialog(
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Subtitle
                 Text(
                     text = "Explore the latest updates to enhance your experience!",

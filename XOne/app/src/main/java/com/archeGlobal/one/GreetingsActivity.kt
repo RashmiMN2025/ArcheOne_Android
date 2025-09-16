@@ -25,8 +25,7 @@ class GreetingsActivity : ComponentActivity() {
             XOneTheme {
                 ResponsiveGreetingsScreen(
                     controller = controller,
-                    onBackPressed = { 
-                        // Check if we came from a child screen (Global Celebration/Regional Festivals)
+                    onBackPressed = { // Check if we came from a child screen (Global Celebration/Regional Festivals)
                         val parentActivity = intent.getStringExtra("parent_activity")
                         if (parentActivity == "home") {
                             // Navigate back to Home instead of previous activity

@@ -3,7 +3,6 @@ package com.archeGlobal.one.controller
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.archeGlobal.one.PolicyActivity
@@ -57,7 +56,7 @@ class PolicyController(
                         Log.d("PolicyController", "Loaded ${policiesData.size} policies from cache")
                     } else {
                         Log.e("PolicyController", "No policies data available")
-                        //Toast.makeText(context, "Failed to load policies", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "Failed to load policies", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
@@ -72,7 +71,7 @@ class PolicyController(
                     }
                 } catch (e2: Exception) {
                     Log.e("PolicyController", "Error loading policies: ${e2.message}", e2)
-                    //Toast.makeText(context, "Failed to load policies", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(context, "Failed to load policies", Toast.LENGTH_SHORT).show()
                 }
             } finally {
                 _isLoading.value = false

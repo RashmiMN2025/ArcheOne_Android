@@ -20,9 +20,6 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.CustomToast
 import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class OtpVerificationActivity : AppCompatActivity() {
     private var showUpdateDialog by mutableStateOf(false)

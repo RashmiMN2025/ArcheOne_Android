@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -115,7 +114,7 @@ fun CommuniqueScreen(
         }
         if (toLoad.isNotEmpty()) {
             Log.d("CommuniqueThumbnail", "Starting concurrent preload for ${toLoad.size} thumbnails")
-            
+
             // Load all thumbnails concurrently with semaphore controlling max concurrent downloads
             val results = toLoad.map { communique ->
                 async(Dispatchers.IO) {
@@ -137,7 +136,7 @@ fun CommuniqueScreen(
             results.forEach { (filePath, bitmap) ->
                 preloadedThumbnails[filePath] = bitmap
             }
-            
+
             Log.d("CommuniqueThumbnail", "Completed concurrent preload: ${results.count { it.second != null }}/${results.size} thumbnails loaded successfully")
         }
     }
@@ -450,20 +449,20 @@ private suspend fun getPdfThumbnail(context: Context, pdfUrl: String): Bitmap? =
             Log.d("CommuniqueThumbnail", "Using cached thumbnail for $pdfUrl")
             return@withContext it
         }
-        
+
         Log.d("CommuniqueThumbnail", "Generating thumbnail for $pdfUrl")
-        
+
         // Add timeout to prevent hanging indefinitely
         val startTime = System.currentTimeMillis()
         val maxDurationMs = 30000L // 30 seconds total timeout
-        
+
         // Download PDF file to cache directory
         val tempFile = downloadPdfToTemp(context, pdfUrl)
         if (tempFile == null || !tempFile.exists() || tempFile.length() == 0L) {
             Log.e("CommuniqueThumbnail", "Failed to download PDF from $pdfUrl")
             return@withContext null // Do not cache failures
         }
-        
+
         // Check if we're still within timeout after download
         val elapsedTime = System.currentTimeMillis() - startTime
         if (elapsedTime > maxDurationMs) {
@@ -471,13 +470,13 @@ private suspend fun getPdfThumbnail(context: Context, pdfUrl: String): Bitmap? =
             tempFile.delete()
             return@withContext null
         }
-        
+
         // Render the first page as a thumbnail
         val thumbnail = renderPdfThumbnail(context, tempFile)
-        
+
         // Clean up the temp file
         tempFile.delete()
-        
+
         // Log final result
         val totalTime = System.currentTimeMillis() - startTime
         if (thumbnail != null) {
@@ -486,7 +485,7 @@ private suspend fun getPdfThumbnail(context: Context, pdfUrl: String): Bitmap? =
         } else {
             Log.e("CommuniqueThumbnail", "Failed to generate thumbnail for $pdfUrl after ${totalTime}ms")
         }
-        
+
         return@withContext thumbnail
     } catch (e: Exception) {
         Log.e("CommuniqueThumbnail", "Error creating thumbnail from $pdfUrl", e)
@@ -500,13 +499,13 @@ private suspend fun getPdfThumbnail(context: Context, pdfUrl: String): Bitmap? =
 private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? = withContext(Dispatchers.IO) {
     val maxRetries = 3
     var lastException: Exception? = null
-    
+
     for (attempt in 0 until maxRetries) {
         var connection: HttpURLConnection? = null
         try {
             val fileName = "temp_pdf_${pdfUrl.hashCode()}.pdf" // Use URL hash for better caching
             val outputFile = File(context.cacheDir, fileName)
-            
+
             // Return cached file if it exists and is valid
             if (outputFile.exists() && outputFile.length() > 0) {
                 Log.d("CommuniqueThumbnail", "Using cached PDF file: ${outputFile.absolutePath}")
@@ -515,7 +514,7 @@ private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? =
 
             val url = URL(pdfUrl)
             connection = url.openConnection() as HttpURLConnection
-            
+
             // Optimized connection settings
             connection.connectTimeout = 5000 // Faster timeout with retry logic
             connection.readTimeout = 10000 // Reduced with retry logic
@@ -527,12 +526,12 @@ private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? =
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 Log.e("CommuniqueThumbnail", "HTTP error code: $responseCode for $pdfUrl")
                 lastException = Exception("HTTP $responseCode")
-                
+
                 // Don't retry for client errors (4xx)
                 if (responseCode in 400..499) {
                     return@withContext null
                 }
-                
+
                 // Continue to next iteration for server errors
                 connection?.disconnect()
                 if (attempt < maxRetries - 1) {
@@ -563,11 +562,10 @@ private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? =
                 outputFile.delete() // Clean up empty file
                 lastException = Exception("Downloaded file is empty")
             }
-            
         } catch (e: Exception) {
             Log.e("CommuniqueThumbnail", "Error downloading PDF (attempt ${attempt + 1}): ${e.message}")
             lastException = e
-            
+
             // Wait before retry
             if (attempt < maxRetries - 1) {
                 delay(1000L * (attempt + 1)) // Exponential backoff: 1s, 2s, 3s
@@ -576,7 +574,7 @@ private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? =
             connection?.disconnect()
         }
     }
-    
+
     Log.e("CommuniqueThumbnail", "Failed to download PDF after $maxRetries attempts: ${lastException?.message}")
     return@withContext null
 }
@@ -588,44 +586,44 @@ private fun renderPdfThumbnail(context: Context, pdfFile: File): Bitmap? {
     var fileDescriptor: ParcelFileDescriptor? = null
     var pdfRenderer: PdfRenderer? = null
     var page: PdfRenderer.Page? = null
-    
+
     try {
         // Validate file before processing
         if (!pdfFile.exists() || pdfFile.length() == 0L) {
             Log.e("CommuniqueThumbnail", "PDF file doesn't exist or is empty: ${pdfFile.absolutePath}")
             return null
         }
-        
+
         Log.d("CommuniqueThumbnail", "Rendering PDF thumbnail for file: ${pdfFile.name} (${pdfFile.length()} bytes)")
-        
+
         fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
         pdfRenderer = PdfRenderer(fileDescriptor)
-        
+
         if (pdfRenderer.pageCount == 0) {
             Log.e("CommuniqueThumbnail", "PDF has no pages")
             return null
         }
-        
+
         Log.d("CommuniqueThumbnail", "PDF has ${pdfRenderer.pageCount} pages")
-        
+
         // Get the first page
         page = pdfRenderer.openPage(0)
-        
+
         // Safely obtain page dimensions
         var pageWidth = page.width
         var pageHeight = page.height
-        
+
         if (pageWidth <= 0 || pageHeight <= 0) {
-            Log.w("CommuniqueThumbnail", "Page reported invalid dimensions: ${pageWidth}x${pageHeight}. Using fallback.")
+            Log.w("CommuniqueThumbnail", "Page reported invalid dimensions: ${pageWidth}x$pageHeight. Using fallback.")
             pageWidth = 595 // A4 width in points at 72 dpi
             pageHeight = 842 // A4 height in points at 72 dpi
         }
-        
+
         // Create a scaled bitmap (fixed thumbnail width for consistency)
         val thumbnailWidth = THUMBNAIL_WIDTH
         val pageRatio = pageHeight.toFloat() / pageWidth.toFloat()
         val thumbnailHeight = maxOf(1, (thumbnailWidth * pageRatio).toInt()) // ensure > 0
-        
+
         // Limit maximum height to prevent excessive memory usage
         val maxHeight = 600
         val finalHeight = minOf(thumbnailHeight, maxHeight)
@@ -634,20 +632,19 @@ private fun renderPdfThumbnail(context: Context, pdfFile: File): Bitmap? {
         } else {
             thumbnailWidth
         }
-        
-        Log.d("CommuniqueThumbnail", "Creating bitmap: ${finalWidth}x${finalHeight}")
-        
+
+        Log.d("CommuniqueThumbnail", "Creating bitmap: ${finalWidth}x$finalHeight")
+
         val bitmap = Bitmap.createBitmap(finalWidth, finalHeight, Bitmap.Config.ARGB_8888)
-        
+
         // Fill with white background first to handle transparent PDFs
         bitmap.eraseColor(android.graphics.Color.WHITE)
-        
+
         // Render the page to the bitmap
         page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-        
+
         Log.d("CommuniqueThumbnail", "Successfully rendered thumbnail: ${bitmap.width}x${bitmap.height}")
         return bitmap
-        
     } catch (e: Exception) {
         Log.e("CommuniqueThumbnail", "Error rendering PDF thumbnail for ${pdfFile.name}", e)
         return null

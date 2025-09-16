@@ -76,7 +76,6 @@ class HomeController(
     private val _showWhatsNewDialog = MutableStateFlow(false)
     val showWhatsNewDialog: StateFlow<Boolean> = _showWhatsNewDialog.asStateFlow()
 
-
     // Initialize PreferencesManager early to avoid null pointer exceptions
     private val preferencesManager by lazy { PreferencesManager(context) }
 
@@ -943,7 +942,6 @@ class HomeController(
             } ?: emptyMap(),
             favorites = preferencesManager.getFavorites()
         )
-        
     }
 
     fun getCurrentViewItems(): List<HomeItem> {
@@ -1031,5 +1029,4 @@ class HomeController(
         Log.d("CelebrationController", "onLoginCompleted called on HomeController ${this.hashCode()}")
         // Celebration data fetch removed to avoid unnecessary API calls
     }
-
 }

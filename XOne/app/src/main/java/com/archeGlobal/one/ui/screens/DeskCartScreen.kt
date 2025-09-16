@@ -15,8 +15,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,15 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import coil.request.CachePolicy
-import androidx.compose.ui.platform.LocalContext
+import coil.request.ImageRequest
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.DeskCartController
 import com.archeGlobal.one.model.DeskCartModel
@@ -256,7 +254,7 @@ fun EmployeeDetailsSection(
         EmployeeInfoRow(label = "Email:", value = model.employeeDetails.emailId)
         EmployeeInfoRow(label = "Employee ID:", value = model.employeeDetails.employeeId)
         EmployeeInfoRow(label = "Department:", value = model.employeeDetails.department)
-        
+
         Spacer(modifier = Modifier.height(8.dp)) // Add space after Department
     }
 }

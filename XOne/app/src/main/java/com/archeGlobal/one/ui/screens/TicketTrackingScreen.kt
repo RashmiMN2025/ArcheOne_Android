@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
@@ -303,7 +302,7 @@ fun TicketCard(
                     // Show different content based on ticket status
                     if (ticket.status == TicketStatus.CLOSED) {
                         // For closed tickets, show detailed information
-                        
+
                         // Sub-Category
                         ticket.subCategory?.let { subCategory ->
                             Row(
@@ -492,10 +491,9 @@ fun TicketCard(
                                 )
                             }
                         }
-                        
                     } else {
                         // For open tickets, show Created and Issue
-                        
+
                         // Created Date
                         Row(
                             modifier = Modifier.fillMaxWidth(),

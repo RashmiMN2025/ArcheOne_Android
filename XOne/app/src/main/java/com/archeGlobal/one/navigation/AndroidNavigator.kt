@@ -12,7 +12,6 @@ import com.archeGlobal.one.*
 import com.archeGlobal.one.GlobalCelebrationDetailActivity
 import com.archeGlobal.one.ui.screens.CoreValuesActivity
 import com.archeGlobal.one.ui.screens.IdeaVaultActivity
-import com.archeGlobal.one.controller.OrderHistoryController
 import com.google.gson.Gson
 import java.net.URLEncoder
 

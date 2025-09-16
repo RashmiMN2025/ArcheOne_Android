@@ -13,12 +13,12 @@ import com.archeGlobal.one.model.EmployeeDetails
 import com.archeGlobal.one.model.StationaryItem
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.DeskCartEligibilityRequest
-import com.archeGlobal.one.network.DeskCartPlaceOrderRequest
 import com.archeGlobal.one.network.DeskCartOrderItem
+import com.archeGlobal.one.network.DeskCartPlaceOrderRequest
 import com.archeGlobal.one.network.RetrofitClient
-import com.archeGlobal.one.utils.UserDataManager
 import com.archeGlobal.one.utils.FileDownloadHelper
 import com.archeGlobal.one.utils.PermissionHelper
+import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,7 +59,7 @@ class DeskCartController(
 
                 if (response.isSuccessful && response.body() != null) {
                     val eligibilityResponse = response.body()!!
-                    
+
                     // Process data on background thread
                     val stationaryItems = eligibilityResponse.order.map { apiItem ->
                         StationaryItem(
@@ -200,7 +200,7 @@ class DeskCartController(
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val orderResponse = response.body()!!
-                        
+
                         // Reset quantities after successful order
                         val resetItems = model.stationaryItems.map {
                             it.copy(currentQuantity = 0)
@@ -221,7 +221,7 @@ class DeskCartController(
                         ).show()
 
                         Log.d("DeskCartController", "Order placed successfully: ${orderResponse.message}")
-                        
+
                         // Navigate to order history activity after successful order
                         Log.d("DeskCartController", "Navigating to Order History Activity after successful order placement")
                         navigator.navigateToOrderHistoryActivity()
@@ -288,27 +288,27 @@ class DeskCartController(
         }
 
         val viewType = if (isUsage) "usage" else "stock"
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // URL encode parameters
                 val encodedCategory = URLEncoder.encode(category, "UTF-8")
                 val encodedLocation = URLEncoder.encode(location, "UTF-8")
-                
+
                 // Construct download URL matching iOS implementation
                 val downloadUrl = "https://dev.arche.global/deskcart/stocklist/csv?category=$encodedCategory&location=$encodedLocation&view=$viewType"
-                
+
                 Log.d("DeskCartController", "Downloading report from: $downloadUrl")
-                
+
                 val response = RetrofitClient.apiService.downloadReport(downloadUrl)
-                
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val responseBody = response.body()!!
-                        
+
                         // Save file using FileDownloadHelper
                         val result = fileDownloadHelper.saveCSVFile(responseBody, category, location, isUsage)
-                        
+
                         if (result.success) {
                             model = model.copy(
                                 isDownloadingStock = false,
@@ -316,14 +316,14 @@ class DeskCartController(
                                 lastDownloadedFile = result.filePath,
                                 downloadError = null
                             )
-                            
+
                             val reportType = if (isUsage) "Monthly Usage Report" else "Stock Report"
                             Toast.makeText(
                                 context,
                                 "$reportType downloaded successfully to Downloads folder",
                                 Toast.LENGTH_LONG
                             ).show()
-                            
+
                             Log.d("DeskCartController", "File downloaded successfully: ${result.filePath}")
                         } else {
                             handleDownloadError(result.errorMessage ?: "Failed to save file")

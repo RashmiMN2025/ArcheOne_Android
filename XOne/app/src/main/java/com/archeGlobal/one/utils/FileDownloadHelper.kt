@@ -11,12 +11,11 @@ import androidx.core.content.FileProvider
 import okhttp3.ResponseBody
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
 class FileDownloadHelper(private val context: Context) {
-    
+
     companion object {
         private const val TAG = "FileDownloadHelper"
         private const val AUTHORITY = "com.archeGlobal.one.fileprovider"
@@ -36,7 +35,7 @@ class FileDownloadHelper(private val context: Context) {
     ): DownloadResult {
         return try {
             val fileName = generateFileName(category, location, isUsage)
-            
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 saveFileToDownloads(responseBody, fileName)
             } else {
@@ -51,12 +50,12 @@ class FileDownloadHelper(private val context: Context) {
     private fun generateFileName(category: String, location: String, isUsage: Boolean): String {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault())
         val dateString = dateFormatter.format(Date())
-        
+
         val safeCategory = category.replace(" ", "_")
         val safeLocation = location.replace(" ", "_")
         val reportType = if (isUsage) "MonthlyUsageReport" else "StockReport"
-        
-        return "${safeCategory}_${reportType}_${safeLocation}_${dateString}.csv"
+
+        return "${safeCategory}_${reportType}_${safeLocation}_$dateString.csv"
     }
 
     private fun saveFileToDownloads(responseBody: ResponseBody, fileName: String): DownloadResult {
@@ -69,7 +68,7 @@ class FileDownloadHelper(private val context: Context) {
             }
 
             val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-            
+
             if (uri != null) {
                 resolver.openOutputStream(uri)?.use { outputStream ->
                     responseBody.byteStream().use { inputStream ->
@@ -88,13 +87,13 @@ class FileDownloadHelper(private val context: Context) {
 
     private fun saveFileToExternalStorage(responseBody: ResponseBody, fileName: String): DownloadResult {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        
+
         if (!downloadsDir.exists()) {
             downloadsDir.mkdirs()
         }
 
         val file = File(downloadsDir, fileName)
-        
+
         FileOutputStream(file).use { outputStream ->
             responseBody.byteStream().use { inputStream ->
                 inputStream.copyTo(outputStream)
@@ -109,7 +108,7 @@ class FileDownloadHelper(private val context: Context) {
         try {
             if (filePath != null) {
                 val file = File(filePath)
-                
+
                 if (file.exists()) {
                     val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         FileProvider.getUriForFile(context, AUTHORITY, file)
@@ -145,7 +144,7 @@ class FileDownloadHelper(private val context: Context) {
                 )
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            
+
             if (intent.resolveActivity(context.packageManager) != null) {
                 context.startActivity(intent)
             }
@@ -158,7 +157,7 @@ class FileDownloadHelper(private val context: Context) {
         try {
             if (filePath != null) {
                 val file = File(filePath)
-                
+
                 if (file.exists()) {
                     val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         FileProvider.getUriForFile(context, AUTHORITY, file)

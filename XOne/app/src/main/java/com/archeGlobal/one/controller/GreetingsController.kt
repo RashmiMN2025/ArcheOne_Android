@@ -397,7 +397,7 @@ class GreetingsController(
 
     fun getCategoryThumbnail(category: String): String {
         val greetingCategories = userDataManager.getGreetingCategoriesData()
-        
+
         // Special handling for categories with dedicated thumbnails - use image from API
         if (category == "Global Celebrations" || category == "Global Celebration") {
             val globalCelebration = greetingCategories?.find { it.name == "Global Celebrations" || it.name == "Global Celebration" }
@@ -408,13 +408,13 @@ class GreetingsController(
             // Use the files from the main Regional Festivals category as provided by API
             return regionalFestivals?.files?.firstOrNull() ?: ""
         }
-        
+
         // For other categories, check if they have a dedicated thumbnail in API data first
         val apiCategory = greetingCategories?.find { it.name == category }
         if (apiCategory != null && apiCategory.files.isNotEmpty()) {
             return apiCategory.files.firstOrNull() ?: ""
         }
-        
+
         // Fallback to first greeting image for the category
         return model.categories[category]?.firstOrNull() ?: ""
     }

@@ -107,7 +107,7 @@ fun OrderHistoryDetailScreen(
                         orderDate = formatOrderHistoryDateDetails(orderItem.Order_Placed_Time),
                         orderStatus = orderItem.Order_Status
                     )
-                    
+
                     // Employee Details Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -132,12 +132,11 @@ fun OrderHistoryDetailScreen(
                             OrderHistoryDetailRow(label = "Department:", value = orderItem.Dept)
                             OrderHistoryDetailRow(label = "Location:", value = orderItem.Location)
                             OrderHistoryDetailRow(
-                                label = "Email:", 
+                                label = "Email:",
                                 value = com.archeGlobal.one.utils.UserDataManager.getInstance(
                                     androidx.compose.ui.platform.LocalContext.current
                                 ).getUserData()?.email ?: ""
                             )
-
                         }
                     }
 
@@ -169,15 +168,15 @@ fun OrderHistoryDetailScreen(
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             // Total items with divider
                             HorizontalDivider(
                                 color = Color.Gray.copy(alpha = 0.3f),
                                 thickness = 1.dp
                             )
-                            
+
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             OrderHistoryItemRow(
                                 label = "Total Items",
                                 value = "Qty: ${orderItem.Total_Items_in_Order}",
@@ -225,7 +224,6 @@ fun OrderHistoryDetailScreen(
                             }
                         }
                     }
-
                 }
             }
         }
@@ -278,7 +276,7 @@ private fun OrderHistoryStatusCard(
                         )
                     }
                 }
-                
+
                 // Status Badge
                 val (backgroundColor, textColor, borderColor) = when (orderStatus.lowercase()) {
                     "pending" -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), Color(0xFFFFA500)) // Orange
@@ -287,7 +285,7 @@ private fun OrderHistoryStatusCard(
                     "closed" -> Triple(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080), Color(0xFF808080)) // Gray
                     else -> Triple(Color.Gray.copy(alpha = 0.15f), Color.Gray, Color.Gray) // Fallback
                 }
-                
+
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(containerColor = backgroundColor),
@@ -329,7 +327,7 @@ private fun OrderHistoryDetailRow(
             color = Color.Gray,
             modifier = Modifier.weight(1f)
         )
-        
+
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
@@ -363,7 +361,7 @@ private fun OrderHistoryItemRow(
             color = Color.Black,
             modifier = Modifier.weight(1f)
         )
-        
+
         Text(
             text = value,
             fontFamily = GraphikFontFamily,

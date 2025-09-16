@@ -95,7 +95,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
     // Count of pending travel approvals
     var pendingApprovalCount by mutableStateOf(0)
         private set
-    
+
     // Flag to prevent concurrent API calls for travel approvals
     private var isLoadingTravelApprovals = false
 
@@ -224,11 +224,11 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
     // Flag to track if data has been loaded to prevent duplicate API calls
     private var isDataLoaded = false
-    
+
     init {
         // Only load essential data (employee details) - no API calls
         loadEmployeeDetails()
-        
+
         // Initialize with one destination for multi-destination mode
         destinations = listOf(
             Destination(
@@ -241,7 +241,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
         )
         Log.d("TravelController", "TravelController created - data will be loaded on first access")
     }
-    
+
     /**
      * Call this method when the Travel service is actually accessed by the user
      * This ensures data is loaded only when needed
@@ -476,7 +476,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
     fun navigateToTravelApprovalDetail(travelRequest: TravelRequest) {
         // Store the selected request so the destination screen can read it
         selectedTravelRequest = travelRequest
-        
+
         // Mark that we're navigating from approvals
         isFromTravelApprovals = true
 
@@ -600,9 +600,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
         if (isLoadingTravelApprovals) {
             return
         }
-        
+
         isLoadingTravelApprovals = true
-        
+
         // Set state to loading only if not already in a success state with data
         if (travelApprovalsState is TravelApprovalsState.Idle) {
             travelApprovalsState = TravelApprovalsState.Loading
@@ -619,7 +619,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
         // Create the request body for combined history
         val request = TravelHistoryRequest(employeeId = "", employeeEmail = userEmail)
-        
+
         // Debug logging to see what user we're sending
         android.util.Log.d("TravelController", "Making API call with userEmail: $userEmail")
 

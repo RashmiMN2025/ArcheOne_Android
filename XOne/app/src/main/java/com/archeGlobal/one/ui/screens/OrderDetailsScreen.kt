@@ -102,7 +102,7 @@ fun OrderDetailsScreen(
                         orderDate = formatOrderDateDetails(orderItem.orderPlacedTime),
                         orderStatus = orderItem.orderStatus
                     )
-                    
+
                     // Employee Details Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -157,15 +157,15 @@ fun OrderDetailsScreen(
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             // Total items with divider
                             HorizontalDivider(
                                 color = Color.Gray.copy(alpha = 0.3f),
                                 thickness = 1.dp
                             )
-                            
+
                             Spacer(modifier = Modifier.height(8.dp))
-                            
+
                             ItemRow(
                                 label = "Total Items",
                                 value = "Qty: ${orderItem.totalItemsInOrder}",
@@ -176,9 +176,7 @@ fun OrderDetailsScreen(
                     }
 
                     // Remarks Card - Show for pending orders, approved orders, or if not empty
-                    if (orderItem.orderStatus.lowercase() == "pending" || 
-                        orderItem.orderStatus.lowercase() == "approved" || 
-                        orderItem.remarks.isNotEmpty()) {
+                    if (orderItem.orderStatus.lowercase() == "pending" || orderItem.orderStatus.lowercase() == "approved" || orderItem.remarks.isNotEmpty()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -267,7 +265,7 @@ fun OrderDetailsScreen(
                                             }
                                         }
                                     }
-                                    
+
                                     "approved" -> {
                                         // Show text field for approved orders (mandatory remarks)
                                         OutlinedTextField(
@@ -340,7 +338,7 @@ fun OrderDetailsScreen(
                                             )
                                         }
                                     }
-                                    
+
                                     else -> {
                                         // Show remarks text for other orders (rejected, closed, cancelled, etc.)
                                         Text(
@@ -411,7 +409,7 @@ private fun OrderStatusCard(
                         )
                     }
                 }
-                
+
                 // Status Badge
                 val (backgroundColor, textColor) = when (orderStatus.lowercase()) {
                     "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
@@ -420,7 +418,7 @@ private fun OrderStatusCard(
                     "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
                     else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
                 }
-                
+
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(containerColor = backgroundColor),
@@ -461,7 +459,7 @@ private fun DetailRow(
             color = Color.Gray,
             modifier = Modifier.weight(1f)
         )
-        
+
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
@@ -495,7 +493,7 @@ private fun ItemRow(
             color = Color.Black,
             modifier = Modifier.weight(1f)
         )
-        
+
         Text(
             text = value,
             fontFamily = GraphikFontFamily,
@@ -521,7 +519,7 @@ private fun CollectedCancelledTabButton(
         isLast -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
         else -> RoundedCornerShape(0.dp)
     }
-    
+
     Box(
         modifier = Modifier
             .clip(shape)

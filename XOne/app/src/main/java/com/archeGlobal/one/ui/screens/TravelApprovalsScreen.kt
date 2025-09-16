@@ -13,9 +13,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,11 +22,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
@@ -183,10 +183,10 @@ fun TravelApprovalsScreen(
                             }
                         }
                         lifecycleOwner.lifecycle.addObserver(observer)
-                        
+
                         // Initial load when screen is first created
                         controller.loadTravelApprovals()
-                        
+
                         onDispose {
                             lifecycleOwner.lifecycle.removeObserver(observer)
                         }
@@ -197,7 +197,7 @@ fun TravelApprovalsScreen(
                         is TravelController.TravelApprovalsState.Idle -> {
                             // Show nothing initially
                         }
-                        
+
                         is TravelController.TravelApprovalsState.Loading -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),

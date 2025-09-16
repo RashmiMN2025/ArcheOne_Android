@@ -232,19 +232,22 @@ fun AddItemDialog(
 
                             // 6. Dynamic Stock Quantity (editable)
                             val stockQuantityLabel =
-                                if (model.quantityUpdateType == "Update Used Quantity") "Used Stock Quantity"
-                                else "New Stock Quantity"
+                                if (model.quantityUpdateType == "Update Used Quantity") {
+                                    "Used Stock Quantity"
+                                } else {
+                                    "New Stock Quantity"
+                                }
 
                             UpdateInventoryTextField(
                                 label = stockQuantityLabel,
                                 value = model.newStockQuantity,
                                 onValueChange = onNewStockQuantityChanged,
-                                placeholder = if (model.quantityUpdateType == "Update Used Quantity")
+                                placeholder = if (model.quantityUpdateType == "Update Used Quantity") {
                                     "Enter quantity used"
-                                else
+                                } else {
                                     "Enter stock to add"
+                                }
                             )
-
 
                             Spacer(modifier = Modifier.height(24.dp))
 
@@ -286,7 +289,6 @@ fun AddItemDialog(
                             )
                         }
                     }
-
 
                     Spacer(modifier = Modifier.height(40.dp))
 
@@ -498,7 +500,9 @@ private fun UpdateInventoryTextField(
                         fontSize = 16.sp
                     )
                 }
-            } else null,
+            } else {
+                null
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -583,7 +587,7 @@ private fun StockSuppliedDateField(
                     color = if (value.isNotEmpty()) Color.Black else Color.Gray,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 Icon(
                     painter = painterResource(id = R.drawable.calendar_3x),
                     contentDescription = "Calendar",

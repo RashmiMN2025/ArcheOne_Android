@@ -2,6 +2,7 @@ package com.archeGlobal.one.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -10,11 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.ui.res.painterResource
-import com.archeGlobal.one.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,15 +24,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.ConsumptionReportController
 import com.archeGlobal.one.model.ConsumptionReportModel
-import com.archeGlobal.one.model.ConsumptionTab
 import com.archeGlobal.one.model.ConsumptionStockCategory
 import com.archeGlobal.one.model.ConsumptionStockItem
+import com.archeGlobal.one.model.ConsumptionTab
 import com.archeGlobal.one.model.UsageCategory
 import com.archeGlobal.one.model.UsageItem
 import com.archeGlobal.one.ui.components.UniversalLoader
@@ -73,60 +73,60 @@ fun ConsumptionReportScreen(
                     )
                 )
         ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Header
-            ConsumptionReportHeader(
-                onBackPressed = controller::onBackPressed
-            )
-
-            // Content
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(32.dp) // Increased spacing between cards
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                item {
-                    // Tab selector and location
-                    Column {
+                // Header
+                ConsumptionReportHeader(
+                    onBackPressed = controller::onBackPressed
+                )
+
+                // Content
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(32.dp) // Increased spacing between cards
+                ) {
+                    item {
+                        // Tab selector and location
+                        Column {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            TabAndLocationRow(
+                                selectedTab = model.selectedTab,
+                                selectedLocation = model.selectedLocation,
+                                locations = model.locations,
+                                onTabSelected = controller::onTabSelected,
+                                onLocationSelected = controller::onLocationSelected
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+                    }
+
+                    when (model.selectedTab) {
+                        ConsumptionTab.STOCK -> {
+                            items(model.stockCategories) { category ->
+                                StockCategoryCard(
+                                    category = category,
+                                    onDownloadReport = controller::onDownloadReport
+                                )
+                            }
+                        }
+                        ConsumptionTab.USAGE -> {
+                            items(model.usageCategories) { category ->
+                                UsageCategoryCard(
+                                    category = category,
+                                    onDownloadReport = controller::onDownloadReport
+                                )
+                            }
+                        }
+                    }
+
+                    item {
                         Spacer(modifier = Modifier.height(16.dp))
-                        TabAndLocationRow(
-                            selectedTab = model.selectedTab,
-                            selectedLocation = model.selectedLocation,
-                            locations = model.locations,
-                            onTabSelected = controller::onTabSelected,
-                            onLocationSelected = controller::onLocationSelected
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
-                }
-
-                when (model.selectedTab) {
-                    ConsumptionTab.STOCK -> {
-                        items(model.stockCategories) { category ->
-                            StockCategoryCard(
-                                category = category,
-                                onDownloadReport = controller::onDownloadReport
-                            )
-                        }
-                    }
-                    ConsumptionTab.USAGE -> {
-                        items(model.usageCategories) { category ->
-                            UsageCategoryCard(
-                                category = category,
-                                onDownloadReport = controller::onDownloadReport
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
-        }
 
             // Loading overlay
             if (model.isLoading) {
@@ -226,7 +226,7 @@ fun TabButton(
         isLast -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
         else -> RoundedCornerShape(0.dp)
     }
-    
+
     Box(
         modifier = Modifier
             .clip(shape)
@@ -254,7 +254,7 @@ fun LocationSelector(
     onLocationSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     Box {
         Box(
             modifier = Modifier
@@ -282,7 +282,7 @@ fun LocationSelector(
                 )
             }
         }
-        
+
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
@@ -453,11 +453,10 @@ fun DownloadReportButton(
 // Function to get color based on category name
 fun getCategoryColor(categoryName: String): Color {
     android.util.Log.d("ConsumptionReport", "getCategoryColor called with: '$categoryName'")
-    
+
     val color = when {
         // Check for stationary/stationery first before stock (since "Stationary Stock" contains both)
-        categoryName.contains("stationary", ignoreCase = true) || 
-        categoryName.contains("stationery", ignoreCase = true) -> {
+        categoryName.contains("stationary", ignoreCase = true) || categoryName.contains("stationery", ignoreCase = true) -> {
             android.util.Log.d("ConsumptionReport", "Matched stationary/stationery - returning teal")
             Color(0xFF4ECDC4) // Teal
         }
@@ -465,8 +464,7 @@ fun getCategoryColor(categoryName: String): Color {
             android.util.Log.d("ConsumptionReport", "Matched party - returning blue")
             Color(0xFF45B7D1) // Blue
         }
-        categoryName.contains("hk", ignoreCase = true) || 
-        categoryName.contains("housekeeping", ignoreCase = true) -> {
+        categoryName.contains("hk", ignoreCase = true) || categoryName.contains("housekeeping", ignoreCase = true) -> {
             android.util.Log.d("ConsumptionReport", "Matched hk/housekeeping - returning green")
             Color(0xFF96CEB4) // Green
         }
@@ -479,7 +477,7 @@ fun getCategoryColor(categoryName: String): Color {
             Color(0xFFFF6B6B) // Default to red
         }
     }
-    
+
     android.util.Log.d("ConsumptionReport", "Final color for '$categoryName': $color")
     return color
 }
@@ -488,10 +486,10 @@ fun getCategoryColor(categoryName: String): Color {
 fun StockBarChart(items: List<ConsumptionStockItem>, categoryName: String) {
     val maxValue = items.maxOfOrNull { it.quantity } ?: 1.0
     val scrollState = rememberScrollState()
-    
+
     // Make the chart wider than the screen to enable scrolling when there are many items
     val chartWidth = maxOf(400.dp, (items.size * 80).dp)
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -516,10 +514,10 @@ fun StockBarChart(items: List<ConsumptionStockItem>, categoryName: String) {
 fun UsageBarChart(items: List<UsageItem>, categoryName: String) {
     val maxValue = items.maxOfOrNull { it.quantity } ?: 1.0
     val scrollState = rememberScrollState()
-    
+
     // Make the chart wider than the screen to enable scrolling when there are many items
     val chartWidth = maxOf(400.dp, (items.size * 80).dp)
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -546,7 +544,7 @@ fun DrawScope.drawBarChart(
     size: Size
 ) {
     if (items.isEmpty()) return
-    
+
     // Use minimum value of 1.0 to ensure chart shows even when all values are 0
     val effectiveMaxValue = if (maxValue == 0.0) 1.0 else maxValue
 
@@ -583,7 +581,7 @@ fun DrawScope.drawBarChart(
             // Round to nearest whole number and display as integer
             val displayValue = kotlin.math.round(value).toInt().toString()
             val textY = if (value > 0) y - 10 else size.height - bottomPadding - 15f
-            
+
             drawText(
                 displayValue,
                 x + barWidth / 2,
@@ -610,11 +608,11 @@ fun DrawScope.drawBarChart(
                 if (text.length <= maxCharsPerLine) {
                     return listOf(text)
                 }
-                
+
                 val words = text.split(" ", "_", "\\", "/", "-")
                 val lines = mutableListOf<String>()
                 var currentLine = ""
-                
+
                 for (word in words) {
                     val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
                     if (testLine.length <= maxCharsPerLine) {
@@ -643,13 +641,13 @@ fun DrawScope.drawBarChart(
                 if (currentLine.isNotEmpty()) {
                     lines.add(currentLine)
                 }
-                
+
                 return lines.take(3) // Limit to 3 lines maximum
             }
-            
+
             // Replace underscores with spaces and split the name into lines (approximately 12 characters per line for good readability)
             val lines = splitTextIntoLines(name.replace("_", " "), 12)
-            
+
             // Draw each line
             lines.forEachIndexed { lineIndex, line ->
                 val yOffset = size.height - bottomPadding + 40 + (lineIndex * 35)
@@ -664,7 +662,7 @@ fun DrawScope.drawBarChart(
     } else {
         listOf(0.0, effectiveMaxValue / 4, effectiveMaxValue / 2, (effectiveMaxValue * 3) / 4, effectiveMaxValue)
     }
-    
+
     yAxisLabels.forEach { label ->
         val y = size.height - bottomPadding - (label.toFloat() / effectiveMaxValue.toFloat()) * chartHeight
 
@@ -672,16 +670,16 @@ fun DrawScope.drawBarChart(
         if (label > 0) { // Don't draw line for 0
             var currentX = leftPadding
             val lineEndX = size.width - 10f
-            
+
             items.forEachIndexed { index, (_, value, _) ->
                 val barX = leftPadding + index * (barWidth + barSpacing) + barSpacing / 2
                 val barEndX = barX + barWidth
                 val barHeight = (value.toFloat() / effectiveMaxValue.toFloat()) * chartHeight
                 val barTopY = size.height - bottomPadding - barHeight
-                
+
                 // Only skip drawing through the bar if the bar is taller than this grid line
                 val barIsTallerThanLine = value > 0 && barTopY < y
-                
+
                 if (barIsTallerThanLine) {
                     // Draw line segment before bar
                     if (currentX < barX) {
@@ -693,10 +691,9 @@ fun DrawScope.drawBarChart(
                         )
                     }
                     currentX = barEndX
-                } 
-                // If bar is shorter than line or no bar, continue the line
+                } // If bar is shorter than line or no bar, continue the line
             }
-            
+
             // Draw final segment after last bar to end of chart
             if (currentX < lineEndX) {
                 drawLine(

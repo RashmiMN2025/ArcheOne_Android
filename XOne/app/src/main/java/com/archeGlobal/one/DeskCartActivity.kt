@@ -24,11 +24,11 @@ class DeskCartActivity : ComponentActivity() {
 
         userDataManager = UserDataManager.getInstance(this)
         controller = DeskCartController(this, AndroidNavigator(this))
-        
+
         // Load DeskCart data immediately since user is accessing the service
         Log.d("DeskCartActivity", "DeskCart service accessed, loading data on demand")
         controller.onServiceAccessed()
-        
+
         setContent {
             XOneTheme {
                 DeskCartScreen(
@@ -38,7 +38,6 @@ class DeskCartActivity : ComponentActivity() {
             }
         }
     }
-
 
     fun finishWithAnimation() {
         finish()

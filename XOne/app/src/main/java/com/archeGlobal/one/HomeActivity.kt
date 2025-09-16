@@ -14,18 +14,18 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
+import androidx.compose.material3.*
 import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,6 +35,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -43,31 +50,22 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.archeGlobal.one.controller.*
 import com.archeGlobal.one.controller.ConsumptionReportController
+import com.archeGlobal.one.controller.SmartCollateralController
+import com.archeGlobal.one.model.DeskCartOrderHistory
 import com.archeGlobal.one.model.FooterNavigationModel
 import com.archeGlobal.one.model.SosBlogModel
-import com.archeGlobal.one.model.DeskCartOrderHistory
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.repository.UserRepository
+import com.archeGlobal.one.ui.components.WhatsNewDialog
 import com.archeGlobal.one.ui.screens.*
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.BiometricHelper
+import com.archeGlobal.one.utils.PreferencesManager
 import com.archeGlobal.one.utils.UserDataManager
 import com.google.gson.Gson
-import kotlinx.coroutines.launch
 import java.net.URLDecoder
-import com.archeGlobal.one.controller.SmartCollateralController
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.archeGlobal.one.ui.components.WhatsNewDialog
-import com.archeGlobal.one.utils.PreferencesManager
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var controller: HomeController
@@ -76,97 +74,97 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var navigator: AndroidNavigator
     private lateinit var helpDeskController: HelpDeskController
     private lateinit var preferencesManager: PreferencesManager
-    
+
     // Lazy-loaded controllers - only initialized when actually needed
-    internal val locationsController by lazy { 
+    internal val locationsController by lazy {
         Log.d("HomeActivity", "Lazy initializing LocationsController")
         LocationsController(this@HomeActivity)
     }
-    internal val businessCardController by lazy { 
+    internal val businessCardController by lazy {
         Log.d("HomeActivity", "Lazy initializing BusinessCardController")
-        BusinessCardControllerImpl(this@HomeActivity, navigator) 
+        BusinessCardControllerImpl(this@HomeActivity, navigator)
     }
-    internal val policyController by lazy { 
+    internal val policyController by lazy {
         Log.d("HomeActivity", "Lazy initializing PolicyController")
-        PolicyController(this@HomeActivity, navigator) 
+        PolicyController(this@HomeActivity, navigator)
     }
-    internal val assetController by lazy { 
+    internal val assetController by lazy {
         Log.d("HomeActivity", "Lazy initializing AssetController")
-        AssetController(this@HomeActivity, navigator) 
+        AssetController(this@HomeActivity, navigator)
     }
-    internal val profileController by lazy { 
+    internal val profileController by lazy {
         Log.d("HomeActivity", "Lazy initializing ProfileController")
-        ProfileController(this@HomeActivity, navigator) 
+        ProfileController(this@HomeActivity, navigator)
     }
-    private val sosController by lazy { 
+    private val sosController by lazy {
         Log.d("HomeActivity", "Lazy initializing SOSController")
-        SOSController(application) 
+        SOSController(application)
     }
-    private val holidayCalendarController by lazy { 
+    private val holidayCalendarController by lazy {
         Log.d("HomeActivity", "Lazy initializing HolidayCalendarController")
-        HolidayCalendarController(RetrofitClient.apiService, UserRepository(this@HomeActivity), this@HomeActivity) 
+        HolidayCalendarController(RetrofitClient.apiService, UserRepository(this@HomeActivity), this@HomeActivity)
     }
-    private val aboutMeController by lazy { 
+    private val aboutMeController by lazy {
         Log.d("HomeActivity", "Lazy initializing AboutMeController")
-        AboutMeController(navigator) 
+        AboutMeController(navigator)
     }
-    private val addressController by lazy { 
+    private val addressController by lazy {
         Log.d("HomeActivity", "Lazy initializing AddressController")
-        AddressController(navigator) 
+        AddressController(navigator)
     }
-    private val emergencyContactController by lazy { 
+    private val emergencyContactController by lazy {
         Log.d("HomeActivity", "Lazy initializing EmergencyContactController")
-        EmergencyContactController(navigator) 
+        EmergencyContactController(navigator)
     }
-    internal val chatController by lazy { 
+    internal val chatController by lazy {
         Log.d("HomeActivity", "Lazy initializing ChatController")
-        ChatController(this@HomeActivity, navigator) 
+        ChatController(this@HomeActivity, navigator)
     }
-    private val communiqueController by lazy { 
+    private val communiqueController by lazy {
         Log.d("HomeActivity", "Lazy initializing CommuniqueController")
-        CommuniqueController(this@HomeActivity, navigator) 
+        CommuniqueController(this@HomeActivity, navigator)
     }
-    private val archeOdysseyController by lazy { 
+    private val archeOdysseyController by lazy {
         Log.d("HomeActivity", "Lazy initializing ArcheOdysseyController")
-        ArcheOdysseyController(navigator) 
+        ArcheOdysseyController(navigator)
     }
-    internal val travelController by lazy { 
+    internal val travelController by lazy {
         Log.d("HomeActivity", "Lazy initializing TravelController")
-        TravelController(navigator, this@HomeActivity) 
+        TravelController(navigator, this@HomeActivity)
     }
-    private val greetingsController by lazy { 
+    private val greetingsController by lazy {
         Log.d("HomeActivity", "Lazy initializing GreetingsController")
-        GreetingsController(this@HomeActivity, navigator) 
+        GreetingsController(this@HomeActivity, navigator)
     }
-    private val ideaVaultController by lazy { 
+    private val ideaVaultController by lazy {
         Log.d("HomeActivity", "Lazy initializing IdeaVaultController")
-        IdeaVaultController(this@HomeActivity, navigator) 
+        IdeaVaultController(this@HomeActivity, navigator)
     }
-    private val holidayOptionsController by lazy { 
+    private val holidayOptionsController by lazy {
         Log.d("HomeActivity", "Lazy initializing HolidayOptionsController")
-        HolidayOptionsController(this@HomeActivity, navigator) 
+        HolidayOptionsController(this@HomeActivity, navigator)
     }
-    private val orderController by lazy { 
+    private val orderController by lazy {
         Log.d("HomeActivity", "Lazy initializing OrderController")
-        OrderController(this@HomeActivity, navigator, lifecycleScope) 
+        OrderController(this@HomeActivity, navigator, lifecycleScope)
     }
-    private val consumptionReportController by lazy { 
+    private val consumptionReportController by lazy {
         Log.d("HomeActivity", "Lazy initializing ConsumptionReportController")
-        ConsumptionReportController(this@HomeActivity, navigator) 
+        ConsumptionReportController(this@HomeActivity, navigator)
     }
-    private val smartCollateralcontroller by lazy { 
+    private val smartCollateralcontroller by lazy {
         Log.d("HomeActivity", "Lazy initializing SmartCollateralController")
-        SmartCollateralController(this@HomeActivity) 
+        SmartCollateralController(this@HomeActivity)
     }
-    internal val deskCartController by lazy { 
+    internal val deskCartController by lazy {
         Log.d("HomeActivity", "Lazy initializing DeskCartController")
         Log.d("HomeActivity", "DeskCartController access stack trace: ${Thread.currentThread().stackTrace.take(10).joinToString("\n")}")
-        DeskCartController(this@HomeActivity, navigator) 
+        DeskCartController(this@HomeActivity, navigator)
     }
-    
+
     // Lazy controllers can be accessed directly by property name
     // No explicit getter methods needed - Kotlin generates them automatically
-    
+
     private var lastPauseTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
     private var isFromLogin = false // Flag to track if we're coming from login
@@ -179,7 +177,7 @@ class HomeActivity : AppCompatActivity() {
     private fun refreshHomeData() {
         // Refresh home screen data without API calls
         Log.d("HomeActivity", "Refreshing home screen data without API calls")
-        
+
         // Update the home controller's data
         controller.refreshUserData()
     }
@@ -194,7 +192,7 @@ class HomeActivity : AppCompatActivity() {
         val clearBackStack = intent.getBooleanExtra("clearBackStack", false)
         val directNavigateTo = intent.getStringExtra("direct_navigate_to")
         val sourceActivity = intent.getStringExtra("source_activity")
-        
+
         // Handle direct action-based navigation
         val directAction = intent.action
 
@@ -240,7 +238,7 @@ class HomeActivity : AppCompatActivity() {
     @SuppressLint("ViewModelConstructorInComposable")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         Log.d("HomeActivity", "onCreate called")
         Log.d("HomeActivity", "Intent extras: ${intent.extras?.keySet()?.joinToString()}")
         Log.d("HomeActivity", "direct_navigate_to: ${intent.getStringExtra("direct_navigate_to")}")
@@ -359,7 +357,6 @@ class HomeActivity : AppCompatActivity() {
 
                 // HomeController already initialized in onCreate() - don't recreate it!
 
-
                 // Controllers are now lazy-loaded - they will be initialized only when accessed
                 // This prevents bulk API calls on app startup
                 android.util.Log.d("HomeActivity", "Controllers converted to lazy initialization - no bulk loading!")
@@ -386,7 +383,7 @@ class HomeActivity : AppCompatActivity() {
                 val directNavigateTo = currentIntent.getStringExtra("direct_navigate_to")
                 val sourceActivity = currentIntent.getStringExtra("source_activity")
                 val orderData = currentIntent.getStringExtra("orderData")
-                
+
                 // Restore order data from intent if navigating to order_history_detail
                 if (currentNavigateTo == "order_history_detail" && orderData != null) {
                     try {
@@ -397,11 +394,11 @@ class HomeActivity : AppCompatActivity() {
                         Log.e("HomeActivity", "Failed to parse order data from intent", e)
                     }
                 }
-                
+
                 // Use reactive state for source activity (updated by onNewIntent)
                 val reactiveSourceActivity by currentSourceActivity
                 val effectiveSourceActivity = reactiveSourceActivity ?: sourceActivity
-                
+
                 // Set initial source activity state if not already set
                 LaunchedEffect(sourceActivity) {
                     if (currentSourceActivity.value == null && sourceActivity != null) {
@@ -422,7 +419,7 @@ class HomeActivity : AppCompatActivity() {
                     currentNavigateTo == "consumption_report" && !clearBackStack -> "consumption_report"
                     else -> "home"
                 }
-                
+
                 Log.d("HomeActivity", "Intent parameters - navigateTo: $currentNavigateTo, directNavigateTo: $directNavigateTo, startDestination: $startDestination")
 
                 // Handle data loading and navigation setup
@@ -436,7 +433,7 @@ class HomeActivity : AppCompatActivity() {
                         helpDeskController.loadTicketsData(currentTicketCategory)
                         Log.d("HomeActivity", "Starting at track_tickets with category: $currentTicketCategory from source: $currentSource")
                     }
-                    
+
                     // Handle order_history destination (similar to track_tickets setup)
                     if (startDestination == "order_history") {
                         Log.d("HomeActivity", "Starting at order_history destination from source: $currentSource")
@@ -1757,10 +1754,10 @@ class HomeActivity : AppCompatActivity() {
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
                         }
-                        ){
+                    ) {
                         SmartCollateralScreen(
                             controller = smartCollateralcontroller,
-                            onBackPressed =  { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() }
                         )
                     }
                 }
@@ -1882,7 +1879,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    
     /**
      * Public method to navigate directly to order history
      * Used by AndroidNavigator for cross-activity navigation

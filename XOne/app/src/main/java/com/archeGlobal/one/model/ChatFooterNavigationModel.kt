@@ -6,11 +6,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -56,8 +53,11 @@ fun ChatBottomNavigationBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        val homeIconRes = if (isUsingPrideIcon) R.drawable.homepride
-                        else R.drawable.arche_black2
+                        val homeIconRes = if (isUsingPrideIcon) {
+                            R.drawable.homepride
+                        } else {
+                            R.drawable.arche_black2
+                        }
                         Image(
                             painter = painterResource(id = homeIconRes),
                             contentDescription = "Home",

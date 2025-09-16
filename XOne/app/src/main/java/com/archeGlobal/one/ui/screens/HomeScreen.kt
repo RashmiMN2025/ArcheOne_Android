@@ -2,7 +2,6 @@ package com.archeGlobal.one.ui.screens
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -68,7 +67,6 @@ import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.HomeController
-import com.archeGlobal.one.controller.LoginController
 import com.archeGlobal.one.controller.MpinController
 import com.archeGlobal.one.controller.OtpVerificationController
 import com.archeGlobal.one.model.AboutMeModel
@@ -89,8 +87,6 @@ import com.archeGlobal.one.ui.components.WhatsNewDialog
 import com.archeGlobal.one.ui.theme.*
 import com.archeGlobal.one.ui.theme.getColorForApp
 import com.archeGlobal.one.utils.BiometricHelper
-import com.archeGlobal.one.utils.DeviceInfo
-import com.archeGlobal.one.utils.DeviceInfoUtils
 import com.archeGlobal.one.utils.ImageCache
 import com.archeGlobal.one.utils.UserDataManager
 import com.google.accompanist.swiperefresh.SwipeRefresh

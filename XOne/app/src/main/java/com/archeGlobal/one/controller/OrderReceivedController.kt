@@ -38,12 +38,12 @@ class OrderReceivedController(
 
     private fun loadOrders() {
         model = model.copy(isLoading = true, error = null)
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 Log.d("OrderReceivedController", "Fetching order history from API...")
                 val response = RetrofitClient.apiService.getOrderHistory()
-                
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val orderHistoryResponse = response.body()!!
@@ -63,7 +63,6 @@ class OrderReceivedController(
             }
         }
     }
-
 
     private fun handleError(message: String) {
         Log.e("OrderReceivedController", message)

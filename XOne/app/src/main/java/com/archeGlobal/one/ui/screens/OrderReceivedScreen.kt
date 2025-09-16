@@ -27,15 +27,14 @@ import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.OrderReceivedController
 import com.archeGlobal.one.model.OrderHistoryItem
-import com.archeGlobal.one.model.OrderHistoryResponse
 import com.archeGlobal.one.ui.components.UniversalLoader
-import java.text.SimpleDateFormat
-import java.util.Locale
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.PrimaryRed
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 // Model for Order Received Screen State
 data class OrderReceivedModel(
@@ -346,7 +345,7 @@ fun OrderStatusBadge(status: String) {
         "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
         else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
     }
-    
+
     Card(
         shape = RoundedCornerShape(8.dp), // Less rounded (reduced from 16dp to 8dp)
         colors = CardDefaults.cardColors(containerColor = backgroundColor),

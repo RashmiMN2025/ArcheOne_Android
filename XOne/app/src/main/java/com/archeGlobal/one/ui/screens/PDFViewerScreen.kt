@@ -112,7 +112,6 @@ private fun CustomTopAppBar(
                             (context as? androidx.activity.ComponentActivity)?.let { activity ->
                                 activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
                                 androidx.core.view.WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-                                activity.window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                             }
 
                             // Start activity with no animation

@@ -1,8 +1,6 @@
 package com.archeGlobal.one.controller
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import com.archeGlobal.one.XOneApplication
 import com.archeGlobal.one.model.APIError
@@ -199,7 +197,7 @@ class OtpVerificationController(
                 val smartCollateral = response.smartCollateral
 
                 smartCollateral?.let {
-                    UserDataManager.getInstance(context).saveSmartCollateral(it)  // persist
+                    UserDataManager.getInstance(context).saveSmartCollateral(it) // persist
                 }
 
                 // Clear session expired preserved data after successful login

@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -229,10 +227,11 @@ fun IdeaVaultScreen(
                                         placeholder = {
                                             Text(
                                                 "Select Category",
-                                            color = Color.LightGray,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal
-                                            ) },
+                                                color = Color.LightGray,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal
+                                            )
+                                        },
                                         trailingIcon = {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.dropdown),
@@ -336,12 +335,14 @@ fun IdeaVaultScreen(
                                 OutlinedTextField(
                                     value = feedbackText,
                                     onValueChange = { feedbackText = it },
-                                    placeholder = { Text(
-                                        "Submit an idea or Feedback",
-                                        color = Color.LightGray,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal
-                                    ) },
+                                    placeholder = {
+                                        Text(
+                                            "Submit an idea or Feedback",
+                                            color = Color.LightGray,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(160.dp), // Taller text field for feedback

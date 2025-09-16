@@ -11,8 +11,6 @@ import com.archeGlobal.one.model.OrderHistoryItem
 import com.archeGlobal.one.model.OrderStatus
 import com.archeGlobal.one.model.getSampleOrderDetails
 import com.archeGlobal.one.navigation.Navigator
-import com.archeGlobal.one.network.RetrofitClient
-import com.archeGlobal.one.utils.UserDataManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

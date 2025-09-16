@@ -35,7 +35,7 @@ class ProfileController(
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
     private var isDataLoaded = false
-    
+
     // Initialize with empty model - data will be loaded on first access
     var model by mutableStateOf(ProfileModel(name = "", email = ""))
         internal set
@@ -43,7 +43,7 @@ class ProfileController(
     init {
         Log.d("ProfileController", "ProfileController created - data will be loaded on first access")
     }
-    
+
     /**
      * Call this method when the Profile service is actually accessed by the user
      * This ensures data is processed only when needed
@@ -57,12 +57,12 @@ class ProfileController(
             Log.d("ProfileController", "Profile data already loaded, skipping processing")
         }
     }
-    
+
     private fun loadProfileData() {
         val userData = userDataManager.getUserData()
         Log.d("ProfileController", "Loading profile data: $userData")
         Log.d("ProfileController", "Profile picture URL: ${userData?.profilePic}")
-        
+
         model = ProfileModel(
             name = userData?.name ?: "",
             email = userData?.email ?: "",

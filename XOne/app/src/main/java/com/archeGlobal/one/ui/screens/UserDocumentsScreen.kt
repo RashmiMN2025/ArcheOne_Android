@@ -335,10 +335,10 @@ fun DocumentItem(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
                 ) {
-                    if (isUploaded){
+                    if (isUploaded) {
                         if (document.document_name in listOf("Medical Insurance Card", "Company Name Change Letter")) {
                             Icon(
-                                painter = painterResource(id = R.drawable.share2),  // Assume you have a share icon in drawable
+                                painter = painterResource(id = R.drawable.share2), // Assume you have a share icon in drawable
                                 contentDescription = "Share",
                                 tint = Color(0xFFDD3825),
                                 modifier = Modifier.size(22.dp)

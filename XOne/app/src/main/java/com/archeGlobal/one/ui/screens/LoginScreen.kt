@@ -771,15 +771,21 @@ fun LoginScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.clickable {
-                                if (stayLoggedIn) showDisableDialog = true
-                                else stayLoggedIn = true
+                                if (stayLoggedIn) {
+                                    showDisableDialog = true
+                                } else {
+                                    stayLoggedIn = true
+                                }
                             }
                         ) {
                             Checkbox(
                                 checked = stayLoggedIn,
                                 onCheckedChange = { checked ->
-                                    if (!checked) showDisableDialog = true
-                                    else stayLoggedIn = true
+                                    if (!checked) {
+                                        showDisableDialog = true
+                                    } else {
+                                        stayLoggedIn = true
+                                    }
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Color(0xFFDD3825),
@@ -832,11 +838,11 @@ fun LoginScreen(
                                     .fillMaxWidth(0.94f) // 98% of actual screen width
                                     .padding(horizontal = 8.dp, vertical = 12.dp)
                             ) {
-                                Column (
+                                Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.padding(20.dp)
                                 ) {
-                                    Icon (
+                                    Icon(
                                         painter = painterResource(id = R.drawable.warning), // Use your document icon
                                         contentDescription = "Document",
                                         tint = Color(0xFFDD3825),
@@ -996,15 +1002,21 @@ fun LoginScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.clickable {
-                                if (stayLoggedIn) showDisableDialog = true
-                                else stayLoggedIn = true
+                                if (stayLoggedIn) {
+                                    showDisableDialog = true
+                                } else {
+                                    stayLoggedIn = true
+                                }
                             }
                         ) {
                             Checkbox(
                                 checked = stayLoggedIn,
                                 onCheckedChange = { checked ->
-                                    if (!checked) showDisableDialog = true
-                                    else stayLoggedIn = true
+                                    if (!checked) {
+                                        showDisableDialog = true
+                                    } else {
+                                        stayLoggedIn = true
+                                    }
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Color(0xFFDD3825),
@@ -1056,11 +1068,11 @@ fun LoginScreen(
                                     .fillMaxWidth(0.94f) // 98% of actual screen width
                                     .padding(horizontal = 8.dp, vertical = 12.dp)
                             ) {
-                                Column (
+                                Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.padding(20.dp)
                                 ) {
-                                    Icon (
+                                    Icon(
                                         painter = painterResource(id = R.drawable.warning), // Use your document icon
                                         contentDescription = "Document",
                                         tint = Color(0xFFDD3825),
@@ -1145,9 +1157,9 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             if (termsAccepted) {
-                                showWebView = true  // Show MicrosoftLoginWebView for MFA
+                                showWebView = true // Show MicrosoftLoginWebView for MFA
                             } else {
-                                showMfaTermsDialog = true  // Or handle terms
+                                showMfaTermsDialog = true // Or handle terms
                             }
                         },
                         modifier = Modifier
@@ -1543,7 +1555,7 @@ fun LoginScreen(
                                 .fillMaxWidth()
                                 .fillMaxHeight() // Almost full screen, adjust as needed
                         ) {
-                            Column (
+                            Column(
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 TopAppBar(
@@ -1595,8 +1607,8 @@ fun LoginScreen(
                                             email = response.email,
                                             mobile = response.mobilePhone,
                                             employeeId = response.employeeId,
-                                            otpFromUser = "",  // Empty for MFA (assume backend handles)
-                                            isBiometric = true,  // Not biometric
+                                            otpFromUser = "", // Empty for MFA (assume backend handles)
+                                            isBiometric = true, // Not biometric
                                             backgroundRefresh = false,
                                             appVersion = deviceInfo.appVersion,
                                             deviceModel = deviceInfo.deviceModel,

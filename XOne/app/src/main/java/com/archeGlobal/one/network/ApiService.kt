@@ -1,5 +1,7 @@
 package com.archeGlobal.one.network
 
+import com.archeGlobal.one.model.AddInventoryItemRequest
+import com.archeGlobal.one.model.AddInventoryItemResponse
 import com.archeGlobal.one.model.ApiGreetingCategory
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.CelebrationResponse
@@ -11,6 +13,7 @@ import com.archeGlobal.one.model.PolicyModel
 import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.SosBlogModel
+import com.archeGlobal.one.model.StockListResponse
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
@@ -19,14 +22,12 @@ import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
-import com.archeGlobal.one.model.StockListResponse
-import com.archeGlobal.one.model.AddInventoryItemRequest
-import com.archeGlobal.one.model.AddInventoryItemResponse
 import com.archeGlobal.one.model.UpdateInventoryItemRequest
 import com.archeGlobal.one.model.UpdateInventoryItemResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -37,8 +38,6 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.PartMap
-
-import okhttp3.ResponseBody
 import retrofit2.http.Url
 
 interface ApiService {
@@ -281,7 +280,7 @@ data class VerifyOtpResponse(
     @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null,
     val faqList: List<FAQCategory>? = null,
     val whatsNew: List<WhatsNewItem>? = null,
-    val smartCollateral: List<SmartCollateralCategory>? = emptyList(),
+    val smartCollateral: List<SmartCollateralCategory>? = emptyList()
 )
 
 data class User(

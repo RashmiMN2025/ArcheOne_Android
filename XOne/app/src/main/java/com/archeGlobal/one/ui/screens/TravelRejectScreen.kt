@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import android.app.Activity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -135,7 +135,7 @@ fun TravelRejectScreen(
                             }
                         },
                         navigationIcon = {
-                            IconButton(onClick = { 
+                            IconButton(onClick = {
                                 (context as? Activity)?.finish()
                             }) {
                                 Icon(
@@ -239,7 +239,7 @@ fun TravelRejectScreen(
                                 )
 
                                 val destination = destinations.firstOrNull()
-                                
+
                                 RejectDetailRow(
                                     iconRes = R.drawable.mappin_and_ellipse,
                                     label = "Origin City",
@@ -269,7 +269,7 @@ fun TravelRejectScreen(
                                     if (index > 0) {
                                         Spacer(modifier = Modifier.height(12.dp))
                                     }
-                                    
+
                                     Text(
                                         text = "Trip ${index + 1}",
                                         fontSize = 14.sp,

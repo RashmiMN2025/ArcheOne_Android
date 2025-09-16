@@ -41,9 +41,9 @@ data class UsageItem(
 // Extension functions to convert API data to consumption report data
 fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategory> {
     val groupedByCategory = this.groupBy { it.category }
-    
+
     val categories = mutableListOf<ConsumptionStockCategory>()
-    
+
     // Add "All Stock" category with all items
     if (this.isNotEmpty()) {
         categories.add(
@@ -60,7 +60,7 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
             )
         )
     }
-    
+
     // Add categories by type in specific order
     // Map desired order to potential category name variations
     val categoryOrder = listOf(
@@ -68,16 +68,16 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
         "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
         "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables")
     )
-    
+
     categoryOrder.forEach { (displayName, searchNames) ->
         // Find matching category (case-insensitive)
         val matchingCategory = groupedByCategory.keys.find { categoryKey ->
             searchNames.any { searchName ->
                 categoryKey.lowercase().contains(searchName.lowercase()) ||
-                searchName.lowercase().contains(categoryKey.lowercase())
+                    searchName.lowercase().contains(categoryKey.lowercase())
             }
         }
-        
+
         matchingCategory?.let { categoryKey ->
             val items = groupedByCategory[categoryKey]!!
             categories.add(
@@ -95,17 +95,17 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
             )
         }
     }
-    
+
     // Add any remaining categories not in the specified order
     val processedCategories = categoryOrder.flatMap { (_, searchNames) ->
         groupedByCategory.keys.filter { categoryKey ->
             searchNames.any { searchName ->
                 categoryKey.lowercase().contains(searchName.lowercase()) ||
-                searchName.lowercase().contains(categoryKey.lowercase())
+                    searchName.lowercase().contains(categoryKey.lowercase())
             }
         }
     }
-    
+
     groupedByCategory.forEach { (category, items) ->
         if (!processedCategories.contains(category)) {
             categories.add(
@@ -123,15 +123,15 @@ fun List<StockItem>.toConsumptionStockCategories(): List<ConsumptionStockCategor
             )
         }
     }
-    
+
     return categories
 }
 
 fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
     val groupedByCategory = this.groupBy { it.category }
-    
+
     val categories = mutableListOf<UsageCategory>()
-    
+
     // Add "All Usage" category with all items
     if (this.isNotEmpty()) {
         categories.add(
@@ -148,7 +148,7 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
             )
         )
     }
-    
+
     // Add categories by type in specific order
     // Map desired order to potential category name variations
     val categoryOrder = listOf(
@@ -156,16 +156,16 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
         "Party Essentials" to listOf("party essentials", "party", "party_essentials"),
         "HK Essentials" to listOf("hk essentials", "hk", "hk_essentials", "housekeeping", "hk_consumables")
     )
-    
+
     categoryOrder.forEach { (displayName, searchNames) ->
         // Find matching category (case-insensitive)
         val matchingCategory = groupedByCategory.keys.find { categoryKey ->
             searchNames.any { searchName ->
                 categoryKey.lowercase().contains(searchName.lowercase()) ||
-                searchName.lowercase().contains(categoryKey.lowercase())
+                    searchName.lowercase().contains(categoryKey.lowercase())
             }
         }
-        
+
         matchingCategory?.let { categoryKey ->
             val items = groupedByCategory[categoryKey]!!
             categories.add(
@@ -183,17 +183,17 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
             )
         }
     }
-    
+
     // Add any remaining categories not in the specified order
     val processedCategories = categoryOrder.flatMap { (_, searchNames) ->
         groupedByCategory.keys.filter { categoryKey ->
             searchNames.any { searchName ->
                 categoryKey.lowercase().contains(searchName.lowercase()) ||
-                searchName.lowercase().contains(categoryKey.lowercase())
+                    searchName.lowercase().contains(categoryKey.lowercase())
             }
         }
     }
-    
+
     groupedByCategory.forEach { (category, items) ->
         if (!processedCategories.contains(category)) {
             categories.add(
@@ -211,7 +211,7 @@ fun List<StockItem>.toUsageCategories(): List<UsageCategory> {
             )
         }
     }
-    
+
     return categories
 }
 

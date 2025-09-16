@@ -18,7 +18,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
@@ -341,7 +340,7 @@ fun TravelScreen(
                             // Mode of Transport
                             Box(modifier = Modifier.fillMaxWidth()) {
                                 val interactionSource = remember { MutableInteractionSource() }
-                                
+
                                 LaunchedEffect(interactionSource) {
                                     interactionSource.interactions.collect { interaction ->
                                         if (interaction is PressInteraction.Release) {
@@ -349,7 +348,7 @@ fun TravelScreen(
                                         }
                                     }
                                 }
-                                
+
                                 OutlinedTextField(
                                     value = controller.modeOfTransport,
                                     onValueChange = { },

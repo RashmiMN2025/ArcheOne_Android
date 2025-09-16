@@ -30,14 +30,14 @@ class AssetController(
 ) {
     var model by mutableStateOf(AssetModel(isLoading = true))
         private set
-    
+
     private var isDataLoaded = false
     private val encryptedApiService = EncryptedAPIService.getInstance(context)
 
     init {
         Log.d("AssetController", "AssetController created - data will be loaded on first access")
     }
-    
+
     /**
      * Call this method when the Asset service is actually accessed by the user
      * This ensures data is processed only when needed

@@ -221,7 +221,7 @@ fun OrderHistoryCard(
                         color = Color.Gray
                     )
                 }
-                
+
                 Row {
                     Text(
                         text = "Items",
@@ -252,7 +252,7 @@ fun OrderHistoryStatusBadge(status: String) {
         "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
         else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
     }
-    
+
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),

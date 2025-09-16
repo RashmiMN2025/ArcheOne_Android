@@ -38,7 +38,6 @@ object DeviceInfoUtils {
     }
 }
 
-
 data class DeviceInfo(
     val platform: String,
     val deviceModel: String,

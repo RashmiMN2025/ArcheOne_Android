@@ -14,13 +14,6 @@ import com.archeGlobal.one.network.Office
 import com.archeGlobal.one.network.SmartCollateralCategory
 import com.archeGlobal.one.network.VerifyOtpResponse
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 /**
  * Singleton class to manage user data throughout the application.
@@ -72,7 +65,6 @@ class UserDataManager private constructor(context: Context) {
 //    }
 
     fun getSmartCollateralData(): List<SmartCollateralCategory>? = smartCollateralData
-
 
     private val PREF_LAST_LOGIN_TIME = "last_login_time"
 
@@ -308,12 +300,12 @@ class UserDataManager private constructor(context: Context) {
             Log.d(TAG, "Category '$category' has ${urls.size} greetings.")
         }
         Log.d(TAG, "Saved greeting categories with ${greetingCategoriesData?.size} items with messages.")
-        
+
         // CRITICAL: Reload data from preferences to refresh in-memory cache
         // This ensures getUserData() immediately returns the fresh data on fresh install
         loadDataFromPreferences()
         Log.d(TAG, "UserDataManager: In-memory cache refreshed. getUserData() now returns: ${userData?.name}")
-        
+
         // Notify all registered callbacks that user data is now ready
         if (isUserDataReady()) {
             Log.d(TAG, "User data is ready, notifying ${onUserDataReadyCallbacks.size} callbacks")
@@ -324,7 +316,7 @@ class UserDataManager private constructor(context: Context) {
                     Log.e(TAG, "Error in user data ready callback", e)
                 }
             }
-            
+
             // Pre-warm network connections removed - data will load lazily when services are accessed
             // TrackTickets warmup removed - data will load lazily when service is accessed
         }
@@ -458,7 +450,7 @@ class UserDataManager private constructor(context: Context) {
     fun addUserDataReadyCallback(callback: () -> Unit) {
         onUserDataReadyCallbacks.add(callback)
         Log.d(TAG, "Added user data ready callback. Total callbacks: ${onUserDataReadyCallbacks.size}")
-        
+
         // If user data is already ready, call the callback immediately
         if (isUserDataReady()) {
             Log.d(TAG, "User data is already ready, calling callback immediately")
@@ -479,23 +471,23 @@ class UserDataManager private constructor(context: Context) {
         onUserDataReadyCallbacks.clear()
         Log.d(TAG, "Cleared all user data ready callbacks")
     }
-    
+
     // Deprecated methods - kept for compatibility but no longer called automatically
     @Deprecated("Connection warmup removed - data will load lazily when services are accessed")
     private fun warmUpConnections() {
         Log.d(TAG, "warmUpConnections - deprecated, connections no longer warmed up automatically")
         // Don't warm up connections automatically anymore
     }
-    
+
     @Deprecated("Connection warmup removed - data will load lazily when services are accessed")
     private fun warmUpConnectionsAsync() {
         Log.d(TAG, "warmUpConnectionsAsync - deprecated, connections no longer warmed up automatically")
         // Don't warm up connections automatically anymore
     }
-    
+
     // DeskCart warmup removed - data will load lazily when service is accessed
     // private suspend fun warmUpDeskCartConnection(email: String) { ... }
-    
+
     @Deprecated("TrackTickets warmup removed - data will load lazily when service is accessed")
     private suspend fun warmUpTrackTicketsConnection(userName: String) {
         Log.d(TAG, "warmUpTrackTicketsConnection - deprecated, tickets now loaded only when needed")
