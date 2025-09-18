@@ -212,7 +212,8 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 BusinessCardScreen(
                                     businessCard = businessCardController.businessCard,
-                                    controller = businessCardController
+                                    controller = businessCardController,
+                                    onBackPressed = { navController.popBackStack() }
                                 )
                             }
 

@@ -8,6 +8,7 @@ import com.archeGlobal.one.controller.RegionalFestivalsController
 import com.archeGlobal.one.navigation.AndroidNavigator
 import com.archeGlobal.one.ui.screens.ResponsiveRegionalFestivalsScreen
 import com.archeGlobal.one.ui.theme.XOneTheme
+import androidx.activity.OnBackPressedCallback
 
 class RegionalFestivalsActivity : ComponentActivity() {
     private lateinit var controller: RegionalFestivalsController
@@ -20,11 +21,18 @@ class RegionalFestivalsActivity : ComponentActivity() {
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         controller = RegionalFestivalsController(this, AndroidNavigator(this))
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                controller.onBackPressed()
+            }
+        })
+
         setContent {
             XOneTheme {
                 ResponsiveRegionalFestivalsScreen(
                     controller = controller,
-                    onBackPressed = { finish() }
+                    onBackPressed = { controller.onBackPressed() }
                 )
             }
         }

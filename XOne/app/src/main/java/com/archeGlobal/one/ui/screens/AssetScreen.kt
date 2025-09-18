@@ -32,7 +32,8 @@ import com.archeGlobal.one.ui.theme.PrimaryRed
 @Composable
 fun AssetScreen(
     model: AssetModel,
-    controller: AssetController
+    controller: AssetController,
+    onBackPressed: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -73,7 +74,7 @@ fun AssetScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { controller.onBackPressed() }) {
+                    IconButton(onClick = { onBackPressed() }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",

@@ -723,7 +723,8 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         BusinessCardScreen(
                             businessCard = businessCardController.businessCard,
-                            controller = businessCardController
+                            controller = businessCardController,
+                            onBackPressed = { navController.popBackStack() }
                         )
                     }
 
@@ -812,7 +813,8 @@ class HomeActivity : AppCompatActivity() {
                     ) {
                         AssetScreen(
                             model = assetController.model,
-                            controller = assetController
+                            controller = assetController,
+                            onBackPressed = {navController.popBackStack()}
                         )
                     }
 
@@ -1520,7 +1522,9 @@ class HomeActivity : AppCompatActivity() {
                             fadeOut(animationSpec = tween(300))
                         }
                     ) {
-                        TicketTrackingScreen(controller = helpDeskController)
+                        TicketTrackingScreen(
+                            controller = helpDeskController
+                        )
                     }
 
                     composable(
