@@ -92,7 +92,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var ideaVaultController: IdeaVaultController
     private lateinit var holidayOptionsController: HolidayOptionsController
     private lateinit var helpDeskController: HelpDeskController
-    private lateinit var orderController: OrderController
+//    private lateinit var orderController: OrderController
     private lateinit var consumptionReportController: ConsumptionReportController
     private lateinit var smartCollateralcontroller: SmartCollateralController
     private lateinit var meetSpaceController: MeetSpaceController
@@ -372,7 +372,7 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 // Initialize order controller
-                orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
+//                orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
                 consumptionReportController = ConsumptionReportController(this@HomeActivity, navigator)
                 smartCollateralcontroller = SmartCollateralController(this)
                 meetSpaceController = MeetSpaceController(this)

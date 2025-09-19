@@ -2,11 +2,13 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.archeGlobal.one.R
 import com.archeGlobal.one.model.*
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
@@ -99,14 +101,22 @@ class OrderHistoryController(
         )
     }
 
+//    fun onBackPressed() {
+//        Log.d("OrderHistoryController", "Back button pressed - source activity: $sourceActivity")
+//        if (sourceActivity == "DeskCartActivity") {
+//            // Navigate back to DeskCart activity
+//            navigator.navigateToDeskCart()
+//        } else {
+//            // Default behavior - pop back stack within HomeActivity
+//            navigator.popBackStack()
+//        }
+//    }
+
     fun onBackPressed() {
-        Log.d("OrderHistoryController", "Back button pressed - source activity: $sourceActivity")
-        if (sourceActivity == "DeskCartActivity") {
-            // Navigate back to DeskCart activity
-            navigator.navigateToDeskCart()
-        } else {
-            // Default behavior - pop back stack within HomeActivity
-            navigator.popBackStack()
+        Log.d("OrderHistoryController", "Back pressed - finishing activity")
+        (context as? ComponentActivity)?.let { act ->
+            act.finish()
+            act.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
         }
     }
 

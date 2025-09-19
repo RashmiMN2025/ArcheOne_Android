@@ -3,11 +3,13 @@ package com.archeGlobal.one.controller
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.archeGlobal.one.R
 import com.archeGlobal.one.model.AdminDashboardItem
 import com.archeGlobal.one.model.AdminDashboardModel
 import com.archeGlobal.one.navigation.Navigator
@@ -66,8 +68,11 @@ class AdminDashboardController(
     }
 
     fun onBackPressed() {
-        Log.d("AdminDashboardController", "Back pressed - navigating to DeskCart")
-        navigator.navigateToDeskCart()
+        Log.d("AdminDashboardController", "Back pressed - finishing activity")
+        (context as? ComponentActivity)?.let { act ->
+            act.finish()
+            act.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        }
     }
 
     fun onDashboardItemClick(item: AdminDashboardItem) {
@@ -97,16 +102,6 @@ class AdminDashboardController(
     private fun handleOrderReceivedClick() {
         Log.d("AdminDashboardController", "Order Received clicked")
         navigator.navigateToOrderReceived()
-
-        // Clear the badge count when clicked
-        val updatedItems = model.dashboardItems.map {
-            if (it.id == "order_received") {
-                it.copy(badgeCount = 0)
-            } else {
-                it
-            }
-        }
-        model = model.copy(dashboardItems = updatedItems)
     }
 
     private fun handleConsumptionReportClick() {
