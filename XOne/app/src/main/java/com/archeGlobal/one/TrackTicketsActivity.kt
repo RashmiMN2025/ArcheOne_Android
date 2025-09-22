@@ -76,4 +76,12 @@ class TrackTicketsActivity : AppCompatActivity() {
         }
         Log.d("TrackTicketsActivity", "Activity destroyed")
     }
+
+    fun finishWithAnimation() {
+        finish()
+        overridePendingTransition(
+            R.anim.slide_in_left,
+            R.anim.slide_out_right
+        )
+    }
 }

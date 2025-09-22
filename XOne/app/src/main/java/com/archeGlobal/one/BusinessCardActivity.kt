@@ -23,7 +23,8 @@ class BusinessCardActivity : ComponentActivity() {
             XOneTheme {
                 BusinessCardScreen(
                     businessCard = controller.businessCard,
-                    controller = controller
+                    controller = controller,
+                    onBackPressed = { finish() },
                 )
             }
         }

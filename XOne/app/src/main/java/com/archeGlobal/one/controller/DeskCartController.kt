@@ -3,11 +3,13 @@ package com.archeGlobal.one.controller
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.archeGlobal.one.R
 import com.archeGlobal.one.model.DeskCartModel
 import com.archeGlobal.one.model.EmployeeDetails
 import com.archeGlobal.one.model.StationaryItem
@@ -123,9 +125,17 @@ class DeskCartController(
         }
     }
 
+//    fun onBackPressed() {
+//        Log.d("DeskCartController", "Back pressed - navigating to Home")
+//        navigator.navigateToHome()
+//    }
+
     fun onBackPressed() {
-        Log.d("DeskCartController", "Back pressed - navigating to Home")
-        navigator.navigateToHome()
+        Log.d("DeskCartController", "Back pressed - finishing activity")
+        (context as? ComponentActivity)?.let { act ->
+            act.finish()
+            act.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        }
     }
 
     fun onAdminDashboardClick() {

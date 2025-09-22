@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.AssetActivity
-import com.archeGlobal.one.HomeActivity
+import com.archeGlobal.one.R
 import com.archeGlobal.one.TrackTicketsActivity
 import com.archeGlobal.one.model.APIError
 import com.archeGlobal.one.model.AssetDetails
@@ -239,24 +239,19 @@ class AssetController(
     }
 
     fun onBackPressed() {
-        // Navigate back to HomeActivity instead of just finishing
-        val intent = Intent(context, HomeActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        context.startActivity(intent)
-        (context as? AssetActivity)?.finish()
+        (context as? AssetActivity)?.finishWithAnimation()
     }
 
     fun navigateToTrackTickets() {
-        // Navigate directly to TrackTicketsActivity to avoid home screen flash
+        // Navigate directly to HomeActivity with track_tickets as the target
         val intent = Intent(context, TrackTicketsActivity::class.java).apply {
             putExtra("ticketCategory", "Asset Related Issue")
-            putExtra("source", "asset") // Add source to track navigation origin
+            putExtra("source", "asset")
         }
-        Log.d("AssetController", "Starting TrackTicketsActivity directly with ticketCategory=Asset Related Issue")
+        Log.d("AssetController", "Starting TrackTicketsActivity with ticketCategory=Asset Related Issue")
         context.startActivity(intent)
-
-        // Finish AssetActivity to prevent going back to it
-        (context as? AssetActivity)?.finish()
+        // Apply forward animation
+        (context as? AssetActivity)?.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        // Finish AssetActivity to prevent going back to itS
     }
 }

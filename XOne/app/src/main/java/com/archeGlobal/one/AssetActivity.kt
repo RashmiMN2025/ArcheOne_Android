@@ -23,20 +23,21 @@ class AssetActivity : ComponentActivity() {
         controller.onServiceAccessed()
 
         // Handle back gesture and back button
-        onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    controller.onBackPressed()
-                }
-            }
-        )
+//        onBackPressedDispatcher.addCallback(
+//            this,
+//            object : OnBackPressedCallback(true) {
+//                override fun handleOnBackPressed() {
+//                    controller.onBackPressed()
+//                }
+//            }
+//        )
 
         setContent {
             XOneTheme {
                 AssetScreen(
                     model = controller.model,
-                    controller = controller
+                    controller = controller,
+                    onBackPressed = { finish() },
                 )
             }
         }

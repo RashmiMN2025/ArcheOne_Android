@@ -276,12 +276,7 @@ class AndroidNavigator(
     }
 
     override fun navigateToGreetingsActivity() {
-        val intent = Intent(activity, GreetingsActivity::class.java).apply {
-            // Clear the activity stack and make this the new root
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            // Add parent activity info so back goes to Home
-            putExtra("parent_activity", "home")
-        }
+        val intent = Intent(activity, GreetingsActivity::class.java)
         activity.startActivity(intent)
     }
 
@@ -330,22 +325,15 @@ class AndroidNavigator(
     }
 
     override fun navigateToOrderReceived() {
-        if (activity is HomeActivity) {
-            navigate("order_received")
-        } else {
-            startActivity(
-                Intent(activity, HomeActivity::class.java).apply {
-                    putExtra("navigateTo", "order_received")
-                }
-            )
-        }
+        Log.d("AndroidNavigator", "Navigating directly to OrderReceivedActivity")
+        val intent = Intent(activity, OrderReceivedActivity::class.java)
+        startActivity(intent)
     }
 
     override fun navigateToOrderDetails(orderId: String) {
-        navController?.navigate("order_details/$orderId") {
-            launchSingleTop = true
-            restoreState = true
-        }
+        Log.d("AndroidNavigator", "Navigating directly to OrderDetailsActivity for order $orderId")
+        val intent = Intent(activity, OrderDetailsActivity::class.java)
+        startActivity(intent)
     }
 
     override fun navigateToOrderHistoryDetail(orderId: String) {
@@ -372,15 +360,11 @@ class AndroidNavigator(
     }
 
     override fun navigateToConsumptionReport() {
-        if (activity is HomeActivity) {
-            navigate("consumption_report")
-        } else {
-            startActivity(
-                Intent(activity, HomeActivity::class.java).apply {
-                    putExtra("navigateTo", "consumption_report")
-                }
-            )
+        val source = if (activity is AdminDashboardActivity) "AdminDashboard" else null
+        val intent = Intent(activity, ConsumptionReportActivity::class.java).apply {
+            putExtra("sourceScreen", source)
         }
+        startActivity(intent)
     }
 
     override fun navigateToXConnect(initialTab: String) {
@@ -712,6 +696,11 @@ class AndroidNavigator(
 
     override fun navigateToSmartCollateral() {
         val intent = Intent(activity, SmartCollateralActivity::class.java)
+        startActivity(intent)
+    }
+
+    override fun navigateToMeetSpace() {
+        val intent = Intent(activity, MeetSpaceActivity::class.java)
         startActivity(intent)
     }
 }

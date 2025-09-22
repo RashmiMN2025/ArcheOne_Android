@@ -3,10 +3,12 @@ package com.archeGlobal.one.controller
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.archeGlobal.one.GlobalCelebrationDetailActivity
+import com.archeGlobal.one.R
 import com.archeGlobal.one.model.GlobalCelebrationModel
 import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.navigation.Navigator
@@ -87,8 +89,14 @@ class GlobalCelebrationController(
             // Clear selection if a subcategory is selected
             model = model.copy(selectedSubcategory = null)
         } else {
-            // Otherwise, go back to the main greetings screen
-            navigator.navigateToGreetingsActivity() // Use navigateToGreetingsActivity instead of navigateToGreetings
+            // Finish the activity with back animation
+            (context as? ComponentActivity)?.let { activity ->
+                activity.finish()
+                activity.overridePendingTransition(
+                    R.anim.slide_in_left,
+                    R.anim.slide_out_right
+                )
+            }
         }
     }
 

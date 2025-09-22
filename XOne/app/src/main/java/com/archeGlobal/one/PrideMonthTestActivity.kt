@@ -148,6 +148,7 @@ fun PrideMonthTestScreen() {
             ) {}
             override fun navigateToGlobalCelebrationDetail(subcategory: com.archeGlobal.one.model.GreetingSubcategory) {}
             override fun navigateToSmartCollateral() {}
+            override fun navigateToMeetSpace() {}
         }
     }
     val mockEventResponse = remember {

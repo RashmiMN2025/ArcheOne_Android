@@ -11,6 +11,8 @@ import com.archeGlobal.one.model.GreetingSubcategory
 import com.archeGlobal.one.model.RegionalFestivalsModel
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.utils.UserDataManager
+import androidx.activity.ComponentActivity
+import com.archeGlobal.one.R
 
 class RegionalFestivalsController(
     private val context: Context,
@@ -77,8 +79,14 @@ class RegionalFestivalsController(
             // Clear selection if a subcategory is selected
             model = model.copy(selectedSubcategory = null)
         } else {
-            // Otherwise, go back to the main greetings screen
-            navigator.navigateToGreetingsActivity()
+            // Finish the activity with back animation
+            (context as? ComponentActivity)?.let { activity ->
+                activity.finish()
+                activity.overridePendingTransition(
+                    R.anim.slide_in_left,
+                    R.anim.slide_out_right
+                )
+            }
         }
     }
 

@@ -426,6 +426,48 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XOne" />
 
+        <activity
+            android:name=".MeetSpaceActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".MeetingRoomListActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".MeetingRoomActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".OrderReceivedActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".OrderDetailsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".ConsumptionReportActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
         <!-- Keep only this FileProvider at the end -->
         <provider
             android:name="androidx.core.content.FileProvider"

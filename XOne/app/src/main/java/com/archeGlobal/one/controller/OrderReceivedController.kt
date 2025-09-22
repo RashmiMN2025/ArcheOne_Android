@@ -2,11 +2,13 @@ package com.archeGlobal.one.controller
 
 import android.content.Context
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.archeGlobal.one.R
 import com.archeGlobal.one.model.*
 import com.archeGlobal.one.navigation.Navigator
 import com.archeGlobal.one.network.RetrofitClient
@@ -73,8 +75,11 @@ class OrderReceivedController(
     }
 
     fun onBackPressed() {
-        Log.d("OrderReceivedController", "Back button pressed - navigating to admin dashboard")
-        navigator.navigateToAdminDashboard()
+        Log.d("OrderReceivedController", "Back button pressed - finishing activity")
+        (context as? ComponentActivity)?.let { act ->
+            act.finish()
+            act.overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        }
     }
 
     fun refreshOrders() {

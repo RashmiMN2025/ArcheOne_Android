@@ -465,7 +465,7 @@ fun RaiseConcernScreen(
                                         painter = painterResource(id = R.drawable.dropdown),
                                         contentDescription = "Dropdown",
                                         tint = Color.Gray,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(15.dp)
                                     )
                                 }
                             },
@@ -587,7 +587,7 @@ fun RaiseConcernScreen(
                                         painter = painterResource(id = R.drawable.dropdown),
                                         contentDescription = "Dropdown",
                                         tint = Color.Gray,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(15.dp)
                                     )
                                 }
                             },

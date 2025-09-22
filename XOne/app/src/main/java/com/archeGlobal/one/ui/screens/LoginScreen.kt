@@ -1577,6 +1577,9 @@ fun LoginScreen(
                                             )
                                         }
                                     },
+                                    actions = {
+                                        Spacer(modifier = Modifier.width(48.dp))
+                                    },
                                     colors = TopAppBarDefaults.topAppBarColors(
                                         containerColor = Color.White,
                                         titleContentColor = Color.Black,

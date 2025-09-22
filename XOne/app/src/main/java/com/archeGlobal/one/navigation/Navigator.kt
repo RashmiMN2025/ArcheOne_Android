@@ -108,4 +108,6 @@ interface Navigator {
     fun navigateToAboutUsWithUrl(url: String)
     fun openPulseLoginWithUrl(url: String)
     fun navigateToSmartCollateral()
+
+    fun navigateToMeetSpace()
 }

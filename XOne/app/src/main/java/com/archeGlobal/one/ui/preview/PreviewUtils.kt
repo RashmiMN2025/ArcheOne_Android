@@ -152,4 +152,8 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToSmartCollateral() {
     }
+
+    override fun navigateToMeetSpace() {
+
+    }
 }

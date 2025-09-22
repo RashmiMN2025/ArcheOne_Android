@@ -164,7 +164,8 @@ private fun CustomTopAppBar(
 @Composable
 fun BusinessCardScreen(
     businessCard: BusinessCardModel,
-    controller: BusinessCardController
+    controller: BusinessCardController,
+    onBackPressed: () -> Unit,
 ) {
     var showFrontSide by remember { mutableStateOf(true) }
     val view = LocalView.current
@@ -256,7 +257,7 @@ fun BusinessCardScreen(
             ) {
                 item {
                     CustomTopAppBar(
-                        onBackPressed = { controller.onBackPressed() },
+                        onBackPressed = { onBackPressed() },
                         onShareClick = {
                             scope.launch {
                                 cardBounds.value?.let { bounds ->
