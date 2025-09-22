@@ -10,7 +10,7 @@ data class TodoModel(
     val selectedTask: TodoTask? = null,
     val showTaskDetail: Boolean = false,
     val isAddingTask: Boolean = false,
-    val isEditingTask: Boolean = false
+    val isEditingTask: Boolean = false,
 )
 
 data class TodoTask(
@@ -22,9 +22,11 @@ data class TodoTask(
     val dayOfWeek: Int = LocalDate.now().dayOfWeek.value, // 1 = Monday, 7 = Sunday
     val dateAdded: LocalDate = LocalDate.now(),
     val creationDate: LocalDate = LocalDate.now(),
-    val completed: Boolean = false // <-- Add this line
+    val completed: Boolean = false, // <-- Add this line
 )
 
 enum class TaskPriority {
-    LOW, MEDIUM, HIGH
+    LOW,
+    MEDIUM,
+    HIGH,
 }

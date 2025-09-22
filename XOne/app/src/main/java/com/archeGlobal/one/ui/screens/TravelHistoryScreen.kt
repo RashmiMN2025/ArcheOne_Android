@@ -37,9 +37,7 @@ import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 
 @Composable
-fun TravelHistoryScreen(
-    controller: TravelController
-) {
+fun TravelHistoryScreen(controller: TravelController) {
     // Get context and font adjustment for consistent font scaling
     val context = LocalContext.current
     val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
@@ -49,38 +47,43 @@ fun TravelHistoryScreen(
     // Wrap entire content with font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
-                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
+                    .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
-                                WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
-                                WelcomeBackgroundBottom // Dark Grey (0xFF474749)
-                            )
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush =
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            WelcomeBackgroundTop, // Light Beige/Grey (0xFFE0DCD1)
+                                            WelcomeBackgroundMiddle, // Light Grey (0xFFC8C8CA)
+                                            WelcomeBackgroundBottom, // Dark Grey (0xFF474749)
+                                        ),
+                                ),
+                        ),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     TopAppBar(
                         title = {
                             Text(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally)
-                                    .offset(x = (-24).dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentWidth(Alignment.CenterHorizontally)
+                                        .offset(x = (-24).dp),
                                 text = "Travel History",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         },
                         navigationIcon = {
@@ -88,22 +91,23 @@ fun TravelHistoryScreen(
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = Color.Black
+                                    tint = Color.Black,
                                 )
                             }
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {}
+                        actions = {},
                     )
 
                     // Add more space after the TopAppBar
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
                     ) {
                         // Render UI based on current travel history state
                         when (val currentState = state) {
@@ -115,7 +119,7 @@ fun TravelHistoryScreen(
                                 if (currentState.historyItems.isEmpty()) {
                                     Box(
                                         modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
+                                        contentAlignment = Alignment.Center,
                                     ) {
                                         Text(text = "No travel history found", fontFamily = GraphikFontFamily)
                                     }
@@ -124,22 +128,23 @@ fun TravelHistoryScreen(
                                         travelRequests = currentState.historyItems,
                                         onTravelRequestClick = { requestId ->
                                             controller.navigateToTravelDetails(requestId)
-                                        }
+                                        },
                                     )
                                 }
                             }
 
                             is TravelHistoryState.Error -> {
                                 Column(
-                                    modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                    modifier =
+                                        Modifier
+                                            .align(Alignment.Center)
+                                            .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Text(text = currentState.message, fontFamily = GraphikFontFamily)
                                     Button(
                                         onClick = { controller.loadCombinedTravelHistory() },
-                                        modifier = Modifier.padding(top = 8.dp)
+                                        modifier = Modifier.padding(top = 8.dp),
                                     ) {
                                         Text("Retry", fontFamily = GraphikFontFamily)
                                     }
@@ -156,12 +161,12 @@ fun TravelHistoryScreen(
 @Composable
 fun TravelHistoryList(
     travelRequests: List<TravelRequest>,
-    onTravelRequestClick: (String) -> Unit
+    onTravelRequestClick: (String) -> Unit,
 ) {
     if (travelRequests.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(text = "No items found", fontFamily = GraphikFontFamily)
         }
@@ -169,12 +174,12 @@ fun TravelHistoryList(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(bottom = 16.dp),
         ) {
             items(travelRequests) { request ->
                 TravelRequestCard(
                     travelRequest = request,
-                    onClick = { onTravelRequestClick(request.id) }
+                    onClick = { onTravelRequestClick(request.id) },
                 )
             }
         }
@@ -184,33 +189,35 @@ fun TravelHistoryList(
 @Composable
 fun TravelRequestCard(
     travelRequest: TravelRequest,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = 1.dp,
-        backgroundColor = Color(0xFFF6F4EE)
+        backgroundColor = Color(0xFFF6F4EE),
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
+            modifier =
+                Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
         ) {
             // ID and Status row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "#${travelRequest.id}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
                 StatusTag(status = travelRequest.status)
             }
@@ -221,7 +228,7 @@ fun TravelRequestCard(
             DetailItem(
                 icon = R.drawable.folder_3x,
                 label = "Project",
-                value = travelRequest.project
+                value = travelRequest.project,
             )
 
             // Handle single vs multi-destination display
@@ -237,7 +244,7 @@ fun TravelRequestCard(
                         DetailItem(
                             icon = R.drawable.mappin_and_ellipse,
                             label = "Origin City",
-                            value = destination.originCity
+                            value = destination.originCity,
                         )
                     }
 
@@ -245,7 +252,7 @@ fun TravelRequestCard(
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
                         label = "Destination City",
-                        value = destination.destinationCity
+                        value = destination.destinationCity,
                     )
 
                     // Show travel dates for single destination
@@ -253,7 +260,7 @@ fun TravelRequestCard(
                         DetailItem(
                             icon = R.drawable.ic_calendar,
                             label = "Travel Dates",
-                            value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate)
+                            value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate),
                         )
                     }
                 } else {
@@ -261,7 +268,7 @@ fun TravelRequestCard(
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
                         label = "Destination",
-                        value = travelRequest.destination
+                        value = travelRequest.destination,
                     )
                 }
             } else {
@@ -275,7 +282,7 @@ fun TravelRequestCard(
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         color = Color.Black,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 4.dp),
                     )
 
                     // Show origin city if available
@@ -283,7 +290,7 @@ fun TravelRequestCard(
                         DetailItem(
                             icon = R.drawable.mappin_and_ellipse,
                             label = "Origin City",
-                            value = destination.originCity
+                            value = destination.originCity,
                         )
                     }
 
@@ -291,13 +298,13 @@ fun TravelRequestCard(
                     DetailItem(
                         icon = R.drawable.mappin_and_ellipse,
                         label = "Destination City",
-                        value = destination.destinationCity
+                        value = destination.destinationCity,
                     )
 
                     DetailItem(
                         icon = R.drawable.airplane_departure,
                         label = "Travel Dates",
-                        value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate)
+                        value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate),
                     )
                 }
             }
@@ -306,7 +313,7 @@ fun TravelRequestCard(
             DetailItem(
                 icon = R.drawable.approver,
                 label = "Approver",
-                value = travelRequest.approver
+                value = travelRequest.approver,
             )
 
             // Add divider line before Created date
@@ -316,7 +323,7 @@ fun TravelRequestCard(
             DetailItem(
                 icon = R.drawable.ic_calendar,
                 label = "Created",
-                value = DateFormatter.formatDisplayDate(travelRequest.createdDate)
+                value = DateFormatter.formatDisplayDate(travelRequest.createdDate),
             )
         }
     }
@@ -324,16 +331,17 @@ fun TravelRequestCard(
 
 @Composable
 fun StatusTag(status: TravelStatus) {
-    val (backgroundColor, textColor, text) = when (status) {
-        TravelStatus.APPROVED -> Triple(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000), "Approved")
-        TravelStatus.REJECTED -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), "Rejected")
-        TravelStatus.PENDING -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), "Pending")
-    }
+    val (backgroundColor, textColor, text) =
+        when (status) {
+            TravelStatus.APPROVED -> Triple(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000), "Approved")
+            TravelStatus.REJECTED -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), "Rejected")
+            TravelStatus.PENDING -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), "Pending")
+        }
 
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Text(
             text = "Status: $text",
@@ -341,7 +349,7 @@ fun StatusTag(status: TravelStatus) {
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
         )
     }
 }
@@ -350,19 +358,20 @@ fun StatusTag(status: TravelStatus) {
 fun DetailItem(
     icon: Int,
     label: String,
-    value: String
+    value: String,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(id = icon),
             contentDescription = label,
             tint = Color.Gray,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(18.dp),
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -372,7 +381,7 @@ fun DetailItem(
             fontSize = 15.sp,
             color = Color.Gray,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -382,7 +391,7 @@ fun DetailItem(
             fontSize = 15.sp,
             fontWeight = FontWeight.Normal,
             fontFamily = GraphikFontFamily,
-            color = Color.Black
+            color = Color.Black,
         )
     }
 }

@@ -59,51 +59,62 @@ import java.net.URL
 private const val THUMBNAIL_WIDTH = 600
 private val collateralThumbnailCache = mutableStateMapOf<String, Bitmap?>()
 
-private suspend fun getPdfThumbnail(context: android.content.Context, pdfUrl: String): Bitmap? = withContext(Dispatchers.IO) {
-    // Return cached bitmap if present (do NOT cache null values)
-    collateralThumbnailCache[pdfUrl]?.let { return@withContext it }
+private suspend fun getPdfThumbnail(
+    context: android.content.Context,
+    pdfUrl: String,
+): Bitmap? =
+    withContext(Dispatchers.IO) {
+        // Return cached bitmap if present (do NOT cache null values)
+        collateralThumbnailCache[pdfUrl]?.let { return@withContext it }
 
-    try {
-        val tempFile = downloadPdfToTemp(context, pdfUrl)
-        if (tempFile == null || !tempFile.exists() || tempFile.length() == 0L) return@withContext null
+        try {
+            val tempFile = downloadPdfToTemp(context, pdfUrl)
+            if (tempFile == null || !tempFile.exists() || tempFile.length() == 0L) return@withContext null
 
-        val thumbnail = renderPdfThumbnail(context, tempFile)
-        tempFile.delete()
-        if (thumbnail != null) {
-            collateralThumbnailCache[pdfUrl] = thumbnail
-        }
-        return@withContext thumbnail
-    } catch (e: Exception) {
-        return@withContext null
-    }
-}
-
-private suspend fun downloadPdfToTemp(context: android.content.Context, pdfUrl: String): File? = withContext(Dispatchers.IO) {
-    var connection: HttpURLConnection? = null
-    try {
-        val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
-        val outputFile = File(context.cacheDir, fileName)
-        val url = URL(pdfUrl)
-        connection = url.openConnection() as HttpURLConnection
-        connection.connectTimeout = 5000
-        connection.readTimeout = 10000
-        if (connection.responseCode != HttpURLConnection.HTTP_OK) return@withContext null
-
-        connection.inputStream.use { input ->
-            FileOutputStream(outputFile).use { output ->
-                input.copyTo(output)
+            val thumbnail = renderPdfThumbnail(context, tempFile)
+            tempFile.delete()
+            if (thumbnail != null) {
+                collateralThumbnailCache[pdfUrl] = thumbnail
             }
+            return@withContext thumbnail
+        } catch (e: Exception) {
+            return@withContext null
         }
-        if (outputFile.exists() && outputFile.length() > 0) return@withContext outputFile
-        return@withContext null
-    } catch (e: Exception) {
-        return@withContext null
-    } finally {
-        connection?.disconnect()
     }
-}
 
-private fun renderPdfThumbnail(context: android.content.Context, pdfFile: File): Bitmap? {
+private suspend fun downloadPdfToTemp(
+    context: android.content.Context,
+    pdfUrl: String,
+): File? =
+    withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection? = null
+        try {
+            val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
+            val outputFile = File(context.cacheDir, fileName)
+            val url = URL(pdfUrl)
+            connection = url.openConnection() as HttpURLConnection
+            connection.connectTimeout = 5000
+            connection.readTimeout = 10000
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) return@withContext null
+
+            connection.inputStream.use { input ->
+                FileOutputStream(outputFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            if (outputFile.exists() && outputFile.length() > 0) return@withContext outputFile
+            return@withContext null
+        } catch (e: Exception) {
+            return@withContext null
+        } finally {
+            connection?.disconnect()
+        }
+    }
+
+private fun renderPdfThumbnail(
+    context: android.content.Context,
+    pdfFile: File,
+): Bitmap? {
     var fileDescriptor: ParcelFileDescriptor? = null
     var pdfRenderer: PdfRenderer? = null
     var page: PdfRenderer.Page? = null
@@ -116,7 +127,8 @@ private fun renderPdfThumbnail(context: android.content.Context, pdfFile: File):
         var pageWidth = page.width
         var pageHeight = page.height
         if (pageWidth <= 0 || pageHeight <= 0) {
-            pageWidth = 595; pageHeight = 842 // Fallback to A4 size
+            pageWidth = 595
+            pageHeight = 842 // Fallback to A4 size
         }
 
         val thumbnailWidth = THUMBNAIL_WIDTH
@@ -128,7 +140,12 @@ private fun renderPdfThumbnail(context: android.content.Context, pdfFile: File):
     } catch (e: Exception) {
         return null
     } finally {
-        try { page?.close(); pdfRenderer?.close(); fileDescriptor?.close() } catch (_: Exception) {}
+        try {
+            page?.close()
+            pdfRenderer?.close()
+            fileDescriptor?.close()
+        } catch (_: Exception) {
+        }
     }
 }
 
@@ -138,36 +155,40 @@ fun CollateralDetailScreen(
     categoryName: String,
     files: List<SmartCollateralFile>,
     controller: CollateralController,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige
-                            Color(0xFFC8C8CA), // Light Gray
-                            Color(0xFF474749) // Dark Gray
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    Color(0xFFE0DCD1), // Light Beige
+                                    Color(0xFFC8C8CA), // Light Gray
+                                    Color(0xFF474749), // Dark Gray
+                                ),
+                        ),
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 TopAppBar(
                     title = {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 categoryName,
@@ -175,7 +196,7 @@ fun CollateralDetailScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -184,23 +205,25 @@ fun CollateralDetailScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_back),
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
                     actions = {
                         Spacer(modifier = Modifier.width(48.dp))
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     items(files) { file ->
                         val context = LocalContext.current
@@ -219,29 +242,33 @@ fun CollateralDetailScreen(
                         // OUTER Column to put Text below Card
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(),
                         ) {
                             // CARD: Thumbnail fills Card completely
                             Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(220.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .clickable { controller.onFileClick(file) },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(220.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .clickable { controller.onFileClick(file) },
                                 shape = RoundedCornerShape(16.dp),
-                                elevation = CardDefaults.cardElevation(6.dp)
+                                elevation = CardDefaults.cardElevation(6.dp),
                             ) {
                                 when {
                                     !file.thumbnailUrl.isNullOrEmpty() -> {
                                         AsyncImage(
                                             model = file.thumbnailUrl,
                                             contentDescription = file.fileName,
-                                            modifier = Modifier
-                                                .fillMaxSize(), // Fill Card (180.dp x full width)
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxSize(),
+                                            // Fill Card (180.dp x full width)
                                             contentScale = ContentScale.Crop,
                                             placeholder = painterResource(id = R.drawable.ic_doc),
-                                            error = painterResource(id = R.drawable.ic_doc)
+                                            error = painterResource(id = R.drawable.ic_doc),
                                         )
                                     }
                                     thumbnail != null -> {
@@ -249,13 +276,13 @@ fun CollateralDetailScreen(
                                             bitmap = thumbnail!!.asImageBitmap(),
                                             contentDescription = file.fileName,
                                             contentScale = ContentScale.FillBounds,
-                                            modifier = Modifier.fillMaxSize() // Fill Card
+                                            modifier = Modifier.fillMaxSize(), // Fill Card
                                         )
                                     }
                                     isLoading -> {
                                         Box(
                                             contentAlignment = Alignment.Center,
-                                            modifier = Modifier.fillMaxSize()
+                                            modifier = Modifier.fillMaxSize(),
                                         ) {
                                             CircularProgressIndicator()
                                         }
@@ -263,13 +290,13 @@ fun CollateralDetailScreen(
                                     else -> {
                                         Box(
                                             contentAlignment = Alignment.Center,
-                                            modifier = Modifier.fillMaxSize()
+                                            modifier = Modifier.fillMaxSize(),
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.ic_doc),
                                                 contentDescription = null,
                                                 modifier = Modifier.size(64.dp),
-                                                tint = Color.Gray
+                                                tint = Color.Gray,
                                             )
                                         }
                                     }
@@ -284,7 +311,7 @@ fun CollateralDetailScreen(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
                             )
                         }
                     }

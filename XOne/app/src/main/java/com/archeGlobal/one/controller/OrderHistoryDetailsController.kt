@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 
 class OrderHistoryDetailsController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) : ViewModel() {
     var remarks by mutableStateOf("")
         private set
@@ -65,18 +65,23 @@ class OrderHistoryDetailsController(
         updateOrderStatus(orderId, "rejected", remarks)
     }
 
-    private fun updateOrderStatus(orderId: String, status: String, rejectionRemarks: String) {
+    private fun updateOrderStatus(
+        orderId: String,
+        status: String,
+        rejectionRemarks: String,
+    ) {
         val userData = userDataManager.getUserData()
         val adminName = userData?.name ?: "Admin"
 
         isLoading = true
 
-        val request = DeskCartUpdateOrderStatusRequest(
-            orderId = orderId,
-            newStatus = status,
-            processedBy = adminName,
-            rejectionRemarks = rejectionRemarks
-        )
+        val request =
+            DeskCartUpdateOrderStatusRequest(
+                orderId = orderId,
+                newStatus = status,
+                processedBy = adminName,
+                rejectionRemarks = rejectionRemarks,
+            )
 
         viewModelScope.launch(Dispatchers.IO) {
             try {

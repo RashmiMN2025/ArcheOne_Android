@@ -29,26 +29,24 @@ data class TravelRequest(
     val employeeName: String? = null, // Name of the employee who requested the travel
     val employeeEmail: String? = null, // Email of the employee who requested the travel
     val employeeId: String? = null, // ID of the employee who requested the travel
-    val employeeMobile: String? = null // Mobile number of the employee who requested the travel
+    val employeeMobile: String? = null, // Mobile number of the employee who requested the travel
 ) {
     /**
      * Check if this is a multi-destination travel request
      */
-    fun isMultiDestination(): Boolean {
-        return travelDestinations != null && travelDestinations.size > 1
-    }
+    fun isMultiDestination(): Boolean = travelDestinations != null && travelDestinations.size > 1
 
     /**
      * Get all destinations for multi-destination travel
      */
-    fun getAllDestinations(): List<TravelDestination> {
-        return travelDestinations ?: emptyList()
-    }
+    fun getAllDestinations(): List<TravelDestination> = travelDestinations ?: emptyList()
 }
 
 /**
  * Represents the possible statuses of a travel request
  */
 enum class TravelStatus {
-    APPROVED, REJECTED, PENDING
+    APPROVED,
+    REJECTED,
+    PENDING,
 }

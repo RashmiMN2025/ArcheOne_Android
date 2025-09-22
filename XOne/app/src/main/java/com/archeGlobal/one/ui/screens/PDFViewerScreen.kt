@@ -51,30 +51,31 @@ private fun CustomTopAppBar(
     title: String,
     onBackClick: () -> Unit,
     showSosButton: Boolean,
-    context: Context
+    context: Context,
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
     Column {
         Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(Color.Transparent),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(Color.Transparent),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Back button
             Box(
                 modifier = Modifier.width(48.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
                         Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color.Black
+                        tint = Color.Black,
                     )
                 }
             }
@@ -82,54 +83,58 @@ private fun CustomTopAppBar(
             // Title
             Box(
                 modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
 
             // SOS button or spacer
             Box(
                 modifier = Modifier.width(48.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 if (showSosButton) {
                     IconButton(
-                        onClick = { // Create intent for SOSActivity with special flags
-                            val intent = android.content.Intent(context, com.archeGlobal.one.SOSActivity::class.java).apply {
-                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
-                                putExtra("fromPdfViewer", true)
-                                putExtra("preventWhiteBar", true)
-                                putExtra("showHeader", false)
-                            }
+                        onClick = {
+                            // Create intent for SOSActivity with special flags
+                            val intent =
+                                android.content.Intent(context, com.archeGlobal.one.SOSActivity::class.java).apply {
+                                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                        android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                    putExtra("fromPdfViewer", true)
+                                    putExtra("preventWhiteBar", true)
+                                    putExtra("showHeader", false)
+                                }
 
                             // Force current activity to have proper display settings
                             (context as? androidx.activity.ComponentActivity)?.let { activity ->
                                 activity.window.statusBarColor = android.graphics.Color.TRANSPARENT
-                                androidx.core.view.WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+                                androidx.core.view.WindowCompat
+                                    .setDecorFitsSystemWindows(activity.window, false)
                             }
 
                             // Start activity with no animation
                             context.startActivity(intent)
                             (context as? androidx.activity.ComponentActivity)?.overridePendingTransition(0, 0)
-                        }
+                        },
                     ) {
                         Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier
+                                    .size(30.dp)
+                                    .background(Color(0xFFDD3825), shape = androidx.compose.foundation.shape.CircleShape),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "SOS",
                                 color = Color.White,
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                fontSize = 10.sp
+                                fontSize = 10.sp,
                             )
                         }
                     }
@@ -145,7 +150,7 @@ private fun CustomTopAppBar(
 fun PDFViewerScreen(
     pdfUrl: String,
     title: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -231,34 +236,36 @@ fun PDFViewerScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                )
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749)),
+                    ),
+                ),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             CustomTopAppBar(
                 title = title,
                 onBackClick = onBackClick,
                 showSosButton = title.contains("Anti Bribery", ignoreCase = true) || title.contains("POSH", ignoreCase = true),
-                context = context
+                context = context,
             )
 
             // Main content container
             Card(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(4.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
             ) {
                 if (!isLoading && !loadError && pdfPages.isNotEmpty()) {
                     // Full-Width Column with PDF pages
                     PdfPagesView(
                         pdfPages = pdfPages,
-                        lazyListState = lazyListState
+                        lazyListState = lazyListState,
                     )
                 }
 
@@ -266,18 +273,18 @@ fun PDFViewerScreen(
                 if (loadError) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(16.dp),
                         ) {
                             Text(
                                 text = errorMessage,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.Red,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
@@ -299,18 +306,20 @@ fun PDFViewerScreen(
                                         }
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFDD3825)
-                                )
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFDD3825),
+                                    ),
                             ) {
                                 Text("Retry")
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedButton(
                                 onClick = onBackClick,
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color(0xFFDD3825)
-                                )
+                                colors =
+                                    ButtonDefaults.outlinedButtonColors(
+                                        contentColor = Color(0xFFDD3825),
+                                    ),
                             ) {
                                 Text("Go Back")
                             }
@@ -326,17 +335,18 @@ fun PDFViewerScreen(
         // Tooltip for double-tap to zoom
         if (showTooltip) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(Color(0xAA000000))
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(Color(0xAA000000))
+                        .padding(8.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Double-tap to zoom",
                     color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
         }
@@ -346,32 +356,36 @@ fun PDFViewerScreen(
 @Composable
 private fun PdfPagesView(
     pdfPages: List<Bitmap>,
-    lazyListState: LazyListState
+    lazyListState: LazyListState,
 ) {
     // Box wrapping entire content for layering
     Box(modifier = Modifier.fillMaxSize()) {
         // Background transparent overlay that catches all scroll events
         // when pages are not zoomed, to ensure scrolling works from anywhere
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(0f) // Lowest layer
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .zIndex(0f), // Lowest layer
         )
 
         // Scrollable content
         LazyColumn(
             state = lazyListState,
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(1f), // Middle layer
-            contentPadding = PaddingValues(vertical = 8.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .zIndex(1f),
+            // Middle layer
+            contentPadding = PaddingValues(vertical = 8.dp),
         ) {
             items(pdfPages) { page ->
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     PdfPageWithZoom(page = page)
                 }
@@ -392,275 +406,296 @@ private fun PdfPageWithZoom(page: Bitmap) {
     var containerSize by remember { mutableStateOf(Size.Zero) }
 
     // Create a transformable state for handling zoom and pan
-    val transformableState = rememberTransformableState { zoomChange, panChange, _ ->
-        // Handle zoom
-        if (zoomChange != 1f) {
-            scale = (scale * zoomChange).coerceIn(1f, 3f)
-        }
+    val transformableState =
+        rememberTransformableState { zoomChange, panChange, _ ->
+            // Handle zoom
+            if (zoomChange != 1f) {
+                scale = (scale * zoomChange).coerceIn(1f, 3f)
+            }
 
-        // Handle pan when zoomed in
-        if (scale > 1f) {
-            offsetX += panChange.x
-            offsetY += panChange.y
+            // Handle pan when zoomed in
+            if (scale > 1f) {
+                offsetX += panChange.x
+                offsetY += panChange.y
 
-            // Constrain pan within bounds
-            val maxX = (containerSize.width * (scale - 1f)) / 2f
-            val maxY = (containerSize.height * (scale - 1f)) / 2f
-            offsetX = offsetX.coerceIn(-maxX, maxX)
-            offsetY = offsetY.coerceIn(-maxY, maxY)
-        } else {
-            // Reset when not zoomed
-            offsetX = 0f
-            offsetY = 0f
+                // Constrain pan within bounds
+                val maxX = (containerSize.width * (scale - 1f)) / 2f
+                val maxY = (containerSize.height * (scale - 1f)) / 2f
+                offsetX = offsetX.coerceIn(-maxX, maxX)
+                offsetY = offsetY.coerceIn(-maxY, maxY)
+            } else {
+                // Reset when not zoomed
+                offsetX = 0f
+                offsetY = 0f
+            }
         }
-    }
 
     // Handle double-tap to zoom
-    val doubleTapModifier = Modifier.pointerInput(Unit) {
-        detectTapGestures(
-            onDoubleTap = {
-                scale = if (scale > 1f) 1f else 2f
-                if (scale <= 1f) {
-                    offsetX = 0f
-                    offsetY = 0f
-                }
-            }
-        )
-    }
+    val doubleTapModifier =
+        Modifier.pointerInput(Unit) {
+            detectTapGestures(
+                onDoubleTap = {
+                    scale = if (scale > 1f) 1f else 2f
+                    if (scale <= 1f) {
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                },
+            )
+        }
 
     // Main container for the PDF page
     Box(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         // The page wrapper with shadow
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onSizeChanged { containerSize = Size(it.width.toFloat(), it.height.toFloat()) },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { containerSize = Size(it.width.toFloat(), it.height.toFloat()) },
             shadowElevation = 2.dp,
-            color = Color.White
+            color = Color.White,
         ) {
             // The PDF page itself - zoomable but won't block scrolling
             Image(
                 bitmap = page.asImageBitmap(),
                 contentDescription = "PDF Page",
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        translationX = offsetX
-                        translationY = offsetY
-                    }
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            translationX = offsetX
+                            translationY = offsetY
+                        },
             )
         }
 
         // Transparent overlay only for zoom gestures
         // We place it over the Surface to capture pinch/zoom without blocking scrolling
         Box(
-            modifier = Modifier
-                .matchParentSize()
-                .transformable(
-                    state = transformableState,
-                    lockRotationOnZoomPan = true,
-                    enabled = scale > 1f
-                )
-                .then(doubleTapModifier)
+            modifier =
+                Modifier
+                    .matchParentSize()
+                    .transformable(
+                        state = transformableState,
+                        lockRotationOnZoomPan = true,
+                        enabled = scale > 1f,
+                    ).then(doubleTapModifier),
         )
     }
 }
 
-private suspend fun downloadPdf(context: Context, pdfUrl: String): File = withContext(Dispatchers.IO) {
-    val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
-    val outputFile = File(context.cacheDir, fileName)
+private suspend fun downloadPdf(
+    context: Context,
+    pdfUrl: String,
+): File =
+    withContext(Dispatchers.IO) {
+        val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
+        val outputFile = File(context.cacheDir, fileName)
 
-    try {
-        Log.d("PDFViewerScreen", "Downloading PDF from URL: $pdfUrl")
+        try {
+            Log.d("PDFViewerScreen", "Downloading PDF from URL: $pdfUrl")
 
-        // Handle content:// URIs (FileProvider)
-        if (pdfUrl.startsWith("content://")) {
-            try {
-                val uri = Uri.parse(pdfUrl)
-                Log.d("PDFViewerScreen", "Handling content URI: $uri")
+            // Handle content:// URIs (FileProvider)
+            if (pdfUrl.startsWith("content://")) {
+                try {
+                    val uri = Uri.parse(pdfUrl)
+                    Log.d("PDFViewerScreen", "Handling content URI: $uri")
 
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    outputFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-
-                if (outputFile.exists() && outputFile.length() > 0) {
-                    Log.d("PDFViewerScreen", "Successfully copied content URI to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
-                    return@withContext outputFile
-                } else {
-                    Log.e("PDFViewerScreen", "Failed to copy from content URI")
-                    throw IllegalArgumentException("Failed to copy from content URI")
-                }
-            } catch (e: Exception) {
-                Log.e("PDFViewerScreen", "Error handling content URI: ${e.message}", e)
-                throw e
-            }
-        }
-
-        // Handle local file URI
-        if (pdfUrl.startsWith("file://")) {
-            try {
-                // Parse the URI properly
-                val uri = Uri.parse(pdfUrl)
-                Log.d("PDFViewerScreen", "URI path: ${uri.path}")
-
-                val sourceFile = File(uri.path ?: "")
-                if (sourceFile.exists() && sourceFile.canRead()) {
-                    Log.d("PDFViewerScreen", "Local file exists and is readable: ${sourceFile.absolutePath}")
-                    sourceFile.inputStream().use { input ->
+                    context.contentResolver.openInputStream(uri)?.use { input ->
                         outputFile.outputStream().use { output ->
                             input.copyTo(output)
                         }
                     }
 
                     if (outputFile.exists() && outputFile.length() > 0) {
-                        Log.d("PDFViewerScreen", "Successfully copied file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
+                        Log.d(
+                            "PDFViewerScreen",
+                            "Successfully copied content URI to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes",
+                        )
+                        return@withContext outputFile
                     } else {
-                        Log.e("PDFViewerScreen", "File copy failed or file is empty: ${outputFile.absolutePath}")
+                        Log.e("PDFViewerScreen", "Failed to copy from content URI")
+                        throw IllegalArgumentException("Failed to copy from content URI")
                     }
-
-                    return@withContext outputFile
-                } else {
-                    Log.e("PDFViewerScreen", "Local file doesn't exist or can't be read: ${sourceFile.absolutePath}")
-                    Log.e("PDFViewerScreen", "File exists: ${sourceFile.exists()}, Can read: ${sourceFile.canRead()}")
-
-                    // If we can't access the original file, try to use it directly if it's in our cache
-                    if (sourceFile.absolutePath.contains(context.cacheDir.absolutePath)) {
-                        Log.d("PDFViewerScreen", "File is in our cache, using it directly")
-                        if (sourceFile.exists() && sourceFile.length() > 0) {
-                            return@withContext sourceFile
-                        }
-                    }
-
-                    throw IllegalArgumentException("Cannot access local file: ${sourceFile.absolutePath}")
+                } catch (e: Exception) {
+                    Log.e("PDFViewerScreen", "Error handling content URI: ${e.message}", e)
+                    throw e
                 }
+            }
+
+            // Handle local file URI
+            if (pdfUrl.startsWith("file://")) {
+                try {
+                    // Parse the URI properly
+                    val uri = Uri.parse(pdfUrl)
+                    Log.d("PDFViewerScreen", "URI path: ${uri.path}")
+
+                    val sourceFile = File(uri.path ?: "")
+                    if (sourceFile.exists() && sourceFile.canRead()) {
+                        Log.d("PDFViewerScreen", "Local file exists and is readable: ${sourceFile.absolutePath}")
+                        sourceFile.inputStream().use { input ->
+                            outputFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+
+                        if (outputFile.exists() && outputFile.length() > 0) {
+                            Log.d(
+                                "PDFViewerScreen",
+                                "Successfully copied file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes",
+                            )
+                        } else {
+                            Log.e("PDFViewerScreen", "File copy failed or file is empty: ${outputFile.absolutePath}")
+                        }
+
+                        return@withContext outputFile
+                    } else {
+                        Log.e("PDFViewerScreen", "Local file doesn't exist or can't be read: ${sourceFile.absolutePath}")
+                        Log.e("PDFViewerScreen", "File exists: ${sourceFile.exists()}, Can read: ${sourceFile.canRead()}")
+
+                        // If we can't access the original file, try to use it directly if it's in our cache
+                        if (sourceFile.absolutePath.contains(context.cacheDir.absolutePath)) {
+                            Log.d("PDFViewerScreen", "File is in our cache, using it directly")
+                            if (sourceFile.exists() && sourceFile.length() > 0) {
+                                return@withContext sourceFile
+                            }
+                        }
+
+                        throw IllegalArgumentException("Cannot access local file: ${sourceFile.absolutePath}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("PDFViewerScreen", "Error handling local file URI: ${e.message}", e)
+                    throw e
+                }
+            }
+
+            // URL handling for remote files
+            try {
+                val url = URL(pdfUrl)
+                val connection = url.openConnection()
+                connection.connect()
+
+                val input = connection.getInputStream()
+                val output = FileOutputStream(outputFile)
+
+                val buffer = ByteArray(4 * 1024) // 4K buffer
+                var read: Int
+                while (input.read(buffer).also { read = it } != -1) {
+                    output.write(buffer, 0, read)
+                }
+
+                output.flush()
+                output.close()
+                input.close()
+
+                if (outputFile.exists() && outputFile.length() > 0) {
+                    Log.d(
+                        "PDFViewerScreen",
+                        "Successfully downloaded file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes",
+                    )
+                } else {
+                    Log.e("PDFViewerScreen", "File download failed or file is empty: ${outputFile.absolutePath}")
+                }
+
+                return@withContext outputFile
             } catch (e: Exception) {
-                Log.e("PDFViewerScreen", "Error handling local file URI: ${e.message}", e)
+                Log.e("PDFViewerScreen", "Error downloading remote PDF: ${e.message}", e)
                 throw e
             }
-        }
-
-        // URL handling for remote files
-        try {
-            val url = URL(pdfUrl)
-            val connection = url.openConnection()
-            connection.connect()
-
-            val input = connection.getInputStream()
-            val output = FileOutputStream(outputFile)
-
-            val buffer = ByteArray(4 * 1024) // 4K buffer
-            var read: Int
-            while (input.read(buffer).also { read = it } != -1) {
-                output.write(buffer, 0, read)
-            }
-
-            output.flush()
-            output.close()
-            input.close()
-
-            if (outputFile.exists() && outputFile.length() > 0) {
-                Log.d("PDFViewerScreen", "Successfully downloaded file to: ${outputFile.absolutePath}, size: ${outputFile.length()} bytes")
-            } else {
-                Log.e("PDFViewerScreen", "File download failed or file is empty: ${outputFile.absolutePath}")
-            }
-
-            return@withContext outputFile
         } catch (e: Exception) {
-            Log.e("PDFViewerScreen", "Error downloading remote PDF: ${e.message}", e)
+            Log.e("PDFViewerScreen", "Error in downloadPdf: ${e.message}", e)
             throw e
         }
-    } catch (e: Exception) {
-        Log.e("PDFViewerScreen", "Error in downloadPdf: ${e.message}", e)
-        throw e
     }
-}
 
-private suspend fun renderPdfPages(context: Context, pdfFile: File): List<Bitmap> = withContext(Dispatchers.IO) {
-    val renderedPages = mutableListOf<Bitmap>()
-
-    try {
-        Log.d("PDFViewerScreen", "Starting to render PDF: ${pdfFile.absolutePath}, size: ${pdfFile.length()} bytes")
-
-        if (!pdfFile.exists() || pdfFile.length() == 0L) {
-            Log.e("PDFViewerScreen", "PDF file does not exist or is empty: ${pdfFile.absolutePath}")
-            throw IllegalArgumentException("PDF file does not exist or is empty")
-        }
+private suspend fun renderPdfPages(
+    context: Context,
+    pdfFile: File,
+): List<Bitmap> =
+    withContext(Dispatchers.IO) {
+        val renderedPages = mutableListOf<Bitmap>()
 
         try {
-            val fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
-            val pdfRenderer = PdfRenderer(fileDescriptor)
+            Log.d("PDFViewerScreen", "Starting to render PDF: ${pdfFile.absolutePath}, size: ${pdfFile.length()} bytes")
 
-            val pageCount = pdfRenderer.pageCount
-            Log.d("PDFViewerScreen", "PDF has $pageCount pages")
-
-            if (pageCount == 0) {
-                Log.e("PDFViewerScreen", "PDF has no pages")
-                throw IllegalArgumentException("PDF has no pages")
+            if (!pdfFile.exists() || pdfFile.length() == 0L) {
+                Log.e("PDFViewerScreen", "PDF file does not exist or is empty: ${pdfFile.absolutePath}")
+                throw IllegalArgumentException("PDF file does not exist or is empty")
             }
 
-            for (i in 0 until pageCount) {
-                val page = pdfRenderer.openPage(i)
-
-                // Create bitmap with appropriate dimensions for screen width
-                val displayMetrics = context.resources.displayMetrics
-                val screenWidth = displayMetrics.widthPixels
-
-                // Calculate height to maintain aspect ratio
-                val pageRatio = page.height.toFloat() / page.width.toFloat()
-                val targetHeight = (screenWidth * pageRatio).toInt()
-
-                val bitmap = Bitmap.createBitmap(screenWidth, targetHeight, Bitmap.Config.ARGB_8888)
-
-                // Render the page onto the bitmap
-                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                renderedPages.add(bitmap)
-
-                page.close()
-
-                Log.d("PDFViewerScreen", "Rendered page ${i + 1} of $pageCount")
-            }
-
-            pdfRenderer.close()
-            fileDescriptor.close()
-
-            Log.d("PDFViewerScreen", "Successfully rendered all $pageCount pages")
-        } catch (e: Exception) {
-            // Handle specific PDF rendering errors
-            Log.e("PDFViewerScreen", "Error rendering PDF (first attempt): ${e.message}", e)
-
-            // Try alternate rendering approach for problematic PDFs
             try {
-                Log.d("PDFViewerScreen", "Trying alternate rendering approach...")
+                val fileDescriptor = ParcelFileDescriptor.open(pdfFile, ParcelFileDescriptor.MODE_READ_ONLY)
+                val pdfRenderer = PdfRenderer(fileDescriptor)
 
-                // Create a simple placeholder bitmap for documents that can't be rendered
-                val displayMetrics = context.resources.displayMetrics
-                val screenWidth = displayMetrics.widthPixels
-                val placeholderHeight = (screenWidth * 1.4f).toInt() // Standard page ratio
+                val pageCount = pdfRenderer.pageCount
+                Log.d("PDFViewerScreen", "PDF has $pageCount pages")
 
-                val placeholderBitmap = Bitmap.createBitmap(screenWidth, placeholderHeight, Bitmap.Config.ARGB_8888)
-                renderedPages.add(placeholderBitmap)
+                if (pageCount == 0) {
+                    Log.e("PDFViewerScreen", "PDF has no pages")
+                    throw IllegalArgumentException("PDF has no pages")
+                }
 
-                Log.d("PDFViewerScreen", "Added placeholder bitmap for document")
+                for (i in 0 until pageCount) {
+                    val page = pdfRenderer.openPage(i)
 
-                // At this point, we have at least one page (placeholder) so the viewer will show something
-                return@withContext renderedPages
-            } catch (innerE: Exception) {
-                Log.e("PDFViewerScreen", "Error with fallback rendering: ${innerE.message}", innerE)
-                throw innerE
+                    // Create bitmap with appropriate dimensions for screen width
+                    val displayMetrics = context.resources.displayMetrics
+                    val screenWidth = displayMetrics.widthPixels
+
+                    // Calculate height to maintain aspect ratio
+                    val pageRatio = page.height.toFloat() / page.width.toFloat()
+                    val targetHeight = (screenWidth * pageRatio).toInt()
+
+                    val bitmap = Bitmap.createBitmap(screenWidth, targetHeight, Bitmap.Config.ARGB_8888)
+
+                    // Render the page onto the bitmap
+                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    renderedPages.add(bitmap)
+
+                    page.close()
+
+                    Log.d("PDFViewerScreen", "Rendered page ${i + 1} of $pageCount")
+                }
+
+                pdfRenderer.close()
+                fileDescriptor.close()
+
+                Log.d("PDFViewerScreen", "Successfully rendered all $pageCount pages")
+            } catch (e: Exception) {
+                // Handle specific PDF rendering errors
+                Log.e("PDFViewerScreen", "Error rendering PDF (first attempt): ${e.message}", e)
+
+                // Try alternate rendering approach for problematic PDFs
+                try {
+                    Log.d("PDFViewerScreen", "Trying alternate rendering approach...")
+
+                    // Create a simple placeholder bitmap for documents that can't be rendered
+                    val displayMetrics = context.resources.displayMetrics
+                    val screenWidth = displayMetrics.widthPixels
+                    val placeholderHeight = (screenWidth * 1.4f).toInt() // Standard page ratio
+
+                    val placeholderBitmap = Bitmap.createBitmap(screenWidth, placeholderHeight, Bitmap.Config.ARGB_8888)
+                    renderedPages.add(placeholderBitmap)
+
+                    Log.d("PDFViewerScreen", "Added placeholder bitmap for document")
+
+                    // At this point, we have at least one page (placeholder) so the viewer will show something
+                    return@withContext renderedPages
+                } catch (innerE: Exception) {
+                    Log.e("PDFViewerScreen", "Error with fallback rendering: ${innerE.message}", innerE)
+                    throw innerE
+                }
             }
+        } catch (e: Exception) {
+            Log.e("PDFViewerScreen", "Error rendering PDF: ${e.message}", e)
+            throw e
         }
-    } catch (e: Exception) {
-        Log.e("PDFViewerScreen", "Error rendering PDF: ${e.message}", e)
-        throw e
-    }
 
-    return@withContext renderedPages
-}
+        return@withContext renderedPages
+    }

@@ -27,7 +27,7 @@ class MeetingRoomActivity : ComponentActivity() {
                     room = room,
                     numberOfAttendees = numberOfAttendees,
                     meetingType = meetingType,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

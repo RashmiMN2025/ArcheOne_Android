@@ -21,33 +21,41 @@ import com.archeGlobal.one.R
 
 @Composable
 fun RotatingLoader(spin: Boolean) {
-    val rotation = if (spin) {
-        val infiniteTransition = rememberInfiniteTransition(label = "rotateLoader")
-        val rot by infiniteTransition.animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 1000, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            ),
-            label = "angle"
-        )
-        rot
-    } else {
-        0f
-    }
+    val rotation =
+        if (spin) {
+            val infiniteTransition = rememberInfiniteTransition(label = "rotateLoader")
+            val rot by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(durationMillis = 1000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                label = "angle",
+            )
+            rot
+        } else {
+            0f
+        }
 
     Box(
-        modifier = Modifier
-            .size(40.dp)
-            .rotate(rotation),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .size(40.dp)
+                .rotate(rotation),
+        contentAlignment = Alignment.Center,
     ) {
         Image(
             painter = painterResource(id = R.drawable.prideloader),
             contentDescription = "Loading",
             modifier = Modifier.fillMaxSize(),
-            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color(0xFFDD3825))
+            colorFilter =
+                androidx.compose.ui.graphics.ColorFilter
+                    .tint(
+                        androidx.compose.ui.graphics
+                            .Color(0xFFDD3825),
+                    ),
         )
     }
 }

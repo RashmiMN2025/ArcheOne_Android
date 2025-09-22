@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class OrderReceivedModel(
     val orders: List<Order> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 data class Order(
@@ -28,7 +28,7 @@ data class Order(
     @SerializedName("items")
     val items: List<OrderItem> = emptyList(),
     @SerializedName("total_items")
-    val totalItems: Int = 0
+    val totalItems: Int = 0,
 )
 
 data class OrderItem(
@@ -37,16 +37,19 @@ data class OrderItem(
     @SerializedName("quantity")
     val quantity: Int,
     @SerializedName("icon_name")
-    val iconName: String
+    val iconName: String,
 )
 
-enum class OrderStatus(val displayName: String, val colorHex: String) {
+enum class OrderStatus(
+    val displayName: String,
+    val colorHex: String,
+) {
     PENDING("Pending", "#D32F2F"),
     PROCESSING("Processing", "#FF9800"),
     APPROVED("Approved", "#4CAF50"),
     REJECTED("Rejected", "#D32F2F"),
     COMPLETED("Completed", "#4CAF50"),
-    CANCELLED("Cancelled", "#757575")
+    CANCELLED("Cancelled", "#757575"),
 }
 
 // API Request/Response models for Order History
@@ -56,7 +59,7 @@ data class OrderHistoryResponse(
     @SerializedName("orders")
     val orders: List<OrderHistoryItem>,
     @SerializedName("message")
-    val message: String? = null
+    val message: String? = null,
 )
 
 data class OrderHistoryItem(
@@ -85,7 +88,7 @@ data class OrderHistoryItem(
     @SerializedName("Remarks")
     val remarks: String,
     @SerializedName("Emailid")
-    val emailId: String
+    val emailId: String,
 )
 
 data class OrderHistoryItemDetail(
@@ -94,13 +97,13 @@ data class OrderHistoryItemDetail(
     @SerializedName("name")
     val name: String,
     @SerializedName("count")
-    val count: Int
+    val count: Int,
 )
 
 // API Request/Response models
 data class OrdersRequest(
     @SerializedName("admin_email")
-    val adminEmail: String
+    val adminEmail: String,
 )
 
 data class OrdersResponse(
@@ -109,12 +112,12 @@ data class OrdersResponse(
     @SerializedName("orders")
     val orders: List<Order>,
     @SerializedName("message")
-    val message: String? = null
+    val message: String? = null,
 )
 
 // Sample data for development
-fun getSampleOrders(): List<Order> {
-    return listOf(
+fun getSampleOrders(): List<Order> =
+    listOf(
         Order(
             orderId = "ORD001",
             status = OrderStatus.PENDING,
@@ -123,11 +126,12 @@ fun getSampleOrders(): List<Order> {
             date = "8 Aug 2025",
             time = "12:03 PM",
             isNew = true,
-            items = listOf(
-                OrderItem("Pen", 5, "ic_pen"),
-                OrderItem("Notepad", 2, "ic_notepad")
-            ),
-            totalItems = 7
+            items =
+                listOf(
+                    OrderItem("Pen", 5, "ic_pen"),
+                    OrderItem("Notepad", 2, "ic_notepad"),
+                ),
+            totalItems = 7,
         ),
         Order(
             orderId = "ORD002",
@@ -137,11 +141,12 @@ fun getSampleOrders(): List<Order> {
             date = "7 Aug 2025",
             time = "12:03 PM",
             isNew = false,
-            items = listOf(
-                OrderItem("Stapler", 1, "ic_stapler"),
-                OrderItem("Pencil", 10, "ic_pencil")
-            ),
-            totalItems = 11
+            items =
+                listOf(
+                    OrderItem("Stapler", 1, "ic_stapler"),
+                    OrderItem("Pencil", 10, "ic_pencil"),
+                ),
+            totalItems = 11,
         ),
         Order(
             orderId = "ORD003",
@@ -151,12 +156,13 @@ fun getSampleOrders(): List<Order> {
             date = "6 Aug 2025",
             time = "11:45 AM",
             isNew = true,
-            items = listOf(
-                OrderItem("Marker", 3, "ic_marker"),
-                OrderItem("Glue", 2, "ic_glue"),
-                OrderItem("Scissor", 1, "ic_scissor")
-            ),
-            totalItems = 6
+            items =
+                listOf(
+                    OrderItem("Marker", 3, "ic_marker"),
+                    OrderItem("Glue", 2, "ic_glue"),
+                    OrderItem("Scissor", 1, "ic_scissor"),
+                ),
+            totalItems = 6,
         ),
         Order(
             orderId = "ORD004",
@@ -166,11 +172,12 @@ fun getSampleOrders(): List<Order> {
             date = "5 Aug 2025",
             time = "10:20 AM",
             isNew = false,
-            items = listOf(
-                OrderItem("Envelope DL", 20, "ic_envelope_dl"),
-                OrderItem("Tape", 2, "ic_tape")
-            ),
-            totalItems = 22
+            items =
+                listOf(
+                    OrderItem("Envelope DL", 20, "ic_envelope_dl"),
+                    OrderItem("Tape", 2, "ic_tape"),
+                ),
+            totalItems = 22,
         ),
         Order(
             orderId = "ORD005",
@@ -180,11 +187,11 @@ fun getSampleOrders(): List<Order> {
             date = "4 Aug 2025",
             time = "09:30 AM",
             isNew = true,
-            items = listOf(
-                OrderItem("Punching Machine", 1, "ic_punching_machine"),
-                OrderItem("Envelope A4", 15, "ic_envelope_a4")
-            ),
-            totalItems = 16
-        )
+            items =
+                listOf(
+                    OrderItem("Punching Machine", 1, "ic_punching_machine"),
+                    OrderItem("Envelope A4", 15, "ic_envelope_a4"),
+                ),
+            totalItems = 16,
+        ),
     )
-}

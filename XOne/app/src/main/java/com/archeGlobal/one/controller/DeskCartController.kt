@@ -28,7 +28,7 @@ import java.net.URLEncoder
 
 class DeskCartController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) : ViewModel() {
     var model by mutableStateOf(DeskCartModel(isInitialLoading = false))
         private set
@@ -55,42 +55,49 @@ class DeskCartController(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 Log.d("DeskCartController", "Fetching eligibility data for email: $email")
-                val response = RetrofitClient.apiService.getDeskCartEligibility(
-                    DeskCartEligibilityRequest(email = email)
-                )
+                val response =
+                    RetrofitClient.apiService.getDeskCartEligibility(
+                        DeskCartEligibilityRequest(email = email),
+                    )
 
                 if (response.isSuccessful && response.body() != null) {
                     val eligibilityResponse = response.body()!!
 
                     // Process data on background thread
-                    val stationaryItems = eligibilityResponse.order.map { apiItem ->
-                        StationaryItem(
-                            id = apiItem.materialId,
-                            name = apiItem.name,
-                            iconName = getIconNameFromItem(apiItem.name),
-                            imageUrl = apiItem.imageUrl,
-                            currentQuantity = 0,
-                            maxQuantity = apiItem.limit
-                        )
-                    }
+                    val stationaryItems =
+                        eligibilityResponse.order.map { apiItem ->
+                            StationaryItem(
+                                id = apiItem.materialId,
+                                name = apiItem.name,
+                                iconName = getIconNameFromItem(apiItem.name),
+                                imageUrl = apiItem.imageUrl,
+                                currentQuantity = 0,
+                                maxQuantity = apiItem.limit,
+                            )
+                        }
 
-                    val employeeDetails = EmployeeDetails(
-                        emailId = userData?.email ?: email,
-                        employeeId = userData?.employeeId ?: "NT1426",
-                        department = userData?.department ?: "Project Department"
-                    )
+                    val employeeDetails =
+                        EmployeeDetails(
+                            emailId = userData?.email ?: email,
+                            employeeId = userData?.employeeId ?: "NT1426",
+                            department = userData?.department ?: "Project Department",
+                        )
 
                     // Only update UI state on main thread
                     withContext(Dispatchers.Main) {
-                        model = model.copy(
-                            employeeDetails = employeeDetails,
-                            stationaryItems = stationaryItems,
-                            isAdmin = eligibilityResponse.isAdmin,
-                            isLoading = false,
-                            isInitialLoading = false
-                        )
+                        model =
+                            model.copy(
+                                employeeDetails = employeeDetails,
+                                stationaryItems = stationaryItems,
+                                isAdmin = eligibilityResponse.isAdmin,
+                                isLoading = false,
+                                isInitialLoading = false,
+                            )
 
-                        Log.d("DeskCartController", "Eligibility data loaded: ${stationaryItems.size} items, isAdmin: ${eligibilityResponse.isAdmin}")
+                        Log.d(
+                            "DeskCartController",
+                            "Eligibility data loaded: ${stationaryItems.size} items, isAdmin: ${eligibilityResponse.isAdmin}",
+                        )
                     }
                 } else {
                     withContext(Dispatchers.Main) {
@@ -107,23 +114,23 @@ class DeskCartController(
 
     private fun handleError(message: String) {
         Log.e("DeskCartController", message)
-        model = model.copy(
-            isLoading = false,
-            isInitialLoading = false,
-            error = message
-        )
+        model =
+            model.copy(
+                isLoading = false,
+                isInitialLoading = false,
+                error = message,
+            )
     }
 
     // Map API item names to existing icon names
-    private fun getIconNameFromItem(itemName: String): String {
-        return when {
+    private fun getIconNameFromItem(itemName: String): String =
+        when {
             itemName.contains("Pen", ignoreCase = true) -> "ic_pen"
             itemName.contains("Pencil", ignoreCase = true) -> "ic_pencil"
             itemName.contains("Notepad", ignoreCase = true) -> "ic_notepad"
             itemName.contains("Eraser", ignoreCase = true) -> "ic_eraser"
             else -> "ic_pen" // Default icon
         }
-    }
 
 //    fun onBackPressed() {
 //        Log.d("DeskCartController", "Back pressed - navigating to Home")
@@ -185,22 +192,24 @@ class DeskCartController(
         val location = userData?.location ?: "Office"
 
         // Create order items
-        val orderItems = selectedItems.map { item ->
-            DeskCartOrderItem(
-                materialId = item.id,
-                count = item.currentQuantity
-            )
-        }
+        val orderItems =
+            selectedItems.map { item ->
+                DeskCartOrderItem(
+                    materialId = item.id,
+                    count = item.currentQuantity,
+                )
+            }
 
         // Create place order request
-        val placeOrderRequest = DeskCartPlaceOrderRequest(
-            email = email,
-            employeeId = employeeId,
-            employeeName = employeeName,
-            department = department,
-            location = location,
-            items = orderItems
-        )
+        val placeOrderRequest =
+            DeskCartPlaceOrderRequest(
+                email = email,
+                employeeId = employeeId,
+                employeeName = employeeName,
+                department = department,
+                location = location,
+                items = orderItems,
+            )
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -212,23 +221,26 @@ class DeskCartController(
                         val orderResponse = response.body()!!
 
                         // Reset quantities after successful order
-                        val resetItems = model.stationaryItems.map {
-                            it.copy(currentQuantity = 0)
-                        }
+                        val resetItems =
+                            model.stationaryItems.map {
+                                it.copy(currentQuantity = 0)
+                            }
 
-                        model = model.copy(
-                            stationaryItems = resetItems,
-                            isLoading = false,
-                            orderPlaced = true
-                        )
+                        model =
+                            model.copy(
+                                stationaryItems = resetItems,
+                                isLoading = false,
+                                orderPlaced = true,
+                            )
 
                         // Show success message with order ID
                         val orderId = orderResponse.orders.firstOrNull()?.orderId ?: "N/A"
-                        Toast.makeText(
-                            context,
-                            "Order placed successfully with ID: $orderId",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        Toast
+                            .makeText(
+                                context,
+                                "Order placed successfully with ID: $orderId",
+                                Toast.LENGTH_LONG,
+                            ).show()
 
                         Log.d("DeskCartController", "Order placed successfully: ${orderResponse.message}")
 
@@ -249,16 +261,15 @@ class DeskCartController(
 
     private fun handleOrderError(message: String) {
         Log.e("DeskCartController", message)
-        model = model.copy(
-            isLoading = false,
-            error = message
-        )
+        model =
+            model.copy(
+                isLoading = false,
+                error = message,
+            )
         Toast.makeText(context, "Failed to place order. Please try again.", Toast.LENGTH_SHORT).show()
     }
 
-    fun getTotalItemsSelected(): Int {
-        return model.stationaryItems.sumOf { it.currentQuantity }
-    }
+    fun getTotalItemsSelected(): Int = model.stationaryItems.sumOf { it.currentQuantity }
 
     fun clearError() {
         model = model.copy(error = null)
@@ -269,7 +280,10 @@ class DeskCartController(
         navigator.navigateToOrderHistoryActivity()
     }
 
-    fun downloadStockReport(category: String = "All", location: String? = null) {
+    fun downloadStockReport(
+        category: String = "All",
+        location: String? = null,
+    ) {
         if (!PermissionHelper.hasStoragePermission(context)) {
             model = model.copy(downloadError = "Storage permission required to download files")
             return
@@ -279,7 +293,10 @@ class DeskCartController(
         downloadReport(category, userLocation, isUsage = false)
     }
 
-    fun downloadUsageReport(category: String = "All", location: String? = null) {
+    fun downloadUsageReport(
+        category: String = "All",
+        location: String? = null,
+    ) {
         if (!PermissionHelper.hasStoragePermission(context)) {
             model = model.copy(downloadError = "Storage permission required to download files")
             return
@@ -289,13 +306,18 @@ class DeskCartController(
         downloadReport(category, userLocation, isUsage = true)
     }
 
-    private fun downloadReport(category: String, location: String, isUsage: Boolean) {
+    private fun downloadReport(
+        category: String,
+        location: String,
+        isUsage: Boolean,
+    ) {
         // Update loading state
-        model = if (isUsage) {
-            model.copy(isDownloadingUsage = true, downloadError = null)
-        } else {
-            model.copy(isDownloadingStock = true, downloadError = null)
-        }
+        model =
+            if (isUsage) {
+                model.copy(isDownloadingUsage = true, downloadError = null)
+            } else {
+                model.copy(isDownloadingStock = true, downloadError = null)
+            }
 
         val viewType = if (isUsage) "usage" else "stock"
 
@@ -320,19 +342,21 @@ class DeskCartController(
                         val result = fileDownloadHelper.saveCSVFile(responseBody, category, location, isUsage)
 
                         if (result.success) {
-                            model = model.copy(
-                                isDownloadingStock = false,
-                                isDownloadingUsage = false,
-                                lastDownloadedFile = result.filePath,
-                                downloadError = null
-                            )
+                            model =
+                                model.copy(
+                                    isDownloadingStock = false,
+                                    isDownloadingUsage = false,
+                                    lastDownloadedFile = result.filePath,
+                                    downloadError = null,
+                                )
 
                             val reportType = if (isUsage) "Monthly Usage Report" else "Stock Report"
-                            Toast.makeText(
-                                context,
-                                "$reportType downloaded successfully to Downloads folder",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            Toast
+                                .makeText(
+                                    context,
+                                    "$reportType downloaded successfully to Downloads folder",
+                                    Toast.LENGTH_LONG,
+                                ).show()
 
                             Log.d("DeskCartController", "File downloaded successfully: ${result.filePath}")
                         } else {
@@ -352,11 +376,12 @@ class DeskCartController(
 
     private fun handleDownloadError(message: String) {
         Log.e("DeskCartController", "Download error: $message")
-        model = model.copy(
-            isDownloadingStock = false,
-            isDownloadingUsage = false,
-            downloadError = message
-        )
+        model =
+            model.copy(
+                isDownloadingStock = false,
+                isDownloadingUsage = false,
+                downloadError = message,
+            )
         Toast.makeText(context, "Download failed: $message", Toast.LENGTH_SHORT).show()
     }
 

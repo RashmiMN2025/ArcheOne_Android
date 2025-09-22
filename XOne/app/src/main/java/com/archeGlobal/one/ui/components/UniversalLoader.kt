@@ -29,29 +29,33 @@ fun UniversalLoader(isLoading: Boolean) {
     if (isLoading) {
         Dialog(
             onDismissRequest = { },
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
-                usePlatformDefaultWidth = false // Ensures it takes full width
-            )
+            properties =
+                DialogProperties(
+                    dismissOnBackPress = false,
+                    dismissOnClickOutside = false,
+                    usePlatformDefaultWidth = false, // Ensures it takes full width
+                ),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize() // Ensures full screen coverage
-                    .background(Color.Black.copy(alpha = 0.3f)), // Dark transparent overlay
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize() // Ensures full screen coverage
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                // Dark transparent overlay
+                contentAlignment = Alignment.Center,
             ) {
                 val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.loading_animation))
                 val progress by animateLottieCompositionAsState(
                     composition,
-                    iterations = LottieConstants.IterateForever
+                    iterations = LottieConstants.IterateForever,
                 )
 
                 LottieAnimation(
                     composition = composition,
                     progress = { progress },
-                    modifier = Modifier
-                        .size(40.dp) // Adjust size as needed
+                    modifier =
+                        Modifier
+                            .size(40.dp), // Adjust size as needed
                 )
             }
         }
@@ -59,30 +63,30 @@ fun UniversalLoader(isLoading: Boolean) {
 }
 
 @Composable
-fun EmptyFavorites(
-    modifier: Modifier = Modifier
-) {
+fun EmptyFavorites(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .offset(y = (-80).dp), // Moved further down by changing from -100.dp to -80.dp
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .offset(y = (-80).dp),
+        // Moved further down by changing from -100.dp to -80.dp
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Spacer(modifier = Modifier.height(15.dp)) // Increased from 10.dp to 15.dp
         Image(
             painter = painterResource(id = R.drawable.ic_star),
             contentDescription = "No favorites",
             modifier = Modifier.size(56.dp),
-            colorFilter = ColorFilter.tint(Color.Gray)
+            colorFilter = ColorFilter.tint(Color.Gray),
         )
         Spacer(modifier = Modifier.height(20.dp)) // Increased from 20.dp to 22.dp
         Text(
             text = "No Favourite Services",
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
-            color = Color.Black
+            color = Color.Black,
         )
         Spacer(modifier = Modifier.height(10.dp)) // Increased from 10.dp to 12.dp
         Text(
@@ -90,7 +94,7 @@ fun EmptyFavorites(
             fontSize = 14.sp,
             color = Color.Black,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
+            modifier = Modifier.padding(horizontal = 32.dp),
         )
     }
 }
@@ -99,35 +103,40 @@ fun EmptyFavorites(
 fun UniversalToast(
     message: String,
     isVisible: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     if (isVisible) {
         Dialog(
             onDismissRequest = { },
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false
-            )
+            properties =
+                DialogProperties(
+                    dismissOnBackPress = false,
+                    dismissOnClickOutside = false,
+                ),
         ) {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.Black.copy(alpha = 0.8f)
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 8.dp
-                )
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = Color.Black.copy(alpha = 0.8f),
+                    ),
+                elevation =
+                    CardDefaults.cardElevation(
+                        defaultElevation = 8.dp,
+                    ),
             ) {
                 Text(
                     text = message,
                     color = Color.White,
-                    modifier = Modifier
-                        .padding(vertical = 16.dp, horizontal = 24.dp),
+                    modifier =
+                        Modifier
+                            .padding(vertical = 16.dp, horizontal = 24.dp),
                     textAlign = TextAlign.Center,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
                 )
             }
         }

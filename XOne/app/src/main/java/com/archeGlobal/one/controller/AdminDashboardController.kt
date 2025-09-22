@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 
 class AdminDashboardController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) : ViewModel() {
     var model by mutableStateOf(AdminDashboardModel())
         private set
@@ -49,19 +49,21 @@ class AdminDashboardController(
                     Log.d("AdminDashboardController", "Dashboard data loaded successfully. Order pending count: $orderPendingCount")
                 } else {
                     withContext(Dispatchers.Main) {
-                        model = model.copy(
-                            isLoading = false,
-                            error = "Failed to load dashboard data: ${response.message()}"
-                        )
+                        model =
+                            model.copy(
+                                isLoading = false,
+                                error = "Failed to load dashboard data: ${response.message()}",
+                            )
                     }
                 }
             } catch (e: Exception) {
                 Log.e("AdminDashboardController", "Error loading dashboard data", e)
                 withContext(Dispatchers.Main) {
-                    model = model.copy(
-                        isLoading = false,
-                        error = "Failed to load dashboard data: ${e.message}"
-                    )
+                    model =
+                        model.copy(
+                            isLoading = false,
+                            error = "Failed to load dashboard data: ${e.message}",
+                        )
                 }
             }
         }
@@ -109,14 +111,18 @@ class AdminDashboardController(
         navigator.navigateToConsumptionReport()
     }
 
-    fun updateBadgeCount(itemId: String, count: Int) {
-        val updatedItems = model.dashboardItems.map {
-            if (it.id == itemId) {
-                it.copy(badgeCount = count)
-            } else {
-                it
+    fun updateBadgeCount(
+        itemId: String,
+        count: Int,
+    ) {
+        val updatedItems =
+            model.dashboardItems.map {
+                if (it.id == itemId) {
+                    it.copy(badgeCount = count)
+                } else {
+                    it
+                }
             }
-        }
         model = model.copy(dashboardItems = updatedItems)
     }
 

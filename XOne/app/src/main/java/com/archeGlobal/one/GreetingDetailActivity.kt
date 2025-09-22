@@ -83,74 +83,97 @@ class GreetingDetailActivity : ComponentActivity() {
                     onGreetingSelected = { newGreetingUrl -> selectedGreetingUrl = newGreetingUrl },
                     onBackPressed = { finish() },
                     onSendGreeting = { sendGreeting(selectedGreetingUrl, editableMessage, category, recipientEmail) },
-                    onSendInOutlook = { greetingUrl, msg -> sendGreetingInOutlook(greetingUrl, msg, category, recipientEmail) }
+                    onSendInOutlook = { greetingUrl, msg -> sendGreetingInOutlook(greetingUrl, msg, category, recipientEmail) },
                 )
             }
         }
     }
 
-    private fun sendGreeting(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
-        android.widget.Toast.makeText(this, "Preparing greeting to send...", android.widget.Toast.LENGTH_SHORT).show()
+    private fun sendGreeting(
+        imageUrl: String,
+        message: String,
+        category: String,
+        recipientEmail: String = "",
+    ) {
+        android.widget.Toast
+            .makeText(this, "Preparing greeting to send...", android.widget.Toast.LENGTH_SHORT)
+            .show()
         downloadImageAndShare(imageUrl, message, category, recipientEmail)
     }
 
-    private fun shareLinkOnly(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, category)
-            val shareText = if (message.isNotEmpty()) {
-                "$message\n\n$imageUrl"
-            } else {
-                imageUrl
+    private fun shareLinkOnly(
+        imageUrl: String,
+        message: String,
+        category: String,
+        recipientEmail: String = "",
+    ) {
+        val intent =
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, category)
+                val shareText =
+                    if (message.isNotEmpty()) {
+                        "$message\n\n$imageUrl"
+                    } else {
+                        imageUrl
+                    }
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                // Pre-fill recipient email if available
+                if (recipientEmail.isNotEmpty()) {
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
+                }
             }
-            putExtra(Intent.EXTRA_TEXT, shareText)
-            // Pre-fill recipient email if available
-            if (recipientEmail.isNotEmpty()) {
-                putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
-            }
-        }
         startActivity(Intent.createChooser(intent, "Send Greeting"))
     }
 
-    private fun downloadImageAndShare(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
+    private fun downloadImageAndShare(
+        imageUrl: String,
+        message: String,
+        category: String,
+        recipientEmail: String = "",
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val imageLoader = ImageLoader(this@GreetingDetailActivity)
-                val request = ImageRequest.Builder(this@GreetingDetailActivity)
-                    .data(imageUrl)
-                    .allowHardware(false)
-                    .build()
+                val request =
+                    ImageRequest
+                        .Builder(this@GreetingDetailActivity)
+                        .data(imageUrl)
+                        .allowHardware(false)
+                        .build()
                 val result = imageLoader.execute(request)
-                val imageBitmap = result.drawable?.let { drawable ->
-                    when (drawable) {
-                        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
-                        else -> {
-                            val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
-                            val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
-                            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                            val canvas = android.graphics.Canvas(bitmap)
-                            drawable.setBounds(0, 0, canvas.width, canvas.height)
-                            drawable.draw(canvas)
-                            bitmap
+                val imageBitmap =
+                    result.drawable?.let { drawable ->
+                        when (drawable) {
+                            is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                            else -> {
+                                val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 512
+                                val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 512
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                drawable.draw(canvas)
+                                bitmap
+                            }
                         }
                     }
-                }
                 val imageUri = saveBitmapToCache(imageBitmap)
                 withContext(Dispatchers.Main) {
                     if (imageUri != null) {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "image/jpeg"
-                            putExtra(Intent.EXTRA_STREAM, imageUri)
-                            putExtra(Intent.EXTRA_SUBJECT, category)
-                            if (message.isNotEmpty()) {
-                                putExtra(Intent.EXTRA_TEXT, message)
+                        val intent =
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = "image/jpeg"
+                                putExtra(Intent.EXTRA_STREAM, imageUri)
+                                putExtra(Intent.EXTRA_SUBJECT, category)
+                                if (message.isNotEmpty()) {
+                                    putExtra(Intent.EXTRA_TEXT, message)
+                                }
+                                // Pre-fill recipient email if available
+                                if (recipientEmail.isNotEmpty()) {
+                                    putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
+                                }
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
-                            // Pre-fill recipient email if available
-                            if (recipientEmail.isNotEmpty()) {
-                                putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
-                            }
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
                         startActivity(Intent.createChooser(intent, "Send Greeting"))
                     } else {
                         shareLinkOnly(imageUrl, message, category, recipientEmail)
@@ -166,7 +189,12 @@ class GreetingDetailActivity : ComponentActivity() {
     }
 
     // --- Send via Outlook with image URL and small display in body ---
-    private fun sendGreetingInOutlook(imageUrl: String, message: String, category: String, recipientEmail: String = "") {
+    private fun sendGreetingInOutlook(
+        imageUrl: String,
+        message: String,
+        category: String,
+        recipientEmail: String = "",
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Get user data for signature
@@ -177,26 +205,28 @@ class GreetingDetailActivity : ComponentActivity() {
                 val userMobile = userData?.mobile ?: ""
 
                 // Build HTML email with image URL (width 300px) and signature
-                val htmlEmailContent = createHtmlEmailWithImageUrl(
-                    message,
-                    imageUrl,
-                    userName,
-                    userDesignation,
-                    userMobile
-                )
+                val htmlEmailContent =
+                    createHtmlEmailWithImageUrl(
+                        message,
+                        imageUrl,
+                        userName,
+                        userDesignation,
+                        userMobile,
+                    )
 
                 withContext(Dispatchers.Main) {
-                    val emailIntent = Intent(Intent.ACTION_SEND).apply {
-                        setPackage("com.microsoft.office.outlook")
-                        type = "text/html"
-                        putExtra(Intent.EXTRA_SUBJECT, category)
-                        putExtra(Intent.EXTRA_HTML_TEXT, htmlEmailContent)
-                        putExtra(Intent.EXTRA_TEXT, message)
-                        // Pre-fill recipient email if available
-                        if (recipientEmail.isNotEmpty()) {
-                            putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
+                    val emailIntent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            setPackage("com.microsoft.office.outlook")
+                            type = "text/html"
+                            putExtra(Intent.EXTRA_SUBJECT, category)
+                            putExtra(Intent.EXTRA_HTML_TEXT, htmlEmailContent)
+                            putExtra(Intent.EXTRA_TEXT, message)
+                            // Pre-fill recipient email if available
+                            if (recipientEmail.isNotEmpty()) {
+                                putExtra(Intent.EXTRA_EMAIL, arrayOf(recipientEmail))
+                            }
                         }
-                    }
                     try {
                         startActivity(emailIntent)
                     } catch (e: Exception) {
@@ -219,7 +249,7 @@ class GreetingDetailActivity : ComponentActivity() {
         imageUrl: String,
         userName: String,
         userDesignation: String,
-        userMobile: String
+        userMobile: String,
     ): String {
         val sanitizedMessage = message.replace("\n", "<br>")
         // Use the public URL for the signature icon
@@ -227,48 +257,48 @@ class GreetingDetailActivity : ComponentActivity() {
         val signatureImgTag = """<img src="$iconUrl" width="90" height="80" alt="User Icon" style="vertical-align: middle;"/>"""
 
         return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-            <style>
-                body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
-                .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
-                .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; }
-                .image-container { text-align: center; margin-bottom: 30px; }
-                .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
-            </style>
-        </head>
-        <body>
-            <div class="email-container">
-                <div class="message-text">
-                    $sanitizedMessage
-                    <br /><br />
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f8f8f8; }
+                    .email-container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; }
+                    .message-text { margin-bottom: 50px; line-height: 1.6; color: #333333; }
+                    .image-container { text-align: center; margin-bottom: 30px; }
+                    .footer-text { font-size:12px; color:#777777; text-align:center; margin-top:20px; }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="message-text">
+                        $sanitizedMessage
+                        <br /><br />
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
+                        <br /> <br />
+                    </div>
+                    
+                    <p style="margin-top: 20px;">Best Regards,</p>
+                    
+                    <table style="margin-top: 10px;">
+                        <tr>
+                            <td style="vertical-align: middle;">
+                                $signatureImgTag
+                            </td>
+                            <td style="padding-left: 18px; vertical-align: middle;">
+                                <strong>$userName</strong><br/>
+                                $userDesignation<br/>
+                                $userMobile
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                
-                <div class="image-container">
-                    <img src="$imageUrl" width="300" style="display:block; margin-top:10px;" /> 
-                    <br /> <br />
-                </div>
-                
-                <p style="margin-top: 20px;">Best Regards,</p>
-                
-                <table style="margin-top: 10px;">
-                    <tr>
-                        <td style="vertical-align: middle;">
-                            $signatureImgTag
-                        </td>
-                        <td style="padding-left: 18px; vertical-align: middle;">
-                            <strong>$userName</strong><br/>
-                            $userDesignation<br/>
-                            $userMobile
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </body>
-        </html>
-        """.trimIndent()
+            </body>
+            </html>
+            """.trimIndent()
     }
 
     private fun saveBitmapToCache(bitmap: Bitmap?): android.net.Uri? {
@@ -282,7 +312,7 @@ class GreetingDetailActivity : ComponentActivity() {
             return FileProvider.getUriForFile(
                 this,
                 "$packageName.provider",
-                file
+                file,
             )
         } catch (e: Exception) {
             android.util.Log.e("GreetingDetailActivity", "Error saving bitmap: ", e)

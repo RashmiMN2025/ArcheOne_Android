@@ -14,15 +14,15 @@ import com.archeGlobal.one.utils.EncryptedAPIHelper
 
 class IdeaVaultController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     private val encryptedAPIHelper = EncryptedAPIHelper(context)
 
     var employeeData by mutableStateOf(
         AboutMeModel(
             name = OtpVerificationController.getUserData()?.name ?: "",
-            email = OtpVerificationController.getUserData()?.email ?: ""
-        )
+            email = OtpVerificationController.getUserData()?.email ?: "",
+        ),
     )
 
     var isSubmitting by mutableStateOf(false)
@@ -30,7 +30,7 @@ class IdeaVaultController(
     fun submitFeedback(
         category: String?,
         feedback: String,
-        callback: (String, Boolean) -> Unit
+        callback: (String, Boolean) -> Unit,
     ) {
         if (feedback.isBlank()) {
             callback("Please provide feedback before submitting.", true)
@@ -39,16 +39,17 @@ class IdeaVaultController(
 
         isSubmitting = true
 
-        val feedbackRequest = FeedbackRequest(
-            name = employeeData.name,
-            email = employeeData.email,
-            category = if (category != "Select Category") category else null,
-            feedback = feedback,
-            rating = 0,
-            platform = "Android",
-            deviceName = Build.MODEL,
-            version = Build.VERSION.RELEASE
-        )
+        val feedbackRequest =
+            FeedbackRequest(
+                name = employeeData.name,
+                email = employeeData.email,
+                category = if (category != "Select Category") category else null,
+                feedback = feedback,
+                rating = 0,
+                platform = "Android",
+                deviceName = Build.MODEL,
+                version = Build.VERSION.RELEASE,
+            )
 
         Log.d("IdeaVaultController", "Submitting encrypted feedback request")
 
@@ -57,7 +58,7 @@ class IdeaVaultController(
             method = "POST",
             request = feedbackRequest,
             responseClass = FeedbackResponse::class.java,
-            withAuthHeader = false
+            withAuthHeader = false,
         ) { response, error ->
             isSubmitting = false
 

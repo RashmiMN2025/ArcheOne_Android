@@ -25,16 +25,17 @@ class MeetingRoomListActivity : ComponentActivity() {
                     meetingType = meetingType,
                     onBackPressed = { finish() },
                     onRoomClick = { room: MeetingRoom ->
-                        val intent = Intent(this@MeetingRoomListActivity, MeetingRoomActivity::class.java).apply {
-                            putExtra("roomName", room.name)
-                            putExtra("roomCapacity", room.capacity)
-                            putExtra("roomEquipment", room.equipment)
-                            putExtra("roomImageRes", room.imageRes)
-                            putExtra("numberOfAttendees", numberOfAttendees)
-                            putExtra("meetingType", meetingType)
-                        }
+                        val intent =
+                            Intent(this@MeetingRoomListActivity, MeetingRoomActivity::class.java).apply {
+                                putExtra("roomName", room.name)
+                                putExtra("roomCapacity", room.capacity)
+                                putExtra("roomEquipment", room.equipment)
+                                putExtra("roomImageRes", room.imageRes)
+                                putExtra("numberOfAttendees", numberOfAttendees)
+                                putExtra("meetingType", meetingType)
+                            }
                         startActivity(intent)
-                    }
+                    },
                 )
             }
         }

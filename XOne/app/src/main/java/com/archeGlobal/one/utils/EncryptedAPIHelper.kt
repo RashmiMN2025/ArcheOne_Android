@@ -13,8 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class EncryptedAPIHelper(private val context: Context) {
-
+class EncryptedAPIHelper(
+    private val context: Context,
+) {
     companion object {
         private const val TAG = "EncryptedAPIHelper"
     }
@@ -28,17 +29,18 @@ class EncryptedAPIHelper(private val context: Context) {
         responseClass: Class<R>,
         withAuthHeader: Boolean = false,
         handleTokenExpiration: Boolean = true,
-        callback: (R?, APIError?) -> Unit
+        callback: (R?, APIError?) -> Unit,
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = encryptedAPIService.encryptedRequest(
-                    endpoint = endpoint,
-                    method = method,
-                    body = request,
-                    responseClass = responseClass,
-                    withAuthHeader = withAuthHeader
-                )
+                val response =
+                    encryptedAPIService.encryptedRequest(
+                        endpoint = endpoint,
+                        method = method,
+                        body = request,
+                        responseClass = responseClass,
+                        withAuthHeader = withAuthHeader,
+                    )
 
                 withContext(Dispatchers.Main) {
                     callback(response, null)
@@ -69,12 +71,22 @@ class EncryptedAPIHelper(private val context: Context) {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Unexpected error in encrypted API call: ${e.message}", e)
-                    val userFriendlyMessage = when {
-                        e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please check your internet connection and try again."
-                        e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your internet connection."
-                        e.message?.contains("connection", ignoreCase = true) == true -> "Connection failed. Please check your internet connection."
-                        else -> "Unable to connect to server. Please try again."
-                    }
+                    val userFriendlyMessage =
+                        when {
+                            e.message?.contains(
+                                "timeout",
+                                ignoreCase = true,
+                            ) == true -> "Request timed out. Please check your internet connection and try again."
+                            e.message?.contains(
+                                "network",
+                                ignoreCase = true,
+                            ) == true -> "Network error. Please check your internet connection."
+                            e.message?.contains(
+                                "connection",
+                                ignoreCase = true,
+                            ) == true -> "Connection failed. Please check your internet connection."
+                            else -> "Unable to connect to server. Please try again."
+                        }
                     callback(null, APIError.UnknownError(-1, userFriendlyMessage))
                 }
             }
@@ -92,7 +104,10 @@ class EncryptedAPIHelper(private val context: Context) {
         }
     }
 
-    fun APIError.handleErrorWithContext(context: Context, callback: (String, Boolean) -> Unit) {
+    fun APIError.handleErrorWithContext(
+        context: Context,
+        callback: (String, Boolean) -> Unit,
+    ) {
         when (this) {
             is APIError.BadRequest -> callback(this.errorMessage, true)
             is APIError.Unauthorized -> {
@@ -131,15 +146,16 @@ class EncryptedAPIHelper(private val context: Context) {
         preferencesManager.clearSessionData()
         userDataManager.clearSessionData()
 
-        val intent = Intent(context, LoginActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("session_expired", true)
-            lastUserData?.let {
-                putExtra("last_email", it.email)
-                putExtra("last_mobile", it.mobile)
-                putExtra("last_employee_id", it.employeeId)
+        val intent =
+            Intent(context, LoginActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("session_expired", true)
+                lastUserData?.let {
+                    putExtra("last_email", it.email)
+                    putExtra("last_mobile", it.mobile)
+                    putExtra("last_employee_id", it.employeeId)
+                }
             }
-        }
         context.startActivity(intent)
     }
 
@@ -147,10 +163,11 @@ class EncryptedAPIHelper(private val context: Context) {
         Log.w("APIError", "App update required")
         // Only redirect to LoginActivity for contexts other than OtpVerificationActivity and HomeActivity
         if (context !is OtpVerificationActivity && context !is HomeActivity) {
-            val intent = Intent(context, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                putExtra("showUpdateDialog", true)
-            }
+            val intent =
+                Intent(context, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("showUpdateDialog", true)
+                }
             context.startActivity(intent)
         }
     }

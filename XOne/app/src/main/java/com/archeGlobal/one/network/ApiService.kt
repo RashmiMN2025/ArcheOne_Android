@@ -3,9 +3,15 @@ package com.archeGlobal.one.network
 import com.archeGlobal.one.model.AddInventoryItemRequest
 import com.archeGlobal.one.model.AddInventoryItemResponse
 import com.archeGlobal.one.model.ApiGreetingCategory
+import com.archeGlobal.one.model.CabBookingRequest
+import com.archeGlobal.one.model.CabBookingResponse
+import com.archeGlobal.one.model.CabHistoryRequest
+import com.archeGlobal.one.model.CabHistoryResponse
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.model.CommuniqueModel
+import com.archeGlobal.one.model.EmployeeSearchRequest
+import com.archeGlobal.one.model.EmployeeSearchResponse
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
@@ -42,28 +48,45 @@ import retrofit2.http.Url
 
 interface ApiService {
     @GET
-    suspend fun downloadReport(@Url url: String): Response<ResponseBody>
+    suspend fun downloadReport(
+        @Url url: String,
+    ): Response<ResponseBody>
 
     @POST("send-otp")
-    fun sendOtp(@Body request: SendOtpRequest): Call<SendOtpResponse>
+    fun sendOtp(
+        @Body request: SendOtpRequest,
+    ): Call<SendOtpResponse>
 
     @POST("otpVerify")
-    fun verifyOtp(@Body request: VerifyOtpRequest): Call<OtpVerifyResponse>
+    fun verifyOtp(
+        @Body request: VerifyOtpRequest,
+    ): Call<OtpVerifyResponse>
 
     @POST("login")
-    fun login(@Header("Authorization") token: String, @Body request: LoginRequest): Call<VerifyOtpResponse>
+    fun login(
+        @Header("Authorization") token: String,
+        @Body request: LoginRequest,
+    ): Call<VerifyOtpResponse>
 
     @POST("/sos")
-    suspend fun submitSOS(@Body request: SOSRequest): Response<SOSResponse>
+    suspend fun submitSOS(
+        @Body request: SOSRequest,
+    ): Response<SOSResponse>
 
     @POST("/helpdesk")
-    suspend fun submitHelpdesk(@Body request: SOSRequest): Response<SOSResponse>
+    suspend fun submitHelpdesk(
+        @Body request: SOSRequest,
+    ): Response<SOSResponse>
 
     @POST("/logout")
-    fun logout(@Body request: LogoutRequest): Call<LogoutResponse>
+    fun logout(
+        @Body request: LogoutRequest,
+    ): Call<LogoutResponse>
 
     @HTTP(method = "DELETE", path = "/delete_doc", hasBody = true)
-    fun deleteDoc(@Body params: Map<String, String>): Call<ProfilePictureResponse>
+    fun deleteDoc(
+        @Body params: Map<String, String>,
+    ): Call<ProfilePictureResponse>
 
     // Document API - List Files
     @Multipart
@@ -71,7 +94,7 @@ interface ApiService {
     fun listDocuments(
         @Part("email") email: RequestBody,
         @Part("employeeId") employeeId: RequestBody,
-        @Part("isPersonal") isPersonal: RequestBody? = null
+        @Part("isPersonal") isPersonal: RequestBody? = null,
     ): Call<DocumentListResponse>
 
     // Document API - Upload File
@@ -79,7 +102,7 @@ interface ApiService {
     @POST("/upload")
     fun uploadDocument(
         @Part file: MultipartBody.Part,
-        @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>
+        @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>,
     ): Call<DocumentListResponse>
 
     // Profile Picture API - Upload
@@ -88,14 +111,16 @@ interface ApiService {
     fun uploadProfilePicture(
         @Part file: MultipartBody.Part,
         @Part("email") email: RequestBody,
-        @Part("employeeId") employeeId: RequestBody
+        @Part("employeeId") employeeId: RequestBody,
     ): Call<ProfilePictureResponse>
 
     @GET("social")
     suspend fun getSocialContent(): Response<SocialContent>
 
     @POST("calendar")
-    suspend fun getCalendar(@Body request: CalendarRequest): Response<CalendarResponse>
+    suspend fun getCalendar(
+        @Body request: CalendarRequest,
+    ): Response<CalendarResponse>
 
     @GET("policies")
     suspend fun getPolicies(): Response<List<PolicyResponse>>
@@ -104,28 +129,42 @@ interface ApiService {
     suspend fun getGreetingCards(): Response<Map<String, List<String>>>
 
     @POST("feedback")
-    suspend fun submitFeedback(@Body request: FeedbackRequest): Response<FeedbackResponse>
+    suspend fun submitFeedback(
+        @Body request: FeedbackRequest,
+    ): Response<FeedbackResponse>
 
     @POST("/reset-password")
-    fun resetPassword(@Body request: PasswordResetRequest): Call<PasswordResetResponse>
+    fun resetPassword(
+        @Body request: PasswordResetRequest,
+    ): Call<PasswordResetResponse>
 
     @GET("daily-event")
     suspend fun getDailyEvent(): Response<EventResponse>
 
     @POST("travel-request-one")
-    fun submitTravelRequest(@Body request: TravelRequestSubmission): Call<TravelRequestResponse>
+    fun submitTravelRequest(
+        @Body request: TravelRequestSubmission,
+    ): Call<TravelRequestResponse>
 
     @POST("travel-request-one")
-    fun getTravelHistory(@Body request: TravelHistoryRequest): Call<TravelHistoryResponse>
+    fun getTravelHistory(
+        @Body request: TravelHistoryRequest,
+    ): Call<TravelHistoryResponse>
 
     @POST("travel-request-one/combined-history-one")
-    fun getTravelCombinedHistory(@Body request: TravelHistoryRequest): Call<TravelCombinedHistoryResponse>
+    fun getTravelCombinedHistory(
+        @Body request: TravelHistoryRequest,
+    ): Call<TravelCombinedHistoryResponse>
 
     @POST("travel-request-one/approve-one")
-    fun approveTravelRequest(@Body request: TravelApprovalActionRequest): Call<TravelApprovalActionResponse>
+    fun approveTravelRequest(
+        @Body request: TravelApprovalActionRequest,
+    ): Call<TravelApprovalActionResponse>
 
     @POST("travel-request-one/reject-one")
-    fun rejectTravelRequest(@Body request: TravelRejectActionRequest): Call<TravelApprovalActionResponse>
+    fun rejectTravelRequest(
+        @Body request: TravelRejectActionRequest,
+    ): Call<TravelApprovalActionResponse>
 
     @GET("employee-celebration")
     suspend fun getEmployeeCelebration(): Response<CelebrationResponse>
@@ -134,34 +173,66 @@ interface ApiService {
     // fun getFAQData(): Call<FAQDataResponse>
 
     @POST("tickets")
-    fun getTickets(@Body request: TicketsRequest): Call<TicketsResponse>
+    fun getTickets(
+        @Body request: TicketsRequest,
+    ): Call<TicketsResponse>
 
     @POST("admin/orders")
-    fun getOrders(@Body request: com.archeGlobal.one.model.OrdersRequest): Call<com.archeGlobal.one.model.OrdersResponse>
+    fun getOrders(
+        @Body request: com.archeGlobal.one.model.OrdersRequest,
+    ): Call<com.archeGlobal.one.model.OrdersResponse>
 
     @GET("deskcart/stocklist")
     suspend fun getStockList(): Response<StockListResponse>
 
     @POST("deskcart/stocklist/add")
-    suspend fun addInventoryItem(@Body request: AddInventoryItemRequest): Response<AddInventoryItemResponse>
+    suspend fun addInventoryItem(
+        @Body request: AddInventoryItemRequest,
+    ): Response<AddInventoryItemResponse>
 
     @POST("deskcart/stocklist/update")
-    suspend fun updateInventoryItem(@Body request: UpdateInventoryItemRequest): Response<UpdateInventoryItemResponse>
+    suspend fun updateInventoryItem(
+        @Body request: UpdateInventoryItemRequest,
+    ): Response<UpdateInventoryItemResponse>
 
     @POST("deskcart/orderlist/allHistory")
     suspend fun getOrderHistory(): Response<com.archeGlobal.one.model.OrderHistoryResponse>
 
     @POST("deskcart/orderlist/eligibility")
-    suspend fun getDeskCartEligibility(@Body request: DeskCartEligibilityRequest): Response<DeskCartEligibilityResponse>
+    suspend fun getDeskCartEligibility(
+        @Body request: DeskCartEligibilityRequest,
+    ): Response<DeskCartEligibilityResponse>
 
     @POST("deskcart/orderlist/userHistory")
-    suspend fun getDeskCartUserHistory(@Body request: com.archeGlobal.one.model.DeskCartOrderHistoryRequest): Response<com.archeGlobal.one.model.DeskCartOrderHistoryResponse>
+    suspend fun getDeskCartUserHistory(
+        @Body request: com.archeGlobal.one.model.DeskCartOrderHistoryRequest,
+    ): Response<com.archeGlobal.one.model.DeskCartOrderHistoryResponse>
 
     @POST("deskcart/orderlist/placeOrder")
-    suspend fun placeDeskCartOrder(@Body request: DeskCartPlaceOrderRequest): Response<DeskCartPlaceOrderResponse>
+    suspend fun placeDeskCartOrder(
+        @Body request: DeskCartPlaceOrderRequest,
+    ): Response<DeskCartPlaceOrderResponse>
 
     @POST("deskcart/orderlist/updateOrderStatus")
-    suspend fun updateDeskCartOrderStatus(@Body request: DeskCartUpdateOrderStatusRequest): Response<DeskCartUpdateOrderStatusResponse>
+    suspend fun updateDeskCartOrderStatus(
+        @Body request: DeskCartUpdateOrderStatusRequest,
+    ): Response<DeskCartUpdateOrderStatusResponse>
+
+    // Cab Booking APIs
+    @POST("cab-booking/submit")
+    fun submitCabBooking(
+        @Body request: CabBookingRequest,
+    ): Call<CabBookingResponse>
+
+    @POST("cab-booking/history")
+    fun getCabHistory(
+        @Body request: CabHistoryRequest,
+    ): Call<CabHistoryResponse>
+
+    @POST("employees/search")
+    fun searchEmployees(
+        @Body request: EmployeeSearchRequest,
+    ): Call<EmployeeSearchResponse>
 }
 
 data class FeedbackRequest(
@@ -172,12 +243,12 @@ data class FeedbackRequest(
     val rating: Int,
     val platform: String,
     val deviceName: String,
-    val version: String
+    val version: String,
 )
 
 data class FeedbackResponse(
     val status: Int,
-    val message: String
+    val message: String,
 )
 
 data class PolicyResponse(
@@ -186,24 +257,24 @@ data class PolicyResponse(
     @SerializedName("pdfUrl")
     val pdfUrl: String,
     @SerializedName("previewUrl")
-    val previewUrl: String
+    val previewUrl: String,
 )
 
 data class LogoutRequest(
     val email: String,
-    val deviceId: String
+    val deviceId: String,
 )
 
 data class LogoutResponse(
     val status: Int,
-    val message: String
+    val message: String,
 )
 
 data class DocumentListResponse(
     val status: Int,
     val message: Any, // Can be a string message or list of files
     val personalDoc: List<Document>? = emptyList(),
-    val professionalDoc: List<Document>? = emptyList()
+    val professionalDoc: List<Document>? = emptyList(),
 )
 
 data class Document(
@@ -214,22 +285,22 @@ data class Document(
     // Fields from the API response
     val document_name: String? = null,
     val doc_data: String? = null,
-    val documentType: String? = null
+    val documentType: String? = null,
 )
 
 data class SOSResponse(
-    @SerializedName("message") val message: String
+    @SerializedName("message") val message: String,
 )
 
 data class SendOtpRequest(
     val email: String,
     val mobile: String,
-    val employeeId: String
+    val employeeId: String,
 )
 
 data class SendOtpResponse(
     val message: String,
-    val status: Int
+    val status: Int,
 )
 
 data class VerifyOtpRequest(
@@ -243,13 +314,13 @@ data class VerifyOtpRequest(
     val deviceId: String,
     val platform: String,
     val osVersion: String,
-    val stayLoggedIn: Boolean = false
+    val stayLoggedIn: Boolean = false,
 )
 
 data class OtpVerifyResponse(
     val status: Int,
     val message: String,
-    val token: String
+    val token: String,
 )
 
 data class LoginRequest(
@@ -260,7 +331,7 @@ data class LoginRequest(
     val deviceModel: String,
     val osVersion: String,
     val appVersion: String,
-    val deviceId: String
+    val deviceId: String,
 )
 
 data class VerifyOtpResponse(
@@ -280,7 +351,7 @@ data class VerifyOtpResponse(
     @SerializedName(value = "eventPopup", alternate = ["event", "dailyEvent", "eventData"]) val eventData: EventResponse? = null,
     val faqList: List<FAQCategory>? = null,
     val whatsNew: List<WhatsNewItem>? = null,
-    val smartCollateral: List<SmartCollateralCategory>? = emptyList()
+    val smartCollateral: List<SmartCollateralCategory>? = emptyList(),
 )
 
 data class User(
@@ -292,7 +363,7 @@ data class User(
     val mobile: String,
     val location: String,
     val state: String? = null,
-    val userDetails: UserDetails? = null
+    val userDetails: UserDetails? = null,
 )
 
 data class UserDetails(
@@ -310,13 +381,13 @@ data class UserDetails(
     val emergency_contact_name: String = "",
     val emergency_contact_relation: String = "",
     val emergency_contact: String = "",
-    val documents: List<UserDocument> = emptyList()
+    val documents: List<UserDocument> = emptyList(),
 )
 
 data class UserDocument(
     val document_name: String = "",
     val doc_data: String = "",
-    val documentType: String = ""
+    val documentType: String = "",
 )
 
 data class Service(
@@ -326,7 +397,7 @@ data class Service(
     val category: String,
     val icon: String? = null,
     val url: String? = null,
-    val isNew: Boolean = false
+    val isNew: Boolean = false,
 )
 
 data class Office(
@@ -335,7 +406,7 @@ data class Office(
     val email: String,
     val country: String,
     val companyName: String? = null,
-    val regionaloffice: List<RegionalOffice>
+    val regionaloffice: List<RegionalOffice>,
 )
 
 data class RegionalOffice(
@@ -349,12 +420,12 @@ data class RegionalOffice(
     val hrContact: String? = null,
     val email: String? = null,
     val floorMap: String? = null,
-    val redirection: String? = null
+    val redirection: String? = null,
 )
 
 data class WhatsNewItem(
     val category: String,
-    val description: String
+    val description: String,
 )
 
 data class AssetResponse(
@@ -366,7 +437,7 @@ data class AssetResponse(
     val Employee_Code: String,
     val mobile_number: String,
     val username: String,
-    val details: List<AssetDetail>
+    val details: List<AssetDetail>,
 )
 
 data class AssetDetail(
@@ -376,21 +447,21 @@ data class AssetDetail(
     val model: String,
     val purchase_date: String?,
     val serial_number: String,
-    val hostname: String?
+    val hostname: String?,
 )
 
 data class CalendarRequest(
-    val state: String
+    val state: String,
 )
 
 data class TicketsRequest(
     val name: String,
     val category: String,
-    val subcategory: String? = null
+    val subcategory: String? = null,
 )
 
 data class TicketsResponse(
-    val tickets: List<TicketItem>
+    val tickets: List<TicketItem>,
 )
 
 data class TicketItem(
@@ -402,44 +473,44 @@ data class TicketItem(
     val subcategory: String? = null,
     val closure_comments: String? = null,
     val resolved_time: String? = null,
-    val subject: String? = null // Make subject optional since API doesn't always return it
+    val subject: String? = null, // Make subject optional since API doesn't always return it
 )
 
 data class FAQCategory(
     val title: String,
-    val items: List<FAQItem>
+    val items: List<FAQItem>,
 )
 
 data class FAQItem(
     val question: String,
-    val answer: List<FAQAnswer>
+    val answer: List<FAQAnswer>,
 )
 
 data class FAQAnswer(
     val cat: String,
-    val des: String
+    val des: String,
 )
 
 data class FAQDataResponse(
     val status: Int,
-    val faqList: List<FAQCategory>
+    val faqList: List<FAQCategory>,
 )
 
 data class DeskCartEligibilityRequest(
-    val email: String
+    val email: String,
 )
 
 data class DeskCartEligibilityResponse(
     val status: Int,
     val isAdmin: Boolean,
-    val order: List<DeskCartItem>
+    val order: List<DeskCartItem>,
 )
 
 data class DeskCartItem(
     val name: String,
     val materialId: String,
     val imageUrl: String,
-    val limit: Int
+    val limit: Int,
 )
 
 data class DeskCartPlaceOrderRequest(
@@ -449,18 +520,18 @@ data class DeskCartPlaceOrderRequest(
     val department: String,
     @SerializedName("Location")
     val location: String,
-    val items: List<DeskCartOrderItem>
+    val items: List<DeskCartOrderItem>,
 )
 
 data class DeskCartOrderItem(
     val materialId: String,
-    val count: Int
+    val count: Int,
 )
 
 data class DeskCartPlaceOrderResponse(
     val status: Int,
     val message: String,
-    val orders: List<DeskCartOrder>
+    val orders: List<DeskCartOrder>,
 )
 
 data class DeskCartOrder(
@@ -488,35 +559,36 @@ data class DeskCartOrder(
     @SerializedName("Remarks")
     val remarks: String,
     @SerializedName("Emailid")
-    val emailId: String
+    val emailId: String,
 )
 
 data class DeskCartOrderHistoryItem(
     val materialId: String,
     val name: String,
-    val count: Int
+    val count: Int,
 )
 
 data class DeskCartUpdateOrderStatusRequest(
     val orderId: String,
     val newStatus: String, // approved, rejected, cancelled, closed
     val processedBy: String, // name of admin
-    val rejectionRemarks: String
+    val rejectionRemarks: String,
 )
 
 data class DeskCartUpdateOrderStatusResponse(
     val status: Int,
-    val orders: List<DeskCartOrder>
+    val orders: List<DeskCartOrder>,
 )
+
 data class SmartCollateralFile(
     val id: Int,
     val fileName: String,
     val fileUrl: String,
-    val thumbnailUrl: String? = null
+    val thumbnailUrl: String? = null,
 )
 
 data class SmartCollateralCategory(
     val id: Int,
     val name: String,
-    val files: List<SmartCollateralFile>
+    val files: List<SmartCollateralFile>,
 )

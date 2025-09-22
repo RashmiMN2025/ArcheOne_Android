@@ -8,7 +8,6 @@ import com.google.gson.annotations.SerializedName
 data class TravelApprovalActionResponse(
     @SerializedName("status")
     val status: Int,
-
     @SerializedName("message")
-    val message: String
+    val message: String,
 )

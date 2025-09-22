@@ -21,7 +21,7 @@ data class AddInventoryItemRequest(
     @SerializedName("location")
     val location: String,
     @SerializedName("suppliedDate")
-    val suppliedDate: String
+    val suppliedDate: String,
 )
 
 data class AddInventoryItemResponse(
@@ -30,7 +30,7 @@ data class AddInventoryItemResponse(
     @SerializedName("message")
     val message: String,
     @SerializedName("data")
-    val data: AddedInventoryItem?
+    val data: AddedInventoryItem?,
 )
 
 data class AddedInventoryItem(
@@ -63,7 +63,7 @@ data class AddedInventoryItem(
     @SerializedName("Last_Updated_Date_Time")
     val lastUpdatedDateTime: String,
     @SerializedName("stock_supplied_date")
-    val stockSuppliedDate: String
+    val stockSuppliedDate: String,
 )
 
 // Update Item API Models
@@ -85,7 +85,7 @@ data class UpdateInventoryItemRequest(
     @SerializedName("updateUtilization")
     val updateUtilization: Boolean = true,
     @SerializedName("location")
-    val location: String? = null
+    val location: String? = null,
 )
 
 data class UpdateInventoryItemResponse(
@@ -94,7 +94,7 @@ data class UpdateInventoryItemResponse(
     @SerializedName("message")
     val message: String,
     @SerializedName("data")
-    val data: UpdatedInventoryItem?
+    val data: UpdatedInventoryItem?,
 )
 
 data class UpdatedInventoryItem(
@@ -129,5 +129,5 @@ data class UpdatedInventoryItem(
     @SerializedName("stock_supplied_date")
     val stockSuppliedDate: String,
     @SerializedName("Utilization")
-    val utilization: String
+    val utilization: String,
 )

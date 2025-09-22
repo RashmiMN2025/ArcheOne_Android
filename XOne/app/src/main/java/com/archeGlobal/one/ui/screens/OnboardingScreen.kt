@@ -39,68 +39,73 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnboardingScreen(
     onGetStartedClick: () -> Unit,
-    onSkipClick: () -> Unit
+    onSkipClick: () -> Unit,
 ) {
     // Onboarding pages data
-    val pages = listOf(
-        OnboardingPage(
-            image = R.drawable.first,
-            title = "Workplace, Simplified",
-            description = "",
-            showLogo = true,
-            useBlackText = false
-        ),
-        OnboardingPage(
-            image = R.drawable.second,
-            title = "All-in-One Workforce Platform",
-            description = "Unite Your Workforce, Seamlessly.",
-            showLogo = false,
-            useBlackText = false
-        ),
-        OnboardingPage(
-            image = R.drawable.third, // Using third.jpeg as requested
-            title = "AI Powered, Digital First",
-            description = "Where Engagement Meets Impact.",
-            showLogo = false,
-            useBlackText = true // Use black text for third page
+    val pages =
+        listOf(
+            OnboardingPage(
+                image = R.drawable.first,
+                title = "Workplace, Simplified",
+                description = "",
+                showLogo = true,
+                useBlackText = false,
+            ),
+            OnboardingPage(
+                image = R.drawable.second,
+                title = "All-in-One Workforce Platform",
+                description = "Unite Your Workforce, Seamlessly.",
+                showLogo = false,
+                useBlackText = false,
+            ),
+            OnboardingPage(
+                image = R.drawable.third, // Using third.jpeg as requested
+                title = "AI Powered, Digital First",
+                description = "Where Engagement Meets Impact.",
+                showLogo = false,
+                useBlackText = true, // Use black text for third page
+            ),
         )
-    )
 
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
     val currentPage = pagerState.currentPage
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
         ) {
             // Pager for onboarding screens
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = false // Disable swipe gesture
+                userScrollEnabled = false, // Disable swipe gesture
             ) { page ->
                 OnboardingPage(
                     page = pages[page],
                     isLastPage = page == pages.size - 1,
-                    onGetStartedClick = onGetStartedClick
+                    onGetStartedClick = onGetStartedClick,
                 )
             }
 
             // Page indicator - only show on first 2 screens, hide on third screen with Get Started button
             if (currentPage < 2) {
                 Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 60.dp), // Increased from 32dp to move indicators up
-                    horizontalArrangement = Arrangement.Center
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 60.dp),
+                    // Increased from 32dp to move indicators up
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     repeat(pages.size) { iteration ->
                         val color =
@@ -108,15 +113,16 @@ fun OnboardingScreen(
                                 Color.White
                             } else {
                                 Color.Gray.copy(
-                                    alpha = 0.5f
+                                    alpha = 0.5f,
                                 )
                             }
                         Box(
-                            modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(if (pagerState.currentPage == iteration) 10.dp else 8.dp)
-                                .clip(CircleShape)
-                                .background(color)
+                            modifier =
+                                Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .size(if (pagerState.currentPage == iteration) 10.dp else 8.dp)
+                                    .clip(CircleShape)
+                                    .background(color),
                         )
                     }
                 }
@@ -127,28 +133,30 @@ fun OnboardingScreen(
                 visible = currentPage < pages.size - 1,
                 enter = fadeIn(animationSpec = tween(300)),
                 exit = fadeOut(animationSpec = tween(300)),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 50.dp) // Moved down slightly from dots
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 24.dp, bottom = 50.dp), // Moved down slightly from dots
             ) {
                 // Custom implementation with white circle and arrow
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(32.dp) // Further increased circle size
-                        .clip(CircleShape)
-                        .background(Color.White)
-                        .clickable {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(currentPage + 1)
-                            }
-                        }
+                    modifier =
+                        Modifier
+                            .size(32.dp) // Further increased circle size
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .clickable {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(currentPage + 1)
+                                }
+                            },
                 ) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Default.ArrowForward,
                         contentDescription = "Next",
                         tint = Color.Black,
-                        modifier = Modifier.size(22.dp) // Further increased arrow size
+                        modifier = Modifier.size(22.dp), // Further increased arrow size
                     )
                 }
             }
@@ -160,32 +168,34 @@ fun OnboardingScreen(
 fun OnboardingPage(
     page: OnboardingPage,
     isLastPage: Boolean = false,
-    onGetStartedClick: () -> Unit
+    onGetStartedClick: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             // Background image
             Image(
                 painter = painterResource(id = page.image),
                 contentDescription = null,
                 contentScale = ContentScale.FillBounds,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
 
             // Content overlay
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                verticalArrangement = Arrangement.Top,
             ) {
                 // Add appropriate spacing at the top based on whether it's the logo page
                 Spacer(modifier = Modifier.height(if (page.showLogo) 70.dp else 0.dp))
@@ -200,9 +210,10 @@ fun OnboardingPage(
                     Image(
                         painter = painterResource(id = R.drawable.arche2),
                         contentDescription = "Arche Logo",
-                        modifier = Modifier
-                            .size(90.dp)
-                            .padding(bottom = 12.dp)
+                        modifier =
+                            Modifier
+                                .size(90.dp)
+                                .padding(bottom = 12.dp),
                     )
                 }
 
@@ -210,12 +221,20 @@ fun OnboardingPage(
                 Text(
                     text = page.title,
                     color = if (page.useBlackText) Color.Black else Color.White,
-                    fontSize = if (page.showLogo) 18.sp else if (page.useBlackText) 24.sp else 28.sp, // Smaller for third page
+                    fontSize =
+                        if (page.showLogo) {
+                            18.sp
+                        } else if (page.useBlackText) {
+                            24.sp
+                        } else {
+                            28.sp
+                        },
+                    // Smaller for third page
                     fontFamily = GraphikFontFamily,
                     fontWeight = if (page.showLogo) FontWeight.Normal else FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     lineHeight = if (page.title.contains("All-in-One")) 36.sp else 32.sp, // Increased line height for second page
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 // Description (if not empty)
@@ -224,11 +243,19 @@ fun OnboardingPage(
                     Text(
                         text = page.description,
                         color = if (page.useBlackText) Color.Black else Color.White,
-                        fontSize = if (page.title.contains("All-in-One")) 16.sp else if (page.useBlackText) 14.sp else 18.sp, // Smaller text for third page
+                        fontSize =
+                            if (page.title.contains("All-in-One")) {
+                                16.sp
+                            } else if (page.useBlackText) {
+                                14.sp
+                            } else {
+                                18.sp
+                            },
+                        // Smaller text for third page
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp)
+                        modifier = Modifier.padding(horizontal = 32.dp),
                     )
                 }
 
@@ -238,19 +265,20 @@ fun OnboardingPage(
                 if (isLastPage) {
                     Button(
                         onClick = onGetStartedClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 32.dp, vertical = 16.dp)
-                            .height(56.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp, vertical = 16.dp)
+                                .height(56.dp),
                         shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                     ) {
                         Text(
                             text = "Get Started",
                             color = Color.White,
                             fontSize = 18.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 }
@@ -266,5 +294,5 @@ data class OnboardingPage(
     val title: String,
     val description: String,
     val showLogo: Boolean = false,
-    val useBlackText: Boolean = false
+    val useBlackText: Boolean = false,
 )

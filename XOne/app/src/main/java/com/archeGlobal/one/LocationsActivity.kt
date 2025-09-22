@@ -29,7 +29,7 @@ class LocationsActivity : ComponentActivity() {
                     controller = controller,
                     isEmergencyContact = false,
                     showHeader = true,
-                    onBackToHome = { finish() } // <-- This will close LocationsActivity and return to Home
+                    onBackToHome = { finish() }, // <-- This will close LocationsActivity and return to Home
                 )
             }
         }

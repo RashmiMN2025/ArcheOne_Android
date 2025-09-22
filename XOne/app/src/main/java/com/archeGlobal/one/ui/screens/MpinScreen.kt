@@ -50,48 +50,50 @@ import com.archeGlobal.one.utils.CustomToast
 fun ResponsiveMpinScreen(
     isReset: Boolean,
     onMpinSet: (String, List<SecurityQuestion>) -> Unit,
-    onForgotMpin: () -> Unit
+    onForgotMpin: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
-    val contentPadding = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 16.dp // Phone
-        WindowWidthSizeClass.Medium -> 48.dp // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 120.dp // Tablet
-        else -> 16.dp
-    }
+    val contentPadding =
+        when (windowSizeClass?.widthSizeClass) {
+            WindowWidthSizeClass.Compact -> 16.dp // Phone
+            WindowWidthSizeClass.Medium -> 48.dp // Large phone/small tablet
+            WindowWidthSizeClass.Expanded -> 120.dp // Tablet
+            else -> 16.dp
+        }
     MpinScreen(
         isReset = isReset,
         onMpinSet = onMpinSet,
         onForgotMpin = onForgotMpin,
-        contentPadding = contentPadding
+        contentPadding = contentPadding,
     )
 }
 
-private val securityQuestionsList = listOf(
-    "What is the name of your first school?",
-    "What is your mother's maiden name?",
-    "What was the name of your first company?",
-    "What is the name of your childhood best friend?",
-    "What is the name of the street you grew up on?",
-    "What is the name of your favorite teacher in school?",
-    "What is your favorite book or author?",
-    "What was the model of your first vehicle?"
-)
+private val securityQuestionsList =
+    listOf(
+        "What is the name of your first school?",
+        "What is your mother's maiden name?",
+        "What was the name of your first company?",
+        "What is the name of your childhood best friend?",
+        "What is the name of the street you grew up on?",
+        "What is the name of your favorite teacher in school?",
+        "What is your favorite book or author?",
+        "What was the model of your first vehicle?",
+    )
 
 @Composable
 fun OutlinedDropdownField(
     options: List<String>,
     selectedIndex: Int,
-    onSelected: (Int) -> Unit
+    onSelected: (Int) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedText = if (selectedIndex in options.indices) options[selectedIndex] else ""
 
     Box(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         OutlinedTextField(
             value = selectedText,
@@ -102,7 +104,7 @@ fun OutlinedDropdownField(
                     "Select a question",
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
             },
             trailingIcon = {
@@ -110,49 +112,53 @@ fun OutlinedDropdownField(
                     imageVector = Icons.Default.ArrowDropDown, // your down arrow icon
                     contentDescription = "Dropdown",
                     tint = Color.Gray,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
             },
-            modifier = Modifier
-                .fillMaxWidth(0.97f)
-                .clickable { expanded = true },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                disabledContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                disabledTextColor = Color.Black,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            ),
-            textStyle = TextStyle(
-                color = if (selectedText.isEmpty()) Color.DarkGray else Color.Black,
-                fontSize = 18.sp,
-                fontFamily = GraphikFontFamily,
-                fontWeight = FontWeight.Normal
-            ),
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.97f)
+                    .clickable { expanded = true },
+            colors =
+                TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    disabledContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    disabledTextColor = Color.Black,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
+            textStyle =
+                TextStyle(
+                    color = if (selectedText.isEmpty()) Color.DarkGray else Color.Black,
+                    fontSize = 18.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                ),
             shape = MaterialTheme.shapes.medium,
-            enabled = false // disables keyboard
+            enabled = false, // disables keyboard
         )
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .background(Color.White)
-                .padding(0.dp, 10.dp, 0.dp, 0.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.85f)
+                    .background(Color.White)
+                    .padding(0.dp, 10.dp, 0.dp, 0.dp),
         ) {
             options.forEachIndexed { idx, option ->
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onSelected(idx)
-                            expanded = false
-                        }
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onSelected(idx)
+                                expanded = false
+                            }.padding(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Text(
                         text = option,
@@ -161,13 +167,13 @@ fun OutlinedDropdownField(
                         fontWeight = FontWeight.Normal,
                         color = Color.Black,
                         lineHeight = 18.sp,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     if (idx != options.lastIndex) {
                         Divider(
                             color = Color(0xFFE0E0E0),
                             thickness = 1.dp,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp),
                         )
                     }
                 }
@@ -181,7 +187,7 @@ fun MpinScreen(
     isReset: Boolean,
     onMpinSet: (String, List<SecurityQuestion>) -> Unit,
     contentPadding: Dp = 16.dp,
-    onForgotMpin: () -> Unit
+    onForgotMpin: () -> Unit,
 ) {
     // State
     val context = LocalContext.current
@@ -190,13 +196,15 @@ fun MpinScreen(
     val scrollState = rememberScrollState()
 
     // For reset: get the two questions set previously
-    val savedQuestions = remember {
-        if (isReset) {
-            com.archeGlobal.one.utils.MpinManager.getSecurityQuestions(context)
-        } else {
-            emptyList()
+    val savedQuestions =
+        remember {
+            if (isReset) {
+                com.archeGlobal.one.utils.MpinManager
+                    .getSecurityQuestions(context)
+            } else {
+                emptyList()
+            }
         }
-    }
 
     // For reset: only allow selection from saved questions
     var selectedResetQuestionIndex by remember { mutableStateOf(0) }
@@ -218,9 +226,10 @@ fun MpinScreen(
     var focusedConfirmIndex by remember { mutableStateOf(-1) }
     val focusManager = LocalFocusManager.current
 
-    val archeGradient = Brush.linearGradient(
-        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-    )
+    val archeGradient =
+        Brush.linearGradient(
+            colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749)),
+        )
 
     LaunchedEffect(error) {
         error?.let {
@@ -229,29 +238,32 @@ fun MpinScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            }
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                },
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(archeGradient)
-                .padding(horizontal = contentPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(archeGradient)
+                    .padding(horizontal = contentPadding),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .verticalScroll(scrollState),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                        .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(50.dp))
 
@@ -262,13 +274,13 @@ fun MpinScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.lock),
                         contentDescription = "Security",
                         tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(28.dp),
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -276,30 +288,33 @@ fun MpinScreen(
                         fontSize = 26.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                 }
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(6.dp, 20.dp, 6.dp, 28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(6.dp, 20.dp, 6.dp, 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = if (isReset) {
-                            "Verify your identity to reset your MPIN"
-                        } else {
-                            "Set security questions and a 4-digit PIN\n for secure access"
-                        },
+                        text =
+                            if (isReset) {
+                                "Verify your identity to reset your MPIN"
+                            } else {
+                                "Set security questions and a 4-digit PIN\n for secure access"
+                            },
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         color = Color.Black.copy(alpha = 0.6f),
-                        modifier = Modifier
-                            .padding(horizontal = 2.dp),
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 2.dp),
                         textAlign = TextAlign.Center,
-                        lineHeight = 18.sp
+                        lineHeight = 18.sp,
                     )
                 }
 
@@ -313,17 +328,17 @@ fun MpinScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black,
-                            modifier = Modifier.align(Alignment.Start)
+                            modifier = Modifier.align(Alignment.Start),
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             OutlinedDropdownField(
                                 options = savedQuestions.map { it.question },
                                 selectedIndex = selectedResetQuestionIndex,
-                                onSelected = { idx -> selectedResetQuestionIndex = idx }
+                                onSelected = { idx -> selectedResetQuestionIndex = idx },
                             )
                         }
                         Spacer(modifier = Modifier.height(11.dp))
@@ -335,7 +350,11 @@ fun MpinScreen(
                                 val hasMoreThan2ConsecutiveSpaces = newValue.contains("   ") // 3 or more spaces
                                 val nonSpaceLength = newValue.replace(" ", "").length
 
-                                if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && nonSpaceLength <= 20 && !newValue.contains('\n')) {
+                                if (!hasLeadingSpace &&
+                                    !hasMoreThan2ConsecutiveSpaces &&
+                                    nonSpaceLength <= 20 &&
+                                    !newValue.contains('\n')
+                                ) {
                                     resetAnswer = newValue
                                 }
                             },
@@ -344,61 +363,82 @@ fun MpinScreen(
                                     "Answer",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Gray
+                                    color = Color.Gray,
                                 )
                             },
-                            modifier = Modifier
-                                .fillMaxWidth(0.97f)
-                                .padding(bottom = 16.dp),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
-                            ),
-                            textStyle = TextStyle(
-                                color = Color.Black,
-                                fontSize = 18.sp,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal
-                            ),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(0.97f)
+                                    .padding(bottom = 16.dp),
+                            colors =
+                                TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                ),
+                            textStyle =
+                                TextStyle(
+                                    color = Color.Black,
+                                    fontSize = 18.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                ),
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = androidx.compose.ui.text.input.ImeAction.Done
-                            ),
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                                ),
                             shape = MaterialTheme.shapes.medium,
-                            visualTransformation = if (showAnswer.getOrNull(0) == true) VisualTransformation.None else PasswordVisualTransformation(),
+                            visualTransformation =
+                                if (showAnswer.getOrNull(0) ==
+                                    true
+                                ) {
+                                    VisualTransformation.None
+                                } else {
+                                    PasswordVisualTransformation()
+                                },
                             trailingIcon = {
                                 IconButton(onClick = {
                                     showAnswer[0] = !showAnswer[0]
                                 }) {
                                     Icon(
-                                        painter = painterResource(
-                                            id = if (showAnswer.getOrNull(0) == true) R.drawable.ic_visibility else R.drawable.ic_visibility_off
-                                        ),
+                                        painter =
+                                            painterResource(
+                                                id =
+                                                    if (showAnswer.getOrNull(0) ==
+                                                        true
+                                                    ) {
+                                                        R.drawable.ic_visibility
+                                                    } else {
+                                                        R.drawable.ic_visibility_off
+                                                    },
+                                            ),
                                         contentDescription = if (showAnswer.getOrNull(0) == true) "Hide" else "Show",
-                                        tint = Color.Gray
+                                        tint = Color.Gray,
                                     )
                                 }
-                            }
+                            },
                         )
                         Spacer(modifier = Modifier.height(6.dp))
 
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 6.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.Top
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 6.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.Top,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.info),
                                 contentDescription = "Info",
                                 tint = Color(0xFFDD3825),
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .padding(top = 2.dp)
+                                modifier =
+                                    Modifier
+                                        .size(16.dp)
+                                        .padding(top = 2.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -407,7 +447,7 @@ fun MpinScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.Black,
-                                lineHeight = 16.sp
+                                lineHeight = 16.sp,
                             )
                         }
 
@@ -426,77 +466,85 @@ fun MpinScreen(
                                     resetVerified = true
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth(0.97f)
-                                .height(65.dp)
-                                .padding(top = 18.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFDD3825)
-                            ),
-                            shape = MaterialTheme.shapes.medium
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(0.97f)
+                                    .height(65.dp)
+                                    .padding(top = 18.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825),
+                                ),
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(
                                 "Verify Answer",
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White
+                                color = Color.White,
                             )
                         }
 
                         if (isReset && !resetVerified) {
                             Spacer(modifier = Modifier.height(18.dp))
-                            val annotatedText = buildAnnotatedString {
-                                append("Not remember? then ")
-                                val start = length
-                                append("login again")
-                                addStyle(
-                                    style = SpanStyle(
-                                        color = Color(0xFFDD3825),
-                                        textDecoration = TextDecoration.Underline,
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    start = start,
-                                    end = length
-                                )
-                                addStringAnnotation(
-                                    tag = "login_again",
-                                    annotation = "login_again",
-                                    start = start,
-                                    end = length
-                                )
-                            }
+                            val annotatedText =
+                                buildAnnotatedString {
+                                    append("Not remember? then ")
+                                    val start = length
+                                    append("login again")
+                                    addStyle(
+                                        style =
+                                            SpanStyle(
+                                                color = Color(0xFFDD3825),
+                                                textDecoration = TextDecoration.Underline,
+                                                fontWeight = FontWeight.Medium,
+                                            ),
+                                        start = start,
+                                        end = length,
+                                    )
+                                    addStringAnnotation(
+                                        tag = "login_again",
+                                        annotation = "login_again",
+                                        start = start,
+                                        end = length,
+                                    )
+                                }
                             ClickableText(
                                 text = annotatedText,
-                                style = TextStyle(
-                                    fontSize = 15.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black
-                                ),
+                                style =
+                                    TextStyle(
+                                        fontSize = 15.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                    ),
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 onClick = { offset ->
-                                    annotatedText.getStringAnnotations(
-                                        tag = "login_again",
-                                        start = offset,
-                                        end = offset
-                                    )
-                                        .firstOrNull()?.let {
+                                    annotatedText
+                                        .getStringAnnotations(
+                                            tag = "login_again",
+                                            start = offset,
+                                            end = offset,
+                                        ).firstOrNull()
+                                        ?.let {
                                             // Navigate to LoginActivity
                                             val activity = context as? android.app.Activity
                                             activity?.let {
-                                                val intent = android.content.Intent(
-                                                    context,
-                                                    com.archeGlobal.one.LoginActivity::class.java
-                                                )
+                                                val intent =
+                                                    android.content.Intent(
+                                                        context,
+                                                        com.archeGlobal.one.LoginActivity::class.java,
+                                                    )
                                                 intent.flags =
-                                                    android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                                    android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
                                                 intent.putExtra("forceDifferentUserMode", true)
                                                 context.startActivity(intent)
                                                 activity.finish()
                                             }
                                         }
-                                }
+                                },
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -505,48 +553,52 @@ fun MpinScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.Black,
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            val goBackText = buildAnnotatedString {
-                                val start = length
-                                append("Go Back")
-                                addStyle(
-                                    style = SpanStyle(
-                                        color = Color(0xFFDD3825),
-                                        textDecoration = TextDecoration.Underline,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    start = start,
-                                    end = length
-                                )
-                                addStringAnnotation(
-                                    tag = "go_back",
-                                    annotation = "go_back",
-                                    start = start,
-                                    end = length
-                                )
-                            }
+                            val goBackText =
+                                buildAnnotatedString {
+                                    val start = length
+                                    append("Go Back")
+                                    addStyle(
+                                        style =
+                                            SpanStyle(
+                                                color = Color(0xFFDD3825),
+                                                textDecoration = TextDecoration.Underline,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                            ),
+                                        start = start,
+                                        end = length,
+                                    )
+                                    addStringAnnotation(
+                                        tag = "go_back",
+                                        annotation = "go_back",
+                                        start = start,
+                                        end = length,
+                                    )
+                                }
                             ClickableText(
                                 text = goBackText,
-                                style = TextStyle(
-                                    fontSize = 15.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black
-                                ),
+                                style =
+                                    TextStyle(
+                                        fontSize = 15.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                    ),
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 onClick = { offset ->
-                                    goBackText.getStringAnnotations(
-                                        tag = "go_back",
-                                        start = offset,
-                                        end = offset
-                                    )
-                                        .firstOrNull()?.let {
+                                    goBackText
+                                        .getStringAnnotations(
+                                            tag = "go_back",
+                                            start = offset,
+                                            end = offset,
+                                        ).firstOrNull()
+                                        ?.let {
                                             val activity = context as? android.app.Activity
                                             activity?.finish()
                                         }
-                                }
+                                },
                             )
                         }
                     } else {
@@ -556,15 +608,16 @@ fun MpinScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black,
-                            modifier = Modifier
-                                .align(Alignment.Start)
-                                .padding(start = 24.dp)
+                            modifier =
+                                Modifier
+                                    .align(Alignment.Start)
+                                    .padding(start = 24.dp),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             for (i in 0 until 4) {
                                 OutlinedTextField(
@@ -583,45 +636,55 @@ fun MpinScreen(
                                             focusRequesters[i - 1].requestFocus()
                                         }
                                     },
-                                    modifier = Modifier
-                                        .width(60.dp)
-                                        .height(60.dp)
-                                        .focusRequester(focusRequesters[i])
-                                        .onFocusChanged { focusState ->
-                                            if (focusState.isFocused) {
-                                                focusedMpinIndex = i
-                                            }
-                                        }
-                                        .border(
-                                            width = 1.5.dp,
-                                            color = if (focusedMpinIndex == i) Color(0xFFDD3825) else Color.White,
-                                            shape = MaterialTheme.shapes.medium
+                                    modifier =
+                                        Modifier
+                                            .width(60.dp)
+                                            .height(60.dp)
+                                            .focusRequester(focusRequesters[i])
+                                            .onFocusChanged { focusState ->
+                                                if (focusState.isFocused) {
+                                                    focusedMpinIndex = i
+                                                }
+                                            }.border(
+                                                width = 1.5.dp,
+                                                color = if (focusedMpinIndex == i) Color(0xFFDD3825) else Color.White,
+                                                shape = MaterialTheme.shapes.medium,
+                                            ),
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 20.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = Color.Black,
+                                            textAlign = TextAlign.Center,
                                         ),
-                                    textStyle = TextStyle(
-                                        fontSize = 20.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center
-                                    ),
                                     singleLine = true,
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
-                                    ),
+                                    keyboardOptions =
+                                        KeyboardOptions(
+                                            keyboardType = KeyboardType.Number,
+                                            imeAction =
+                                                if (i ==
+                                                    3
+                                                ) {
+                                                    androidx.compose.ui.text.input.ImeAction.Done
+                                                } else {
+                                                    androidx.compose.ui.text.input.ImeAction.Next
+                                                },
+                                        ),
                                     shape = MaterialTheme.shapes.medium,
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        disabledContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        disabledTextColor = Color.Black,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    visualTransformation = PasswordVisualTransformation()
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            disabledContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            disabledTextColor = Color.Black,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                        ),
+                                    visualTransformation = PasswordVisualTransformation(),
                                 )
                                 if (i < 3) Spacer(modifier = Modifier.width(16.dp))
                             }
@@ -632,15 +695,16 @@ fun MpinScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black,
-                            modifier = Modifier
-                                .align(Alignment.Start)
-                                .padding(start = 24.dp)
+                            modifier =
+                                Modifier
+                                    .align(Alignment.Start)
+                                    .padding(start = 24.dp),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             for (i in 0 until 4) {
                                 OutlinedTextField(
@@ -648,7 +712,8 @@ fun MpinScreen(
                                     onValueChange = { value ->
                                         if (value.length <= 1 && value.all { it.isDigit() }) {
                                             confirmMpinDigits =
-                                                confirmMpinDigits.toMutableList()
+                                                confirmMpinDigits
+                                                    .toMutableList()
                                                     .also { it[i] = value }
                                             if (value.isNotEmpty() && i < 3) {
                                                 confirmFocusRequesters[i + 1].requestFocus()
@@ -656,50 +721,61 @@ fun MpinScreen(
                                         }
                                         if (value.isEmpty() && i > 0) {
                                             confirmMpinDigits =
-                                                confirmMpinDigits.toMutableList()
+                                                confirmMpinDigits
+                                                    .toMutableList()
                                                     .also { it[i] = "" }
                                             confirmFocusRequesters[i - 1].requestFocus()
                                         }
                                     },
-                                    modifier = Modifier
-                                        .width(60.dp)
-                                        .height(60.dp)
-                                        .focusRequester(confirmFocusRequesters[i])
-                                        .onFocusChanged { focusState ->
-                                            if (focusState.isFocused) {
-                                                focusedConfirmIndex = i
-                                            }
-                                        }
-                                        .border(
-                                            width = 1.5.dp,
-                                            color = if (focusedConfirmIndex == i) Color(0xFFDD3825) else Color.White,
-                                            shape = MaterialTheme.shapes.medium
+                                    modifier =
+                                        Modifier
+                                            .width(60.dp)
+                                            .height(60.dp)
+                                            .focusRequester(confirmFocusRequesters[i])
+                                            .onFocusChanged { focusState ->
+                                                if (focusState.isFocused) {
+                                                    focusedConfirmIndex = i
+                                                }
+                                            }.border(
+                                                width = 1.5.dp,
+                                                color = if (focusedConfirmIndex == i) Color(0xFFDD3825) else Color.White,
+                                                shape = MaterialTheme.shapes.medium,
+                                            ),
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 20.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = Color.Black,
+                                            textAlign = TextAlign.Center,
                                         ),
-                                    textStyle = TextStyle(
-                                        fontSize = 20.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center
-                                    ),
                                     singleLine = true,
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
-                                    ),
+                                    keyboardOptions =
+                                        KeyboardOptions(
+                                            keyboardType = KeyboardType.Number,
+                                            imeAction =
+                                                if (i ==
+                                                    3
+                                                ) {
+                                                    androidx.compose.ui.text.input.ImeAction.Done
+                                                } else {
+                                                    androidx.compose.ui.text.input.ImeAction.Next
+                                                },
+                                        ),
                                     shape = MaterialTheme.shapes.medium,
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        disabledContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        disabledTextColor = Color.Black,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    visualTransformation = PasswordVisualTransformation()
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            disabledContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            disabledTextColor = Color.Black,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                        ),
+                                    visualTransformation = PasswordVisualTransformation(),
                                 )
                                 if (i < 3) Spacer(modifier = Modifier.width(16.dp))
                             }
@@ -715,27 +791,30 @@ fun MpinScreen(
                                     CustomToast.showErrorToast(context, "MPINs do not match!")
                                 } else {
                                     error = null
-                                    com.archeGlobal.one.utils.MpinManager.saveMpin(context, mpin)
+                                    com.archeGlobal.one.utils.MpinManager
+                                        .saveMpin(context, mpin)
                                     CustomToast.showErrorToast(context, "Your MPIN reset successfully!")
                                     onMpinSet(mpin, savedQuestions)
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth(0.97f)
-                                .height(65.dp)
-                                .padding(top = 16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFDD3825)
-                            ),
-                            shape = MaterialTheme.shapes.medium
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(0.97f)
+                                    .height(65.dp)
+                                    .padding(top = 16.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825),
+                                ),
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(
                                 "Set MPIN",
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White
+                                color = Color.White,
                             )
                         }
                     }
@@ -748,21 +827,23 @@ fun MpinScreen(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black,
-                            modifier = Modifier.align(Alignment.Start)
+                            modifier = Modifier.align(Alignment.Start),
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         for (i in 0..1) {
-                            val filteredQuestions = securityQuestionsList.filterIndexed { idx, _ ->
-                                idx == selectedQuestionIndices[i] || idx !in selectedQuestionIndices
-                            }
-                            val selectedIdxInFiltered = filteredQuestions.indexOf(
-                                selectedQuestionIndices.getOrNull(i)?.let { idx ->
-                                    securityQuestionsList.getOrNull(idx)
+                            val filteredQuestions =
+                                securityQuestionsList.filterIndexed { idx, _ ->
+                                    idx == selectedQuestionIndices[i] || idx !in selectedQuestionIndices
                                 }
-                            )
+                            val selectedIdxInFiltered =
+                                filteredQuestions.indexOf(
+                                    selectedQuestionIndices.getOrNull(i)?.let { idx ->
+                                        securityQuestionsList.getOrNull(idx)
+                                    },
+                                )
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
+                                horizontalArrangement = Arrangement.Center,
                             ) {
                                 OutlinedDropdownField(
                                     options = filteredQuestions,
@@ -771,11 +852,14 @@ fun MpinScreen(
                                         val originalIdx =
                                             securityQuestionsList.indexOf(filteredQuestions[filteredIdx])
                                         selectedQuestionIndices =
-                                            selectedQuestionIndices.toMutableList()
+                                            selectedQuestionIndices
+                                                .toMutableList()
                                                 .also { it[i] = originalIdx }
-                                        selectedQuestions = selectedQuestions.toMutableList()
-                                            .also { it[i] = securityQuestionsList[originalIdx] }
-                                    }
+                                        selectedQuestions =
+                                            selectedQuestions
+                                                .toMutableList()
+                                                .also { it[i] = securityQuestionsList[originalIdx] }
+                                    },
                                 )
                             }
                             Spacer(modifier = Modifier.height(11.dp))
@@ -787,7 +871,11 @@ fun MpinScreen(
                                     val hasMoreThan2ConsecutiveSpaces = newValue.contains("   ") // 3 or more spaces
                                     val nonSpaceLength = newValue.replace(" ", "").length
 
-                                    if (!hasLeadingSpace && !hasMoreThan2ConsecutiveSpaces && nonSpaceLength <= 20 && !newValue.contains('\n')) {
+                                    if (!hasLeadingSpace &&
+                                        !hasMoreThan2ConsecutiveSpaces &&
+                                        nonSpaceLength <= 20 &&
+                                        !newValue.contains('\n')
+                                    ) {
                                         answers = answers.toMutableList().also { it[i] = newValue }
                                     }
                                 },
@@ -796,32 +884,43 @@ fun MpinScreen(
                                         "Answer ${i + 1}",
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Normal,
-                                        color = Color.Gray
+                                        color = Color.Gray,
                                     )
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth(0.97f)
-                                    .padding(bottom = if (i == 0) 8.dp else 16.dp),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                ),
-                                textStyle = TextStyle(
-                                    color = Color.Black,
-                                    fontSize = 18.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal
-                                ),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth(0.97f)
+                                        .padding(bottom = if (i == 0) 8.dp else 16.dp),
+                                colors =
+                                    TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                    ),
+                                textStyle =
+                                    TextStyle(
+                                        color = Color.Black,
+                                        fontSize = 18.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                    ),
                                 singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = androidx.compose.ui.text.input.ImeAction.Done
-                                ),
+                                keyboardOptions =
+                                    KeyboardOptions(
+                                        imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                                    ),
                                 shape = MaterialTheme.shapes.medium,
-                                visualTransformation = if (showAnswer.getOrNull(i) == true) VisualTransformation.None else PasswordVisualTransformation(),
+                                visualTransformation =
+                                    if (showAnswer.getOrNull(i) ==
+                                        true
+                                    ) {
+                                        VisualTransformation.None
+                                    } else {
+                                        PasswordVisualTransformation()
+                                    },
                                 trailingIcon = {
                                     IconButton(onClick = {
                                         if (showAnswer.size <= i) {
@@ -830,32 +929,42 @@ fun MpinScreen(
                                         showAnswer[i] = !showAnswer[i]
                                     }) {
                                         Icon(
-                                            painter = painterResource(
-                                                id = if (showAnswer.getOrNull(i) == true) R.drawable.ic_visibility else R.drawable.ic_visibility_off
-                                            ),
+                                            painter =
+                                                painterResource(
+                                                    id =
+                                                        if (showAnswer.getOrNull(i) ==
+                                                            true
+                                                        ) {
+                                                            R.drawable.ic_visibility
+                                                        } else {
+                                                            R.drawable.ic_visibility_off
+                                                        },
+                                                ),
                                             contentDescription = if (showAnswer.getOrNull(i) == true) "Hide" else "Show",
-                                            tint = Color.Gray
+                                            tint = Color.Gray,
                                         )
                                     }
-                                }
+                                },
                             )
                             Spacer(modifier = Modifier.height(if (i == 0) 8.dp else 14.dp))
                         }
 
                         // Info message with red icon
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.Top
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.Top,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.info),
                                 contentDescription = "Info",
                                 tint = Color(0xFFDD3825),
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .padding(top = 2.dp)
+                                modifier =
+                                    Modifier
+                                        .size(16.dp)
+                                        .padding(top = 2.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -864,7 +973,7 @@ fun MpinScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.Black,
-                                lineHeight = 16.sp
+                                lineHeight = 16.sp,
                             )
                         }
 
@@ -881,22 +990,24 @@ fun MpinScreen(
                                     step = 1
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth(0.97f)
-                                .height(65.dp)
-                                .padding(top = 8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                            ),
-                            shape = MaterialTheme.shapes.medium
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(0.97f)
+                                    .height(65.dp)
+                                    .padding(top = 8.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825), // Keep same color when disabled
+                                ),
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(
                                 "Continue",
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White
+                                color = Color.White,
                             )
                         }
                     } else {
@@ -906,15 +1017,16 @@ fun MpinScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black,
-                            modifier = Modifier
-                                .align(Alignment.Start)
-                                .padding(start = 24.dp)
+                            modifier =
+                                Modifier
+                                    .align(Alignment.Start)
+                                    .padding(start = 24.dp),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             for (i in 0 until 4) {
                                 OutlinedTextField(
@@ -933,45 +1045,55 @@ fun MpinScreen(
                                             focusRequesters[i - 1].requestFocus()
                                         }
                                     },
-                                    modifier = Modifier
-                                        .width(60.dp)
-                                        .height(60.dp)
-                                        .focusRequester(focusRequesters[i])
-                                        .onFocusChanged { focusState ->
-                                            if (focusState.isFocused) {
-                                                focusedMpinIndex = i
-                                            }
-                                        }
-                                        .border(
-                                            width = 1.5.dp,
-                                            color = if (focusedMpinIndex == i) Color(0xFFDD3825) else Color.White,
-                                            shape = MaterialTheme.shapes.medium
+                                    modifier =
+                                        Modifier
+                                            .width(60.dp)
+                                            .height(60.dp)
+                                            .focusRequester(focusRequesters[i])
+                                            .onFocusChanged { focusState ->
+                                                if (focusState.isFocused) {
+                                                    focusedMpinIndex = i
+                                                }
+                                            }.border(
+                                                width = 1.5.dp,
+                                                color = if (focusedMpinIndex == i) Color(0xFFDD3825) else Color.White,
+                                                shape = MaterialTheme.shapes.medium,
+                                            ),
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 20.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = Color.Black,
+                                            textAlign = TextAlign.Center,
                                         ),
-                                    textStyle = TextStyle(
-                                        fontSize = 20.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center
-                                    ),
                                     singleLine = true,
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
-                                    ),
+                                    keyboardOptions =
+                                        KeyboardOptions(
+                                            keyboardType = KeyboardType.Number,
+                                            imeAction =
+                                                if (i ==
+                                                    3
+                                                ) {
+                                                    androidx.compose.ui.text.input.ImeAction.Done
+                                                } else {
+                                                    androidx.compose.ui.text.input.ImeAction.Next
+                                                },
+                                        ),
                                     shape = MaterialTheme.shapes.medium,
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        disabledContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        disabledTextColor = Color.Black,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    visualTransformation = PasswordVisualTransformation()
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            disabledContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            disabledTextColor = Color.Black,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                        ),
+                                    visualTransformation = PasswordVisualTransformation(),
                                 )
                                 if (i < 3) Spacer(modifier = Modifier.width(16.dp))
                             }
@@ -982,72 +1104,87 @@ fun MpinScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color.Black,
-                            modifier = Modifier
-                                .align(Alignment.Start)
-                                .padding(start = 24.dp)
+                            modifier =
+                                Modifier
+                                    .align(Alignment.Start)
+                                    .padding(start = 24.dp),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             for (i in 0 until 4) {
                                 OutlinedTextField(
                                     value = confirmMpinDigits[i],
                                     onValueChange = { value ->
                                         if (value.length <= 1 && value.all { it.isDigit() }) {
-                                            confirmMpinDigits = confirmMpinDigits.toMutableList()
-                                                .also { it[i] = value }
+                                            confirmMpinDigits =
+                                                confirmMpinDigits
+                                                    .toMutableList()
+                                                    .also { it[i] = value }
                                             if (value.isNotEmpty() && i < 3) {
                                                 confirmFocusRequesters[i + 1].requestFocus()
                                             }
                                         }
                                         if (value.isEmpty() && i > 0) {
-                                            confirmMpinDigits = confirmMpinDigits.toMutableList()
-                                                .also { it[i] = "" }
+                                            confirmMpinDigits =
+                                                confirmMpinDigits
+                                                    .toMutableList()
+                                                    .also { it[i] = "" }
                                             confirmFocusRequesters[i - 1].requestFocus()
                                         }
                                     },
-                                    modifier = Modifier
-                                        .width(60.dp)
-                                        .height(60.dp)
-                                        .focusRequester(confirmFocusRequesters[i])
-                                        .onFocusChanged { focusState ->
-                                            if (focusState.isFocused) {
-                                                focusedConfirmIndex = i
-                                            }
-                                        }
-                                        .border(
-                                            width = 1.5.dp,
-                                            color = if (focusedConfirmIndex == i) Color(0xFFDD3825) else Color.White,
-                                            shape = MaterialTheme.shapes.medium
+                                    modifier =
+                                        Modifier
+                                            .width(60.dp)
+                                            .height(60.dp)
+                                            .focusRequester(confirmFocusRequesters[i])
+                                            .onFocusChanged { focusState ->
+                                                if (focusState.isFocused) {
+                                                    focusedConfirmIndex = i
+                                                }
+                                            }.border(
+                                                width = 1.5.dp,
+                                                color = if (focusedConfirmIndex == i) Color(0xFFDD3825) else Color.White,
+                                                shape = MaterialTheme.shapes.medium,
+                                            ),
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 20.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = Color.Black,
+                                            textAlign = TextAlign.Center,
                                         ),
-                                    textStyle = TextStyle(
-                                        fontSize = 20.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center
-                                    ),
                                     singleLine = true,
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = if (i == 3) androidx.compose.ui.text.input.ImeAction.Done else androidx.compose.ui.text.input.ImeAction.Next
-                                    ),
+                                    keyboardOptions =
+                                        KeyboardOptions(
+                                            keyboardType = KeyboardType.Number,
+                                            imeAction =
+                                                if (i ==
+                                                    3
+                                                ) {
+                                                    androidx.compose.ui.text.input.ImeAction.Done
+                                                } else {
+                                                    androidx.compose.ui.text.input.ImeAction.Next
+                                                },
+                                        ),
                                     shape = MaterialTheme.shapes.medium,
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        disabledContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        disabledTextColor = Color.Black,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    visualTransformation = PasswordVisualTransformation()
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            disabledContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            disabledTextColor = Color.Black,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                        ),
+                                    visualTransformation = PasswordVisualTransformation(),
                                 )
                                 if (i < 3) Spacer(modifier = Modifier.width(16.dp))
                             }
@@ -1067,27 +1204,29 @@ fun MpinScreen(
                                         mpin,
                                         listOf(
                                             SecurityQuestion(selectedQuestions[0], answers[0]),
-                                            SecurityQuestion(selectedQuestions[1], answers[1])
-                                        )
+                                            SecurityQuestion(selectedQuestions[1], answers[1]),
+                                        ),
                                     )
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth(0.97f)
-                                .height(65.dp)
-                                .padding(top = 16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                            ),
-                            shape = MaterialTheme.shapes.medium
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(0.97f)
+                                    .height(65.dp)
+                                    .padding(top = 16.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825), // Keep same color when disabled
+                                ),
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(
                                 "Set MPIN",
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White
+                                color = Color.White,
                             )
                         }
                     }

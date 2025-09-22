@@ -59,24 +59,25 @@ fun ResponsivePolicyScreen(
     model: PolicyModel,
     onPolicyClick: (PolicyModel.Policy) -> Unit,
     onBackClick: () -> Unit,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
-    val (columns, cardWidth) = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 2 to 160.dp // Phone
-        WindowWidthSizeClass.Medium -> 3 to 180.dp // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 4 to 220.dp // Tablet
-        else -> 2 to 160.dp
-    }
+    val (columns, cardWidth) =
+        when (windowSizeClass?.widthSizeClass) {
+            WindowWidthSizeClass.Compact -> 2 to 160.dp // Phone
+            WindowWidthSizeClass.Medium -> 3 to 180.dp // Large phone/small tablet
+            WindowWidthSizeClass.Expanded -> 4 to 220.dp // Tablet
+            else -> 2 to 160.dp
+        }
     PolicyScreen(
         model = model,
         onPolicyClick = onPolicyClick,
         onBackClick = onBackClick,
         isLoading = isLoading,
         columns = columns,
-        cardWidth = cardWidth
+        cardWidth = cardWidth,
     )
 }
 
@@ -88,29 +89,32 @@ fun PolicyScreen(
     onBackClick: () -> Unit,
     isLoading: Boolean = false,
     columns: Int = 2,
-    cardWidth: Dp = 160.dp
+    cardWidth: Dp = 160.dp,
 ) {
     var searchQuery by remember { mutableStateOf("") } // State for search query
 
     // Filter policies based on the search query
-    val filteredPolicies = model.policies.filter { policy ->
-        policy.policyName.contains(searchQuery, ignoreCase = true)
-    }
+    val filteredPolicies =
+        model.policies.filter { policy ->
+            policy.policyName.contains(searchQuery, ignoreCase = true)
+        }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749)),
+                        ),
+                    ),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Top App Bar
@@ -118,7 +122,7 @@ fun PolicyScreen(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "Policies",
@@ -126,7 +130,7 @@ fun PolicyScreen(
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -135,61 +139,66 @@ fun PolicyScreen(
                             Icon(
                                 Icons.Default.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
                     actions = {
                         Spacer(modifier = Modifier.width(48.dp))
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 )
 
                 // Search Bar
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = Color.Transparent
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = Color.Transparent,
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White)
-                            .border(
-                                width = 1.dp,
-                                color = Color.LightGray.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.LightGray.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(12.dp),
+                                ),
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = "Search",
                                 tint = Color.Gray,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
                             )
 
                             BasicTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 8.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 8.dp),
                                 singleLine = true,
-                                textStyle = TextStyle( // Added textStyle for innerTextField
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                ),
+                                textStyle =
+                                    TextStyle( // Added textStyle for innerTextField
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black,
+                                    ),
                                 decorationBox = { innerTextField ->
                                     Box {
                                         if (searchQuery.isEmpty()) {
@@ -198,12 +207,12 @@ fun PolicyScreen(
                                                 color = Color.Gray.copy(alpha = 0.6f),
                                                 fontSize = 16.sp,
                                                 fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Normal
+                                                fontWeight = FontWeight.Normal,
                                             )
                                         }
                                         innerTextField()
                                     }
-                                }
+                                },
                             )
                         }
                     }
@@ -213,7 +222,7 @@ fun PolicyScreen(
                 if (isLoading) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         CircularProgressIndicator()
                     }
@@ -222,14 +231,14 @@ fun PolicyScreen(
                         // Show a message if no policies match the search query
                         Box(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "No policies found",
                                 fontSize = 16.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Gray
+                                color = Color.Gray,
                             )
                         }
                     } else {
@@ -238,7 +247,7 @@ fun PolicyScreen(
                             contentPadding = PaddingValues(16.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         ) {
                             items(filteredPolicies, key = { it.filePath }) { policy ->
                                 PolicyCard(policy = policy, onClick = { onPolicyClick(policy) })
@@ -258,7 +267,7 @@ fun PolicyScreen(
 private fun PolicyCard(
     policy: PolicyModel.Policy,
     onClick: () -> Unit,
-    cardWidth: Dp = 160.dp
+    cardWidth: Dp = 160.dp,
 ) {
     val context = LocalContext.current
     var thumbnail by remember { mutableStateOf<Bitmap?>(null) }
@@ -272,30 +281,32 @@ private fun PolicyCard(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(cardWidth)
-            .padding(8.dp) // Add padding around the card
+        modifier =
+            Modifier
+                .width(cardWidth)
+                .padding(8.dp), // Add padding around the card
     ) {
         Box(
-            modifier = Modifier
-                .width(cardWidth)
-                .aspectRatio(0.7f) // Adjust aspect ratio for the card
+            modifier =
+                Modifier
+                    .width(cardWidth)
+                    .aspectRatio(0.7f), // Adjust aspect ratio for the card
         ) {
             Card(
                 onClick = onClick,
                 modifier = Modifier.fillMaxSize(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(32.dp),
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     } else {
                         thumbnail?.let { bitmap ->
@@ -303,13 +314,13 @@ private fun PolicyCard(
                                 bitmap = bitmap.asImageBitmap(),
                                 contentDescription = policy.policyName,
                                 contentScale = ContentScale.Fit,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
                             )
                         } ?: Icon(
                             painter = painterResource(id = R.drawable.ic_policy_default),
                             contentDescription = null,
                             tint = Color.DarkGray,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
                         )
                     }
                 }
@@ -318,19 +329,20 @@ private fun PolicyCard(
             // SOS Circle Tag for Specific Policies
             if (policy.policyName == "Anti Bribery and Anti Corruption Policy" || policy.policyName == "PoSH Policy") {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd) // Align the SOS tag to the top-right corner
-                        .offset(x = (-8).dp, y = 8.dp) // Adjust position slightly
-                        .size(24.dp) // Size of the SOS circle
-                        .background(color = Color(0xFFE94235), shape = CircleShape),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd) // Align the SOS tag to the top-right corner
+                            .offset(x = (-8).dp, y = 8.dp) // Adjust position slightly
+                            .size(24.dp) // Size of the SOS circle
+                            .background(color = Color(0xFFE94235), shape = CircleShape),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "SOS",
                         fontSize = 10.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White
+                        color = Color.White,
                     )
                 }
             }
@@ -345,9 +357,10 @@ private fun PolicyCard(
             fontSize = 12.sp,
             maxLines = 2,
             lineHeight = 16.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
         )
     }
 }
@@ -355,79 +368,90 @@ private fun PolicyCard(
 /**
  * Downloads a PDF from a URL and generates a thumbnail from its first page
  */
-private suspend fun getPdfThumbnail(context: Context, pdfUrl: String): Bitmap? = withContext(Dispatchers.IO) {
-    try {
-        // Return cached bitmap if present (do NOT cache null values)
-        pdfThumbnailCache[pdfUrl]?.let {
-            Log.d("PolicyThumbnail", "Using cached thumbnail for $pdfUrl")
-            return@withContext it
-        }
-        Log.d("PolicyThumbnail", "Generating thumbnail for $pdfUrl")
-        // Download PDF file to cache directory
-        val tempFile = downloadPdfToTemp(context, pdfUrl)
-        if (tempFile == null || !tempFile.exists() || tempFile.length() == 0L) {
-            Log.e("PolicyThumbnail", "Failed to download PDF from $pdfUrl")
+private suspend fun getPdfThumbnail(
+    context: Context,
+    pdfUrl: String,
+): Bitmap? =
+    withContext(Dispatchers.IO) {
+        try {
+            // Return cached bitmap if present (do NOT cache null values)
+            pdfThumbnailCache[pdfUrl]?.let {
+                Log.d("PolicyThumbnail", "Using cached thumbnail for $pdfUrl")
+                return@withContext it
+            }
+            Log.d("PolicyThumbnail", "Generating thumbnail for $pdfUrl")
+            // Download PDF file to cache directory
+            val tempFile = downloadPdfToTemp(context, pdfUrl)
+            if (tempFile == null || !tempFile.exists() || tempFile.length() == 0L) {
+                Log.e("PolicyThumbnail", "Failed to download PDF from $pdfUrl")
+                return@withContext null // Do not cache failures
+            }
+            // Render the first page as a thumbnail
+            val thumbnail = renderPdfThumbnail(context, tempFile)
+            // Clean up the temp file
+            tempFile.delete()
+            // Cache the bitmap only if successfully created
+            if (thumbnail != null) {
+                pdfThumbnailCache[pdfUrl] = thumbnail
+            }
+            return@withContext thumbnail
+        } catch (e: Exception) {
+            Log.e("PolicyThumbnail", "Error creating thumbnail from $pdfUrl", e)
             return@withContext null // Do not cache failures
         }
-        // Render the first page as a thumbnail
-        val thumbnail = renderPdfThumbnail(context, tempFile)
-        // Clean up the temp file
-        tempFile.delete()
-        // Cache the bitmap only if successfully created
-        if (thumbnail != null) {
-            pdfThumbnailCache[pdfUrl] = thumbnail
-        }
-        return@withContext thumbnail
-    } catch (e: Exception) {
-        Log.e("PolicyThumbnail", "Error creating thumbnail from $pdfUrl", e)
-        return@withContext null // Do not cache failures
     }
-}
 
 /**
  * Downloads PDF from a URL to a temporary file
  */
-private suspend fun downloadPdfToTemp(context: Context, pdfUrl: String): File? = withContext(Dispatchers.IO) {
-    var connection: HttpURLConnection? = null
-    try {
-        val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
-        val outputFile = File(context.cacheDir, fileName)
+private suspend fun downloadPdfToTemp(
+    context: Context,
+    pdfUrl: String,
+): File? =
+    withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection? = null
+        try {
+            val fileName = "temp_pdf_${System.currentTimeMillis()}.pdf"
+            val outputFile = File(context.cacheDir, fileName)
 
-        val url = URL(pdfUrl)
-        connection = url.openConnection() as HttpURLConnection
-        connection.connectTimeout = 15000
-        connection.readTimeout = 15000
+            val url = URL(pdfUrl)
+            connection = url.openConnection() as HttpURLConnection
+            connection.connectTimeout = 15000
+            connection.readTimeout = 15000
 
-        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-            Log.e("PolicyThumbnail", "HTTP error code: ${connection.responseCode}")
-            return@withContext null
-        }
-
-        connection.inputStream.use { input ->
-            FileOutputStream(outputFile).use { output ->
-                input.copyTo(output)
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                Log.e("PolicyThumbnail", "HTTP error code: ${connection.responseCode}")
+                return@withContext null
             }
-        }
 
-        if (outputFile.exists() && outputFile.length() > 0) {
-            Log.d("PolicyThumbnail", "PDF downloaded successfully to ${outputFile.absolutePath}")
-            return@withContext outputFile
-        } else {
-            Log.e("PolicyThumbnail", "Downloaded file is empty or doesn't exist")
+            connection.inputStream.use { input ->
+                FileOutputStream(outputFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            if (outputFile.exists() && outputFile.length() > 0) {
+                Log.d("PolicyThumbnail", "PDF downloaded successfully to ${outputFile.absolutePath}")
+                return@withContext outputFile
+            } else {
+                Log.e("PolicyThumbnail", "Downloaded file is empty or doesn't exist")
+                return@withContext null
+            }
+        } catch (e: Exception) {
+            Log.e("PolicyThumbnail", "Error downloading PDF: ${e.message}", e)
             return@withContext null
+        } finally {
+            connection?.disconnect()
         }
-    } catch (e: Exception) {
-        Log.e("PolicyThumbnail", "Error downloading PDF: ${e.message}", e)
-        return@withContext null
-    } finally {
-        connection?.disconnect()
     }
-}
 
 /**
  * Renders the first page of a PDF as a thumbnail
  */
-private fun renderPdfThumbnail(context: Context, pdfFile: File): Bitmap? {
+private fun renderPdfThumbnail(
+    context: Context,
+    pdfFile: File,
+): Bitmap? {
     var fileDescriptor: ParcelFileDescriptor? = null
     var pdfRenderer: PdfRenderer? = null
     var page: PdfRenderer.Page? = null

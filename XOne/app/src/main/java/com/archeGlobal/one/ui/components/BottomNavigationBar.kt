@@ -34,19 +34,20 @@ fun BottomNavigationBar(
     onChatClick: () -> Unit,
     onSOSClick: () -> Unit,
     onProfileClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val homeSelectedColor = Color(0xFF000000) // Black for home
     val selectedColor = Color(0xFFDD3825) // Red for other items
     val unselectedColor = Color(0xFF808080) // Gray for unselected
 
     NavigationBar(
-        modifier = modifier
-            .height(70.dp)
-            .fillMaxWidth(),
+        modifier =
+            modifier
+                .height(70.dp)
+                .fillMaxWidth(),
         containerColor = Color(0xFFF6F4EE),
         contentColor = selectedColor,
-        tonalElevation = 4.dp
+        tonalElevation = 4.dp,
     ) {
         // Home item
         NavigationBarItem(
@@ -55,20 +56,28 @@ fun BottomNavigationBar(
             icon = {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .fillMaxWidth()
+                    modifier =
+                        Modifier
+                            .padding(top = 4.dp)
+                            .fillMaxWidth(),
                 ) {
-                    val homeIconRes = when {
-                        isUsingPrideIcon && model.showHome -> R.drawable.homepride
-                        isUsingPrideIcon -> R.drawable.homepride
-                        else -> R.drawable.arche_black2
-                    }
+                    val homeIconRes =
+                        when {
+                            isUsingPrideIcon && model.showHome -> R.drawable.homepride
+                            isUsingPrideIcon -> R.drawable.homepride
+                            else -> R.drawable.arche_black2
+                        }
                     Image(
                         painter = painterResource(id = homeIconRes),
                         contentDescription = "Home",
                         modifier = Modifier.size(24.dp),
-                        colorFilter = if (isUsingPrideIcon) null else androidx.compose.ui.graphics.ColorFilter.tint(homeSelectedColor)
+                        colorFilter =
+                            if (isUsingPrideIcon) {
+                                null
+                            } else {
+                                androidx.compose.ui.graphics.ColorFilter
+                                    .tint(homeSelectedColor)
+                            },
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -76,18 +85,19 @@ fun BottomNavigationBar(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 12.sp,
-                        color = homeSelectedColor
+                        color = homeSelectedColor,
                     )
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = homeSelectedColor,
-                unselectedIconColor = homeSelectedColor, // Always black
-                selectedTextColor = homeSelectedColor, // Always black
-                unselectedTextColor = homeSelectedColor, // Always black
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = homeSelectedColor,
+                    unselectedIconColor = homeSelectedColor, // Always black
+                    selectedTextColor = homeSelectedColor, // Always black
+                    unselectedTextColor = homeSelectedColor, // Always black
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
 
         // Chat item
@@ -98,13 +108,13 @@ fun BottomNavigationBar(
                 CompositionLocalProvider(LocalContentColor provides if (model.showChat) selectedColor else unselectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
                     ) {
                         Icon(
                             painterResource(id = R.drawable.chat),
                             contentDescription = "Chat",
                             modifier = Modifier.size(24.dp),
-                            tint = if (model.showChat) selectedColor else unselectedColor
+                            tint = if (model.showChat) selectedColor else unselectedColor,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -112,19 +122,20 @@ fun BottomNavigationBar(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = if (model.showChat) selectedColor else unselectedColor
+                            color = if (model.showChat) selectedColor else unselectedColor,
                         )
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
-                unselectedTextColor = unselectedColor,
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
 
         // SOS item
@@ -135,13 +146,13 @@ fun BottomNavigationBar(
                 CompositionLocalProvider(LocalContentColor provides if (model.showSOS) selectedColor else unselectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
                     ) {
                         Icon(
                             painterResource(id = R.drawable.sostab),
                             contentDescription = "SOS",
                             modifier = Modifier.size(24.dp),
-                            tint = if (model.showSOS) selectedColor else unselectedColor
+                            tint = if (model.showSOS) selectedColor else unselectedColor,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -149,19 +160,20 @@ fun BottomNavigationBar(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = if (model.showSOS) selectedColor else unselectedColor
+                            color = if (model.showSOS) selectedColor else unselectedColor,
                         )
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
-                unselectedTextColor = unselectedColor,
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
 
         // Profile item
@@ -172,13 +184,13 @@ fun BottomNavigationBar(
                 CompositionLocalProvider(LocalContentColor provides if (model.showProfile) selectedColor else unselectedColor) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 4.dp),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.footerprofile),
                             contentDescription = "Profile",
                             modifier = Modifier.size(24.dp),
-                            tint = if (model.showProfile) selectedColor else unselectedColor
+                            tint = if (model.showProfile) selectedColor else unselectedColor,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -186,19 +198,20 @@ fun BottomNavigationBar(
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = if (model.showProfile) selectedColor else unselectedColor
+                            color = if (model.showProfile) selectedColor else unselectedColor,
                         )
                     }
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
-                unselectedTextColor = unselectedColor,
-                indicatorColor = Color(0xFFF6F4EE)
-            ),
-            alwaysShowLabel = false
+            colors =
+                NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = Color(0xFFF6F4EE),
+                ),
+            alwaysShowLabel = false,
         )
     }
 }

@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.Density
  */
 data class AppFontScaleAdjustment(
     val fontScale: Float = 1.0f,
-    val ignoreSystemFontScale: Boolean = true
+    val ignoreSystemFontScale: Boolean = true,
 )
 
 // Create a CompositionLocal to provide the font scale adjustment
@@ -32,26 +32,27 @@ val LocalAppFontScaleAdjustment = compositionLocalOf { AppFontScaleAdjustment() 
 @Composable
 fun FontScaleAdjusted(
     fontScaleAdjustment: AppFontScaleAdjustment = AppFontScaleAdjustment(),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
 
     // Create a custom density that applies our font scale
-    val customDensity = remember(density, fontScaleAdjustment) {
-        val systemFontScale = if (fontScaleAdjustment.ignoreSystemFontScale) 1.0f else density.fontScale
-        val adjustedFontScale = systemFontScale * fontScaleAdjustment.fontScale
+    val customDensity =
+        remember(density, fontScaleAdjustment) {
+            val systemFontScale = if (fontScaleAdjustment.ignoreSystemFontScale) 1.0f else density.fontScale
+            val adjustedFontScale = systemFontScale * fontScaleAdjustment.fontScale
 
-        Density(
-            density = density.density,
-            fontScale = adjustedFontScale
-        )
-    }
+            Density(
+                density = density.density,
+                fontScale = adjustedFontScale,
+            )
+        }
 
     CompositionLocalProvider(
         LocalDensity provides customDensity,
         LocalAppFontScaleAdjustment provides fontScaleAdjustment,
-        content = content
+        content = content,
     )
 }
 
@@ -59,9 +60,7 @@ fun FontScaleAdjusted(
  * Extension function to adjust text style with a consistent scale factor.
  * Useful for ensuring text renders consistently across devices.
  */
-fun TextStyle.withConsistentFontSize(sizeFactor: Float = 1.0f): TextStyle {
-    return copy(fontSize = fontSize * sizeFactor)
-}
+fun TextStyle.withConsistentFontSize(sizeFactor: Float = 1.0f): TextStyle = copy(fontSize = fontSize * sizeFactor)
 
 /**
  * Helper function to get device-specific font adjustments.

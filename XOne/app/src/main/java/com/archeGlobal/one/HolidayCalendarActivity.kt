@@ -32,7 +32,7 @@ class HolidayCalendarActivity : ComponentActivity() {
                         intent.putExtra("month", month)
                         startActivity(intent)
                     },
-                    onHolidayListClick = { }
+                    onHolidayListClick = { },
                 )
             }
         }

@@ -10,7 +10,6 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.UserDataManager
 
 class SmartCollateralActivity : ComponentActivity() {
-
     private lateinit var controller: SmartCollateralController
     private lateinit var collateralController: CollateralController
 
@@ -25,7 +24,7 @@ class SmartCollateralActivity : ComponentActivity() {
             XOneTheme {
                 SmartCollateralScreen(
                     controller = controller,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

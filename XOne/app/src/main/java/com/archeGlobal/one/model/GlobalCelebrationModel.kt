@@ -4,5 +4,5 @@ package com.archeGlobal.one.model
 data class GlobalCelebrationModel(
     val subcategories: List<GreetingSubcategory> = emptyList(),
     val searchQuery: String = "",
-    val selectedSubcategory: GreetingSubcategory? = null
+    val selectedSubcategory: GreetingSubcategory? = null,
 )

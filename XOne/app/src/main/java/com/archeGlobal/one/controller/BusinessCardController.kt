@@ -32,19 +32,28 @@ import java.io.OutputStream
 interface BusinessCardController {
     val showEditCardDialog: MutableState<Boolean>
     val businessCard: BusinessCardModel
+
     fun onBackPressed()
+
     fun onDownloadCard(bitmap: Bitmap)
+
     fun onShareCard(bitmap: Bitmap)
+
     fun onEditCard()
-    fun onCardUpdated(newLocation: String, newCountryCode: String, newPhoneNumber: String)
+
+    fun onCardUpdated(
+        newLocation: String,
+        newCountryCode: String,
+        newPhoneNumber: String,
+    )
+
     fun refreshQRCode(isPortraitMode: Boolean)
 }
 
 class BusinessCardControllerImpl(
     private val context: Context,
-    private val navigator: AndroidNavigator
+    private val navigator: AndroidNavigator,
 ) : BusinessCardController {
-
     override val showEditCardDialog: MutableState<Boolean> = mutableStateOf(false)
 
     override val businessCard: BusinessCardModel
@@ -54,7 +63,11 @@ class BusinessCardControllerImpl(
         showEditCardDialog.value = true
     }
 
-    override fun onCardUpdated(newLocation: String, newCountryCode: String, newPhoneNumber: String) {
+    override fun onCardUpdated(
+        newLocation: String,
+        newCountryCode: String,
+        newPhoneNumber: String,
+    ) {
         var isValid = true
         var message = ""
 
@@ -77,16 +90,18 @@ class BusinessCardControllerImpl(
         }
 
         if (isValid) {
-            val locationValue = if (newLocation.trim().equals("N/A", ignoreCase = true)) {
-                "Bangalore"
-            } else {
-                newLocation
-            }
+            val locationValue =
+                if (newLocation.trim().equals("N/A", ignoreCase = true)) {
+                    "Bangalore"
+                } else {
+                    newLocation
+                }
 
-            val updatedCard = _businessCard.value.copy(
-                location = locationValue,
-                phone = formatPhoneNumber(newCountryCode, newPhoneNumber)
-            )
+            val updatedCard =
+                _businessCard.value.copy(
+                    location = locationValue,
+                    phone = formatPhoneNumber(newCountryCode, newPhoneNumber),
+                )
             _businessCard.value = generateQRCodeForCard(updatedCard)
 
             showEditCardDialog.value = false
@@ -96,7 +111,10 @@ class BusinessCardControllerImpl(
         }
     }
 
-    private fun formatPhoneNumber(countryCode: String, phoneNumber: String): String {
+    private fun formatPhoneNumber(
+        countryCode: String,
+        phoneNumber: String,
+    ): String {
         // Clean inputs
         val cleanCountryCode = countryCode.trim().replace(" ", "").take(4)
         val cleanPhoneNumber = phoneNumber.filter { it.isDigit() }.take(10)
@@ -105,10 +123,11 @@ class BusinessCardControllerImpl(
         val finalCountryCode = if (cleanCountryCode.isEmpty()) "+91" else cleanCountryCode
 
         // Pad or truncate phone number to 10 digits
-        val finalPhoneNumber = when {
-            cleanPhoneNumber.length < 10 -> cleanPhoneNumber.padEnd(10, '0')
-            else -> cleanPhoneNumber
-        }
+        val finalPhoneNumber =
+            when {
+                cleanPhoneNumber.length < 10 -> cleanPhoneNumber.padEnd(10, '0')
+                else -> cleanPhoneNumber
+            }
 
         // Format as "<countryCode> - <phoneNumber>"
         return "$finalCountryCode - $finalPhoneNumber"
@@ -118,7 +137,7 @@ class BusinessCardControllerImpl(
         try {
             ContextCompat.getSystemService(
                 context,
-                NotificationManager::class.java
+                NotificationManager::class.java,
             )
         } catch (e: Exception) {
             Log.d("BusinessCardController", "NotificationManager not available - likely in preview mode")
@@ -135,79 +154,88 @@ class BusinessCardControllerImpl(
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Business Card Downloads",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Notifications for downloaded business cards"
-                enableLights(true)
-                enableVibration(true)
-            }
+            val channel =
+                NotificationChannel(
+                    CHANNEL_ID,
+                    "Business Card Downloads",
+                    NotificationManager.IMPORTANCE_HIGH,
+                ).apply {
+                    description = "Notifications for downloaded business cards"
+                    enableLights(true)
+                    enableVibration(true)
+                }
             notificationManager?.createNotificationChannel(channel)
         }
     }
 
-    private fun checkNotificationPermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    private fun checkNotificationPermission(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.POST_NOTIFICATIONS
+                Manifest.permission.POST_NOTIFICATIONS,
             ) == PackageManager.PERMISSION_GRANTED
         } else {
             true
-        }
-    } // Change _businessCard to MutableState
-    private val _businessCard = mutableStateOf(
-        OtpVerificationController.getUserData()?.let { userData ->
-            // Process the location - if it's N/A, replace with Bangalore
-            val locationValue = if (userData.location == "N/A" || userData.location.isEmpty()) {
-                "Bangalore"
-            } else {
-                userData.location
-            }
+        } // Change _businessCard to MutableState
 
-            val card = BusinessCardModel(
+    private val _businessCard =
+        mutableStateOf(
+            OtpVerificationController.getUserData()?.let { userData ->
+                // Process the location - if it's N/A, replace with Bangalore
+                val locationValue =
+                    if (userData.location == "N/A" || userData.location.isEmpty()) {
+                        "Bangalore"
+                    } else {
+                        userData.location
+                    }
+
+                val card =
+                    BusinessCardModel(
+                        companyLogo = R.drawable.arche,
+                        name = userData.name,
+                        designation = userData.designation,
+                        department = userData.department,
+                        email = userData.email,
+                        phone = formatPhoneNumber("+91", userData.mobile),
+                        location = locationValue, // Updated location with Bangalore fallback
+                        website = "www.arche.global",
+                    )
+
+                // Generate QR code for the card
+                generateQRCodeForCard(card)
+            } ?: BusinessCardModel(
+                // Fallback default values if userData is null
                 companyLogo = R.drawable.arche,
-                name = userData.name,
-                designation = userData.designation,
-                department = userData.department,
-                email = userData.email,
-                phone = formatPhoneNumber("+91", userData.mobile),
-                location = locationValue, // Updated location with Bangalore fallback
-                website = "www.arche.global"
-            )
-
-            // Generate QR code for the card
-            generateQRCodeForCard(card)
-        } ?: BusinessCardModel(
-            // Fallback default values if userData is null
-            companyLogo = R.drawable.arche,
-            name = "",
-            designation = "",
-            department = "",
-            email = "",
-            phone = "",
-            location = "",
-            website = ""
+                name = "",
+                designation = "",
+                department = "",
+                email = "",
+                phone = "",
+                location = "",
+                website = "",
+            ),
         )
-    )
 
     // Generate QR code for a business card and return a new card with QR code
-    private fun generateQRCodeForCard(card: BusinessCardModel, isPortrait: Boolean = true): BusinessCardModel {
-        val qrCode = QRCodeGenerator.generateQRCode(
-            name = card.name,
-            title = card.designation,
-            email = card.email,
-            phone = card.phone,
-            location = card.location,
-            layoutType = if (isPortrait) {
-                QRCodeGenerator.QRLayoutType.VERTICAL
-            } else {
-                QRCodeGenerator.QRLayoutType.HORIZONTAL
-            },
-            size = if (isPortrait) 240 else 140 // Changed from 100 to 140 to match 70dp on screen size
-        )
+    private fun generateQRCodeForCard(
+        card: BusinessCardModel,
+        isPortrait: Boolean = true,
+    ): BusinessCardModel {
+        val qrCode =
+            QRCodeGenerator.generateQRCode(
+                name = card.name,
+                title = card.designation,
+                email = card.email,
+                phone = card.phone,
+                location = card.location,
+                layoutType =
+                    if (isPortrait) {
+                        QRCodeGenerator.QRLayoutType.VERTICAL
+                    } else {
+                        QRCodeGenerator.QRLayoutType.HORIZONTAL
+                    },
+                size = if (isPortrait) 240 else 140, // Changed from 100 to 140 to match 70dp on screen size
+            )
 
         return card.copy(qrCode = qrCode)
     }
@@ -215,12 +243,13 @@ class BusinessCardControllerImpl(
     override fun onDownloadCard(bitmap: Bitmap) {
         try {
             val fileName = "business_card_${System.currentTimeMillis()}.png"
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/BusinessCards")
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-            }
+            val contentValues =
+                ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/BusinessCards")
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
 
             val resolver = context.contentResolver
             val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
@@ -238,46 +267,52 @@ class BusinessCardControllerImpl(
                 resolver.update(it, contentValues, null, null)
 
                 if (checkNotificationPermission()) {
-                    val viewIntent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(uri, "image/png")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
+                    val viewIntent =
+                        Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, "image/png")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
 
-                    val pendingIntent = PendingIntent.getActivity(
-                        context,
-                        0,
-                        viewIntent,
-                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                    )
+                    val pendingIntent =
+                        PendingIntent.getActivity(
+                            context,
+                            0,
+                            viewIntent,
+                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                        )
 
-                    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_notification_download)
-                        .setContentTitle("Business Card Downloaded")
-                        .setContentText("Tap to view your business card")
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setAutoCancel(true)
-                        .setContentIntent(pendingIntent)
-                        .build()
+                    val notification =
+                        NotificationCompat
+                            .Builder(context, CHANNEL_ID)
+                            .setSmallIcon(R.drawable.ic_notification_download)
+                            .setContentTitle("Business Card Downloaded")
+                            .setContentText("Tap to view your business card")
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setAutoCancel(true)
+                            .setContentIntent(pendingIntent)
+                            .build()
 
                     val notificationId = System.currentTimeMillis().toInt()
                     notificationManager?.notify(notificationId, notification)
                 }
 
-                Toast.makeText(
-                    context,
-                    "Business card downloaded successfully. Check Photos or Gallery",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast
+                    .makeText(
+                        context,
+                        "Business card downloaded successfully. Check Photos or Gallery",
+                        Toast.LENGTH_SHORT,
+                    ).show()
             } ?: run {
                 throw IOException("Failed to create media store entry")
             }
         } catch (e: IOException) {
             e.printStackTrace()
-            Toast.makeText(
-                context,
-                "Failed to save business card",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast
+                .makeText(
+                    context,
+                    "Failed to save business card",
+                    Toast.LENGTH_SHORT,
+                ).show()
         }
     }
 
@@ -292,27 +327,30 @@ class BusinessCardControllerImpl(
             stream.close()
 
             val imagePath = File(cachePath, fileName)
-            val contentUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.provider",
-                imagePath
-            )
+            val contentUri =
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    imagePath,
+                )
 
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                type = "image/png"
-                putExtra(Intent.EXTRA_STREAM, contentUri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            val shareIntent =
+                Intent().apply {
+                    action = Intent.ACTION_SEND
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
 
             context.startActivity(Intent.createChooser(shareIntent, "Share Business Card"))
         } catch (e: IOException) {
             e.printStackTrace()
-            android.widget.Toast.makeText(
-                context,
-                "Failed to share business card",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
+            android.widget.Toast
+                .makeText(
+                    context,
+                    "Failed to share business card",
+                    android.widget.Toast.LENGTH_SHORT,
+                ).show()
         }
     }
 

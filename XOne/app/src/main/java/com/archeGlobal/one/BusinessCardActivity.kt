@@ -34,7 +34,7 @@ class BusinessCardActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left, // enter animation for previous activity
-            R.anim.slide_out_right // exit animation for current activity
+            R.anim.slide_out_right, // exit animation for current activity
         )
     }
 }

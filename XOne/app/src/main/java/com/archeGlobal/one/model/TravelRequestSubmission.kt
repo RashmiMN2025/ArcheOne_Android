@@ -9,20 +9,15 @@ import com.google.gson.annotations.SerializedName
 data class TravelDestination(
     @SerializedName("travel_destination")
     val travelDestination: String,
-
     @SerializedName("origin_city")
     val originCity: String,
-
     @SerializedName("destination_city")
     val destinationCity: String,
-
     @SerializedName("departure_date") val departureDate: String,
-
     @SerializedName("arrival_date")
     val arrivalDate: String,
-
     @SerializedName("flight_time")
-    val flightTimePreference: String = ""
+    val flightTimePreference: String = "",
 )
 
 /**
@@ -32,18 +27,14 @@ data class TravelDestination(
 data class TravelDetail(
     @SerializedName("originCity")
     val originCity: String = "N/A",
-
     @SerializedName("destinationCity")
     val destinationCity: String,
-
     @SerializedName("departureDate")
     val departureDate: String,
-
     @SerializedName("arrivalDate")
     val arrivalDate: String,
-
     @SerializedName("flightTimePreference")
-    val flightTime: String = ""
+    val flightTime: String = "",
 )
 
 /**
@@ -53,60 +44,42 @@ data class TravelDetail(
 data class TravelRequestSubmission(
     @SerializedName("employeeName")
     val employeeName: String,
-
     @SerializedName("employeeEmail")
     val employeeEmail: String,
-
     @SerializedName("employeeId")
     val employeeId: String,
-
     @SerializedName("mobile")
     val mobile: String = "",
-
     @SerializedName("destinations")
     val travelDetails: List<TravelDetail>,
-
     @SerializedName("frequentFlyerNumber")
     val frequentFlyerNum: String = "",
-
     @SerializedName("mealPreference")
     val mealPref: String = "",
-
     @SerializedName("seatPreference")
     val seatPref: String = "",
-
     @SerializedName("projectName")
     val projectName: String,
-
     @SerializedName("businessJustification")
     val businessJustification: String,
-
     @SerializedName("modeOfTransport")
     val modeOfTransport: String,
-
     @SerializedName("flightType")
     val flightType: String = "",
-
     @SerializedName("reportingManagerName")
     val reportingManagerName: String,
-
     @SerializedName("reportingManagerEmail")
     val reportingManagerEmail: String,
-
     @SerializedName("stayRequired")
     val stayRequired: Boolean,
-
     @SerializedName("grade")
     val grade: String,
-
     @SerializedName("aadhar_number")
     val aadharNumber: String,
-
     @SerializedName("date_of_birth")
     val dateOfBirth: String,
-
     @SerializedName("multiTravel")
-    val multiTravel: Boolean
+    val multiTravel: Boolean,
 )
 
 /**
@@ -116,21 +89,16 @@ data class TravelRequestSubmission(
 data class TravelRequestResponse(
     @SerializedName("status")
     val status: Int,
-
     @SerializedName("message")
     val message: String,
-
     // Support both camelCase and snake_case for order_history
     @SerializedName("orderHistory")
     val orderHistory: List<TravelHistoryItem>? = null,
-
     @SerializedName("order_history")
-    val orderHistorySnakeCase: List<TravelHistoryItem>? = null
+    val orderHistorySnakeCase: List<TravelHistoryItem>? = null,
 ) {
     // Helper function to get order history regardless of format
-    fun getAllOrderHistory(): List<TravelHistoryItem>? {
-        return orderHistory ?: orderHistorySnakeCase
-    }
+    fun getAllOrderHistory(): List<TravelHistoryItem>? = orderHistory ?: orderHistorySnakeCase
 }
 
 /**
@@ -157,15 +125,16 @@ fun createSingleDestinationRequest(
     frequentFlyerNumber: String,
     mealPreference: String,
     seatPreference: String,
-    flightTime: String
+    flightTime: String,
 ): TravelRequestSubmission {
-    val travelDetail = TravelDetail(
-        originCity = originCity,
-        destinationCity = destinationCity,
-        departureDate = departureDate,
-        arrivalDate = arrivalDate,
-        flightTime = flightTime
-    )
+    val travelDetail =
+        TravelDetail(
+            originCity = originCity,
+            destinationCity = destinationCity,
+            departureDate = departureDate,
+            arrivalDate = arrivalDate,
+            flightTime = flightTime,
+        )
 
     return TravelRequestSubmission(
         employeeName = employeeName,
@@ -186,7 +155,7 @@ fun createSingleDestinationRequest(
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
-        multiTravel = false
+        multiTravel = false,
     )
 }
 
@@ -210,9 +179,9 @@ fun createMultiDestinationRequest(
     frequentFlyerNumber: String,
     mealPreference: String,
     seatPreference: String,
-    travelDetails: List<TravelDetail>
-): TravelRequestSubmission {
-    return TravelRequestSubmission(
+    travelDetails: List<TravelDetail>,
+): TravelRequestSubmission =
+    TravelRequestSubmission(
         employeeName = employeeName,
         employeeEmail = employeeEmail,
         employeeId = employeeId,
@@ -231,6 +200,5 @@ fun createMultiDestinationRequest(
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
-        multiTravel = true
+        multiTravel = true,
     )
-}

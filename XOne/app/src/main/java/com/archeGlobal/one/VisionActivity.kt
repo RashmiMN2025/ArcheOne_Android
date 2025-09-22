@@ -20,7 +20,7 @@ class VisionActivity : ComponentActivity() {
         setContent {
             XOneTheme {
                 VisionScreen(
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

@@ -26,79 +26,87 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 fun PrideMonthDialog(
     isUsingPrideIcon: Boolean,
     onDismiss: () -> Unit,
-    onToggleIcon: () -> Unit
+    onToggleIcon: () -> Unit,
 ) {
     var isSpinning by remember { mutableStateOf(false) }
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 8.dp
-            )
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = Color.White,
+                ),
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = 8.dp,
+                ),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // Title
                 Text(
                     text = "Celebrating love, equality, and pride this month and always.",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 24.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 24.dp),
                     fontSize = 15.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // App Icons Row
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // Regular App Icon
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Card(
-                            modifier = Modifier
-                                .size(64.dp),
-
+                            modifier =
+                                Modifier
+                                    .size(64.dp),
                             shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Black
-                            ),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = 2.dp,
-                                color = Color(0xFFDD3825)
-                            )
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = Color.Black,
+                                ),
+                            border =
+                                androidx.compose.foundation.BorderStroke(
+                                    width = 2.dp,
+                                    color = Color(0xFFDD3825),
+                                ),
                         ) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.arche2),
                                     contentDescription = "App Icon",
-                                    modifier = Modifier
-                                        .size(48.dp),
-
-                                    contentScale = ContentScale.Fit
+                                    modifier =
+                                        Modifier
+                                            .size(48.dp),
+                                    contentScale = ContentScale.Fit,
                                 )
                             }
                         }
@@ -110,7 +118,7 @@ fun PrideMonthDialog(
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                     }
 
@@ -119,28 +127,29 @@ fun PrideMonthDialog(
 
                     // Pride App Icon
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Card(
-                            modifier = Modifier
-                                .size(64.dp),
-
+                            modifier =
+                                Modifier
+                                    .size(64.dp),
                             shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Black
-                            )
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = Color.Black,
+                                ),
                         ) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.archepride),
                                     contentDescription = "Pride App Icon",
-                                    modifier = Modifier
-                                        .fillMaxSize(),
-
-                                    contentScale = ContentScale.Fit
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize(),
+                                    contentScale = ContentScale.Fit,
                                 )
                             }
                         }
@@ -152,7 +161,7 @@ fun PrideMonthDialog(
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                     }
                 }
@@ -165,22 +174,24 @@ fun PrideMonthDialog(
                         isSpinning = true
                         onToggleIcon()
                     },
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .height(46.dp)
-                        .fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isUsingPrideIcon) Color(0xFFFEE9E9) else Color(0xFFDD3825),
-                        contentColor = if (isUsingPrideIcon) Color(0xFFDD3825) else Color.White
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 16.dp)
+                            .height(46.dp)
+                            .fillMaxWidth(),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = if (isUsingPrideIcon) Color(0xFFFEE9E9) else Color(0xFFDD3825),
+                            contentColor = if (isUsingPrideIcon) Color(0xFFDD3825) else Color.White,
+                        ),
+                    shape = RoundedCornerShape(12.dp),
                 ) {
                     Text(
                         text = if (isUsingPrideIcon) "Change back to App Icon" else "Change to Pride Icon",
                         fontSize = 15.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = if (isUsingPrideIcon) Color(0xFFDD3825) else Color.White
+                        color = if (isUsingPrideIcon) Color(0xFFDD3825) else Color.White,
                     )
                 }
 

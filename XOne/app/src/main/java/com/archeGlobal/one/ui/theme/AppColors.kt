@@ -2,8 +2,8 @@ package com.archeGlobal.one.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-fun getColorForApp(title: String): Color {
-    return when (title) {
+fun getColorForApp(title: String): Color =
+    when (title) {
         "ID" -> Color(0xFF1c5c89)
         "Asset" -> Color(0xFFb33d1f)
         "Timesheet" -> Color(0xFF999900)
@@ -32,4 +32,3 @@ fun getColorForApp(title: String): Color {
         "SAP" -> Color(0xFF0000CD)
         else -> Color(0xFF091857)
     }
-}

@@ -17,7 +17,7 @@ class UserDocumentsActivity : ComponentActivity() {
                 UserDocumentsScreen(
                     controller = controller,
                     context = this,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

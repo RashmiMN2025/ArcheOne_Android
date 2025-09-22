@@ -73,6 +73,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
     private lateinit var helpDeskController: HelpDeskController
+
 //    private lateinit var orderController: OrderController
 //    private lateinit var consumptionReportController: ConsumptionReportController
 //    private lateinit var smartCollateralcontroller: SmartCollateralController
@@ -200,7 +201,10 @@ class HomeActivity : AppCompatActivity() {
         // Handle direct action-based navigation
         val directAction = intent.action
 
-        Log.d("HomeActivity", "onNewIntent called with navigateTo=$navigateTo, directNavigateTo=$directNavigateTo, sourceActivity=$sourceActivity, ticketCategory=$ticketCategory, source=$source, clearBackStack=$clearBackStack")
+        Log.d(
+            "HomeActivity",
+            "onNewIntent called with navigateTo=$navigateTo, directNavigateTo=$directNavigateTo, sourceActivity=$sourceActivity, ticketCategory=$ticketCategory, source=$source, clearBackStack=$clearBackStack",
+        )
 
         // Handle direct navigation from DeskCart
         if (directNavigateTo == "order_history") {
@@ -262,7 +266,9 @@ class HomeActivity : AppCompatActivity() {
 
         // If MPIN is not set and we're NOT coming from login, redirect to MPIN setup
         // Users coming from login should not be forced to set up MPIN
-        if (!com.archeGlobal.one.utils.MpinManager.checkMpinExists(this)) {
+        if (!com.archeGlobal.one.utils.MpinManager
+                .checkMpinExists(this)
+        ) {
             val loginIntent = android.content.Intent(this, com.archeGlobal.one.LoginActivity::class.java)
             loginIntent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(loginIntent)
@@ -288,16 +294,21 @@ class HomeActivity : AppCompatActivity() {
         } else {
             // If not coming from login/MPIN setup and MPIN exists, set lock state to true
             // This ensures MPIN prompt shows when app is reopened
-            if (com.archeGlobal.one.utils.MpinManager.checkMpinExists(this)) {
+            if (com.archeGlobal.one.utils.MpinManager
+                    .checkMpinExists(this)
+            ) {
                 userDataManager.preferencesManager.setAppLockState(true)
             }
         }
 
         if ((fromMpin || fromLogin) && !biometricPromptShown) {
             biometricPromptShown = true
-            val biometricHelper = com.archeGlobal.one.utils.BiometricHelper(this)
+            val biometricHelper =
+                com.archeGlobal.one.utils
+                    .BiometricHelper(this)
             if (biometricHelper.canUseBiometric() && !biometricHelper.isBiometricEnabled()) {
-                android.app.AlertDialog.Builder(this)
+                android.app.AlertDialog
+                    .Builder(this)
                     .setTitle("Enable Fingerprint Login")
                     .setMessage("Would you like to use fingerprint for faster login next time?")
                     .setPositiveButton("Yes") { _, _ ->
@@ -310,10 +321,9 @@ class HomeActivity : AppCompatActivity() {
                                 userDataManager.preferencesManager.setBiometricEnabled(true)
                                 userDataManager.preferencesManager.setAppLockState(false)
                             },
-                            onError = { _ -> }
+                            onError = { _ -> },
                         )
-                    }
-                    .setNegativeButton("No", null)
+                    }.setNegativeButton("No", null)
                     .setCancelable(false)
                     .show()
             }
@@ -332,14 +342,15 @@ class HomeActivity : AppCompatActivity() {
                         Toast.makeText(this@HomeActivity, "Press Home to exit the app", Toast.LENGTH_SHORT).show()
                     }
                 }
-            }
+            },
         )
 
         // Initialize controllers that need context
-        otpVerificationController = OtpVerificationController(
-            navigator = navigator, // Use the existing navigator instance
-            context = this
-        )
+        otpVerificationController =
+            OtpVerificationController(
+                navigator = navigator, // Use the existing navigator instance
+                context = this,
+            )
 
         // Check if we need to navigate to a specific destination
         val destination = intent.getStringExtra("destination")
@@ -348,7 +359,10 @@ class HomeActivity : AppCompatActivity() {
         val source = intent.getStringExtra("source")
         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
         val fromOtp = intent.getBooleanExtra("FROM_OTP", false) // Print the intent extras for debugging
-        Log.d("HomeActivity", "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, ticketCategory=$ticketCategory, source=$source, isEmergencyContact=$isEmergencyContact")
+        Log.d(
+            "HomeActivity",
+            "onCreate with intent extras: destination=$destination, navigateTo=$navigateTo, ticketCategory=$ticketCategory, source=$source, isEmergencyContact=$isEmergencyContact",
+        )
         Log.d("HomeActivity", "All extras: ${intent.extras?.keySet()?.joinToString()}")
         Log.d("HomeActivity", "fromOtp=$fromOtp")
 
@@ -418,22 +432,34 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 // Determine start destination based on intent - SIMPLE LOGIC
-                val startDestination = when {
-                    directNavigateTo == "order_history" -> "order_history" // NEW: Direct navigation from DeskCart
-                    currentAction == "navigate_to_order_history" -> "order_history" // Direct action navigation
-                    clearBackStack && currentNavigateTo == "home" -> "home" // Force home when clearing back stack
-                    currentNavigateTo == "track_tickets" && currentTicketCategory != null -> "track_tickets"
-                    currentNavigateTo == "order_received" -> "order_received"
-                    currentNavigateTo == "order_history" -> "order_history"
-                    currentNavigateTo == "order_history_detail" -> "home" // Start at home then navigate to detail
-                    currentNavigateTo == "consumption_report" && !clearBackStack -> "consumption_report"
-                    else -> "home"
-                }
+                val startDestination =
+                    when {
+                        directNavigateTo == "order_history" -> "order_history" // NEW: Direct navigation from DeskCart
+                        currentAction == "navigate_to_order_history" -> "order_history" // Direct action navigation
+                        clearBackStack && currentNavigateTo == "home" -> "home" // Force home when clearing back stack
+                        currentNavigateTo == "track_tickets" && currentTicketCategory != null -> "track_tickets"
+                        currentNavigateTo == "order_received" -> "order_received"
+                        currentNavigateTo == "order_history" -> "order_history"
+                        currentNavigateTo == "order_history_detail" -> "home" // Start at home then navigate to detail
+                        currentNavigateTo == "consumption_report" && !clearBackStack -> "consumption_report"
+                        else -> "home"
+                    }
 
-                Log.d("HomeActivity", "Intent parameters - navigateTo: $currentNavigateTo, directNavigateTo: $directNavigateTo, startDestination: $startDestination")
+                Log.d(
+                    "HomeActivity",
+                    "Intent parameters - navigateTo: $currentNavigateTo, directNavigateTo: $directNavigateTo, startDestination: $startDestination",
+                )
 
                 // Handle data loading and navigation setup
-                LaunchedEffect(currentDestination, currentNavigateTo, currentTicketCategory, currentSource, isEmergencyContact, clearBackStack, directNavigateTo) {
+                LaunchedEffect(
+                    currentDestination,
+                    currentNavigateTo,
+                    currentTicketCategory,
+                    currentSource,
+                    isEmergencyContact,
+                    clearBackStack,
+                    directNavigateTo,
+                ) {
                     // Set up track_tickets controller FIRST if that's our destination
                     if (startDestination == "track_tickets" && currentTicketCategory != null) {
                         if (currentSource != null) {
@@ -458,7 +484,8 @@ class HomeActivity : AppCompatActivity() {
                                 if (message.contains("Invalid Token")) {
                                     Toast.makeText(this@HomeActivity, "Session expired. Please log in again.", Toast.LENGTH_SHORT).show()
                                     // Preserve that this is not a first-time user for session expiry
-                                    com.archeGlobal.one.utils.setFirstTimeLogin(this@HomeActivity, false)
+                                    com.archeGlobal.one.utils
+                                        .setFirstTimeLogin(this@HomeActivity, false)
                                     // Clear all user data
                                     userDataManager.clearUserData()
                                     navigator.navigateToLoginScreen()
@@ -490,7 +517,10 @@ class HomeActivity : AppCompatActivity() {
                                         }
                                         // Load tickets with the specified category before navigating
                                         helpDeskController.navigateToTrackTickets(currentTicketCategory)
-                                        Log.d("HomeActivity", "Navigating to track_tickets with category: $currentTicketCategory from source: $currentSource")
+                                        Log.d(
+                                            "HomeActivity",
+                                            "Navigating to track_tickets with category: $currentTicketCategory from source: $currentSource",
+                                        )
                                     } else if (route == "order_history") {
                                         navController.navigate("order_history")
                                         Log.d("HomeActivity", "Navigating to order_history")
@@ -533,7 +563,7 @@ class HomeActivity : AppCompatActivity() {
                 // UniversalLoader(isLoading = isLoading)
                 NavHost(
                     navController = navController,
-                    startDestination = startDestination
+                    startDestination = startDestination,
                 ) {
                     composable(
                         route = "home",
@@ -548,7 +578,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         val eventData = controller.eventData.collectAsState().value
                         val showEventPopup = controller.showEventPopup.collectAsState().value
@@ -581,7 +611,7 @@ class HomeActivity : AppCompatActivity() {
                             eventData = eventData,
                             showEventPopup = showEventPopup,
                             onDismissEventPopup = controller::dismissEventPopup,
-                            navigator = navigator
+                            navigator = navigator,
                         )
                     }
 
@@ -599,7 +629,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         // Call onChatScreenEnter when entering the chat screen
                         LaunchedEffect(Unit) {
@@ -610,26 +640,27 @@ class HomeActivity : AppCompatActivity() {
                             viewModel = chatController.viewModel,
                             navController = navController,
                             onBackPressed = chatController::onBackPressed,
-                            showBottomBar = true
+                            showBottomBar = true,
                         )
                     }
 
                     // Add raise concern screen with customizable title
                     composable(
                         route = "raise_concern/{title}?category={category}&subcategory={subcategory}",
-                        arguments = listOf(
-                            navArgument("title") { type = NavType.StringType },
-                            navArgument("category") {
-                                type = NavType.StringType
-                                nullable = true
-                                defaultValue = null
-                            },
-                            navArgument("subcategory") {
-                                type = NavType.StringType
-                                nullable = true
-                                defaultValue = null
-                            }
-                        ),
+                        arguments =
+                            listOf(
+                                navArgument("title") { type = NavType.StringType },
+                                navArgument("category") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                },
+                                navArgument("subcategory") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                },
+                            ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -641,7 +672,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) { backStackEntry ->
                         val title = backStackEntry.arguments?.getString("title") ?: "Raise a Concern"
                         val decodedTitle = java.net.URLDecoder.decode(title, "UTF-8")
@@ -657,18 +688,19 @@ class HomeActivity : AppCompatActivity() {
                             prefilledSubcategory = decodedSubcategory,
                             onNavigateToTrackTickets = { category ->
                                 helpDeskController.navigateToTrackTickets(category)
-                            }
+                            },
                         )
                     }
 
                     composable(
                         route = "locations?showHeader={showHeader}",
-                        arguments = listOf(
-                            navArgument("showHeader") {
-                                type = NavType.BoolType
-                                defaultValue = true
-                            }
-                        ),
+                        arguments =
+                            listOf(
+                                navArgument("showHeader") {
+                                    type = NavType.BoolType
+                                    defaultValue = true
+                                },
+                            ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -680,7 +712,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) { backStackEntry ->
                         val showHeader = intent.getBooleanExtra("showHeader", false)
                         val isEmergencyContact = intent.getBooleanExtra("isEmergencyContact", false)
@@ -695,7 +727,7 @@ class HomeActivity : AppCompatActivity() {
                             controller = locationsController,
                             isEmergencyContact = isEmergencyContact,
                             showHeader = showHeader,
-                            onBackToHome = { navigator.navigateToHome() }
+                            onBackToHome = { navigator.navigateToHome() },
                         )
                     }
 
@@ -712,12 +744,12 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         BusinessCardScreen(
                             businessCard = businessCardController.businessCard,
                             controller = businessCardController,
-                            onBackPressed = { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() },
                         )
                     }
 
@@ -734,12 +766,12 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         IdeaVaultScreen(
                             onBackPressed = { navController.popBackStack() },
                             controller = ideaVaultController, // Pass the initialized controller
-                            apiService = RetrofitClient.apiService
+                            apiService = RetrofitClient.apiService,
                         )
                     }
 
@@ -756,13 +788,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         PolicyScreen(
                             model = policyController.model.value,
                             onPolicyClick = policyController::onPolicyClick,
                             onBackClick = policyController::onBackClick,
-                            isLoading = policyController.isLoading.value
+                            isLoading = policyController.isLoading.value,
                         )
                     }
 
@@ -779,13 +811,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         CommuniqueScreen(
                             model = communiqueController.model,
                             onCommuniqueClick = communiqueController::onCommuniqueClick,
                             onBackPressed = { navController.popBackStack() },
-                            isLoading = communiqueController.isLoading.value
+                            isLoading = communiqueController.isLoading.value,
                         )
                     }
 
@@ -802,12 +834,12 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         AssetScreen(
                             model = assetController.model,
                             controller = assetController,
-                            onBackPressed = {navController.popBackStack()}
+                            onBackPressed = { navController.popBackStack() },
                         )
                     }
 
@@ -824,10 +856,10 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         HolidayOptionsScreen(
-                            controller = holidayOptionsController
+                            controller = holidayOptionsController,
                         )
                     }
 
@@ -844,7 +876,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         HolidayCalendarScreen(
                             controller = holidayCalendarController,
@@ -854,10 +886,13 @@ class HomeActivity : AppCompatActivity() {
                             },
                             onHolidayListClick = { pdfUrl ->
                                 // Use our PDFViewerScreen with navigator
-                                val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                                val currentYear =
+                                    java.util.Calendar
+                                        .getInstance()
+                                        .get(java.util.Calendar.YEAR)
                                 navigator.navigateToPDFViewer(pdfUrl, "Holiday List $currentYear")
                                 Log.d("HomeActivity", "Opening holiday list PDF in PDFViewerScreen: $pdfUrl")
-                            }
+                            },
                         )
                     }
 
@@ -866,7 +901,7 @@ class HomeActivity : AppCompatActivity() {
                         MonthDetailScreen(
                             month = month,
                             controller = holidayCalendarController,
-                            onBackPressed = { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() },
                         )
                     }
 
@@ -883,20 +918,21 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         ProfileScreen(
                             controller = profileController,
-                            footerNavigation = FooterNavigationModel(
-                                showHome = false,
-                                showChat = false,
-                                showSOS = false,
-                                showProfile = true
-                            ),
+                            footerNavigation =
+                                FooterNavigationModel(
+                                    showHome = false,
+                                    showChat = false,
+                                    showSOS = false,
+                                    showProfile = true,
+                                ),
                             onFooterHomeClick = { navController.navigate("home") },
                             onFooterChatClick = { navigator.navigateToChat() },
                             onFooterSOSClick = { navController.navigate("sos") },
-                            onFooterProfileClick = { /* Already on Profile screen */ }
+                            onFooterProfileClick = { /* Already on Profile screen */ },
                         )
                     }
 
@@ -913,10 +949,10 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         AboutMeScreen(
-                            controller = aboutMeController
+                            controller = aboutMeController,
                         )
                     }
 
@@ -933,16 +969,16 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         AddressDetailsScreen(
-                            controller = addressController
+                            controller = addressController,
                         )
                     }
 
                     composable("core_values") {
                         CoreValuesScreen(
-                            onBackPressed = { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() },
                         )
                     }
 
@@ -959,25 +995,26 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         EmergencyContactScreen(
-                            controller = emergencyContactController
+                            controller = emergencyContactController,
                         )
                     }
 
                     composable(
                         route = "pdf_viewer/{pdfUrl}?title={title}",
-                        arguments = listOf(
-                            navArgument("pdfUrl") {
-                                type = NavType.StringType
-                                nullable = false
-                            },
-                            navArgument("title") {
-                                type = NavType.StringType
-                                defaultValue = "PDF Viewer"
-                            }
-                        ),
+                        arguments =
+                            listOf(
+                                navArgument("pdfUrl") {
+                                    type = NavType.StringType
+                                    nullable = false
+                                },
+                                navArgument("title") {
+                                    type = NavType.StringType
+                                    defaultValue = "PDF Viewer"
+                                },
+                            ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -989,37 +1026,39 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) { backStackEntry ->
                         val encodedPdfUrl = backStackEntry.arguments?.getString("pdfUrl") ?: ""
                         val title = backStackEntry.arguments?.getString("title") ?: "PDF Viewer"
 
                         // Safely decode the URL
-                        val pdfUrl = try {
-                            val decoded = URLDecoder.decode(encodedPdfUrl, "UTF-8")
-                            Log.d("HomeActivity", "Successfully decoded PDF URL: $decoded")
-                            decoded
-                        } catch (e: Exception) {
-                            Log.e("HomeActivity", "Error decoding PDF URL: ${e.message}", e)
-                            // If decoding fails, pass the encoded URL and let the PDFViewerScreen handle the error
-                            encodedPdfUrl
-                        }
+                        val pdfUrl =
+                            try {
+                                val decoded = URLDecoder.decode(encodedPdfUrl, "UTF-8")
+                                Log.d("HomeActivity", "Successfully decoded PDF URL: $decoded")
+                                decoded
+                            } catch (e: Exception) {
+                                Log.e("HomeActivity", "Error decoding PDF URL: ${e.message}", e)
+                                // If decoding fails, pass the encoded URL and let the PDFViewerScreen handle the error
+                                encodedPdfUrl
+                            }
 
                         PDFViewerScreen(
                             pdfUrl = pdfUrl,
                             title = title,
-                            onBackClick = { navController.popBackStack() }
+                            onBackClick = { navController.popBackStack() },
                         )
                     }
 
                     composable(
                         route = "sos?showHeader={showHeader}",
-                        arguments = listOf(
-                            navArgument("showHeader") {
-                                type = NavType.BoolType
-                                defaultValue = true // Default to true if not provided
-                            }
-                        ),
+                        arguments =
+                            listOf(
+                                navArgument("showHeader") {
+                                    type = NavType.BoolType
+                                    defaultValue = true // Default to true if not provided
+                                },
+                            ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -1031,7 +1070,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) { backStackEntry ->
                         val showHeader = backStackEntry.arguments?.getBoolean("showHeader") ?: true
 
@@ -1042,7 +1081,7 @@ class HomeActivity : AppCompatActivity() {
                                 onBackPressed = { showRaiseConcern = false },
                                 onNavigateToTrackTickets = { category ->
                                     helpDeskController.navigateToTrackTickets(category)
-                                }
+                                },
                             )
                         } else {
                             SOSScreen(
@@ -1088,7 +1127,7 @@ class HomeActivity : AppCompatActivity() {
                                     // Navigate to profile
                                     navController.navigate("profile")
                                 },
-                                showHeader = showHeader // Pass the showHeader value dynamically
+                                showHeader = showHeader, // Pass the showHeader value dynamically
                             )
                         }
                     }
@@ -1107,14 +1146,14 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) { backStackEntry ->
                         val json = backStackEntry.arguments?.getString("blog")
                         val blog = Gson().fromJson(json, SosBlogModel::class.java)
 
                         SOSDetailScreen(
                             blog = blog,
-                            onBackPressed = { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() },
                         )
                     }
 
@@ -1131,10 +1170,10 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         VisionScreen(
-                            onBackPressed = { navigator.navigateToHome() }
+                            onBackPressed = { navigator.navigateToHome() },
                         )
                     }; // <-- Add comma to separate composables
 
@@ -1151,11 +1190,11 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         GreetingsScreen(
                             controller = greetingsController,
-                            onBackPressed = { navigator.navigateToHome() }
+                            onBackPressed = { navigator.navigateToHome() },
                         )
                     }; // <-- Add comma to separate composables
 
@@ -1172,29 +1211,31 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
-                        val globalCelebrationController = GlobalCelebrationController(
-                            this@HomeActivity,
-                            navigator,
-                            greetingsController
-                        )
+                        val globalCelebrationController =
+                            GlobalCelebrationController(
+                                this@HomeActivity,
+                                navigator,
+                                greetingsController,
+                            )
                         GlobalCelebrationScreen(
                             controller = globalCelebrationController,
-                            onBackPressed = { navigator.navigateToGreetings() }
+                            onBackPressed = { navigator.navigateToGreetings() },
                         )
                     }
 
                     // Add the service_not_available route
                     composable(
                         route = "service_not_available?serviceName={serviceName}",
-                        arguments = listOf(
-                            navArgument("serviceName") {
-                                type = NavType.StringType
-                                nullable = true
-                                defaultValue = null
-                            }
-                        ),
+                        arguments =
+                            listOf(
+                                navArgument("serviceName") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                    defaultValue = null
+                                },
+                            ),
                         enterTransition = {
                             fadeIn(animationSpec = tween(300))
                         },
@@ -1206,12 +1247,12 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) { backStackEntry ->
                         val serviceName = backStackEntry.arguments?.getString("serviceName")
                         ServiceNotAvailableScreen(
                             navController = navController,
-                            serviceName = serviceName
+                            serviceName = serviceName,
                         )
                     }
 
@@ -1229,10 +1270,10 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         TravelScreen(
-                            controller = travelController
+                            controller = travelController,
                         )
                     }
 
@@ -1250,10 +1291,10 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         TravelHistoryScreen(
-                            controller = travelController
+                            controller = travelController,
                         )
                     }
 
@@ -1271,13 +1312,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         // Only show the detail screen if a travel request is selected
                         travelController.selectedTravelRequest?.let { travelRequest ->
                             TravelRequestDetailScreen(
                                 controller = travelController,
-                                travelRequest = travelRequest
+                                travelRequest = travelRequest,
                             )
                         } ?: run {
                             // If no travel request is selected, go back to travel history
@@ -1301,13 +1342,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         // Only show the detail screen if a travel request is selected
                         travelController.selectedTravelRequest?.let { travelRequest ->
                             TravelHistoryDetailScreen(
                                 controller = travelController,
-                                travelRequest = travelRequest
+                                travelRequest = travelRequest,
                             )
                         } ?: run {
                             // If no travel request is selected, go back to travel history
@@ -1331,10 +1372,10 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         TravelApprovalsScreen(
-                            controller = travelController
+                            controller = travelController,
                         )
                     }
 
@@ -1352,13 +1393,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         // Only show the detail screen if a travel request is selected
                         travelController.selectedTravelRequest?.let { travelRequest ->
                             TravelApprovalDetailScreen(
                                 controller = travelController,
-                                travelRequest = travelRequest
+                                travelRequest = travelRequest,
                             )
                         } ?: run {
                             // If no travel request is selected, go back to travel approvals
@@ -1382,13 +1423,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         // Only show the confirmation screen if a travel request is selected
                         travelController.selectedTravelRequest?.let { travelRequest ->
                             TravelApprovalConfirmScreen(
                                 controller = travelController,
-                                travelRequest = travelRequest
+                                travelRequest = travelRequest,
                             )
                         } ?: run {
                             // If no travel request is selected, go back to travel approvals
@@ -1412,13 +1453,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         // Only show the approval screen if a travel request is selected
                         travelController.selectedTravelRequest?.let { travelRequest ->
                             TravelApproveScreen(
                                 controller = travelController,
-                                travelRequest = travelRequest
+                                travelRequest = travelRequest,
                             )
                         } ?: run {
                             // If no travel request is selected, go back to travel approvals
@@ -1442,13 +1483,13 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         // Only show the rejection screen if a travel request is selected
                         travelController.selectedTravelRequest?.let { travelRequest ->
                             TravelRejectScreen(
                                 controller = travelController,
-                                travelRequest = travelRequest
+                                travelRequest = travelRequest,
                             )
                         } ?: run {
                             // If no travel request is selected, go back to travel approvals
@@ -1472,7 +1513,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         travelController.selectedTravelRequest?.let { tr ->
                             TravelApprovalDetailsScreen(controller = travelController, travelRequest = tr)
@@ -1495,7 +1536,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         HelpDeskScreen(controller = helpDeskController)
                     }
@@ -1513,10 +1554,10 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         TicketTrackingScreen(
-                            controller = helpDeskController
+                            controller = helpDeskController,
                         )
                     }
 
@@ -1533,7 +1574,7 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) { backStackEntry ->
                         val faqId = backStackEntry.arguments?.getString("faqId") ?: ""
                         FAQDetailScreen(faqId = faqId, controller = helpDeskController)
@@ -1541,67 +1582,69 @@ class HomeActivity : AppCompatActivity() {
                     // Order details route
                     composable(
                         route = "order_details/{orderId}",
-                        arguments = listOf(
-                            navArgument("orderId") {
-                                type = NavType.StringType
-                                nullable = false
-                            }
-                        ),
+                        arguments =
+                            listOf(
+                                navArgument("orderId") {
+                                    type = NavType.StringType
+                                    nullable = false
+                                },
+                            ),
                         enterTransition = {
                             slideIntoContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
                         },
                         exitTransition = {
                             slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
                         },
                         popEnterTransition = {
                             slideIntoContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
                         },
                         popExitTransition = {
                             slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
-                        }
+                        },
                     ) { backStackEntry ->
                         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
 
                         // Get order details from companion object
                         OrderReceivedController.selectedOrderForDetails?.let { orderItem ->
-                            val orderHistoryDetailsController = remember {
-                                OrderHistoryDetailsController(this@HomeActivity, navigator)
-                            }
+                            val orderHistoryDetailsController =
+                                remember {
+                                    OrderHistoryDetailsController(this@HomeActivity, navigator)
+                                }
                             OrderDetailsScreen(
                                 controller = orderHistoryDetailsController,
-                                orderItem = orderItem
+                                orderItem = orderItem,
                             )
                         } ?: run {
                             // Show error state if no order found
                             Box(
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
                                     Text(
                                         text = "Order not found",
                                         color = Color.Red,
                                         fontFamily = GraphikFontFamily,
-                                        fontSize = 16.sp
+                                        fontSize = 16.sp,
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Button(
-                                        onClick = { navigator.navigateToOrderReceived() }
+                                        onClick = { navigator.navigateToOrderReceived() },
                                     ) {
                                         Text("Go Back")
                                     }
@@ -1613,67 +1656,69 @@ class HomeActivity : AppCompatActivity() {
                     // Order History Detail route
                     composable(
                         route = "order_history_detail/{orderId}",
-                        arguments = listOf(
-                            navArgument("orderId") {
-                                type = NavType.StringType
-                                nullable = false
-                            }
-                        ),
+                        arguments =
+                            listOf(
+                                navArgument("orderId") {
+                                    type = NavType.StringType
+                                    nullable = false
+                                },
+                            ),
                         enterTransition = {
                             slideIntoContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
                         },
                         exitTransition = {
                             slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
                         },
                         popEnterTransition = {
                             slideIntoContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
                         },
                         popExitTransition = {
                             slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                                animationSpec = tween(300)
+                                animationSpec = tween(300),
                             )
-                        }
+                        },
                     ) { backStackEntry ->
                         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
 
                         // Get order details from OrderHistoryController companion object
                         OrderHistoryController.selectedOrderForDetails?.let { orderItem ->
-                            val orderHistoryController = remember(effectiveSourceActivity) {
-                                OrderHistoryController(this@HomeActivity, navigator, effectiveSourceActivity)
-                            }
+                            val orderHistoryController =
+                                remember(effectiveSourceActivity) {
+                                    OrderHistoryController(this@HomeActivity, navigator, effectiveSourceActivity)
+                                }
                             OrderHistoryDetailScreen(
                                 controller = orderHistoryController,
-                                orderItem = orderItem
+                                orderItem = orderItem,
                             )
                         } ?: run {
                             // Show error state if no order found
                             Box(
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
                                     Text(
                                         text = "Order not found",
                                         color = Color.Red,
                                         fontFamily = GraphikFontFamily,
-                                        fontSize = 16.sp
+                                        fontSize = 16.sp,
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Button(
-                                        onClick = { navigator.navigateToOrderHistory() }
+                                        onClick = { navigator.navigateToOrderHistory() },
                                     ) {
                                         Text("Go Back to Order History")
                                     }
@@ -1696,14 +1741,15 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
-                        val orderReceivedController = remember {
-                            OrderReceivedController(this@HomeActivity, navigator)
-                        }
+                        val orderReceivedController =
+                            remember {
+                                OrderReceivedController(this@HomeActivity, navigator)
+                            }
                         OrderReceivedScreen(
                             model = orderReceivedController.model,
-                            controller = orderReceivedController
+                            controller = orderReceivedController,
                         )
                     }
 
@@ -1721,14 +1767,15 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
-                        val orderHistoryController = remember(effectiveSourceActivity) {
-                            OrderHistoryController(this@HomeActivity, navigator, effectiveSourceActivity)
-                        }
+                        val orderHistoryController =
+                            remember(effectiveSourceActivity) {
+                                OrderHistoryController(this@HomeActivity, navigator, effectiveSourceActivity)
+                            }
                         OrderHistoryScreen(
                             model = orderHistoryController.model,
-                            controller = orderHistoryController
+                            controller = orderHistoryController,
                         )
                     }
 
@@ -1746,11 +1793,11 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         ConsumptionReportScreen(
                             model = consumptionReportController.model,
-                            controller = consumptionReportController
+                            controller = consumptionReportController,
                         )
                     }
 
@@ -1767,11 +1814,11 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
+                        },
                     ) {
                         SmartCollateralScreen(
                             controller = smartCollateralcontroller,
-                            onBackPressed = { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() },
                         )
                     }
 
@@ -1788,11 +1835,11 @@ class HomeActivity : AppCompatActivity() {
                         },
                         popExitTransition = {
                             fadeOut(animationSpec = tween(300))
-                        }
-                    ){
+                        },
+                    ) {
                         MeetSpaceScreen(
                             controller = meetSpaceController,
-                            onBackPressed =  { navController.popBackStack() }
+                            onBackPressed = { navController.popBackStack() },
                         )
                     }
                 }
@@ -1804,31 +1851,41 @@ class HomeActivity : AppCompatActivity() {
                             preferencesManager.setBoolean("showUpdateDialog", true)
 
                             // Open Play Store
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            }
+                            val intent =
+                                Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
                             try {
                                 startActivity(intent)
                                 Log.d("HomeActivity", "Play Store intent launched successfully for package: $packageName")
                             } catch (e: Exception) {
                                 Log.e("HomeActivity", "Failed to launch Play Store intent: ${e.message}")
                                 // Fallback to web-based Play Store URL
-                                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                }
+                                val webIntent =
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://play.google.com/store/apps/details?id=$packageName"),
+                                    ).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
                                 try {
                                     startActivity(webIntent)
                                     Log.d("HomeActivity", "Web Play Store intent launched successfully for package: $packageName")
                                 } catch (e: Exception) {
                                     Log.e("HomeActivity", "Failed to open web Play Store: ${e.message}")
-                                    Toast.makeText(this@HomeActivity, "Unable to open Play Store. Please try again.", Toast.LENGTH_SHORT).show()
+                                    Toast
+                                        .makeText(
+                                            this@HomeActivity,
+                                            "Unable to open Play Store. Please try again.",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
                                 }
                             }
                         },
                         onDismiss = {
                             showUpdateDialog = false
                             preferencesManager.setBoolean("showUpdateDialog", false)
-                        }
+                        },
                     )
                 }
 
@@ -1842,7 +1899,7 @@ class HomeActivity : AppCompatActivity() {
                         appVersion = "1.4",
                         onDismiss = {
                             controller.dismissWhatsNewDialog()
-                        }
+                        },
                     )
                 }
             }
@@ -1903,13 +1960,14 @@ class HomeActivity : AppCompatActivity() {
                     isAuthenticating.value = false
                     Log.w("HomeActivity", "Biometric authentication failed: $error")
 
-                    val intent = Intent(this@HomeActivity, LoginActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra("session_expired", true)
-                    }
+                    val intent =
+                        Intent(this@HomeActivity, LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            putExtra("session_expired", true)
+                        }
                     startActivity(intent)
                     finish()
-                }
+                },
             )
         }
     }
@@ -1932,32 +1990,34 @@ class HomeActivity : AppCompatActivity() {
     @Composable
     fun UpdateRequiredDialog(
         onUpdateClick: () -> Unit,
-        onDismiss: () -> Unit
+        onDismiss: () -> Unit,
     ) {
         Dialog(
             onDismissRequest = onDismiss,
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false
-            )
+            properties =
+                DialogProperties(
+                    dismissOnBackPress = false,
+                    dismissOnClickOutside = false,
+                ),
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFFF6F4EE),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     // Download icon
                     Icon(
                         painter = painterResource(id = R.drawable.ic_download),
                         contentDescription = "Update Required",
                         tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -1969,7 +2029,7 @@ class HomeActivity : AppCompatActivity() {
                         fontWeight = FontWeight.Bold,
                         fontFamily = GraphikFontFamily,
                         color = Color.Black,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -1981,7 +2041,7 @@ class HomeActivity : AppCompatActivity() {
                         fontFamily = GraphikFontFamily,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
-                        lineHeight = 22.sp
+                        lineHeight = 22.sp,
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -1989,20 +2049,22 @@ class HomeActivity : AppCompatActivity() {
                     // Update button
                     Button(
                         onClick = onUpdateClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(8.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                contentColor = Color.White,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
                     ) {
                         androidx.compose.material3.Text(
                             text = "Update Now",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily
+                            fontFamily = GraphikFontFamily,
                         )
                     }
                 }

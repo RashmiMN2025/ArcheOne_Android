@@ -12,5 +12,5 @@ package com.archeGlobal.one.network
 data class ProfilePictureResponse(
     val status: Int,
     val message: String,
-    val filePath: String? = null
+    val filePath: String? = null,
 )

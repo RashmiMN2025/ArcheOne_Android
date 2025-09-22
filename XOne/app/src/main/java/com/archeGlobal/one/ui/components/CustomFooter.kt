@@ -26,39 +26,40 @@ fun CustomFooter(
     onFooterHomeClick: () -> Unit,
     onFooterChatClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
-    onFooterProfileClick: () -> Unit
+    onFooterProfileClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp) // Increased footer height
-            .background(Color.White),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(80.dp) // Increased footer height
+                .background(Color.White),
         horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         FooterIcon(
             text = "Home",
             icon = Icons.Default.Home,
             onClick = onFooterHomeClick,
-            isSelected = footerNavigation.showHome
+            isSelected = footerNavigation.showHome,
         )
         FooterIcon(
             text = "Chat",
             icon = Icons.Default.Person, // Replace with the correct chat icon
             onClick = onFooterChatClick,
-            isSelected = footerNavigation.showChat
+            isSelected = footerNavigation.showChat,
         )
         FooterIcon(
             text = "SOS",
             icon = Icons.Default.Warning, // Replace with the correct SOS icon
             onClick = onFooterSOSClick,
-            isSelected = footerNavigation.showSOS
+            isSelected = footerNavigation.showSOS,
         )
         FooterIcon(
             text = "Profile",
             icon = Icons.Default.Person,
             onClick = onFooterProfileClick,
-            isSelected = footerNavigation.showProfile
+            isSelected = footerNavigation.showProfile,
         )
     }
 }
@@ -68,19 +69,20 @@ fun FooterIcon(
     text: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    isSelected: Boolean
+    isSelected: Boolean,
 ) {
     Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .clickable(onClick = onClick)
+                .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = text,
             tint = if (isSelected) Color.Black else Color.Gray,
-            modifier = Modifier.size(32.dp) // Increased icon size
+            modifier = Modifier.size(32.dp), // Increased icon size
         )
         Text(
             text = text,
@@ -88,7 +90,7 @@ fun FooterIcon(
             fontFamily = GraphikFontFamily, // Updated font family
             fontWeight = FontWeight.Medium, // Updated font weight
             color = if (isSelected) Color.Black else Color.Gray,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }

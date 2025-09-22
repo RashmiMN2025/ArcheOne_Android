@@ -19,7 +19,7 @@ class CoreValuesActivity : AppCompatActivity() {
         setContent {
             XOneTheme {
                 CoreValuesScreen(
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 ) // Replace with your actual Composable function
             }
         }

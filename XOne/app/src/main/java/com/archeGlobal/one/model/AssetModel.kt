@@ -14,7 +14,7 @@ data class AssetModel(
     val division: String = "",
     val issueDescription: String = "",
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 data class AssetDetails(
@@ -26,5 +26,5 @@ data class AssetDetails(
     val assetId: String = "",
     val purchaseDate: String = "",
     val oldAssetId: String = "",
-    val hostName: String = "" // <-- Added
+    val hostName: String = "", // <-- Added
 )

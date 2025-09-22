@@ -25,7 +25,9 @@ import java.io.FileOutputStream
 /**
  * This class handles document upload operations with the new API
  */
-class DocumentUploadManager(private val context: Context) {
+class DocumentUploadManager(
+    private val context: Context,
+) {
     // Companion object for static members
     companion object {
         private const val TAG = "DocumentUploadManager"
@@ -40,21 +42,23 @@ class DocumentUploadManager(private val context: Context) {
     val uploadSuccess = MutableLiveData<Boolean>(false)
 
     // Document type mapping for personal documents
-    private val personalDocTypes = mapOf(
-        "id" to "ID Card",
-        "pan" to "PAN Card",
-        "medical" to "Medical Insurance Card"
-    )
+    private val personalDocTypes =
+        mapOf(
+            "id" to "ID Card",
+            "pan" to "PAN Card",
+            "medical" to "Medical Insurance Card",
+        )
 
     // Document type mapping for professional documents
-    private val professionalDocTypes = mapOf(
-        "aadhar" to "Aadhar Card",
-        "passport" to "Passport",
-        "pan" to "PAN card",
-        "offer_letter" to "Offer Letter",
-        "certificate" to "Certificate",
-        "exp_letter" to "Experience Letter"
-    )
+    private val professionalDocTypes =
+        mapOf(
+            "aadhar" to "Aadhar Card",
+            "passport" to "Passport",
+            "pan" to "PAN card",
+            "offer_letter" to "Offer Letter",
+            "certificate" to "Certificate",
+            "exp_letter" to "Experience Letter",
+        )
 
     /**
      * Get the current user's employee ID
@@ -150,40 +154,45 @@ class DocumentUploadManager(private val context: Context) {
             val call = RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart)
             Log.d(TAG, "List documents request URL: ${call.request().url}")
 
-            call.enqueue(object : Callback<DocumentListResponse> {
-                override fun onResponse(
-                    call: Call<DocumentListResponse>,
-                    response: Response<DocumentListResponse>
-                ) {
-                    isLoading.postValue(false)
+            call.enqueue(
+                object : Callback<DocumentListResponse> {
+                    override fun onResponse(
+                        call: Call<DocumentListResponse>,
+                        response: Response<DocumentListResponse>,
+                    ) {
+                        isLoading.postValue(false)
 
-                    if (response.isSuccessful && response.body() != null) {
-                        val responseBody = response.body()!!
-                        Log.d(TAG, "List documents success, status: ${responseBody.status}")
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseBody = response.body()!!
+                            Log.d(TAG, "List documents success, status: ${responseBody.status}")
 
-                        // Log all documents returned
-                        responseBody.personalDoc?.forEach { doc ->
-                            Log.d(
-                                TAG,
-                                "Document: ${doc.document_name}, type: ${doc.documentType}, " +
-                                    "has data: ${!doc.doc_data.isNullOrBlank()}"
-                            )
-                        }
+                            // Log all documents returned
+                            responseBody.personalDoc?.forEach { doc ->
+                                Log.d(
+                                    TAG,
+                                    "Document: ${doc.document_name}, type: ${doc.documentType}, " +
+                                        "has data: ${!doc.doc_data.isNullOrBlank()}",
+                                )
+                            }
 
-                        if (responseBody.status == 200) {
-                            onSuccess(responseBody)
+                            if (responseBody.status == 200) {
+                                onSuccess(responseBody)
+                            } else {
+                                handleErrorResponse(responseBody)
+                            }
                         } else {
-                            handleErrorResponse(responseBody)
+                            handleApiError(response)
                         }
-                    } else {
-                        handleApiError(response)
                     }
-                }
 
-                override fun onFailure(call: Call<DocumentListResponse>, t: Throwable) {
-                    handleNetworkError(call, t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<DocumentListResponse>,
+                        t: Throwable,
+                    ) {
+                        handleNetworkError(call, t)
+                    }
+                },
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Exception preparing list documents request", e)
             isLoading.postValue(false)
@@ -194,7 +203,11 @@ class DocumentUploadManager(private val context: Context) {
     /**
      * Delete a document
      */
-    fun deleteDocument(documentName: String, documentType: String, onSuccess: (DocumentListResponse) -> Unit) {
+    fun deleteDocument(
+        documentName: String,
+        documentType: String,
+        onSuccess: (DocumentListResponse) -> Unit,
+    ) {
         // Get employee ID from user data
         val employeeId = getEmployeeId()
         if (employeeId == null) {
@@ -211,48 +224,54 @@ class DocumentUploadManager(private val context: Context) {
         errorMessage.postValue(null)
 
         try {
-            val params = mapOf(
-                "email" to email,
-                "employeeId" to employeeId,
-                "documentType" to documentType
-            )
+            val params =
+                mapOf(
+                    "email" to email,
+                    "employeeId" to employeeId,
+                    "documentType" to documentType,
+                )
 
             Log.d(TAG, "Deleting document: $documentName, type: $documentType, email: $email, employeeId: $employeeId")
 
             val call = RetrofitClient.apiService.deleteDoc(params)
             Log.d(TAG, "Delete document request URL: ${call.request().url}")
 
-            call.enqueue(object : Callback<ProfilePictureResponse> {
-                override fun onResponse(
-                    call: Call<ProfilePictureResponse>,
-                    response: Response<ProfilePictureResponse>
-                ) {
-                    isLoading.postValue(false)
+            call.enqueue(
+                object : Callback<ProfilePictureResponse> {
+                    override fun onResponse(
+                        call: Call<ProfilePictureResponse>,
+                        response: Response<ProfilePictureResponse>,
+                    ) {
+                        isLoading.postValue(false)
 
-                    if (response.isSuccessful && response.body() != null) {
-                        val responseBody = response.body()!!
-                        Log.d(TAG, "Delete document success, status: ${responseBody.status}")
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseBody = response.body()!!
+                            Log.d(TAG, "Delete document success, status: ${responseBody.status}")
 
-                        if (responseBody.status == 200) {
-                            Toast.makeText(context, "Document deleted successfully", Toast.LENGTH_SHORT).show()
-                            // Refresh document list
-                            listDocuments { listResponse ->
-                                onSuccess(listResponse)
+                            if (responseBody.status == 200) {
+                                Toast.makeText(context, "Document deleted successfully", Toast.LENGTH_SHORT).show()
+                                // Refresh document list
+                                listDocuments { listResponse ->
+                                    onSuccess(listResponse)
+                                }
+                            } else {
+                                val errorMsg = responseBody.message ?: "Failed to delete document"
+                                errorMessage.postValue(errorMsg)
+                                Log.e(TAG, "Delete document error: $errorMsg")
                             }
                         } else {
-                            val errorMsg = responseBody.message ?: "Failed to delete document"
-                            errorMessage.postValue(errorMsg)
-                            Log.e(TAG, "Delete document error: $errorMsg")
+                            handleApiError(response)
                         }
-                    } else {
-                        handleApiError(response)
                     }
-                }
 
-                override fun onFailure(call: Call<ProfilePictureResponse>, t: Throwable) {
-                    handleNetworkError(call, t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ProfilePictureResponse>,
+                        t: Throwable,
+                    ) {
+                        handleNetworkError(call, t)
+                    }
+                },
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Exception preparing delete document request", e)
             isLoading.postValue(false)
@@ -266,7 +285,7 @@ class DocumentUploadManager(private val context: Context) {
     fun uploadDocumentFromUri(
         documentName: String,
         uri: Uri,
-        onSuccess: (DocumentListResponse) -> Unit
+        onSuccess: (DocumentListResponse) -> Unit,
     ) {
         // Get employee ID from user data
         val employeeId = getEmployeeId()
@@ -322,7 +341,7 @@ class DocumentUploadManager(private val context: Context) {
     fun uploadDocumentFromBitmap(
         documentName: String,
         bitmap: Bitmap,
-        onSuccess: (DocumentListResponse) -> Unit
+        onSuccess: (DocumentListResponse) -> Unit,
     ) {
         // Get employee ID from user data
         val employeeId = getEmployeeId()
@@ -368,7 +387,7 @@ class DocumentUploadManager(private val context: Context) {
         file: File,
         email: String,
         employeeId: String,
-        onSuccess: (DocumentListResponse) -> Unit
+        onSuccess: (DocumentListResponse) -> Unit,
     ) {
         isLoading.postValue(true)
         errorMessage.postValue(null)
@@ -393,44 +412,50 @@ class DocumentUploadManager(private val context: Context) {
             val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
             // Make the API call with parameters
-            val call = RetrofitClient.apiService.uploadDocument(
-                filePart,
-                params
-            )
+            val call =
+                RetrofitClient.apiService.uploadDocument(
+                    filePart,
+                    params,
+                )
 
             // Log request details
             Log.d("DocumentUploadManager", "Upload request URL: ${call.request().url}")
             Log.d("DocumentUploadManager", "Upload request method: ${call.request().method}")
 
             // Execute the request
-            call.enqueue(object : Callback<DocumentListResponse> {
-                override fun onResponse(
-                    call: Call<DocumentListResponse>,
-                    response: Response<DocumentListResponse>
-                ) {
-                    isLoading.postValue(false)
+            call.enqueue(
+                object : Callback<DocumentListResponse> {
+                    override fun onResponse(
+                        call: Call<DocumentListResponse>,
+                        response: Response<DocumentListResponse>,
+                    ) {
+                        isLoading.postValue(false)
 
-                    if (response.isSuccessful && response.body() != null) {
-                        val responseBody = response.body()!!
-                        Log.d("DocumentUploadManager", "Upload success, status: ${responseBody.status}")
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseBody = response.body()!!
+                            Log.d("DocumentUploadManager", "Upload success, status: ${responseBody.status}")
 
-                        if (responseBody.status == 200) {
-                            // Show success message
-                            Toast.makeText(context, "Document uploaded successfully!", Toast.LENGTH_SHORT).show()
-                            uploadSuccess.postValue(true)
-                            onSuccess(responseBody)
+                            if (responseBody.status == 200) {
+                                // Show success message
+                                Toast.makeText(context, "Document uploaded successfully!", Toast.LENGTH_SHORT).show()
+                                uploadSuccess.postValue(true)
+                                onSuccess(responseBody)
+                            } else {
+                                handleErrorResponse(responseBody)
+                            }
                         } else {
-                            handleErrorResponse(responseBody)
+                            handleApiError(response)
                         }
-                    } else {
-                        handleApiError(response)
                     }
-                }
 
-                override fun onFailure(call: Call<DocumentListResponse>, t: Throwable) {
-                    handleNetworkError(call, t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<DocumentListResponse>,
+                        t: Throwable,
+                    ) {
+                        handleNetworkError(call, t)
+                    }
+                },
+            )
         } catch (e: Exception) {
             Log.e("DocumentUploadManager", "Exception preparing upload request", e)
             isLoading.postValue(false)
@@ -485,7 +510,10 @@ class DocumentUploadManager(private val context: Context) {
     /**
      * Handle network error
      */
-    private fun handleNetworkError(call: Call<*>, t: Throwable) {
+    private fun handleNetworkError(
+        call: Call<*>,
+        t: Throwable,
+    ) {
         isLoading.postValue(false)
         val errorMsg = "Network error: ${t.message}"
         errorMessage.postValue(errorMsg)
@@ -517,9 +545,10 @@ class DocumentUploadManager(private val context: Context) {
 
             // If we couldn't get the filename from the cursor, try to get it from the URI path
             if (fileName == null) {
-                fileName = uri.path?.let { path ->
-                    path.substring(path.lastIndexOf('/') + 1)
-                }
+                fileName =
+                    uri.path?.let { path ->
+                        path.substring(path.lastIndexOf('/') + 1)
+                    }
             }
 
             Log.d("DocumentUploadManager", "File name from URI: $fileName")
@@ -533,12 +562,13 @@ class DocumentUploadManager(private val context: Context) {
     /**
      * Convert URI to File
      */
-    private fun getFileFromUri(uri: Uri): File? {
-        return try {
+    private fun getFileFromUri(uri: Uri): File? =
+        try {
             val contentResolver = context.contentResolver
-            val fileExtension = contentResolver.getType(uri)?.let { mimeType ->
-                MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-            } ?: "pdf" // Default to PDF if the extension cannot be determined
+            val fileExtension =
+                contentResolver.getType(uri)?.let { mimeType ->
+                    MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                } ?: "pdf" // Default to PDF if the extension cannot be determined
 
             val fileName = getFileNameFromUri(uri) ?: "temp_upload.$fileExtension"
             val file = File(context.cacheDir, fileName)
@@ -555,13 +585,12 @@ class DocumentUploadManager(private val context: Context) {
             Log.e("DocumentUploadManager", "Error converting Uri to File: ${e.message}")
             null
         }
-    }
 
     /**
      * Save Bitmap to File
      */
-    private fun saveBitmapToFile(bitmap: Bitmap): File? {
-        return try {
+    private fun saveBitmapToFile(bitmap: Bitmap): File? =
+        try {
             val fileName = "temp_upload.jpg"
             val file = File(context.cacheDir, fileName)
 
@@ -575,5 +604,4 @@ class DocumentUploadManager(private val context: Context) {
             Log.e("DocumentUploadManager", "Error saving bitmap to file", e)
             null
         }
-    }
 }

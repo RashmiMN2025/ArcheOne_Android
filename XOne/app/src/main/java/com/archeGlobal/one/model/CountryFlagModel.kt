@@ -2,11 +2,11 @@ package com.archeGlobal.one.model
 
 data class CountryFlagModel(
     val countryCode: String,
-    val flagEmoji: String
+    val flagEmoji: String,
 )
 
-fun getCountryFlag(countryName: String): String {
-    return when (countryName) {
+fun getCountryFlag(countryName: String): String =
+    when (countryName) {
         "USA" -> "🇺🇸"
         "India" -> "🇮🇳"
         "Dubai" -> "🇦🇪"
@@ -15,4 +15,3 @@ fun getCountryFlag(countryName: String): String {
         "Latin America" -> "🇵🇪" // Using Peru flag since that's the specific location
         else -> "🌎"
     }
-}

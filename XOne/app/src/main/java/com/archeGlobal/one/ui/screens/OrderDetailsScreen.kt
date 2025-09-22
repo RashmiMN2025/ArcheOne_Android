@@ -34,26 +34,30 @@ import java.util.Locale
 @Composable
 fun OrderDetailsScreen(
     controller: OrderHistoryDetailsController,
-    orderItem: OrderHistoryItem
+    orderItem: OrderHistoryItem,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Header
@@ -61,7 +65,7 @@ fun OrderDetailsScreen(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "Order Details",
@@ -70,7 +74,7 @@ fun OrderDetailsScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.offset(x = (-24).dp) // Center align properly
+                                modifier = Modifier.offset(x = (-24).dp), // Center align properly
                             )
                         }
                     },
@@ -79,28 +83,30 @@ fun OrderDetailsScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 // Content
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Order Status Card at top
                     OrderStatusCard(
                         orderId = orderItem.orderId,
                         orderDate = formatOrderDateDetails(orderItem.orderPlacedTime),
-                        orderStatus = orderItem.orderStatus
+                        orderStatus = orderItem.orderStatus,
                     )
 
                     // Employee Details Card
@@ -108,10 +114,10 @@ fun OrderDetailsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     ) {
                         Column(
-                            modifier = Modifier.padding(20.dp)
+                            modifier = Modifier.padding(20.dp),
                         ) {
                             Text(
                                 text = "Employee Details",
@@ -119,7 +125,7 @@ fun OrderDetailsScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 20.sp, // Increased from 18sp
                                 color = Color.Black,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                modifier = Modifier.padding(bottom = 16.dp),
                             )
 
                             DetailRow(label = "Name:", value = orderItem.empName)
@@ -134,10 +140,10 @@ fun OrderDetailsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     ) {
                         Column(
-                            modifier = Modifier.padding(20.dp)
+                            modifier = Modifier.padding(20.dp),
                         ) {
                             Text(
                                 text = "Order Items",
@@ -145,14 +151,14 @@ fun OrderDetailsScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 20.sp, // Increased from 18sp
                                 color = Color.Black,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                modifier = Modifier.padding(bottom = 16.dp),
                             )
 
                             // List each item
                             orderItem.items.filter { it.count > 0 }.forEach { item ->
                                 ItemRow(
                                     label = item.name.replace("_", " "),
-                                    value = "Qty: ${item.count}"
+                                    value = "Qty: ${item.count}",
                                 )
                             }
 
@@ -161,7 +167,7 @@ fun OrderDetailsScreen(
                             // Total items with divider
                             HorizontalDivider(
                                 color = Color.Gray.copy(alpha = 0.3f),
-                                thickness = 1.dp
+                                thickness = 1.dp,
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -170,21 +176,24 @@ fun OrderDetailsScreen(
                                 label = "Total Items",
                                 value = "Qty: ${orderItem.totalItemsInOrder}",
                                 labelWeight = FontWeight.Normal,
-                                valueWeight = FontWeight.Normal
+                                valueWeight = FontWeight.Normal,
                             )
                         }
                     }
 
                     // Remarks Card - Show for pending orders, approved orders, or if not empty
-                    if (orderItem.orderStatus.lowercase() == "pending" || orderItem.orderStatus.lowercase() == "approved" || orderItem.remarks.isNotEmpty()) {
+                    if (orderItem.orderStatus.lowercase() == "pending" ||
+                        orderItem.orderStatus.lowercase() == "approved" ||
+                        orderItem.remarks.isNotEmpty()
+                    ) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                         ) {
                             Column(
-                                modifier = Modifier.padding(20.dp)
+                                modifier = Modifier.padding(20.dp),
                             ) {
                                 Text(
                                     text = "Remarks",
@@ -192,7 +201,7 @@ fun OrderDetailsScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 20.sp, // Increased from 18sp
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 16.dp)
+                                    modifier = Modifier.padding(bottom = 16.dp),
                                 )
 
                                 when (orderItem.orderStatus.lowercase()) {
@@ -205,20 +214,22 @@ fun OrderDetailsScreen(
                                                 Text(
                                                     "Enter remarks (Mandatory)",
                                                     color = Color.Gray,
-                                                    fontFamily = GraphikFontFamily
+                                                    fontFamily = GraphikFontFamily,
                                                 )
                                             },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(120.dp),
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedBorderColor = PrimaryRed,
-                                                unfocusedBorderColor = Color.Gray,
-                                                focusedTextColor = Color.Black,
-                                                unfocusedTextColor = Color.Black
-                                            ),
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .height(120.dp),
+                                            colors =
+                                                OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = PrimaryRed,
+                                                    unfocusedBorderColor = Color.Gray,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedTextColor = Color.Black,
+                                                ),
                                             shape = RoundedCornerShape(8.dp),
-                                            maxLines = 4
+                                            maxLines = 4,
                                         )
 
                                         Spacer(modifier = Modifier.height(16.dp))
@@ -226,23 +237,24 @@ fun OrderDetailsScreen(
                                         // Action buttons for pending orders
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                                         ) {
                                             Button(
                                                 onClick = { controller.onRejectOrder(orderItem.orderId) },
                                                 modifier = Modifier.weight(1f),
                                                 enabled = !controller.isLoading,
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = Color(0xFFDC3545),
-                                                    disabledContainerColor = Color(0xFFDC3545).copy(alpha = 0.6f)
-                                                ),
-                                                shape = RoundedCornerShape(28.dp)
+                                                colors =
+                                                    ButtonDefaults.buttonColors(
+                                                        containerColor = Color(0xFFDC3545),
+                                                        disabledContainerColor = Color(0xFFDC3545).copy(alpha = 0.6f),
+                                                    ),
+                                                shape = RoundedCornerShape(28.dp),
                                             ) {
                                                 Text(
                                                     text = "Reject",
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Medium,
-                                                    color = Color.White
+                                                    color = Color.White,
                                                 )
                                             }
 
@@ -250,17 +262,18 @@ fun OrderDetailsScreen(
                                                 onClick = { controller.onApproveOrder(orderItem.orderId) },
                                                 modifier = Modifier.weight(1f),
                                                 enabled = !controller.isLoading,
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = Color(0xFF28A745),
-                                                    disabledContainerColor = Color(0xFF28A745).copy(alpha = 0.6f)
-                                                ),
-                                                shape = RoundedCornerShape(28.dp)
+                                                colors =
+                                                    ButtonDefaults.buttonColors(
+                                                        containerColor = Color(0xFF28A745),
+                                                        disabledContainerColor = Color(0xFF28A745).copy(alpha = 0.6f),
+                                                    ),
+                                                shape = RoundedCornerShape(28.dp),
                                             ) {
                                                 Text(
                                                     text = "Approve",
                                                     fontFamily = GraphikFontFamily,
                                                     fontWeight = FontWeight.Medium,
-                                                    color = Color.White
+                                                    color = Color.White,
                                                 )
                                             }
                                         }
@@ -275,20 +288,22 @@ fun OrderDetailsScreen(
                                                 Text(
                                                     "Enter remarks (mandatory)",
                                                     color = Color.Gray,
-                                                    fontFamily = GraphikFontFamily
+                                                    fontFamily = GraphikFontFamily,
                                                 )
                                             },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(120.dp),
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedBorderColor = PrimaryRed,
-                                                unfocusedBorderColor = Color.Gray,
-                                                focusedTextColor = Color.Black,
-                                                unfocusedTextColor = Color.Black
-                                            ),
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .height(120.dp),
+                                            colors =
+                                                OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = PrimaryRed,
+                                                    unfocusedBorderColor = Color.Gray,
+                                                    focusedTextColor = Color.Black,
+                                                    unfocusedTextColor = Color.Black,
+                                                ),
                                             shape = RoundedCornerShape(8.dp),
-                                            maxLines = 4
+                                            maxLines = 4,
                                         )
 
                                         Spacer(modifier = Modifier.height(16.dp))
@@ -296,20 +311,20 @@ fun OrderDetailsScreen(
                                         // Switch for Collected/Cancelled
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.Center
+                                            horizontalArrangement = Arrangement.Center,
                                         ) {
                                             Row {
                                                 CollectedCancelledTabButton(
                                                     text = "Collected",
                                                     isSelected = controller.selectedAction == "collected",
                                                     onClick = { controller.updateSelectedAction("collected") },
-                                                    isFirst = true
+                                                    isFirst = true,
                                                 )
                                                 CollectedCancelledTabButton(
                                                     text = "Cancelled",
                                                     isSelected = controller.selectedAction == "cancelled",
                                                     onClick = { controller.updateSelectedAction("cancelled") },
-                                                    isLast = true
+                                                    isLast = true,
                                                 )
                                             }
                                         }
@@ -319,22 +334,25 @@ fun OrderDetailsScreen(
                                         // Close Order button
                                         Button(
                                             onClick = { controller.onCloseOrder(orderItem.orderId) },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(50.dp), // Increased height
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp),
+                                            // Increased height
                                             enabled = !controller.isLoading,
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = PrimaryRed,
-                                                disabledContainerColor = PrimaryRed.copy(alpha = 0.6f)
-                                            ),
-                                            shape = RoundedCornerShape(28.dp)
+                                            colors =
+                                                ButtonDefaults.buttonColors(
+                                                    containerColor = PrimaryRed,
+                                                    disabledContainerColor = PrimaryRed.copy(alpha = 0.6f),
+                                                ),
+                                            shape = RoundedCornerShape(28.dp),
                                         ) {
                                             Text(
                                                 text = if (controller.selectedAction == "collected") "Close Order" else "Cancel Order",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Medium,
                                                 color = Color.White,
-                                                fontSize = 16.sp
+                                                fontSize = 16.sp,
                                             )
                                         }
                                     }
@@ -346,7 +364,7 @@ fun OrderDetailsScreen(
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Normal,
                                             fontSize = 14.sp,
-                                            color = Color.Black
+                                            color = Color.Black,
                                         )
                                     }
                                 }
@@ -368,21 +386,21 @@ fun OrderDetailsScreen(
 private fun OrderStatusCard(
     orderId: String,
     orderDate: String,
-    orderStatus: String
+    orderStatus: String,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Column {
                     Text(
@@ -390,7 +408,7 @@ private fun OrderStatusCard(
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                     Row(modifier = Modifier.padding(top = 4.dp)) {
                         Text(
@@ -398,31 +416,32 @@ private fun OrderStatusCard(
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                         Text(
                             text = orderDate,
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Normal,
-                            color = Color.Gray
+                            color = Color.Gray,
                         )
                     }
                 }
 
                 // Status Badge
-                val (backgroundColor, textColor) = when (orderStatus.lowercase()) {
-                    "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
-                    "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000)) // Green
-                    "rejected", "cancelled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000)) // Red
-                    "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
-                    else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
-                }
+                val (backgroundColor, textColor) =
+                    when (orderStatus.lowercase()) {
+                        "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
+                        "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000)) // Green
+                        "rejected", "cancelled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000)) // Red
+                        "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
+                        else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
+                    }
 
                 Card(
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(containerColor = backgroundColor),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 ) {
                     Text(
                         text = "Status: $orderStatus",
@@ -430,7 +449,7 @@ private fun OrderStatusCard(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         color = textColor,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
                     )
                 }
             }
@@ -443,13 +462,14 @@ private fun DetailRow(
     label: String,
     value: String,
     labelWeight: FontWeight = FontWeight.Normal,
-    valueWeight: FontWeight = FontWeight.Normal
+    valueWeight: FontWeight = FontWeight.Normal,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = label,
@@ -457,7 +477,7 @@ private fun DetailRow(
             fontWeight = labelWeight,
             fontSize = 16.sp, // Increased from 14sp
             color = Color.Gray,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
 
         Text(
@@ -467,7 +487,7 @@ private fun DetailRow(
             fontSize = 16.sp, // Increased from 14sp
             color = Color.Black,
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
         )
     }
 }
@@ -477,13 +497,14 @@ private fun ItemRow(
     label: String,
     value: String,
     labelWeight: FontWeight = FontWeight.Normal,
-    valueWeight: FontWeight = FontWeight.Normal
+    valueWeight: FontWeight = FontWeight.Normal,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = label,
@@ -491,7 +512,7 @@ private fun ItemRow(
             fontWeight = labelWeight,
             fontSize = 16.sp, // Increased from 14sp
             color = Color.Black,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
 
         Text(
@@ -501,7 +522,7 @@ private fun ItemRow(
             fontSize = 16.sp, // Increased from 14sp
             color = Color.Black,
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
         )
     }
 }
@@ -512,30 +533,31 @@ private fun CollectedCancelledTabButton(
     isSelected: Boolean,
     onClick: () -> Unit,
     isFirst: Boolean = false,
-    isLast: Boolean = false
+    isLast: Boolean = false,
 ) {
-    val shape = when {
-        isFirst -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
-        isLast -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
-        else -> RoundedCornerShape(0.dp)
-    }
+    val shape =
+        when {
+            isFirst -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+            isLast -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+            else -> RoundedCornerShape(0.dp)
+        }
 
     Box(
-        modifier = Modifier
-            .clip(shape)
-            .background(
-                if (isSelected) Color.White else Color(0xFFE0E0E0)
-            )
-            .clickable { onClick() }
-            .padding(horizontal = 24.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .clip(shape)
+                .background(
+                    if (isSelected) Color.White else Color(0xFFE0E0E0),
+                ).clickable { onClick() }
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
             fontFamily = GraphikFontFamily,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             fontSize = 14.sp,
-            color = Color.Black
+            color = Color.Black,
         )
     }
 }

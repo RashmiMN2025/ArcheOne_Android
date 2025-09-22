@@ -34,7 +34,7 @@ class RaiseConcernActivity : ComponentActivity() {
                     },
                     title = title,
                     source = source,
-                    prefilledCategory = prefilledCategory // ✅ pass prefilled category
+                    prefilledCategory = prefilledCategory, // ✅ pass prefilled category
                 )
             }
         }

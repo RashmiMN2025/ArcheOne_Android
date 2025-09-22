@@ -19,12 +19,13 @@ class SOSDetailActivity : ComponentActivity() {
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         // Use the version-compatible way to get parcelable extra
-        val blog = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra("blog", SosBlogModel::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra("blog") as? SosBlogModel
-        }
+        val blog =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra("blog", SosBlogModel::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra("blog") as? SosBlogModel
+            }
 
         navigator = AndroidNavigator(this)
 
@@ -32,7 +33,7 @@ class SOSDetailActivity : ComponentActivity() {
             blog?.let {
                 SOSDetailScreen(
                     blog = it,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }

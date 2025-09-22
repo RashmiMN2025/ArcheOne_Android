@@ -32,11 +32,12 @@ class XConnectActivity : ComponentActivity() {
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         // Get the initial tab selection from intent, defaulting to "All Posts" if not specified
-        val initialTab = if (intent.hasExtra("initialTab")) {
-            intent.getStringExtra("initialTab")
-        } else {
-            "All Posts"
-        } ?: "All Posts"
+        val initialTab =
+            if (intent.hasExtra("initialTab")) {
+                intent.getStringExtra("initialTab")
+            } else {
+                "All Posts"
+            } ?: "All Posts"
 
         // Start preloading data immediately when activity is created
         SocialDataProvider.getInstance(applicationContext).preloadData()
@@ -96,7 +97,7 @@ class XConnectActivity : ComponentActivity() {
                                     selectedArticleType = type
                                     currentScreen = Screen.ArticleDetail
                                 },
-                                initialTab = initialTab
+                                initialTab = initialTab,
                             )
                         }
                         is Screen.ArticleDetail -> {
@@ -109,7 +110,7 @@ class XConnectActivity : ComponentActivity() {
                                     },
                                     onReadMore = {
                                         socialController.openInBrowser(selectedArticleType, article.id)
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -130,5 +131,6 @@ class XConnectActivity : ComponentActivity() {
 // Sealed class for navigation
 sealed class Screen {
     object XConnect : Screen()
+
     object ArticleDetail : Screen()
 }

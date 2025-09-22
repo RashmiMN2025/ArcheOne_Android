@@ -42,22 +42,23 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 @Composable
 fun ResponsiveRegionalFestivalsScreen(
     controller: RegionalFestivalsController,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
-    val (columns, cardWidth) = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 2 to 160.dp // Phone
-        WindowWidthSizeClass.Medium -> 3 to 180.dp // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 4 to 220.dp // Tablet
-        else -> 2 to 160.dp
-    }
+    val (columns, cardWidth) =
+        when (windowSizeClass?.widthSizeClass) {
+            WindowWidthSizeClass.Compact -> 2 to 160.dp // Phone
+            WindowWidthSizeClass.Medium -> 3 to 180.dp // Large phone/small tablet
+            WindowWidthSizeClass.Expanded -> 4 to 220.dp // Tablet
+            else -> 2 to 160.dp
+        }
     RegionalFestivalsScreen(
         controller = controller,
         onBackPressed = onBackPressed,
         columns = columns,
-        cardWidth = cardWidth
+        cardWidth = cardWidth,
     )
 }
 
@@ -67,7 +68,7 @@ fun RegionalFestivalsScreen(
     controller: RegionalFestivalsController,
     onBackPressed: () -> Unit,
     columns: Int = 2,
-    cardWidth: Dp = 160.dp
+    cardWidth: Dp = 160.dp,
 ) {
     // Status bar padding to avoid overlapping with front camera
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
@@ -78,52 +79,58 @@ fun RegionalFestivalsScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 Spacer(modifier = Modifier.height(statusBarPadding.calculateTopPadding()))
 
                 // Top App Bar with Back Button and Title
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(onClick = onBackPressed) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
 
                         Box(
                             modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "Regional Festivals",
@@ -131,7 +138,7 @@ fun RegionalFestivalsScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                color = Color.Black
+                                color = Color.Black,
                             )
                         }
 
@@ -147,34 +154,37 @@ fun RegionalFestivalsScreen(
                     }
                 }
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = Color.Transparent
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = Color.Transparent,
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White)
-                            .border(
-                                1.dp,
-                                Color.LightGray.copy(alpha = 0.5f),
-                                RoundedCornerShape(12.dp)
-                            )
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White)
+                                .border(
+                                    1.dp,
+                                    Color.LightGray.copy(alpha = 0.5f),
+                                    RoundedCornerShape(12.dp),
+                                ),
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.search11),
                                 contentDescription = "Search celebration...",
                                 tint = Color.Gray,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             BasicTextField(
                                 value = searchQuery,
@@ -182,16 +192,18 @@ fun RegionalFestivalsScreen(
                                     searchQuery = value
                                     controller.updateSearchQuery(value)
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 8.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 8.dp),
                                 singleLine = true,
-                                textStyle = androidx.compose.ui.text.TextStyle(
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                ),
+                                textStyle =
+                                    androidx.compose.ui.text.TextStyle(
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black,
+                                    ),
                                 decorationBox = { innerTextField ->
                                     Box {
                                         if (searchQuery.isEmpty()) {
@@ -200,30 +212,31 @@ fun RegionalFestivalsScreen(
                                                 color = Color.Gray.copy(alpha = 0.6f),
                                                 fontSize = 16.sp,
                                                 fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Normal
+                                                fontWeight = FontWeight.Normal,
                                             )
                                         }
                                         innerTextField()
                                     }
-                                }
+                                },
                             )
                         }
                     }
                 }
 
                 // Filter subcategories locally using searchQuery
-                val filteredSubcategories = remember(searchQuery) {
-                    controller.model.subcategories.filter {
-                        it.name.contains(searchQuery.orEmpty(), ignoreCase = true)
+                val filteredSubcategories =
+                    remember(searchQuery) {
+                        controller.model.subcategories.filter {
+                            it.name.contains(searchQuery.orEmpty(), ignoreCase = true)
+                        }
                     }
-                }
                 RegionalFestivalsSubcategoriesGrid(
                     subcategories = filteredSubcategories,
                     onSubcategoryClick = { subcategory ->
                         controller.onSubcategorySelected(subcategory)
                     },
                     columns = columns,
-                    cardWidth = cardWidth
+                    cardWidth = cardWidth,
                 )
             }
         }
@@ -235,19 +248,19 @@ fun RegionalFestivalsSubcategoriesGrid(
     subcategories: List<GreetingSubcategory>,
     onSubcategoryClick: (GreetingSubcategory) -> Unit,
     columns: Int = 2,
-    cardWidth: Dp = 160.dp
+    cardWidth: Dp = 160.dp,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(subcategories) { subcategory ->
             RegionalFestivalsSubcategoryCard(
                 subcategory = subcategory,
                 onClick = { onSubcategoryClick(subcategory) },
-                cardWidth = cardWidth
+                cardWidth = cardWidth,
             )
         }
     }
@@ -257,37 +270,40 @@ fun RegionalFestivalsSubcategoriesGrid(
 fun RegionalFestivalsSubcategoryCard(
     subcategory: GreetingSubcategory,
     onClick: () -> Unit,
-    cardWidth: Dp = 160.dp
+    cardWidth: Dp = 160.dp,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(cardWidth)
-            .padding(8.dp)
+        modifier =
+            Modifier
+                .width(cardWidth)
+                .padding(8.dp),
     ) {
         Box(
-            modifier = Modifier
-                .width(cardWidth)
-                .aspectRatio(0.8f)
+            modifier =
+                Modifier
+                    .width(cardWidth)
+                    .aspectRatio(0.8f),
         ) {
             Card(
                 onClick = onClick,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .border(width = 2.dp, color = Color(0xFFF5F5F5), shape = RoundedCornerShape(16.dp)),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .border(width = 2.dp, color = Color(0xFFF5F5F5), shape = RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (subcategory.files.isNotEmpty()) {
                         AsyncImage(
                             model = subcategory.files.first(),
                             contentDescription = subcategory.name,
                             contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         )
                     } else {
                         Text(
@@ -295,7 +311,7 @@ fun RegionalFestivalsSubcategoryCard(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(16.dp),
                         )
                     }
                 }
@@ -313,9 +329,10 @@ fun RegionalFestivalsSubcategoryCard(
             fontSize = 14.sp,
             maxLines = 2,
             lineHeight = 16.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
         )
     }
 }

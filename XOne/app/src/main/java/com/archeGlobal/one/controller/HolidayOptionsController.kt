@@ -10,12 +10,13 @@ import com.archeGlobal.one.navigation.Navigator
  */
 class HolidayOptionsController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     fun navigateToHolidayCalendar() {
         Log.d("HolidayOptionsController", "Navigating to Holiday Calendar")
         navigator.navigateToHolidayCalendar()
     }
+
     fun navigateToKudos() {
         // Navigate to service not available screen for Kudos
         Log.d("HolidayOptionsController", "Navigating to Service Not Available screen for Kudos")

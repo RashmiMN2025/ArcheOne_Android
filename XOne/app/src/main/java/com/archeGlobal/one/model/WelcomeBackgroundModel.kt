@@ -8,5 +8,5 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 data class WelcomeBackgroundModel(
     val topColor: Color = WelcomeBackgroundTop,
     val middleColor: Color = WelcomeBackgroundMiddle,
-    val bottomColor: Color = WelcomeBackgroundBottom
+    val bottomColor: Color = WelcomeBackgroundBottom,
 )

@@ -53,7 +53,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBackPressed: () -> Unit) {
+fun MyDocumentsScreen(
+    controller: MyDocumentsController,
+    context: Context,
+    onBackPressed: () -> Unit,
+) {
     // Create the document upload manager
     val uploadManager = remember { DocumentUploadManager(context) }
 
@@ -81,65 +85,69 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         mutableStateOf(
             ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
+                Manifest.permission.CAMERA,
+            ) == PackageManager.PERMISSION_GRANTED,
         )
     }
 
     // Camera launcher
-    val cameraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        bitmap?.let {
-            Toast.makeText(context, "Image captured successfully", Toast.LENGTH_SHORT).show()
-            showUploadDialog = false
-            selectedDocument?.let { docName ->
-                uploadManager.uploadDocumentFromBitmap(docName, it) { response ->
-                    controller.updateDocumentsFromResponse(response)
+    val cameraLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.TakePicturePreview(),
+        ) { bitmap ->
+            bitmap?.let {
+                Toast.makeText(context, "Image captured successfully", Toast.LENGTH_SHORT).show()
+                showUploadDialog = false
+                selectedDocument?.let { docName ->
+                    uploadManager.uploadDocumentFromBitmap(docName, it) { response ->
+                        controller.updateDocumentsFromResponse(response)
+                    }
                 }
             }
         }
-    }
 
     // Permission launcher
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasCameraPermission = isGranted
-        if (isGranted) {
-            cameraLauncher.launch(null)
-        } else {
-            Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
+    val cameraPermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { isGranted ->
+            hasCameraPermission = isGranted
+            if (isGranted) {
+                cameraLauncher.launch(null)
+            } else {
+                Toast.makeText(context, "Camera permission is required to use camera", Toast.LENGTH_SHORT).show()
+            }
         }
-    }
 
     // Gallery launcher
-    val galleryLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            Toast.makeText(context, "File selected successfully", Toast.LENGTH_SHORT).show()
-            showUploadDialog = false
-            selectedDocument?.let { docName ->
-                uploadManager.uploadDocumentFromUri(docName, uri) { response ->
-                    controller.updateDocumentsFromResponse(response)
+    val galleryLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.GetContent(),
+        ) { uri: Uri? ->
+            uri?.let {
+                Toast.makeText(context, "File selected successfully", Toast.LENGTH_SHORT).show()
+                showUploadDialog = false
+                selectedDocument?.let { docName ->
+                    uploadManager.uploadDocumentFromUri(docName, uri) { response ->
+                        controller.updateDocumentsFromResponse(response)
+                    }
                 }
             }
         }
-    }
 
     // File launcher for PDFs
-    val fileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            Toast.makeText(context, "File selected successfully", Toast.LENGTH_SHORT).show()
-            showUploadDialog = false
-            selectedDocument?.let { docName ->
-                uploadManager.uploadDocumentFromUri(docName, uri) { response ->
-                    controller.updateDocumentsFromResponse(response)
+    val fileLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                Toast.makeText(context, "File selected successfully", Toast.LENGTH_SHORT).show()
+                showUploadDialog = false
+                selectedDocument?.let { docName ->
+                    uploadManager.uploadDocumentFromUri(docName, uri) { response ->
+                        controller.updateDocumentsFromResponse(response)
+                    }
                 }
             }
         }
-    }
 
     // Show error message if any
     errorMessage?.let { error ->
@@ -184,41 +192,45 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
     val isKeyboardVisible = imeInsets.getBottom(density) > 0
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige
-                            Color(0xFFC8C8CA), // Light Gray
-                            Color(0xFF474749) // Dark Gray
-                        )
-                    )
-                )
-                .then(if (showMpinPrompt) Modifier.blur(8.dp) else Modifier)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    Color(0xFFE0DCD1), // Light Beige
+                                    Color(0xFFC8C8CA), // Light Gray
+                                    Color(0xFF474749), // Dark Gray
+                                ),
+                        ),
+                    ).then(if (showMpinPrompt) Modifier.blur(8.dp) else Modifier),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .fillMaxSize(),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(bottom = 10.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(bottom = 10.dp),
                 ) {
                     IconButton(onClick = onBackPressed) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = Color.Black,
                         )
                     }
 
@@ -230,7 +242,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
 
                     Spacer(modifier = Modifier.weight(1.5f))
@@ -238,23 +250,26 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
 
                 // Scrollable Content
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp),
                 ) {
                     item {
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE))
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp),
                             ) {
                                 Text(
                                     text = "Upload or view your personal and professional documents here",
@@ -262,10 +277,11 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 32.dp),
-                                    textAlign = TextAlign.Center
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 32.dp),
+                                    textAlign = TextAlign.Center,
                                 )
 
                                 Text(
@@ -274,15 +290,16 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 12.dp)
+                                    modifier = Modifier.padding(bottom = 12.dp),
                                 )
 
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 24.dp),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 24.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     listOf("Aadhar Card", "Passport", "PAN Card").forEach { item ->
                                         DocumentCard(
@@ -293,7 +310,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                             context = context,
                                             uploadManager = uploadManager,
                                             fileLauncher = fileLauncher,
-                                            setSelectedDocument = { selectedDocument = it }
+                                            setSelectedDocument = { selectedDocument = it },
                                         )
                                     }
                                 }
@@ -304,15 +321,16 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 12.dp)
+                                    modifier = Modifier.padding(bottom = 12.dp),
                                 )
 
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 16.dp),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     listOf("Offer Letter", "Certificate", "Experience Letter").forEach { item ->
                                         DocumentCard(
@@ -323,16 +341,17 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                             context = context,
                                             uploadManager = uploadManager,
                                             fileLauncher = fileLauncher,
-                                            setSelectedDocument = { selectedDocument = it }
+                                            setSelectedDocument = { selectedDocument = it },
                                         )
                                     }
                                 }
 
                                 // Note about file size limit
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 20.dp)
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 20.dp),
                                 ) {
                                     Text(
                                         text = "Note: You can only upload images and PDFs. The file size limit is 5MB.",
@@ -341,7 +360,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                         fontWeight = FontWeight.Normal,
                                         color = Color.Gray,
                                         modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
                                     )
                                 }
                             }
@@ -367,7 +386,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                         }
                     },
                     onGalleryClick = { galleryLauncher.launch("image/*") },
-                    onFilesClick = { fileLauncher.launch("application/pdf") }
+                    onFilesClick = { fileLauncher.launch("application/pdf") },
                 )
             }
         }
@@ -375,18 +394,19 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
         if (showMpinPrompt) {
             // Blur and block background
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.50f))
-                    .blur(6.dp)
-                    .zIndex(10f)
-                    .pointerInput(Unit) {
-                        detectHorizontalDragGestures { change, dragAmount ->
-                            if (dragAmount > 60) { // right swipe
-                                onBackPressed()
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.50f))
+                        .blur(6.dp)
+                        .zIndex(10f)
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures { change, dragAmount ->
+                                if (dragAmount > 60) { // right swipe
+                                    onBackPressed()
+                                }
                             }
-                        }
-                    }
+                        },
             )
 
             // Loader if verifying
@@ -395,38 +415,41 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
             }
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(101f),
-                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .zIndex(101f),
+                contentAlignment = if (isKeyboardVisible) Alignment.TopCenter else Alignment.Center,
             ) {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
                     color = Color(0xFFF6F4EE),
                     shadowElevation = 24.dp,
                     tonalElevation = 2.dp,
-                    modifier = Modifier
-                        .widthIn(min = 340.dp, max = 420.dp)
-                        .padding(horizontal = 16.dp)
-                        .then(
-                            if (isKeyboardVisible) {
-                                Modifier.padding(top = 32.dp)
-                            } else {
-                                Modifier
-                            }
-                        )
+                    modifier =
+                        Modifier
+                            .widthIn(min = 340.dp, max = 420.dp)
+                            .padding(horizontal = 16.dp)
+                            .then(
+                                if (isKeyboardVisible) {
+                                    Modifier.padding(top = 32.dp)
+                                } else {
+                                    Modifier
+                                },
+                            ),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp, vertical = 28.dp)
-                            .widthIn(min = 340.dp, max = 420.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 20.dp, vertical = 28.dp)
+                                .widthIn(min = 340.dp, max = 420.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Icon(
                             painter = painterResource(id = com.archeGlobal.one.R.drawable.lock),
                             contentDescription = "Lock",
                             tint = Color(0xFFDD3825),
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
                         )
                         Spacer(modifier = Modifier.height(18.dp))
                         Text(
@@ -435,7 +458,7 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 26.sp,
                             color = Color.Black,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
@@ -445,12 +468,12 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                             fontSize = 16.sp,
                             color = Color.Black,
                             textAlign = TextAlign.Center,
-                            lineHeight = 18.sp
+                            lineHeight = 18.sp,
                         )
                         Spacer(modifier = Modifier.height(28.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 "Enter MPIN",
@@ -458,13 +481,13 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 16.sp,
                                 color = Color(0xFF7B7B7B),
-                                modifier = Modifier.padding(start = 4.dp)
+                                modifier = Modifier.padding(start = 4.dp),
                             )
                         }
                         Spacer(modifier = Modifier.height(10.dp))
                         Row(
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             for (i in 0 until 4) {
                                 val hasDigit = enteredMpin.getOrNull(i)?.isDigit() == true
@@ -486,42 +509,44 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                             focusRequesters[i - 1].requestFocus()
                                         }
                                     },
-                                    modifier = Modifier
-                                        .width(65.dp)
-                                        .height(65.dp)
-                                        .focusRequester(focusRequesters[i])
-                                        .padding(horizontal = 4.dp)
-                                        .onFocusChanged { focusState ->
-                                            if (focusState.isFocused) focusedIndex = i
-                                        }
-                                        .border(
-                                            width = 1.5.dp,
-                                            color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
-                                            shape = MaterialTheme.shapes.medium
+                                    modifier =
+                                        Modifier
+                                            .width(65.dp)
+                                            .height(65.dp)
+                                            .focusRequester(focusRequesters[i])
+                                            .padding(horizontal = 4.dp)
+                                            .onFocusChanged { focusState ->
+                                                if (focusState.isFocused) focusedIndex = i
+                                            }.border(
+                                                width = 1.5.dp,
+                                                color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
+                                                shape = MaterialTheme.shapes.medium,
+                                            ),
+                                    textStyle =
+                                        TextStyle(
+                                            fontSize = 28.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black,
+                                            textAlign = TextAlign.Center,
                                         ),
-                                    textStyle = TextStyle(
-                                        fontSize = 28.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center
-                                    ),
                                     singleLine = true,
                                     visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                     shape = MaterialTheme.shapes.medium,
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        disabledContainerColor = Color.White,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedTextColor = Color.Black,
-                                        disabledTextColor = Color.Black,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        disabledIndicatorColor = Color.Transparent
-                                    ),
-                                    isError = mpinError != null && enteredMpin.length == 4
+                                    colors =
+                                        TextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            disabledContainerColor = Color.White,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedTextColor = Color.Black,
+                                            disabledTextColor = Color.Black,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            disabledIndicatorColor = Color.Transparent,
+                                        ),
+                                    isError = mpinError != null && enteredMpin.length == 4,
                                 )
                                 if (i < 3) Spacer(modifier = Modifier.width(8.dp))
                             }
@@ -550,21 +575,23 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                     }
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(54.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(54.dp),
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825),
-                                contentColor = Color.White
-                            ),
-                            enabled = !isVerifyingMpin
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    contentColor = Color.White,
+                                ),
+                            enabled = !isVerifyingMpin,
                         ) {
                             Text(
                                 "Unlock",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 20.sp
+                                fontSize = 20.sp,
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -575,23 +602,25 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                 intent.putExtra("resetMpin", true)
                                 context.startActivity(intent)
                             },
-                            modifier = Modifier
-                                .width(140.dp)
-                                .height(38.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE0B4AA),
-                                contentColor = Color(0xFFDD3825),
-                                disabledContainerColor = Color(0xFFDD3825),
-                                disabledContentColor = Color(0xFFDD3825)
-                            ),
+                            modifier =
+                                Modifier
+                                    .width(140.dp)
+                                    .height(38.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFE0B4AA),
+                                    contentColor = Color(0xFFDD3825),
+                                    disabledContainerColor = Color(0xFFDD3825),
+                                    disabledContentColor = Color(0xFFDD3825),
+                                ),
                             border = BorderStroke(1.dp, Color(0xFFDD3825)),
-                            shape = MaterialTheme.shapes.medium
+                            shape = MaterialTheme.shapes.medium,
                         ) {
                             Text(
                                 "Reset MPIN",
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -603,9 +632,10 @@ fun MyDocumentsScreen(controller: MyDocumentsController, context: Context, onBac
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Red,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp),
                             )
                         }
                     }
@@ -621,20 +651,22 @@ private fun UploadDialog(
     onDismiss: () -> Unit,
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit,
-    onFilesClick: () -> Unit
+    onFilesClick: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.92f)
+                    .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     "Upload Document",
@@ -642,10 +674,11 @@ private fun UploadDialog(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 2.dp),
-                    textAlign = TextAlign.Center
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 2.dp),
+                    textAlign = TextAlign.Center,
                 )
 
                 Text(
@@ -654,31 +687,33 @@ private fun UploadDialog(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Gray,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    textAlign = TextAlign.Center
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                    textAlign = TextAlign.Center,
                 )
 
                 // Camera Button
                 Button(
                     onClick = onCameraClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_camera),
                         contentDescription = "Camera",
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     )
                     Text(
                         "Camera",
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
 
@@ -687,22 +722,23 @@ private fun UploadDialog(
                 // Gallery Button
                 Button(
                     onClick = onGalleryClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_gallery),
                         contentDescription = "Gallery",
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     )
                     Text(
                         "Gallery",
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
 
@@ -711,22 +747,23 @@ private fun UploadDialog(
                 // Files Button
                 Button(
                     onClick = onFilesClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDD3825)),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_file),
                         contentDescription = "Files",
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     )
                     Text(
                         "Files",
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -743,26 +780,28 @@ fun DocumentCard(
     context: Context,
     uploadManager: DocumentUploadManager,
     fileLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Uri?>,
-    setSelectedDocument: (String?) -> Unit
+    setSelectedDocument: (String?) -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .border(
-                width = 1.dp,
-                color = Color.Black,
-                shape = RoundedCornerShape(8.dp)
-            ),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0))
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .border(
+                    width = 1.dp,
+                    color = Color.Black,
+                    shape = RoundedCornerShape(8.dp),
+                ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F0)),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = name,
@@ -770,20 +809,23 @@ fun DocumentCard(
                 fontSize = 16.sp,
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 IconButton(
                     onClick = {
                         if (isUploaded) {
                             // Delete document
-                            val documentType = controller.personalDocTypes.entries
-                                .find { it.value == name }?.key
-                                ?: controller.professionalDocTypes.entries
-                                    .find { it.value == name }?.key
+                            val documentType =
+                                controller.personalDocTypes.entries
+                                    .find { it.value == name }
+                                    ?.key
+                                    ?: controller.professionalDocTypes.entries
+                                        .find { it.value == name }
+                                        ?.key
                             if (documentType != null) {
                                 uploadManager.deleteDocument(name, documentType) { response ->
                                     controller.updateDocumentsFromResponse(response)
@@ -798,30 +840,31 @@ fun DocumentCard(
                             fileLauncher.launch("application/pdf")
                         }
                     },
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(36.dp),
                 ) {
                     if (isUploaded) {
                         Icon(
                             painter = painterResource(id = R.drawable.delete),
                             contentDescription = "Delete",
                             tint = Color(0xFFDD3825),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                     } else {
                         Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(
-                                    color = Color(0xFFDD3825),
-                                    shape = androidx.compose.foundation.shape.CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier
+                                    .size(24.dp)
+                                    .background(
+                                        color = Color(0xFFDD3825),
+                                        shape = androidx.compose.foundation.shape.CircleShape,
+                                    ),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_upload_circle),
                                 contentDescription = "Upload",
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(16.dp),
                             )
                         }
                     }
@@ -829,13 +872,13 @@ fun DocumentCard(
 
                 IconButton(
                     onClick = { controller.onViewClick(context, name) },
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.view11),
                         contentDescription = "View",
                         tint = Color(0xFFDD3825),
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }

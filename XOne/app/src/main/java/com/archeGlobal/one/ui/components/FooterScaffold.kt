@@ -17,7 +17,7 @@ fun FooterScaffold(
     onFooterChatClick: () -> Unit,
     onFooterSOSClick: () -> Unit,
     onFooterProfileClick: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val sharedPref = context.getSharedPreferences("event_preferences", android.content.Context.MODE_PRIVATE)
@@ -33,14 +33,15 @@ fun FooterScaffold(
                 onChatClick = onFooterChatClick,
                 onSOSClick = onFooterSOSClick,
                 onProfileClick = onFooterProfileClick,
-                modifier = Modifier.zIndex(1f) // Ensure navigation bar is always on top
+                modifier = Modifier.zIndex(1f), // Ensure navigation bar is always on top
             )
-        }
+        },
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             content()
         }

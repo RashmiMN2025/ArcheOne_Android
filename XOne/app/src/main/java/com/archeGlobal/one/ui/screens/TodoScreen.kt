@@ -54,7 +54,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TodoScreen(
     controller: TodoController,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     var newTask by remember { mutableStateOf<TodoTask?>(null) } // <-- Add this line
     val tasksForSelectedDay = controller.getTasksForSelectedDay()
@@ -77,27 +77,29 @@ fun TodoScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Color(0xFFE0DCD1) // Light Beige
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Color(0xFFE0DCD1), // Light Beige
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 // Top AppBar
                 TopAppBar(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "ZenTask",
@@ -105,47 +107,53 @@ fun TodoScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             )
                         }
                     },
                     navigationIcon = {
                         IconButton(
-                            onClick = onBackPressed
+                            onClick = onBackPressed,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_back),
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
                     actions = {
                         Spacer(modifier = Modifier.width(50.dp))
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 // Day selector row
                 DaySelector(
                     selectedDay = controller.model.selectedDay,
-                    onDaySelected = controller::selectDay
+                    onDaySelected = controller::selectDay,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Tasks List
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth() // Stretch to full width
-                        .weight(0.85f) // Increase height as needed
-                        .background(Color(0xFFF8F8F0)), // Beige color
-                    contentAlignment = Alignment.TopCenter
+                    modifier =
+                        Modifier
+                            .fillMaxWidth() // Stretch to full width
+                            .weight(0.85f) // Increase height as needed
+                            .background(Color(0xFFF8F8F0)),
+                    // Beige color
+                    contentAlignment = Alignment.TopCenter,
                 ) {
                     // Empty State or Task List
-                    if (tasksForSelectedDay.isEmpty() && currentNewTask != null && currentNewTask.dayOfWeek == controller.model.selectedDay) {
+                    if (tasksForSelectedDay.isEmpty() &&
+                        currentNewTask != null &&
+                        currentNewTask.dayOfWeek == controller.model.selectedDay
+                    ) {
                         EmptyTasksMessage(
                             newTask = currentNewTask,
                             selectedDay = controller.model.selectedDay,
@@ -158,13 +166,13 @@ fun TodoScreen(
                             },
                             onToggleCompleted = controller::toggleTaskCompleted,
                             formatTimeRange = controller::formatTimeRange,
-                            formatCreationDate = controller::formatCreationDate
+                            formatCreationDate = controller::formatCreationDate,
                         )
                     } else if (tasksForSelectedDay.isEmpty()) {
                         // Show the empty state if there are no tasks at all for this day
                         EmptyTasksMessage(
                             selectedDay = controller.model.selectedDay,
-                            days = days
+                            days = days,
                         )
                     } else {
                         TaskList(
@@ -174,7 +182,7 @@ fun TodoScreen(
                             onDeleteClick = controller::deleteTask, // Directly delete the task
                             onToggleCompleted = controller::toggleTaskCompleted, // <-- Pass controller function here
                             formatTimeRange = controller::formatTimeRange,
-                            formatCreationDate = controller::formatCreationDate
+                            formatCreationDate = controller::formatCreationDate,
                         )
                     }
                 }
@@ -183,22 +191,25 @@ fun TodoScreen(
                 Button(
                     onClick = {
                         if (isPastDay) {
-                            Toast.makeText(
-                                context,
-                                "Tasks cannot be added for previous days",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Tasks cannot be added for previous days",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
                         } else {
                             controller.startAddTask()
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE83A25)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE83A25),
+                        ),
+                    shape = RoundedCornerShape(12.dp),
                 ) {
                     Text(
                         text = "Add Task",
@@ -206,7 +217,7 @@ fun TodoScreen(
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier.padding(vertical = 8.dp),
                     )
                 }
             }
@@ -218,7 +229,7 @@ fun TodoScreen(
                     onDismiss = controller::closeTaskDetail,
                     onEdit = controller::startEditTask,
                     onDelete = controller::deleteTask,
-                    formatTimeRange = controller::formatTimeRange
+                    formatTimeRange = controller::formatTimeRange,
                 )
             }
 
@@ -231,7 +242,7 @@ fun TodoScreen(
                         val task = controller.addTask(title, priority, startTime, endTime)
                         newTask = task
                     },
-                    onCancel = controller::cancelAddTask
+                    onCancel = controller::cancelAddTask,
                 )
             }
 
@@ -241,7 +252,7 @@ fun TodoScreen(
                     isEditing = true,
                     initialTask = controller.model.selectedTask,
                     onSave = controller::updateTask,
-                    onCancel = controller::cancelEditTask
+                    onCancel = controller::cancelEditTask,
                 )
             }
         }
@@ -251,48 +262,54 @@ fun TodoScreen(
 @Composable
 fun DaySelector(
     selectedDay: Int,
-    onDaySelected: (Int) -> Unit
+    onDaySelected: (Int) -> Unit,
 ) {
     // Day names - Mon through Fri
     val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
     val dayValues = (1..5).toList() // 1 = Monday, 5 = Friday
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(55.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(55.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFC8C8CA) // Light gray background for tabs
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color(0xFFC8C8CA), // Light gray background for tabs
+            ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 0.dp, horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 0.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             days.forEachIndexed { index, dayName ->
                 val dayValue = dayValues[index]
                 val isSelected = selectedDay == dayValue
 
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f)
-                        .padding(vertical = 4.dp)
-                        .clickable { onDaySelected(dayValue) }, // <-- clickable here for all
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .padding(vertical = 4.dp)
+                            .clickable { onDaySelected(dayValue) },
+                    // <-- clickable here for all
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (isSelected) {
                         Box(
-                            modifier = Modifier
-                                .width(66.dp)
-                                .height(32.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color.White),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier
+                                    .width(66.dp)
+                                    .height(32.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.White),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = dayName,
@@ -300,7 +317,7 @@ fun DaySelector(
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 15.sp,
                                 fontFamily = GraphikFontFamily,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     } else {
@@ -310,7 +327,7 @@ fun DaySelector(
                             fontWeight = FontWeight.Normal,
                             fontSize = 15.sp,
                             fontFamily = GraphikFontFamily,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
@@ -318,9 +335,10 @@ fun DaySelector(
                 if (index < days.lastIndex) {
                     Divider(
                         color = Color(0xFFB0B0B0),
-                        modifier = Modifier
-                            .fillMaxHeight(0.6f)
-                            .width(1.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxHeight(0.6f)
+                                .width(1.dp),
                     )
                 }
             }
@@ -337,21 +355,23 @@ fun TaskList(
     onDeleteClick: (TodoTask) -> Unit,
     onToggleCompleted: (TodoTask) -> Unit,
     formatTimeRange: (TodoTask) -> String,
-    formatCreationDate: (TodoTask) -> String
+    formatCreationDate: (TodoTask) -> String,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, Color.White), // Keep border
         elevation = CardDefaults.cardElevation(2.dp), // Remove shadow
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
     ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp) // <-- Add this line for right shift
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp), // <-- Add this line for right shift
         ) {
             items(tasks.size) { index ->
                 val task = tasks[index]
@@ -362,14 +382,14 @@ fun TaskList(
                     onDeleteClick = { onDeleteClick(task) },
                     onToggleCompleted = { onToggleCompleted(task) },
                     formatTimeRange = { formatTimeRange(task) },
-                    formatCreationDate = { formatCreationDate(task) }
+                    formatCreationDate = { formatCreationDate(task) },
                 )
 
                 if (index < tasks.lastIndex) {
                     Divider(
                         color = Color(0xFFE0DCD1),
                         thickness = 1.dp,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp),
                     )
                 }
             }
@@ -385,7 +405,7 @@ fun SwipeableTaskItem(
     onDeleteClick: () -> Unit,
     onToggleCompleted: (TodoTask) -> Unit, // <-- Add this line
     formatTimeRange: () -> String,
-    formatCreationDate: () -> String
+    formatCreationDate: () -> String,
 ) {
     // State for swipe offset
     var offsetX by remember { mutableStateOf(0f) }
@@ -404,43 +424,46 @@ fun SwipeableTaskItem(
     val animatedOffsetDp by animateDpAsState(
         targetValue = with(density) { minOf(offsetX, 0f).coerceAtLeast(-actionsWidth.toPx()).toDp() },
         animationSpec = tween(durationMillis = 300),
-        label = "Offset Animation"
+        label = "Offset Animation",
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier =
+            Modifier
+                .fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .height(cardHeight), // Match card height
-            horizontalArrangement = Arrangement.End
+            modifier =
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .height(cardHeight),
+            // Match card height
+            horizontalArrangement = Arrangement.End,
         ) {
             // Only show Delete button if task is completed
             if (task.completed) {
                 Box(
-                    modifier = Modifier
-                        .width(80.dp) // Full width of actions
-                        .fillMaxHeight()
-                        .background(
-                            Color(0xFFFF3B30)
-                        )
-                        .clickable {
-                            onDeleteClick()
-                            offsetX = 0f // Reset swipe state
-                            isSwipeRevealed = false
-                        },
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .width(80.dp) // Full width of actions
+                            .fillMaxHeight()
+                            .background(
+                                Color(0xFFFF3B30),
+                            ).clickable {
+                                onDeleteClick()
+                                offsetX = 0f // Reset swipe state
+                                isSwipeRevealed = false
+                            },
+                    contentAlignment = Alignment.Center,
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
                             tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -448,34 +471,34 @@ fun SwipeableTaskItem(
                             color = Color.White,
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
+                            fontWeight = FontWeight.Normal,
                         )
                     }
                 }
             } else {
                 // Delete button (left)
                 Box(
-                    modifier = Modifier
-                        .width(80.dp)
-                        .fillMaxHeight()
-                        .background(
-                            Color(0xFFFF3B30)
-                        )
-                        .clickable {
-                            onDeleteClick()
-                            offsetX = 0f // Reset swipe state
-                            isSwipeRevealed = false
-                        },
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .width(80.dp)
+                            .fillMaxHeight()
+                            .background(
+                                Color(0xFFFF3B30),
+                            ).clickable {
+                                onDeleteClick()
+                                offsetX = 0f // Reset swipe state
+                                isSwipeRevealed = false
+                            },
+                    contentAlignment = Alignment.Center,
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
                             tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -483,33 +506,33 @@ fun SwipeableTaskItem(
                             color = Color.White,
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
+                            fontWeight = FontWeight.Normal,
                         )
                     }
                 }
                 // Edit button (right)
                 Box(
-                    modifier = Modifier
-                        .width(80.dp)
-                        .fillMaxHeight()
-                        .background(
-                            Color(0xFF007AFF)
-                        )
-                        .clickable {
-                            onEditClick()
-                            offsetX = 0f // Reset swipe state
-                            isSwipeRevealed = false
-                        },
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .width(80.dp)
+                            .fillMaxHeight()
+                            .background(
+                                Color(0xFF007AFF),
+                            ).clickable {
+                                onEditClick()
+                                offsetX = 0f // Reset swipe state
+                                isSwipeRevealed = false
+                            },
+                    contentAlignment = Alignment.Center,
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
                             tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -517,7 +540,7 @@ fun SwipeableTaskItem(
                             color = Color.White,
                             fontSize = 14.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
+                            fontWeight = FontWeight.Normal,
                         )
                     }
                 }
@@ -526,76 +549,79 @@ fun SwipeableTaskItem(
 
         // Main task card - can be swiped
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset { IntOffset(animatedOffsetDp.roundToPx(), 0) }
-                .draggable(
-                    orientation = Orientation.Horizontal,
-                    state = rememberDraggableState { delta ->
-                        // Only allow swiping left
-                        if (delta <= 0f) {
-                            offsetX += delta
-                        } else if (isSwipeRevealed) {
-                            // Swiping right to close
-                            offsetX += delta
-                        }
-                        if (offsetX < -swipeThreshold) {
-                            isSwipeRevealed = true
-                        }
-                        if (offsetX > -20f) {
-                            isSwipeRevealed = false
-                        }
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .offset { IntOffset(animatedOffsetDp.roundToPx(), 0) }
+                    .draggable(
+                        orientation = Orientation.Horizontal,
+                        state =
+                            rememberDraggableState { delta ->
+                                // Only allow swiping left
+                                if (delta <= 0f) {
+                                    offsetX += delta
+                                } else if (isSwipeRevealed) {
+                                    // Swiping right to close
+                                    offsetX += delta
+                                }
+                                if (offsetX < -swipeThreshold) {
+                                    isSwipeRevealed = true
+                                }
+                                if (offsetX > -20f) {
+                                    isSwipeRevealed = false
+                                }
+                            },
+                        onDragStopped = { _ ->
+                            // Snap to position based on current offset
+                            offsetX =
+                                if (isSwipeRevealed || offsetX < -swipeThreshold / 2) {
+                                    -actionsWidth.value * density.density
+                                } else {
+                                    0f
+                                }
+                        },
+                    ).onSizeChanged { size ->
+                        // Convert the size in pixels to dp
+                        cardHeight = with(density) { size.height.toDp() }
                     },
-                    onDragStopped = { _ ->
-                        // Snap to position based on current offset
-                        offsetX = if (isSwipeRevealed || offsetX < -swipeThreshold / 2) {
-                            -actionsWidth.value * density.density
-                        } else {
-                            0f
-                        }
-                    }
-                )
-                .onSizeChanged { size ->
-                    // Convert the size in pixels to dp
-                    cardHeight = with(density) { size.height.toDp() }
-                },
             shape = RoundedCornerShape(0.dp), // <-- Remove curved corners
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = Color.White),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        if (isSwipeRevealed) {
-                            offsetX = 0f
-                            isSwipeRevealed = false
-                        } else {
-                            onToggleCompleted(task) // <-- Call controller's toggle function
-                            onTaskClick()
-                        }
-                    }
-                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (isSwipeRevealed) {
+                                offsetX = 0f
+                                isSwipeRevealed = false
+                            } else {
+                                onToggleCompleted(task) // <-- Call controller's toggle function
+                                onTaskClick()
+                            }
+                        }.padding(horizontal = 8.dp, vertical = 8.dp),
             ) {
                 // Circle with check mark if checked
                 Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(if (task.completed) Color(0xFFDD3825) else Color.Transparent)
-                        .border(
-                            width = 2.dp,
-                            color = if (task.completed) Color(0xFFDD3825) else Color.Gray,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(if (task.completed) Color(0xFFDD3825) else Color.Transparent)
+                            .border(
+                                width = 2.dp,
+                                color = if (task.completed) Color(0xFFDD3825) else Color.Gray,
+                                shape = CircleShape,
+                            ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (task.completed) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = "Checked",
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
                     }
                 }
@@ -604,7 +630,7 @@ fun SwipeableTaskItem(
 
                 // Task details
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 ) {
                     // Title
                     Text(
@@ -613,7 +639,7 @@ fun SwipeableTaskItem(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
-                        textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None // <-- Add this line
+                        textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None, // <-- Add this line
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -624,7 +650,7 @@ fun SwipeableTaskItem(
                         fontSize = 14.sp,
                         color = Color.Gray,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
                     )
 
                     // Time
@@ -633,7 +659,7 @@ fun SwipeableTaskItem(
                         fontSize = 14.sp,
                         color = Color.Gray,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
                     )
 
                     // Added on date
@@ -642,7 +668,7 @@ fun SwipeableTaskItem(
                         fontSize = 14.sp,
                         color = Color.Gray,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
                     )
                 }
             }
@@ -660,33 +686,36 @@ fun EmptyTasksMessage(
     onDeleteClick: ((TodoTask) -> Unit)? = null,
     onToggleCompleted: ((TodoTask) -> Unit)? = null,
     formatTimeRange: ((TodoTask) -> String)? = null,
-    formatCreationDate: ((TodoTask) -> String)? = null
+    formatCreationDate: ((TodoTask) -> String)? = null,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth() // Stretch to full width
-            .height(650.dp) // Increase height as needed
-            .background(Color(0xFFF8F8F0)), // Beige color
-        contentAlignment = if (newTask == null) Alignment.Center else Alignment.TopCenter
+        modifier =
+            Modifier
+                .fillMaxWidth() // Stretch to full width
+                .height(650.dp) // Increase height as needed
+                .background(Color(0xFFF8F8F0)),
+        // Beige color
+        contentAlignment = if (newTask == null) Alignment.Center else Alignment.TopCenter,
     ) {
         if (newTask == null) {
             // Show empty state text and arrow
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = if (selectedDay != null && days.isNotEmpty()) {
-                        "No tasks for ${days[selectedDay - 1]}"
-                    } else {
-                        "No tasks"
-                    },
+                    text =
+                        if (selectedDay != null && days.isNotEmpty()) {
+                            "No tasks for ${days[selectedDay - 1]}"
+                        } else {
+                            "No tasks"
+                        },
                     fontSize = 18.sp,
                     color = Color.Gray,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -697,35 +726,40 @@ fun EmptyTasksMessage(
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Normal,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Down arrow with circle icon
                 Box(
-                    modifier = Modifier
-                        .size(35.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Gray, CircleShape), // Gray border
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(35.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, Color.Gray, CircleShape),
+                    // Gray border
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack, // Use ArrowBack and rotate
                         contentDescription = "Down Arrow",
                         tint = Color.Gray,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .rotate(270f) // Rotate to point down
+                        modifier =
+                            Modifier
+                                .size(20.dp)
+                                .rotate(270f), // Rotate to point down
                     )
                 }
             }
         } else { // Show the new task card on the beige background, hide the text
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 100.dp), // Add top padding here (adjust as needed)
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 100.dp),
+                // Add top padding here (adjust as needed)
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 SwipeableTaskItem(
                     task = newTask,
@@ -737,7 +771,7 @@ fun EmptyTasksMessage(
                     },
                     onToggleCompleted = { onToggleCompleted?.invoke(newTask) ?: Unit },
                     formatTimeRange = { formatTimeRange?.invoke(newTask) ?: "" },
-                    formatCreationDate = { formatCreationDate?.invoke(newTask) ?: "" }
+                    formatCreationDate = { formatCreationDate?.invoke(newTask) ?: "" },
                 )
             }
         }
@@ -750,7 +784,7 @@ fun TaskDetailDialog(
     onDismiss: () -> Unit,
     onEdit: (TodoTask) -> Unit,
     onDelete: (TodoTask) -> Unit,
-    formatTimeRange: (TodoTask) -> String
+    formatTimeRange: (TodoTask) -> String,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -763,7 +797,7 @@ fun TaskDetailDialog(
                     text = task.title,
                     fontSize = 18.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -771,23 +805,25 @@ fun TaskDetailDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = "Priority: ")
                     Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .background(
-                                color = when (task.priority) {
-                                    TaskPriority.HIGH -> Color(0xFFDD3825) // Red
-                                    TaskPriority.MEDIUM -> Color(0xFFFFA500) // Orange
-                                    TaskPriority.LOW -> Color(0xFF4CAF50) // Green
-                                },
-                                shape = CircleShape
-                            )
+                        modifier =
+                            Modifier
+                                .size(12.dp)
+                                .background(
+                                    color =
+                                        when (task.priority) {
+                                            TaskPriority.HIGH -> Color(0xFFDD3825) // Red
+                                            TaskPriority.MEDIUM -> Color(0xFFFFA500) // Orange
+                                            TaskPriority.LOW -> Color(0xFF4CAF50) // Green
+                                        },
+                                    shape = CircleShape,
+                                ),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = task.priority.name,
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
 
@@ -797,29 +833,31 @@ fun TaskDetailDialog(
                     text = "Time: ${formatTimeRange(task)}",
                     fontSize = 14.sp,
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         },
         confirmButton = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 Button(
                     onClick = { onEdit(task) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    )
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                        ),
                 ) {
                     Text("Edit")
                 }
 
                 Button(
                     onClick = { onDelete(task) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFDD3825)
-                    )
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825),
+                        ),
                 ) {
                     Text("Delete")
                 }
@@ -829,7 +867,7 @@ fun TaskDetailDialog(
             TextButton(onClick = onDismiss) {
                 Text("Close")
             }
-        }
+        },
     )
 }
 
@@ -838,28 +876,28 @@ fun TaskFormDialog(
     isEditing: Boolean,
     initialTask: TodoTask?,
     onSave: (String, TaskPriority, LocalTime, LocalTime) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
 ) {
     var title by remember { mutableStateOf(initialTask?.title ?: "") }
     var priority by remember { mutableStateOf(initialTask?.priority ?: TaskPriority.MEDIUM) }
     var startTimeHour by remember {
         mutableStateOf(
-            initialTask?.startTime?.hour ?: LocalTime.now().hour
+            initialTask?.startTime?.hour ?: LocalTime.now().hour,
         )
     }
     var startTimeMinute by remember {
         mutableStateOf(
-            initialTask?.startTime?.minute ?: LocalTime.now().minute
+            initialTask?.startTime?.minute ?: LocalTime.now().minute,
         )
     }
     var endTimeHour by remember {
         mutableStateOf(
-            initialTask?.endTime?.hour ?: LocalTime.now().plusHours(1).hour
+            initialTask?.endTime?.hour ?: LocalTime.now().plusHours(1).hour,
         )
     }
     var endTimeMinute by remember {
         mutableStateOf(
-            initialTask?.endTime?.minute ?: LocalTime.now().minute
+            initialTask?.endTime?.minute ?: LocalTime.now().minute,
         )
     }
 
@@ -877,29 +915,33 @@ fun TaskFormDialog(
     // Full-screen overlay
     Dialog(
         onDismissRequest = onCancel,
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-            usePlatformDefaultWidth = false
-        )
+        properties =
+            DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = false,
+            ),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth(1f)
+            modifier =
+                Modifier
+                    .fillMaxWidth(1f),
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color(0xFFF6F4EE),
                 tonalElevation = 8.dp,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp, vertical = 30.dp) // match your card container
+                modifier =
+                    Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(horizontal = 15.dp, vertical = 30.dp), // match your card container
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
                 ) {
                     Text(
                         text = if (isEditing) "Edit Task" else "Add Task",
@@ -908,7 +950,7 @@ fun TaskFormDialog(
                         color = Color.Black,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -919,7 +961,7 @@ fun TaskFormDialog(
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -929,40 +971,47 @@ fun TaskFormDialog(
                         value = title,
                         onValueChange = { title = it },
                         placeholder = { Text("Please enter your task details") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 120.dp), // Make text field taller
-                        textStyle = TextStyle(
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 120.dp),
+                        // Make text field taller
+                        textStyle =
+                            TextStyle(
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                            ),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.LightGray,
-                            focusedBorderColor = Color.LightGray,
-                            unfocusedTextColor = Color.LightGray,
-                            focusedTextColor = Color.Black
-                        )
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.LightGray,
+                                focusedBorderColor = Color.LightGray,
+                                unfocusedTextColor = Color.LightGray,
+                                focusedTextColor = Color.Black,
+                            ),
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Priority selection - segmented control
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(45.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(45.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFEBEBEB) // Light gray background
-                        )
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = Color(0xFFEBEBEB), // Light gray background
+                            ),
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(2.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             val options =
                                 listOf(TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH)
@@ -970,21 +1019,21 @@ fun TaskFormDialog(
                                 val isSelected = priority == option
 
                                 Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(
-                                            if (isSelected) Color.White else Color.Transparent
-                                        )
-                                        .clickable { priority = option }
-                                        .padding(vertical = 6.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(
+                                                if (isSelected) Color.White else Color.Transparent,
+                                            ).clickable { priority = option }
+                                            .padding(vertical = 6.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
                                         text = option.name.capitalize(),
                                         color = Color.Black,
                                         fontFamily = GraphikFontFamily,
-                                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Medium
+                                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Medium,
                                     )
                                 }
 
@@ -992,9 +1041,10 @@ fun TaskFormDialog(
                                 if (index < options.lastIndex) {
                                     Divider(
                                         color = Color(0xFFD0D0D0),
-                                        modifier = Modifier
-                                            .fillMaxHeight(0.7f)
-                                            .width(1.dp)
+                                        modifier =
+                                            Modifier
+                                                .fillMaxHeight(0.7f)
+                                                .width(1.dp),
                                     )
                                 }
                             }
@@ -1009,39 +1059,43 @@ fun TaskFormDialog(
                         fontSize = 18.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Combined time range selection box
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFEBEBEB) // Light gray
-                        )
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = Color(0xFFEBEBEB), // Light gray
+                            ),
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             // From time
                             Row(
-                                modifier = Modifier
-                                    .clickable { showStartTimePicker = true },
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier =
+                                    Modifier
+                                        .clickable { showStartTimePicker = true },
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = "From:",
                                     fontSize = 18.sp,
                                     color = Color.Black,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
                                 )
 
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -1051,30 +1105,32 @@ fun TaskFormDialog(
                                     fontSize = 18.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                             }
 
                             // Separator
                             Box(
-                                modifier = Modifier
-                                    .width(1.dp)
-                                    .height(24.dp)
-                                    .background(Color.Gray)
+                                modifier =
+                                    Modifier
+                                        .width(1.dp)
+                                        .height(24.dp)
+                                        .background(Color.Gray),
                             )
 
                             // To time
                             Row(
-                                modifier = Modifier
-                                    .clickable { showEndTimePicker = true },
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier =
+                                    Modifier
+                                        .clickable { showEndTimePicker = true },
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = "To:",
                                     fontSize = 18.sp,
                                     color = Color.Black,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
                                 )
 
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -1084,7 +1140,7 @@ fun TaskFormDialog(
                                     fontSize = 18.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                             }
                         }
@@ -1100,10 +1156,11 @@ fun TaskFormDialog(
                             onSave(title, priority, startTime, endTime)
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825) // Red button
-                        ),
-                        shape = RoundedCornerShape(24.dp)
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825), // Red button
+                            ),
+                        shape = RoundedCornerShape(24.dp),
                     ) {
                         Text(
                             text = if (isEditing) "Save Task" else "Add Task",
@@ -1111,7 +1168,7 @@ fun TaskFormDialog(
                             color = Color.White,
                             fontFamily = GraphikFontFamily,
                             fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = 4.dp),
                         )
                     }
 
@@ -1120,14 +1177,14 @@ fun TaskFormDialog(
                     // Close text button
                     TextButton(
                         onClick = onCancel,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
                     ) {
                         Text(
                             text = "Close",
                             color = Color(0xFFDD3825), // Red text
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
+                            fontWeight = FontWeight.Normal,
                         )
                     }
                 }
@@ -1145,7 +1202,7 @@ fun TaskFormDialog(
                 startTimeMinute = minute
                 showStartTimePicker = false
             },
-            onDismiss = { showStartTimePicker = false }
+            onDismiss = { showStartTimePicker = false },
         )
     }
 
@@ -1158,7 +1215,7 @@ fun TaskFormDialog(
                 endTimeMinute = minute
                 showEndTimePicker = false
             },
-            onDismiss = { showEndTimePicker = false }
+            onDismiss = { showEndTimePicker = false },
         )
     }
 }
@@ -1168,13 +1225,14 @@ fun NativeTimePickerDialog(
     initialHour: Int,
     initialMinute: Int,
     onTimeSelected: (Int, Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
-    val initialHour12 = when {
-        initialHour == 0 -> 12
-        initialHour > 12 -> initialHour - 12
-        else -> initialHour
-    }
+    val initialHour12 =
+        when {
+            initialHour == 0 -> 12
+            initialHour > 12 -> initialHour - 12
+            else -> initialHour
+        }
     val initialIsAM = initialHour < 12
 
     var selectedHour by remember { mutableStateOf<Int?>(initialHour12) }
@@ -1187,30 +1245,32 @@ fun NativeTimePickerDialog(
             shape = RoundedCornerShape(20.dp),
             color = Color.White,
             tonalElevation = 8.dp,
-            modifier = Modifier
-                .width(340.dp)
-                .padding(8.dp)
+            modifier =
+                Modifier
+                    .width(340.dp)
+                    .padding(8.dp),
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = "Select Time",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (!isSelectingMinute) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Box(
-                        modifier = Modifier
-                            .size(260.dp)
-                            .background(Color(0xFFEBEBEB), shape = CircleShape),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .size(260.dp)
+                                .background(Color(0xFFEBEBEB), shape = CircleShape),
+                        contentAlignment = Alignment.Center,
                     ) {
                         with(LocalDensity.current) {
                             val radius = 105.dp.toPx()
@@ -1220,72 +1280,72 @@ fun NativeTimePickerDialog(
                                 val y = kotlin.math.sin(angle) * radius
                                 val hour = if (i == 0) 12 else i
                                 Box(
-                                    modifier = Modifier
-                                        .offset {
-                                            IntOffset(
-                                                x = x.toInt(),
-                                                y = y.toInt()
-                                            )
-                                        }
-                                        .size(38.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (selectedHour == hour) Color(0xFFDD3825) else Color.Transparent
-                                        )
-                                        .border(
-                                            1.dp,
-                                            if (selectedHour == hour) Color(0xFFDD3825) else Color.Transparent,
-                                            CircleShape
-                                        )
-                                        .clickable {
-                                            selectedHour = hour
-                                            isSelectingMinute = true // Switch to minute selection immediately
-                                        },
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .offset {
+                                                IntOffset(
+                                                    x = x.toInt(),
+                                                    y = y.toInt(),
+                                                )
+                                            }.size(38.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (selectedHour == hour) Color(0xFFDD3825) else Color.Transparent,
+                                            ).border(
+                                                1.dp,
+                                                if (selectedHour == hour) Color(0xFFDD3825) else Color.Transparent,
+                                                CircleShape,
+                                            ).clickable {
+                                                selectedHour = hour
+                                                isSelectingMinute = true // Switch to minute selection immediately
+                                            },
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
                                         text = hour.toString(),
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Normal,
                                         fontFamily = GraphikFontFamily,
-                                        color = if (selectedHour == hour) Color.White else Color.Black
+                                        color = if (selectedHour == hour) Color.White else Color.Black,
                                     )
                                 }
                             }
                             // AM/PM toggle in center
                             Row(
                                 modifier = Modifier.align(Alignment.Center),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Button(
                                     onClick = { isAM = true },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (isAM) Color(0xFFDD3825) else Color(0xFFF8F8F0)
-                                    ),
+                                    colors =
+                                        ButtonDefaults.buttonColors(
+                                            containerColor = if (isAM) Color(0xFFDD3825) else Color(0xFFF8F8F0),
+                                        ),
                                     shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.padding(end = 4.dp)
+                                    modifier = Modifier.padding(end = 4.dp),
                                 ) {
                                     Text(
                                         text = "AM",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium,
                                         fontFamily = GraphikFontFamily,
-                                        color = if (isAM) Color.White else Color(0xFFDD3825)
+                                        color = if (isAM) Color.White else Color(0xFFDD3825),
                                     )
                                 }
                                 Button(
                                     onClick = { isAM = false },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (!isAM) Color(0xFFDD3825) else Color(0xFFF8F8F0)
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
+                                    colors =
+                                        ButtonDefaults.buttonColors(
+                                            containerColor = if (!isAM) Color(0xFFDD3825) else Color(0xFFF8F8F0),
+                                        ),
+                                    shape = RoundedCornerShape(8.dp),
                                 ) {
                                     Text(
                                         text = "PM",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium,
                                         fontFamily = GraphikFontFamily,
-                                        color = if (!isAM) Color.White else Color(0xFFDD3825)
+                                        color = if (!isAM) Color.White else Color(0xFFDD3825),
                                     )
                                 }
                             }
@@ -1294,10 +1354,11 @@ fun NativeTimePickerDialog(
                 } else {
                     Spacer(modifier = Modifier.height(8.dp))
                     Box(
-                        modifier = Modifier
-                            .size(260.dp)
-                            .background(Color(0xFFEBEBEB), shape = CircleShape),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .size(260.dp)
+                                .background(Color(0xFFEBEBEB), shape = CircleShape),
+                        contentAlignment = Alignment.Center,
                     ) {
                         with(LocalDensity.current) {
                             val radius = 100.dp.toPx() // Increased radius for numbers
@@ -1307,56 +1368,55 @@ fun NativeTimePickerDialog(
                                 val y = kotlin.math.sin(angle) * radius
                                 val minute = (i * 5) % 60
                                 Box(
-                                    modifier = Modifier
-                                        .offset {
-                                            IntOffset(
-                                                x = x.toInt(),
-                                                y = y.toInt()
-                                            )
-                                        }
-                                        .size(38.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent
-                                        )
-                                        .border(
-                                            1.dp,
-                                            if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent,
-                                            CircleShape
-                                        )
-                                        .clickable {
-                                            selectedMinute = minute
-                                            // Confirm immediately after minute selection
-                                            val hour24 = if (selectedHour == 12) {
-                                                if (isAM) 0 else 12
-                                            } else {
-                                                if (isAM) selectedHour!! else selectedHour!! + 12
-                                            }
-                                            onTimeSelected(hour24, selectedMinute)
-                                            onDismiss()
-                                        },
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .offset {
+                                                IntOffset(
+                                                    x = x.toInt(),
+                                                    y = y.toInt(),
+                                                )
+                                            }.size(38.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent,
+                                            ).border(
+                                                1.dp,
+                                                if (selectedMinute == minute) Color(0xFFDD3825) else Color.Transparent,
+                                                CircleShape,
+                                            ).clickable {
+                                                selectedMinute = minute
+                                                // Confirm immediately after minute selection
+                                                val hour24 =
+                                                    if (selectedHour == 12) {
+                                                        if (isAM) 0 else 12
+                                                    } else {
+                                                        if (isAM) selectedHour!! else selectedHour!! + 12
+                                                    }
+                                                onTimeSelected(hour24, selectedMinute)
+                                                onDismiss()
+                                            },
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
                                         text = "%02d".format(minute),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Normal,
                                         fontFamily = GraphikFontFamily,
-                                        color = if (selectedMinute == minute) Color.White else Color.Black
+                                        color = if (selectedMinute == minute) Color.White else Color.Black,
                                     )
                                 }
                             }
                             // Back to hour selection in center (unchanged)
                             TextButton(
                                 onClick = { isSelectingMinute = false },
-                                modifier = Modifier.align(Alignment.Center)
+                                modifier = Modifier.align(Alignment.Center),
                             ) {
                                 Text(
                                     text = "Back",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontFamily = GraphikFontFamily,
-                                    color = Color(0xFFDD3825)
+                                    color = Color(0xFFDD3825),
                                 )
                             }
                         }
@@ -1366,14 +1426,14 @@ fun NativeTimePickerDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(
                     onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 ) {
                     Text(
                         text = "Cancel",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Normal,
                         fontFamily = GraphikFontFamily,
-                        color = Color(0xFFDD3825)
+                        color = Color(0xFFDD3825),
                     )
                 }
             }
@@ -1382,6 +1442,4 @@ fun NativeTimePickerDialog(
 }
 
 // Helper function to capitalize first letter of a string
-private fun String.capitalize(): String {
-    return this.lowercase().replaceFirstChar { it.uppercase() }
-}
+private fun String.capitalize(): String = this.lowercase().replaceFirstChar { it.uppercase() }

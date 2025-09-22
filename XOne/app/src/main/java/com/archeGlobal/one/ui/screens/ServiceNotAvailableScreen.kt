@@ -43,34 +43,40 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 @Composable
 fun ServiceNotAvailableScreen(
     navController: NavController,
-    serviceName: String? = null
+    serviceName: String? = null,
 ) {
     // Create a gradient background from light gray to darker gray
-    val gradientBackground = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFFE6E6E2), // Light gray at top
-            Color(0xFF9E9E9E) // Darker gray at bottom
+    val gradientBackground =
+        Brush.verticalGradient(
+            colors =
+                listOf(
+                    Color(0xFFE6E6E2), // Light gray at top
+                    Color(0xFF9E9E9E), // Darker gray at bottom
+                ),
         )
-    )
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(brush = gradientBackground)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(brush = gradientBackground),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) { // Add less weight at the top to move content up
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                // Add less weight at the top to move content up
                 Spacer(modifier = Modifier.weight(0.3f))
 
                 // Red warning triangle icon
@@ -79,7 +85,7 @@ fun ServiceNotAvailableScreen(
                     contentDescription = "Service Unavailable",
                     modifier = Modifier.size(70.dp).align(Alignment.CenterHorizontally),
                     contentScale = ContentScale.Fit,
-                    colorFilter = ColorFilter.tint(Color(0xFFE84C3D)) // Red tint
+                    colorFilter = ColorFilter.tint(Color(0xFFE84C3D)), // Red tint
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -92,7 +98,7 @@ fun ServiceNotAvailableScreen(
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
                     color = Color.Black,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -103,20 +109,20 @@ fun ServiceNotAvailableScreen(
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
                     color = Color.Black,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(24.dp)) // Website link text - single row with colored link
                 Row(
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         "Meanwhile, you can ",
                         fontSize = 14.sp,
                         color = Color.DarkGray,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
 
                     Text(
@@ -125,11 +131,13 @@ fun ServiceNotAvailableScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFFE84C3D),
-                        modifier = Modifier.clickable { // Open the website in browser
-                            val intent =
-                                Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/"))
-                            navController.context.startActivity(intent)
-                        }
+                        modifier =
+                            Modifier.clickable {
+                                // Open the website in browser
+                                val intent =
+                                    Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/"))
+                                navController.context.startActivity(intent)
+                            },
                     )
                 }
 
@@ -139,14 +147,16 @@ fun ServiceNotAvailableScreen(
                 // Red rounded Go Back button
                 Button(
                     onClick = { navController.popBackStack() },
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .padding(bottom = 48.dp)
-                        .align(Alignment.CenterHorizontally),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.7f)
+                            .padding(bottom = 48.dp)
+                            .align(Alignment.CenterHorizontally),
                     shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE84C3D) // Red button color
-                    )
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE84C3D), // Red button color
+                        ),
                 ) {
                     Text(
                         text = "Go Back",
@@ -154,7 +164,7 @@ fun ServiceNotAvailableScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(vertical = 4.dp),
-                        color = Color.White
+                        color = Color.White,
                     )
                 }
             }
@@ -167,10 +177,11 @@ fun ServiceNotAvailableScreen(
 fun ServiceNotAvailableScreenPreview() {
     // Mock NavController for preview
     val navController = rememberNavController()
-    XOneTheme { // Using the app's theme for the preview
+    XOneTheme {
+        // Using the app's theme for the preview
         ServiceNotAvailableScreen(
             navController = navController,
-            serviceName = "My Career"
+            serviceName = "My Career",
         )
     }
 }

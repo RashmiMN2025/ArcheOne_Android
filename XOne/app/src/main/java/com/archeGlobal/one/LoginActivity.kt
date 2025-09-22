@@ -48,16 +48,19 @@ class LoginActivity : AppCompatActivity() {
         val sessionExpired = intent.getBooleanExtra("session_expired", false)
         val clearFields = intent.getBooleanExtra("clearFields", false)
 
-        val mpinController = com.archeGlobal.one.controller.MpinController(this)
+        val mpinController =
+            com.archeGlobal.one.controller
+                .MpinController(this)
         val hasMpin = mpinController.isMpinSet()
 
         // For session expiry, show quick login options if MPIN/biometric are available
-        val forceOriginalLoginFinal = if (sessionExpired) {
-            // For session expiry, never force original login - always allow quick auth methods
-            false
-        } else {
-            !hasMpin || forceOriginalLogin
-        }
+        val forceOriginalLoginFinal =
+            if (sessionExpired) {
+                // For session expiry, never force original login - always allow quick auth methods
+                false
+            } else {
+                !hasMpin || forceOriginalLogin
+            }
 
         // Handle back press in login screen - exit app instead of going back
         onBackPressedDispatcher.addCallback(
@@ -67,7 +70,7 @@ class LoginActivity : AppCompatActivity() {
                     // Exit the app when back is pressed at login
                     finish()
                 }
-            }
+            },
         )
 
         // If launched with intent to show update dialog, show it immediately
@@ -87,7 +90,7 @@ class LoginActivity : AppCompatActivity() {
                     navigator = navigator,
                     forceOriginalLogin = forceOriginalLoginFinal,
                     forceDifferentUserMode = forceDifferentUserMode,
-                    clearFields = clearFields
+                    clearFields = clearFields,
                 )
 
                 // Update Required Dialog
@@ -98,7 +101,7 @@ class LoginActivity : AppCompatActivity() {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
                             startActivity(intent)
                         },
-                        onDismiss = { showUpdateDialog = false }
+                        onDismiss = { showUpdateDialog = false },
                     )
                 }
             }
@@ -113,32 +116,34 @@ class LoginActivity : AppCompatActivity() {
 @Composable
 fun UpdateRequiredDialog(
     onUpdateClick: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false
-        )
+        properties =
+            DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+            ),
     ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = Color(0xFFF6F4EE),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // Download icon
                 Icon(
                     painter = painterResource(id = R.drawable.ic_download),
                     contentDescription = "Update Required",
                     tint = Color(0xFFDD3825),
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(48.dp),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -150,7 +155,7 @@ fun UpdateRequiredDialog(
                     fontWeight = FontWeight.Bold,
                     fontFamily = GraphikFontFamily,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -162,7 +167,7 @@ fun UpdateRequiredDialog(
                     fontFamily = GraphikFontFamily,
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
+                    lineHeight = 22.sp,
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -170,20 +175,22 @@ fun UpdateRequiredDialog(
                 // Update button
                 Button(
                     onClick = onUpdateClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFDD3825),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFDD3825),
+                            contentColor = Color.White,
+                        ),
+                    shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
                         text = "Update Now",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
-                        fontFamily = GraphikFontFamily
+                        fontFamily = GraphikFontFamily,
                     )
                 }
             }

@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Read(//c/Users/user/Downloads/**)",
+      "Bash(.gradlew assembleDebug --no-daemon --no-build-cache)",
+      "Read(//c/c/Users/user/Documents/GitHub/XOne---Android/XOne/**)"
     ],
     "deny": [],
     "ask": []

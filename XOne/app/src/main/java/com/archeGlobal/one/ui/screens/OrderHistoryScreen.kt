@@ -35,7 +35,7 @@ import java.util.Locale
 @Composable
 fun OrderHistoryScreen(
     model: OrderHistoryModel,
-    controller: OrderHistoryController
+    controller: OrderHistoryController,
 ) {
     // Handle back gesture navigation
     BackHandler {
@@ -43,31 +43,35 @@ fun OrderHistoryScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 // Header
                 OrderHistoryHeader(
                     onBackPressed = controller::onBackPressed,
-                    onRefresh = controller::refreshOrderHistory
+                    onRefresh = controller::refreshOrderHistory,
                 )
 
                 // Content
@@ -79,7 +83,7 @@ fun OrderHistoryScreen(
                         OrderHistoryErrorContent(
                             error = model.error,
                             onRetry = controller::refreshOrderHistory,
-                            onDismiss = controller::clearError
+                            onDismiss = controller::clearError,
                         )
                     }
                     model.orders.isEmpty() -> {
@@ -88,7 +92,7 @@ fun OrderHistoryScreen(
                     else -> {
                         OrderHistoryList(
                             orders = model.orders,
-                            onOrderClick = controller::onOrderClick
+                            onOrderClick = controller::onOrderClick,
                         )
                     }
                 }
@@ -106,13 +110,13 @@ fun OrderHistoryScreen(
 @Composable
 fun OrderHistoryHeader(
     onBackPressed: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
 ) {
     TopAppBar(
         title = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Order History",
@@ -121,7 +125,7 @@ fun OrderHistoryHeader(
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.offset(x = (-24).dp) // Center accounting for back button
+                    modifier = Modifier.offset(x = (-24).dp), // Center accounting for back button
                 )
             }
         },
@@ -130,32 +134,34 @@ fun OrderHistoryHeader(
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.Black
+                    tint = Color.Black,
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+            ),
     )
 }
 
 @Composable
 fun OrderHistoryList(
     orders: List<DeskCartOrderHistory>,
-    onOrderClick: (DeskCartOrderHistory) -> Unit
+    onOrderClick: (DeskCartOrderHistory) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
+        contentPadding = PaddingValues(bottom = 16.dp),
     ) {
         items(orders, key = { it.order_Id }) { order ->
             OrderHistoryCard(
                 order = order,
-                onClick = { onOrderClick(order) }
+                onClick = { onOrderClick(order) },
             )
         }
     }
@@ -164,26 +170,28 @@ fun OrderHistoryList(
 @Composable
 fun OrderHistoryCard(
     order: DeskCartOrderHistory,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF6F4EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
         ) {
             // First Row: Order ID and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Left side: Order ID
                 Text(
@@ -191,7 +199,7 @@ fun OrderHistoryCard(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp,
-                    color = Color.Black
+                    color = Color.Black,
                 )
 
                 // Right side: Status Badge
@@ -203,7 +211,7 @@ fun OrderHistoryCard(
             // Second Row: Order Placed date and Items count
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row {
                     Text(
@@ -211,14 +219,14 @@ fun OrderHistoryCard(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                     Text(
                         text = ": ${formatOrderDateHistory(order.Order_Placed_Time)}",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
                 }
 
@@ -228,14 +236,14 @@ fun OrderHistoryCard(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                     Text(
                         text = ": Qty: ${order.Total_Items_in_Order}",
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
                 }
             }
@@ -245,18 +253,19 @@ fun OrderHistoryCard(
 
 @Composable
 fun OrderHistoryStatusBadge(status: String) {
-    val (backgroundColor, textColor) = when (status.lowercase()) {
-        "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
-        "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000)) // Green
-        "rejected", "cancelled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000)) // Red
-        "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
-        else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
-    }
+    val (backgroundColor, textColor) =
+        when (status.lowercase()) {
+            "pending" -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500)) // Orange
+            "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000)) // Green
+            "rejected", "cancelled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000)) // Red
+            "closed" -> Pair(Color(0xFF808080).copy(alpha = 0.15f), Color(0xFF808080)) // Gray
+            else -> Pair(Color.Gray.copy(alpha = 0.15f), Color.Gray) // Fallback
+        }
 
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Text(
             text = "Status: $status",
@@ -264,7 +273,7 @@ fun OrderHistoryStatusBadge(status: String) {
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp) // Smaller padding for reduced size
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), // Smaller padding for reduced size
         )
     }
 }
@@ -273,11 +282,11 @@ fun OrderHistoryStatusBadge(status: String) {
 fun EmptyOrderHistoryContent() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = "No Order History",
@@ -285,7 +294,7 @@ fun EmptyOrderHistoryContent() {
                 fontWeight = FontWeight.Medium,
                 fontSize = 18.sp,
                 color = Color.Black,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -296,7 +305,7 @@ fun EmptyOrderHistoryContent() {
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
                 color = Color.Gray,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -306,15 +315,15 @@ fun EmptyOrderHistoryContent() {
 fun OrderHistoryErrorContent(
     error: String,
     onRetry: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = "Error",
@@ -322,7 +331,7 @@ fun OrderHistoryErrorContent(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = PrimaryRed,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -334,32 +343,33 @@ fun OrderHistoryErrorContent(
                 fontSize = 14.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 32.dp)
+                modifier = Modifier.padding(horizontal = 32.dp),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 TextButton(onClick = onDismiss) {
                     Text(
                         text = "Dismiss",
                         fontFamily = GraphikFontFamily,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
                 }
 
                 Button(
                     onClick = onRetry,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryRed
-                    )
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = PrimaryRed,
+                        ),
                 ) {
                     Text(
                         text = "Retry",
                         fontFamily = GraphikFontFamily,
-                        color = Color.White
+                        color = Color.White,
                     )
                 }
             }

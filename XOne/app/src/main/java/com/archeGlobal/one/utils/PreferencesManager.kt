@@ -19,11 +19,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class PreferencesManager(context: Context) {
-    private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
-        "XOne_preferences",
-        Context.MODE_PRIVATE
-    )
+class PreferencesManager(
+    context: Context,
+) {
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences(
+            "XOne_preferences",
+            Context.MODE_PRIVATE,
+        )
     private val gson = Gson()
 
     fun saveFavorites(favorites: Map<String, List<HomeItem>>) {
@@ -49,19 +52,13 @@ class PreferencesManager(context: Context) {
     }
 
     // Get the saved authentication token
-    fun getAuthToken(): String? {
-        return sharedPreferences.getString(KEY_AUTH_TOKEN, null)
-    }
+    fun getAuthToken(): String? = sharedPreferences.getString(KEY_AUTH_TOKEN, null)
 
     // Check if this is the first launch of the app
-    fun isFirstLaunch(): Boolean {
-        return sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
-    }
+    fun isFirstLaunch(): Boolean = sharedPreferences.getBoolean(KEY_IS_FIRST_LAUNCH, true)
 
     // Check if user is logged in
-    fun isLoggedIn(): Boolean {
-        return getAuthToken() != null
-    }
+    fun isLoggedIn(): Boolean = getAuthToken() != null
 
     // Clear auth token on logout
     fun clearAuthToken() {
@@ -217,22 +214,24 @@ class PreferencesManager(context: Context) {
 
     // Clear all user-related data on logout
     fun clearAllUserData() {
-        sharedPreferences.edit().apply {
-            remove(KEY_AUTH_TOKEN)
-            remove(KEY_USER_DATA)
-            remove(KEY_OFFICES_DATA)
-            remove(KEY_POLICIES_DATA)
-            remove(KEY_SOS_BLOGS_DATA)
-            remove(KEY_ASSET_DETAILS)
-            remove(KEY_COMMUNIQUE_DATA)
-            remove(KEY_FAQ_DATA)
-            remove(KEY_EVENT_DATA)
-            remove(KEY_APP_LOCKED) // Clear app lock state when session expires
-            remove(KEY_BIOMETRIC_ENABLED) // Clear biometric settings
-            remove(KEY_BIOMETRIC_EMAIL)
-            remove(KEY_BIOMETRIC_MOBILE)
-            remove(KEY_BIOMETRIC_EMPLOYEE_ID)
-        }.apply()
+        sharedPreferences
+            .edit()
+            .apply {
+                remove(KEY_AUTH_TOKEN)
+                remove(KEY_USER_DATA)
+                remove(KEY_OFFICES_DATA)
+                remove(KEY_POLICIES_DATA)
+                remove(KEY_SOS_BLOGS_DATA)
+                remove(KEY_ASSET_DETAILS)
+                remove(KEY_COMMUNIQUE_DATA)
+                remove(KEY_FAQ_DATA)
+                remove(KEY_EVENT_DATA)
+                remove(KEY_APP_LOCKED) // Clear app lock state when session expires
+                remove(KEY_BIOMETRIC_ENABLED) // Clear biometric settings
+                remove(KEY_BIOMETRIC_EMAIL)
+                remove(KEY_BIOMETRIC_MOBILE)
+                remove(KEY_BIOMETRIC_EMPLOYEE_ID)
+            }.apply()
 
         // Update the locked state flow
         _lockedState.value = false
@@ -240,31 +239,33 @@ class PreferencesManager(context: Context) {
 
     // Clear only session data but preserve MPIN and biometric data for re-authentication
     fun clearSessionData() {
-        sharedPreferences.edit().apply {
-            remove(KEY_AUTH_TOKEN)
-            remove(KEY_USER_DATA)
-            remove(KEY_OFFICES_DATA)
-            remove(KEY_POLICIES_DATA)
-            remove(KEY_SOS_BLOGS_DATA)
-            remove(KEY_ASSET_DETAILS)
-            remove(KEY_COMMUNIQUE_DATA)
-            remove(KEY_FAQ_DATA)
-            remove(KEY_EVENT_DATA)
-            remove(KEY_APP_LOCKED) // Clear app lock state when session expires
-            remove(KEY_SEEN_SERVICES) // Clear seen services so New stickers can appear again
-            remove(KEY_INSTALL_TYPE) // Clear install type so it can be determined fresh on next login
-            // Keep MPIN and biometric data for re-authentication
-            // remove(KEY_BIOMETRIC_ENABLED) - Keep this
-            // remove(KEY_BIOMETRIC_EMAIL) - Keep this
-            // remove(KEY_BIOMETRIC_MOBILE) - Keep this
-            // remove(KEY_BIOMETRIC_EMPLOYEE_ID) - Keep this
-            // remove(KEY_BIOMETRIC_TOKEN) - Keep this temporarily for re-auth
-            // Keep last user data for re-authentication
-            // remove("last_user_email") - Keep this
-            // remove("last_user_mobile") - Keep this
-            // remove("last_user_employee_id") - Keep this
-            // remove("last_user_name") - Keep this
-        }.apply()
+        sharedPreferences
+            .edit()
+            .apply {
+                remove(KEY_AUTH_TOKEN)
+                remove(KEY_USER_DATA)
+                remove(KEY_OFFICES_DATA)
+                remove(KEY_POLICIES_DATA)
+                remove(KEY_SOS_BLOGS_DATA)
+                remove(KEY_ASSET_DETAILS)
+                remove(KEY_COMMUNIQUE_DATA)
+                remove(KEY_FAQ_DATA)
+                remove(KEY_EVENT_DATA)
+                remove(KEY_APP_LOCKED) // Clear app lock state when session expires
+                remove(KEY_SEEN_SERVICES) // Clear seen services so New stickers can appear again
+                remove(KEY_INSTALL_TYPE) // Clear install type so it can be determined fresh on next login
+                // Keep MPIN and biometric data for re-authentication
+                // remove(KEY_BIOMETRIC_ENABLED) - Keep this
+                // remove(KEY_BIOMETRIC_EMAIL) - Keep this
+                // remove(KEY_BIOMETRIC_MOBILE) - Keep this
+                // remove(KEY_BIOMETRIC_EMPLOYEE_ID) - Keep this
+                // remove(KEY_BIOMETRIC_TOKEN) - Keep this temporarily for re-auth
+                // Keep last user data for re-authentication
+                // remove("last_user_email") - Keep this
+                // remove("last_user_mobile") - Keep this
+                // remove("last_user_employee_id") - Keep this
+                // remove("last_user_name") - Keep this
+            }.apply()
 
         // Update the locked state flow
         _lockedState.value = false
@@ -275,9 +276,7 @@ class PreferencesManager(context: Context) {
     val lockedState: StateFlow<Boolean> = _lockedState.asStateFlow()
 
     // Check if app is locked
-    fun getAppLockState(): Boolean {
-        return sharedPreferences.getBoolean(KEY_APP_LOCKED, false)
-    }
+    fun getAppLockState(): Boolean = sharedPreferences.getBoolean(KEY_APP_LOCKED, false)
 
     // Set app locked state
     fun setAppLockState(locked: Boolean) {
@@ -287,17 +286,13 @@ class PreferencesManager(context: Context) {
     }
 
     // App version and service tracking methods
-    fun getAppVersion(): String {
-        return sharedPreferences.getString(KEY_APP_VERSION, "") ?: ""
-    }
+    fun getAppVersion(): String = sharedPreferences.getString(KEY_APP_VERSION, "") ?: ""
 
     fun setAppVersion(version: String) {
         sharedPreferences.edit().putString(KEY_APP_VERSION, version).apply()
     }
 
-    fun getSeenServices(): Set<String> {
-        return sharedPreferences.getStringSet(KEY_SEEN_SERVICES, emptySet()) ?: emptySet()
-    }
+    fun getSeenServices(): Set<String> = sharedPreferences.getStringSet(KEY_SEEN_SERVICES, emptySet()) ?: emptySet()
 
     fun addSeenService(serviceName: String) {
         val seenServices = getSeenServices().toMutableSet()
@@ -311,9 +306,7 @@ class PreferencesManager(context: Context) {
         sharedPreferences.edit().putStringSet(KEY_SEEN_SERVICES, seenServices).apply()
     }
 
-    fun isServiceNew(serviceName: String): Boolean {
-        return !getSeenServices().contains(serviceName)
-    }
+    fun isServiceNew(serviceName: String): Boolean = !getSeenServices().contains(serviceName)
 
     fun clearSeenServices() {
         sharedPreferences.edit().remove(KEY_SEEN_SERVICES).apply()
@@ -323,9 +316,7 @@ class PreferencesManager(context: Context) {
         sharedPreferences.edit().putString(KEY_INSTALL_TYPE, type).apply()
     }
 
-    fun getInstallType(): String {
-        return sharedPreferences.getString(KEY_INSTALL_TYPE, "NEW") ?: "NEW"
-    }
+    fun getInstallType(): String = sharedPreferences.getString(KEY_INSTALL_TYPE, "NEW") ?: "NEW"
 
     fun clearInstallType() {
         sharedPreferences.edit().remove(KEY_INSTALL_TYPE).apply()
@@ -358,21 +349,29 @@ class PreferencesManager(context: Context) {
         private const val KEY_SMART_COLLATERAL_DATA = "smart_collateral_data"
     }
 
-    fun setBoolean(key: String, value: Boolean) {
+    fun setBoolean(
+        key: String,
+        value: Boolean,
+    ) {
         sharedPreferences.edit().putBoolean(key, value).apply()
     }
 
-    fun getBoolean(key: String, default: Boolean): Boolean {
-        return sharedPreferences.getBoolean(key, default)
-    }
+    fun getBoolean(
+        key: String,
+        default: Boolean,
+    ): Boolean = sharedPreferences.getBoolean(key, default)
 
-    fun setString(key: String, value: String) {
+    fun setString(
+        key: String,
+        value: String,
+    ) {
         sharedPreferences.edit().putString(key, value).apply()
     }
 
-    fun getString(key: String, default: String): String? {
-        return sharedPreferences.getString(key, default)
-    }
+    fun getString(
+        key: String,
+        default: String,
+    ): String? = sharedPreferences.getString(key, default)
 
     // Mark that the app has been launched before
     fun setFirstLaunchComplete() {
@@ -385,26 +384,29 @@ class PreferencesManager(context: Context) {
     }
 
     // Get the profile update timestamp
-    fun getProfileUpdateTimestamp(): Long {
-        return sharedPreferences.getLong(KEY_PROFILE_UPDATE_TIMESTAMP, 0)
-    }
+    fun getProfileUpdateTimestamp(): Long = sharedPreferences.getLong(KEY_PROFILE_UPDATE_TIMESTAMP, 0)
 
     fun setBiometricEnabled(enabled: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).apply()
     }
 
-    fun isBiometricEnabled(): Boolean {
-        return sharedPreferences.getBoolean(KEY_BIOMETRIC_ENABLED, false)
-    }
+    fun isBiometricEnabled(): Boolean = sharedPreferences.getBoolean(KEY_BIOMETRIC_ENABLED, false)
 
-    fun saveBiometricCredentials(email: String, mobile: String, employeeId: String, token: String) {
-        sharedPreferences.edit().apply {
-            putString(KEY_BIOMETRIC_EMAIL, email)
-            putString(KEY_BIOMETRIC_MOBILE, mobile)
-            putString(KEY_BIOMETRIC_EMPLOYEE_ID, employeeId)
-            putString(KEY_BIOMETRIC_TOKEN, token)
-            putBoolean(KEY_BIOMETRIC_ENABLED, true)
-        }.apply()
+    fun saveBiometricCredentials(
+        email: String,
+        mobile: String,
+        employeeId: String,
+        token: String,
+    ) {
+        sharedPreferences
+            .edit()
+            .apply {
+                putString(KEY_BIOMETRIC_EMAIL, email)
+                putString(KEY_BIOMETRIC_MOBILE, mobile)
+                putString(KEY_BIOMETRIC_EMPLOYEE_ID, employeeId)
+                putString(KEY_BIOMETRIC_TOKEN, token)
+                putBoolean(KEY_BIOMETRIC_ENABLED, true)
+            }.apply()
     }
 
     fun getBiometricCredentialsWithToken(): Quad<String, String, String, String>? {
@@ -428,26 +430,30 @@ class PreferencesManager(context: Context) {
     }
 
     fun clearBiometricData() {
-        sharedPreferences.edit().apply {
-            remove(KEY_BIOMETRIC_ENABLED)
-            remove(KEY_BIOMETRIC_EMAIL)
-            remove(KEY_BIOMETRIC_MOBILE)
-            remove(KEY_BIOMETRIC_EMPLOYEE_ID)
-            remove(KEY_BIOMETRIC_TOKEN)
-        }.apply()
+        sharedPreferences
+            .edit()
+            .apply {
+                remove(KEY_BIOMETRIC_ENABLED)
+                remove(KEY_BIOMETRIC_EMAIL)
+                remove(KEY_BIOMETRIC_MOBILE)
+                remove(KEY_BIOMETRIC_EMPLOYEE_ID)
+                remove(KEY_BIOMETRIC_TOKEN)
+            }.apply()
     }
 
-    fun saveLong(key: String, value: Long) {
+    fun saveLong(
+        key: String,
+        value: Long,
+    ) {
         sharedPreferences.edit().putLong(key, value).apply()
     }
 
-    fun getLong(key: String): Long? {
-        return if (sharedPreferences.contains(key)) {
+    fun getLong(key: String): Long? =
+        if (sharedPreferences.contains(key)) {
             sharedPreferences.getLong(key, 0)
         } else {
             null
         }
-    }
 
     fun saveGreetingsList(greetings: Map<String, List<String>>?) {
         if (greetings == null) {
@@ -520,9 +526,7 @@ class PreferencesManager(context: Context) {
     }
 
     // Get tasks data
-    fun getTasks(): String {
-        return sharedPreferences.getString(KEY_TASKS_DATA, "") ?: ""
-    }
+    fun getTasks(): String = sharedPreferences.getString(KEY_TASKS_DATA, "") ?: ""
 
     // Save event data
     fun saveEventData(eventDataJson: String?) {

@@ -14,7 +14,6 @@ import com.archeGlobal.one.ui.theme.XOneTheme
 import com.archeGlobal.one.utils.UserDataManager
 
 class TrackTicketsActivity : AppCompatActivity() {
-
     private lateinit var helpDeskController: HelpDeskController
     private lateinit var userDataManager: UserDataManager
     private lateinit var userDataReadyCallback: () -> Unit
@@ -57,10 +56,10 @@ class TrackTicketsActivity : AppCompatActivity() {
             XOneTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     TicketTrackingScreen(
-                        controller = helpDeskController
+                        controller = helpDeskController,
                     )
                 }
             }
@@ -81,7 +80,7 @@ class TrackTicketsActivity : AppCompatActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left,
-            R.anim.slide_out_right
+            R.anim.slide_out_right,
         )
     }
 }

@@ -29,7 +29,7 @@ class NoDocumentFoundActivity : ComponentActivity() {
             XOneTheme {
                 NoDocumentFoundScreen(
                     documentName = documentName,
-                    onBackPressed = { finish() }
+                    onBackPressed = { finish() },
                 )
             }
         }
@@ -39,52 +39,56 @@ class NoDocumentFoundActivity : ComponentActivity() {
 @Composable
 fun NoDocumentFoundScreen(
     documentName: String,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFE0DCD1), // Light Beige
-                        Color(0xFFC8C8CA), // Light Gray
-                        Color(0xFF474749) // Dark Gray
-                    )
-                )
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color(0xFFE0DCD1), // Light Beige
+                                Color(0xFFC8C8CA), // Light Gray
+                                Color(0xFF474749), // Dark Gray
+                            ),
+                    ),
+                ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
         ) {
             // Header with back button and title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 35.dp, bottom = 10.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 35.dp, bottom = 10.dp),
             ) {
                 IconButton(onClick = onBackPressed) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
-                        tint = Color.Black
+                        tint = Color.Black,
                     )
                 }
 
                 // Centered Title
                 Box(
                     modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = documentName,
                         color = Color.Black,
                         fontSize = 20.sp,
                         fontFamily = GraphikFontFamily,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
                 // Empty box for symmetry
@@ -93,9 +97,10 @@ fun NoDocumentFoundScreen(
 
             // Center the message
             Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .fillMaxSize(),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "No document found for $documentName.\nPlease upload the document.",
@@ -104,7 +109,7 @@ fun NoDocumentFoundScreen(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
-                    lineHeight = 24.sp
+                    lineHeight = 24.sp,
                 )
             }
         }

@@ -39,7 +39,7 @@ class OnboardingActivity : ComponentActivity() {
                         // Navigate to login screen
                         startActivity(Intent(this, LoginActivity::class.java))
                         finish()
-                    }
+                    },
                 )
             }
         }

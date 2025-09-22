@@ -6,9 +6,8 @@ import androidx.lifecycle.LifecycleOwner
 import com.archeGlobal.one.utils.UserDataManager
 
 class AppLifecycleObserver(
-    private val app: Application
+    private val app: Application,
 ) : DefaultLifecycleObserver {
-
     private var lastBackgroundTime: Long = 0
     private val BACKGROUND_THRESHOLD = 1000 * 30 // 30 seconds
 
@@ -42,7 +41,5 @@ class AppLifecycleObserver(
     }
 
     // Check if authentication session is active
-    fun isAuthenticationSessionActive(): Boolean {
-        return authenticationSessionActive
-    }
+    fun isAuthenticationSessionActive(): Boolean = authenticationSessionActive
 }

@@ -5,7 +5,9 @@ import android.content.Intent
 import android.util.Log
 import com.archeGlobal.one.WebViewActivity
 
-class WebLinksController(private val context: Context) {
+class WebLinksController(
+    private val context: Context,
+) {
     companion object {
         private const val TAG = "WebLinksController"
     }
@@ -30,13 +32,17 @@ class WebLinksController(private val context: Context) {
         openWebView(url, "ZingHR")
     }
 
-    private fun openWebView(url: String, title: String) {
+    private fun openWebView(
+        url: String,
+        title: String,
+    ) {
         try {
-            val intent = Intent(context, WebViewActivity::class.java).apply {
-                putExtra("fileUrl", url)
-                putExtra("title", title)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            val intent =
+                Intent(context, WebViewActivity::class.java).apply {
+                    putExtra("fileUrl", url)
+                    putExtra("title", title)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
             context.startActivity(intent)
             Log.d(TAG, "Opening $title portal in WebView: $url")
         } catch (e: Exception) {

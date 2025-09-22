@@ -11,7 +11,7 @@ data class HomeModel(
     val showSearchAndFavorites: Boolean = true,
     val categories: Map<String, List<HomeItem>> = emptyMap(),
     val favorites: Map<String, List<HomeItem>> = emptyMap(),
-    val footerNavigation: FooterNavigationModel = FooterNavigationModel()
+    val footerNavigation: FooterNavigationModel = FooterNavigationModel(),
 )
 
 data class HomeItem(
@@ -20,5 +20,5 @@ data class HomeItem(
     val isFavorite: Boolean = false,
     val category: String = "",
     val isNew: Boolean = false,
-    val stickerText: String = "New"
+    val stickerText: String = "New",
 )

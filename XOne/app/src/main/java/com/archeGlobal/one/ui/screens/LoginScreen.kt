@@ -86,24 +86,25 @@ fun ResponsiveLoginScreen(
     navigator: Navigator,
     forceOriginalLogin: Boolean = false,
     forceDifferentUserMode: Boolean = false,
-    clearFields: Boolean = false
+    clearFields: Boolean = false,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
-    val contentPadding = when (windowSizeClass?.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 16.dp // Phone
-        WindowWidthSizeClass.Medium -> 48.dp // Large phone/small tablet
-        WindowWidthSizeClass.Expanded -> 120.dp // Tablet
-        else -> 16.dp
-    }
+    val contentPadding =
+        when (windowSizeClass?.widthSizeClass) {
+            WindowWidthSizeClass.Compact -> 16.dp // Phone
+            WindowWidthSizeClass.Medium -> 48.dp // Large phone/small tablet
+            WindowWidthSizeClass.Expanded -> 120.dp // Tablet
+            else -> 16.dp
+        }
     LoginScreen(
         controller = controller,
         navigator = navigator,
         forceOriginalLogin = forceOriginalLogin,
         forceDifferentUserMode = forceDifferentUserMode,
         contentPadding = contentPadding,
-        clearFields = clearFields
+        clearFields = clearFields,
     )
 }
 
@@ -115,7 +116,7 @@ fun LoginScreen(
     forceOriginalLogin: Boolean = false,
     forceDifferentUserMode: Boolean = false,
     contentPadding: Dp = 16.dp, // <-- Add this parameter
-    clearFields: Boolean = false
+    clearFields: Boolean = false,
 ) {
     val context = LocalContext.current
     val userDataManager = UserDataManager.getInstance(context)
@@ -141,11 +142,13 @@ fun LoginScreen(
     val sessionExpired = activity?.intent?.getBooleanExtra("session_expired", false) ?: false
 
     // Get last user name from preserved data (works for both logout and session expiry)
-    val lastEmployeeName = if (sessionExpired) {
-        preferencesManager.getString("session_expired_name", "") ?: preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
-    } else {
-        preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
-    }
+    val lastEmployeeName =
+        if (sessionExpired) {
+            preferencesManager.getString("session_expired_name", "") ?: preferencesManager.getString("last_user_name", "")
+                ?: userDataManager.getLastUsername()
+        } else {
+            preferencesManager.getString("last_user_name", "") ?: userDataManager.getLastUsername()
+        }
 
     // For session expiry, treat as returning user if we have preserved data
     val shouldTreatAsReturningUser = sessionExpired && !lastEmployeeName.isNullOrEmpty()
@@ -162,20 +165,35 @@ fun LoginScreen(
 
     // Debug biometric state
     LaunchedEffect(Unit) {
-        Log.d("LoginScreen", "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton")
+        Log.d(
+            "LoginScreen",
+            "Biometric State - canUseBiometric: $canUseBiometric, isBiometricEnabled: $isBiometricEnabled, showBiometricButton: $showBiometricButton",
+        )
     }
 
     // Update firstTimeLogin when the screen is created, considering session expiry
     LaunchedEffect(Unit) {
         val calculatedFirstTime = forceOriginalLogin || (isFirstTimeLogin(context) && !shouldTreatAsReturningUser)
         firstTimeLogin = calculatedFirstTime
-        Log.d("LoginScreen", "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(context)}, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+        Log.d(
+            "LoginScreen",
+            "Screen Created: firstTimeLogin=$firstTimeLogin, forceOriginalLogin=$forceOriginalLogin, isFirstTimeLogin=${isFirstTimeLogin(
+                context,
+            )}, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser",
+        )
     }
 
     var showFingerprint by remember { mutableStateOf(false) }
 
     // Update showFingerprint when relevant conditions change
-    LaunchedEffect(firstTimeLogin, showBiometricButton, forceDifferentUserMode, sessionExpired, shouldTreatAsReturningUser, isBiometricEnabled) {
+    LaunchedEffect(
+        firstTimeLogin,
+        showBiometricButton,
+        forceDifferentUserMode,
+        sessionExpired,
+        shouldTreatAsReturningUser,
+        isBiometricEnabled,
+    ) {
         // Show fingerprint for returning users (including session expired) if biometric is available
         showFingerprint = showBiometricButton && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)
         // Reset isDifferentUserMode after normal logout (when it's not forced)
@@ -184,8 +202,14 @@ fun LoginScreen(
         }
 
         // Debug logging
-        Log.d("LoginScreen", "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
-        Log.d("LoginScreen", "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}")
+        Log.d(
+            "LoginScreen",
+            "Biometric Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser",
+        )
+        Log.d(
+            "LoginScreen",
+            "Biometric Debug: canUseBiometric=${biometricHelper.canUseBiometric()}, isBiometricEnabled=${biometricHelper.isBiometricEnabled()}",
+        )
         Log.d("LoginScreen", "Biometric Debug: showFingerprint=$showFingerprint")
     }
 
@@ -214,40 +238,44 @@ fun LoginScreen(
     val userData = userDataManager.getUserData()
 
     // Always try to get preserved user data (works for both logout and session expiry)
-    val lastUserEmail = if (sessionExpired) {
-        preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "")
-    } else {
-        preferencesManager.getString("last_user_email", "")
-    }
-    val lastUserMobile = if (sessionExpired) {
-        preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "")
-    } else {
-        preferencesManager.getString("last_user_mobile", "")
-    }
-    val lastUserEmployeeId = if (sessionExpired) {
-        preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "")
-    } else {
-        preferencesManager.getString("last_user_employee_id", "")
-    }
+    val lastUserEmail =
+        if (sessionExpired) {
+            preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "")
+        } else {
+            preferencesManager.getString("last_user_email", "")
+        }
+    val lastUserMobile =
+        if (sessionExpired) {
+            preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "")
+        } else {
+            preferencesManager.getString("last_user_mobile", "")
+        }
+    val lastUserEmployeeId =
+        if (sessionExpired) {
+            preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "")
+        } else {
+            preferencesManager.getString("last_user_employee_id", "")
+        }
 
-    val preservedUserData = if (!lastUserEmail.isNullOrBlank() && !lastUserMobile.isNullOrBlank() && !lastUserEmployeeId.isNullOrBlank()) {
-        UserData(
-            name = lastEmployeeName ?: "",
-            email = lastUserEmail,
-            mobile = lastUserMobile,
-            employeeId = lastUserEmployeeId,
-            designation = "",
-            department = "",
-            location = "",
-            services = emptyList(),
-            profilePic = null,
-            sosContact = null,
-            userDetails = null,
-            greetings = emptyMap()
-        )
-    } else {
-        null
-    }
+    val preservedUserData =
+        if (!lastUserEmail.isNullOrBlank() && !lastUserMobile.isNullOrBlank() && !lastUserEmployeeId.isNullOrBlank()) {
+            UserData(
+                name = lastEmployeeName ?: "",
+                email = lastUserEmail,
+                mobile = lastUserMobile,
+                employeeId = lastUserEmployeeId,
+                designation = "",
+                department = "",
+                location = "",
+                services = emptyList(),
+                profilePic = null,
+                sosContact = null,
+                userDetails = null,
+                greetings = emptyMap(),
+            )
+        } else {
+            null
+        }
 
     val effectiveUserData = userData ?: preservedUserData
 
@@ -271,16 +299,18 @@ fun LoginScreen(
             Log.d("LoginScreen", "Attempting auto token refresh with preserved credentials")
 
             // Try to auto-refresh token using preserved credentials
-            val otpController = OtpVerificationController(
-                navigator = navigator,
-                context = context
-            )
+            val otpController =
+                OtpVerificationController(
+                    navigator = navigator,
+                    context = context,
+                )
 
             // Create a special controller that doesn't auto-navigate
-            val backgroundOtpController = OtpVerificationController(
-                navigator = navigator,
-                context = context
-            )
+            val backgroundOtpController =
+                OtpVerificationController(
+                    navigator = navigator,
+                    context = context,
+                )
 
             val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
             // Use backgroundRefresh flag to avoid auto-navigation
@@ -296,7 +326,7 @@ fun LoginScreen(
                 deviceId = deviceInfo.deviceId,
                 platform = deviceInfo.platform,
                 osVersion = deviceInfo.osVersion,
-                stayLoggedIn = stayLoggedIn
+                stayLoggedIn = stayLoggedIn,
             ) { message, isError ->
                 isAutoRefreshing = false
                 Log.d("LoginScreen", "Background token refresh result: isError=$isError, message=$message")
@@ -313,7 +343,10 @@ fun LoginScreen(
 
     // Re-evaluate the login method whenever firstTimeLogin or hasMpin changes
     LaunchedEffect(firstTimeLogin, hasMpin, isDifferentUserMode, showBiometricButton, effectiveUserData, sessionExpired) {
-        Log.d("LoginScreen", "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin")
+        Log.d(
+            "LoginScreen",
+            "Reevaluating login method: hasEffectiveUserData=${effectiveUserData != null}, hasMpin=$hasMpin, isLoggedIn=$isLoggedIn, sessionExpired=$sessionExpired, firstTimeLogin=$firstTimeLogin",
+        )
 
         // If we have preserved user data and user is not logged in (token expired/logout), prioritize MFA first
         if (effectiveUserData != null && !isLoggedIn) {
@@ -354,39 +387,42 @@ fun LoginScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            }
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige
-                            Color(0xFFC8C8CA), // Light Gray
-                            Color(0xFF474749) // Dark Gray
-                        )
-                    )
-                )
-                .padding(bottom = 32.dp, start = contentPadding, end = contentPadding),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .background(
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    Color(0xFFE0DCD1), // Light Beige
+                                    Color(0xFFC8C8CA), // Light Gray
+                                    Color(0xFF474749), // Dark Gray
+                                ),
+                        ),
+                    ).padding(bottom = 32.dp, start = contentPadding, end = contentPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 16.dp),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = 16.dp),
                 verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(50.dp))
 
@@ -404,10 +440,11 @@ fun LoginScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        textAlign = TextAlign.Center
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                        textAlign = TextAlign.Center,
                     )
                 }
 
@@ -419,7 +456,7 @@ fun LoginScreen(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -427,10 +464,11 @@ fun LoginScreen(
                 // ...inside your Column after the "Log in with" Text...
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.97f)
-                        .height(52.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.97f)
+                            .height(52.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     // For new users (firstTimeLogin or isDifferentUserMode): OTP first, then MFA
                     // For returning users: MFA first, then MPIN, then Fingerprint
@@ -439,17 +477,22 @@ fun LoginScreen(
                         // OTP button - first for new users
                         if (showOtpButton) {
                             Button(
-                                onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
+                                onClick = {
+                                    selectedLoginMethod = "OTP"
+                                    showOtpFields = true
+                                },
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
                                 shape = MaterialTheme.shapes.medium,
                                 contentPadding = PaddingValues(0.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                                    contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
-                                ),
-                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                        contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black,
+                                    ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825)),
                             ) {
                                 Text(
                                     "OTP",
@@ -457,7 +500,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     maxLines = 1,
-                                    softWrap = false
+                                    softWrap = false,
                                 )
                             }
                         }
@@ -465,16 +508,18 @@ fun LoginScreen(
                         // MFA button - second for new users
                         Button(
                             onClick = { selectedLoginMethod = "MFA" },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
                             shape = MaterialTheme.shapes.medium,
                             contentPadding = PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                                contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
-                            ),
-                            border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                    contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black,
+                                ),
+                            border = BorderStroke(0.5.dp, Color(0xFFDD3825)),
                         ) {
                             Text(
                                 "MFA",
@@ -482,23 +527,25 @@ fun LoginScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
                                 maxLines = 1,
-                                softWrap = false
+                                softWrap = false,
                             )
                         }
                     } else {
                         // For returning users: MFA first
                         Button(
                             onClick = { selectedLoginMethod = "MFA" },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
                             shape = MaterialTheme.shapes.medium,
                             contentPadding = PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                                contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black
-                            ),
-                            border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedLoginMethod == "MFA") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                    contentColor = if (selectedLoginMethod == "MFA") Color(0xFFDD3825) else Color.Black,
+                                ),
+                            border = BorderStroke(0.5.dp, Color(0xFFDD3825)),
                         ) {
                             Text(
                                 "MFA",
@@ -506,7 +553,7 @@ fun LoginScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Normal,
                                 maxLines = 1,
-                                softWrap = false
+                                softWrap = false,
                             )
                         }
 
@@ -514,16 +561,18 @@ fun LoginScreen(
                         if (!isDifferentUserMode && hasMpin && (!firstTimeLogin || sessionExpired || shouldTreatAsReturningUser)) {
                             Button(
                                 onClick = { selectedLoginMethod = "MPIN" },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
                                 shape = MaterialTheme.shapes.medium,
                                 contentPadding = PaddingValues(0.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
-                                    contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black
-                                ),
-                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedLoginMethod == "MPIN") Color(0xFFE0B4AA) else Color.White,
+                                        contentColor = if (selectedLoginMethod == "MPIN") Color(0xFFDD3825) else Color.Black,
+                                    ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825)),
                             ) {
                                 Text(
                                     "MPIN",
@@ -531,7 +580,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     maxLines = 1,
-                                    softWrap = false
+                                    softWrap = false,
                                 )
                             }
                         }
@@ -539,17 +588,22 @@ fun LoginScreen(
                         // Show OTP button for returning users if needed
                         if (showOtpButton) {
                             Button(
-                                onClick = { selectedLoginMethod = "OTP"; showOtpFields = true },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
+                                onClick = {
+                                    selectedLoginMethod = "OTP"
+                                    showOtpFields = true
+                                },
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
                                 shape = MaterialTheme.shapes.medium,
                                 contentPadding = PaddingValues(0.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
-                                    contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black
-                                ),
-                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedLoginMethod == "OTP") Color(0xFFE0B4AA) else Color.White, // Light shade when selected
+                                        contentColor = if (selectedLoginMethod == "OTP") Color(0xFFDD3825) else Color.Black,
+                                    ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825)),
                             ) {
                                 Text(
                                     "OTP",
@@ -557,29 +611,37 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     maxLines = 1,
-                                    softWrap = false
+                                    softWrap = false,
                                 )
                             }
                         }
 
                         // Debug logging for fingerprint button condition
-                        Log.d("LoginScreen", "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser")
+                        Log.d(
+                            "LoginScreen",
+                            "UI Debug: showBiometricButton=$showBiometricButton, firstTimeLogin=$firstTimeLogin, isDifferentUserMode=$isDifferentUserMode, sessionExpired=$sessionExpired, shouldTreatAsReturningUser=$shouldTreatAsReturningUser",
+                        )
                         Log.d("LoginScreen", "Fingerprint condition check: showFingerprint=$showFingerprint")
 
                         // Show fingerprint button for returning users (including session expired) when biometric is available - third for returning users
                         if (showFingerprint && !isDifferentUserMode) {
                             Button(
-                                onClick = { selectedLoginMethod = "Fingerprint"; showOtpFields = false },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
+                                onClick = {
+                                    selectedLoginMethod = "Fingerprint"
+                                    showOtpFields = false
+                                },
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight(),
                                 shape = MaterialTheme.shapes.medium,
                                 contentPadding = PaddingValues(0.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
-                                    contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black
-                                ),
-                                border = BorderStroke(0.5.dp, Color(0xFFDD3825))
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFE0B4AA) else Color.White,
+                                        contentColor = if (selectedLoginMethod == "Fingerprint") Color(0xFFDD3825) else Color.Black,
+                                    ),
+                                border = BorderStroke(0.5.dp, Color(0xFFDD3825)),
                             ) {
                                 Text(
                                     "Fingerprint",
@@ -587,7 +649,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     maxLines = 1,
-                                    softWrap = false
+                                    softWrap = false,
                                 )
                             }
                         }
@@ -636,25 +698,27 @@ fun LoginScreen(
                                 }
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .height(62.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825)
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .height(62.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFDD3825),
+                            ),
                         shape = MaterialTheme.shapes.medium,
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.login), // <-- Your lock icon
                                 contentDescription = "OTP",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -662,7 +726,7 @@ fun LoginScreen(
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
@@ -674,26 +738,29 @@ fun LoginScreen(
                         value = email,
                         onValueChange = { email = it },
                         placeholder = { Text("Email ID") },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .padding(bottom = 16.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        textStyle = TextStyle(
-                            color = Color.Black,
-                            fontSize = 18.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .padding(bottom = 16.dp),
+                        colors =
+                            TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                        textStyle =
+                            TextStyle(
+                                color = Color.Black,
+                                fontSize = 18.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                            ),
                         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions.Default,
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium,
                     )
 
                     // Mobile Number Field
@@ -705,39 +772,46 @@ fun LoginScreen(
                             }
                         },
                         placeholder = { Text("Mobile No") },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .padding(bottom = 16.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        textStyle = TextStyle(
-                            color = Color.Black,
-                            fontSize = 18.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        ),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Number
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .padding(bottom = 16.dp),
+                        colors =
+                            TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                        textStyle =
+                            TextStyle(
+                                color = Color.Black,
+                                fontSize = 18.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                            ),
+                        keyboardOptions =
+                            KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next,
+                                keyboardType = KeyboardType.Number,
+                            ),
                         keyboardActions = KeyboardActions.Default,
                         shape = MaterialTheme.shapes.medium,
                         visualTransformation = if (mobileVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { mobileVisible = !mobileVisible }) {
                                 Icon(
-                                    painter = painterResource(id = if (mobileVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
+                                    painter =
+                                        painterResource(
+                                            id = if (mobileVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off,
+                                        ),
                                     contentDescription = if (mobileVisible) "Hide mobile number" else "Show mobile number",
-                                    tint = Color.Gray
+                                    tint = Color.Gray,
                                 )
                             }
-                        }
+                        },
                     )
 
                     // Employee ID Field
@@ -745,38 +819,42 @@ fun LoginScreen(
                         value = employeeId,
                         onValueChange = { employeeId = it },
                         placeholder = { Text("Employee ID") },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .padding(bottom = 32.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        textStyle = TextStyle(
-                            color = Color.Black,
-                            fontSize = 18.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .padding(bottom = 32.dp),
+                        colors =
+                            TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                        textStyle =
+                            TextStyle(
+                                color = Color.Black,
+                                fontSize = 18.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                            ),
                         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions.Default,
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium,
                     )
 
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable {
-                                if (stayLoggedIn) {
-                                    showDisableDialog = true
-                                } else {
-                                    stayLoggedIn = true
-                                }
-                            }
+                            modifier =
+                                Modifier.clickable {
+                                    if (stayLoggedIn) {
+                                        showDisableDialog = true
+                                    } else {
+                                        stayLoggedIn = true
+                                    }
+                                },
                         ) {
                             Checkbox(
                                 checked = stayLoggedIn,
@@ -787,19 +865,21 @@ fun LoginScreen(
                                         stayLoggedIn = true
                                     }
                                 },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFFDD3825),
-                                    uncheckedColor = Color.Gray,
-                                    checkmarkColor = Color.White
-                                ),
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(6.dp))
+                                colors =
+                                    CheckboxDefaults.colors(
+                                        checkedColor = Color(0xFFDD3825),
+                                        uncheckedColor = Color.Gray,
+                                        checkmarkColor = Color.White,
+                                    ),
+                                modifier =
+                                    Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(6.dp)),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
 
                             Column(
-                                modifier = Modifier.weight(1f) // Takes available space on the left
+                                modifier = Modifier.weight(1f), // Takes available space on the left
                             ) {
                                 Text(
                                     "Stay logged in for faster access",
@@ -807,7 +887,7 @@ fun LoginScreen(
                                     fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Text(
                                     "Your credentials will be securely stored",
@@ -815,7 +895,7 @@ fun LoginScreen(
                                     color = Color.Gray,
                                     fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal
+                                    fontWeight = FontWeight.Normal,
                                 )
                             }
                         }
@@ -827,26 +907,28 @@ fun LoginScreen(
                     if (showDisableDialog) {
                         Dialog(
                             onDismissRequest = { showDisableDialog = false },
-                            properties = DialogProperties(
-                                usePlatformDefaultWidth = false // removes built-in margins
-                            )
+                            properties =
+                                DialogProperties(
+                                    usePlatformDefaultWidth = false, // removes built-in margins
+                                ),
                         ) {
                             Surface(
                                 shape = RoundedCornerShape(18.dp),
                                 color = Color(0xFFF6F4EE),
-                                modifier = Modifier
-                                    .fillMaxWidth(0.94f) // 98% of actual screen width
-                                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth(0.94f) // 98% of actual screen width
+                                        .padding(horizontal = 8.dp, vertical = 12.dp),
                             ) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(20.dp)
+                                    modifier = Modifier.padding(20.dp),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.warning), // Use your document icon
                                         contentDescription = "Document",
                                         tint = Color(0xFFDD3825),
-                                        modifier = Modifier.size(48.dp)
+                                        modifier = Modifier.size(48.dp),
                                     )
                                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -856,7 +938,7 @@ fun LoginScreen(
                                         fontWeight = FontWeight.SemiBold,
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
                                     )
                                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -867,33 +949,36 @@ fun LoginScreen(
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
                                         textAlign = TextAlign.Center,
-                                        lineHeight = 16.sp
+                                        lineHeight = 16.sp,
                                     )
                                     Spacer(modifier = Modifier.height(18.dp))
 
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
                                         Button(
                                             onClick = { showDisableDialog = false },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(46.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0x9ADED9D9),
-                                                contentColor = Color.Black
-                                            ),
+                                            modifier =
+                                                Modifier
+                                                    .weight(1f)
+                                                    .height(46.dp),
+                                            colors =
+                                                ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0x9ADED9D9),
+                                                    contentColor = Color.Black,
+                                                ),
                                             border = BorderStroke(1.dp, Color.LightGray),
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = RoundedCornerShape(12.dp),
                                         ) {
                                             Text(
                                                 "Cancel",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Medium,
                                                 fontSize = 14.sp,
-                                                color = Color.Black
+                                                color = Color.Black,
                                             )
                                         }
                                         Button(
@@ -901,21 +986,23 @@ fun LoginScreen(
                                                 stayLoggedIn = false
                                                 showDisableDialog = false
                                             },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(46.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFDD3825),
-                                                contentColor = Color.White
-                                            ),
-                                            shape = RoundedCornerShape(12.dp)
+                                            modifier =
+                                                Modifier
+                                                    .weight(1f)
+                                                    .height(46.dp),
+                                            colors =
+                                                ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0xFFDD3825),
+                                                    contentColor = Color.White,
+                                                ),
+                                            shape = RoundedCornerShape(12.dp),
                                         ) {
                                             Text(
                                                 "Disable",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 14.sp,
-                                                color = Color.White
+                                                color = Color.White,
                                             )
                                         }
                                     }
@@ -962,26 +1049,28 @@ fun LoginScreen(
                                 }
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .height(65.dp)
-                            .padding(top = 6.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .height(65.dp)
+                                .padding(top = 6.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFDD3825), // Keep same color when disabled
+                            ),
                         shape = MaterialTheme.shapes.medium,
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.login), // <-- Your lock icon
                                 contentDescription = "OTP",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -989,7 +1078,7 @@ fun LoginScreen(
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
@@ -1001,13 +1090,14 @@ fun LoginScreen(
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable {
-                                if (stayLoggedIn) {
-                                    showDisableDialog = true
-                                } else {
-                                    stayLoggedIn = true
-                                }
-                            }
+                            modifier =
+                                Modifier.clickable {
+                                    if (stayLoggedIn) {
+                                        showDisableDialog = true
+                                    } else {
+                                        stayLoggedIn = true
+                                    }
+                                },
                         ) {
                             Checkbox(
                                 checked = stayLoggedIn,
@@ -1018,19 +1108,21 @@ fun LoginScreen(
                                         stayLoggedIn = true
                                     }
                                 },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFFDD3825),
-                                    uncheckedColor = Color.Gray,
-                                    checkmarkColor = Color.White
-                                ),
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(6.dp))
+                                colors =
+                                    CheckboxDefaults.colors(
+                                        checkedColor = Color(0xFFDD3825),
+                                        uncheckedColor = Color.Gray,
+                                        checkmarkColor = Color.White,
+                                    ),
+                                modifier =
+                                    Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(6.dp)),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
 
                             Column(
-                                modifier = Modifier.weight(1f) // Takes available space on the left
+                                modifier = Modifier.weight(1f), // Takes available space on the left
                             ) {
                                 Text(
                                     "Stay logged in for faster access",
@@ -1038,7 +1130,7 @@ fun LoginScreen(
                                     fontSize = 16.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                                 Text(
                                     "Your credentials will be securely stored",
@@ -1046,7 +1138,7 @@ fun LoginScreen(
                                     color = Color.Gray,
                                     fontSize = 12.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal
+                                    fontWeight = FontWeight.Normal,
                                 )
                             }
                         }
@@ -1057,26 +1149,28 @@ fun LoginScreen(
                     if (showDisableDialog) {
                         Dialog(
                             onDismissRequest = { showDisableDialog = false },
-                            properties = DialogProperties(
-                                usePlatformDefaultWidth = false // removes built-in margins
-                            )
+                            properties =
+                                DialogProperties(
+                                    usePlatformDefaultWidth = false, // removes built-in margins
+                                ),
                         ) {
                             Surface(
                                 shape = RoundedCornerShape(18.dp),
                                 color = Color(0xFFF6F4EE),
-                                modifier = Modifier
-                                    .fillMaxWidth(0.94f) // 98% of actual screen width
-                                    .padding(horizontal = 8.dp, vertical = 12.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth(0.94f) // 98% of actual screen width
+                                        .padding(horizontal = 8.dp, vertical = 12.dp),
                             ) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(20.dp)
+                                    modifier = Modifier.padding(20.dp),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.warning), // Use your document icon
                                         contentDescription = "Document",
                                         tint = Color(0xFFDD3825),
-                                        modifier = Modifier.size(48.dp)
+                                        modifier = Modifier.size(48.dp),
                                     )
                                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -1086,7 +1180,7 @@ fun LoginScreen(
                                         fontWeight = FontWeight.SemiBold,
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
                                     )
                                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -1097,33 +1191,36 @@ fun LoginScreen(
                                         fontFamily = GraphikFontFamily,
                                         color = Color.Black,
                                         textAlign = TextAlign.Center,
-                                        lineHeight = 16.sp
+                                        lineHeight = 16.sp,
                                     )
                                     Spacer(modifier = Modifier.height(18.dp))
 
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
                                         Button(
                                             onClick = { showDisableDialog = false },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(46.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0x9ADED9D9),
-                                                contentColor = Color.Black
-                                            ),
+                                            modifier =
+                                                Modifier
+                                                    .weight(1f)
+                                                    .height(46.dp),
+                                            colors =
+                                                ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0x9ADED9D9),
+                                                    contentColor = Color.Black,
+                                                ),
                                             border = BorderStroke(1.dp, Color.LightGray),
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = RoundedCornerShape(12.dp),
                                         ) {
                                             Text(
                                                 "Cancel",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.Medium,
                                                 fontSize = 14.sp,
-                                                color = Color.Black
+                                                color = Color.Black,
                                             )
                                         }
                                         Button(
@@ -1131,21 +1228,23 @@ fun LoginScreen(
                                                 stayLoggedIn = false
                                                 showDisableDialog = false
                                             },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(46.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFDD3825),
-                                                contentColor = Color.White
-                                            ),
-                                            shape = RoundedCornerShape(12.dp)
+                                            modifier =
+                                                Modifier
+                                                    .weight(1f)
+                                                    .height(46.dp),
+                                            colors =
+                                                ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0xFFDD3825),
+                                                    contentColor = Color.White,
+                                                ),
+                                            shape = RoundedCornerShape(12.dp),
                                         ) {
                                             Text(
                                                 "Disable",
                                                 fontFamily = GraphikFontFamily,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 14.sp,
-                                                color = Color.White
+                                                color = Color.White,
                                             )
                                         }
                                     }
@@ -1162,25 +1261,27 @@ fun LoginScreen(
                                 showMfaTermsDialog = true // Or handle terms
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .height(62.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .height(62.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFDD3825), // Keep same color when disabled
+                            ),
                         shape = MaterialTheme.shapes.medium,
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.mfa), // <-- Your MFA icon in drawable
                                 contentDescription = "MFA",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -1188,7 +1289,7 @@ fun LoginScreen(
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
@@ -1216,28 +1317,46 @@ fun LoginScreen(
                                             bioEmployeeId = credentials.third
                                         } else {
                                             // Enhanced fallback to session expired data if available
-                                            bioEmail = when {
-                                                effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
-                                                sessionExpired -> preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "") ?: ""
-                                                else -> preferencesManager.getString("last_user_email", "") ?: ""
-                                            }
+                                            bioEmail =
+                                                when {
+                                                    effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
+                                                    sessionExpired ->
+                                                        preferencesManager.getString("session_expired_email", "")
+                                                            ?: preferencesManager.getString("last_user_email", "")
+                                                            ?: ""
+                                                    else -> preferencesManager.getString("last_user_email", "") ?: ""
+                                                }
 
-                                            bioMobile = when {
-                                                effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
-                                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "") ?: ""
-                                                else -> preferencesManager.getString("last_user_mobile", "") ?: ""
-                                            }
+                                            bioMobile =
+                                                when {
+                                                    effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
+                                                    sessionExpired ->
+                                                        preferencesManager.getString("session_expired_mobile", "")
+                                                            ?: preferencesManager.getString("last_user_mobile", "")
+                                                            ?: ""
+                                                    else -> preferencesManager.getString("last_user_mobile", "") ?: ""
+                                                }
 
-                                            bioEmployeeId = when {
-                                                effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
-                                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
-                                                else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
-                                            }
+                                            bioEmployeeId =
+                                                when {
+                                                    effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
+                                                    sessionExpired ->
+                                                        preferencesManager.getString("session_expired_employee_id", "")
+                                                            ?: preferencesManager.getString("last_user_employee_id", "")
+                                                            ?: ""
+                                                    else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                                }
 
-                                            Log.d("LoginScreen", "Biometric fallback credentials: email=$bioEmail, mobile=$bioMobile, employeeId=$bioEmployeeId, sessionExpired=$sessionExpired")
+                                            Log.d(
+                                                "LoginScreen",
+                                                "Biometric fallback credentials: email=$bioEmail, mobile=$bioMobile, employeeId=$bioEmployeeId, sessionExpired=$sessionExpired",
+                                            )
 
                                             if (bioEmail.isBlank() || bioMobile.isBlank() || bioEmployeeId.isBlank()) {
-                                                CustomToast.showErrorToast(context, "Biometric credentials not found. Please login with MPIN or OTP.")
+                                                CustomToast.showErrorToast(
+                                                    context,
+                                                    "Biometric credentials not found. Please login with MPIN or OTP.",
+                                                )
                                                 return@showBiometricPrompt
                                             }
                                         }
@@ -1249,10 +1368,11 @@ fun LoginScreen(
                                         }
 
                                         // Call OTP verify with isBiometric = true and empty OTP
-                                        val otpController = OtpVerificationController(
-                                            navigator = navigator,
-                                            context = context
-                                        )
+                                        val otpController =
+                                            OtpVerificationController(
+                                                navigator = navigator,
+                                                context = context,
+                                            )
 
                                         val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
                                         otpController.verifyOtp(
@@ -1267,7 +1387,7 @@ fun LoginScreen(
                                             deviceId = deviceInfo.deviceId,
                                             platform = deviceInfo.platform,
                                             osVersion = deviceInfo.osVersion,
-                                            stayLoggedIn = stayLoggedIn
+                                            stayLoggedIn = stayLoggedIn,
                                         ) { message, isError ->
                                             if (isError) {
                                                 CustomToast.showErrorToast(context, message)
@@ -1282,29 +1402,31 @@ fun LoginScreen(
                                             // User cancelled - they can try again or use another method
                                             Log.d("LoginScreen", "Biometric authentication cancelled by user")
                                         }
-                                    }
+                                    },
                                 )
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .height(62.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825) // Keep same color when disabled
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .height(62.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFDD3825), // Keep same color when disabled
+                            ),
                         shape = MaterialTheme.shapes.medium,
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_fingerprint), // <-- Your fingerprint icon in drawable
                                 contentDescription = "Fingerprint",
                                 tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -1312,7 +1434,7 @@ fun LoginScreen(
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
@@ -1326,14 +1448,15 @@ fun LoginScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
-                        modifier = Modifier
-                            .align(Alignment.Start)
-                            .padding(start = 12.dp)
+                        modifier =
+                            Modifier
+                                .align(Alignment.Start)
+                                .padding(start = 12.dp),
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         for (i in 0 until 4) {
                             OutlinedTextField(
@@ -1350,45 +1473,48 @@ fun LoginScreen(
                                         focusRequesters[i - 1].requestFocus()
                                     }
                                 },
-                                modifier = Modifier
-                                    .width(65.dp)
-                                    .height(65.dp)
-                                    .focusRequester(focusRequesters[i])
-                                    .padding(horizontal = 4.dp)
-                                    .onFocusChanged { focusState ->
-                                        if (focusState.isFocused) focusedIndex = i
-                                    }
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
-                                        shape = MaterialTheme.shapes.medium
+                                modifier =
+                                    Modifier
+                                        .width(65.dp)
+                                        .height(65.dp)
+                                        .focusRequester(focusRequesters[i])
+                                        .padding(horizontal = 4.dp)
+                                        .onFocusChanged { focusState ->
+                                            if (focusState.isFocused) focusedIndex = i
+                                        }.border(
+                                            width = 1.5.dp,
+                                            color = if (focusedIndex == i) Color(0xFFDD3825) else Color.Gray,
+                                            shape = MaterialTheme.shapes.medium,
+                                        ),
+                                textStyle =
+                                    TextStyle(
+                                        fontSize = 28.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center,
                                     ),
-                                textStyle = TextStyle(
-                                    fontSize = 28.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center
-                                ),
                                 singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Number,
-                                    imeAction = if (i == 3) ImeAction.Done else ImeAction.Next
-                                ),
+                                keyboardOptions =
+                                    KeyboardOptions(
+                                        keyboardType = KeyboardType.Number,
+                                        imeAction = if (i == 3) ImeAction.Done else ImeAction.Next,
+                                    ),
                                 enabled = !isVerifyingMpin,
                                 shape = MaterialTheme.shapes.medium,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    disabledContainerColor = Color.White,
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black,
-                                    disabledTextColor = Color.Black,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent
-                                ),
-                                visualTransformation = PasswordVisualTransformation()
+                                colors =
+                                    TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        disabledContainerColor = Color.White,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedTextColor = Color.Black,
+                                        disabledTextColor = Color.Black,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent,
+                                    ),
+                                visualTransformation = PasswordVisualTransformation(),
                             )
                             if (i < 3) Spacer(modifier = Modifier.width(8.dp))
                         }
@@ -1412,38 +1538,57 @@ fun LoginScreen(
                                 isVerifyingMpin = false
                                 return@Button
                             }
-                            val otpController = OtpVerificationController(
-                                navigator = navigator,
-                                context = context
-                            )
+                            val otpController =
+                                OtpVerificationController(
+                                    navigator = navigator,
+                                    context = context,
+                                )
                             // Get credentials with better fallback logic for session expiry
-                            val useEmail = when {
-                                email.isNotEmpty() -> email
-                                effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
-                                sessionExpired -> preferencesManager.getString("session_expired_email", "") ?: preferencesManager.getString("last_user_email", "") ?: ""
-                                else -> preferencesManager.getString("last_user_email", "") ?: ""
-                            }
+                            val useEmail =
+                                when {
+                                    email.isNotEmpty() -> email
+                                    effectiveUserData?.email?.isNotEmpty() == true -> effectiveUserData.email!!
+                                    sessionExpired ->
+                                        preferencesManager.getString("session_expired_email", "")
+                                            ?: preferencesManager.getString("last_user_email", "")
+                                            ?: ""
+                                    else -> preferencesManager.getString("last_user_email", "") ?: ""
+                                }
 
-                            val useMobile = when {
-                                mobile.isNotEmpty() -> mobile
-                                effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
-                                sessionExpired -> preferencesManager.getString("session_expired_mobile", "") ?: preferencesManager.getString("last_user_mobile", "") ?: ""
-                                else -> preferencesManager.getString("last_user_mobile", "") ?: ""
-                            }
+                            val useMobile =
+                                when {
+                                    mobile.isNotEmpty() -> mobile
+                                    effectiveUserData?.mobile?.isNotEmpty() == true -> effectiveUserData.mobile!!
+                                    sessionExpired ->
+                                        preferencesManager.getString("session_expired_mobile", "")
+                                            ?: preferencesManager.getString("last_user_mobile", "")
+                                            ?: ""
+                                    else -> preferencesManager.getString("last_user_mobile", "") ?: ""
+                                }
 
-                            val useEmployeeId = when {
-                                employeeId.isNotEmpty() -> employeeId
-                                effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
-                                sessionExpired -> preferencesManager.getString("session_expired_employee_id", "") ?: preferencesManager.getString("last_user_employee_id", "") ?: ""
-                                else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
-                            }
+                            val useEmployeeId =
+                                when {
+                                    employeeId.isNotEmpty() -> employeeId
+                                    effectiveUserData?.employeeId?.isNotEmpty() == true -> effectiveUserData.employeeId!!
+                                    sessionExpired ->
+                                        preferencesManager.getString("session_expired_employee_id", "")
+                                            ?: preferencesManager.getString("last_user_employee_id", "")
+                                            ?: ""
+                                    else -> preferencesManager.getString("last_user_employee_id", "") ?: ""
+                                }
 
-                            Log.d("LoginScreen", "MPIN credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId, sessionExpired=$sessionExpired")
+                            Log.d(
+                                "LoginScreen",
+                                "MPIN credentials: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId, sessionExpired=$sessionExpired",
+                            )
 
                             if (useEmail.isBlank() || useMobile.isBlank() || useEmployeeId.isBlank()) {
                                 mpinError = "User credentials missing. Please use OTP login."
                                 isVerifyingMpin = false
-                                Log.e("LoginScreen", "Missing credentials after fallback: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId")
+                                Log.e(
+                                    "LoginScreen",
+                                    "Missing credentials after fallback: email=$useEmail, mobile=$useMobile, employeeId=$useEmployeeId",
+                                )
                                 return@Button
                             }
 
@@ -1460,7 +1605,7 @@ fun LoginScreen(
                                 deviceId = deviceInfo.deviceId,
                                 platform = deviceInfo.platform,
                                 osVersion = deviceInfo.osVersion,
-                                stayLoggedIn = stayLoggedIn
+                                stayLoggedIn = stayLoggedIn,
                             ) { message, isError ->
                                 isVerifyingMpin = false
                                 if (isError) {
@@ -1470,21 +1615,23 @@ fun LoginScreen(
                                 }
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth(0.97f)
-                            .height(65.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFDD3825),
-                            disabledContainerColor = Color(0xFFDD3825)
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.97f)
+                                .height(65.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFDD3825),
+                                disabledContainerColor = Color(0xFFDD3825),
+                            ),
                         shape = MaterialTheme.shapes.medium,
-                        enabled = !isVerifyingMpin
+                        enabled = !isVerifyingMpin,
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.lock),
                             contentDescription = "Lock",
                             tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -1492,7 +1639,7 @@ fun LoginScreen(
                             color = Color.White,
                             fontSize = 20.sp,
                             fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                     if (mpinError != null) {
@@ -1500,63 +1647,68 @@ fun LoginScreen(
                             text = mpinError ?: "",
                             color = Color.Red,
                             fontSize = 14.sp,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp),
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     // Reset MPIN
                     ClickableText(
-                        text = buildAnnotatedString {
-                            append("Reset MPIN")
-                            addStyle(
-                                style = SpanStyle(
-                                    color = Color(0xFFDD3825),
-                                    textDecoration = TextDecoration.Underline,
-                                    fontWeight = FontWeight.Normal
-                                ),
-                                start = 0,
-                                end = "Reset MPIN".length
-                            )
-                            addStringAnnotation(
-                                tag = "reset_mpin",
-                                annotation = "reset_mpin",
-                                start = 0,
-                                end = "Reset MPIN".length
-                            )
-                        },
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            color = Color(0xFFDD3825)
-                        ),
+                        text =
+                            buildAnnotatedString {
+                                append("Reset MPIN")
+                                addStyle(
+                                    style =
+                                        SpanStyle(
+                                            color = Color(0xFFDD3825),
+                                            textDecoration = TextDecoration.Underline,
+                                            fontWeight = FontWeight.Normal,
+                                        ),
+                                    start = 0,
+                                    end = "Reset MPIN".length,
+                                )
+                                addStringAnnotation(
+                                    tag = "reset_mpin",
+                                    annotation = "reset_mpin",
+                                    start = 0,
+                                    end = "Reset MPIN".length,
+                                )
+                            },
+                        style =
+                            TextStyle(
+                                fontSize = 16.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                color = Color(0xFFDD3825),
+                            ),
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                         onClick = { offset ->
                             // Navigate to MPIN reset screen
                             val intent = Intent(context, MpinActivity::class.java)
                             intent.putExtra("resetMpin", true)
                             context.startActivity(intent)
-                        }
+                        },
                     )
                 }
 
                 if (showWebView) {
                     Dialog(
                         onDismissRequest = { showWebView = false },
-                        properties = DialogProperties(
-                            dismissOnBackPress = false,
-                            dismissOnClickOutside = false,
-                            usePlatformDefaultWidth = false // Fullscreen
-                        )
+                        properties =
+                            DialogProperties(
+                                dismissOnBackPress = false,
+                                dismissOnClickOutside = false,
+                                usePlatformDefaultWidth = false, // Fullscreen
+                            ),
                     ) {
                         Surface(
                             color = Color.White,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight() // Almost full screen, adjust as needed
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(), // Almost full screen, adjust as needed
                         ) {
                             Column(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
                             ) {
                                 TopAppBar(
                                     title = {
@@ -1566,44 +1718,46 @@ fun LoginScreen(
                                             fontSize = 20.sp,
                                             textAlign = TextAlign.Center,
                                             fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
                                         )
                                     },
                                     navigationIcon = {
                                         IconButton(onClick = { showWebView = false }) {
                                             Icon(
                                                 Icons.Default.ArrowBack,
-                                                contentDescription = "Back"
+                                                contentDescription = "Back",
                                             )
                                         }
                                     },
                                     actions = {
                                         Spacer(modifier = Modifier.width(48.dp))
                                     },
-                                    colors = TopAppBarDefaults.topAppBarColors(
-                                        containerColor = Color.White,
-                                        titleContentColor = Color.Black,
-                                        navigationIconContentColor = Color.Black
-                                    )
+                                    colors =
+                                        TopAppBarDefaults.topAppBarColors(
+                                            containerColor = Color.White,
+                                            titleContentColor = Color.Black,
+                                            navigationIconContentColor = Color.Black,
+                                        ),
                                 )
                                 MicrosoftLoginWebView(
                                     url = "https://login.microsoftonline.com/3865b44b-651f-4df8-a0c8-2625494f6198/oauth2/v2.0/authorize?client_id=b4cdff13-7b2f-4237-86bb-76cd7e6e3dcd&response_type=code&redirect_uri=https%3A%2F%2Farcheone.arche.global%2FmfaCallback&scope=openid%20profile%20User.Read&response_mode=query&prompt=login",
                                     onReceiveAuth = { response ->
                                         Log.d(
                                             "LoginScreen",
-                                            "MFA onReceiveAuth called with token: ${response.token}"
+                                            "MFA onReceiveAuth called with token: ${response.token}",
                                         )
                                         Log.d(
                                             "LoginScreen",
-                                            "Email: ${response.email}, EmployeeId: ${response.employeeId}, Mobile: ${response.mobilePhone}"
+                                            "Email: ${response.email}, EmployeeId: ${response.employeeId}, Mobile: ${response.mobilePhone}",
                                         )
                                         authResponse = response
                                         isLoading = true
                                         // Use encrypted API call like OTP flow
-                                        val otpController = OtpVerificationController(
-                                            navigator = navigator,
-                                            context = context
-                                        )
+                                        val otpController =
+                                            OtpVerificationController(
+                                                navigator = navigator,
+                                                context = context,
+                                            )
                                         val deviceInfo = DeviceInfoUtils.getAllDeviceInfo(context)
 
                                         otpController.verifyOtp(
@@ -1618,15 +1772,16 @@ fun LoginScreen(
                                             deviceId = deviceInfo.deviceId,
                                             platform = deviceInfo.platform,
                                             osVersion = deviceInfo.osVersion,
-                                            stayLoggedIn = stayLoggedIn
+                                            stayLoggedIn = stayLoggedIn,
                                         ) { message, isError ->
                                             Log.d(
                                                 "LoginScreen",
-                                                "loginWithToken callback: message=$message, isError=$isError"
+                                                "loginWithToken callback: message=$message, isError=$isError",
                                             )
                                             isLoading = false
                                             if (!isError) {
-                                                UserDataManager.getInstance(context)
+                                                UserDataManager
+                                                    .getInstance(context)
                                                     .setHasLoggedIn(true)
                                                 setFirstTimeLogin(context, false)
                                                 firstTimeLogin = false
@@ -1641,7 +1796,7 @@ fun LoginScreen(
                                                             true,
                                                             response.email,
                                                             response.mobilePhone,
-                                                            response.employeeId
+                                                            response.employeeId,
                                                         )
                                                     } else {
                                                         // MPIN not set, go to MPIN setup
@@ -1649,7 +1804,7 @@ fun LoginScreen(
                                                             response.email,
                                                             response.mobilePhone,
                                                             response.employeeId,
-                                                            response.token
+                                                            response.token,
                                                         )
                                                     }
                                                 }
@@ -1658,7 +1813,7 @@ fun LoginScreen(
                                     },
                                     onClose = {
                                         showWebView = false
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -1668,46 +1823,51 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 if ((!isLoggedIn && hasLoggedIn) || (effectiveUserData != null && !isAutoRefreshing)) {
-                    val annotatedText = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp,
-                                color = Color.Black
+                    val annotatedText =
+                        buildAnnotatedString {
+                            withStyle(
+                                style =
+                                    SpanStyle(
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp,
+                                        color = Color.Black,
+                                    ),
+                            ) {
+                                append("Not a user?")
+                            }
+                            append("  ")
+                            val start = length
+                            append("Log in as different user")
+                            addStyle(
+                                style =
+                                    SpanStyle(
+                                        color = Color(0xFFDD3825),
+                                        textDecoration = TextDecoration.Underline,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp,
+                                    ),
+                                start = start,
+                                end = length,
                             )
-                        ) {
-                            append("Not a user?")
+                            addStringAnnotation(
+                                tag = "login_different_user",
+                                annotation = "login_different_user",
+                                start = start,
+                                end = length,
+                            )
                         }
-                        append("  ")
-                        val start = length
-                        append("Log in as different user")
-                        addStyle(
-                            style = SpanStyle(
-                                color = Color(0xFFDD3825),
-                                textDecoration = TextDecoration.Underline,
-                                fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 14.sp
-                            ),
-                            start = start,
-                            end = length
-                        )
-                        addStringAnnotation(
-                            tag = "login_different_user",
-                            annotation = "login_different_user",
-                            start = start,
-                            end = length
-                        )
-                    }
 
                     var forceUpdate by remember { mutableStateOf(false) }
 
                     ClickableText(
                         text = annotatedText,
                         onClick = { offset ->
-                            annotatedText.getStringAnnotations(tag = "login_different_user", start = offset, end = offset)
-                                .firstOrNull()?.let {
+                            annotatedText
+                                .getStringAnnotations(tag = "login_different_user", start = offset, end = offset)
+                                .firstOrNull()
+                                ?.let {
                                     // Clear all login-related state and persistent user data
                                     UserDataManager.getInstance(context).clearUserData()
                                     UserDataManager.getInstance(context).setIsLoggedIn(false)
@@ -1742,7 +1902,7 @@ fun LoginScreen(
                                     forceUpdate = !forceUpdate
                                 }
                         },
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 8.dp),
                     )
                 }
 
@@ -1753,22 +1913,24 @@ fun LoginScreen(
                     fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .clickable {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/arche-one-privacy-policy"))
-                            context.startActivity(intent)
-                        },
-                    textDecoration = TextDecoration.Underline
+                    modifier =
+                        Modifier
+                            .padding(top = 16.dp)
+                            .clickable {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/arche-one-privacy-policy"))
+                                context.startActivity(intent)
+                            },
+                    textDecoration = TextDecoration.Underline,
                 )
 
                 // Anti-Bribery and Employee Code of Conduct (side by side)
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.97f)
-                        .padding(top = 10.dp)
-                        .padding(bottom = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.97f)
+                            .padding(top = 10.dp)
+                            .padding(bottom = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "Anti-Bribery and Anti- Corruption Policy",
@@ -1776,24 +1938,29 @@ fun LoginScreen(
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/anti-bribery-and-anti-corruption-policy"))
-                                context.startActivity(intent)
-                            }
-                            .padding(end = 8.dp),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .clickable {
+                                    val intent =
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://arche.global/anti-bribery-and-anti-corruption-policy"),
+                                        )
+                                    context.startActivity(intent)
+                                }.padding(end = 8.dp),
                         textDecoration = TextDecoration.Underline,
                         maxLines = 2,
                         lineHeight = 20.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                     // Vertical divider
                     Box(
-                        modifier = Modifier
-                            .height(30.dp)
-                            .width(1.dp)
-                            .background(Color.DarkGray)
+                        modifier =
+                            Modifier
+                                .height(30.dp)
+                                .width(1.dp)
+                                .background(Color.DarkGray),
                     )
 
                     Text(
@@ -1802,17 +1969,17 @@ fun LoginScreen(
                         fontSize = 14.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Normal,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/employee-code-of-conduct"))
-                                context.startActivity(intent)
-                            }
-                            .padding(start = 10.dp),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .clickable {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://arche.global/employee-code-of-conduct"))
+                                    context.startActivity(intent)
+                                }.padding(start = 10.dp),
                         textDecoration = TextDecoration.Underline,
                         maxLines = 2,
                         lineHeight = 20.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -1821,28 +1988,30 @@ fun LoginScreen(
 
             // Reset Password Button at the bottom
             Card(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .height(70.dp)
-                    .align(Alignment.CenterHorizontally)
-                    .clickable {
-                        navigator.navigateToPasswordReset()
-                    },
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.9f)
+                        .height(70.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .clickable {
+                            navigator.navigateToPasswordReset()
+                        },
                 shape = MaterialTheme.shapes.medium,
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
             ) {
                 Row(
-                    modifier = Modifier
-                        .padding(vertical = 10.dp, horizontal = 20.dp)
-                        .fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .padding(vertical = 10.dp, horizontal = 20.dp)
+                            .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.key),
                         contentDescription = "Reset Password Icon",
                         tint = Color.Black,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(28.dp),
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1851,13 +2020,13 @@ fun LoginScreen(
                             color = Color.Black,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily
+                            fontFamily = GraphikFontFamily,
                         )
                         Text(
                             text = "For Outlook, and more",
                             color = Color.Gray,
                             fontSize = 12.sp,
-                            fontFamily = GraphikFontFamily
+                            fontFamily = GraphikFontFamily,
                         )
                     }
                 }
@@ -1875,26 +2044,28 @@ fun LoginScreen(
                     if (showOtpTermsDialog) showOtpTermsDialog = false
                     if (showMfaTermsDialog) showMfaTermsDialog = false
                 },
-                properties = DialogProperties(
-                    usePlatformDefaultWidth = false // removes built-in margins
-                )
+                properties =
+                    DialogProperties(
+                        usePlatformDefaultWidth = false, // removes built-in margins
+                    ),
             ) {
                 Surface(
                     shape = RoundedCornerShape(18.dp),
                     color = Color(0xFFF6F4EE),
-                    modifier = Modifier
-                        .fillMaxWidth(0.94f) // 98% of actual screen width
-                        .padding(horizontal = 8.dp, vertical = 12.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.94f) // 98% of actual screen width
+                            .padding(horizontal = 8.dp, vertical = 12.dp),
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(20.dp)
+                        modifier = Modifier.padding(20.dp),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.busjust), // Use your document icon
                             contentDescription = "Document",
                             tint = Color(0xFFDD3825),
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
@@ -1903,24 +2074,25 @@ fun LoginScreen(
                             fontWeight = FontWeight.SemiBold,
                             fontFamily = GraphikFontFamily,
                             color = Color.Black,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 200.dp, max = 400.dp)
-                                .border(
-                                    width = 1.dp,
-                                    color = Color.Gray,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .verticalScroll(rememberScrollState())
-                                .padding(12.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 200.dp, max = 400.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        color = Color.Gray,
+                                        shape = RoundedCornerShape(8.dp),
+                                    ).verticalScroll(rememberScrollState())
+                                    .padding(12.dp),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .padding(6.dp)
+                                modifier =
+                                    Modifier
+                                        .padding(6.dp),
                             ) {
                                 Text(
                                     "Welcome to Arche's official application.\n\n" +
@@ -1929,7 +2101,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    lineHeight = 20.sp
+                                    lineHeight = 20.sp,
                                 )
                                 Text(
                                     "✅ Usage Terms\n\n",
@@ -1937,7 +2109,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    lineHeight = 20.sp
+                                    lineHeight = 20.sp,
                                 )
                                 Text(
                                     "- You acknowledge that this application is owned and managed by Arche Global Private Limited.\n" +
@@ -1948,7 +2120,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    lineHeight = 20.sp
+                                    lineHeight = 20.sp,
                                 )
                                 Text(
                                     "🔐 Privacy & Security\n\n",
@@ -1956,7 +2128,7 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black,
-                                    lineHeight = 20.sp
+                                    lineHeight = 20.sp,
                                 )
                                 Text(
                                     "- Your data is protected under applicable data protection laws and internal security protocols.\n" +
@@ -1966,15 +2138,16 @@ fun LoginScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     color = Color.Black,
-                                    lineHeight = 20.sp
+                                    lineHeight = 20.sp,
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.height(18.dp))
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             Button(
                                 onClick = {
@@ -1982,22 +2155,24 @@ fun LoginScreen(
                                     if (showMfaTermsDialog) showMfaTermsDialog = false
                                     CustomToast.showErrorToast(context, "Please accept the terms and condition")
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(46.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0x9ADED9D9),
-                                    contentColor = Color.Black
-                                ),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .height(46.dp),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = Color(0x9ADED9D9),
+                                        contentColor = Color.Black,
+                                    ),
                                 border = BorderStroke(1.dp, Color.LightGray),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
                             ) {
                                 Text(
                                     "Cancel",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 14.sp,
-                                    color = Color.Black
+                                    color = Color.Black,
                                 )
                             }
                             Button(
@@ -2020,21 +2195,23 @@ fun LoginScreen(
                                         showWebView = true
                                     }
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(46.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFDD3825),
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(12.dp)
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .height(46.dp),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFDD3825),
+                                        contentColor = Color.White,
+                                    ),
+                                shape = RoundedCornerShape(12.dp),
                             ) {
                                 Text(
                                     "Accept",
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 14.sp,
-                                    color = Color.White
+                                    color = Color.White,
                                 )
                             }
                         }

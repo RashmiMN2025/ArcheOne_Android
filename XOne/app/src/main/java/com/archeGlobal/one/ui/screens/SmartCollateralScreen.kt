@@ -38,37 +38,41 @@ import com.archeGlobal.one.ui.theme.GraphikFontFamily
 @Composable
 fun SmartCollateralScreen(
     controller: SmartCollateralController,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     val context = LocalContext.current
     val categories = controller.getSmartCollateralList()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFE0DCD1), // Light Beige
-                            Color(0xFFC8C8CA), // Light Gray
-                            Color(0xFF474749) // Dark Gray
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    Color(0xFFE0DCD1), // Light Beige
+                                    Color(0xFFC8C8CA), // Light Gray
+                                    Color(0xFF474749), // Dark Gray
+                                ),
+                        ),
+                    ),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "SmartCollateral",
@@ -76,7 +80,7 @@ fun SmartCollateralScreen(
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -85,16 +89,17 @@ fun SmartCollateralScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_back),
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
                     actions = {
                         Spacer(modifier = Modifier.width(48.dp))
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 // 3-column Vertical Grid
@@ -105,28 +110,30 @@ fun SmartCollateralScreen(
                 } else {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         items(categories) { category ->
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .clickable { controller.onCategoryClick(category) }
-                                    .background(Color(0xFFF6F4EE))
-                                    .padding(8.dp)
-                                    .height(100.dp)
+                                modifier =
+                                    Modifier
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .clickable { controller.onCategoryClick(category) }
+                                        .background(Color(0xFFF6F4EE))
+                                        .padding(8.dp)
+                                        .height(100.dp),
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.folder), // Same icon for all
                                     contentDescription = category.name,
                                     tint = Color.Black,
-                                    modifier = Modifier.size(38.dp)
+                                    modifier = Modifier.size(38.dp),
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
@@ -135,7 +142,7 @@ fun SmartCollateralScreen(
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.Black,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
                                 )
                             }
                         }

@@ -7,5 +7,5 @@ import com.google.gson.annotations.SerializedName
  */
 data class TravelApprovalRequest(
     @SerializedName("managerEmail")
-    val managerEmail: String
+    val managerEmail: String,
 )

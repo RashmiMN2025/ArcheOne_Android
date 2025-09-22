@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter
 fun HolidayListScreen(
     controller: HolidayCalendarController,
     navigator: Navigator,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
 ) {
     val holidaysState = controller.holidays.observeAsState()
     val holidayFileUrl = controller.holidayFileUrl.observeAsState()
@@ -59,37 +59,41 @@ fun HolidayListScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749))
-                )
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFE0DCD1), Color(0xFFC8C8CA), Color(0xFF474749)),
+                    ),
+                ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
         ) {
             // Top Bar with back button and title
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding() // This adds top padding for the status bar
-                    .padding(vertical = 8.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding() // This adds top padding for the status bar
+                        .padding(vertical = 8.dp),
             ) {
                 // Back button aligned to the left
                 IconButton(
                     onClick = onBackPressed,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.CenterStart)
+                    modifier =
+                        Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterStart),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
-                        tint = Color.Black
+                        tint = Color.Black,
                     )
                 }
 
@@ -100,7 +104,7 @@ fun HolidayListScreen(
                     fontSize = 20.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
                 )
 
                 // View PDF button aligned to the right
@@ -116,15 +120,16 @@ fun HolidayListScreen(
                                     // Could show a toast here if needed
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFDD3825)
-                            ),
-                            modifier = Modifier.align(Alignment.CenterEnd)
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                ),
+                            modifier = Modifier.align(Alignment.CenterEnd),
                         ) {
                             Text(
                                 text = "PDF",
                                 color = Color.White,
-                                fontSize = 14.sp
+                                fontSize = 14.sp,
                             )
                         }
                     }
@@ -137,33 +142,34 @@ fun HolidayListScreen(
             if (holidaysState.value is NetworkResult.Loading) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     CircularProgressIndicator(
-                        color = Color(0xFFDD3825)
+                        color = Color(0xFFDD3825),
                     )
                 }
             } else if (holidays.isEmpty()) {
                 // Empty state
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     Text(
                         text = "No holidays found",
                         color = Color.Gray,
                         fontSize = 16.sp,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             } else {
                 // Holiday list header
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFDD3825), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFDD3825), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
                         text = "Holiday",
@@ -171,7 +177,7 @@ fun HolidayListScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        modifier = Modifier.weight(2f)
+                        modifier = Modifier.weight(2f),
                     )
                     Text(
                         text = "Date",
@@ -180,7 +186,7 @@ fun HolidayListScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.End
+                        textAlign = TextAlign.End,
                     )
                 }
 
@@ -189,7 +195,7 @@ fun HolidayListScreen(
                 // Holiday list
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     items(holidays) { holiday ->
                         HolidayItem(holiday = holiday)
@@ -203,35 +209,38 @@ fun HolidayListScreen(
 @Composable
 fun HolidayItem(holiday: Holiday) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(2f)
+                modifier = Modifier.weight(2f),
             ) {
                 // Color indicator based on holiday type
                 Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when (holiday.holidayType) {
-                                "Yes" -> Color(0xFFDD3825) // Red for mandatory holidays
-                                "RH" -> Color(0xFF2196F3) // Blue for RH holidays
-                                else -> Color.Gray // Gray for others
-                            }
-                        )
+                    modifier =
+                        Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when (holiday.holidayType) {
+                                    "Yes" -> Color(0xFFDD3825) // Red for mandatory holidays
+                                    "RH" -> Color(0xFF2196F3) // Blue for RH holidays
+                                    else -> Color.Gray // Gray for others
+                                },
+                            ),
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -242,44 +251,45 @@ fun HolidayItem(holiday: Holiday) {
                         fontSize = 16.sp,
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Black
+                        color = Color.Black,
                     )
                     Text(
                         text = formatHolidayDate(holiday.date),
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
                 }
             }
 
             // Holiday type badge
             Text(
-                text = when (holiday.holidayType) {
-                    "Yes" -> "Holiday"
-                    "RH" -> "RH"
-                    else -> "Other"
-                },
+                text =
+                    when (holiday.holidayType) {
+                        "Yes" -> "Holiday"
+                        "RH" -> "RH"
+                        else -> "Other"
+                    },
                 fontSize = 12.sp,
-                color = when (holiday.holidayType) {
-                    "Yes" -> Color(0xFFDD3825)
-                    "RH" -> Color(0xFF2196F3)
-                    else -> Color.Gray
-                },
+                color =
+                    when (holiday.holidayType) {
+                        "Yes" -> Color(0xFFDD3825)
+                        "RH" -> Color(0xFF2196F3)
+                        else -> Color.Gray
+                    },
                 fontFamily = GraphikFontFamily,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End
+                textAlign = TextAlign.End,
             )
         }
     }
 }
 
-private fun formatHolidayDate(dateStr: String): String {
-    return try {
+private fun formatHolidayDate(dateStr: String): String =
+    try {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
         val date = LocalDate.parse(dateStr, formatter)
         date.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
     } catch (e: Exception) {
         dateStr // Return original string if parsing fails
     }
-}

@@ -8,7 +8,6 @@ import com.google.gson.annotations.SerializedName
 data class TravelHistoryRequest(
     @SerializedName("employeeId")
     val employeeId: String,
-
     @SerializedName("employeeEmail")
-    val employeeEmail: String
+    val employeeEmail: String,
 )

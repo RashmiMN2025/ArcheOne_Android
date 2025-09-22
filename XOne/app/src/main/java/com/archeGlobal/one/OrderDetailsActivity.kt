@@ -34,7 +34,7 @@ class OrderDetailsActivity : ComponentActivity() {
             XOneTheme {
                 OrderDetailsScreen(
                     controller = controller,
-                    orderItem = orderItem
+                    orderItem = orderItem,
                 )
             }
         }
@@ -44,7 +44,7 @@ class OrderDetailsActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left,
-            R.anim.slide_out_right
+            R.anim.slide_out_right,
         )
     }
 }

@@ -32,7 +32,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun TravelApprovalConfirmScreen(
     controller: TravelController,
-    travelRequest: TravelRequest
+    travelRequest: TravelRequest,
 ) {
     // Get context and font adjustment for consistent font scaling
     val context = LocalContext.current
@@ -85,24 +85,27 @@ fun TravelApprovalConfirmScreen(
         }
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF5F5F5))
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFF5F5F5)),
             ) {
                 // Show loading overlay when API call is in progress
                 if (isLoading) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0x80FFFFFF))
-                            .zIndex(1f),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color(0x80FFFFFF))
+                                .zIndex(1f),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator()
@@ -113,14 +116,15 @@ fun TravelApprovalConfirmScreen(
                 }
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                 ) {
                     // Top bar with back button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(onClick = { controller.navigateBack() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -129,7 +133,7 @@ fun TravelApprovalConfirmScreen(
                             "Approve Travel Request",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(start = 8.dp)
+                            modifier = Modifier.padding(start = 8.dp),
                         )
                     }
 
@@ -137,52 +141,57 @@ fun TravelApprovalConfirmScreen(
 
                     // Travel request details card
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
                         elevation = 4.dp,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                         ) {
                             // Request ID with status
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     "#${selectedRequest.id}",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
+                                    fontSize = 16.sp,
                                 )
 
                                 Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(
-                                            when (selectedRequest.status) {
-                                                com.archeGlobal.one.model.TravelStatus.PENDING -> Color(
-                                                    0xFFFFD700
-                                                ) // Yellow for pending
-                                                com.archeGlobal.one.model.TravelStatus.APPROVED -> Color(
-                                                    0xFF4CD964
-                                                ) // Green for approved
-                                                com.archeGlobal.one.model.TravelStatus.REJECTED -> Color(
-                                                    0xFFFF3B30
-                                                ) // Red for rejected
-                                            }
-                                        )
-                                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    modifier =
+                                        Modifier
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(
+                                                when (selectedRequest.status) {
+                                                    com.archeGlobal.one.model.TravelStatus.PENDING ->
+                                                        Color(
+                                                            0xFFFFD700,
+                                                        ) // Yellow for pending
+                                                    com.archeGlobal.one.model.TravelStatus.APPROVED ->
+                                                        Color(
+                                                            0xFF4CD964,
+                                                        ) // Green for approved
+                                                    com.archeGlobal.one.model.TravelStatus.REJECTED ->
+                                                        Color(
+                                                            0xFFFF3B30,
+                                                        ) // Red for rejected
+                                                },
+                                            ).padding(horizontal = 12.dp, vertical = 4.dp),
                                 ) {
                                     Text(
                                         text = "Status: $selectedRequest.status.name",
                                         color = Color.Black,
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
                                     )
                                 }
                             }
@@ -195,16 +204,16 @@ fun TravelApprovalConfirmScreen(
                             DetailRow("Project", selectedRequest.project)
                             DetailRow(
                                 "Business Justification",
-                                selectedRequest.businessJustification ?: "Not provided"
+                                selectedRequest.businessJustification ?: "Not provided",
                             )
                             DetailRow(
                                 "Date of Departure",
-                                selectedRequest.departureDate ?: "Not provided"
+                                selectedRequest.departureDate ?: "Not provided",
                             )
                             DetailRow("Date of Arrival", selectedRequest.arrivalDate ?: "Not provided")
                             DetailRow(
                                 "Mode of Transport",
-                                selectedRequest.modeOfTransport ?: "Not provided"
+                                selectedRequest.modeOfTransport ?: "Not provided",
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -213,14 +222,16 @@ fun TravelApprovalConfirmScreen(
                             OutlinedTextField(
                                 value = remarks,
                                 onValueChange = { remarks = it },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(120.dp),
                                 placeholder = { Text("Enter remark (optional)") },
-                                colors = TextFieldDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = Color.Gray,
-                                    unfocusedBorderColor = Color.LightGray
-                                )
+                                colors =
+                                    TextFieldDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = Color.Gray,
+                                        unfocusedBorderColor = Color.LightGray,
+                                    ),
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -232,7 +243,7 @@ fun TravelApprovalConfirmScreen(
                                     color = Color(0xFF4CD964),
                                     fontWeight = FontWeight.Medium,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
@@ -244,7 +255,7 @@ fun TravelApprovalConfirmScreen(
                                     color = Color.Red,
                                     fontWeight = FontWeight.Medium,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
@@ -254,21 +265,23 @@ fun TravelApprovalConfirmScreen(
                                 onClick = {
                                     controller.approveTravelRequest(selectedRequest.id, remarks)
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = Color(0xFF4CD964),
-                                    disabledBackgroundColor = Color.Gray
-                                ),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        backgroundColor = Color(0xFF4CD964),
+                                        disabledBackgroundColor = Color.Gray,
+                                    ),
                                 shape = RoundedCornerShape(8.dp),
-                                enabled = !isLoading
+                                enabled = !isLoading,
                             ) {
                                 if (isLoading) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(24.dp),
                                         color = Color.White,
-                                        strokeWidth = 2.dp
+                                        strokeWidth = 2.dp,
                                     )
                                 } else {
                                     Text(
@@ -276,7 +289,7 @@ fun TravelApprovalConfirmScreen(
                                         color = Color.White,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
+                                        fontSize = 16.sp,
                                     )
                                 }
                             }
@@ -289,17 +302,21 @@ fun TravelApprovalConfirmScreen(
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun DetailRow(
+    label: String,
+    value: String,
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             label,
             color = Color.Gray,
-            fontSize = 14.sp
+            fontSize = 14.sp,
         )
         Text(
             value,
@@ -307,7 +324,7 @@ private fun DetailRow(label: String, value: String) {
             fontSize = 14.sp,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f),
-            maxLines = 2
+            maxLines = 2,
         )
     }
 }

@@ -5,6 +5,12 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.archeGlobal.one.model.CabAttendee
+import com.archeGlobal.one.model.CabBookingResponse
+import com.archeGlobal.one.model.CabLocation
+import com.archeGlobal.one.model.EmployeeSearchRequest
+import com.archeGlobal.one.model.EmployeeSearchResponse
+import com.archeGlobal.one.model.EmployeeSearchResult
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
@@ -15,6 +21,7 @@ import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelStatus
+import com.archeGlobal.one.model.createCabBookingRequest
 import com.archeGlobal.one.model.createMultiDestinationRequest
 import com.archeGlobal.one.model.createSingleDestinationRequest
 import com.archeGlobal.one.navigation.Navigator
@@ -32,18 +39,24 @@ import java.util.TimeZone
 /**
  * Controller for the Travel screens following MVC architecture
  */
-class TravelController(private val navigator: Navigator, private val context: Context) {
-
+class TravelController(
+    private val navigator: Navigator,
+    private val context: Context,
+) {
     /**
      * Sealed class representing the state of travel history
      */
     sealed class TravelHistoryState {
         object Loading : TravelHistoryState()
+
         data class Success(
             val historyItems: List<TravelRequest>,
-            val approvalItems: List<TravelRequest> = emptyList()
+            val approvalItems: List<TravelRequest> = emptyList(),
         ) : TravelHistoryState()
-        data class Error(val message: String) : TravelHistoryState()
+
+        data class Error(
+            val message: String,
+        ) : TravelHistoryState()
     }
 
     /**
@@ -51,26 +64,42 @@ class TravelController(private val navigator: Navigator, private val context: Co
      */
     sealed class TravelApprovalsState {
         object Idle : TravelApprovalsState()
+
         object Loading : TravelApprovalsState()
-        data class Success(val approvalRequests: List<TravelRequest>) : TravelApprovalsState()
-        data class Error(val message: String) : TravelApprovalsState()
+
+        data class Success(
+            val approvalRequests: List<TravelRequest>,
+        ) : TravelApprovalsState()
+
+        data class Error(
+            val message: String,
+        ) : TravelApprovalsState()
     }
 
     // State for travel approval actions
     sealed class TravelApprovalActionState {
         object Idle : TravelApprovalActionState()
+
         object Loading : TravelApprovalActionState()
-        data class Success(val message: String) : TravelApprovalActionState()
-        data class Error(val message: String) : TravelApprovalActionState()
+
+        data class Success(
+            val message: String,
+        ) : TravelApprovalActionState()
+
+        data class Error(
+            val message: String,
+        ) : TravelApprovalActionState()
     }
 
     // Date formatters - Using IST timezone to match Indian Standard Time
-    private val displayDateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
-        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
-    }
-    private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
-        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
-    }
+    private val displayDateFormat =
+        SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+        }
+    private val apiDateFormat =
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+        }
 
     // UI state
     var travelHistoryState by mutableStateOf<TravelHistoryState>(TravelHistoryState.Loading)
@@ -124,12 +153,15 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
     // Data class for individual destination
     data class Destination(
-        val id: String = java.util.UUID.randomUUID().toString(),
+        val id: String =
+            java.util.UUID
+                .randomUUID()
+                .toString(),
         val originCity: String = "",
         val destination: String = "",
         val departureDate: String = "",
         val returnDate: String = "",
-        val flightTimePreference: String = ""
+        val flightTimePreference: String = "",
     )
 
     // Travel form fields
@@ -156,9 +188,9 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
             // For grade 6 and above, include flight option
             return if (gradeNumber >= 6) {
-                listOf("Flight", "Bus", "Train")
+                listOf("Flight", "Bus", "Train", "Cab")
             } else {
-                listOf("Bus", "Train")
+                listOf("Bus", "Train", "Cab")
             }
         }
     var modeOfTransport by mutableStateOf("")
@@ -167,9 +199,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
 
     // Initialize with current date - Using consistent format and IST timezone
-    private val currentDateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
-        timeZone = TimeZone.getTimeZone("Asia/Kolkata")
-    }
+    private val currentDateFormatter =
+        SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).apply {
+            timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+        }
     private val currentDate = currentDateFormatter.format(Date())
 
     var departureDate by mutableStateOf(currentDate)
@@ -185,12 +218,13 @@ class TravelController(private val navigator: Navigator, private val context: Co
         private set
 
     // Flight time preference options
-    val flightTimeOptions = listOf(
-        "Early Morning (00:00-06:00)",
-        "Morning (06:00-12:00)",
-        "Mid Day (12:00-18:00)",
-        "Night (18:00-23:00)"
-    )
+    val flightTimeOptions =
+        listOf(
+            "Early Morning (00:00-06:00)",
+            "Morning (06:00-12:00)",
+            "Mid Day (12:00-18:00)",
+            "Night (18:00-23:00)",
+        )
     var flightTimePreference by mutableStateOf("")
         private set
     var isFlightTimeDropdownExpanded by mutableStateOf(false)
@@ -222,6 +256,79 @@ class TravelController(private val navigator: Navigator, private val context: Co
     var showFrequentFlyerDialog by mutableStateOf(false)
         private set
 
+    // Cab booking specific fields
+    var isLocalTravel by mutableStateOf(false)
+        private set
+    var passengerCount by mutableStateOf(1)
+        private set
+    var cabType by mutableStateOf("")
+        private set
+    var cabDuration by mutableStateOf("")
+        private set
+    var pickupLocation by mutableStateOf("")
+        private set
+    var finalDropLocation by mutableStateOf("")
+        private set
+    var visitPoints by mutableStateOf(listOf<VisitPoint>())
+        private set
+    var mapDetails by mutableStateOf("")
+        private set
+
+    // Enhanced cab booking fields to match design specifications
+    var projectId by mutableStateOf("")
+        private set
+    var opportunityId by mutableStateOf("")
+        private set
+    var crmId by mutableStateOf("")
+        private set
+    var cabTravelDate by mutableStateOf(currentDate)
+        private set
+    var attendeeSearchQuery by mutableStateOf("")
+        private set
+    var additionalAttendees by mutableStateOf(listOf<CabAttendee>())
+        private set
+    var cabPickupLocations by mutableStateOf(listOf<CabLocation>())
+        private set
+
+    // Employee search state
+    var employeeSearchResults by mutableStateOf(listOf<EmployeeSearchResult>())
+        private set
+    var isSearchingEmployees by mutableStateOf(false)
+        private set
+    var showAttendeeSearch by mutableStateOf(false)
+        private set
+
+    // Cab submission state
+    var isCabSubmitting by mutableStateOf(false)
+        private set
+    var cabSubmissionError by mutableStateOf<String?>(null)
+        private set
+
+    // Cab dropdown states
+    var isCabTypeDropdownExpanded by mutableStateOf(false)
+        private set
+    var isCabDurationDropdownExpanded by mutableStateOf(false)
+        private set
+
+    // Enhanced cab options to match design
+    val cabTypeOptions = listOf("5 Seats", "6 Seater", "7 Seats", "7 Seater")
+    val cabDurationOptions = listOf("4 Hours", "8 Hours")
+    val travelTypeOptions = listOf("Local Travel", "Out of Local Station")
+
+    // Travel type dropdown state
+    var isTravelTypeDropdownExpanded by mutableStateOf(false)
+        private set
+
+    // Data class for visit points
+    data class VisitPoint(
+        val id: String =
+            java.util.UUID
+                .randomUUID()
+                .toString(),
+        val location: String = "",
+        val order: Int = 1,
+    )
+
     // Flag to track if data has been loaded to prevent duplicate API calls
     private var isDataLoaded = false
 
@@ -230,15 +337,16 @@ class TravelController(private val navigator: Navigator, private val context: Co
         loadEmployeeDetails()
 
         // Initialize with one destination for multi-destination mode
-        destinations = listOf(
-            Destination(
-                originCity = "",
-                destination = "",
-                departureDate = currentDate,
-                returnDate = currentDate,
-                flightTimePreference = ""
+        destinations =
+            listOf(
+                Destination(
+                    originCity = "",
+                    destination = "",
+                    departureDate = currentDate,
+                    returnDate = currentDate,
+                    flightTimePreference = "",
+                ),
             )
-        )
         Log.d("TravelController", "TravelController created - data will be loaded on first access")
     }
 
@@ -289,34 +397,43 @@ class TravelController(private val navigator: Navigator, private val context: Co
         travelHistoryState = TravelHistoryState.Loading
 
         // Create request with employee ID and email
-        val request = TravelHistoryRequest(
-            employeeId = employeeId,
-            employeeEmail = employeeEmail
-        )
+        val request =
+            TravelHistoryRequest(
+                employeeId = employeeId,
+                employeeEmail = employeeEmail,
+            )
 
         // Make API call to get travel history
-        RetrofitClient.apiService.getTravelHistory(request).enqueue(object : Callback<TravelHistoryResponse> {
-            override fun onResponse(call: Call<TravelHistoryResponse>, response: Response<TravelHistoryResponse>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val historyItems = response.body()!!.orderHistory.map { it.toTravelRequest() }
-                    travelHistoryState = TravelHistoryState.Success(historyItems)
-                } else {
-                    try {
-                        val errorBody = response.errorBody()?.string()
-                        Log.e("TravelController", "Error loading travel history: ${response.code()}, Error: $errorBody")
-                        travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
-                    } catch (e: Exception) {
-                        Log.e("TravelController", "Error parsing error response", e)
-                        travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+        RetrofitClient.apiService.getTravelHistory(request).enqueue(
+            object : Callback<TravelHistoryResponse> {
+                override fun onResponse(
+                    call: Call<TravelHistoryResponse>,
+                    response: Response<TravelHistoryResponse>,
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val historyItems = response.body()!!.orderHistory.map { it.toTravelRequest() }
+                        travelHistoryState = TravelHistoryState.Success(historyItems)
+                    } else {
+                        try {
+                            val errorBody = response.errorBody()?.string()
+                            Log.e("TravelController", "Error loading travel history: ${response.code()}, Error: $errorBody")
+                            travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+                        } catch (e: Exception) {
+                            Log.e("TravelController", "Error parsing error response", e)
+                            travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+                        }
                     }
                 }
-            }
 
-            override fun onFailure(call: Call<TravelHistoryResponse>, t: Throwable) {
-                Log.e("TravelController", "Network error loading travel history", t)
-                travelHistoryState = TravelHistoryState.Error("Network error. Please check your connection and try again.")
-            }
-        })
+                override fun onFailure(
+                    call: Call<TravelHistoryResponse>,
+                    t: Throwable,
+                ) {
+                    Log.e("TravelController", "Network error loading travel history", t)
+                    travelHistoryState = TravelHistoryState.Error("Network error. Please check your connection and try again.")
+                }
+            },
+        )
     }
 
     /**
@@ -328,54 +445,78 @@ class TravelController(private val navigator: Navigator, private val context: Co
         travelHistoryState = TravelHistoryState.Loading
 
         // Create request with employee email (new API only needs email)
-        val request = TravelHistoryRequest(
-            employeeId = employeeId,
-            employeeEmail = employeeEmail
-        )
+        val request =
+            TravelHistoryRequest(
+                employeeId = employeeId,
+                employeeEmail = employeeEmail,
+            )
 
         // Make API call to get combined travel history with Travel Details field
-        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(object : Callback<TravelCombinedHistoryResponse> {
-            override fun onResponse(call: Call<TravelCombinedHistoryResponse>, response: Response<TravelCombinedHistoryResponse>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val orderHistoryItems = response.body()!!.orderHistory
-                    val approvalHistoryItems = response.body()!!.approvalHistory
-                    Log.d("TravelController", "Loaded ${orderHistoryItems.size} order history items and ${approvalHistoryItems.size} approval history items")
+        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(
+            object : Callback<TravelCombinedHistoryResponse> {
+                override fun onResponse(
+                    call: Call<TravelCombinedHistoryResponse>,
+                    response: Response<TravelCombinedHistoryResponse>,
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val orderHistoryItems = response.body()!!.orderHistory
+                        val approvalHistoryItems = response.body()!!.approvalHistory
+                        Log.d(
+                            "TravelController",
+                            "Loaded ${orderHistoryItems.size} order history items and ${approvalHistoryItems.size} approval history items",
+                        )
 
-                    // Convert to TravelRequest objects using the proper toTravelRequest method
-                    // which now includes the Travel Details field
-                    val historyItems = orderHistoryItems.map { item ->
-                        Log.d("TravelController", "Processing order ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}")
-                        item.toTravelRequest()
-                    }
+                        // Convert to TravelRequest objects using the proper toTravelRequest method
+                        // which now includes the Travel Details field
+                        val historyItems =
+                            orderHistoryItems.map { item ->
+                                Log.d(
+                                    "TravelController",
+                                    "Processing order ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}",
+                                )
+                                item.toTravelRequest()
+                            }
 
-                    val approvalItems = approvalHistoryItems.map { item ->
-                        Log.d("TravelController", "Processing approval ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}")
-                        item.toTravelRequest()
-                    }
+                        val approvalItems =
+                            approvalHistoryItems.map { item ->
+                                Log.d(
+                                    "TravelController",
+                                    "Processing approval ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}",
+                                )
+                                item.toTravelRequest()
+                            }
 
-                    travelHistoryState = TravelHistoryState.Success(
-                        historyItems = historyItems,
-                        approvalItems = approvalItems
-                    )
+                        travelHistoryState =
+                            TravelHistoryState.Success(
+                                historyItems = historyItems,
+                                approvalItems = approvalItems,
+                            )
 
-                    Log.d("TravelController", "Loaded combined history: ${historyItems.size} order requests, ${approvalItems.size} approval requests")
-                } else {
-                    try {
-                        val errorBody = response.errorBody()?.string()
-                        Log.e("TravelController", "Error loading combined history: ${response.code()}, Error: $errorBody")
-                        travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
-                    } catch (e: Exception) {
-                        Log.e("TravelController", "Error parsing error response", e)
-                        travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+                        Log.d(
+                            "TravelController",
+                            "Loaded combined history: ${historyItems.size} order requests, ${approvalItems.size} approval requests",
+                        )
+                    } else {
+                        try {
+                            val errorBody = response.errorBody()?.string()
+                            Log.e("TravelController", "Error loading combined history: ${response.code()}, Error: $errorBody")
+                            travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+                        } catch (e: Exception) {
+                            Log.e("TravelController", "Error parsing error response", e)
+                            travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
+                        }
                     }
                 }
-            }
 
-            override fun onFailure(call: Call<TravelCombinedHistoryResponse>, t: Throwable) {
-                Log.e("TravelController", "Network error loading combined history", t)
-                travelHistoryState = TravelHistoryState.Error("Network error. Please check your connection and try again.")
-            }
-        })
+                override fun onFailure(
+                    call: Call<TravelCombinedHistoryResponse>,
+                    t: Throwable,
+                ) {
+                    Log.e("TravelController", "Network error loading combined history", t)
+                    travelHistoryState = TravelHistoryState.Error("Network error. Please check your connection and try again.")
+                }
+            },
+        )
     }
 
     // We now use real data from the API instead of mock data
@@ -575,9 +716,7 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Check if there are any pending travel approvals
      * @return True if there are pending approvals, false otherwise
      */
-    fun hasPendingApprovals(): Boolean {
-        return pendingApprovalCount > 0
-    }
+    fun hasPendingApprovals(): Boolean = pendingApprovalCount > 0
 
     /**
      * Check if there is any travel approval history
@@ -624,46 +763,58 @@ class TravelController(private val navigator: Navigator, private val context: Co
         android.util.Log.d("TravelController", "Making API call with userEmail: $userEmail")
 
         // Make the API call using combined history endpoint
-        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(object : Callback<TravelCombinedHistoryResponse> {
-            override fun onResponse(call: Call<TravelCombinedHistoryResponse>, response: Response<TravelCombinedHistoryResponse>) {
-                isLoadingTravelApprovals = false
-                if (response.isSuccessful) {
-                    val combinedResponse = response.body()
-                    if (combinedResponse != null && combinedResponse.status == 200) {
-                        // Convert API response to UI models (only approval history)
-                        val approvalRequests = combinedResponse.approvalHistory.map { it.toTravelRequest() }
-                        travelApprovalsState = TravelApprovalsState.Success(approvalRequests)
+        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(
+            object : Callback<TravelCombinedHistoryResponse> {
+                override fun onResponse(
+                    call: Call<TravelCombinedHistoryResponse>,
+                    response: Response<TravelCombinedHistoryResponse>,
+                ) {
+                    isLoadingTravelApprovals = false
+                    if (response.isSuccessful) {
+                        val combinedResponse = response.body()
+                        if (combinedResponse != null && combinedResponse.status == 200) {
+                            // Convert API response to UI models (only approval history)
+                            val approvalRequests = combinedResponse.approvalHistory.map { it.toTravelRequest() }
+                            travelApprovalsState = TravelApprovalsState.Success(approvalRequests)
 
-                        // Update pending approvals count
-                        pendingApprovalCount = approvalRequests.count { it.status == TravelStatus.PENDING }
+                            // Update pending approvals count
+                            pendingApprovalCount = approvalRequests.count { it.status == TravelStatus.PENDING }
+                        } else {
+                            travelApprovalsState = TravelApprovalsState.Error("Failed to load approval requests")
+                        }
                     } else {
-                        travelApprovalsState = TravelApprovalsState.Error("Failed to load approval requests")
+                        travelApprovalsState = TravelApprovalsState.Error("Error: ${response.code()} ${response.message()}")
                     }
-                } else {
-                    travelApprovalsState = TravelApprovalsState.Error("Error: ${response.code()} ${response.message()}")
                 }
-            }
 
-            override fun onFailure(call: Call<TravelCombinedHistoryResponse>, t: Throwable) {
-                isLoadingTravelApprovals = false
-                Log.e("TravelController", "Error loading travel approvals", t)
-                travelApprovalsState = TravelApprovalsState.Error("Network error: ${t.message}")
-            }
-        })
+                override fun onFailure(
+                    call: Call<TravelCombinedHistoryResponse>,
+                    t: Throwable,
+                ) {
+                    isLoadingTravelApprovals = false
+                    Log.e("TravelController", "Error loading travel approvals", t)
+                    travelApprovalsState = TravelApprovalsState.Error("Network error: ${t.message}")
+                }
+            },
+        )
     }
 
     /**
      * Approve a travel request
      */
-    fun approveTravelRequest(travelRequestId: String, remarks: String = "") {
+    fun approveTravelRequest(
+        travelRequestId: String,
+        remarks: String = "",
+    ) {
         // Set the action state to loading
         approvalActionState = TravelApprovalActionState.Loading
 
         val currentState = travelApprovalsState
-        val request: TravelRequest? = when (currentState) {
-            is TravelApprovalsState.Success -> currentState.approvalRequests.find { it.id == travelRequestId }
-            else -> selectedTravelRequest?.takeIf { it.id == travelRequestId }
-        }
+        val request: TravelRequest? =
+            when (currentState) {
+                is TravelApprovalsState.Success -> currentState.approvalRequests.find { it.id == travelRequestId }
+                else -> selectedTravelRequest?.takeIf { it.id == travelRequestId }
+            }
 
         if (request == null) {
             Log.e("TravelController", "Travel request with ID $travelRequestId not found")
@@ -673,9 +824,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
 
         // First update the local state (if we have a list) to give immediate feedback
         if (currentState is TravelApprovalsState.Success) {
-            val updatedRequests = currentState.approvalRequests.map {
-                if (it.id == travelRequestId) it.copy(status = TravelStatus.APPROVED) else it
-            }
+            val updatedRequests =
+                currentState.approvalRequests.map {
+                    if (it.id == travelRequestId) it.copy(status = TravelStatus.APPROVED) else it
+                }
             travelApprovalsState = TravelApprovalsState.Success(updatedRequests)
         }
 
@@ -695,59 +847,74 @@ class TravelController(private val navigator: Navigator, private val context: Co
         val token = request.actionToken ?: ""
 
         // Make the API call to approve the request
-        val approveRequest = TravelApprovalActionRequest(
-            email = userEmail,
-            requestId = travelRequestId,
-            token = token
-        )
+        val approveRequest =
+            TravelApprovalActionRequest(
+                email = userEmail,
+                requestId = travelRequestId,
+                token = token,
+            )
 
-        RetrofitClient.apiService.approveTravelRequest(approveRequest).enqueue(object : Callback<TravelApprovalActionResponse> {
-            override fun onResponse(call: Call<TravelApprovalActionResponse>, response: Response<TravelApprovalActionResponse>) {
-                if (response.isSuccessful) {
-                    val approvalResponse = response.body()
-                    if (approvalResponse != null && approvalResponse.status == 200) {
-                        Log.d("TravelController", "Successfully approved travel request: $travelRequestId")
-                        // Update the approval action state
-                        approvalActionState = TravelApprovalActionState.Success(approvalResponse.message ?: "Request approved successfully")
-                        // State is already updated, no need to do anything else
+        RetrofitClient.apiService.approveTravelRequest(approveRequest).enqueue(
+            object : Callback<TravelApprovalActionResponse> {
+                override fun onResponse(
+                    call: Call<TravelApprovalActionResponse>,
+                    response: Response<TravelApprovalActionResponse>,
+                ) {
+                    if (response.isSuccessful) {
+                        val approvalResponse = response.body()
+                        if (approvalResponse != null && approvalResponse.status == 200) {
+                            Log.d("TravelController", "Successfully approved travel request: $travelRequestId")
+                            // Update the approval action state
+                            approvalActionState =
+                                TravelApprovalActionState.Success(approvalResponse.message ?: "Request approved successfully")
+                            // State is already updated, no need to do anything else
+                        } else {
+                            Log.e("TravelController", "Error approving travel request: ${approvalResponse?.message}")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Error(approvalResponse?.message ?: "Failed to approve request")
+                            // Revert the state change if the API call failed
+                            loadTravelApprovals() // Reload the data
+                        }
                     } else {
-                        Log.e("TravelController", "Error approving travel request: ${approvalResponse?.message}")
+                        Log.e("TravelController", "Error approving travel request: ${response.code()} ${response.message()}")
                         // Update the approval action state
-                        approvalActionState = TravelApprovalActionState.Error(approvalResponse?.message ?: "Failed to approve request")
+                        approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
                         // Revert the state change if the API call failed
                         loadTravelApprovals() // Reload the data
                     }
-                } else {
-                    Log.e("TravelController", "Error approving travel request: ${response.code()} ${response.message()}")
+                }
+
+                override fun onFailure(
+                    call: Call<TravelApprovalActionResponse>,
+                    t: Throwable,
+                ) {
+                    Log.e("TravelController", "Error approving travel request", t)
                     // Update the approval action state
-                    approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
+                    approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
                     // Revert the state change if the API call failed
                     loadTravelApprovals() // Reload the data
                 }
-            }
-
-            override fun onFailure(call: Call<TravelApprovalActionResponse>, t: Throwable) {
-                Log.e("TravelController", "Error approving travel request", t)
-                // Update the approval action state
-                approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
-                // Revert the state change if the API call failed
-                loadTravelApprovals() // Reload the data
-            }
-        })
+            },
+        )
     }
 
     /**
      * Reject a travel request
      */
-    fun rejectTravelRequest(travelRequestId: String, remarks: String = "", actionToken: String? = null) {
+    fun rejectTravelRequest(
+        travelRequestId: String,
+        remarks: String = "",
+        actionToken: String? = null,
+    ) {
         // Set the action state to loading
         approvalActionState = TravelApprovalActionState.Loading
 
         val currentState = travelApprovalsState
-        val request: TravelRequest? = when (currentState) {
-            is TravelApprovalsState.Success -> currentState.approvalRequests.find { it.id == travelRequestId }
-            else -> selectedTravelRequest?.takeIf { it.id == travelRequestId }
-        }
+        val request: TravelRequest? =
+            when (currentState) {
+                is TravelApprovalsState.Success -> currentState.approvalRequests.find { it.id == travelRequestId }
+                else -> selectedTravelRequest?.takeIf { it.id == travelRequestId }
+            }
 
         if (request == null) {
             Log.e("TravelController", "Travel request with ID $travelRequestId not found")
@@ -756,9 +923,10 @@ class TravelController(private val navigator: Navigator, private val context: Co
         }
 
         if (currentState is TravelApprovalsState.Success) {
-            val updatedRequests = currentState.approvalRequests.map {
-                if (it.id == travelRequestId) it.copy(status = TravelStatus.REJECTED) else it
-            }
+            val updatedRequests =
+                currentState.approvalRequests.map {
+                    if (it.id == travelRequestId) it.copy(status = TravelStatus.REJECTED) else it
+                }
             travelApprovalsState = TravelApprovalsState.Success(updatedRequests)
         }
 
@@ -778,46 +946,56 @@ class TravelController(private val navigator: Navigator, private val context: Co
         val token = request.actionToken ?: ""
 
         // Make the API call to reject the request (using the same endpoint as approve)
-        val rejectRequest = TravelRejectActionRequest(
-            email = userEmail,
-            requestId = travelRequestId,
-            token = token,
-            remarks = remarks
-        )
+        val rejectRequest =
+            TravelRejectActionRequest(
+                email = userEmail,
+                requestId = travelRequestId,
+                token = token,
+                remarks = remarks,
+            )
 
-        RetrofitClient.apiService.rejectTravelRequest(rejectRequest).enqueue(object : Callback<TravelApprovalActionResponse> {
-            override fun onResponse(call: Call<TravelApprovalActionResponse>, response: Response<TravelApprovalActionResponse>) {
-                if (response.isSuccessful) {
-                    val rejectionResponse = response.body()
-                    if (rejectionResponse != null && rejectionResponse.status == 200) {
-                        Log.d("TravelController", "Successfully rejected travel request: $travelRequestId")
-                        // Update the approval action state
-                        approvalActionState = TravelApprovalActionState.Success(rejectionResponse.message ?: "Request rejected successfully")
-                        // State is already updated, no need to do anything else
+        RetrofitClient.apiService.rejectTravelRequest(rejectRequest).enqueue(
+            object : Callback<TravelApprovalActionResponse> {
+                override fun onResponse(
+                    call: Call<TravelApprovalActionResponse>,
+                    response: Response<TravelApprovalActionResponse>,
+                ) {
+                    if (response.isSuccessful) {
+                        val rejectionResponse = response.body()
+                        if (rejectionResponse != null && rejectionResponse.status == 200) {
+                            Log.d("TravelController", "Successfully rejected travel request: $travelRequestId")
+                            // Update the approval action state
+                            approvalActionState =
+                                TravelApprovalActionState.Success(rejectionResponse.message ?: "Request rejected successfully")
+                            // State is already updated, no need to do anything else
+                        } else {
+                            Log.e("TravelController", "Error rejecting travel request: ${rejectionResponse?.message}")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Error(rejectionResponse?.message ?: "Failed to reject request")
+                            // Revert the state change if the API call failed
+                            loadTravelApprovals() // Reload the data
+                        }
                     } else {
-                        Log.e("TravelController", "Error rejecting travel request: ${rejectionResponse?.message}")
+                        Log.e("TravelController", "Error rejecting travel request: ${response.code()} ${response.message()}")
                         // Update the approval action state
-                        approvalActionState = TravelApprovalActionState.Error(rejectionResponse?.message ?: "Failed to reject request")
+                        approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
                         // Revert the state change if the API call failed
                         loadTravelApprovals() // Reload the data
                     }
-                } else {
-                    Log.e("TravelController", "Error rejecting travel request: ${response.code()} ${response.message()}")
+                }
+
+                override fun onFailure(
+                    call: Call<TravelApprovalActionResponse>,
+                    t: Throwable,
+                ) {
+                    Log.e("TravelController", "Error rejecting travel request", t)
                     // Update the approval action state
-                    approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
+                    approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
                     // Revert the state change if the API call failed
                     loadTravelApprovals() // Reload the data
                 }
-            }
-
-            override fun onFailure(call: Call<TravelApprovalActionResponse>, t: Throwable) {
-                Log.e("TravelController", "Error rejecting travel request", t)
-                // Update the approval action state
-                approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
-                // Revert the state change if the API call failed
-                loadTravelApprovals() // Reload the data
-            }
-        })
+            },
+        )
     }
 
     /**
@@ -857,12 +1035,21 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Set default flight type to "Domestic" when Flight is selected
             if (value == "Flight") {
                 flightType = "Domestic"
-            } else {
-                // Reset flight-related fields if mode is not Flight
+                // Reset cab fields when switching to flight
+                resetCabBookingFields()
+            } else if (value == "Cab") {
+                // Reset flight-related fields when switching to cab
                 flightType = ""
                 flightTimePreference = ""
                 seatPreference = ""
                 frequentFlyerNumber = "0"
+            } else {
+                // Reset both flight and cab fields for other transport modes
+                flightType = ""
+                flightTimePreference = ""
+                seatPreference = ""
+                frequentFlyerNumber = "0"
+                resetCabBookingFields()
             }
         }
         // Close dropdown after selection
@@ -1049,8 +1236,8 @@ class TravelController(private val navigator: Navigator, private val context: Co
     /**
      * Convert display date format (dd MMM yyyy) to API date format (yyyy-MM-dd)
      */
-    private fun convertToApiDateFormat(displayDate: String): String {
-        return try {
+    private fun convertToApiDateFormat(displayDate: String): String =
+        try {
             val date = displayDateFormat.parse(displayDate)
             if (date != null) {
                 val apiDate = apiDateFormat.format(date)
@@ -1063,14 +1250,13 @@ class TravelController(private val navigator: Navigator, private val context: Co
             Log.e("TravelController", "Error converting date format", e)
             displayDate // Return original if parsing fails
         }
-    }
 
     /**
      * Convert millis directly to API date format to avoid timezone issues
      * This method fixes the 1-day shift bug by avoiding string parsing and using IST timezone
      */
-    private fun convertMillisToApiDateFormat(millis: Long): String {
-        return try {
+    private fun convertMillisToApiDateFormat(millis: Long): String =
+        try {
             val date = Date(millis)
             apiDateFormat.format(date)
         } catch (e: Exception) {
@@ -1078,13 +1264,12 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Fallback to current date
             apiDateFormat.format(Date())
         }
-    }
 
     /**
      * Convert millis directly to display date format
      */
-    private fun convertMillisToDisplayDateFormat(millis: Long): String {
-        return try {
+    private fun convertMillisToDisplayDateFormat(millis: Long): String =
+        try {
             val date = Date(millis)
             val formattedDate = displayDateFormat.format(date)
             Log.d("TravelController", "Converting millis $millis to display date: $formattedDate")
@@ -1094,7 +1279,6 @@ class TravelController(private val navigator: Navigator, private val context: Co
             // Fallback to current date
             displayDateFormat.format(Date())
         }
-    }
 
     /**
      * Submit travel request
@@ -1105,92 +1289,96 @@ class TravelController(private val navigator: Navigator, private val context: Co
         submissionError = null
 
         // Extract the flight time value without the time range
-        val flightTimeValue = when {
-            flightTimePreference.contains("Early Morning") -> "Early Morning"
-            flightTimePreference.contains("Morning") -> "Morning"
-            flightTimePreference.contains("Mid Day") -> "Mid Day"
-            flightTimePreference.contains("Night") -> "Night"
-            else -> flightTimePreference
-        }
-
-        // Create travel request submission object
-        val travelRequest = if (isMultiDestination) {
-            // Multi-destination request
-            val travelDetailsList = destinations.map { dest ->
-                // Extract the flight time value for this specific destination
-                val destinationFlightTime = when {
-                    dest.flightTimePreference.contains("Early Morning") -> "Early Morning"
-                    dest.flightTimePreference.contains("Morning") -> "Morning"
-                    dest.flightTimePreference.contains("Mid Day") -> "Mid Day"
-                    dest.flightTimePreference.contains("Night") -> "Night"
-                    else -> dest.flightTimePreference
-                }
-
-                TravelDetail(
-                    originCity = dest.originCity,
-                    destinationCity = dest.destination,
-                    departureDate = convertToApiDateFormat(dest.departureDate),
-                    arrivalDate = convertToApiDateFormat(dest.returnDate),
-                    flightTime = destinationFlightTime
-                )
+        val flightTimeValue =
+            when {
+                flightTimePreference.contains("Early Morning") -> "Early Morning"
+                flightTimePreference.contains("Morning") -> "Morning"
+                flightTimePreference.contains("Mid Day") -> "Mid Day"
+                flightTimePreference.contains("Night") -> "Night"
+                else -> flightTimePreference
             }
 
-            Log.d("TravelController", "Submitting multi-destination travel request with ${travelDetailsList.size} destinations")
+        // Create travel request submission object
+        val travelRequest =
+            if (isMultiDestination) {
+                // Multi-destination request
+                val travelDetailsList =
+                    destinations.map { dest ->
+                        // Extract the flight time value for this specific destination
+                        val destinationFlightTime =
+                            when {
+                                dest.flightTimePreference.contains("Early Morning") -> "Early Morning"
+                                dest.flightTimePreference.contains("Morning") -> "Morning"
+                                dest.flightTimePreference.contains("Mid Day") -> "Mid Day"
+                                dest.flightTimePreference.contains("Night") -> "Night"
+                                else -> dest.flightTimePreference
+                            }
 
-            createMultiDestinationRequest(
-                employeeId = employeeId,
-                employeeName = employeeName,
-                employeeEmail = employeeEmail,
-                mobile = mobileNumber,
-                projectName = projectName,
-                businessJustification = businessJustification,
-                modeOfTransport = modeOfTransport,
-                reportingManagerName = reportingManagerName,
-                reportingManagerEmail = reportingManagerEmail,
-                stayRequired = stayRequired,
-                grade = employeeGrade,
-                aadharNumber = aadharNumber,
-                dateOfBirth = dateOfBirth,
-                frequentFlyerNumber = frequentFlyerNumber,
-                mealPreference = if (mealPreferenceEnabled) mealPreference else "",
-                seatPreference = seatPreference,
-                travelDetails = travelDetailsList
-            )
-        } else {
-            // Single destination request
-            val apiDepartureDate = convertToApiDateFormat(departureDate)
-            val apiArrivalDate = convertToApiDateFormat(arrivalDate)
+                        TravelDetail(
+                            originCity = dest.originCity,
+                            destinationCity = dest.destination,
+                            departureDate = convertToApiDateFormat(dest.departureDate),
+                            arrivalDate = convertToApiDateFormat(dest.returnDate),
+                            flightTime = destinationFlightTime,
+                        )
+                    }
 
-            Log.d("TravelController", "Submitting single-destination travel request:")
-            Log.d("TravelController", "  Display departure date: $departureDate")
-            Log.d("TravelController", "  API departure date: $apiDepartureDate")
-            Log.d("TravelController", "  Display arrival date: $arrivalDate")
-            Log.d("TravelController", "  API arrival date: $apiArrivalDate")
+                Log.d("TravelController", "Submitting multi-destination travel request with ${travelDetailsList.size} destinations")
 
-            createSingleDestinationRequest(
-                employeeId = employeeId,
-                employeeName = employeeName,
-                employeeEmail = employeeEmail,
-                mobile = mobileNumber,
-                originCity = originCity,
-                destinationCity = destination,
-                projectName = projectName,
-                businessJustification = businessJustification,
-                modeOfTransport = modeOfTransport,
-                departureDate = apiDepartureDate,
-                arrivalDate = apiArrivalDate,
-                reportingManagerName = reportingManagerName,
-                reportingManagerEmail = reportingManagerEmail,
-                stayRequired = stayRequired,
-                grade = employeeGrade,
-                aadharNumber = aadharNumber,
-                dateOfBirth = dateOfBirth,
-                frequentFlyerNumber = frequentFlyerNumber,
-                mealPreference = if (mealPreferenceEnabled) mealPreference else "",
-                seatPreference = seatPreference,
-                flightTime = flightTimeValue
-            )
-        }
+                createMultiDestinationRequest(
+                    employeeId = employeeId,
+                    employeeName = employeeName,
+                    employeeEmail = employeeEmail,
+                    mobile = mobileNumber,
+                    projectName = projectName,
+                    businessJustification = businessJustification,
+                    modeOfTransport = modeOfTransport,
+                    reportingManagerName = reportingManagerName,
+                    reportingManagerEmail = reportingManagerEmail,
+                    stayRequired = stayRequired,
+                    grade = employeeGrade,
+                    aadharNumber = aadharNumber,
+                    dateOfBirth = dateOfBirth,
+                    frequentFlyerNumber = frequentFlyerNumber,
+                    mealPreference = if (mealPreferenceEnabled) mealPreference else "",
+                    seatPreference = seatPreference,
+                    travelDetails = travelDetailsList,
+                )
+            } else {
+                // Single destination request
+                val apiDepartureDate = convertToApiDateFormat(departureDate)
+                val apiArrivalDate = convertToApiDateFormat(arrivalDate)
+
+                Log.d("TravelController", "Submitting single-destination travel request:")
+                Log.d("TravelController", "  Display departure date: $departureDate")
+                Log.d("TravelController", "  API departure date: $apiDepartureDate")
+                Log.d("TravelController", "  Display arrival date: $arrivalDate")
+                Log.d("TravelController", "  API arrival date: $apiArrivalDate")
+
+                createSingleDestinationRequest(
+                    employeeId = employeeId,
+                    employeeName = employeeName,
+                    employeeEmail = employeeEmail,
+                    mobile = mobileNumber,
+                    originCity = originCity,
+                    destinationCity = destination,
+                    projectName = projectName,
+                    businessJustification = businessJustification,
+                    modeOfTransport = modeOfTransport,
+                    departureDate = apiDepartureDate,
+                    arrivalDate = apiArrivalDate,
+                    reportingManagerName = reportingManagerName,
+                    reportingManagerEmail = reportingManagerEmail,
+                    stayRequired = stayRequired,
+                    grade = employeeGrade,
+                    aadharNumber = aadharNumber,
+                    dateOfBirth = dateOfBirth,
+                    frequentFlyerNumber = frequentFlyerNumber,
+                    mealPreference = if (mealPreferenceEnabled) mealPreference else "",
+                    seatPreference = seatPreference,
+                    flightTime = flightTimeValue,
+                )
+            }
 
         // Log the travel request being sent for debugging
         Log.d("TravelController", "Submitting travel request:")
@@ -1231,104 +1419,117 @@ class TravelController(private val navigator: Navigator, private val context: Co
         }
 
         // Make API call
-        RetrofitClient.apiService.submitTravelRequest(travelRequest).enqueue(object : Callback<TravelRequestResponse> {
-            override fun onResponse(call: Call<TravelRequestResponse>, response: Response<TravelRequestResponse>) {
-                isSubmitting = false
-                Log.d("TravelController", "Received response - Code: ${response.code()}, Success: ${response.isSuccessful}")
+        RetrofitClient.apiService.submitTravelRequest(travelRequest).enqueue(
+            object : Callback<TravelRequestResponse> {
+                override fun onResponse(
+                    call: Call<TravelRequestResponse>,
+                    response: Response<TravelRequestResponse>,
+                ) {
+                    isSubmitting = false
+                    Log.d("TravelController", "Received response - Code: ${response.code()}, Success: ${response.isSuccessful}")
 
-                try {
-                    Log.d("TravelController", "Response body is null: ${response.body() == null}")
+                    try {
+                        Log.d("TravelController", "Response body is null: ${response.body() == null}")
 
-                    if (response.isSuccessful && response.body() != null) {
-                        val responseBody = response.body()!!
-                        Log.d("TravelController", "Response status: ${responseBody.status}")
-                        Log.d("TravelController", "Response message: ${responseBody.message}")
+                        if (response.isSuccessful && response.body() != null) {
+                            val responseBody = response.body()!!
+                            Log.d("TravelController", "Response status: ${responseBody.status}")
+                            Log.d("TravelController", "Response message: ${responseBody.message}")
 
-                        if (responseBody.status == 200) {
-                            // Request was successful
-                            Log.d("TravelController", "Travel request submitted successfully")
+                            if (responseBody.status == 200) {
+                                // Request was successful
+                                Log.d("TravelController", "Travel request submitted successfully")
 
-                            // Show success toast message
-                            CustomToast.show(context, "Travel request submitted successfully!")
+                                // Show success toast message
+                                CustomToast.show(context, "Travel request submitted successfully!")
 
-                            // Log multi-destination details if available
-                            responseBody.getAllOrderHistory()?.firstOrNull()?.let { order ->
-                                Log.d("TravelController", "Request ID: ${order.requestId}")
-                                order.travelDetails?.let { details ->
-                                    Log.d("TravelController", "Travel details: ${details.size} destinations")
-                                    details.forEach { dest ->
-                                        Log.d("TravelController", "  - ${dest.travelDestination}: ${dest.departureDate} to ${dest.arrivalDate}")
+                                // Log multi-destination details if available
+                                responseBody.getAllOrderHistory()?.firstOrNull()?.let { order ->
+                                    Log.d("TravelController", "Request ID: ${order.requestId}")
+                                    order.travelDetails?.let { details ->
+                                        Log.d("TravelController", "Travel details: ${details.size} destinations")
+                                        details.forEach { dest ->
+                                            Log.d(
+                                                "TravelController",
+                                                "  - ${dest.travelDestination}: ${dest.departureDate} to ${dest.arrivalDate}",
+                                            )
+                                        }
                                     }
                                 }
-                            }
 
-                            // Clear any previous errors and navigate to travel history
-                            submissionError = null
-                            // Refresh travel history to show the new request
-                            loadCombinedTravelHistory()
-                            navigator.navigateToTravelHistory()
-                        } else {
-                            // Server returned an error
-                            submissionError = responseBody.message
-                            Log.e("TravelController", "Error submitting travel request: ${responseBody.message}")
-                        }
-                    } else {
-                        // HTTP error
-                        try {
-                            val errorBody = response.errorBody()?.string()
-                            submissionError = "Failed to submit travel request. Please try again."
-                            Log.e("TravelController", "HTTP error: ${response.code()}, Error body: $errorBody")
-
-                            // Also try to log the raw response if available
-                            if (response.body() == null) {
-                                Log.e("TravelController", "Response body is null - likely parsing error")
+                                // Clear any previous errors and navigate to travel history
+                                submissionError = null
+                                // Refresh travel history to show the new request
+                                loadCombinedTravelHistory()
+                                navigator.navigateToTravelHistory()
                             } else {
-                                Log.e("TravelController", "Response body exists but response not successful")
+                                // Server returned an error
+                                submissionError = responseBody.message
+                                Log.e("TravelController", "Error submitting travel request: ${responseBody.message}")
                             }
-                        } catch (e: Exception) {
-                            submissionError = "Failed to submit travel request. Please try again."
-                            Log.e("TravelController", "HTTP error: ${response.code()}, Error reading error body", e)
+                        } else {
+                            // HTTP error
+                            try {
+                                val errorBody = response.errorBody()?.string()
+                                submissionError = "Failed to submit travel request. Please try again."
+                                Log.e("TravelController", "HTTP error: ${response.code()}, Error body: $errorBody")
+
+                                // Also try to log the raw response if available
+                                if (response.body() == null) {
+                                    Log.e("TravelController", "Response body is null - likely parsing error")
+                                } else {
+                                    Log.e("TravelController", "Response body exists but response not successful")
+                                }
+                            } catch (e: Exception) {
+                                submissionError = "Failed to submit travel request. Please try again."
+                                Log.e("TravelController", "HTTP error: ${response.code()}, Error reading error body", e)
+                            }
                         }
+                    } catch (e: Exception) {
+                        Log.e("TravelController", "Exception in onResponse: ${e.message}", e)
+                        submissionError = "Error processing response. Please try again."
                     }
-                } catch (e: Exception) {
-                    Log.e("TravelController", "Exception in onResponse: ${e.message}", e)
-                    submissionError = "Error processing response. Please try again."
                 }
-            }
 
-            override fun onFailure(call: Call<TravelRequestResponse>, t: Throwable) {
-                isSubmitting = false
-
-                // Check if this is a JSON parsing error after a successful request
-                if (t is com.google.gson.JsonSyntaxException && (
-                    t.message?.contains("Expected an int but was BOOLEAN") == true ||
-                        t.message?.contains("stay_required") == true
-                    )
+                override fun onFailure(
+                    call: Call<TravelRequestResponse>,
+                    t: Throwable,
                 ) {
-                    // This means the request was successful but response parsing failed
-                    // Suppress the error and show success
-                    Log.d("TravelController", "Request successful but response parsing failed - treating as success")
+                    isSubmitting = false
 
-                    // Show success toast message
-                    CustomToast.show(context, "Travel request submitted successfully!")
+                    // Check if this is a JSON parsing error after a successful request
+                    if (t is com.google.gson.JsonSyntaxException &&
+                        (
+                            t.message?.contains("Expected an int but was BOOLEAN") == true ||
+                                t.message?.contains("stay_required") == true
+                        )
+                    ) {
+                        // This means the request was successful but response parsing failed
+                        // Suppress the error and show success
+                        Log.d("TravelController", "Request successful but response parsing failed - treating as success")
 
-                    submissionError = null
-                    // Refresh travel history to show the new request
-                    loadCombinedTravelHistory()
-                    navigator.navigateToTravelHistory()
-                } else {
-                    // Genuine network error
-                    submissionError = "Network error. Please check your connection and try again."
-                    Log.e("TravelController", "Network error submitting travel request", t)
-                    Log.e("TravelController", "Error type: ${t.javaClass.simpleName}")
-                    Log.e("TravelController", "Error message: ${t.message}")
-                    Log.e("TravelController", "Error cause: ${t.cause}")
+                        // Show success toast message
+                        CustomToast.show(context, "Travel request submitted successfully!")
+
+                        submissionError = null
+                        // Refresh travel history to show the new request
+                        loadCombinedTravelHistory()
+                        navigator.navigateToTravelHistory()
+                    } else {
+                        // Genuine network error
+                        submissionError = "Network error. Please check your connection and try again."
+                        Log.e("TravelController", "Network error submitting travel request", t)
+                        Log.e("TravelController", "Error type: ${t.javaClass.simpleName}")
+                        Log.e("TravelController", "Error message: ${t.message}")
+                        Log.e("TravelController", "Error cause: ${t.cause}")
+                    }
                 }
-            }
-        })
+            },
+        )
     }
 
     // Multi-destination functions
+
     /**
      * Toggle between single and multi-destination mode
      */
@@ -1336,15 +1537,16 @@ class TravelController(private val navigator: Navigator, private val context: Co
         isMultiDestination = isMulti
         if (isMulti && destinations.isEmpty()) {
             // Initialize with one destination
-            destinations = listOf(
-                Destination(
-                    originCity = "",
-                    destination = "",
-                    departureDate = currentDate,
-                    returnDate = currentDate,
-                    flightTimePreference = ""
+            destinations =
+                listOf(
+                    Destination(
+                        originCity = "",
+                        destination = "",
+                        departureDate = currentDate,
+                        returnDate = currentDate,
+                        flightTimePreference = "",
+                    ),
                 )
-            )
         }
     }
 
@@ -1352,13 +1554,14 @@ class TravelController(private val navigator: Navigator, private val context: Co
      * Add a new destination to the list
      */
     fun addDestination() {
-        destinations = destinations + Destination(
-            originCity = "",
-            destination = "",
-            departureDate = currentDate,
-            returnDate = currentDate,
-            flightTimePreference = ""
-        )
+        destinations = destinations +
+            Destination(
+                originCity = "",
+                destination = "",
+                departureDate = currentDate,
+                returnDate = currentDate,
+                flightTimePreference = "",
+            )
     }
 
     /**
@@ -1371,59 +1574,78 @@ class TravelController(private val navigator: Navigator, private val context: Co
     /**
      * Update origin city field for a specific destination
      */
-    fun updateDestinationOriginCity(destinationId: String, value: String) {
-        destinations = destinations.map { destination ->
-            if (destination.id == destinationId) {
-                destination.copy(originCity = value)
-            } else {
-                destination
+    fun updateDestinationOriginCity(
+        destinationId: String,
+        value: String,
+    ) {
+        destinations =
+            destinations.map { destination ->
+                if (destination.id == destinationId) {
+                    destination.copy(originCity = value)
+                } else {
+                    destination
+                }
             }
-        }
     }
 
     /**
      * Update flight time preference for a specific destination
      */
-    fun updateDestinationFlightTimePreference(destinationId: String, value: String) {
-        destinations = destinations.map { destination ->
-            if (destination.id == destinationId) {
-                destination.copy(flightTimePreference = value)
-            } else {
-                destination
+    fun updateDestinationFlightTimePreference(
+        destinationId: String,
+        value: String,
+    ) {
+        destinations =
+            destinations.map { destination ->
+                if (destination.id == destinationId) {
+                    destination.copy(flightTimePreference = value)
+                } else {
+                    destination
+                }
             }
-        }
     }
 
     /**
      * Update destination field for a specific destination
      */
-    fun updateDestinationField(destinationId: String, value: String) {
-        destinations = destinations.map { destination ->
-            if (destination.id == destinationId) {
-                destination.copy(destination = value)
-            } else {
-                destination
+    fun updateDestinationField(
+        destinationId: String,
+        value: String,
+    ) {
+        destinations =
+            destinations.map { destination ->
+                if (destination.id == destinationId) {
+                    destination.copy(destination = value)
+                } else {
+                    destination
+                }
             }
-        }
     }
 
     /**
      * Update departure date for a specific destination
      */
-    fun updateDestinationDepartureDate(destinationId: String, value: String) {
-        destinations = destinations.map { destination ->
-            if (destination.id == destinationId) {
-                destination.copy(departureDate = value)
-            } else {
-                destination
+    fun updateDestinationDepartureDate(
+        destinationId: String,
+        value: String,
+    ) {
+        destinations =
+            destinations.map { destination ->
+                if (destination.id == destinationId) {
+                    destination.copy(departureDate = value)
+                } else {
+                    destination
+                }
             }
-        }
     }
 
     /**
      * Update departure date from millis for a specific destination
      */
-    fun updateDestinationDepartureDateFromMillis(destinationId: String, millis: Long) {
+    fun updateDestinationDepartureDateFromMillis(
+        destinationId: String,
+        millis: Long,
+    ) {
         val formattedDate = convertMillisToDisplayDateFormat(millis)
         updateDestinationDepartureDate(destinationId, formattedDate)
     }
@@ -1431,20 +1653,27 @@ class TravelController(private val navigator: Navigator, private val context: Co
     /**
      * Update return date for a specific destination
      */
-    fun updateDestinationReturnDate(destinationId: String, value: String) {
-        destinations = destinations.map { destination ->
-            if (destination.id == destinationId) {
-                destination.copy(returnDate = value)
-            } else {
-                destination
+    fun updateDestinationReturnDate(
+        destinationId: String,
+        value: String,
+    ) {
+        destinations =
+            destinations.map { destination ->
+                if (destination.id == destinationId) {
+                    destination.copy(returnDate = value)
+                } else {
+                    destination
+                }
             }
-        }
     }
 
     /**
      * Update return date from millis for a specific destination
      */
-    fun updateDestinationReturnDateFromMillis(destinationId: String, millis: Long) {
+    fun updateDestinationReturnDateFromMillis(
+        destinationId: String,
+        millis: Long,
+    ) {
         val formattedDate = convertMillisToDisplayDateFormat(millis)
         updateDestinationReturnDate(destinationId, formattedDate)
     }
@@ -1464,6 +1693,493 @@ class TravelController(private val navigator: Navigator, private val context: Co
     fun onBackPressed() {
         navigator.popBackStack()
     }
+
+    // Cab booking methods
+
+    /**
+     * Update local travel selection
+     */
+    fun updateLocalTravel(isLocal: Boolean) {
+        isLocalTravel = isLocal
+        // Reset passenger count to 1 when changing travel type
+        if (isLocal && passengerCount == 1) {
+            // Keep validation visible
+        }
+    }
+
+    /**
+     * Update travel type from dropdown selection
+     */
+    fun updateTravelType(travelType: String) {
+        isLocalTravel = travelType == "Local Travel"
+        isTravelTypeDropdownExpanded = false
+    }
+
+    /**
+     * Toggle travel type dropdown
+     */
+    fun toggleTravelTypeDropdown() {
+        isTravelTypeDropdownExpanded = !isTravelTypeDropdownExpanded
+    }
+
+    /**
+     * Dismiss travel type dropdown
+     */
+    fun dismissTravelTypeDropdown() {
+        isTravelTypeDropdownExpanded = false
+    }
+
+    /**
+     * Update passenger count
+     */
+    fun updatePassengerCount(count: Int) {
+        passengerCount = count
+    }
+
+    /**
+     * Validate cab booking rules
+     */
+    fun validateCabBooking(): String? =
+        if (isLocalTravel && passengerCount == 1) {
+            "Single passenger not allowed for local travel"
+        } else {
+            null
+        }
+
+    /**
+     * Update cab type
+     */
+    fun updateCabType(type: String) {
+        cabType = type
+        isCabTypeDropdownExpanded = false
+    }
+
+    /**
+     * Toggle cab type dropdown
+     */
+    fun toggleCabTypeDropdown() {
+        isCabTypeDropdownExpanded = !isCabTypeDropdownExpanded
+    }
+
+    /**
+     * Dismiss cab type dropdown
+     */
+    fun dismissCabTypeDropdown() {
+        isCabTypeDropdownExpanded = false
+    }
+
+    /**
+     * Update cab duration
+     */
+    fun updateCabDuration(duration: String) {
+        cabDuration = duration
+        isCabDurationDropdownExpanded = false
+    }
+
+    /**
+     * Toggle cab duration dropdown
+     */
+    fun toggleCabDurationDropdown() {
+        isCabDurationDropdownExpanded = !isCabDurationDropdownExpanded
+    }
+
+    /**
+     * Dismiss cab duration dropdown
+     */
+    fun dismissCabDurationDropdown() {
+        isCabDurationDropdownExpanded = false
+    }
+
+    /**
+     * Update pickup location
+     */
+    fun updatePickupLocation(location: String) {
+        pickupLocation = location
+    }
+
+    /**
+     * Update final drop location
+     */
+    fun updateFinalDropLocation(location: String) {
+        finalDropLocation = location
+    }
+
+    /**
+     * Add new visit point (max 3 allowed)
+     */
+    fun addVisitPoint() {
+        if (visitPoints.size < 3) {
+            val newPoint =
+                VisitPoint(
+                    order = visitPoints.size + 1,
+                )
+            visitPoints = visitPoints + newPoint
+        }
+    }
+
+    /**
+     * Remove visit point by ID
+     */
+    fun removeVisitPoint(pointId: String) {
+        visitPoints =
+            visitPoints
+                .filter { it.id != pointId }
+                .mapIndexed { index, point ->
+                    point.copy(order = index + 1)
+                }
+    }
+
+    /**
+     * Update visit point location
+     */
+    fun updateVisitPointLocation(
+        pointId: String,
+        location: String,
+    ) {
+        visitPoints =
+            visitPoints.map { point ->
+                if (point.id == pointId) {
+                    point.copy(location = location)
+                } else {
+                    point
+                }
+            }
+    }
+
+    /**
+     * Update map details
+     */
+    fun updateMapDetails(details: String) {
+        mapDetails = details
+    }
+
+    // Enhanced cab booking methods
+
+    /**
+     * Update project ID
+     */
+    fun updateProjectId(value: String) {
+        projectId = value
+    }
+
+    /**
+     * Update opportunity ID
+     */
+    fun updateOpportunityId(value: String) {
+        opportunityId = value
+    }
+
+    /**
+     * Update CRM ID
+     */
+    fun updateCrmId(value: String) {
+        crmId = value
+    }
+
+    /**
+     * Update cab travel date
+     */
+    fun updateCabTravelDate(value: String) {
+        cabTravelDate = value
+    }
+
+    /**
+     * Update cab travel date from date picker millis
+     */
+    fun updateCabTravelDateFromMillis(millis: Long) {
+        cabTravelDate = convertMillisToDisplayDateFormat(millis)
+    }
+
+    /**
+     * Update attendee search query
+     */
+    fun updateAttendeeSearchQuery(value: String) {
+        attendeeSearchQuery = value
+        if (value.length >= 3) {
+            searchEmployees(value)
+        } else {
+            employeeSearchResults = emptyList()
+        }
+    }
+
+    /**
+     * Search for employees to add as attendees
+     */
+    fun searchEmployees(query: String) {
+        if (query.length < 3) return
+
+        isSearchingEmployees = true
+        val searchRequest =
+            EmployeeSearchRequest(
+                query = query,
+                searchType = "name",
+                limit = 10,
+            )
+
+        RetrofitClient.apiService.searchEmployees(searchRequest).enqueue(
+            object : Callback<EmployeeSearchResponse> {
+                override fun onResponse(
+                    call: Call<EmployeeSearchResponse>,
+                    response: Response<EmployeeSearchResponse>,
+                ) {
+                    isSearchingEmployees = false
+                    if (response.isSuccessful && response.body() != null) {
+                        val searchResponse = response.body()!!
+                        if (searchResponse.status == 200) {
+                            employeeSearchResults = searchResponse.employees
+                        } else {
+                            employeeSearchResults = emptyList()
+                        }
+                    } else {
+                        employeeSearchResults = emptyList()
+                        Log.e("TravelController", "Error searching employees: ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<EmployeeSearchResponse>,
+                    t: Throwable,
+                ) {
+                    isSearchingEmployees = false
+                    employeeSearchResults = emptyList()
+                    Log.e("TravelController", "Network error searching employees", t)
+                }
+            },
+        )
+    }
+
+    /**
+     * Add attendee from search results
+     */
+    fun addAttendee(employee: EmployeeSearchResult) {
+        val attendee =
+            CabAttendee(
+                name = employee.name,
+                employeeId = employee.employeeId,
+                email = employee.email,
+                department = employee.department,
+            )
+        additionalAttendees = additionalAttendees + attendee
+        attendeeSearchQuery = ""
+        employeeSearchResults = emptyList()
+        showAttendeeSearch = false
+    }
+
+    /**
+     * Remove attendee by index
+     */
+    fun removeAttendee(index: Int) {
+        additionalAttendees = additionalAttendees.filterIndexed { i, _ -> i != index }
+    }
+
+    /**
+     * Toggle attendee search visibility
+     */
+    fun toggleAttendeeSearch() {
+        showAttendeeSearch = !showAttendeeSearch
+        if (!showAttendeeSearch) {
+            attendeeSearchQuery = ""
+            employeeSearchResults = emptyList()
+        }
+    }
+
+    /**
+     * Add pickup location
+     */
+    fun addPickupLocation() {
+        val newLocation =
+            CabLocation(
+                address = "",
+                order = cabPickupLocations.size + 1,
+                isPickup = true,
+            )
+        cabPickupLocations = cabPickupLocations + newLocation
+    }
+
+    /**
+     * Remove pickup location by ID
+     */
+    fun removePickupLocation(locationId: String) {
+        cabPickupLocations =
+            cabPickupLocations
+                .filter { it.id != locationId }
+                .mapIndexed { index, location ->
+                    location.copy(order = index + 1)
+                }
+    }
+
+    /**
+     * Update pickup location address
+     */
+    fun updatePickupLocationAddress(
+        locationId: String,
+        address: String,
+    ) {
+        cabPickupLocations =
+            cabPickupLocations.map { location ->
+                if (location.id == locationId) {
+                    location.copy(address = address)
+                } else {
+                    location
+                }
+            }
+    }
+
+    /**
+     * Submit enhanced cab booking request
+     */
+    fun submitCabBookingRequest() {
+        // Reset state
+        isCabSubmitting = true
+        cabSubmissionError = null
+
+        // Validate required fields
+        if (businessJustification.isBlank()) {
+            cabSubmissionError = "Business justification is required"
+            isCabSubmitting = false
+            return
+        }
+
+        if (cabType.isBlank()) {
+            cabSubmissionError = "Please select cab type"
+            isCabSubmitting = false
+            return
+        }
+
+        if (cabDuration.isBlank()) {
+            cabSubmissionError = "Please select duration"
+            isCabSubmitting = false
+            return
+        }
+
+        if (pickupLocation.isBlank() && cabPickupLocations.isEmpty()) {
+            cabSubmissionError = "Please provide pickup location"
+            isCabSubmitting = false
+            return
+        }
+
+        if (finalDropLocation.isBlank()) {
+            cabSubmissionError = "Please provide drop location"
+            isCabSubmitting = false
+            return
+        }
+
+        // Create pickup locations list
+        val allPickupLocations =
+            if (pickupLocation.isNotBlank()) {
+                listOf(CabLocation(address = pickupLocation, order = 1, isPickup = true)) + cabPickupLocations
+            } else {
+                cabPickupLocations
+            }
+
+        // Create cab booking request
+        val cabRequest =
+            createCabBookingRequest(
+                employeeId = employeeId,
+                employeeName = employeeName,
+                employeeEmail = employeeEmail,
+                mobile = mobileNumber,
+                projectName = projectName.takeIf { it.isNotBlank() },
+                projectId = projectId.takeIf { it.isNotBlank() },
+                opportunityId = opportunityId.takeIf { it.isNotBlank() },
+                crmId = crmId.takeIf { it.isNotBlank() },
+                businessJustification = businessJustification,
+                travelType = if (isLocalTravel) "Local Travel" else "Out of Local Station",
+                travelDate = convertToApiDateFormat(cabTravelDate),
+                passengerCount = passengerCount,
+                additionalAttendees = additionalAttendees,
+                cabType = cabType,
+                duration = cabDuration,
+                pickupLocations = allPickupLocations,
+                dropLocation = finalDropLocation,
+                reportingManagerName = reportingManagerName,
+                reportingManagerEmail = reportingManagerEmail,
+                grade = employeeGrade,
+                aadharNumber = aadharNumber,
+                dateOfBirth = dateOfBirth,
+            )
+
+        // Log the request for debugging
+        Log.d("TravelController", "Submitting cab booking request:")
+        Log.d("TravelController", "  Employee: ${cabRequest.employeeName}")
+        Log.d("TravelController", "  Travel Type: ${cabRequest.travelType}")
+        Log.d("TravelController", "  Date: ${cabRequest.travelDate}")
+        Log.d("TravelController", "  Passengers: ${cabRequest.passengerCount}")
+        Log.d("TravelController", "  Cab Type: ${cabRequest.cabType}")
+        Log.d("TravelController", "  Duration: ${cabRequest.duration}")
+        Log.d("TravelController", "  Pickup Locations: ${cabRequest.pickupLocations.size}")
+        Log.d("TravelController", "  Additional Attendees: ${cabRequest.additionalAttendees.size}")
+
+        // Make API call
+        RetrofitClient.apiService.submitCabBooking(cabRequest).enqueue(
+            object : Callback<CabBookingResponse> {
+                override fun onResponse(
+                    call: Call<CabBookingResponse>,
+                    response: Response<CabBookingResponse>,
+                ) {
+                    isCabSubmitting = false
+                    if (response.isSuccessful && response.body() != null) {
+                        val cabResponse = response.body()!!
+                        if (cabResponse.status == 200) {
+                            // Success
+                            CustomToast.show(context, "Cab booking request submitted successfully!")
+                            cabSubmissionError = null
+
+                            // Navigate to travel history
+                            loadCombinedTravelHistory()
+                            navigator.navigateToTravelHistory()
+                        } else {
+                            cabSubmissionError = cabResponse.message
+                            Log.e("TravelController", "Error submitting cab booking: ${cabResponse.message}")
+                        }
+                    } else {
+                        cabSubmissionError = "Failed to submit cab booking. Please try again."
+                        Log.e("TravelController", "HTTP error: ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<CabBookingResponse>,
+                    t: Throwable,
+                ) {
+                    isCabSubmitting = false
+                    cabSubmissionError = "Network error. Please check your connection and try again."
+                    Log.e("TravelController", "Network error submitting cab booking", t)
+                }
+            },
+        )
+    }
+
+    /**
+     * Reset cab booking fields when switching away from cab mode
+     */
+    private fun resetCabBookingFields() {
+        isLocalTravel = false
+        passengerCount = 1
+        cabType = ""
+        cabDuration = ""
+        pickupLocation = ""
+        finalDropLocation = ""
+        visitPoints = emptyList()
+        mapDetails = ""
+
+        // Reset enhanced cab booking fields
+        projectId = ""
+        opportunityId = ""
+        crmId = ""
+        cabTravelDate = currentDate
+        attendeeSearchQuery = ""
+        additionalAttendees = emptyList()
+        cabPickupLocations = emptyList()
+        employeeSearchResults = emptyList()
+        showAttendeeSearch = false
+        cabSubmissionError = null
+
+        // Reset dropdown states
+        isCabTypeDropdownExpanded = false
+        isCabDurationDropdownExpanded = false
+        isTravelTypeDropdownExpanded = false
+    }
 }
 
 /**
@@ -1471,6 +2187,12 @@ class TravelController(private val navigator: Navigator, private val context: Co
  */
 sealed class TravelHistoryState {
     object Loading : TravelHistoryState()
-    data class Success(val travelRequests: List<TravelRequest>) : TravelHistoryState()
-    data class Error(val message: String) : TravelHistoryState()
+
+    data class Success(
+        val travelRequests: List<TravelRequest>,
+    ) : TravelHistoryState()
+
+    data class Error(
+        val message: String,
+    ) : TravelHistoryState()
 }

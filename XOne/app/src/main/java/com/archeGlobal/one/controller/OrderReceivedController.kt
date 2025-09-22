@@ -20,12 +20,12 @@ import kotlinx.coroutines.withContext
 
 class OrderReceivedController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) : ViewModel() {
-
     companion object {
         var selectedOrderForDetails: OrderHistoryItem? = null
     }
+
     var model by mutableStateOf(OrderReceivedModel())
         private set
 
@@ -49,10 +49,11 @@ class OrderReceivedController(
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val orderHistoryResponse = response.body()!!
-                        model = model.copy(
-                            orders = orderHistoryResponse.orders,
-                            isLoading = false
-                        )
+                        model =
+                            model.copy(
+                                orders = orderHistoryResponse.orders,
+                                isLoading = false,
+                            )
                         Log.d("OrderReceivedController", "Orders loaded successfully: ${orderHistoryResponse.orders.size} orders")
                     } else {
                         handleError("Failed to load orders: ${response.message()}")
@@ -68,10 +69,11 @@ class OrderReceivedController(
 
     private fun handleError(message: String) {
         Log.e("OrderReceivedController", message)
-        model = model.copy(
-            isLoading = false,
-            error = message
-        )
+        model =
+            model.copy(
+                isLoading = false,
+                error = message,
+            )
     }
 
     fun onBackPressed() {
@@ -93,13 +95,9 @@ class OrderReceivedController(
         navigator.navigateToOrderDetails(order.orderId)
     }
 
-    fun getPendingOrdersCount(): Int {
-        return model.orders.count { it.orderStatus.lowercase() == "pending" }
-    }
+    fun getPendingOrdersCount(): Int = model.orders.count { it.orderStatus.lowercase() == "pending" }
 
-    fun getTotalOrdersCount(): Int {
-        return model.orders.size
-    }
+    fun getTotalOrdersCount(): Int = model.orders.size
 
     fun clearError() {
         model = model.copy(error = null)

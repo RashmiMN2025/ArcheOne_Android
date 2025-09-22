@@ -15,7 +15,7 @@ data class SupportTicket(
     val closureComments: String? = null,
     val resolvedTime: String? = null,
     val lastUpdate: String? = null,
-    val details: TicketDetails? = null
+    val details: TicketDetails? = null,
 )
 
 data class TicketDetails(
@@ -23,11 +23,14 @@ data class TicketDetails(
     val deviceInfo: String,
     val appVersion: String,
     val rating: Int? = null,
-    val additionalNotes: String? = null
+    val additionalNotes: String? = null,
 )
 
 enum class TicketStatus {
-    OPEN, IN_PROGRESS, CLOSED, PENDING
+    OPEN,
+    IN_PROGRESS,
+    CLOSED,
+    PENDING,
 }
 
 data class HelpDeskFAQ(
@@ -35,25 +38,26 @@ data class HelpDeskFAQ(
     val title: String,
     val question: String,
     val answer: String,
-    val category: String = "General"
+    val category: String = "General",
 )
 
 data class HelpDeskModel(
     val faqItems: List<HelpDeskFAQ> = emptyList(),
     val tickets: List<SupportTicket> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 // Extension function to convert API TicketItem to SupportTicket
 fun TicketItem.toSupportTicket(): SupportTicket {
-    val ticketStatus = when (status.uppercase()) {
-        "OPEN" -> TicketStatus.OPEN
-        "IN_PROGRESS", "IN PROGRESS" -> TicketStatus.IN_PROGRESS
-        "CLOSED" -> TicketStatus.CLOSED
-        "PENDING" -> TicketStatus.PENDING
-        else -> TicketStatus.CLOSED // Default to closed for unknown statuses
-    }
+    val ticketStatus =
+        when (status.uppercase()) {
+            "OPEN" -> TicketStatus.OPEN
+            "IN_PROGRESS", "IN PROGRESS" -> TicketStatus.IN_PROGRESS
+            "CLOSED" -> TicketStatus.CLOSED
+            "PENDING" -> TicketStatus.PENDING
+            else -> TicketStatus.CLOSED // Default to closed for unknown statuses
+        }
 
     return SupportTicket(
         id = id,
@@ -67,7 +71,7 @@ fun TicketItem.toSupportTicket(): SupportTicket {
         closureComments = closure_comments,
         resolvedTime = resolved_time,
         lastUpdate = null,
-        details = null
+        details = null,
     )
 }
 
@@ -78,13 +82,14 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
     this.forEachIndexed { categoryIndex, category ->
         category.items.forEachIndexed { itemIndex, item ->
             // Combine all answer descriptions into a single formatted answer
-            val combinedAnswer = item.answer.joinToString("\n\n") { answer ->
-                if (answer.cat.isNotBlank()) {
-                    "• ${answer.cat}: ${answer.des}"
-                } else {
-                    "• ${answer.des}"
+            val combinedAnswer =
+                item.answer.joinToString("\n\n") { answer ->
+                    if (answer.cat.isNotBlank()) {
+                        "• ${answer.cat}: ${answer.des}"
+                    } else {
+                        "• ${answer.des}"
+                    }
                 }
-            }
 
             faqs.add(
                 HelpDeskFAQ(
@@ -92,8 +97,8 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
                     title = category.title,
                     question = item.question,
                     answer = combinedAnswer,
-                    category = category.title
-                )
+                    category = category.title,
+                ),
             )
         }
     }
@@ -105,8 +110,8 @@ fun List<FAQCategory>.toHelpDeskFAQs(): List<HelpDeskFAQ> {
             title = "Other Issues",
             question = "Other issue raise concern",
             answer = "For any other issues not covered in the FAQ, please use the 'Raise a Ticket' button to create a support ticket.",
-            category = "General"
-        )
+            category = "General",
+        ),
     )
 
     return faqs

@@ -4,10 +4,14 @@ import android.content.Context
 import com.archeGlobal.one.model.SecurityQuestion
 import com.archeGlobal.one.utils.MpinManager
 
-class MpinController(private val context: Context) {
-
+class MpinController(
+    private val context: Context,
+) {
     /** Save MPIN and security questions for reset validation */
-    fun saveMpinAndQuestions(mpin: String, questions: List<SecurityQuestion>) {
+    fun saveMpinAndQuestions(
+        mpin: String,
+        questions: List<SecurityQuestion>,
+    ) {
         MpinManager.saveMpin(context, mpin)
         MpinManager.saveSecurityQuestions(context, questions)
     }

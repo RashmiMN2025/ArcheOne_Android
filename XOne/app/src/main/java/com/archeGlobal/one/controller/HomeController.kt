@@ -43,13 +43,13 @@ import java.util.Locale
 class HomeController(
     private val navigator: Navigator,
     private val context: Context,
-    initialModel: HomeModel = HomeModel()
+    initialModel: HomeModel = HomeModel(),
 ) {
     var employeeData by mutableStateOf(
         AboutMeModel(
             name = OtpVerificationController.getUserData()?.name ?: "",
-            email = OtpVerificationController.getUserData()?.email ?: ""
-        )
+            email = OtpVerificationController.getUserData()?.email ?: "",
+        ),
     )
     private val _eventData = MutableStateFlow<com.archeGlobal.one.model.EventResponse?>(null)
     val eventData: StateFlow<com.archeGlobal.one.model.EventResponse?> = _eventData.asStateFlow()
@@ -66,9 +66,10 @@ class HomeController(
 
     // Celebration state
     private val _celebrationData = MutableStateFlow<CelebrationResponse?>(null)
-    val celebrationData: StateFlow<CelebrationResponse?> = _celebrationData.asStateFlow().also {
-        Log.d("CelebrationController", "CelebrationData StateFlow created")
-    }
+    val celebrationData: StateFlow<CelebrationResponse?> =
+        _celebrationData.asStateFlow().also {
+            Log.d("CelebrationController", "CelebrationData StateFlow created")
+        }
 
     private val _showCelebrationDialog = MutableStateFlow(false)
     val showCelebrationDialog: StateFlow<Boolean> = _showCelebrationDialog.asStateFlow()
@@ -160,12 +161,13 @@ class HomeController(
         }
 
         // Ensure the URL is properly formatted (starts with http:// or https://)
-        val formattedImageUrl = if (!originalImageUrl.startsWith("http://") && !originalImageUrl.startsWith("https://")) {
-            // Assuming dev.arche.global is the base for relative paths
-            "https://dev.arche.global:7000/$originalImageUrl".trim()
-        } else {
-            originalImageUrl.trim()
-        }
+        val formattedImageUrl =
+            if (!originalImageUrl.startsWith("http://") && !originalImageUrl.startsWith("https://")) {
+                // Assuming dev.arche.global is the base for relative paths
+                "https://dev.arche.global:7000/$originalImageUrl".trim()
+            } else {
+                originalImageUrl.trim()
+            }
 
         Log.d("EventController", "Formatted event image URL: $formattedImageUrl")
         return event.copy(image = formattedImageUrl)
@@ -187,7 +189,10 @@ class HomeController(
 
                 // Update the StateFlow with the processed event data
                 _eventData.value = eventResponse
-                Log.d("EventController", "Updated _eventData StateFlow. New value: Title=${_eventData.value?.title}, Image=${_eventData.value?.image}")
+                Log.d(
+                    "EventController",
+                    "Updated _eventData StateFlow. New value: Title=${_eventData.value?.title}, Image=${_eventData.value?.image}",
+                )
 
                 // Switch to main thread for UI updates related to event popup visibility
                 withContext(Dispatchers.Main) {
@@ -215,7 +220,10 @@ class HomeController(
         // Event is considered empty if it has no meaningful content
         val isEmpty = !hasTitle && !hasDescription && !hasImage && !hasDate
 
-        Log.d("EventController", "Event emptiness check - hasTitle: $hasTitle, hasDescription: $hasDescription, hasImage: $hasImage, hasDate: $hasDate, isEmpty: $isEmpty")
+        Log.d(
+            "EventController",
+            "Event emptiness check - hasTitle: $hasTitle, hasDescription: $hasDescription, hasImage: $hasImage, hasDate: $hasDate, isEmpty: $isEmpty",
+        )
 
         return isEmpty
     }
@@ -336,14 +344,16 @@ class HomeController(
         val currentlyUsingPrideIcon = sharedPref.getBoolean(KEY_USING_PRIDE_ICON, false)
 
         // Component names for the two launcher aliases
-        val defaultAlias = android.content.ComponentName(
-            context,
-            "com.archeGlobal.one.SplashAlias"
-        )
-        val prideAlias = android.content.ComponentName(
-            context,
-            "com.archeGlobal.one.SplashAliasPride"
-        )
+        val defaultAlias =
+            android.content.ComponentName(
+                context,
+                "com.archeGlobal.one.SplashAlias",
+            )
+        val prideAlias =
+            android.content.ComponentName(
+                context,
+                "com.archeGlobal.one.SplashAliasPride",
+            )
 
         val pm = context.packageManager
         if (currentlyUsingPrideIcon) {
@@ -351,24 +361,24 @@ class HomeController(
             pm.setComponentEnabledSetting(
                 defaultAlias,
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                android.content.pm.PackageManager.DONT_KILL_APP
+                android.content.pm.PackageManager.DONT_KILL_APP,
             )
             pm.setComponentEnabledSetting(
                 prideAlias,
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                android.content.pm.PackageManager.DONT_KILL_APP
+                android.content.pm.PackageManager.DONT_KILL_APP,
             )
         } else {
             // Switch to pride icon
             pm.setComponentEnabledSetting(
                 prideAlias,
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                android.content.pm.PackageManager.DONT_KILL_APP
+                android.content.pm.PackageManager.DONT_KILL_APP,
             )
             pm.setComponentEnabledSetting(
                 defaultAlias,
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                android.content.pm.PackageManager.DONT_KILL_APP
+                android.content.pm.PackageManager.DONT_KILL_APP,
             )
         }
 
@@ -376,12 +386,15 @@ class HomeController(
         sharedPref.edit().putBoolean(KEY_USING_PRIDE_ICON, !currentlyUsingPrideIcon).apply()
 
         // Notify user – the launcher might take a moment to refresh
-        val msg = if (currentlyUsingPrideIcon) {
-            "Switched back to regular app icon"
-        } else {
-            "Switched to Pride app icon"
-        }
-        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+        val msg =
+            if (currentlyUsingPrideIcon) {
+                "Switched back to regular app icon"
+            } else {
+                "Switched to Pride app icon"
+            }
+        android.widget.Toast
+            .makeText(context, msg, android.widget.Toast.LENGTH_SHORT)
+            .show()
 
         // Close the dialog
         dismissPrideMonthDialog()
@@ -410,7 +423,10 @@ class HomeController(
                     Log.d("CelebrationController", "Setting celebration data to StateFlow...")
                     _celebrationData.value = celebrationData
                     Log.d("CelebrationController", "StateFlow updated. Current value not null: ${_celebrationData.value != null}")
-                    Log.d("CelebrationController", "StateFlow celebration count: Today=${_celebrationData.value?.today?.size}, Tomorrow=${_celebrationData.value?.tomorrow?.size}")
+                    Log.d(
+                        "CelebrationController",
+                        "StateFlow celebration count: Today=${_celebrationData.value?.today?.size}, Tomorrow=${_celebrationData.value?.tomorrow?.size}",
+                    )
                 } else {
                     Log.e("CelebrationController", "Failed to fetch celebration data: ${response.errorBody()?.string()}")
                 }
@@ -475,7 +491,11 @@ class HomeController(
         _showWhatsNewDialog.value = true
     }
 
-    fun onCelebrationWishesClick(email: String, employeeName: String, celebrationType: String) {
+    fun onCelebrationWishesClick(
+        email: String,
+        employeeName: String,
+        celebrationType: String,
+    ) {
         Log.d("CelebrationController", "Wishes clicked for email: $email, name: $employeeName, type: $celebrationType")
 
         // Get greetings data from UserDataManager
@@ -484,11 +504,12 @@ class HomeController(
         val categoryMessages = userDataManager.getGreetingCategoriesData()
 
         // Find the appropriate category based on celebration type
-        val categoryName = when (celebrationType.lowercase()) {
-            "birthday" -> "Birthday"
-            "work anniversary" -> "Career Milestone"
-            else -> celebrationType
-        }
+        val categoryName =
+            when (celebrationType.lowercase()) {
+                "birthday" -> "Birthday"
+                "work anniversary" -> "Career Milestone"
+                else -> celebrationType
+            }
 
         // Get greetings for the category
         val categoryGreetings = greetingsData?.get(categoryName) ?: emptyList()
@@ -496,25 +517,26 @@ class HomeController(
 
         // Get default message for the category and pre-fill with employee name
         val defaultMessage = categoryMessages?.find { it.name == categoryName }?.message ?: ""
-        val personalizedMessage = if (defaultMessage.isNotEmpty()) {
-            // Replace any generic greetings with the actual employee name
-            defaultMessage
-                .replace("Dear colleague", "Dear $employeeName", ignoreCase = true)
-                .replace("Dear team member", "Dear $employeeName", ignoreCase = true)
-                .replace("Dear employee", "Dear $employeeName", ignoreCase = true)
-                .replace("Dear friend", "Dear $employeeName", ignoreCase = true)
-                .replace("Dear one", "Dear $employeeName", ignoreCase = true)
-                .let { message ->
-                    // If the message doesn't start with "Dear [name]", prepend it
-                    if (!message.trimStart().startsWith("Dear $employeeName", ignoreCase = true)) {
-                        "Dear $employeeName,\n\n$message"
-                    } else {
-                        message
+        val personalizedMessage =
+            if (defaultMessage.isNotEmpty()) {
+                // Replace any generic greetings with the actual employee name
+                defaultMessage
+                    .replace("Dear colleague", "Dear $employeeName", ignoreCase = true)
+                    .replace("Dear team member", "Dear $employeeName", ignoreCase = true)
+                    .replace("Dear employee", "Dear $employeeName", ignoreCase = true)
+                    .replace("Dear friend", "Dear $employeeName", ignoreCase = true)
+                    .replace("Dear one", "Dear $employeeName", ignoreCase = true)
+                    .let { message ->
+                        // If the message doesn't start with "Dear [name]", prepend it
+                        if (!message.trimStart().startsWith("Dear $employeeName", ignoreCase = true)) {
+                            "Dear $employeeName,\n\n$message"
+                        } else {
+                            message
+                        }
                     }
-                }
-        } else {
-            "Dear $employeeName,\n\nCongratulations on your special day!"
-        }
+            } else {
+                "Dear $employeeName,\n\nCongratulations on your special day!"
+            }
 
         // Navigate directly to GreetingDetailActivity
         val intent = Intent(context, com.archeGlobal.one.GreetingDetailActivity::class.java)
@@ -537,40 +559,41 @@ class HomeController(
             employeeId = OtpVerificationController.getUserData()?.employeeId ?: "",
             profilePicture = OtpVerificationController.getUserData()?.profilePic,
             showAllApps = true,
-            categories = OtpVerificationController.getUserData()?.let { userData ->
-                userData.services
-                    .groupBy { it.category }
-                    .toSortedMap(
-                        Comparator { a, b ->
-                            // If either is MyApps, handle special case
-                            when {
-                                a.equals("MyApps", ignoreCase = true) && !b.equals("MyApps", ignoreCase = true) -> 1
-                                !a.equals("MyApps", ignoreCase = true) && b.equals("MyApps", ignoreCase = true) -> -1
-                                else -> a.compareTo(b, ignoreCase = true)
+            categories =
+                OtpVerificationController.getUserData()?.let { userData ->
+                    userData.services
+                        .groupBy { it.category }
+                        .toSortedMap(
+                            Comparator { a, b ->
+                                // If either is MyApps, handle special case
+                                when {
+                                    a.equals("MyApps", ignoreCase = true) && !b.equals("MyApps", ignoreCase = true) -> 1
+                                    !a.equals("MyApps", ignoreCase = true) && b.equals("MyApps", ignoreCase = true) -> -1
+                                    else -> a.compareTo(b, ignoreCase = true)
+                                }
+                            },
+                        ).mapValues { (_, services) ->
+                            services.map { service ->
+                                HomeItem(
+                                    title = service.service,
+                                    icon = service.icon ?: service.service.lowercase().replace(" ", ""),
+                                    isFavorite = service.favourite,
+                                    category = service.category,
+                                    isNew = shouldShowAsNew(service),
+                                    stickerText = getStickerText(),
+                                )
                             }
                         }
-                    )
-                    .mapValues { (_, services) ->
-                        services.map { service ->
-                            HomeItem(
-                                title = service.service,
-                                icon = service.icon ?: service.service.lowercase().replace(" ", ""),
-                                isFavorite = service.favourite,
-                                category = service.category,
-                                isNew = shouldShowAsNew(service),
-                                stickerText = getStickerText()
-                            )
-                        }
-                    }
-            } ?: emptyMap(),
+                } ?: emptyMap(),
             favorites = preferencesManager.getFavorites(),
-            footerNavigation = FooterNavigationModel(
-                showHome = true,
-                showChat = false,
-                showSOS = false,
-                showProfile = false
-            )
-        )
+            footerNavigation =
+                FooterNavigationModel(
+                    showHome = true,
+                    showChat = false,
+                    showSOS = false,
+                    showProfile = false,
+                ),
+        ),
     )
         private set
 
@@ -826,27 +849,32 @@ class HomeController(
         }
     }
 
-    fun onAllAppsClick() = handleNavigation {
-        Log.d("HomeController", "All Apps clicked. Current state: ${model.showAllApps}")
-        model = model.copy(
-            showAllApps = true,
-            viewFavorites = false
-        )
-        Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
-    }
+    fun onAllAppsClick() =
+        handleNavigation {
+            Log.d("HomeController", "All Apps clicked. Current state: ${model.showAllApps}")
+            model =
+                model.copy(
+                    showAllApps = true,
+                    viewFavorites = false,
+                )
+            Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
+        }
 
-    fun onFavoritesClick() = handleNavigation {
-        Log.d("HomeController", "Favorites clicked. Current state: ${model.viewFavorites}")
-        model = model.copy(
-            viewFavorites = true,
-            showAllApps = false
-        )
-        Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
-    }
+    fun onFavoritesClick() =
+        handleNavigation {
+            Log.d("HomeController", "Favorites clicked. Current state: ${model.viewFavorites}")
+            model =
+                model.copy(
+                    viewFavorites = true,
+                    showAllApps = false,
+                )
+            Log.d("HomeController", "New state - showAllApps: ${model.showAllApps}, viewFavorites: ${model.viewFavorites}")
+        }
 
-    fun onShowProfileClick() = handleNavigation {
-        navigator.navigateToXProfile()
-    }
+    fun onShowProfileClick() =
+        handleNavigation {
+            navigator.navigateToXProfile()
+        }
 
     fun onToggleFavorite(item: HomeItem) {
         val currentFavorites = model.favorites.toMutableMap()
@@ -876,86 +904,93 @@ class HomeController(
         preferencesManager.saveFavorites(sortedFavorites)
 
         // Update item's favorite status in categories
-        val updatedCategories = model.categories.mapValues { (_, items) ->
-            items.map {
-                if (it.title == item.title) {
-                    it.copy(isFavorite = !it.isFavorite)
-                } else {
-                    it
+        val updatedCategories =
+            model.categories.mapValues { (_, items) ->
+                items.map {
+                    if (it.title == item.title) {
+                        it.copy(isFavorite = !it.isFavorite)
+                    } else {
+                        it
+                    }
                 }
             }
+
+        model =
+            model.copy(
+                categories = updatedCategories,
+            )
+    }
+
+    fun onFooterHomeClick() =
+        handleNavigation {
+            // Already on home screen, no action needed
         }
 
-        model = model.copy(
-            categories = updatedCategories
-        )
-    }
+    fun onFooterChatClick() =
+        handleNavigation {
+            navigator.navigateToChat()
+        }
 
-    fun onFooterHomeClick() = handleNavigation {
-        // Already on home screen, no action needed
-    }
+    fun onFooterSOSClick() =
+        handleNavigation {
+            // Use the navigator to navigate to SOS screen
+            navigator.navigateToSOS(true)
+        }
 
-    fun onFooterChatClick() = handleNavigation {
-        navigator.navigateToChat()
-    }
+    fun onFooterProfileClick() =
+        handleNavigation {
+            navigator.navigateToProfile()
+        }
 
-    fun onFooterSOSClick() = handleNavigation {
-        // Use the navigator to navigate to SOS screen
-        navigator.navigateToSOS(true)
-    }
-
-    fun onFooterProfileClick() = handleNavigation {
-        navigator.navigateToProfile()
-    }
-
-    fun onXCardClick() = handleNavigation {
-        navigator.navigateToBusinessCard()
-    }
+    fun onXCardClick() =
+        handleNavigation {
+            navigator.navigateToBusinessCard()
+        }
 
     fun refreshUserData() {
         val userData = OtpVerificationController.getUserData()
-        model = model.copy(
-            userName = userData?.name ?: "",
-            designation = userData?.designation ?: "",
-            department = userData?.department ?: "",
-            employeeId = userData?.employeeId ?: "",
-            profilePicture = userData?.profilePic,
-            categories = userData?.let { data ->
-                data.services
-                    .groupBy { it.category }
-                    .toSortedMap(
-                        Comparator { a, b ->
-                            // If either is MyApps, handle special case
-                            when {
-                                a.equals("MyApps", ignoreCase = true) && !b.equals("MyApps", ignoreCase = true) -> 1
-                                !a.equals("MyApps", ignoreCase = true) && b.equals("MyApps", ignoreCase = true) -> -1
-                                else -> a.compareTo(b, ignoreCase = true)
+        model =
+            model.copy(
+                userName = userData?.name ?: "",
+                designation = userData?.designation ?: "",
+                department = userData?.department ?: "",
+                employeeId = userData?.employeeId ?: "",
+                profilePicture = userData?.profilePic,
+                categories =
+                    userData?.let { data ->
+                        data.services
+                            .groupBy { it.category }
+                            .toSortedMap(
+                                Comparator { a, b ->
+                                    // If either is MyApps, handle special case
+                                    when {
+                                        a.equals("MyApps", ignoreCase = true) && !b.equals("MyApps", ignoreCase = true) -> 1
+                                        !a.equals("MyApps", ignoreCase = true) && b.equals("MyApps", ignoreCase = true) -> -1
+                                        else -> a.compareTo(b, ignoreCase = true)
+                                    }
+                                },
+                            ).mapValues { (_, services) ->
+                                services.map { service ->
+                                    HomeItem(
+                                        title = service.service,
+                                        icon = service.icon ?: service.service.lowercase().replace(" ", ""),
+                                        isFavorite = service.favourite,
+                                        category = service.category,
+                                        isNew = shouldShowAsNew(service),
+                                        stickerText = getStickerText(),
+                                    )
+                                }
                             }
-                        }
-                    )
-                    .mapValues { (_, services) ->
-                        services.map { service ->
-                            HomeItem(
-                                title = service.service,
-                                icon = service.icon ?: service.service.lowercase().replace(" ", ""),
-                                isFavorite = service.favourite,
-                                category = service.category,
-                                isNew = shouldShowAsNew(service),
-                                stickerText = getStickerText()
-                            )
-                        }
-                    }
-            } ?: emptyMap(),
-            favorites = preferencesManager.getFavorites()
-        )
+                    } ?: emptyMap(),
+                favorites = preferencesManager.getFavorites(),
+            )
     }
 
-    fun getCurrentViewItems(): List<HomeItem> {
-        return when {
+    fun getCurrentViewItems(): List<HomeItem> =
+        when {
             model.viewFavorites -> model.favorites.values.flatten()
             else -> model.categories.values.flatten()
         }
-    }
 
     fun updateProfilePicture(profilePicUrl: String?) {
         Log.d("HomeController", "Updating profile picture to: $profilePicUrl")
@@ -964,11 +999,12 @@ class HomeController(
         ImageCache.invalidateProfileImageCache()
 
         // Force a model update with a new instance to trigger recomposition
-        model = model.copy(
-            profilePicture = profilePicUrl,
-            // Adding a small change to any property forces recomposition
-            userName = model.userName
-        )
+        model =
+            model.copy(
+                profilePicture = profilePicUrl,
+                // Adding a small change to any property forces recomposition
+                userName = model.userName,
+            )
 
         // Call refreshUserData after a short delay to ensure UI updates
         // This helps when we're on the home screen and need immediate refresh
@@ -984,7 +1020,10 @@ class HomeController(
         // Show New sticker when backend explicitly marks service as isNew: true
         val shouldShow = service.isNew
 
-        Log.d("HomeController", "Service '${service.service}': installType=$installType, backendSaysNew=${service.isNew}, userHasntSeen=$userHasntSeen, shouldShow=$shouldShow")
+        Log.d(
+            "HomeController",
+            "Service '${service.service}': installType=$installType, backendSaysNew=${service.isNew}, userHasntSeen=$userHasntSeen, shouldShow=$shouldShow",
+        )
         return shouldShow
     }
 

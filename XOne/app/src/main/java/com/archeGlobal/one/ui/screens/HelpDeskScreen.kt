@@ -42,9 +42,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HelpDeskScreen(
-    controller: HelpDeskController
-) {
+fun HelpDeskScreen(controller: HelpDeskController) {
     val model by controller.model.collectAsState()
 
     // Handle back press gesture to navigate to proper source screen
@@ -53,30 +51,34 @@ fun HelpDeskScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 modifier = Modifier.offset(x = 24.dp),
@@ -84,7 +86,7 @@ fun HelpDeskScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -95,18 +97,18 @@ fun HelpDeskScreen(
                         val backScale by animateFloatAsState(
                             targetValue = if (isBackPressed) 0.8f else 1f,
                             animationSpec = tween(durationMillis = 150),
-                            label = "backScale"
+                            label = "backScale",
                         )
 
                         IconButton(
                             onClick = { controller.navigateToHome() },
                             interactionSource = backInteractionSource,
-                            modifier = Modifier.scale(backScale)
+                            modifier = Modifier.scale(backScale),
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
@@ -117,31 +119,33 @@ fun HelpDeskScreen(
                         val trackScale by animateFloatAsState(
                             targetValue = if (isTrackPressed) 0.9f else 1f,
                             animationSpec = tween(durationMillis = 150),
-                            label = "trackScale"
+                            label = "trackScale",
                         )
 
                         TextButton(
                             onClick = { controller.navigateToTrackTickets() },
                             colors = ButtonDefaults.textButtonColors(contentColor = Color.Red),
                             interactionSource = trackInteractionSource,
-                            modifier = Modifier.scale(trackScale)
+                            modifier = Modifier.scale(trackScale),
                         ) {
                             Text(
                                 text = "Track Tickets",
                                 fontFamily = GraphikFontFamily,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                 ) {
                     Text(
                         text = "Support Categories",
@@ -149,7 +153,7 @@ fun HelpDeskScreen(
                         fontSize = 25.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 8.dp),
                     )
 
                     Text(
@@ -157,14 +161,14 @@ fun HelpDeskScreen(
                         fontFamily = GraphikFontFamily,
                         fontSize = 15.sp,
                         color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 24.dp)
+                        modifier = Modifier.padding(bottom = 24.dp),
                     )
 
                     when {
                         model.isLoading -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 CircularProgressIndicator()
                             }
@@ -173,14 +177,14 @@ fun HelpDeskScreen(
                             Column(
                                 modifier = Modifier.fillMaxSize(),
                                 verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Text(
                                     text = "Error loading FAQ data",
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Red
+                                    color = Color.Red,
                                 )
                                 Text(
                                     text = model.error!!,
@@ -188,13 +192,14 @@ fun HelpDeskScreen(
                                     fontSize = 14.sp,
                                     color = Color.Gray,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .padding(top = 8.dp)
-                                        .padding(horizontal = 16.dp)
+                                    modifier =
+                                        Modifier
+                                            .padding(top = 8.dp)
+                                            .padding(horizontal = 16.dp),
                                 )
                                 Button(
                                     onClick = { controller.refreshFAQData() },
-                                    modifier = Modifier.padding(top = 16.dp)
+                                    modifier = Modifier.padding(top = 16.dp),
                                 ) {
                                     Text("Retry")
                                 }
@@ -203,10 +208,10 @@ fun HelpDeskScreen(
                         else -> {
                             AnimatedVisibility(
                                 visible = !model.isLoading,
-                                enter = fadeIn(animationSpec = tween(300))
+                                enter = fadeIn(animationSpec = tween(300)),
                             ) {
                                 LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(22.dp)
+                                    verticalArrangement = Arrangement.spacedBy(22.dp),
                                 ) {
                                     // Dynamically generate categories from FAQ data
                                     val faqsByCategory = model.faqItems.groupBy { it.title }
@@ -218,7 +223,7 @@ fun HelpDeskScreen(
                                                 CategorySection(
                                                     title = categoryTitle,
                                                     items = faqs.map { faq -> faq.question to faq.id },
-                                                    onItemClick = { itemId -> controller.navigateToFAQDetail(itemId) }
+                                                    onItemClick = { itemId -> controller.navigateToFAQDetail(itemId) },
                                                 )
                                             }
                                         }
@@ -238,10 +243,11 @@ fun HelpDeskScreen(
 
         // Fixed "Raise a Ticket" button at the bottom
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 32.dp, vertical = 40.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 32.dp, vertical = 40.dp),
         ) {
             val raiseTicketInteractionSource = remember { MutableInteractionSource() }
             val isRaiseTicketPressed by raiseTicketInteractionSource.collectIsPressedAsState()
@@ -249,38 +255,41 @@ fun HelpDeskScreen(
             val raiseTicketScale by animateFloatAsState(
                 targetValue = if (isRaiseTicketPressed) 0.95f else 1f,
                 animationSpec = tween(durationMillis = 150),
-                label = "raiseTicketScale"
+                label = "raiseTicketScale",
             )
 
             Button(
                 onClick = { controller.navigateToRaiseConcern("Raise a Ticket") },
-                modifier = Modifier
-                    .fillMaxWidth(0.63f)
-                    .height(56.dp)
-                    .scale(raiseTicketScale)
-                    .align(Alignment.Center),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFD32F2F)
-                ),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.63f)
+                        .height(56.dp)
+                        .scale(raiseTicketScale)
+                        .align(Alignment.Center),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFD32F2F),
+                    ),
                 shape = RoundedCornerShape(28.dp),
-                interactionSource = raiseTicketInteractionSource
+                interactionSource = raiseTicketInteractionSource,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(18.dp)
-                            .clip(RoundedCornerShape(9.dp))
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .size(18.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(Color.White),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "!",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFD32F2F)
+                            color = Color(0xFFD32F2F),
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
@@ -289,20 +298,21 @@ fun HelpDeskScreen(
                         fontFamily = GraphikFontFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.25.sp,
-                        color = Color.White
+                        color = Color.White,
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Box(
-                        modifier = Modifier
-                            .size(18.dp)
-                            .border(1.dp, Color.White, CircleShape),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .size(18.dp)
+                                .border(1.dp, Color.White, CircleShape),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Add,
                             contentDescription = "Add Ticket",
                             tint = Color.White,
-                            modifier = Modifier.size(9.dp)
+                            modifier = Modifier.size(9.dp),
                         )
                     }
                 }
@@ -315,7 +325,7 @@ fun HelpDeskScreen(
 fun CategorySection(
     title: String,
     items: List<Pair<String, String>>,
-    onItemClick: (String) -> Unit
+    onItemClick: (String) -> Unit,
 ) {
     Column {
         Text(
@@ -324,13 +334,13 @@ fun CategorySection(
             fontWeight = FontWeight.SemiBold,
             fontFamily = GraphikFontFamily,
             color = Color.Black,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 12.dp),
         )
 
         items.forEach { (itemText, itemId) ->
             CategoryItem(
                 text = itemText,
-                onClick = { onItemClick(itemId) }
+                onClick = { onItemClick(itemId) },
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -340,7 +350,7 @@ fun CategorySection(
 @Composable
 fun CategoryItem(
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -348,45 +358,51 @@ fun CategoryItem(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(durationMillis = 150),
-        label = "scale"
+        label = "scale",
     )
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick() },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .scale(scale)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                ) { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.7f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.7f),
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(20.dp)),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(20.dp)),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.helpq),
                         contentDescription = "Help Question",
                         modifier = Modifier.size(20.dp),
-                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.Gray)
+                        colorFilter =
+                            androidx.compose.ui.graphics.ColorFilter
+                                .tint(Color.Gray),
                     )
                 }
 
@@ -399,7 +415,7 @@ fun CategoryItem(
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
-                    lineHeight = 20.sp
+                    lineHeight = 20.sp,
                 )
             }
 
@@ -407,7 +423,7 @@ fun CategoryItem(
                 text = ">",
                 color = Color.Gray,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Normal
+                fontWeight = FontWeight.Normal,
             )
         }
     }
@@ -416,7 +432,7 @@ fun CategoryItem(
 @Composable
 fun FAQCard(
     faq: HelpDeskFAQ,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -424,60 +440,64 @@ fun FAQCard(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(durationMillis = 150),
-        label = "scale"
+        label = "scale",
     )
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onClick() },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .scale(scale)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                ) { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.7f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.7f),
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            if (faq.question.contains("Other issue", ignoreCase = true)) {
-                                Color(0xFFD32F2F)
-                            } else {
-                                Color(0xFFE8E4F3)
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                if (faq.question.contains("Other issue", ignoreCase = true)) {
+                                    Color(0xFFD32F2F)
+                                } else {
+                                    Color(0xFFE8E4F3)
+                                },
+                            ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (faq.question.contains("Other issue", ignoreCase = true)) {
                         Text(
                             text = "!",
                             color = Color.White,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                     } else {
                         Text(
                             text = "+",
                             color = Color.White,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -487,19 +507,21 @@ fun FAQCard(
                 Text(
                     text = faq.question,
                     fontSize = 15.sp,
-                    color = if (faq.question.contains("Other issue", ignoreCase = true)) {
-                        Color(0xFFD32F2F)
-                    } else {
-                        Color.Black
-                    },
+                    color =
+                        if (faq.question.contains("Other issue", ignoreCase = true)) {
+                            Color(0xFFD32F2F)
+                        } else {
+                            Color.Black
+                        },
                     fontFamily = GraphikFontFamily,
-                    fontWeight = if (faq.question.contains("Other issue", ignoreCase = true)) {
-                        FontWeight.Medium
-                    } else {
-                        FontWeight.Normal
-                    },
+                    fontWeight =
+                        if (faq.question.contains("Other issue", ignoreCase = true)) {
+                            FontWeight.Medium
+                        } else {
+                            FontWeight.Normal
+                        },
                     modifier = Modifier.weight(1f),
-                    lineHeight = 20.sp
+                    lineHeight = 20.sp,
                 )
             }
 
@@ -507,7 +529,7 @@ fun FAQCard(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "Arrow",
                 tint = Color.Gray.copy(alpha = 0.6f),
-                modifier = Modifier.size(19.dp)
+                modifier = Modifier.size(19.dp),
             )
         }
     }

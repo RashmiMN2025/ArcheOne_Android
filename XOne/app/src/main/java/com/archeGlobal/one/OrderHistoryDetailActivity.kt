@@ -28,12 +28,13 @@ class OrderHistoryDetailActivity : ComponentActivity() {
         val androidNavigator = AndroidNavigator(this)
 
         // Create a custom navigator that properly handles back navigation for this activity
-        navigator = object : Navigator by androidNavigator {
-            override fun popBackStack() {
-                // In separate activity, finish instead of using navController
-                finishWithAnimation()
+        navigator =
+            object : Navigator by androidNavigator {
+                override fun popBackStack() {
+                    // In separate activity, finish instead of using navController
+                    finishWithAnimation()
+                }
             }
-        }
         controller = OrderHistoryController(this, navigator, "OrderHistoryActivity")
 
         // Handle back button to return to OrderHistoryActivity
@@ -43,7 +44,7 @@ class OrderHistoryDetailActivity : ComponentActivity() {
                 override fun handleOnBackPressed() {
                     finishWithAnimation()
                 }
-            }
+            },
         )
 
         // Get the selected order from the companion object (set by OrderHistoryActivity)
@@ -54,13 +55,13 @@ class OrderHistoryDetailActivity : ComponentActivity() {
                 orderItem?.let { order ->
                     OrderHistoryDetailScreen(
                         controller = controller,
-                        orderItem = order
+                        orderItem = order,
                     )
                 } ?: run {
                     // Fallback if no order data found
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text("Order not found")
                     }
@@ -73,7 +74,7 @@ class OrderHistoryDetailActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left,
-            R.anim.slide_out_right
+            R.anim.slide_out_right,
         )
     }
 }

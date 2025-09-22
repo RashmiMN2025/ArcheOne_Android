@@ -9,16 +9,16 @@ data class SOSRequest(
     @SerializedName("category") val category: String, // Ensure this matches backend
     @SerializedName("subcategory") val subcategory: String? = null, // New subcategory field
     @SerializedName("query") val query: String, // Ensure this matches backend
-    @SerializedName("anonymous") val anonymous: Boolean = false
+    @SerializedName("anonymous") val anonymous: Boolean = false,
 )
 
 data class SOSResponse(
     val status: Boolean,
-    val message: String
+    val message: String,
 )
 
 data class EncryptedSOSResponse(
     val status: Int,
     val message: String,
-    val encryptedData: String? = null
+    val encryptedData: String? = null,
 )

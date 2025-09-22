@@ -64,14 +64,16 @@ class SplashActivity : ComponentActivity() {
 fun XOneSplashScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 painter = painterResource(id = R.drawable.arche2),
                 contentDescription = "Company Logo",
-                modifier = Modifier.size(110.dp)
-                    .offset(y = (-40).dp)
+                modifier =
+                    Modifier
+                        .size(110.dp)
+                        .offset(y = (-40).dp),
             )
         }
     }

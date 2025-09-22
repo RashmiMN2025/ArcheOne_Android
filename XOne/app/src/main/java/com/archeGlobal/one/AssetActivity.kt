@@ -2,7 +2,6 @@ package com.archeGlobal.one
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.archeGlobal.one.controller.AssetController
@@ -47,7 +46,7 @@ class AssetActivity : ComponentActivity() {
         finish()
         overridePendingTransition(
             R.anim.slide_in_left,
-            R.anim.slide_out_right
+            R.anim.slide_out_right,
         )
     }
 }

@@ -27,8 +27,9 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
 
-class UserDocumentsController(private val context: Context) {
-
+class UserDocumentsController(
+    private val context: Context,
+) {
     companion object {
         private const val TAG = "UserDocumentsController"
     }
@@ -42,13 +43,14 @@ class UserDocumentsController(private val context: Context) {
     val userDocuments: LiveData<List<UserDocument>> = _userDocuments
 
     // LiveData for upload status, mirroring MyDocumentsController
-    private val _uploadStatus = MutableLiveData<MutableMap<String, Boolean>>(
-        mutableMapOf(
-            "PAN Card" to false,
-            "ID Card" to false,
-            "Medical Insurance Card" to false
+    private val _uploadStatus =
+        MutableLiveData<MutableMap<String, Boolean>>(
+            mutableMapOf(
+                "PAN Card" to false,
+                "ID Card" to false,
+                "Medical Insurance Card" to false,
+            ),
         )
-    )
     val uploadStatus: LiveData<MutableMap<String, Boolean>> = _uploadStatus
 
     // Expose DocumentUploadManager states
@@ -72,7 +74,16 @@ class UserDocumentsController(private val context: Context) {
         val userData = userDataManager.getUserData()
         val documents = userData?.userDetails?.documents ?: emptyList()
         documents.forEach { doc ->
-            Log.d(TAG, "User data document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) "empty" else "has data ('${doc.doc_data.take(50)}...')"}, type: ${doc.documentType}")
+            Log.d(
+                TAG,
+                "User data document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) {
+                    "empty"
+                } else {
+                    "has data ('${doc.doc_data.take(
+                        50,
+                    )}...')"
+                }}, type: ${doc.documentType}",
+            )
         }
         _userDocuments.value = documents
         updateUploadStatus(documents)
@@ -85,9 +96,10 @@ class UserDocumentsController(private val context: Context) {
         documentUploadManager.listDocuments { response ->
             isLoading.postValue(false)
             // Only process API response if it has valid documents
-            val apiDocs = response.personalDoc?.filter { doc ->
-                !doc.document_name.isNullOrBlank() && !doc.documentType.isNullOrBlank()
-            } ?: emptyList()
+            val apiDocs =
+                response.personalDoc?.filter { doc ->
+                    !doc.document_name.isNullOrBlank() && !doc.documentType.isNullOrBlank()
+                } ?: emptyList()
 
             if (apiDocs.isNotEmpty()) {
                 processApiResponse(response)
@@ -99,30 +111,42 @@ class UserDocumentsController(private val context: Context) {
     }
 
     private fun processApiResponse(response: DocumentListResponse) {
-        val personalDocs = response.personalDoc?.map { doc ->
-            // Map documentType to display name, fallback to document_name if available
-            val docName = when {
-                doc.documentType == "id" -> "ID Card"
-                doc.documentType == "pan" -> "PAN Card"
-                doc.documentType == "medical" -> "Medical Insurance Card"
-                !doc.document_name.isNullOrBlank() -> doc.document_name!! // Use API name if available
-                else -> "Unknown Document"
-            }
+        val personalDocs =
+            response.personalDoc?.map { doc ->
+                // Map documentType to display name, fallback to document_name if available
+                val docName =
+                    when {
+                        doc.documentType == "id" -> "ID Card"
+                        doc.documentType == "pan" -> "PAN Card"
+                        doc.documentType == "medical" -> "Medical Insurance Card"
+                        !doc.document_name.isNullOrBlank() -> doc.document_name!! // Use API name if available
+                        else -> "Unknown Document"
+                    }
 
-            UserDocument(
-                document_name = docName,
-                doc_data = doc.doc_data ?: "",
-                documentType = doc.documentType ?: when (docName) {
-                    "ID Card" -> "id"
-                    "PAN Card" -> "pan"
-                    "Medical Insurance Card" -> "medical"
-                    else -> ""
-                }
-            )
-        } ?: emptyList()
+                UserDocument(
+                    document_name = docName,
+                    doc_data = doc.doc_data ?: "",
+                    documentType =
+                        doc.documentType ?: when (docName) {
+                            "ID Card" -> "id"
+                            "PAN Card" -> "pan"
+                            "Medical Insurance Card" -> "medical"
+                            else -> ""
+                        },
+                )
+            } ?: emptyList()
 
         personalDocs.forEach { doc ->
-            Log.d(TAG, "Processed document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) "empty" else "has data ('${doc.doc_data.take(50)}...')"}, type: ${doc.documentType}")
+            Log.d(
+                TAG,
+                "Processed document: ${doc.document_name}, data: ${if (doc.doc_data.isBlank()) {
+                    "empty"
+                } else {
+                    "has data ('${doc.doc_data.take(
+                        50,
+                    )}...')"
+                }}, type: ${doc.documentType}",
+            )
         }
         _userDocuments.postValue(personalDocs)
         updateUploadStatus(personalDocs)
@@ -130,11 +154,12 @@ class UserDocumentsController(private val context: Context) {
     }
 
     private fun updateUploadStatus(documents: List<UserDocument>) {
-        val newUploadStatus = mutableMapOf(
-            "PAN Card" to false,
-            "ID Card" to false,
-            "Medical Insurance Card" to false
-        )
+        val newUploadStatus =
+            mutableMapOf(
+                "PAN Card" to false,
+                "ID Card" to false,
+                "Medical Insurance Card" to false,
+            )
         documents.forEach { doc ->
             val docName = doc.document_name
             if (docName in newUploadStatus && !doc.doc_data.isNullOrBlank()) {
@@ -168,11 +193,19 @@ class UserDocumentsController(private val context: Context) {
         return false
     }
 
-    private fun checkDocumentUrl(url: String, onResult: (isPdf: Boolean, htmlContent: String?) -> Unit) {
+    private fun checkDocumentUrl(
+        url: String,
+        onResult: (isPdf: Boolean, htmlContent: String?) -> Unit,
+    ) {
         ioScope.launch {
             try {
                 val client = OkHttpClient.Builder().followRedirects(true).build()
-                val request = Request.Builder().url(url).get().build()
+                val request =
+                    Request
+                        .Builder()
+                        .url(url)
+                        .get()
+                        .build()
                 client.newCall(request).execute().use { response ->
                     val contentType = response.header("Content-Type") ?: ""
                     if (contentType.contains("application/pdf", true)) {
@@ -208,75 +241,96 @@ class UserDocumentsController(private val context: Context) {
             val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val employeeIdPart = employeeId.toRequestBody("text/plain".toMediaTypeOrNull())
             val isPersonalPart = "true".toRequestBody("text/plain".toMediaTypeOrNull())
-            RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart).enqueue(object : Callback<DocumentListResponse> {
-                override fun onResponse(
-                    call: Call<DocumentListResponse>,
-                    response: Response<DocumentListResponse>
-                ) {
-                    isLoading.postValue(false)
-                    if (response.isSuccessful && response.body() != null) {
-                        val body = response.body()!!
-                        Log.d(TAG, "API response status: ${body.status}, message: ${body.message}")
-                        Log.d(TAG, "Personal docs count: ${body.personalDoc?.size ?: 0}")
-                        body.personalDoc?.forEach { doc ->
-                            Log.d(
-                                TAG,
-                                "Document in response: name=${doc.document_name}, type=${doc.documentType}, " +
-                                    "has data: ${!doc.doc_data.isNullOrBlank()}"
-                            )
-                            if (!doc.doc_data.isNullOrBlank()) {
-                                Log.d(TAG, "Doc data starts with: ${doc.doc_data?.take(30)}...")
+            RetrofitClient.apiService.listDocuments(emailPart, employeeIdPart, isPersonalPart).enqueue(
+                object : Callback<DocumentListResponse> {
+                    override fun onResponse(
+                        call: Call<DocumentListResponse>,
+                        response: Response<DocumentListResponse>,
+                    ) {
+                        isLoading.postValue(false)
+                        if (response.isSuccessful && response.body() != null) {
+                            val body = response.body()!!
+                            Log.d(TAG, "API response status: ${body.status}, message: ${body.message}")
+                            Log.d(TAG, "Personal docs count: ${body.personalDoc?.size ?: 0}")
+                            body.personalDoc?.forEach { doc ->
+                                Log.d(
+                                    TAG,
+                                    "Document in response: name=${doc.document_name}, type=${doc.documentType}, " +
+                                        "has data: ${!doc.doc_data.isNullOrBlank()}",
+                                )
+                                if (!doc.doc_data.isNullOrBlank()) {
+                                    Log.d(TAG, "Doc data starts with: ${doc.doc_data?.take(30)}...")
+                                }
                             }
-                        }
-                        var matchingDoc = body.personalDoc?.find { it.document_name == document.document_name }
-                        if (matchingDoc == null && document.documentType.isNotBlank()) {
-                            matchingDoc = body.personalDoc?.find { it.documentType == document.documentType }
-                            Log.d(TAG, "Searching by document type: ${document.documentType}")
-                        }
-                        Log.d(TAG, "Looking for document: ${document.document_name}, type: ${document.documentType}")
-                        if (matchingDoc != null) {
-                            Log.d(
-                                TAG,
-                                "Found matching document: ${matchingDoc.document_name}, " +
-                                    "type: ${matchingDoc.documentType}, has data: ${!matchingDoc.doc_data.isNullOrBlank()}"
-                            )
-                            if (!matchingDoc.doc_data.isNullOrBlank()) {
-                                val filePath = matchingDoc.doc_data!!
-                                Log.d(TAG, "Found document URL: $filePath - performing content check")
-                                checkDocumentUrl(filePath) { isPdf, htmlContent ->
-                                    if (isPdf) {
-                                        val intent = Intent(context, WebViewActivity::class.java).apply {
-                                            putExtra("fileUrl", filePath)
-                                            putExtra("title", matchingDoc.document_name ?: document.document_name)
-                                            putExtra("isPdf", true)
-                                            putExtra("isPersonal", true)
+                            var matchingDoc = body.personalDoc?.find { it.document_name == document.document_name }
+                            if (matchingDoc == null && document.documentType.isNotBlank()) {
+                                matchingDoc = body.personalDoc?.find { it.documentType == document.documentType }
+                                Log.d(TAG, "Searching by document type: ${document.documentType}")
+                            }
+                            Log.d(TAG, "Looking for document: ${document.document_name}, type: ${document.documentType}")
+                            if (matchingDoc != null) {
+                                Log.d(
+                                    TAG,
+                                    "Found matching document: ${matchingDoc.document_name}, " +
+                                        "type: ${matchingDoc.documentType}, has data: ${!matchingDoc.doc_data.isNullOrBlank()}",
+                                )
+                                if (!matchingDoc.doc_data.isNullOrBlank()) {
+                                    val filePath = matchingDoc.doc_data!!
+                                    Log.d(TAG, "Found document URL: $filePath - performing content check")
+                                    checkDocumentUrl(filePath) { isPdf, htmlContent ->
+                                        if (isPdf) {
+                                            val intent =
+                                                Intent(context, WebViewActivity::class.java).apply {
+                                                    putExtra("fileUrl", filePath)
+                                                    putExtra("title", matchingDoc.document_name ?: document.document_name)
+                                                    putExtra("isPdf", true)
+                                                    putExtra("isPersonal", true)
+                                                }
+                                            context.startActivity(intent)
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "No document found for ${matchingDoc.document_name}. Please upload the document.",
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
+                                            Log.d(TAG, "Document URL is not a valid PDF for ${matchingDoc.document_name}")
                                         }
-                                        context.startActivity(intent)
-                                    } else {
-                                        Toast.makeText(context, "No document found for ${matchingDoc.document_name}. Please upload the document.", Toast.LENGTH_SHORT).show()
-                                        Log.d(TAG, "Document URL is not a valid PDF for ${matchingDoc.document_name}")
                                     }
+                                } else {
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "No document found for ${document.document_name}. Please upload the document.",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    Log.d(TAG, "Document found but no URL in doc_data for ${document.document_name}")
                                 }
                             } else {
-                                Toast.makeText(context, "No document found for ${document.document_name}. Please upload the document.", Toast.LENGTH_SHORT).show()
-                                Log.d(TAG, "Document found but no URL in doc_data for ${document.document_name}")
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "No document found for ${document.document_name}. Please upload the document.",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                Log.d(TAG, "No matching document found for ${document.document_name} in response")
                             }
                         } else {
-                            Toast.makeText(context, "No document found for ${document.document_name}. Please upload the document.", Toast.LENGTH_SHORT).show()
-                            Log.d(TAG, "No matching document found for ${document.document_name} in response")
+                            Toast.makeText(context, "Failed to get document data", Toast.LENGTH_SHORT).show()
+                            Log.e(TAG, "API call failed: ${response.code()} ${response.message()}")
                         }
-                    } else {
-                        Toast.makeText(context, "Failed to get document data", Toast.LENGTH_SHORT).show()
-                        Log.e(TAG, "API call failed: ${response.code()} ${response.message()}")
                     }
-                }
 
-                override fun onFailure(call: Call<DocumentListResponse>, t: Throwable) {
-                    isLoading.postValue(false)
-                    Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
-                    Log.e(TAG, "Network error: ${t.message}")
-                }
-            })
+                    override fun onFailure(
+                        call: Call<DocumentListResponse>,
+                        t: Throwable,
+                    ) {
+                        isLoading.postValue(false)
+                        Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
+                        Log.e(TAG, "Network error: ${t.message}")
+                    }
+                },
+            )
         } catch (e: Exception) {
             isLoading.postValue(false)
             Log.e(TAG, "Error viewing document: ${e.message}")
@@ -284,7 +338,11 @@ class UserDocumentsController(private val context: Context) {
         }
     }
 
-    fun uploadDocument(documentName: String, uri: Uri, onSuccess: (DocumentListResponse) -> Unit) {
+    fun uploadDocument(
+        documentName: String,
+        uri: Uri,
+        onSuccess: (DocumentListResponse) -> Unit,
+    ) {
         documentUploadManager.uploadDocumentFromUri(documentName, uri) { response ->
             if (response.status == 200) {
                 Toast.makeText(context, "$documentName uploaded successfully", Toast.LENGTH_SHORT).show()
@@ -301,26 +359,30 @@ class UserDocumentsController(private val context: Context) {
         }
     }
 
-    fun deleteDocument(document: UserDocument, onComplete: (Boolean) -> Unit) {
+    fun deleteDocument(
+        document: UserDocument,
+        onComplete: (Boolean) -> Unit,
+    ) {
         try {
             Log.d(TAG, "Requesting deletion of document: ${document.document_name}, type: ${document.documentType}")
             isLoading.postValue(true)
             val email = userDataManager.getUserData()?.email ?: ""
             val employeeId = userDataManager.getUserData()?.employeeId ?: ""
             // Map document_name to documentType if documentType is empty
-            val documentType = when {
-                document.documentType.isNotBlank() -> document.documentType
-                document.document_name == "PAN Card" -> "pan"
-                document.document_name == "ID Card" -> "id"
-                document.document_name == "Medical Insurance Card" -> "medical"
-                else -> {
-                    isLoading.postValue(false)
-                    Toast.makeText(context, "Unknown document type for ${document.document_name}", Toast.LENGTH_SHORT).show()
-                    Log.e(TAG, "Unknown document type for ${document.document_name}")
-                    onComplete(false)
-                    return
+            val documentType =
+                when {
+                    document.documentType.isNotBlank() -> document.documentType
+                    document.document_name == "PAN Card" -> "pan"
+                    document.document_name == "ID Card" -> "id"
+                    document.document_name == "Medical Insurance Card" -> "medical"
+                    else -> {
+                        isLoading.postValue(false)
+                        Toast.makeText(context, "Unknown document type for ${document.document_name}", Toast.LENGTH_SHORT).show()
+                        Log.e(TAG, "Unknown document type for ${document.document_name}")
+                        onComplete(false)
+                        return
+                    }
                 }
-            }
             if (email.isEmpty() || employeeId.isEmpty()) {
                 isLoading.postValue(false)
                 Toast.makeText(context, "User information not available", Toast.LENGTH_SHORT).show()
@@ -328,38 +390,44 @@ class UserDocumentsController(private val context: Context) {
                 onComplete(false)
                 return
             }
-            val params = mapOf(
-                "email" to email,
-                "employeeId" to employeeId,
-                "documentType" to documentType
-            )
-            RetrofitClient.apiService.deleteDoc(params).enqueue(object : Callback<ProfilePictureResponse> {
-                override fun onResponse(
-                    call: Call<ProfilePictureResponse>,
-                    response: Response<ProfilePictureResponse>
-                ) {
-                    isLoading.postValue(false)
-                    if (response.isSuccessful && response.body()?.status == 200) {
-                        Log.d(TAG, "Document deleted successfully: ${document.document_name}")
-                        // Immediately update the local document data to reflect deletion
-                        updateDocumentAfterDelete(document.document_name)
-                        onComplete(true)
-                    } else {
-                        val errorMsg = response.body()?.message ?: "Failed to delete document"
-                        Log.e(TAG, "Delete API failed: ${response.code()} $errorMsg")
+            val params =
+                mapOf(
+                    "email" to email,
+                    "employeeId" to employeeId,
+                    "documentType" to documentType,
+                )
+            RetrofitClient.apiService.deleteDoc(params).enqueue(
+                object : Callback<ProfilePictureResponse> {
+                    override fun onResponse(
+                        call: Call<ProfilePictureResponse>,
+                        response: Response<ProfilePictureResponse>,
+                    ) {
+                        isLoading.postValue(false)
+                        if (response.isSuccessful && response.body()?.status == 200) {
+                            Log.d(TAG, "Document deleted successfully: ${document.document_name}")
+                            // Immediately update the local document data to reflect deletion
+                            updateDocumentAfterDelete(document.document_name)
+                            onComplete(true)
+                        } else {
+                            val errorMsg = response.body()?.message ?: "Failed to delete document"
+                            Log.e(TAG, "Delete API failed: ${response.code()} $errorMsg")
+                            errorMessage.postValue(errorMsg)
+                            onComplete(false)
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call<ProfilePictureResponse>,
+                        t: Throwable,
+                    ) {
+                        isLoading.postValue(false)
+                        val errorMsg = "Network error: ${t.message}"
+                        Log.e(TAG, errorMsg)
                         errorMessage.postValue(errorMsg)
                         onComplete(false)
                     }
-                }
-
-                override fun onFailure(call: Call<ProfilePictureResponse>, t: Throwable) {
-                    isLoading.postValue(false)
-                    val errorMsg = "Network error: ${t.message}"
-                    Log.e(TAG, errorMsg)
-                    errorMessage.postValue(errorMsg)
-                    onComplete(false)
-                }
-            })
+                },
+            )
         } catch (e: Exception) {
             isLoading.postValue(false)
             Log.e(TAG, "Error deleting document: ${e.message}")
@@ -393,18 +461,20 @@ class UserDocumentsController(private val context: Context) {
                 val file = File(context.cacheDir, fileName)
                 file.writeBytes(bytes)
 
-                val uri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider", // Assume FileProvider is set up in manifest
-                    file
-                )
+                val uri =
+                    FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.provider", // Assume FileProvider is set up in manifest
+                        file,
+                    )
 
                 withContext(Dispatchers.Main) {
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/pdf"
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
+                    val shareIntent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "application/pdf"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
                     context.startActivity(Intent.createChooser(shareIntent, "Share ${document.document_name}"))
                 }
             } catch (e: Exception) {
@@ -420,24 +490,30 @@ class UserDocumentsController(private val context: Context) {
         processApiResponse(response)
     }
 
-    private fun updateUserDataAfterUpload(documentName: String, response: DocumentListResponse) {
+    private fun updateUserDataAfterUpload(
+        documentName: String,
+        response: DocumentListResponse,
+    ) {
         val currentDocs = _userDocuments.value?.map { it.copy() }?.toMutableList() ?: mutableListOf()
 
         // Find the uploaded document in the response
-        val uploadedDoc = response.personalDoc?.find { doc ->
-            doc.document_name == documentName || (doc.documentType == "pan" && documentName == "PAN Card") ||
-                (doc.documentType == "id" && documentName == "ID Card") ||
-                (doc.documentType == "medical" && documentName == "Medical Insurance Card")
-        }
+        val uploadedDoc =
+            response.personalDoc?.find { doc ->
+                doc.document_name == documentName ||
+                    (doc.documentType == "pan" && documentName == "PAN Card") ||
+                    (doc.documentType == "id" && documentName == "ID Card") ||
+                    (doc.documentType == "medical" && documentName == "Medical Insurance Card")
+            }
 
         if (uploadedDoc != null && !uploadedDoc.doc_data.isNullOrBlank()) {
             // Update or add the document with the new data
             val existingIndex = currentDocs.indexOfFirst { it.document_name == documentName }
-            val updatedDoc = UserDocument(
-                document_name = documentName,
-                doc_data = uploadedDoc.doc_data,
-                documentType = uploadedDoc.documentType ?: ""
-            )
+            val updatedDoc =
+                UserDocument(
+                    document_name = documentName,
+                    doc_data = uploadedDoc.doc_data,
+                    documentType = uploadedDoc.documentType ?: "",
+                )
 
             if (existingIndex >= 0) {
                 currentDocs[existingIndex] = updatedDoc

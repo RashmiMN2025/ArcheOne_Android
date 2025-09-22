@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 @Composable
 fun FingerprintEnableDialog(
     onEnable: () -> Unit,
-    onSkip: () -> Unit
+    onSkip: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = { /* Prevent dismiss on outside touch if needed */ },
@@ -23,6 +23,6 @@ fun FingerprintEnableDialog(
             TextButton(onClick = onSkip) {
                 Text("Not Now")
             }
-        }
+        },
     )
 }

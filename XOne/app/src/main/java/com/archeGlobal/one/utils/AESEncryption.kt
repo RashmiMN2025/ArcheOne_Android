@@ -6,8 +6,10 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
-
+class AESEncryption(
+    private val key: ByteArray,
+    private val iv: ByteArray,
+) {
     companion object {
         private const val TAG = "AESEncryption"
         private const val AES_ALGORITHM = "AES"
@@ -37,8 +39,8 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
     /**
      * Encrypt data using AES-256-CBC with PKCS5 padding
      */
-    fun encrypt(data: ByteArray): ByteArray? {
-        return try {
+    fun encrypt(data: ByteArray): ByteArray? =
+        try {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             val keySpec = SecretKeySpec(key, AES_ALGORITHM)
             val ivSpec = IvParameterSpec(iv)
@@ -52,13 +54,12 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             Log.e(TAG, "AES encryption failed: ${e.message}", e)
             null
         }
-    }
 
     /**
      * Decrypt data using AES-256-CBC with PKCS5 padding
      */
-    fun decrypt(encryptedData: ByteArray): ByteArray? {
-        return try {
+    fun decrypt(encryptedData: ByteArray): ByteArray? =
+        try {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             val keySpec = SecretKeySpec(key, AES_ALGORITHM)
             val ivSpec = IvParameterSpec(iv)
@@ -72,14 +73,11 @@ class AESEncryption(private val key: ByteArray, private val iv: ByteArray) {
             Log.e(TAG, "AES decryption failed: ${e.message}", e)
             null
         }
-    }
 
     /**
      * Encrypt string data
      */
-    fun encrypt(data: String): ByteArray? {
-        return encrypt(data.toByteArray(Charsets.UTF_8))
-    }
+    fun encrypt(data: String): ByteArray? = encrypt(data.toByteArray(Charsets.UTF_8))
 
     /**
      * Decrypt to string

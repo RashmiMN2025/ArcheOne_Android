@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class OrderController(
     private val context: Context,
     private val navigator: Navigator,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
 ) {
     var model by mutableStateOf(OrderDetailsModel())
         private set
@@ -37,23 +37,28 @@ class OrderController(
             // For now, load sample data
             val orderDetails = getSampleOrderDetails(orderId)
 
-            model = model.copy(
-                order = orderDetails,
-                isLoading = false,
-                error = null
-            )
+            model =
+                model.copy(
+                    order = orderDetails,
+                    isLoading = false,
+                    error = null,
+                )
 
             Log.d("OrderController", "Order details loaded successfully for ID: $orderId")
         } catch (e: Exception) {
             Log.e("OrderController", "Error loading order details", e)
-            model = model.copy(
-                isLoading = false,
-                error = "Failed to load order details"
-            )
+            model =
+                model.copy(
+                    isLoading = false,
+                    error = "Failed to load order details",
+                )
         }
     }
 
-    fun approveOrder(orderId: String, remarks: String) {
+    fun approveOrder(
+        orderId: String,
+        remarks: String,
+    ) {
         coroutineScope.launch(Dispatchers.Main) {
             try {
                 approvalActionState = OrderApprovalActionState.Loading
@@ -77,7 +82,10 @@ class OrderController(
         }
     }
 
-    fun rejectOrder(orderId: String, reason: String) {
+    fun rejectOrder(
+        orderId: String,
+        reason: String,
+    ) {
         coroutineScope.launch(Dispatchers.Main) {
             try {
                 approvalActionState = OrderApprovalActionState.Loading

@@ -23,9 +23,8 @@ import kotlinx.coroutines.launch
 class InventoryController(
     private val context: Context,
     private val navigator: Navigator,
-    private val sourceScreen: String? = null
+    private val sourceScreen: String? = null,
 ) : ViewModel() {
-
     private val userDataManager = UserDataManager.getInstance(context)
 
     companion object {
@@ -39,9 +38,8 @@ class InventoryController(
             android.util.Log.d("InventoryController", "Cached ${inventoryItems.size} inventory items")
         }
 
-        private fun isCacheValid(): Boolean {
-            return cachedInventoryItems != null && (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
-        }
+        private fun isCacheValid(): Boolean =
+            cachedInventoryItems != null && (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
     }
 
     var model by mutableStateOf(InventoryModel())
@@ -66,14 +64,15 @@ class InventoryController(
                 val categories = inventoryItems.map { it.category }.distinct().sorted()
                 val types = listOf("All") + categories
 
-                model = model.copy(
-                    inventoryItems = inventoryItems,
-                    allItems = inventoryItems,
-                    locations = locations,
-                    types = types,
-                    isLoading = false,
-                    errorMessage = null
-                )
+                model =
+                    model.copy(
+                        inventoryItems = inventoryItems,
+                        allItems = inventoryItems,
+                        locations = locations,
+                        types = types,
+                        isLoading = false,
+                        errorMessage = null,
+                    )
                 filterItems()
             }
         }
@@ -104,28 +103,30 @@ class InventoryController(
 
     fun onItemClick(item: InventoryItem) {
         // Open dialog in UPDATE mode with pre-filled data
-        addItemModel = addItemModel.copy(
-            showDialog = true,
-            mode = DialogMode.UPDATE,
-            selectedLocation = item.location.ifEmpty { "Bengaluru" },
-            selectedType = item.category.ifEmpty { "HK_Consumables" },
-            selectedItem = item.name,
-            addItem = item.id,
-            existingStock = item.totalStock.toString(),
-            usedStockQuantity = "",
-            brand = item.brand.ifEmpty { "Schevaran" },
-            unit = item.unit,
-            updatedBy = userDataManager.getUserData()?.name ?: "",
-            quantityUpdateType = "Update Used Quantity" // Default to most common use case
-        )
+        addItemModel =
+            addItemModel.copy(
+                showDialog = true,
+                mode = DialogMode.UPDATE,
+                selectedLocation = item.location.ifEmpty { "Bengaluru" },
+                selectedType = item.category.ifEmpty { "HK_Consumables" },
+                selectedItem = item.name,
+                addItem = item.id,
+                existingStock = item.totalStock.toString(),
+                usedStockQuantity = "",
+                brand = item.brand.ifEmpty { "Schevaran" },
+                unit = item.unit,
+                updatedBy = userDataManager.getUserData()?.name ?: "",
+                quantityUpdateType = "Update Used Quantity", // Default to most common use case
+            )
     }
 
     fun onAddItemClick() {
-        addItemModel = addItemModel.copy(
-            showDialog = true,
-            mode = DialogMode.ADD,
-            updatedBy = userDataManager.getUserData()?.name ?: ""
-        )
+        addItemModel =
+            addItemModel.copy(
+                showDialog = true,
+                mode = DialogMode.ADD,
+                updatedBy = userDataManager.getUserData()?.name ?: "",
+            )
     }
 
     fun onAddItemDismiss() {
@@ -197,24 +198,30 @@ class InventoryController(
             viewModelScope.launch {
                 addItemModel = addItemModel.copy(isLoading = true)
                 try {
-                    val request = AddInventoryItemRequest(
-                        updatedBy = addItemModel.updatedBy,
-                        itemCategory = addItemModel.selectedType, // Keep original case
-                        view = addItemModel.selectedAccessType, // Keep original case
-                        itemName = addItemModel.selectedItem,
-                        unit = addItemModel.unit,
-                        brand = addItemModel.brand,
-                        openingStock = addItemModel.existingStock,
-                        location = addItemModel.selectedLocation,
-                        suppliedDate = getCurrentDate() // Use current date as default
-                    )
+                    val request =
+                        AddInventoryItemRequest(
+                            updatedBy = addItemModel.updatedBy,
+                            itemCategory = addItemModel.selectedType, // Keep original case
+                            view = addItemModel.selectedAccessType, // Keep original case
+                            itemName = addItemModel.selectedItem,
+                            unit = addItemModel.unit,
+                            brand = addItemModel.brand,
+                            openingStock = addItemModel.existingStock,
+                            location = addItemModel.selectedLocation,
+                            suppliedDate = getCurrentDate(), // Use current date as default
+                        )
 
                     val response = RetrofitClient.apiService.addInventoryItem(request)
                     if (response.isSuccessful && response.body()?.status == 200) {
                         // Success - refresh inventory list
                         loadInventoryData()
                         addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
-                        Toast.makeText(context, "The item ${addItemModel.selectedItem} has been added to the inventory.", Toast.LENGTH_LONG).show()
+                        Toast
+                            .makeText(
+                                context,
+                                "The item ${addItemModel.selectedItem} has been added to the inventory.",
+                                Toast.LENGTH_LONG,
+                            ).show()
                         resetAddItemForm()
                     } else {
                         addItemModel = addItemModel.copy(isLoading = false)
@@ -251,17 +258,18 @@ class InventoryController(
                     android.util.Log.d("InventoryController", "updateUtilization: $isUsedQuantityUpdate")
                     android.util.Log.d("InventoryController", "=========================")
 
-                    val request = UpdateInventoryItemRequest(
-                        updatedBy = addItemModel.updatedBy,
-                        itemName = addItemModel.selectedItem,
-                        itemId = addItemModel.addItem,
-                        itemCount = itemCount,
-                        brand = addItemModel.brand,
-                        unit = addItemModel.unit,
-                        suppliedDate = getCurrentDate(),
-                        updateUtilization = isUsedQuantityUpdate, // true for used quantity, false for new quantity
-                        location = addItemModel.selectedLocation
-                    )
+                    val request =
+                        UpdateInventoryItemRequest(
+                            updatedBy = addItemModel.updatedBy,
+                            itemName = addItemModel.selectedItem,
+                            itemId = addItemModel.addItem,
+                            itemCount = itemCount,
+                            brand = addItemModel.brand,
+                            unit = addItemModel.unit,
+                            suppliedDate = getCurrentDate(),
+                            updateUtilization = isUsedQuantityUpdate, // true for used quantity, false for new quantity
+                            location = addItemModel.selectedLocation,
+                        )
 
                     android.util.Log.d("InventoryController", "Sending API request...")
                     val response = RetrofitClient.apiService.updateInventoryItem(request)
@@ -275,12 +283,25 @@ class InventoryController(
                         // Success - refresh inventory list
                         loadInventoryData()
                         addItemModel = addItemModel.copy(showDialog = false, isLoading = false)
-                        Toast.makeText(context, "The stock for ${addItemModel.selectedItem} item has been updated to $updatedTotalStock.", Toast.LENGTH_LONG).show()
+                        Toast
+                            .makeText(
+                                context,
+                                "The stock for ${addItemModel.selectedItem} item has been updated to $updatedTotalStock.",
+                                Toast.LENGTH_LONG,
+                            ).show()
                         resetAddItemForm()
                     } else {
-                        android.util.Log.e("InventoryController", "API Error - Response Code: ${response.code()}, Status: ${response.body()?.status}")
+                        android.util.Log.e(
+                            "InventoryController",
+                            "API Error - Response Code: ${response.code()}, Status: ${response.body()?.status}",
+                        )
                         addItemModel = addItemModel.copy(isLoading = false)
-                        Toast.makeText(context, "Failed to update inventory: ${response.body()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
+                        Toast
+                            .makeText(
+                                context,
+                                "Failed to update inventory: ${response.body()?.message ?: "Unknown error"}",
+                                Toast.LENGTH_SHORT,
+                            ).show()
                     }
                 } catch (e: Exception) {
                     android.util.Log.e("InventoryController", "Network Error: ${e.message}", e)
@@ -339,14 +360,12 @@ class InventoryController(
         addItemModel = AddItemModel()
     }
 
-    private fun getCurrentDate(): String {
-        return java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+    private fun getCurrentDate(): String =
+        java.text
+            .SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
             .format(java.util.Date())
-    }
 
-    private fun generateItemId(): String {
-        return "item_${System.currentTimeMillis()}"
-    }
+    private fun generateItemId(): String = "item_${System.currentTimeMillis()}"
 
     private fun getCurrentDateTime(): String {
         val dateFormat = java.text.SimpleDateFormat("d MMM yyyy 'at' h:mm a", java.util.Locale.getDefault())
@@ -358,10 +377,11 @@ class InventoryController(
 
         // Filter by search query
         if (model.searchQuery.isNotBlank()) {
-            filteredItems = filteredItems.filter { item ->
-                item.name.contains(model.searchQuery, ignoreCase = true) ||
-                    item.itemNumber.contains(model.searchQuery, ignoreCase = true)
-            }
+            filteredItems =
+                filteredItems.filter { item ->
+                    item.name.contains(model.searchQuery, ignoreCase = true) ||
+                        item.itemNumber.contains(model.searchQuery, ignoreCase = true)
+                }
         }
 
         // Filter by type
@@ -395,35 +415,42 @@ class InventoryController(
                         val categories = inventoryItems.map { it.category }.distinct().sorted()
                         val types = listOf("All") + categories
 
-                        model = model.copy(
-                            inventoryItems = inventoryItems,
-                            allItems = inventoryItems,
-                            locations = locations,
-                            types = types,
-                            isLoading = false,
-                            errorMessage = null
-                        )
+                        model =
+                            model.copy(
+                                inventoryItems = inventoryItems,
+                                allItems = inventoryItems,
+                                locations = locations,
+                                types = types,
+                                isLoading = false,
+                                errorMessage = null,
+                            )
 
                         // Apply initial filter
                         filterItems()
-                        android.util.Log.d("InventoryController", "Inventory data loaded and cached successfully: ${inventoryItems.size} items")
-                    } else {
-                        model = model.copy(
-                            isLoading = false,
-                            errorMessage = "Failed to load inventory data"
+                        android.util.Log.d(
+                            "InventoryController",
+                            "Inventory data loaded and cached successfully: ${inventoryItems.size} items",
                         )
+                    } else {
+                        model =
+                            model.copy(
+                                isLoading = false,
+                                errorMessage = "Failed to load inventory data",
+                            )
                     }
                 } else {
-                    model = model.copy(
-                        isLoading = false,
-                        errorMessage = "Network error: ${response.code()}"
-                    )
+                    model =
+                        model.copy(
+                            isLoading = false,
+                            errorMessage = "Network error: ${response.code()}",
+                        )
                 }
             } catch (e: Exception) {
-                model = model.copy(
-                    isLoading = false,
-                    errorMessage = "Error: ${e.message}"
-                )
+                model =
+                    model.copy(
+                        isLoading = false,
+                        errorMessage = "Error: ${e.message}",
+                    )
             }
         }
     }

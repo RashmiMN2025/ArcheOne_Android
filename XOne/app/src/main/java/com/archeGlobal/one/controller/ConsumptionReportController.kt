@@ -26,9 +26,8 @@ import java.net.URLEncoder
 class ConsumptionReportController(
     private val context: Context,
     private val navigator: Navigator,
-    private val sourceScreen: String? = null
+    private val sourceScreen: String? = null,
 ) : ViewModel() {
-
     companion object {
         private const val CACHE_DURATION_MS = 5 * 60 * 1000L // 5 minutes
         private var cachedModel: ConsumptionReportModel? = null
@@ -40,9 +39,7 @@ class ConsumptionReportController(
             Log.d("ConsumptionReportController", "Cached consumption report data")
         }
 
-        private fun isCacheValid(): Boolean {
-            return cachedModel != null && (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
-        }
+        private fun isCacheValid(): Boolean = cachedModel != null && (System.currentTimeMillis() - cacheTimestamp) < CACHE_DURATION_MS
     }
 
     var model by mutableStateOf(ConsumptionReportModel())
@@ -80,11 +77,12 @@ class ConsumptionReportController(
                         val stockData = stockListResponse.data
 
                         // Process data on background thread
-                        val filteredData = if (model.selectedLocation.isNotBlank()) {
-                            stockData.filter { it.location == model.selectedLocation }
-                        } else {
-                            stockData
-                        }
+                        val filteredData =
+                            if (model.selectedLocation.isNotBlank()) {
+                                stockData.filter { it.location == model.selectedLocation }
+                            } else {
+                                stockData
+                            }
 
                         val stockCategories = filteredData.toConsumptionStockCategories()
                         val usageCategories = filteredData.toUsageCategories()
@@ -94,13 +92,14 @@ class ConsumptionReportController(
 
                         // Update UI on main thread
                         withContext(Dispatchers.Main) {
-                            val newModel = model.copy(
-                                stockCategories = stockCategories,
-                                usageCategories = usageCategories,
-                                locations = locations,
-                                isLoading = false,
-                                error = null
-                            )
+                            val newModel =
+                                model.copy(
+                                    stockCategories = stockCategories,
+                                    usageCategories = usageCategories,
+                                    locations = locations,
+                                    isLoading = false,
+                                    error = null,
+                                )
                             model = newModel
 
                             // Cache the data
@@ -109,27 +108,30 @@ class ConsumptionReportController(
                         Log.d("ConsumptionReportController", "Consumption data loaded successfully")
                     } else {
                         withContext(Dispatchers.Main) {
-                            model = model.copy(
-                                isLoading = false,
-                                error = "Failed to load consumption data"
-                            )
+                            model =
+                                model.copy(
+                                    isLoading = false,
+                                    error = "Failed to load consumption data",
+                                )
                         }
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        model = model.copy(
-                            isLoading = false,
-                            error = "Network error: ${response.code()}"
-                        )
+                        model =
+                            model.copy(
+                                isLoading = false,
+                                error = "Network error: ${response.code()}",
+                            )
                     }
                 }
             } catch (e: Exception) {
                 Log.e("ConsumptionReportController", "Error loading consumption data", e)
                 withContext(Dispatchers.Main) {
-                    model = model.copy(
-                        isLoading = false,
-                        error = "Error: ${e.message}"
-                    )
+                    model =
+                        model.copy(
+                            isLoading = false,
+                            error = "Error: ${e.message}",
+                        )
                 }
             }
         }
@@ -187,27 +189,30 @@ class ConsumptionReportController(
 
                         if (result.success) {
                             val reportType = if (isUsage) "Monthly Usage Report" else "Stock Report"
-                            Toast.makeText(
-                                context,
-                                "$reportType for $categoryId downloaded successfully to Downloads folder",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            Toast
+                                .makeText(
+                                    context,
+                                    "$reportType for $categoryId downloaded successfully to Downloads folder",
+                                    Toast.LENGTH_LONG,
+                                ).show()
 
                             Log.d("ConsumptionReportController", "File downloaded successfully: ${result.filePath}")
                         } else {
-                            Toast.makeText(
-                                context,
-                                "Download failed: ${result.errorMessage}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Download failed: ${result.errorMessage}",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
                             Log.e("ConsumptionReportController", "Download error: ${result.errorMessage}")
                         }
                     } else {
-                        Toast.makeText(
-                            context,
-                            "Failed to download report: ${response.message()}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast
+                            .makeText(
+                                context,
+                                "Failed to download report: ${response.message()}",
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         Log.e("ConsumptionReportController", "API error: ${response.code()} - ${response.message()}")
                     }
                 }

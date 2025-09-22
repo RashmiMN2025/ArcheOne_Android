@@ -37,7 +37,7 @@ import java.util.*
 @Composable
 fun TravelApprovalDetailScreen(
     controller: TravelController,
-    travelRequest: TravelRequest
+    travelRequest: TravelRequest,
 ) {
     // Get context and font adjustment for consistent font scaling
     val context = LocalContext.current
@@ -46,23 +46,27 @@ fun TravelApprovalDetailScreen(
     // Wrap entire content with font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .systemBarsPadding()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .systemBarsPadding(),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                WelcomeBackgroundTop,
-                                WelcomeBackgroundMiddle,
-                                WelcomeBackgroundBottom
-                            )
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush =
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            WelcomeBackgroundTop,
+                                            WelcomeBackgroundMiddle,
+                                            WelcomeBackgroundBottom,
+                                        ),
+                                ),
+                        ),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     Spacer(modifier = Modifier.height(48.dp))
@@ -71,7 +75,7 @@ fun TravelApprovalDetailScreen(
                         title = {
                             Box(
                                 modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     text = "Travel Approval Details",
@@ -79,7 +83,7 @@ fun TravelApprovalDetailScreen(
                                     fontSize = 20.sp,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
                                 )
                             }
                         },
@@ -88,7 +92,7 @@ fun TravelApprovalDetailScreen(
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = Color.Black
+                                    tint = Color.Black,
                                 )
                             }
                         },
@@ -96,24 +100,26 @@ fun TravelApprovalDetailScreen(
                         elevation = 0.dp,
                         actions = {
                             Spacer(modifier = Modifier.width(48.dp))
-                        }
+                        },
                     )
 
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(16.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
-                        backgroundColor = Color(0xFFF6F4EE)
+                        backgroundColor = Color(0xFFF6F4EE),
                     ) {
                         val scrollState = rememberScrollState()
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(scrollState)
-                                .padding(16.dp)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(scrollState)
+                                    .padding(16.dp),
                         ) {
                             // Title
                             Text(
@@ -121,7 +127,7 @@ fun TravelApprovalDetailScreen(
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                modifier = Modifier.padding(bottom = 16.dp),
                             )
 
                             // Request details
@@ -140,19 +146,20 @@ fun TravelApprovalDetailScreen(
                             DetailRow(label = "Email:", value = travelRequest.employeeEmail ?: "N/A")
                             DetailRow(label = "Mobile:", value = travelRequest.employeeMobile ?: "N/A")
                             // Show origin → destination format
-                            val destinationValue = run {
-                                val destinations = travelRequest.getAllDestinations()
-                                if (destinations.isNotEmpty()) {
-                                    val destination = destinations[0]
-                                    if (!destination.originCity.isNullOrEmpty()) {
-                                        "${destination.originCity} → ${destination.destinationCity}"
+                            val destinationValue =
+                                run {
+                                    val destinations = travelRequest.getAllDestinations()
+                                    if (destinations.isNotEmpty()) {
+                                        val destination = destinations[0]
+                                        if (!destination.originCity.isNullOrEmpty()) {
+                                            "${destination.originCity} → ${destination.destinationCity}"
+                                        } else {
+                                            destination.destinationCity
+                                        }
                                     } else {
-                                        destination.destinationCity
+                                        travelRequest.destination // Fallback
                                     }
-                                } else {
-                                    travelRequest.destination // Fallback
                                 }
-                            }
                             DetailRow(label = "Origin → Destination:", value = destinationValue)
                             DetailRow(label = "Project:", value = travelRequest.project)
                             DetailRow(label = "Business Justification:", value = travelRequest.businessJustification ?: "N/A")
@@ -160,7 +167,10 @@ fun TravelApprovalDetailScreen(
                             DetailRow(label = "Return Date:", value = travelRequest.arrivalDate ?: "N/A")
                             DetailRow(label = "Transport Mode:", value = travelRequest.modeOfTransport ?: "N/A")
                             DetailRow(label = "Status:", value = travelRequest.status.name)
-                            DetailRow(label = "Created Date:", value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(travelRequest.createdDate))
+                            DetailRow(
+                                label = "Created Date:",
+                                value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(travelRequest.createdDate),
+                            )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
@@ -168,37 +178,39 @@ fun TravelApprovalDetailScreen(
                             if (travelRequest.status == TravelStatus.PENDING) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 ) {
                                     Button(
                                         onClick = { controller.navigateToTravelApprove(travelRequest) },
                                         modifier = Modifier.weight(1f),
-                                        colors = ButtonDefaults.buttonColors(
-                                            backgroundColor = Color(0xFF4CAF50)
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
+                                        colors =
+                                            ButtonDefaults.buttonColors(
+                                                backgroundColor = Color(0xFF4CAF50),
+                                            ),
+                                        shape = RoundedCornerShape(8.dp),
                                     ) {
                                         Text(
                                             text = "Approve",
                                             color = Color.White,
                                             fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
                                         )
                                     }
 
                                     Button(
                                         onClick = { controller.navigateToTravelReject(travelRequest) },
                                         modifier = Modifier.weight(1f),
-                                        colors = ButtonDefaults.buttonColors(
-                                            backgroundColor = PrimaryRed
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
+                                        colors =
+                                            ButtonDefaults.buttonColors(
+                                                backgroundColor = PrimaryRed,
+                                            ),
+                                        shape = RoundedCornerShape(8.dp),
                                     ) {
                                         Text(
                                             text = "Reject",
                                             color = Color.White,
                                             fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
                                         )
                                     }
                                 }
@@ -213,57 +225,61 @@ fun TravelApprovalDetailScreen(
 
 @Composable
 private fun StatusBadge(status: TravelStatus) {
-    val (backgroundColor, textColor) = when (status) {
-        TravelStatus.APPROVED -> Color(0xFF4CD964) to Color.White // Green
-        TravelStatus.REJECTED -> PrimaryRed to Color.White // Red
-        TravelStatus.PENDING -> Color(0xFFFFCC00) to Color.Black // Yellow
-    }
+    val (backgroundColor, textColor) =
+        when (status) {
+            TravelStatus.APPROVED -> Color(0xFF4CD964) to Color.White // Green
+            TravelStatus.REJECTED -> PrimaryRed to Color.White // Red
+            TravelStatus.PENDING -> Color(0xFFFFCC00) to Color.Black // Yellow
+        }
 
     Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(backgroundColor)
+                .padding(horizontal = 12.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = status.name.lowercase().replaceFirstChar { it.uppercase() },
             color = textColor,
             fontSize = 12.sp,
             fontFamily = GraphikFontFamily,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }
 
 @Composable
-private fun DetailRow(label: String, value: String) {
+private fun DetailRow(
+    label: String,
+    value: String,
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            modifier = Modifier.width(140.dp)
+            modifier = Modifier.width(140.dp),
         )
         Text(
             text = value,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
-            color = Color.Black
+            color = Color.Black,
         )
     }
 }
 
-private fun String.capitalize(): String {
-    return this.lowercase().replaceFirstChar { it.uppercase() }
-}
+private fun String.capitalize(): String = this.lowercase().replaceFirstChar { it.uppercase() }
 
 /**
  * Format date string to "d MMM yyyy" format (e.g., "10 Jun 2025")

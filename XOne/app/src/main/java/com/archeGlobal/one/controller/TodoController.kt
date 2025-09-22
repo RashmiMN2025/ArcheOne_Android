@@ -18,13 +18,14 @@ import java.time.format.DateTimeFormatter
 
 class TodoController(
     private val navigator: Navigator,
-    private val context: Context
+    private val context: Context,
 ) {
     private val preferencesManager = PreferencesManager(context)
-    private val gson = GsonBuilder()
-        .registerTypeAdapter(LocalDate::class.java, LocalDateAdapter())
-        .registerTypeAdapter(LocalTime::class.java, LocalTimeAdapter())
-        .create()
+    private val gson =
+        GsonBuilder()
+            .registerTypeAdapter(LocalDate::class.java, LocalDateAdapter())
+            .registerTypeAdapter(LocalTime::class.java, LocalTimeAdapter())
+            .create()
 
     var model by mutableStateOf(TodoModel())
         private set
@@ -66,10 +67,10 @@ class TodoController(
         model = model.copy(selectedDay = dayOfWeek)
     }
 
-    fun getTasksForSelectedDay(): List<TodoTask> {
-        return model.tasks.filter { it.dayOfWeek == model.selectedDay }
+    fun getTasksForSelectedDay(): List<TodoTask> =
+        model.tasks
+            .filter { it.dayOfWeek == model.selectedDay }
             .sortedBy { it.startTime }
-    }
 
     fun formatTimeRange(task: TodoTask): String {
         val formatter = DateTimeFormatter.ofPattern("h:mm a")
@@ -82,50 +83,61 @@ class TodoController(
     }
 
     fun selectTask(task: TodoTask) {
-        model = model.copy(
-            selectedTask = task,
-            showTaskDetail = true
-        )
+        model =
+            model.copy(
+                selectedTask = task,
+                showTaskDetail = true,
+            )
     }
 
     fun closeTaskDetail() {
-        model = model.copy(
-            showTaskDetail = false
-        )
+        model =
+            model.copy(
+                showTaskDetail = false,
+            )
     }
 
     fun startAddTask() {
-        model = model.copy(
-            isAddingTask = true
-        )
+        model =
+            model.copy(
+                isAddingTask = true,
+            )
     }
 
     fun cancelAddTask() {
-        model = model.copy(
-            isAddingTask = false
-        )
+        model =
+            model.copy(
+                isAddingTask = false,
+            )
     }
 
-    fun addTask(title: String, priority: TaskPriority, startTime: LocalTime, endTime: LocalTime): TodoTask? {
+    fun addTask(
+        title: String,
+        priority: TaskPriority,
+        startTime: LocalTime,
+        endTime: LocalTime,
+    ): TodoTask? {
         if (title.isBlank()) {
             return null
         }
 
-        val newTask = TodoTask(
-            title = title,
-            priority = priority,
-            startTime = startTime,
-            endTime = endTime,
-            dayOfWeek = model.selectedDay
-        )
+        val newTask =
+            TodoTask(
+                title = title,
+                priority = priority,
+                startTime = startTime,
+                endTime = endTime,
+                dayOfWeek = model.selectedDay,
+            )
 
         val updatedTasks = model.tasks.toMutableList()
         updatedTasks.add(newTask)
 
-        model = model.copy(
-            tasks = updatedTasks,
-            isAddingTask = false
-        )
+        model =
+            model.copy(
+                tasks = updatedTasks,
+                isAddingTask = false,
+            )
 
         Log.d("TodoController", "Tasks after add: ${model.tasks.size}")
 
@@ -134,30 +146,38 @@ class TodoController(
     }
 
     fun startEditTask(task: TodoTask) {
-        model = model.copy(
-            selectedTask = task,
-            isEditingTask = true,
-            showTaskDetail = false
-        )
+        model =
+            model.copy(
+                selectedTask = task,
+                isEditingTask = true,
+                showTaskDetail = false,
+            )
     }
 
     fun cancelEditTask() {
-        model = model.copy(
-            isEditingTask = false
-        )
+        model =
+            model.copy(
+                isEditingTask = false,
+            )
     }
 
-    fun updateTask(title: String, priority: TaskPriority, startTime: LocalTime, endTime: LocalTime) {
+    fun updateTask(
+        title: String,
+        priority: TaskPriority,
+        startTime: LocalTime,
+        endTime: LocalTime,
+    ) {
         if (title.isBlank() || model.selectedTask == null) {
             return
         }
 
-        val updatedTask = model.selectedTask!!.copy(
-            title = title,
-            priority = priority,
-            startTime = startTime,
-            endTime = endTime
-        )
+        val updatedTask =
+            model.selectedTask!!.copy(
+                title = title,
+                priority = priority,
+                startTime = startTime,
+                endTime = endTime,
+            )
 
         val taskIndex = model.tasks.indexOfFirst { it.id == updatedTask.id }
         if (taskIndex == -1) {
@@ -167,11 +187,12 @@ class TodoController(
         val updatedTasks = model.tasks.toMutableList()
         updatedTasks[taskIndex] = updatedTask
 
-        model = model.copy(
-            tasks = updatedTasks,
-            selectedTask = null,
-            isEditingTask = false
-        )
+        model =
+            model.copy(
+                tasks = updatedTasks,
+                selectedTask = null,
+                isEditingTask = false,
+            )
 
         saveTasks()
     }
@@ -179,11 +200,12 @@ class TodoController(
     fun deleteTask(task: TodoTask) {
         val updatedTasks = model.tasks.filter { it.id != task.id }
 
-        model = model.copy(
-            tasks = updatedTasks,
-            selectedTask = null,
-            showTaskDetail = false
-        )
+        model =
+            model.copy(
+                tasks = updatedTasks,
+                selectedTask = null,
+                showTaskDetail = false,
+            )
 
         Log.d("TodoController", "Tasks after delete: ${model.tasks.size}")
 
@@ -203,7 +225,10 @@ class TodoController(
 
     // Adapters for Gson to handle LocalDate and LocalTime
     private class LocalDateAdapter : com.google.gson.TypeAdapter<LocalDate>() {
-        override fun write(out: com.google.gson.stream.JsonWriter, value: LocalDate?) {
+        override fun write(
+            out: com.google.gson.stream.JsonWriter,
+            value: LocalDate?,
+        ) {
             if (value == null) {
                 out.nullValue()
             } else {
@@ -218,7 +243,10 @@ class TodoController(
     }
 
     private class LocalTimeAdapter : com.google.gson.TypeAdapter<LocalTime>() {
-        override fun write(out: com.google.gson.stream.JsonWriter, value: LocalTime?) {
+        override fun write(
+            out: com.google.gson.stream.JsonWriter,
+            value: LocalTime?,
+        ) {
             if (value == null) {
                 out.nullValue()
             } else {

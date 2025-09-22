@@ -13,15 +13,19 @@ object MpinManager {
     private const val KEY_QUESTION_2 = "security_question_2"
     private const val KEY_ANSWER_2 = "security_answer_2"
 
-    private fun prefs(context: Context) = EncryptedSharedPreferences.create(
-        PREF_NAME,
-        MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
-        context,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private fun prefs(context: Context) =
+        EncryptedSharedPreferences.create(
+            PREF_NAME,
+            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+            context,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+        )
 
-    fun saveMpin(context: Context, mpin: String) {
+    fun saveMpin(
+        context: Context,
+        mpin: String,
+    ) {
         prefs(context).edit().putString(KEY_MPIN, mpin).apply()
     }
 
@@ -37,7 +41,8 @@ object MpinManager {
 
     fun clearSecurityQuestions(context: Context) {
         // Clear from encrypted preferences
-        prefs(context).edit()
+        prefs(context)
+            .edit()
             .remove(KEY_QUESTION_1)
             .remove(KEY_ANSWER_1)
             .remove(KEY_QUESTION_2)
@@ -53,11 +58,14 @@ object MpinManager {
         clearSecurityQuestions(context)
     }
 
-    private fun getPrefs(context: Context) =
-        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+    private fun getPrefs(context: Context) = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
-    fun saveSecurityQuestions(context: Context, questions: List<SecurityQuestion>) {
-        prefs(context).edit()
+    fun saveSecurityQuestions(
+        context: Context,
+        questions: List<SecurityQuestion>,
+    ) {
+        prefs(context)
+            .edit()
             .putString(KEY_QUESTION_1, questions[0].question)
             .putString(KEY_ANSWER_1, questions[0].answer)
             .putString(KEY_QUESTION_2, questions[1].question)
@@ -73,7 +81,7 @@ object MpinManager {
         val a2 = prefs.getString(KEY_ANSWER_2, "") ?: ""
         return listOf(
             SecurityQuestion(q1, a1),
-            SecurityQuestion(q2, a2)
+            SecurityQuestion(q2, a2),
         )
     }
 

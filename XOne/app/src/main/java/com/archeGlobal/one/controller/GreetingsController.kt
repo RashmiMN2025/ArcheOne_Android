@@ -22,7 +22,7 @@ import java.io.FileOutputStream
 
 class GreetingsController(
     private val context: Context,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) {
     private val userDataManager = UserDataManager.getInstance(context)
 
@@ -35,7 +35,9 @@ class GreetingsController(
 
     init {
         loadGreetings()
-    } private fun loadGreetings() {
+    }
+
+    private fun loadGreetings() {
         val greetings = userDataManager.getGreetingsData()
         val greetingCategories = userDataManager.getGreetingCategoriesData()
         var subcategories: List<GreetingSubcategory> = emptyList()
@@ -45,37 +47,46 @@ class GreetingsController(
             // Two approaches to identify subcategories:
             // 1. Check if files contain "/Global Celebration/" path
             // 2. Check if message field is "Global Celebration" (indicates it's a subcategory)
-            subcategories = greetingCategories.filter { cat ->
-                cat.files.any { file -> file.contains("/Global Celebration/") } ||
-                    cat.message == "Global Celebration" ||
-                    cat.name != "Global Celebration" && (cat.files.any { file -> file.contains("global") || file.contains("celebration") })
-            }.map { cat ->
-                GreetingSubcategory(
-                    id = cat.id,
-                    name = cat.name,
-                    files = cat.files,
-                    message = cat.message
-                )
-            }
+            subcategories =
+                greetingCategories
+                    .filter { cat ->
+                        cat.files.any { file -> file.contains("/Global Celebration/") } ||
+                            cat.message == "Global Celebration" ||
+                            cat.name != "Global Celebration" &&
+                            (cat.files.any { file -> file.contains("global") || file.contains("celebration") })
+                    }.map { cat ->
+                        GreetingSubcategory(
+                            id = cat.id,
+                            name = cat.name,
+                            files = cat.files,
+                            message = cat.message,
+                        )
+                    }
             Log.d("GreetingsController", "Found ${subcategories.size} subcategories for Global Celebration")
         }
 
         // Always add Global Celebration to categories regardless if we have subcategories or not
         // This ensures it appears in the UI
-        val categoriesWithGlobal = if (greetings != null) {
-            val mutable = greetings.toMutableMap()
-            // Always add Global Celebration category (check both singular and plural forms)
-            if (!mutable.containsKey("Global Celebrations") && !mutable.containsKey("Global Celebration")) {
-                // Use first image from subcategories if available, otherwise empty list
-                val firstImage = subcategories.firstOrNull()?.files?.firstOrNull()?.let { listOf(it) } ?: emptyList()
-                mutable["Global Celebrations"] = firstImage
-                Log.d("GreetingsController", "Added Global Celebrations category with ${firstImage.size} images")
+        val categoriesWithGlobal =
+            if (greetings != null) {
+                val mutable = greetings.toMutableMap()
+                // Always add Global Celebration category (check both singular and plural forms)
+                if (!mutable.containsKey("Global Celebrations") && !mutable.containsKey("Global Celebration")) {
+                    // Use first image from subcategories if available, otherwise empty list
+                    val firstImage =
+                        subcategories
+                            .firstOrNull()
+                            ?.files
+                            ?.firstOrNull()
+                            ?.let { listOf(it) } ?: emptyList()
+                    mutable["Global Celebrations"] = firstImage
+                    Log.d("GreetingsController", "Added Global Celebrations category with ${firstImage.size} images")
+                }
+                mutable.toMap()
+            } else {
+                // If no categories at all, at least add Global Celebrations
+                mapOf("Global Celebrations" to emptyList<String>())
             }
-            mutable.toMap()
-        } else {
-            // If no categories at all, at least add Global Celebrations
-            mapOf("Global Celebrations" to emptyList<String>())
-        }
 
         model = model.copy(categories = categoriesWithGlobal, subcategories = subcategories)
         Log.d("GreetingsController", "Loaded ${categoriesWithGlobal.size} greeting categories with Global Celebration")
@@ -97,21 +108,23 @@ class GreetingsController(
     }
 
     // Get message for category from API data or fallback to empty
-    private fun getMessageForCategory(category: String): String {
-        return model.categoryMessages[category] ?: ""
-    }
+    private fun getMessageForCategory(category: String): String = model.categoryMessages[category] ?: ""
 
-    fun onCategorySelected(category: String, navigateToDetail: Boolean = false) {
+    fun onCategorySelected(
+        category: String,
+        navigateToDetail: Boolean = false,
+    ) {
         try {
             // For Global Celebration, just select the category and show subcategories
             if ((category == "Global Celebrations" || category == "Global Celebration") && model.subcategories.isNotEmpty()) {
                 Log.d("GreetingsController", "Selected parent category: $category with ${model.subcategories.size} subcategories")
-                model = model.copy(
-                    selectedCategory = category,
-                    selectedSubcategory = null,
-                    selectedGreeting = null,
-                    message = getMessageForCategory(category)
-                )
+                model =
+                    model.copy(
+                        selectedCategory = category,
+                        selectedSubcategory = null,
+                        selectedGreeting = null,
+                        message = getMessageForCategory(category),
+                    )
                 return
             }
             // For other categories, select the first greeting
@@ -135,17 +148,18 @@ class GreetingsController(
                     firstGreetingInCategory,
                     greetingsInCategory,
                     categoryMessage,
-                    category
+                    category,
                 )
                 return // Prevent model update and recomposition
             }
 
-            model = model.copy(
-                selectedCategory = category,
-                selectedSubcategory = null,
-                selectedGreeting = firstGreetingInCategory,
-                message = categoryMessage
-            )
+            model =
+                model.copy(
+                    selectedCategory = category,
+                    selectedSubcategory = null,
+                    selectedGreeting = firstGreetingInCategory,
+                    message = categoryMessage,
+                )
         } catch (e: Exception) {
             Log.e("GreetingsController", "Error in onCategorySelected: ${e.message}", e)
         }
@@ -191,9 +205,10 @@ class GreetingsController(
 
     fun getFilteredCategories(): List<String> {
         val query = model.searchQuery.lowercase()
-        val categories = model.categories.keys.filter { category ->
-            category.lowercase().contains(query)
-        }
+        val categories =
+            model.categories.keys.filter { category ->
+                category.lowercase().contains(query)
+            }
         Log.d("GreetingsController", "Filtered categories: $categories from ${model.categories.keys}")
         return categories
     }
@@ -225,7 +240,7 @@ class GreetingsController(
             return FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.provider",
-                file
+                file,
             )
         } catch (e: Exception) {
             Log.e("GreetingsController", "Error saving card screenshot: ${e.message}", e)
@@ -239,21 +254,23 @@ class GreetingsController(
 
         if (imageUri != null) {
             // Send both card screenshot and text
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/jpeg"
-                putExtra(Intent.EXTRA_STREAM, imageUri)
-                putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
-                putExtra(Intent.EXTRA_TEXT, model.message)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            val intent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "image/jpeg"
+                    putExtra(Intent.EXTRA_STREAM, imageUri)
+                    putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
+                    putExtra(Intent.EXTRA_TEXT, model.message)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
             context.startActivity(Intent.createChooser(intent, "Send Greeting"))
         } else {
             // Fallback to text-only sharing if screenshot fails
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
-                putExtra(Intent.EXTRA_TEXT, model.message)
-            }
+            val intent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, greetingTitle)
+                    putExtra(Intent.EXTRA_TEXT, model.message)
+                }
             context.startActivity(Intent.createChooser(intent, "Send Greeting"))
         }
     } // Removed controller-level sendInOutlook implementation
@@ -277,29 +294,35 @@ class GreetingsController(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Create a target bitmap to receive the downloaded image
-                val imageBitmap = coil.ImageLoader(context).execute(
-                    coil.request.ImageRequest.Builder(context)
-                        .data(imageUrl)
-                        .allowHardware(false) // Needed to access pixels
-                        .build()
-                ).drawable?.let { drawable ->
-                    // Convert drawable to bitmap
-                    when (drawable) {
-                        is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
-                        else -> {
-                            // Create a bitmap from any drawable
-                            val bitmap = Bitmap.createBitmap(
-                                drawable.intrinsicWidth,
-                                drawable.intrinsicHeight,
-                                Bitmap.Config.ARGB_8888
-                            )
-                            val canvas = android.graphics.Canvas(bitmap)
-                            drawable.setBounds(0, 0, canvas.width, canvas.height)
-                            drawable.draw(canvas)
-                            bitmap
+                val imageBitmap =
+                    coil
+                        .ImageLoader(context)
+                        .execute(
+                            coil.request.ImageRequest
+                                .Builder(context)
+                                .data(imageUrl)
+                                .allowHardware(false) // Needed to access pixels
+                                .build(),
+                        ).drawable
+                        ?.let { drawable ->
+                            // Convert drawable to bitmap
+                            when (drawable) {
+                                is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                                else -> {
+                                    // Create a bitmap from any drawable
+                                    val bitmap =
+                                        Bitmap.createBitmap(
+                                            drawable.intrinsicWidth,
+                                            drawable.intrinsicHeight,
+                                            Bitmap.Config.ARGB_8888,
+                                        )
+                                    val canvas = android.graphics.Canvas(bitmap)
+                                    drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                    drawable.draw(canvas)
+                                    bitmap
+                                }
+                            }
                         }
-                    }
-                }
 
                 // If image was successfully downloaded and converted to bitmap
                 if (imageBitmap != null) {
@@ -327,23 +350,26 @@ class GreetingsController(
     }
 
     // Get subcategories for a category (for now, only for Global Celebration)
-    fun getSubcategoriesForCategory(category: String): List<GreetingSubcategory> {
-        return if (category == "Global Celebrations" || category == "Global Celebration") model.subcategories else emptyList()
-    }
+    fun getSubcategoriesForCategory(category: String): List<GreetingSubcategory> =
+        if (category == "Global Celebrations" || category == "Global Celebration") model.subcategories else emptyList()
 
     // Select a subcategory (now expects a GreetingSubcategory)
-    fun onSubcategorySelected(subcategory: GreetingSubcategory, navigateToDetail: Boolean = false) {
+    fun onSubcategorySelected(
+        subcategory: GreetingSubcategory,
+        navigateToDetail: Boolean = false,
+    ) {
         val greetingsInSubcategory = subcategory.files
         if (greetingsInSubcategory.isEmpty()) {
             Log.e("GreetingsController", "No greetings found for subcategory: ${subcategory.name}")
             return
         }
         val firstGreeting = greetingsInSubcategory.firstOrNull()
-        val updatedModel = model.copy(
-            selectedSubcategory = subcategory,
-            selectedGreeting = firstGreeting,
-            message = subcategory.message
-        )
+        val updatedModel =
+            model.copy(
+                selectedSubcategory = subcategory,
+                selectedGreeting = firstGreeting,
+                message = subcategory.message,
+            )
         model = updatedModel
         if (navigateToDetail && firstGreeting != null) {
             navigateToGreetingDetail(firstGreeting)
@@ -351,17 +377,15 @@ class GreetingsController(
     }
 
     // Get greetings for a subcategory
-    fun getGreetingsForSubcategory(subcategory: GreetingSubcategory?): List<String> {
-        return subcategory?.files ?: emptyList()
-    }
+    fun getGreetingsForSubcategory(subcategory: GreetingSubcategory?): List<String> = subcategory?.files ?: emptyList()
 
     // Clear selected subcategory
     fun clearSelectedSubcategory() {
         model = model.copy(selectedSubcategory = null)
     }
 
-    fun onBackPressed(): Boolean {
-        return when {
+    fun onBackPressed(): Boolean =
+        when {
             model.selectedSubcategory != null -> {
                 clearSelectedSubcategory()
                 true
@@ -372,7 +396,6 @@ class GreetingsController(
             }
             else -> false
         }
-    }
 
     fun onCategoryClick(category: String) {
         if (category == "Global Celebrations" || category == "Global Celebration") {
@@ -391,9 +414,7 @@ class GreetingsController(
         }
     }
 
-    fun getGreetingsForCategory(category: String): List<String> {
-        return model.categories[category] ?: emptyList()
-    }
+    fun getGreetingsForCategory(category: String): List<String> = model.categories[category] ?: emptyList()
 
     fun getCategoryThumbnail(category: String): String {
         val greetingCategories = userDataManager.getGreetingCategoriesData()

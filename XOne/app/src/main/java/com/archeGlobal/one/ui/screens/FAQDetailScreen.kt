@@ -38,36 +38,40 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 @Composable
 fun FAQDetailScreen(
     faqId: String,
-    controller: HelpDeskController
+    controller: HelpDeskController,
 ) {
     val faq = controller.getFAQById(faqId)
 
     if (faq == null) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                WelcomeBackgroundTop,
-                                WelcomeBackgroundMiddle,
-                                WelcomeBackgroundBottom
-                            )
-                        )
-                    ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush =
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            WelcomeBackgroundTop,
+                                            WelcomeBackgroundMiddle,
+                                            WelcomeBackgroundBottom,
+                                        ),
+                                ),
+                        ),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = "FAQ not found",
                     fontSize = 18.sp,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
         }
@@ -75,30 +79,34 @@ fun FAQDetailScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .systemBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .systemBarsPadding(),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            WelcomeBackgroundTop,
-                            WelcomeBackgroundMiddle,
-                            WelcomeBackgroundBottom
-                        )
-                    )
-                )
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush =
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        WelcomeBackgroundTop,
+                                        WelcomeBackgroundMiddle,
+                                        WelcomeBackgroundBottom,
+                                    ),
+                            ),
+                    ),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = {
                         Box(
                             modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 modifier = Modifier.offset(x = (-24).dp),
@@ -106,7 +114,7 @@ fun FAQDetailScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontFamily = GraphikFontFamily,
                                 color = Color.Black,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     },
@@ -115,19 +123,21 @@ fun FAQDetailScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color.Black
+                                tint = Color.Black,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                        ),
                 )
 
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                 ) {
                     item {
                         QuestionCard(faq)
@@ -147,35 +157,37 @@ fun FAQDetailScreen(
 
                     item {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = "Still unable to fix the issue",
                                 fontSize = 15.sp,
                                 fontFamily = GraphikFontFamily,
-                                color = Color.Black
+                                color = Color.Black,
                             )
 
                             Button(
                                 onClick = {
                                     controller.raiseTicket(faq.question, faq.answer)
                                 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFDD3825)
-                                ),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFDD3825),
+                                    ),
                                 shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                             ) {
                                 Text(
                                     text = "Raise a Ticket",
                                     color = Color.White,
                                     fontSize = 15.sp,
                                     fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
                                 )
                             }
                         }
@@ -191,30 +203,33 @@ fun QuestionCard(faq: HelpDeskFAQ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.7f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.7f),
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.query),
                         contentDescription = "Query",
                         modifier = Modifier.size(20.dp),
-                        colorFilter = ColorFilter.tint(Color(0xFFD32F2F))
+                        colorFilter = ColorFilter.tint(Color(0xFFD32F2F)),
                     )
                 }
 
@@ -225,7 +240,7 @@ fun QuestionCard(faq: HelpDeskFAQ) {
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
             }
 
@@ -237,7 +252,7 @@ fun QuestionCard(faq: HelpDeskFAQ) {
                 fontWeight = FontWeight.Bold,
                 fontFamily = GraphikFontFamily,
                 color = Color.Black,
-                lineHeight = 24.sp
+                lineHeight = 24.sp,
             )
         }
     }
@@ -250,30 +265,33 @@ fun AnswerCard(faq: HelpDeskFAQ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.7f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.7f),
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.solution),
                         contentDescription = "Solution",
                         modifier = Modifier.size(20.dp),
-                        colorFilter = ColorFilter.tint(Color(0xFFD32F2F))
+                        colorFilter = ColorFilter.tint(Color(0xFFD32F2F)),
                     )
                 }
 
@@ -284,7 +302,7 @@ fun AnswerCard(faq: HelpDeskFAQ) {
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
             }
 
@@ -297,74 +315,81 @@ fun AnswerCard(faq: HelpDeskFAQ) {
             val emailMatches = emailPattern.findAll(answerText).toList()
             val stepMatches = stepPattern.findAll(answerText).toList()
 
-            val annotatedString = buildAnnotatedString {
-                var lastIndex = 0
-                val allMatches = (emailMatches.map { "email" to it } + stepMatches.map { "step" to it })
-                    .sortedBy { it.second.range.first }
+            val annotatedString =
+                buildAnnotatedString {
+                    var lastIndex = 0
+                    val allMatches =
+                        (emailMatches.map { "email" to it } + stepMatches.map { "step" to it })
+                            .sortedBy { it.second.range.first }
 
-                allMatches.forEach { (type, match) ->
-                    // Add text before match
-                    append(answerText.substring(lastIndex, match.range.first))
+                    allMatches.forEach { (type, match) ->
+                        // Add text before match
+                        append(answerText.substring(lastIndex, match.range.first))
 
-                    when (type) {
-                        "email" -> {
-                            // Add clickable email
-                            pushStringAnnotation(
-                                tag = "EMAIL",
-                                annotation = match.value
-                            )
-                            withStyle(
-                                style = SpanStyle(
-                                    color = Color(0xFFD32F2F),
-                                    textDecoration = TextDecoration.Underline
+                        when (type) {
+                            "email" -> {
+                                // Add clickable email
+                                pushStringAnnotation(
+                                    tag = "EMAIL",
+                                    annotation = match.value,
                                 )
-                            ) {
-                                append(match.value)
+                                withStyle(
+                                    style =
+                                        SpanStyle(
+                                            color = Color(0xFFD32F2F),
+                                            textDecoration = TextDecoration.Underline,
+                                        ),
+                                ) {
+                                    append(match.value)
+                                }
+                                pop()
                             }
-                            pop()
-                        }
-                        "step" -> {
-                            // Add bullet point
-                            append("• ")
-                            // Add semibold step title
-                            withStyle(
-                                style = SpanStyle(
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            ) {
-                                append(match.groupValues[1])
+                            "step" -> {
+                                // Add bullet point
+                                append("• ")
+                                // Add semibold step title
+                                withStyle(
+                                    style =
+                                        SpanStyle(
+                                            fontWeight = FontWeight.SemiBold,
+                                        ),
+                                ) {
+                                    append(match.groupValues[1])
+                                }
+                                // Add colon
+                                append(":")
                             }
-                            // Add colon
-                            append(":")
                         }
+
+                        lastIndex = match.range.last + 1
                     }
 
-                    lastIndex = match.range.last + 1
+                    // Add remaining text
+                    if (lastIndex < answerText.length) {
+                        append(answerText.substring(lastIndex))
+                    }
                 }
-
-                // Add remaining text
-                if (lastIndex < answerText.length) {
-                    append(answerText.substring(lastIndex))
-                }
-            }
 
             ClickableText(
                 text = annotatedString,
-                style = androidx.compose.ui.text.TextStyle(
-                    fontSize = 14.sp,
-                    color = Color.Black,
-                    fontFamily = GraphikFontFamily,
-                    lineHeight = 20.sp
-                ),
+                style =
+                    androidx.compose.ui.text.TextStyle(
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        fontFamily = GraphikFontFamily,
+                        lineHeight = 20.sp,
+                    ),
                 onClick = { offset ->
-                    annotatedString.getStringAnnotations(
-                        tag = "EMAIL",
-                        start = offset,
-                        end = offset
-                    ).firstOrNull()?.let { annotation ->
-                        uriHandler.openUri("mailto:${annotation.item}")
-                    }
-                }
+                    annotatedString
+                        .getStringAnnotations(
+                            tag = "EMAIL",
+                            start = offset,
+                            end = offset,
+                        ).firstOrNull()
+                        ?.let { annotation ->
+                            uriHandler.openUri("mailto:${annotation.item}")
+                        }
+                },
             )
         }
     }

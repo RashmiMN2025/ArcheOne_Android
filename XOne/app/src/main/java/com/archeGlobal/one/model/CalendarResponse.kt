@@ -7,5 +7,5 @@ data class CalendarResponse(
     @SerializedName("milestones") val milestones: List<Milestone> = emptyList(),
     @SerializedName("holidays") val holidays: List<Holiday>,
     @SerializedName("holidaysFile") val holidaysFile: String,
-    @SerializedName(value = "globalEvents", alternate = ["globalCelebrations"]) val globalEvents: List<GlobalEvent> = emptyList()
+    @SerializedName(value = "globalEvents", alternate = ["globalCelebrations"]) val globalEvents: List<GlobalEvent> = emptyList(),
 )

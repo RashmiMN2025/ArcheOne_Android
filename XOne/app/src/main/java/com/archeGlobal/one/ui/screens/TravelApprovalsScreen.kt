@@ -47,9 +47,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun TravelApprovalsScreen(
-    controller: TravelController
-) {
+fun TravelApprovalsScreen(controller: TravelController) {
     // State for rejection dialog
     var showRejectionDialog by remember { mutableStateOf(false) }
     var rejectionRemarks by remember { mutableStateOf("") }
@@ -67,24 +65,25 @@ fun TravelApprovalsScreen(
                 Text(
                     "Rejection Reason",
                     fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             },
             text = {
                 Column {
                     Text(
                         "Please provide a reason for rejecting this travel request:",
-                        fontFamily = GraphikFontFamily
+                        fontFamily = GraphikFontFamily,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = rejectionRemarks,
                         onValueChange = { rejectionRemarks = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
                         placeholder = { Text("Enter rejection reason") },
-                        maxLines = 3
+                        maxLines = 3,
                     )
 
                     // Focus the text field when dialog appears
@@ -100,11 +99,11 @@ fun TravelApprovalsScreen(
                         showRejectionDialog = false
                         rejectionRemarks = ""
                     },
-                    enabled = rejectionRemarks.isNotBlank()
+                    enabled = rejectionRemarks.isNotBlank(),
                 ) {
                     Text(
                         "Submit",
-                        color = if (rejectionRemarks.isNotBlank()) PrimaryRed else Color.Gray
+                        color = if (rejectionRemarks.isNotBlank()) PrimaryRed else Color.Gray,
                     )
                 }
             },
@@ -115,7 +114,7 @@ fun TravelApprovalsScreen(
                 }) {
                     Text("Cancel")
                 }
-            }
+            },
         )
     }
 
@@ -125,38 +124,43 @@ fun TravelApprovalsScreen(
     // Wrap entire content with font scale adjustment
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .systemBarsPadding() // <-- This ensures your content is not hidden by system bars
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .systemBarsPadding(), // <-- This ensures your content is not hidden by system bars
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                WelcomeBackgroundTop, // Light Beige/Grey
-                                WelcomeBackgroundMiddle, // Light Grey
-                                WelcomeBackgroundBottom // Dark Grey
-                            )
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush =
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            WelcomeBackgroundTop, // Light Beige/Grey
+                                            WelcomeBackgroundMiddle, // Light Grey
+                                            WelcomeBackgroundBottom, // Dark Grey
+                                        ),
+                                ),
+                        ),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     TopAppBar(
                         title = {
                             Text(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentWidth(Alignment.CenterHorizontally)
-                                    .offset(x = (-24).dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentWidth(Alignment.CenterHorizontally)
+                                        .offset(x = (-24).dp),
                                 text = "Travel Approvals",
                                 color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         },
                         navigationIcon = {
@@ -164,24 +168,25 @@ fun TravelApprovalsScreen(
                                 Icon(
                                     Icons.Default.ArrowBack,
                                     contentDescription = "Back",
-                                    tint = Color.Black
+                                    tint = Color.Black,
                                 )
                             }
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {}
+                        actions = {},
                     )
 
                     // Load travel approvals when screen is first shown and on resume
                     val lifecycleOwner = LocalLifecycleOwner.current
                     DisposableEffect(lifecycleOwner) {
-                        val observer = LifecycleEventObserver { _, event ->
-                            if (event == Lifecycle.Event.ON_RESUME) {
-                                // Load travel approvals data when screen resumes
-                                controller.loadTravelApprovals()
+                        val observer =
+                            LifecycleEventObserver { _, event ->
+                                if (event == Lifecycle.Event.ON_RESUME) {
+                                    // Load travel approvals data when screen resumes
+                                    controller.loadTravelApprovals()
+                                }
                             }
-                        }
                         lifecycleOwner.lifecycle.addObserver(observer)
 
                         // Initial load when screen is first created
@@ -201,7 +206,7 @@ fun TravelApprovalsScreen(
                         is TravelController.TravelApprovalsState.Loading -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 CircularProgressIndicator(color = PrimaryRed)
                             }
@@ -211,46 +216,52 @@ fun TravelApprovalsScreen(
                             if (state.approvalRequests.isEmpty()) {
                                 // Empty state
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
                                         text = "No travel requests to approve",
                                         color = Color.Gray,
                                         fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
                                     )
                                 }
                             } else {
                                 // Show list of approval requests
                                 LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
                                 ) {
                                     items(state.approvalRequests) { request ->
                                         ApprovalRequestCard(
                                             request = request,
-                                            onApprove = { // Navigate to dedicated approval screen instead of calling API directly
-                                                val intent = Intent(
-                                                    context,
-                                                    TravelApproveActivity::class.java
-                                                ).apply {
-                                                    putExtra("travel_request", Gson().toJson(request))
-                                                }
+                                            onApprove = {
+                                                // Navigate to dedicated approval screen instead of calling API directly
+                                                val intent =
+                                                    Intent(
+                                                        context,
+                                                        TravelApproveActivity::class.java,
+                                                    ).apply {
+                                                        putExtra("travel_request", Gson().toJson(request))
+                                                    }
                                                 context.startActivity(intent)
                                             },
-                                            onReject = { // Navigate to dedicated rejection screen instead of direct API call
-                                                val intent = Intent(
-                                                    context,
-                                                    TravelRejectActivity::class.java
-                                                ).apply {
-                                                    putExtra("travel_request", Gson().toJson(request))
-                                                }
+                                            onReject = {
+                                                // Navigate to dedicated rejection screen instead of direct API call
+                                                val intent =
+                                                    Intent(
+                                                        context,
+                                                        TravelRejectActivity::class.java,
+                                                    ).apply {
+                                                        putExtra("travel_request", Gson().toJson(request))
+                                                    }
                                                 context.startActivity(intent)
                                             },
                                             onClick = {
@@ -258,7 +269,7 @@ fun TravelApprovalsScreen(
                                                 if (request.status != com.archeGlobal.one.model.TravelStatus.PENDING) {
                                                     controller.navigateToTravelApprovalDetail(request)
                                                 }
-                                            }
+                                            },
                                         )
                                     }
                                 }
@@ -268,10 +279,11 @@ fun TravelApprovalsScreen(
                         is TravelController.TravelApprovalsState.Error -> {
                             // Error state
                             Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
@@ -279,7 +291,7 @@ fun TravelApprovalsScreen(
                                         color = Color.Red,
                                         fontSize = 16.sp,
                                         fontFamily = GraphikFontFamily,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
@@ -287,21 +299,22 @@ fun TravelApprovalsScreen(
                                         color = Color.Gray,
                                         fontSize = 14.sp,
                                         fontFamily = GraphikFontFamily,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(PrimaryRed)
-                                            .clickable { controller.loadTravelApprovals() }
-                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        modifier =
+                                            Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(PrimaryRed)
+                                                .clickable { controller.loadTravelApprovals() }
+                                                .padding(horizontal = 16.dp, vertical = 8.dp),
                                     ) {
                                         Text(
                                             text = "Retry",
                                             color = Color.White,
                                             fontSize = 14.sp,
-                                            fontFamily = GraphikFontFamily
+                                            fontFamily = GraphikFontFamily,
                                         )
                                     }
                                 }
@@ -319,33 +332,35 @@ fun ApprovalRequestCard(
     request: TravelRequest,
     onApprove: () -> Unit,
     onReject: () -> Unit,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = 4.dp,
-        backgroundColor = Color(0xFFF6F4EE)
+        backgroundColor = Color(0xFFF6F4EE),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             // Header with ID and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Text(
                     text = "#${request.id}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
 
                 // Status Badge matching the image design
@@ -358,7 +373,7 @@ fun ApprovalRequestCard(
             Divider(
                 color = Color.LightGray.copy(alpha = 0.5f),
                 thickness = 1.dp,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -367,20 +382,20 @@ fun ApprovalRequestCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.person_3x),
                     contentDescription = "Employee",
                     tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = "Employee",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -388,7 +403,7 @@ fun ApprovalRequestCard(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
 
@@ -397,20 +412,20 @@ fun ApprovalRequestCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.folder_3x),
                     contentDescription = "Project",
                     tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = "Project",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -418,7 +433,7 @@ fun ApprovalRequestCard(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
 
@@ -427,11 +442,11 @@ fun ApprovalRequestCard(
             // Trip details based on single or multi destination
             if (request.isMultiDestination()) {
                 MultiDestinationTripDetails(
-                    travelRequest = request
+                    travelRequest = request,
                 )
             } else {
                 SingleDestinationTripDetails(
-                    travelRequest = request
+                    travelRequest = request,
                 )
             }
 
@@ -441,20 +456,20 @@ fun ApprovalRequestCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.calendar_3x),
                     contentDescription = "Created",
                     tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = "Created",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -462,7 +477,7 @@ fun ApprovalRequestCard(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
 
@@ -474,50 +489,53 @@ fun ApprovalRequestCard(
                 Divider(
                     color = Color.LightGray.copy(alpha = 0.5f),
                     thickness = 1.dp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Approve button
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(color = Color(0xFF4CAF50)) // Green color
-                            .padding(vertical = 12.dp)
-                            .clickable(onClick = onApprove),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = Color(0xFF4CAF50)) // Green color
+                                .padding(vertical = 12.dp)
+                                .clickable(onClick = onApprove),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "Approve",
                             color = Color.White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily
+                            fontFamily = GraphikFontFamily,
                         )
                     }
 
                     // Reject button
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(color = PrimaryRed)
-                            .padding(vertical = 12.dp)
-                            .clickable(onClick = onReject),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = PrimaryRed)
+                                .padding(vertical = 12.dp)
+                                .clickable(onClick = onReject),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "Reject",
                             color = Color.White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily
+                            fontFamily = GraphikFontFamily,
                         )
                     }
                 }
@@ -527,9 +545,7 @@ fun ApprovalRequestCard(
 }
 
 @Composable
-fun SingleDestinationTripDetails(
-    travelRequest: TravelRequest
-) {
+fun SingleDestinationTripDetails(travelRequest: TravelRequest) {
     Column {
         // Get destinations for separate display
         val destinations = travelRequest.getAllDestinations()
@@ -539,20 +555,20 @@ fun SingleDestinationTripDetails(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.mappin_and_ellipse),
                 contentDescription = "Origin City",
                 tint = Color.Gray,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
             Text(
                 text = "Origin City",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = GraphikFontFamily,
-                color = Color.Gray
+                color = Color.Gray,
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
@@ -560,7 +576,7 @@ fun SingleDestinationTripDetails(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = GraphikFontFamily,
-                color = Color.Black
+                color = Color.Black,
             )
         }
 
@@ -570,20 +586,20 @@ fun SingleDestinationTripDetails(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.mappin_and_ellipse),
                 contentDescription = "Destination City",
                 tint = Color.Gray,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
             Text(
                 text = "Destination City",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = GraphikFontFamily,
-                color = Color.Gray
+                color = Color.Gray,
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
@@ -591,7 +607,7 @@ fun SingleDestinationTripDetails(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = GraphikFontFamily,
-                color = Color.Black
+                color = Color.Black,
             )
         }
 
@@ -601,20 +617,20 @@ fun SingleDestinationTripDetails(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.airplane_departure),
                 contentDescription = "Travel Dates",
                 tint = Color.Gray,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
             Text(
                 text = "Travel Dates",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = GraphikFontFamily,
-                color = Color.Gray
+                color = Color.Gray,
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
@@ -622,21 +638,19 @@ fun SingleDestinationTripDetails(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = GraphikFontFamily,
-                color = Color.Black
+                color = Color.Black,
             )
         }
     }
 }
 
 @Composable
-fun MultiDestinationTripDetails(
-    travelRequest: TravelRequest
-) {
+fun MultiDestinationTripDetails(travelRequest: TravelRequest) {
     val destinations = travelRequest.getAllDestinations()
 
     destinations.forEachIndexed { index, destination ->
         Column(
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = 4.dp),
         ) {
             Text(
                 text = "Trip ${index + 1}",
@@ -644,27 +658,27 @@ fun MultiDestinationTripDetails(
                 fontWeight = FontWeight.Medium,
                 fontFamily = GraphikFontFamily,
                 color = Color.Black,
-                modifier = Modifier.padding(bottom = 4.dp)
+                modifier = Modifier.padding(bottom = 4.dp),
             )
 
             // Origin City
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Origin City",
                     tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = "Origin City",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -672,7 +686,7 @@ fun MultiDestinationTripDetails(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
 
@@ -682,20 +696,20 @@ fun MultiDestinationTripDetails(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Destination City",
                     tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = "Destination City",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -703,7 +717,7 @@ fun MultiDestinationTripDetails(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
 
@@ -713,20 +727,20 @@ fun MultiDestinationTripDetails(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.airplane_departure),
                     contentDescription = "Travel Dates",
                     tint = Color.Gray,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = "Travel Dates",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -734,7 +748,7 @@ fun MultiDestinationTripDetails(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = GraphikFontFamily,
-                    color = Color.Black
+                    color = Color.Black,
                 )
             }
 
@@ -747,16 +761,17 @@ fun MultiDestinationTripDetails(
 
 @Composable
 fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
-    val (backgroundColor, textColor, text) = when (status) {
-        com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF28A745), "Approved") // Lighter green
-        com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFFDC3545), "Rejected") // Lighter red
-        com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
-    }
+    val (backgroundColor, textColor, text) =
+        when (status) {
+            com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF28A745), "Approved") // Lighter green
+            com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFFDC3545), "Rejected") // Lighter red
+            com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
+        }
 
     Card(
         shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor,
-        elevation = 0.dp
+        elevation = 0.dp,
     ) {
         Text(
             text = "Status: $text",
@@ -764,7 +779,7 @@ fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
             color = textColor,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
     }
 }
@@ -773,27 +788,28 @@ fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
 fun DetailItem(
     iconRes: ImageVector,
     label: String,
-    value: String?
+    value: String?,
 ) {
     if (value == null) return
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = iconRes,
             contentDescription = label,
             tint = Color.Gray,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(18.dp),
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = label,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
-            color = Color.Gray
+            color = Color.Gray,
         )
         Spacer(modifier = Modifier.weight(1f))
         Text(
@@ -801,7 +817,7 @@ fun DetailItem(
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
         )
     }
 }
