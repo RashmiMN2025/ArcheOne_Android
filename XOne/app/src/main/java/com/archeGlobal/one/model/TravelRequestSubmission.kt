@@ -62,6 +62,12 @@ data class TravelRequestSubmission(
     val projectName: String,
     @SerializedName("businessJustification")
     val businessJustification: String,
+    @SerializedName("projectId")
+    val projectId: String = "",
+    @SerializedName("opportunityId")
+    val opportunityId: String = "",
+    @SerializedName("crmId")
+    val crmId: String = "",
     @SerializedName("modeOfTransport")
     val modeOfTransport: String,
     @SerializedName("flightType")
@@ -113,6 +119,9 @@ fun createSingleDestinationRequest(
     destinationCity: String,
     projectName: String,
     businessJustification: String,
+    projectId: String = "",
+    opportunityId: String = "",
+    crmId: String = "",
     modeOfTransport: String,
     departureDate: String,
     arrivalDate: String,
@@ -147,6 +156,9 @@ fun createSingleDestinationRequest(
         seatPref = seatPreference,
         projectName = projectName,
         businessJustification = businessJustification,
+        projectId = projectId,
+        opportunityId = opportunityId,
+        crmId = crmId,
         modeOfTransport = modeOfTransport,
         flightType = "",
         reportingManagerName = reportingManagerName,
@@ -169,6 +181,9 @@ fun createMultiDestinationRequest(
     mobile: String,
     projectName: String,
     businessJustification: String,
+    projectId: String = "",
+    opportunityId: String = "",
+    crmId: String = "",
     modeOfTransport: String,
     reportingManagerName: String,
     reportingManagerEmail: String,
@@ -192,6 +207,9 @@ fun createMultiDestinationRequest(
         seatPref = seatPreference,
         projectName = projectName,
         businessJustification = businessJustification,
+        projectId = projectId,
+        opportunityId = opportunityId,
+        crmId = crmId,
         modeOfTransport = modeOfTransport,
         flightType = "",
         reportingManagerName = reportingManagerName,

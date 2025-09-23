@@ -311,7 +311,7 @@ class TravelController(
         private set
 
     // Enhanced cab options to match design
-    val cabTypeOptions = listOf("5 Seats", "6 Seater", "7 Seats", "7 Seater")
+    val cabTypeOptions = listOf("5 Seats", "7 Seats")
     val cabDurationOptions = listOf("4 Hours", "8 Hours")
     val travelTypeOptions = listOf("Local Travel", "Out of Local Station")
 
@@ -1023,6 +1023,7 @@ class TravelController(
         businessJustification = value
     }
 
+
     /**
      * Update mode of transport field
      * If the selected mode is not available for the employee's grade, it will be reset
@@ -1043,6 +1044,11 @@ class TravelController(
                 flightTimePreference = ""
                 seatPreference = ""
                 frequentFlyerNumber = "0"
+                // Don't reset cab fields when switching TO cab mode
+                // Set default to Local Travel if not already set
+                if (isLocalTravel == false && cabType.isEmpty()) {
+                    isLocalTravel = true
+                }
             } else {
                 // Reset both flight and cab fields for other transport modes
                 flightType = ""
@@ -1332,6 +1338,9 @@ class TravelController(
                     mobile = mobileNumber,
                     projectName = projectName,
                     businessJustification = businessJustification,
+                    projectId = projectId,
+                    opportunityId = opportunityId,
+                    crmId = crmId,
                     modeOfTransport = modeOfTransport,
                     reportingManagerName = reportingManagerName,
                     reportingManagerEmail = reportingManagerEmail,
@@ -1364,6 +1373,9 @@ class TravelController(
                     destinationCity = destination,
                     projectName = projectName,
                     businessJustification = businessJustification,
+                    projectId = projectId,
+                    opportunityId = opportunityId,
+                    crmId = crmId,
                     modeOfTransport = modeOfTransport,
                     departureDate = apiDepartureDate,
                     arrivalDate = apiArrivalDate,

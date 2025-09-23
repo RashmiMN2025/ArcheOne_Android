@@ -315,6 +315,103 @@ fun TravelScreen(controller: TravelController) {
                                 shape = RoundedCornerShape(8.dp),
                             )
 
+
+                            // Project ID
+                            OutlinedTextField(
+                                value = controller.projectId,
+                                onValueChange = { controller.updateProjectId(it) },
+                                placeholder = {
+                                    Text(
+                                        "Project ID",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                    )
+                                },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                                colors =
+                                    OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                        focusedPlaceholderColor = Color(0xFFF6F4EE),
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
+                            )
+
+                            // Opportunity ID
+                            OutlinedTextField(
+                                value = controller.opportunityId,
+                                onValueChange = { controller.updateOpportunityId(it) },
+                                placeholder = {
+                                    Text(
+                                        "Opportunity ID",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                    )
+                                },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                                colors =
+                                    OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                        focusedPlaceholderColor = Color(0xFFF6F4EE),
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
+                            )
+
+                            // CRM ID
+                            OutlinedTextField(
+                                value = controller.crmId,
+                                onValueChange = { controller.updateCrmId(it) },
+                                placeholder = {
+                                    Text(
+                                        "CRM ID",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                    )
+                                },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                                colors =
+                                    OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                        unfocusedPlaceholderColor = Color(0xFFF6F4EE),
+                                        focusedPlaceholderColor = Color(0xFFF6F4EE),
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
+                            )
+
                             // Business Justification
                             OutlinedTextField(
                                 value = controller.businessJustification,
@@ -1178,35 +1275,37 @@ fun TravelScreen(controller: TravelController) {
                                 }
                             }
 
-                            // Stay Required Toggle (outside destination cards)
-                            Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Text(
-                                    text = "Stay Required",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black,
-                                )
+                            // Stay Required Toggle (only for non-cab transport modes)
+                            if (controller.modeOfTransport != "Cab") {
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(
+                                        text = "Stay Required",
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                    )
 
-                                // Toggle switch
-                                androidx.compose.material.Switch(
-                                    checked = controller.stayRequired,
-                                    onCheckedChange = { controller.toggleStayRequired(it) },
-                                    modifier = Modifier.scale(1.2f),
-                                    colors =
-                                        androidx.compose.material.SwitchDefaults.colors(
-                                            checkedThumbColor = Color(0xFFF6F4EE),
-                                            checkedTrackColor = Color(0xFFADE1B6),
-                                            uncheckedThumbColor = Color(0xFFF6F4EE),
-                                            uncheckedTrackColor = Color.LightGray,
-                                        ),
-                                )
+                                    // Toggle switch
+                                    androidx.compose.material.Switch(
+                                        checked = controller.stayRequired,
+                                        onCheckedChange = { controller.toggleStayRequired(it) },
+                                        modifier = Modifier.scale(1.2f),
+                                        colors =
+                                            androidx.compose.material.SwitchDefaults.colors(
+                                                checkedThumbColor = Color(0xFFF6F4EE),
+                                                checkedTrackColor = Color(0xFFADE1B6),
+                                                uncheckedThumbColor = Color(0xFFF6F4EE),
+                                                uncheckedTrackColor = Color.LightGray,
+                                            ),
+                                    )
+                                }
                             }
 
                             // Approval Chain
@@ -1825,165 +1924,55 @@ fun CabBookingSection(controller: TravelController) {
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
     ) {
-        // Project Name (optional)
-        OutlinedTextField(
-            value = controller.projectName,
-            onValueChange = { controller.updateProjectName(it) },
-            placeholder = {
-                Text(
-                    "Project Name",
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = GraphikFontFamily,
-                )
-            },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent,
-                    cursorColor = Color.Black,
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedTextColor = Color.Black,
-                    focusedTextColor = Color.Black,
-                ),
-            shape = RoundedCornerShape(8.dp),
-        )
-
-        // Project ID
-        OutlinedTextField(
-            value = controller.projectId,
-            onValueChange = { controller.updateProjectId(it) },
-            placeholder = {
-                Text(
-                    "Project ID",
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = GraphikFontFamily,
-                )
-            },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent,
-                    cursorColor = Color.Black,
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedTextColor = Color.Black,
-                    focusedTextColor = Color.Black,
-                ),
-            shape = RoundedCornerShape(8.dp),
-        )
-
-        // Opportunity ID
-        OutlinedTextField(
-            value = controller.opportunityId,
-            onValueChange = { controller.updateOpportunityId(it) },
-            placeholder = {
-                Text(
-                    "Opportunity ID",
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = GraphikFontFamily,
-                )
-            },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent,
-                    cursorColor = Color.Black,
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedTextColor = Color.Black,
-                    focusedTextColor = Color.Black,
-                ),
-            shape = RoundedCornerShape(8.dp),
-        )
-
-        // CRM ID
-        OutlinedTextField(
-            value = controller.crmId,
-            onValueChange = { controller.updateCrmId(it) },
-            placeholder = {
-                Text(
-                    "CRM ID",
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = GraphikFontFamily,
-                )
-            },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent,
-                    cursorColor = Color.Black,
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedTextColor = Color.Black,
-                    focusedTextColor = Color.Black,
-                ),
-            shape = RoundedCornerShape(8.dp),
-        )
 
         // Travel Type Selection (Local Travel / Out of Local Station)
         Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = if (controller.isLocalTravel) "Local Travel" else "Out of Local Station",
-                onValueChange = { },
-                placeholder = {
-                    Text(
-                        "Travel Type *",
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Normal,
-                        fontFamily = GraphikFontFamily,
-                    )
-                },
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                        .clickable(onClick = { controller.toggleTravelTypeDropdown() }),
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
-                        cursorColor = Color.Black,
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedTextColor = Color.Black,
-                        focusedTextColor = Color.Black,
-                    ),
-                shape = RoundedCornerShape(8.dp),
-                trailingIcon = {
-                    Icon(
-                        Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Dropdown",
-                        tint = Color.Gray,
-                    )
-                },
-                readOnly = true,
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .clickable { controller.toggleTravelTypeDropdown() }
+            ) {
+                OutlinedTextField(
+                    value = if (controller.isLocalTravel) "Local Travel" else "Out of Local Station",
+                    onValueChange = { },
+                    placeholder = {
+                        Text(
+                            "Travel Type *",
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = GraphikFontFamily,
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.Transparent,
+                            cursorColor = Color.Black,
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedContainerColor = Color(0xFFF5F5F5),
+                            unfocusedTextColor = Color.Black,
+                            focusedTextColor = Color.Black,
+                            disabledContainerColor = Color(0xFFF5F5F5),
+                            disabledTextColor = Color.Black,
+                            disabledBorderColor = Color.Transparent,
+                        ),
+                    shape = RoundedCornerShape(8.dp),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Dropdown",
+                            tint = Color.Gray,
+                        )
+                    },
+                    readOnly = true,
+                    enabled = false, // Disable text field interaction
+                )
+            }
 
             DropdownMenu(
                 expanded = controller.isTravelTypeDropdownExpanded,
@@ -2003,42 +1992,6 @@ fun CabBookingSection(controller: TravelController) {
             }
         }
 
-        // Date Selection
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-        ) {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                        .padding(16.dp)
-                        .clickable { showCabDatePicker = true },
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = controller.cabTravelDate,
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                    )
-                    Icon(
-                        painter = painterResource(id = android.R.drawable.ic_menu_today),
-                        contentDescription = "Calendar",
-                        tint = Color.Gray,
-                    )
-                }
-            }
-        }
 
         // Cab travel not allowed for single passenger note
         if (controller.isLocalTravel && controller.passengerCount == 1) {
@@ -2051,190 +2004,56 @@ fun CabBookingSection(controller: TravelController) {
             )
         }
 
-        // Search for Additional Attendees
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                value = controller.attendeeSearchQuery,
-                onValueChange = { controller.updateAttendeeSearchQuery(it) },
-                placeholder = {
-                    Text(
-                        "Search for Additional Attendees",
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Normal,
-                        fontFamily = GraphikFontFamily,
-                    )
-                },
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
-                        cursorColor = Color.Black,
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedTextColor = Color.Black,
-                        focusedTextColor = Color.Black,
-                    ),
-                shape = RoundedCornerShape(8.dp),
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = android.R.drawable.ic_search_category_default),
-                        contentDescription = "Search",
-                        tint = Color.Gray,
-                    )
-                },
-            )
-        }
 
-        // Employee Search Results
-        if (controller.employeeSearchResults.isNotEmpty()) {
-            Card(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(8.dp),
-                elevation = 4.dp,
-                backgroundColor = Color.White,
-            ) {
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                ) {
-                    controller.employeeSearchResults.take(5).forEach { employee ->
-                        Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable { controller.addAttendee(employee) }
-                                    .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = employee.name,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 14.sp,
-                                )
-                                Text(
-                                    text = "${employee.employeeId} • ${employee.department}",
-                                    fontFamily = GraphikFontFamily,
-                                    fontSize = 12.sp,
-                                    color = Color.Gray,
-                                )
-                            }
-                        }
-                        if (employee != controller.employeeSearchResults.last()) {
-                            Divider(color = Color.LightGray, thickness = 0.5.dp)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Added Attendees List
-        if (controller.additionalAttendees.isNotEmpty()) {
-            Text(
-                text = "Additional Attendees",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = GraphikFontFamily,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-
-            controller.additionalAttendees.forEachIndexed { index, attendee ->
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 4.dp)
-                            .background(Color(0xFFF0F0F0), RoundedCornerShape(4.dp))
-                            .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = attendee.name,
-                            fontFamily = GraphikFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                        )
-                        Text(
-                            text = "${attendee.employeeId} • ${attendee.department}",
-                            fontFamily = GraphikFontFamily,
-                            fontSize = 10.sp,
-                            color = Color.Gray,
-                        )
-                    }
-                    IconButton(
-                        onClick = { controller.removeAttendee(index) },
-                        modifier = Modifier.size(20.dp),
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.bin),
-                            contentDescription = "Remove",
-                            tint = Color.Red,
-                            modifier = Modifier.size(14.dp),
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        // Only show cab details if single passenger validation passes or multiple passengers
-        if (!(controller.isLocalTravel && controller.passengerCount == 1)) {
+        // Show cab details for all cab bookings
             // Cab Type Dropdown (enhanced with seat options)
             Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = controller.cabType,
-                    onValueChange = { },
-                    placeholder = {
-                        Text(
-                            "Cab Type *",
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Normal,
-                            fontFamily = GraphikFontFamily,
-                        )
-                    },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                            .clickable(onClick = { controller.toggleCabTypeDropdown() }),
-                    colors =
-                        OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent,
-                            cursorColor = Color.Black,
-                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                            focusedContainerColor = Color(0xFFF5F5F5),
-                            unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black,
-                        ),
-                    shape = RoundedCornerShape(8.dp),
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Dropdown",
-                            tint = Color.Gray,
-                        )
-                    },
-                    readOnly = true,
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                        .clickable { controller.toggleCabTypeDropdown() }
+                ) {
+                    OutlinedTextField(
+                        value = controller.cabType,
+                        onValueChange = { },
+                        placeholder = {
+                            Text(
+                                "Cab Type *",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                            )
+                        },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                cursorColor = Color.Black,
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black,
+                                disabledContainerColor = Color(0xFFF5F5F5),
+                                disabledTextColor = Color.Black,
+                                disabledBorderColor = Color.Transparent,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Dropdown",
+                                tint = Color.Gray,
+                            )
+                        },
+                        readOnly = true,
+                        enabled = false, // Disable text field interaction
+                    )
+                }
 
                 DropdownMenu(
                     expanded = controller.isCabTypeDropdownExpanded,
@@ -2254,8 +2073,154 @@ fun CabBookingSection(controller: TravelController) {
                 }
             }
 
-            // Duration Dropdown
-            Box(modifier = Modifier.fillMaxWidth()) {
+            // Search for Additional Attendees (only for local travel and after cab type is selected)
+            if (controller.isLocalTravel && controller.cabType.isNotEmpty()) {
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = controller.attendeeSearchQuery,
+                        onValueChange = { controller.updateAttendeeSearchQuery(it) },
+                        placeholder = {
+                            Text(
+                                "Search Member to add",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                            )
+                        },
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                cursorColor = Color.Black,
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(id = android.R.drawable.ic_search_category_default),
+                                contentDescription = "Search",
+                                tint = Color.Gray,
+                            )
+                        },
+                    )
+                }
+
+                // Employee Search Results
+                if (controller.employeeSearchResults.isNotEmpty()) {
+                    Card(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = 4.dp,
+                        backgroundColor = Color.White,
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(8.dp),
+                        ) {
+                            controller.employeeSearchResults.take(5).forEach { employee ->
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clickable { controller.addAttendee(employee) }
+                                            .padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = employee.name,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                        )
+                                        Text(
+                                            text = "${employee.employeeId} • ${employee.department}",
+                                            fontFamily = GraphikFontFamily,
+                                            fontSize = 12.sp,
+                                            color = Color.Gray,
+                                        )
+                                    }
+                                }
+                                if (employee != controller.employeeSearchResults.last()) {
+                                    Divider(color = Color.LightGray, thickness = 0.5.dp)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Added Attendees List
+                if (controller.additionalAttendees.isNotEmpty()) {
+                    Text(
+                        text = "Additional Attendees",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = GraphikFontFamily,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+
+                    controller.additionalAttendees.forEachIndexed { index, attendee ->
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp)
+                                    .background(Color(0xFFF0F0F0), RoundedCornerShape(4.dp))
+                                    .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = attendee.name,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp,
+                                )
+                                Text(
+                                    text = "${attendee.employeeId} • ${attendee.department}",
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 10.sp,
+                                    color = Color.Gray,
+                                )
+                            }
+                            IconButton(
+                                onClick = { controller.removeAttendee(index) },
+                                modifier = Modifier.size(20.dp),
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.bin),
+                                    contentDescription = "Remove",
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
+            // Duration Dropdown (only for local travel)
+            if (controller.isLocalTravel) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = controller.cabDuration,
                     onValueChange = { },
@@ -2311,6 +2276,7 @@ fun CabBookingSection(controller: TravelController) {
                     }
                 }
             }
+            }
 
             // Pickup Location 1
             OutlinedTextField(
@@ -2342,30 +2308,42 @@ fun CabBookingSection(controller: TravelController) {
                 shape = RoundedCornerShape(8.dp),
             )
 
-            // Add Pickup Location Button
-            Button(
-                onClick = { controller.addPickupLocation() },
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2196F3),
-                        contentColor = Color.White,
-                    ),
-                shape = RoundedCornerShape(30.dp),
-                modifier =
-                    Modifier
+            // Add Pickup Location Button (only for local travel)
+            if (controller.isLocalTravel) {
+                Row(
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
-            ) {
-                Text(
-                    text = "Add Pickup Location",
-                    fontSize = 16.sp,
-                    fontFamily = GraphikFontFamily,
-                    fontWeight = FontWeight.Medium,
-                )
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = { controller.addPickupLocation() },
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2196F3),
+                                contentColor = Color.White,
+                            ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier =
+                            Modifier
+                                .height(32.dp)
+                                .width(160.dp),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 3.dp),
+                    ) {
+                        Text(
+                            text = "Add Pickup Location",
+                            fontSize = 14.sp,
+                            fontFamily = GraphikFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White,
+                        )
+                    }
+                }
             }
 
-            // Additional Pickup Locations
-            controller.cabPickupLocations.forEachIndexed { index, location ->
+            // Additional Pickup Locations (only for local travel)
+            if (controller.isLocalTravel) {
+                controller.cabPickupLocations.forEachIndexed { index, location ->
                 Row(
                     modifier =
                         Modifier
@@ -2415,6 +2393,7 @@ fun CabBookingSection(controller: TravelController) {
                     }
                 }
             }
+            }
 
             // Drop Location
             OutlinedTextField(
@@ -2445,6 +2424,43 @@ fun CabBookingSection(controller: TravelController) {
                     ),
                 shape = RoundedCornerShape(8.dp),
             )
+
+            // Date Selection
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                            .padding(16.dp)
+                            .clickable { showCabDatePicker = true },
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = controller.cabTravelDate,
+                            color = Color.Black,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                        )
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.ic_menu_today),
+                            contentDescription = "Calendar",
+                            tint = Color.Gray,
+                        )
+                    }
+                }
+            }
         }
 
         // Date Picker Dialog
@@ -2503,5 +2519,4 @@ fun CabBookingSection(controller: TravelController) {
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
-    }
 }
