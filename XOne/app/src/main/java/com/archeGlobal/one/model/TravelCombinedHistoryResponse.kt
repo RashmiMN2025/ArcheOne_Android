@@ -288,3 +288,45 @@ data class TravelApprovalHistoryItem(
         return travelRequest
     }
 }
+
+/**
+ * V2 API Models for new travel endpoints
+ */
+
+/**
+ * Response model for /travel/v2/approval-history-count
+ */
+data class TravelV2ApprovalHistoryCountResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("approval_history_count")
+    val approvalHistoryCount: Int,
+)
+
+/**
+ * Response model for /travel/v2/order-history
+ */
+data class TravelV2OrderHistoryResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("order_history")
+    val orderHistory: List<TravelOrderHistoryItem>,
+)
+
+/**
+ * Response model for /travel/v2/approval-history
+ */
+data class TravelV2ApprovalHistoryResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("approval_history")
+    val approvalHistory: List<TravelApprovalHistoryItem>,
+)
+
+/**
+ * Request model for V2 APIs (only requires employeeEmail)
+ */
+data class TravelV2Request(
+    @SerializedName("employeeEmail")
+    val employeeEmail: String,
+)

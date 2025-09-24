@@ -11,6 +11,7 @@ import com.archeGlobal.one.model.CabLocation
 import com.archeGlobal.one.model.EmployeeSearchRequest
 import com.archeGlobal.one.model.EmployeeSearchResponse
 import com.archeGlobal.one.model.EmployeeSearchResult
+import com.archeGlobal.one.model.SuggestedUser
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
@@ -21,6 +22,9 @@ import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelStatus
+import com.archeGlobal.one.model.TravelV2ApprovalHistoryResponse
+import com.archeGlobal.one.model.TravelV2OrderHistoryResponse
+import com.archeGlobal.one.model.TravelV2Request
 import com.archeGlobal.one.model.createCabBookingRequest
 import com.archeGlobal.one.model.createMultiDestinationRequest
 import com.archeGlobal.one.model.createSingleDestinationRequest
@@ -298,6 +302,12 @@ class TravelController(
     var showAttendeeSearch by mutableStateOf(false)
         private set
 
+    // Suggested users search state (for cab booking)
+    var suggestedUsers by mutableStateOf(listOf<SuggestedUser>())
+        private set
+    var isSearchingSuggestedUsers by mutableStateOf(false)
+        private set
+
     // Cab submission state
     var isCabSubmitting by mutableStateOf(false)
         private set
@@ -438,84 +448,107 @@ class TravelController(
 
     /**
      * Load combined travel history for the current user
-     * This uses the new combined history API endpoint
+     * This uses the new v2 API endpoints for order-history and approval-history
      */
     fun loadCombinedTravelHistory() {
         // Set to loading state
         travelHistoryState = TravelHistoryState.Loading
 
-        // Create request with employee email (new API only needs email)
-        val request =
-            TravelHistoryRequest(
-                employeeId = employeeId,
-                employeeEmail = employeeEmail,
-            )
+        // Create request with employee email (v2 API only needs email)
+        val request = TravelV2Request(employeeEmail = employeeEmail)
 
-        // Make API call to get combined travel history with Travel Details field
-        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(
-            object : Callback<TravelCombinedHistoryResponse> {
+        // Variables to track both API calls
+        var orderHistoryResponse: List<com.archeGlobal.one.model.TravelOrderHistoryItem>? = null
+        var approvalHistoryResponse: List<com.archeGlobal.one.model.TravelApprovalHistoryItem>? = null
+        var orderCallCompleted = false
+        var approvalCallCompleted = false
+
+        // Function to check if both calls are completed and process results
+        fun processResults() {
+            if (orderCallCompleted && approvalCallCompleted) {
+                val orderItems = orderHistoryResponse ?: emptyList()
+                val approvalItems = approvalHistoryResponse ?: emptyList()
+
+                Log.d(
+                    "TravelController",
+                    "V2 API: Loaded ${orderItems.size} order history items and ${approvalItems.size} approval history items",
+                )
+
+                // Convert to TravelRequest objects
+                val historyItems = orderItems.map { item ->
+                    Log.d("TravelController", "Processing order ${item.requestId}")
+                    item.toTravelRequest()
+                }
+
+                val approvalItemsConverted = approvalItems.map { item ->
+                    Log.d("TravelController", "Processing approval ${item.requestId}")
+                    item.toTravelRequest()
+                }
+
+                travelHistoryState = TravelHistoryState.Success(
+                    historyItems = historyItems,
+                    approvalItems = approvalItemsConverted,
+                )
+
+                Log.d(
+                    "TravelController",
+                    "V2 API: Loaded combined history: ${historyItems.size} order requests, ${approvalItemsConverted.size} approval requests",
+                )
+            }
+        }
+
+        // Make order history API call
+        RetrofitClient.apiService.getTravelV2OrderHistory(request).enqueue(
+            object : Callback<TravelV2OrderHistoryResponse> {
                 override fun onResponse(
-                    call: Call<TravelCombinedHistoryResponse>,
-                    response: Response<TravelCombinedHistoryResponse>,
+                    call: Call<TravelV2OrderHistoryResponse>,
+                    response: Response<TravelV2OrderHistoryResponse>,
                 ) {
                     if (response.isSuccessful && response.body() != null) {
-                        val orderHistoryItems = response.body()!!.orderHistory
-                        val approvalHistoryItems = response.body()!!.approvalHistory
-                        Log.d(
-                            "TravelController",
-                            "Loaded ${orderHistoryItems.size} order history items and ${approvalHistoryItems.size} approval history items",
-                        )
-
-                        // Convert to TravelRequest objects using the proper toTravelRequest method
-                        // which now includes the Travel Details field
-                        val historyItems =
-                            orderHistoryItems.map { item ->
-                                Log.d(
-                                    "TravelController",
-                                    "Processing order ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}",
-                                )
-                                item.toTravelRequest()
-                            }
-
-                        val approvalItems =
-                            approvalHistoryItems.map { item ->
-                                Log.d(
-                                    "TravelController",
-                                    "Processing approval ${item.requestId}: Travel Details count = ${item.travelDetails?.size ?: 0}",
-                                )
-                                item.toTravelRequest()
-                            }
-
-                        travelHistoryState =
-                            TravelHistoryState.Success(
-                                historyItems = historyItems,
-                                approvalItems = approvalItems,
-                            )
-
-                        Log.d(
-                            "TravelController",
-                            "Loaded combined history: ${historyItems.size} order requests, ${approvalItems.size} approval requests",
-                        )
+                        orderHistoryResponse = response.body()!!.orderHistory
+                        Log.d("TravelController", "V2 Order history API success: ${orderHistoryResponse?.size} items")
                     } else {
-                        try {
-                            val errorBody = response.errorBody()?.string()
-                            Log.e("TravelController", "Error loading combined history: ${response.code()}, Error: $errorBody")
-                            travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
-                        } catch (e: Exception) {
-                            Log.e("TravelController", "Error parsing error response", e)
-                            travelHistoryState = TravelHistoryState.Error("Failed to load travel history. Please try again.")
-                        }
+                        Log.e("TravelController", "V2 Order history API error: ${response.code()}")
+                        orderHistoryResponse = emptyList()
                     }
+                    orderCallCompleted = true
+                    processResults()
                 }
 
-                override fun onFailure(
-                    call: Call<TravelCombinedHistoryResponse>,
-                    t: Throwable,
-                ) {
-                    Log.e("TravelController", "Network error loading combined history", t)
-                    travelHistoryState = TravelHistoryState.Error("Network error. Please check your connection and try again.")
+                override fun onFailure(call: Call<TravelV2OrderHistoryResponse>, t: Throwable) {
+                    Log.e("TravelController", "V2 Order history API network error", t)
+                    orderHistoryResponse = emptyList()
+                    orderCallCompleted = true
+                    processResults()
                 }
-            },
+            }
+        )
+
+        // Make approval history API call
+        RetrofitClient.apiService.getTravelV2ApprovalHistory(request).enqueue(
+            object : Callback<TravelV2ApprovalHistoryResponse> {
+                override fun onResponse(
+                    call: Call<TravelV2ApprovalHistoryResponse>,
+                    response: Response<TravelV2ApprovalHistoryResponse>,
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        approvalHistoryResponse = response.body()!!.approvalHistory
+                        Log.d("TravelController", "V2 Approval history API success: ${approvalHistoryResponse?.size} items")
+                    } else {
+                        Log.e("TravelController", "V2 Approval history API error: ${response.code()}")
+                        approvalHistoryResponse = emptyList()
+                    }
+                    approvalCallCompleted = true
+                    processResults()
+                }
+
+                override fun onFailure(call: Call<TravelV2ApprovalHistoryResponse>, t: Throwable) {
+                    Log.e("TravelController", "V2 Approval history API network error", t)
+                    approvalHistoryResponse = emptyList()
+                    approvalCallCompleted = true
+                    processResults()
+                }
+            }
         )
     }
 
@@ -756,25 +789,25 @@ class TravelController(
             return
         }
 
-        // Create the request body for combined history
-        val request = TravelHistoryRequest(employeeId = "", employeeEmail = userEmail)
+        // Create the request body for v2 API (only needs email)
+        val request = TravelV2Request(employeeEmail = userEmail)
 
         // Debug logging to see what user we're sending
-        android.util.Log.d("TravelController", "Making API call with userEmail: $userEmail")
+        android.util.Log.d("TravelController", "Making V2 API call with userEmail: $userEmail")
 
-        // Make the API call using combined history endpoint
-        RetrofitClient.apiService.getTravelCombinedHistory(request).enqueue(
-            object : Callback<TravelCombinedHistoryResponse> {
+        // Make the API call using v2 approval history endpoint
+        RetrofitClient.apiService.getTravelV2ApprovalHistory(request).enqueue(
+            object : Callback<TravelV2ApprovalHistoryResponse> {
                 override fun onResponse(
-                    call: Call<TravelCombinedHistoryResponse>,
-                    response: Response<TravelCombinedHistoryResponse>,
+                    call: Call<TravelV2ApprovalHistoryResponse>,
+                    response: Response<TravelV2ApprovalHistoryResponse>,
                 ) {
                     isLoadingTravelApprovals = false
                     if (response.isSuccessful) {
-                        val combinedResponse = response.body()
-                        if (combinedResponse != null && combinedResponse.status == 200) {
+                        val v2Response = response.body()
+                        if (v2Response != null && v2Response.status == 200) {
                             // Convert API response to UI models (only approval history)
-                            val approvalRequests = combinedResponse.approvalHistory.map { it.toTravelRequest() }
+                            val approvalRequests = v2Response.approvalHistory.map { it.toTravelRequest() }
                             travelApprovalsState = TravelApprovalsState.Success(approvalRequests)
 
                             // Update pending approvals count
@@ -788,7 +821,7 @@ class TravelController(
                 }
 
                 override fun onFailure(
-                    call: Call<TravelCombinedHistoryResponse>,
+                    call: Call<TravelV2ApprovalHistoryResponse>,
                     t: Throwable,
                 ) {
                     isLoadingTravelApprovals = false
@@ -1907,10 +1940,10 @@ class TravelController(
      */
     fun updateAttendeeSearchQuery(value: String) {
         attendeeSearchQuery = value
-        if (value.length >= 3) {
-            searchEmployees(value)
-        } else {
+        // Clear old employee search results when query changes
+        if (value.length < 2) {
             employeeSearchResults = emptyList()
+            suggestedUsers = emptyList()
         }
     }
 
@@ -1958,6 +1991,68 @@ class TravelController(
                 }
             },
         )
+    }
+
+    /**
+     * Search for suggested users using the simpler suggest-users API
+     */
+    fun searchSuggestedUsers(query: String) {
+        if (query.length < 2) {
+            suggestedUsers = emptyList()
+            return
+        }
+
+        isSearchingSuggestedUsers = true
+
+        RetrofitClient.apiService.suggestUsers(query).enqueue(
+            object : Callback<List<SuggestedUser>> {
+                override fun onResponse(
+                    call: Call<List<SuggestedUser>>,
+                    response: Response<List<SuggestedUser>>,
+                ) {
+                    isSearchingSuggestedUsers = false
+                    if (response.isSuccessful && response.body() != null) {
+                        suggestedUsers = response.body()!!
+                    } else {
+                        suggestedUsers = emptyList()
+                        Log.e("TravelController", "Error searching suggested users: ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<List<SuggestedUser>>,
+                    t: Throwable,
+                ) {
+                    isSearchingSuggestedUsers = false
+                    suggestedUsers = emptyList()
+                    Log.e("TravelController", "Network error searching suggested users", t)
+                }
+            },
+        )
+    }
+
+    /**
+     * Add attendee from suggested users search results
+     */
+    fun addAttendeeFromSuggestedUser(suggestedUser: SuggestedUser) {
+        val attendee =
+            CabAttendee(
+                name = suggestedUser.displayName,
+                email = suggestedUser.mail,
+                employeeId = null, // Not provided by suggest-users API
+                department = null, // Not provided by suggest-users API
+            )
+
+        val currentAttendees = additionalAttendees.toMutableList()
+
+        // Check if already added
+        if (!currentAttendees.any { it.email == attendee.email }) {
+            currentAttendees.add(attendee)
+            additionalAttendees = currentAttendees
+        }
+
+        // Clear search results
+        suggestedUsers = emptyList()
     }
 
     /**
@@ -2184,6 +2279,7 @@ class TravelController(
         additionalAttendees = emptyList()
         cabPickupLocations = emptyList()
         employeeSearchResults = emptyList()
+        suggestedUsers = emptyList()
         showAttendeeSearch = false
         cabSubmissionError = null
 

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DisplayMode
@@ -2085,7 +2086,11 @@ fun CabBookingSection(controller: TravelController) {
                 ) {
                     OutlinedTextField(
                         value = controller.attendeeSearchQuery,
-                        onValueChange = { controller.updateAttendeeSearchQuery(it) },
+                        onValueChange = {
+                            controller.updateAttendeeSearchQuery(it)
+                            // Use suggested users search for cab booking
+                            controller.searchSuggestedUsers(it)
+                        },
                         placeholder = {
                             Text(
                                 "Search Member to add",
@@ -2119,8 +2124,32 @@ fun CabBookingSection(controller: TravelController) {
                     )
                 }
 
-                // Employee Search Results
-                if (controller.employeeSearchResults.isNotEmpty()) {
+                // Loading indicator for suggested users search
+                if (controller.isSearchingSuggestedUsers) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFF1976D2),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Searching members...",
+                            fontFamily = GraphikFontFamily,
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                        )
+                    }
+                }
+
+                // Suggested Users Search Results
+                if (controller.suggestedUsers.isNotEmpty()) {
                     Card(
                         modifier =
                             Modifier
@@ -2133,31 +2162,31 @@ fun CabBookingSection(controller: TravelController) {
                         Column(
                             modifier = Modifier.padding(8.dp),
                         ) {
-                            controller.employeeSearchResults.take(5).forEach { employee ->
+                            controller.suggestedUsers.take(5).forEach { user ->
                                 Row(
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
-                                            .clickable { controller.addAttendee(employee) }
+                                            .clickable { controller.addAttendeeFromSuggestedUser(user) }
                                             .padding(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = employee.name,
+                                            text = user.displayName,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium,
                                             fontSize = 14.sp,
                                         )
                                         Text(
-                                            text = "${employee.employeeId} • ${employee.department}",
+                                            text = user.mail,
                                             fontFamily = GraphikFontFamily,
                                             fontSize = 12.sp,
                                             color = Color.Gray,
                                         )
                                     }
                                 }
-                                if (employee != controller.employeeSearchResults.last()) {
+                                if (user != controller.suggestedUsers.last()) {
                                     Divider(color = Color.LightGray, thickness = 0.5.dp)
                                 }
                             }
@@ -2182,7 +2211,7 @@ fun CabBookingSection(controller: TravelController) {
                                 Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 4.dp)
-                                    .background(Color(0xFFF0F0F0), RoundedCornerShape(4.dp))
+                                    .background(Color.White, RoundedCornerShape(4.dp))
                                     .padding(8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
@@ -2195,7 +2224,7 @@ fun CabBookingSection(controller: TravelController) {
                                     fontSize = 12.sp,
                                 )
                                 Text(
-                                    text = "${attendee.employeeId} • ${attendee.department}",
+                                    text = attendee.email ?: if (attendee.employeeId != null) "${attendee.employeeId} • ${attendee.department}" else "Selected Member",
                                     fontFamily = GraphikFontFamily,
                                     fontSize = 10.sp,
                                     color = Color.Gray,

@@ -20,6 +20,7 @@ import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.StockListResponse
+import com.archeGlobal.one.model.SuggestedUser
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
@@ -28,6 +29,10 @@ import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
+import com.archeGlobal.one.model.TravelV2ApprovalHistoryCountResponse
+import com.archeGlobal.one.model.TravelV2ApprovalHistoryResponse
+import com.archeGlobal.one.model.TravelV2OrderHistoryResponse
+import com.archeGlobal.one.model.TravelV2Request
 import com.archeGlobal.one.model.UpdateInventoryItemRequest
 import com.archeGlobal.one.model.UpdateInventoryItemResponse
 import com.google.gson.annotations.SerializedName
@@ -233,6 +238,27 @@ interface ApiService {
     fun searchEmployees(
         @Body request: EmployeeSearchRequest,
     ): Call<EmployeeSearchResponse>
+
+    @GET("suggest-users")
+    fun suggestUsers(
+        @retrofit2.http.Query("name") name: String,
+    ): Call<List<SuggestedUser>>
+
+    // V2 Travel APIs
+    @POST("travel/v2/approval-history-count")
+    fun getTravelV2ApprovalHistoryCount(
+        @Body request: TravelV2Request,
+    ): Call<TravelV2ApprovalHistoryCountResponse>
+
+    @POST("travel/v2/order-history")
+    fun getTravelV2OrderHistory(
+        @Body request: TravelV2Request,
+    ): Call<TravelV2OrderHistoryResponse>
+
+    @POST("travel/v2/approval-history")
+    fun getTravelV2ApprovalHistory(
+        @Body request: TravelV2Request,
+    ): Call<TravelV2ApprovalHistoryResponse>
 }
 
 data class FeedbackRequest(

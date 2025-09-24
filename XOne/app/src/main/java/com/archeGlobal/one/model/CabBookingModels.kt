@@ -118,6 +118,16 @@ data class CabDriverDetails(
 )
 
 /**
+ * Suggested User for simple user search
+ */
+data class SuggestedUser(
+    @SerializedName("mail")
+    val mail: String,
+    @SerializedName("displayName")
+    val displayName: String,
+)
+
+/**
  * Employee Search Request for finding additional attendees
  */
 data class EmployeeSearchRequest(
