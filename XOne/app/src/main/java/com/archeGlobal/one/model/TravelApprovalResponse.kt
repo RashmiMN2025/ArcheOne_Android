@@ -17,6 +17,8 @@ data class TravelApprovalResponse(
  * Model for individual travel approval item
  */
 data class TravelApprovalItem(
+    @SerializedName("request_id")
+    val requestId: String,
     @SerializedName("employee_name")
     val employeeName: String,
     @SerializedName("employee_email")
@@ -25,40 +27,55 @@ data class TravelApprovalItem(
     val employeeId: String,
     @SerializedName("mobile")
     val mobile: String,
-    @SerializedName("travel_destination")
-    val travelDestination: String,
     @SerializedName("project_name")
     val projectName: String,
+    @SerializedName("project_id")
+    val projectId: String? = null,
+    @SerializedName("opportunity_id")
+    val opportunityId: String? = null,
+    @SerializedName("crm_id")
+    val crmId: String? = null,
     @SerializedName("business_justification")
     val businessJustification: String,
-    @SerializedName("departure_date")
-    val departureDate: String,
-    @SerializedName("arrival_date")
-    val arrivalDate: String,
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
-    @SerializedName("status")
-    val status: String,
-    @SerializedName("request_id")
-    val requestId: String,
-    @SerializedName("created_at")
-    val createdAt: String,
+    @SerializedName("reporting_manager_name")
+    val reportingManagerName: String? = null,
+    @SerializedName("reporting_manager_email")
+    val reportingManagerEmail: String? = null,
     @SerializedName("action_token")
     val actionToken: String,
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("rejection_description")
+    val rejectionDescription: String? = null,
     @SerializedName("remarks")
-    val remarks: String,
+    val remarks: String? = null,
+    @SerializedName("created_at")
+    val createdAt: String,
+    @SerializedName("updated_at")
+    val updatedAt: String? = null,
     @SerializedName("stay_required")
     val stayRequired: Boolean? = null,
     @SerializedName("meal_pref")
     val mealPreference: String? = null,
     @SerializedName("seat_pref")
     val seatPreference: String? = null,
-    @SerializedName("flight_time")
-    val flightTime: String? = null,
     @SerializedName("frequent_flyer_num")
     val frequentFlyerNumber: String? = null,
-    @SerializedName("Travel Details")
+    @SerializedName("travelDetails")
     val travelDetails: List<TravelDestination>? = null,
+    // Legacy fields for backward compatibility
+    @SerializedName("travel_destination")
+    val travelDestination: String? = null,
+    @SerializedName("departure_date")
+    val departureDate: String? = null,
+    @SerializedName("arrival_date")
+    val arrivalDate: String? = null,
+    @SerializedName("flight_time")
+    val flightTime: String? = null,
+    @SerializedName("Travel Details")
+    val legacyTravelDetails: List<TravelDestination>? = null,
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -72,44 +89,59 @@ data class TravelApprovalItem(
                 else -> TravelStatus.PENDING
             }
 
+        // Get travel details from new format or fall back to legacy
+        val allTravelDetails = travelDetails ?: legacyTravelDetails
+
         // Handle multi-destination display
         val destinationDisplay =
-            if (travelDetails != null && travelDetails.isNotEmpty()) {
-                // Multi-destination: show count and first destination
-                if (travelDetails.size == 1) {
-                    travelDetails.first().travelDestination
+            if (allTravelDetails != null && allTravelDetails.isNotEmpty()) {
+                // Multi-destination: show origin → destination format
+                if (allTravelDetails.size == 1) {
+                    val detail = allTravelDetails.first()
+                    "${detail.originCity} → ${detail.destinationCity}"
                 } else {
-                    "${travelDetails.first().travelDestination} (+${travelDetails.size - 1} more)"
+                    val firstDetail = allTravelDetails.first()
+                    "${firstDetail.originCity} → ${firstDetail.destinationCity} (+${allTravelDetails.size - 1} more)"
                 }
             } else {
-                // Single destination
-                travelDestination
+                // Single destination (legacy format)
+                travelDestination ?: "Unknown Destination"
             }
+
+        // Get departure/arrival dates from travel details or legacy fields
+        val firstDetail = allTravelDetails?.firstOrNull()
+        val depDate = firstDetail?.departureDate ?: departureDate ?: ""
+        val arrDate = firstDetail?.arrivalDate ?: arrivalDate ?: ""
 
         return TravelRequest(
             id = requestId,
             project = projectName,
             destination = destinationDisplay,
             approver = employeeName,
-            approverEmail = null, // Approval response doesn't include manager email
+            approverEmail = reportingManagerEmail,
             createdDate = DateFormatter.parseApiDate(createdAt),
             status = travelStatus,
             businessJustification = businessJustification,
             modeOfTransport = modeOfTransport,
-            departureDate = departureDate,
-            arrivalDate = arrivalDate,
+            departureDate = depDate,
+            arrivalDate = arrDate,
             actionToken = actionToken,
-            travelDestinations = travelDetails,
+            travelDestinations = allTravelDetails,
         )
     }
 
     /**
      * Check if this is a multi-destination travel request
      */
-    fun isMultiDestination(): Boolean = travelDetails != null && travelDetails.size > 1
+    fun isMultiDestination(): Boolean {
+        val allTravelDetails = travelDetails ?: legacyTravelDetails
+        return allTravelDetails != null && allTravelDetails.size > 1
+    }
 
     /**
      * Get all destinations for multi-destination travel
      */
-    fun getAllDestinations(): List<TravelDestination> = travelDetails ?: emptyList()
+    fun getAllDestinations(): List<TravelDestination> {
+        return travelDetails ?: legacyTravelDetails ?: emptyList()
+    }
 }

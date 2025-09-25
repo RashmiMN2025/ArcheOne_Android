@@ -139,7 +139,7 @@ class HelpDeskController(
             ),
         )
 
-    fun loadTicketsData(category: String = "Helpdesk") {
+    fun loadTicketsData(category: String = "Helpdesk", subCategory: String? = null) {
         // Set loading state and clear existing tickets to prevent showing old data
         _model.value =
             _model.value.copy(
@@ -164,10 +164,10 @@ class HelpDeskController(
             TicketsRequest(
                 name = userName,
                 category = category,
-                subcategory = null, // Currently not filtering by subcategory when loading tickets
+                subCategory = subCategory,
             )
 
-        Log.d("HelpDeskController", "Starting API call for tickets with category: $category")
+        Log.d("HelpDeskController", "Starting API call for tickets with category: $category, subCategory: $subCategory")
         apiService.getTickets(request).enqueue(
             object : Callback<TicketsResponse> {
                 override fun onResponse(

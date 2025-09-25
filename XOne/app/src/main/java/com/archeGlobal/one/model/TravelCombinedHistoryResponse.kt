@@ -144,6 +144,7 @@ data class TravelOrderHistoryItem(
 
 /**
  * Model for approval history items
+ * Updated to support new API format with additional fields
  */
 data class TravelApprovalHistoryItem(
     @SerializedName("request_id")
@@ -158,38 +159,49 @@ data class TravelApprovalHistoryItem(
     val mobile: String,
     @SerializedName("project_name")
     val projectName: String,
+    @SerializedName("project_id")
+    val projectId: String? = null,
+    @SerializedName("opportunity_id")
+    val opportunityId: String? = null,
+    @SerializedName("crm_id")
+    val crmId: String? = null,
     @SerializedName("business_justification")
     val businessJustification: String,
-    @SerializedName("departure_date")
-    val departureDate: String,
-    @SerializedName("arrival_date")
-    val arrivalDate: String,
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
     @SerializedName("reporting_manager_name")
     val reportingManagerName: String,
     @SerializedName("reporting_manager_email")
     val reportingManagerEmail: String,
-    @SerializedName("status")
-    val status: String,
     @SerializedName("action_token")
     val actionToken: String,
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("rejection_description")
+    val rejectionDescription: String? = null,
+    @SerializedName("remarks")
+    val remarks: String? = null,
     @SerializedName("created_at")
     val createdAt: String,
-    @SerializedName("remarks")
-    val remarks: String?,
+    @SerializedName("updated_at")
+    val updatedAt: String? = null,
     @SerializedName("stay_required")
     val stayRequired: String?,
     @SerializedName("meal_pref")
     val mealPreference: String?,
     @SerializedName("seat_pref")
     val seatPreference: String?,
-    @SerializedName("flight_time")
-    val flightTime: String?,
     @SerializedName("frequent_flyer_num")
     val frequentFlyerNumber: String?,
     @SerializedName("travelDetails")
     val travelDetails: List<TravelDestination>? = null,
+    // Legacy fields for backward compatibility
+    @SerializedName("departure_date")
+    val departureDate: String? = null,
+    @SerializedName("arrival_date")
+    val arrivalDate: String? = null,
+    @SerializedName("flight_time")
+    val flightTime: String? = null,
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -207,9 +219,9 @@ data class TravelApprovalHistoryItem(
                 else -> TravelStatus.PENDING
             }
 
-        // Handle destination display using travelDetails array
+        // Handle destination display using travelDetails array or fallback to legacy fields
         // Debug logging
-        android.util.Log.d("TravelCombinedHistory", "Request $requestId: travelDetails = ${travelDetails?.size ?: "null"}")
+        android.util.Log.d("TravelCombinedHistory", "Request $requestId: travelDetails = ${travelDetails?.size ?: "null"}, mode = $modeOfTransport")
         travelDetails?.forEachIndexed { index, detail ->
             android.util.Log.d(
                 "TravelCombinedHistory",
@@ -234,9 +246,23 @@ data class TravelApprovalHistoryItem(
                         "$firstDestination +${travelDetails.size - 1} more"
                     }
                 }
+                // Fallback for cab bookings and other formats that might not have travelDetails
                 else -> {
-                    // Fallback: Show a more descriptive message
-                    "Travel Request #${requestId.takeLast(4)}"
+                    // For cab bookings and other modes, create a descriptive display
+                    when (modeOfTransport.lowercase()) {
+                        "cab" -> {
+                            // Cab bookings might not have detailed destination info
+                            "Cab Booking - ${projectName.take(20)}${if (projectName.length > 20) "..." else ""}"
+                        }
+                        else -> {
+                            // Other travel modes: fallback to project or request ID
+                            if (projectName.isNotBlank()) {
+                                "Travel for ${projectName.take(20)}${if (projectName.length > 20) "..." else ""}"
+                            } else {
+                                "Travel Request #${requestId.takeLast(4)}"
+                            }
+                        }
+                    }
                 }
             }
 
@@ -249,6 +275,11 @@ data class TravelApprovalHistoryItem(
         android.util.Log.d("TravelApprovalMapping", "API reporting_manager_name: $reportingManagerName")
         android.util.Log.d("TravelApprovalMapping", "API reporting_manager_email: $reportingManagerEmail")
 
+        // Get dates from travel details or use legacy fields
+        val firstDetail = travelDetails?.firstOrNull()
+        val depDate = firstDetail?.departureDate ?: departureDate ?: ""
+        val arrDate = firstDetail?.arrivalDate ?: arrivalDate ?: ""
+
         val travelRequest =
             TravelRequest(
                 id = requestId,
@@ -260,14 +291,14 @@ data class TravelApprovalHistoryItem(
                 status = travelStatus,
                 businessJustification = businessJustification,
                 modeOfTransport = modeOfTransport,
-                departureDate = departureDate,
-                arrivalDate = arrivalDate,
+                departureDate = depDate,
+                arrivalDate = arrDate,
                 actionToken = actionToken,
-                rejectionReason = remarks,
+                rejectionReason = rejectionDescription ?: remarks, // Use rejection_description first, then fall back to remarks
                 stayRequired = stayRequired,
                 mealPreference = mealPreference,
                 seatPreference = seatPreference,
-                flightTime = flightTime,
+                flightTime = firstDetail?.flightTimePreference ?: flightTime,
                 frequentFlyerNumber = frequentFlyerNumber,
                 travelDestinations = travelDetails,
                 employeeName = employeeName,
@@ -329,4 +360,14 @@ data class TravelV2ApprovalHistoryResponse(
 data class TravelV2Request(
     @SerializedName("employeeEmail")
     val employeeEmail: String,
+)
+
+/**
+ * Response model for /travel/v2/admin/history
+ */
+data class TravelV2AdminHistoryResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("admin_history")
+    val adminHistory: List<TravelApprovalHistoryItem>,
 )

@@ -29,6 +29,7 @@ import com.archeGlobal.one.model.TravelHistoryResponse
 import com.archeGlobal.one.model.TravelRejectActionRequest
 import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
+import com.archeGlobal.one.model.TravelV2AdminHistoryResponse
 import com.archeGlobal.one.model.TravelV2ApprovalHistoryCountResponse
 import com.archeGlobal.one.model.TravelV2ApprovalHistoryResponse
 import com.archeGlobal.one.model.TravelV2OrderHistoryResponse
@@ -259,6 +260,9 @@ interface ApiService {
     fun getTravelV2ApprovalHistory(
         @Body request: TravelV2Request,
     ): Call<TravelV2ApprovalHistoryResponse>
+
+    @POST("travel/v2/admin/history")
+    fun getTravelV2AdminHistory(): Call<TravelV2AdminHistoryResponse>
 }
 
 data class FeedbackRequest(
@@ -483,7 +487,7 @@ data class CalendarRequest(
 data class TicketsRequest(
     val name: String,
     val category: String,
-    val subcategory: String? = null,
+    val subCategory: String? = null,
 )
 
 data class TicketsResponse(
