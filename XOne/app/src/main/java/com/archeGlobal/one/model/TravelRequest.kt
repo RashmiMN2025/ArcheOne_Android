@@ -49,4 +49,5 @@ enum class TravelStatus {
     APPROVED,
     REJECTED,
     PENDING,
+    CANCELLED,
 }

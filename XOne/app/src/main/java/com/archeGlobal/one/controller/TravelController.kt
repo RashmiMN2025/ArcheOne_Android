@@ -1105,28 +1105,28 @@ class TravelController(
             return
         }
 
-        // Get the auth token and employee email
+        // Get the action token from the request and employee email
         val userDataManager = UserDataManager.getInstance(context)
-        val authToken = userDataManager.getAuthToken()
+        val actionToken = request.actionToken
         val employeeEmail = userDataManager.getUserData()?.email
 
-        if (authToken == null || employeeEmail == null) {
-            Log.e("TravelController", "Cannot cancel travel request: missing auth token or email")
+        if (actionToken == null || employeeEmail == null) {
+            Log.e("TravelController", "Cannot cancel travel request: missing action token or email")
             approvalActionState = TravelApprovalActionState.Error("Authentication error")
             return
         }
 
-        // Create the cancel request
+        // Create the cancel request with action token
         val cancelRequest =
             TravelCancelActionRequest(
                 requestId = travelRequestId,
-                token = authToken,
+                token = actionToken,
                 email = employeeEmail,
                 remarks = remarks,
             )
 
         // Debug logging
-        Log.d("TravelController", "Cancelling travel request: $travelRequestId with remarks: $remarks")
+        Log.d("TravelController", "Cancelling travel request: $travelRequestId with action token and remarks: $remarks")
 
         // Make the API call
         RetrofitClient.apiService.cancelTravelRequest(cancelRequest).enqueue(
@@ -1141,19 +1141,28 @@ class TravelController(
                             Log.d("TravelController", "Travel request cancelled successfully: ${cancelResponse.message}")
                             // Update the approval action state
                             approvalActionState = TravelApprovalActionState.Success(cancelResponse.message)
+                            // Show success message
+                           // CustomToast.showToast(context, cancelResponse.message)
                             // Reload the approval list to reflect the cancellation
                             loadTravelApprovals()
+                            // Navigate back to approvals list
+                            navigator.popBackStack()
                         } else {
                             Log.e("TravelController", "Error cancelling travel request: ${cancelResponse?.message}")
                             // Update the approval action state
                             approvalActionState = TravelApprovalActionState.Error(cancelResponse?.message ?: "Failed to cancel request")
+                            // Show error message
+                            //CustomToast.showToast(context, cancelResponse?.message ?: "Failed to cancel request")
                             // Reload the data
                             loadTravelApprovals()
                         }
                     } else {
                         Log.e("TravelController", "Error cancelling travel request: ${response.code()} ${response.message()}")
+                        val errorMsg = "Error: ${response.code()} ${response.message()}"
                         // Update the approval action state
-                        approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
+                        approvalActionState = TravelApprovalActionState.Error(errorMsg)
+                        // Show error message
+                        //CustomToast.showToast(context, errorMsg)
                         // Reload the data
                         loadTravelApprovals()
                     }
@@ -1164,8 +1173,11 @@ class TravelController(
                     t: Throwable,
                 ) {
                     Log.e("TravelController", "Error cancelling travel request", t)
+                    val errorMsg = "Network error: ${t.message ?: "Unknown error"}"
                     // Update the approval action state
-                    approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
+                    approvalActionState = TravelApprovalActionState.Error(errorMsg)
+                    // Show error message
+                    //CustomToast.showToast(context, errorMsg)
                     // Reload the data
                     loadTravelApprovals()
                 }
@@ -1713,6 +1725,65 @@ class TravelController(
                 }
             },
         )
+    }
+
+    /**
+     * Download travel admin report as CSV
+     */
+    fun downloadAdminReport() {
+        val userDataManager = UserDataManager.getInstance(context)
+        val employeeEmail = userDataManager.getUserData()?.email
+
+        if (employeeEmail == null) {
+            CustomToast.show(context, "Unable to download report: No user email found")
+            return
+        }
+
+        // Show loading toast
+        CustomToast.show(context, "Downloading report...")
+
+        // Use coroutine to call suspend function
+        Thread {
+            kotlinx.coroutines.runBlocking {
+                try {
+                    val request = TravelV2Request(employeeEmail = employeeEmail)
+                    val response = RetrofitClient.apiService.downloadTravelAdminReport(request)
+
+                    if (response.isSuccessful && response.body() != null) {
+                        val responseBody = response.body()!!
+
+                        // Save CSV file to downloads directory
+                        val fileName = "travel_admin_report_${System.currentTimeMillis()}.csv"
+                        val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
+                            android.os.Environment.DIRECTORY_DOWNLOADS
+                        )
+                        val file = java.io.File(downloadsDir, fileName)
+
+                        responseBody.byteStream().use { inputStream ->
+                            file.outputStream().use { outputStream ->
+                                inputStream.copyTo(outputStream)
+                            }
+                        }
+
+                        (context as? android.app.Activity)?.runOnUiThread {
+                            CustomToast.show(context, "Report downloaded to Downloads/$fileName")
+                        }
+
+                        Log.d("TravelController", "Report downloaded successfully: ${file.absolutePath}")
+                    } else {
+                        (context as? android.app.Activity)?.runOnUiThread {
+                            CustomToast.show(context, "Failed to download report: ${response.code()}")
+                        }
+                        Log.e("TravelController", "Error downloading report: ${response.code()} ${response.message()}")
+                    }
+                } catch (e: Exception) {
+                    (context as? android.app.Activity)?.runOnUiThread {
+                        CustomToast.show(context, "Error downloading report: ${e.message}")
+                    }
+                    Log.e("TravelController", "Exception downloading report", e)
+                }
+            }
+        }.start()
     }
 
     // Multi-destination functions

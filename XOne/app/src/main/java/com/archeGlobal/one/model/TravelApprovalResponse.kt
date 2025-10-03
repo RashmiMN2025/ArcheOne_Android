@@ -86,6 +86,7 @@ data class TravelApprovalItem(
             when (status.lowercase()) {
                 "approved" -> TravelStatus.APPROVED
                 "rejected" -> TravelStatus.REJECTED
+                "cancelled" -> TravelStatus.CANCELLED
                 else -> TravelStatus.PENDING
             }
 

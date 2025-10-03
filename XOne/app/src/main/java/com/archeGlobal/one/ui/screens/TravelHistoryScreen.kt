@@ -336,6 +336,7 @@ fun StatusTag(status: TravelStatus) {
             TravelStatus.APPROVED -> Triple(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000), "Approved")
             TravelStatus.REJECTED -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), "Rejected")
             TravelStatus.PENDING -> Triple(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500), "Pending")
+            TravelStatus.CANCELLED -> Triple(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000), "Cancelled")
         }
 
     Card(

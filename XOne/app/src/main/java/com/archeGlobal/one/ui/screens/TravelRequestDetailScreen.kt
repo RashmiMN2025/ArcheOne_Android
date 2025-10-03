@@ -307,89 +307,63 @@ fun TravelRequestDetailScreen(
 
                             // Cancel button - only show when request is approved and coming from admin dashboard
                             if (travelRequest.status == TravelStatus.APPROVED && controller.isFromAdminDashboard) {
-                                var showCancelDialog by remember { mutableStateOf(false) }
                                 var cancelRemarks by remember { mutableStateOf("") }
 
                                 Spacer(modifier = Modifier.height(24.dp))
 
+                                // Remarks text field
+                                OutlinedTextField(
+                                    value = cancelRemarks,
+                                    onValueChange = { cancelRemarks = it },
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 16.dp),
+                                    placeholder = {
+                                        Text(
+                                            "Enter remark (required)",
+                                            fontFamily = GraphikFontFamily,
+                                            color = Color.Gray.copy(alpha = 0.6f),
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors =
+                                        androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
+                                            textColor = Color.Black,
+                                            backgroundColor = Color.White,
+                                            focusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                                            cursorColor = Color.Black,
+                                        ),
+                                    minLines = 4,
+                                    maxLines = 6,
+                                )
+
+                                // Submit Cancellation button
                                 Button(
-                                    onClick = { showCancelDialog = true },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = {
+                                        if (cancelRemarks.isNotBlank()) {
+                                            controller.cancelTravelRequest(travelRequest.id, cancelRemarks)
+                                        }
+                                    },
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp),
                                     colors =
                                         ButtonDefaults.buttonColors(
-                                            backgroundColor = Color(0xFFFF9800), // Orange for cancel
+                                            backgroundColor = Color(0xFF6B7280), // Gray charcoal color
+                                            disabledBackgroundColor = Color(0xFF9CA3AF), // Lighter gray when disabled
                                         ),
                                     shape = RoundedCornerShape(8.dp),
+                                    enabled = cancelRemarks.isNotBlank(),
                                 ) {
                                     Text(
                                         text = "Submit Cancellation",
                                         color = Color.White,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
-                                    )
-                                }
-
-                                // Cancel confirmation dialog
-                                if (showCancelDialog) {
-                                    AlertDialog(
-                                        onDismissRequest = { showCancelDialog = false },
-                                        title = {
-                                            Text(
-                                                "Cancel Travel Request",
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                            )
-                                        },
-                                        text = {
-                                            Column {
-                                                Text(
-                                                    "Enter reason for cancellation:",
-                                                    fontFamily = GraphikFontFamily,
-                                                    modifier = Modifier.padding(bottom = 8.dp),
-                                                )
-                                                OutlinedTextField(
-                                                    value = cancelRemarks,
-                                                    onValueChange = { cancelRemarks = it },
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    placeholder = {
-                                                        Text(
-                                                            "Enter remark (required)",
-                                                            fontFamily = GraphikFontFamily,
-                                                        )
-                                                    },
-                                                    minLines = 3,
-                                                    maxLines = 5,
-                                                )
-                                            }
-                                        },
-                                        confirmButton = {
-                                            Button(
-                                                onClick = {
-                                                    if (cancelRemarks.isNotBlank()) {
-                                                        controller.cancelTravelRequest(travelRequest.id, cancelRemarks)
-                                                        showCancelDialog = false
-                                                    }
-                                                },
-                                                colors =
-                                                    ButtonDefaults.buttonColors(
-                                                        backgroundColor = Color(0xFFFF9800),
-                                                    ),
-                                                enabled = cancelRemarks.isNotBlank(),
-                                            ) {
-                                                Text("Submit", color = Color.White, fontFamily = GraphikFontFamily)
-                                            }
-                                        },
-                                        dismissButton = {
-                                            Button(
-                                                onClick = { showCancelDialog = false },
-                                                colors =
-                                                    ButtonDefaults.buttonColors(
-                                                        backgroundColor = Color.Gray,
-                                                    ),
-                                            ) {
-                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
-                                            }
-                                        },
+                                        fontSize = 16.sp,
                                     )
                                 }
                             }
@@ -475,6 +449,7 @@ fun TravelRequestStatusBadge(status: com.archeGlobal.one.model.TravelStatus) {
             com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFE6F4EA), Color(0xFF34A853), "Approved")
             com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFFCE8E6), Color(0xFFEA4335), "Rejected")
             com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFEF7E0), Color(0xFFFBBC05), "Pending")
+            com.archeGlobal.one.model.TravelStatus.CANCELLED -> Triple(Color(0xFFFCE8E6), Color(0xFFEA4335), "Cancelled")
         }
 
     Card(

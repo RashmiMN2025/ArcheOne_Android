@@ -411,7 +411,7 @@ fun TravelAdminDashboardScreen(controller: TravelController) {
                                             .background(Color(0xFF424242))
                                             .clip(RoundedCornerShape(8.dp))
                                     ) {
-                                        listOf("All", "Pending", "Approved", "Rejected").forEach { option ->
+                                        listOf("All", "Pending", "Approved", "Rejected", "Cancelled").forEach { option ->
                                             DropdownMenuItem(
                                                 onClick = {
                                                     selectedStatusFilter = option
@@ -906,7 +906,7 @@ fun TravelAdminDashboardScreen(controller: TravelController) {
                     .padding(end = 16.dp, bottom = 24.dp) // Move button up slightly
                     .clip(RoundedCornerShape(20.dp)) // More rounded edges
                     .background(PrimaryRed)
-                    .clickable { /* Handle download report */ }
+                    .clickable { controller.downloadAdminReport() }
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Row(
@@ -1142,6 +1142,7 @@ fun AdminTravelStatusBadge(status: com.archeGlobal.one.model.TravelStatus) {
         com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF28A745), "Approved")
         com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFFDC3545), "Rejected")
         com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
+        com.archeGlobal.one.model.TravelStatus.CANCELLED -> Triple(Color(0xFFF8D7DA), Color(0xFFDC3545), "Cancelled")
     }
 
     Card(

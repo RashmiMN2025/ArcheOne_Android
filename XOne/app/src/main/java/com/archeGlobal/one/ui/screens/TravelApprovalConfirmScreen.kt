@@ -184,6 +184,10 @@ fun TravelApprovalConfirmScreen(
                                                         Color(
                                                             0xFFFF3B30,
                                                         ) // Red for rejected
+                                                    com.archeGlobal.one.model.TravelStatus.CANCELLED ->
+                                                        Color(
+                                                            0xFFFF3B30,
+                                                        ) // Red for cancelled (same as rejected)
                                                 },
                                             ).padding(horizontal = 12.dp, vertical = 4.dp),
                                 ) {

@@ -79,6 +79,7 @@ data class TravelOrderHistoryItem(
             when (status.lowercase()) {
                 "approved" -> TravelStatus.APPROVED
                 "rejected" -> TravelStatus.REJECTED
+                "cancelled" -> TravelStatus.CANCELLED
                 else -> TravelStatus.PENDING
             }
 
@@ -216,6 +217,7 @@ data class TravelApprovalHistoryItem(
             when (status.lowercase()) {
                 "approved" -> TravelStatus.APPROVED
                 "rejected" -> TravelStatus.REJECTED
+                "cancelled" -> TravelStatus.CANCELLED
                 else -> TravelStatus.PENDING
             }
 

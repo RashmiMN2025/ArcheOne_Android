@@ -766,6 +766,7 @@ fun TravelStatusBadgeComponent(status: com.archeGlobal.one.model.TravelStatus) {
             com.archeGlobal.one.model.TravelStatus.APPROVED -> Triple(Color(0xFFD4EDDA), Color(0xFF28A745), "Approved") // Lighter green
             com.archeGlobal.one.model.TravelStatus.REJECTED -> Triple(Color(0xFFF8D7DA), Color(0xFFDC3545), "Rejected") // Lighter red
             com.archeGlobal.one.model.TravelStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFFFF9800), "Pending")
+            com.archeGlobal.one.model.TravelStatus.CANCELLED -> Triple(Color(0xFFF8D7DA), Color(0xFFDC3545), "Cancelled") // Same as rejected
         }
 
     Card(

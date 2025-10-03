@@ -52,6 +52,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.PartMap
+import retrofit2.http.Streaming
 import retrofit2.http.Url
 
 interface ApiService {
@@ -272,6 +273,12 @@ interface ApiService {
     fun getTravelV2AdminHistory(
         @Body request: TravelV2Request,
     ): Call<TravelV2AdminHistoryResponse>
+
+    @POST("travel/v2/admin/history")
+    @Streaming
+    suspend fun downloadTravelAdminReport(
+        @Body request: TravelV2Request,
+    ): Response<ResponseBody>
 }
 
 data class FeedbackRequest(

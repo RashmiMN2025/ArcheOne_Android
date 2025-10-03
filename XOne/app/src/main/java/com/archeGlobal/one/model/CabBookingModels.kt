@@ -247,6 +247,7 @@ data class CabHistoryItem(
                 when (status.toLowerCase()) {
                     "approved" -> TravelStatus.APPROVED
                     "rejected" -> TravelStatus.REJECTED
+                    "cancelled" -> TravelStatus.CANCELLED
                     else -> TravelStatus.PENDING
                 },
             businessJustification = null,

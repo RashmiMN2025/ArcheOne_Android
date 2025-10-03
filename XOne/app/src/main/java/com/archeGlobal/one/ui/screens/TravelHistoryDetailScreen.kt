@@ -125,6 +125,7 @@ fun TravelHistoryDetailScreen(
                                     com.archeGlobal.one.model.TravelStatus.APPROVED -> "Approved"
                                     com.archeGlobal.one.model.TravelStatus.REJECTED -> "Rejected"
                                     com.archeGlobal.one.model.TravelStatus.PENDING -> "Pending"
+                                    com.archeGlobal.one.model.TravelStatus.CANCELLED -> "Cancelled"
                                 },
                         )
 
