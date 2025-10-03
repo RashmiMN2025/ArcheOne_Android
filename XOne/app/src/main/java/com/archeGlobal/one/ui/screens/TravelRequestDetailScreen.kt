@@ -5,16 +5,23 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -297,6 +304,95 @@ fun TravelRequestDetailScreen(
                                 label = "Created",
                                 value = formattedCreatedDate,
                             )
+
+                            // Cancel button - only show when request is approved and coming from admin dashboard
+                            if (travelRequest.status == TravelStatus.APPROVED && controller.isFromAdminDashboard) {
+                                var showCancelDialog by remember { mutableStateOf(false) }
+                                var cancelRemarks by remember { mutableStateOf("") }
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                Button(
+                                    onClick = { showCancelDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors =
+                                        ButtonDefaults.buttonColors(
+                                            backgroundColor = Color(0xFFFF9800), // Orange for cancel
+                                        ),
+                                    shape = RoundedCornerShape(8.dp),
+                                ) {
+                                    Text(
+                                        text = "Submit Cancellation",
+                                        color = Color.White,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
+
+                                // Cancel confirmation dialog
+                                if (showCancelDialog) {
+                                    AlertDialog(
+                                        onDismissRequest = { showCancelDialog = false },
+                                        title = {
+                                            Text(
+                                                "Cancel Travel Request",
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                            )
+                                        },
+                                        text = {
+                                            Column {
+                                                Text(
+                                                    "Enter reason for cancellation:",
+                                                    fontFamily = GraphikFontFamily,
+                                                    modifier = Modifier.padding(bottom = 8.dp),
+                                                )
+                                                OutlinedTextField(
+                                                    value = cancelRemarks,
+                                                    onValueChange = { cancelRemarks = it },
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    placeholder = {
+                                                        Text(
+                                                            "Enter remark (required)",
+                                                            fontFamily = GraphikFontFamily,
+                                                        )
+                                                    },
+                                                    minLines = 3,
+                                                    maxLines = 5,
+                                                )
+                                            }
+                                        },
+                                        confirmButton = {
+                                            Button(
+                                                onClick = {
+                                                    if (cancelRemarks.isNotBlank()) {
+                                                        controller.cancelTravelRequest(travelRequest.id, cancelRemarks)
+                                                        showCancelDialog = false
+                                                    }
+                                                },
+                                                colors =
+                                                    ButtonDefaults.buttonColors(
+                                                        backgroundColor = Color(0xFFFF9800),
+                                                    ),
+                                                enabled = cancelRemarks.isNotBlank(),
+                                            ) {
+                                                Text("Submit", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        },
+                                        dismissButton = {
+                                            Button(
+                                                onClick = { showCancelDialog = false },
+                                                colors =
+                                                    ButtonDefaults.buttonColors(
+                                                        backgroundColor = Color.Gray,
+                                                    ),
+                                            ) {
+                                                Text("Cancel", color = Color.White, fontFamily = GraphikFontFamily)
+                                            }
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
                 }

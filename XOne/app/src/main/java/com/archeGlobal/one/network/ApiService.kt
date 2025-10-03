@@ -23,6 +23,8 @@ import com.archeGlobal.one.model.StockListResponse
 import com.archeGlobal.one.model.SuggestedUser
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.model.TravelCancelActionRequest
+import com.archeGlobal.one.model.TravelCancelActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
 import com.archeGlobal.one.model.TravelHistoryRequest
 import com.archeGlobal.one.model.TravelHistoryResponse
@@ -147,7 +149,7 @@ interface ApiService {
     @GET("daily-event")
     suspend fun getDailyEvent(): Response<EventResponse>
 
-    @POST("travel-request-one")
+    @POST("travel/v2/request")
     fun submitTravelRequest(
         @Body request: TravelRequestSubmission,
     ): Call<TravelRequestResponse>
@@ -162,15 +164,20 @@ interface ApiService {
         @Body request: TravelHistoryRequest,
     ): Call<TravelCombinedHistoryResponse>
 
-    @POST("travel-request-one/approve-one")
+    @POST("travel/v2/approve")
     fun approveTravelRequest(
         @Body request: TravelApprovalActionRequest,
     ): Call<TravelApprovalActionResponse>
 
-    @POST("travel-request-one/reject-one")
+    @POST("travel/v2/reject")
     fun rejectTravelRequest(
         @Body request: TravelRejectActionRequest,
     ): Call<TravelApprovalActionResponse>
+
+    @POST("travel/v2/admin/cancel")
+    fun cancelTravelRequest(
+        @Body request: TravelCancelActionRequest,
+    ): Call<TravelCancelActionResponse>
 
     @GET("employee-celebration")
     suspend fun getEmployeeCelebration(): Response<CelebrationResponse>
@@ -225,7 +232,7 @@ interface ApiService {
     ): Response<DeskCartUpdateOrderStatusResponse>
 
     // Cab Booking APIs
-    @POST("cab-booking/submit")
+    @POST("travel/v2/request")
     fun submitCabBooking(
         @Body request: CabBookingRequest,
     ): Call<CabBookingResponse>
@@ -262,7 +269,9 @@ interface ApiService {
     ): Call<TravelV2ApprovalHistoryResponse>
 
     @POST("travel/v2/admin/history")
-    fun getTravelV2AdminHistory(): Call<TravelV2AdminHistoryResponse>
+    fun getTravelV2AdminHistory(
+        @Body request: TravelV2Request,
+    ): Call<TravelV2AdminHistoryResponse>
 }
 
 data class FeedbackRequest(

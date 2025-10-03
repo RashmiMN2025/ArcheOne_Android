@@ -489,6 +489,13 @@ class AndroidNavigator(
         }
     }
 
+    override fun navigateToTravelAdminDashboard() {
+        navController?.navigate("travel_admin_dashboard") {
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     override fun navigateToTravelApprovalDetail() {
         navController?.navigate("travel_approval_detail") {
             launchSingleTop = true

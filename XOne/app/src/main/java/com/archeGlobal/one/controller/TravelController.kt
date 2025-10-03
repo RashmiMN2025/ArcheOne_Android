@@ -14,6 +14,8 @@ import com.archeGlobal.one.model.EmployeeSearchResult
 import com.archeGlobal.one.model.SuggestedUser
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
+import com.archeGlobal.one.model.TravelCancelActionRequest
+import com.archeGlobal.one.model.TravelCancelActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
 import com.archeGlobal.one.model.TravelDetail
 import com.archeGlobal.one.model.TravelHistoryRequest
@@ -122,12 +124,20 @@ class TravelController(
     var isFromTravelApprovals by mutableStateOf(false)
         private set
 
+    // Track if we navigated to detail screen from admin dashboard
+    var isFromAdminDashboard by mutableStateOf(false)
+        private set
+
     // Travel approval action state
     var approvalActionState by mutableStateOf<TravelApprovalActionState>(TravelApprovalActionState.Idle)
         private set
 
     // Count of pending travel approvals
     var pendingApprovalCount by mutableStateOf(0)
+        private set
+
+    // Flag to indicate if user is an admin (has access to admin dashboard)
+    var isAdmin by mutableStateOf(false)
         private set
 
     // Flag to prevent concurrent API calls for travel approvals
@@ -627,6 +637,9 @@ class TravelController(
             if (request != null) {
                 // Store the selected travel request
                 selectedTravelRequest = request
+                // Mark that we're navigating from admin dashboard
+                isFromAdminDashboard = true
+                isFromTravelApprovals = false
                 // Navigate to the travel request detail screen (for approvals)
                 navigator.navigateToTravelRequestDetail()
             } else {
@@ -643,6 +656,21 @@ class TravelController(
     fun navigateToTravelApprovals() {
         loadTravelApprovals()
         navigator.navigateToTravelApprovals()
+    }
+
+    /**
+     * Navigate to travel admin dashboard screen
+     */
+    fun navigateToTravelAdminDashboard() {
+        loadTravelApprovals()
+        navigator.navigateToTravelAdminDashboard()
+    }
+
+    /**
+     * Reload approval history count and admin status
+     */
+    fun reloadApprovalHistoryCount() {
+        loadTravelApprovals()
     }
 
     /**
@@ -782,10 +810,13 @@ class TravelController(
         }
 
         // Debug logging
-        android.util.Log.d("TravelController", "Making V2 Admin History API call (no request body needed)")
+        android.util.Log.d("TravelController", "Making V2 Admin History API call")
 
-        // Make the API call using v2 admin history endpoint (no request body needed)
-        RetrofitClient.apiService.getTravelV2AdminHistory().enqueue(
+        // Create request with employee email
+        val adminRequest = TravelV2Request(employeeEmail = employeeEmail)
+
+        // Make the API call using v2 admin history endpoint
+        RetrofitClient.apiService.getTravelV2AdminHistory(adminRequest).enqueue(
             object : Callback<TravelV2AdminHistoryResponse> {
                 override fun onResponse(
                     call: Call<TravelV2AdminHistoryResponse>,
@@ -829,6 +860,9 @@ class TravelController(
 
                             // Update pending approvals count
                             pendingApprovalCount = approvalRequests.count { it.status == TravelStatus.PENDING }
+
+                            // Set isAdmin flag if user has approval requests (admin access)
+                            isAdmin = approvalRequests.isNotEmpty()
                         } else {
                             travelApprovalsState = TravelApprovalsState.Error("Failed to load approval requests")
                         }
@@ -1043,6 +1077,97 @@ class TravelController(
                     approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
                     // Revert the state change if the API call failed
                     loadTravelApprovals() // Reload the data
+                }
+            },
+        )
+    }
+
+    /**
+     * Cancel an approved travel request (Admin only)
+     */
+    fun cancelTravelRequest(
+        travelRequestId: String,
+        remarks: String,
+    ) {
+        // Set the action state to loading
+        approvalActionState = TravelApprovalActionState.Loading
+
+        val currentState = travelApprovalsState
+        val request: TravelRequest? =
+            when (currentState) {
+                is TravelApprovalsState.Success -> currentState.approvalRequests.find { it.id == travelRequestId }
+                else -> selectedTravelRequest?.takeIf { it.id == travelRequestId }
+            }
+
+        if (request == null) {
+            Log.e("TravelController", "Cannot cancel travel request: request not found")
+            approvalActionState = TravelApprovalActionState.Error("Request not found")
+            return
+        }
+
+        // Get the auth token and employee email
+        val userDataManager = UserDataManager.getInstance(context)
+        val authToken = userDataManager.getAuthToken()
+        val employeeEmail = userDataManager.getUserData()?.email
+
+        if (authToken == null || employeeEmail == null) {
+            Log.e("TravelController", "Cannot cancel travel request: missing auth token or email")
+            approvalActionState = TravelApprovalActionState.Error("Authentication error")
+            return
+        }
+
+        // Create the cancel request
+        val cancelRequest =
+            TravelCancelActionRequest(
+                requestId = travelRequestId,
+                token = authToken,
+                email = employeeEmail,
+                remarks = remarks,
+            )
+
+        // Debug logging
+        Log.d("TravelController", "Cancelling travel request: $travelRequestId with remarks: $remarks")
+
+        // Make the API call
+        RetrofitClient.apiService.cancelTravelRequest(cancelRequest).enqueue(
+            object : Callback<TravelCancelActionResponse> {
+                override fun onResponse(
+                    call: Call<TravelCancelActionResponse>,
+                    response: Response<TravelCancelActionResponse>,
+                ) {
+                    if (response.isSuccessful) {
+                        val cancelResponse = response.body()
+                        if (cancelResponse != null && cancelResponse.status == 200) {
+                            Log.d("TravelController", "Travel request cancelled successfully: ${cancelResponse.message}")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Success(cancelResponse.message)
+                            // Reload the approval list to reflect the cancellation
+                            loadTravelApprovals()
+                        } else {
+                            Log.e("TravelController", "Error cancelling travel request: ${cancelResponse?.message}")
+                            // Update the approval action state
+                            approvalActionState = TravelApprovalActionState.Error(cancelResponse?.message ?: "Failed to cancel request")
+                            // Reload the data
+                            loadTravelApprovals()
+                        }
+                    } else {
+                        Log.e("TravelController", "Error cancelling travel request: ${response.code()} ${response.message()}")
+                        // Update the approval action state
+                        approvalActionState = TravelApprovalActionState.Error("Error: ${response.code()} ${response.message()}")
+                        // Reload the data
+                        loadTravelApprovals()
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<TravelCancelActionResponse>,
+                    t: Throwable,
+                ) {
+                    Log.e("TravelController", "Error cancelling travel request", t)
+                    // Update the approval action state
+                    approvalActionState = TravelApprovalActionState.Error("Network error: ${t.message ?: "Unknown error"}")
+                    // Reload the data
+                    loadTravelApprovals()
                 }
             },
         )
@@ -2226,13 +2351,17 @@ class TravelController(
         // Log the request for debugging
         Log.d("TravelController", "Submitting cab booking request:")
         Log.d("TravelController", "  Employee: ${cabRequest.employeeName}")
-        Log.d("TravelController", "  Travel Type: ${cabRequest.travelType}")
-        Log.d("TravelController", "  Date: ${cabRequest.travelDate}")
-        Log.d("TravelController", "  Passengers: ${cabRequest.passengerCount}")
-        Log.d("TravelController", "  Cab Type: ${cabRequest.cabType}")
-        Log.d("TravelController", "  Duration: ${cabRequest.duration}")
-        Log.d("TravelController", "  Pickup Locations: ${cabRequest.pickupLocations.size}")
-        Log.d("TravelController", "  Additional Attendees: ${cabRequest.additionalAttendees.size}")
+        Log.d("TravelController", "  Mode of Transport: ${cabRequest.modeOfTransport}")
+        Log.d("TravelController", "  Cab Details: ${cabRequest.cabDetails.size} entries")
+        cabRequest.cabDetails.firstOrNull()?.let { detail ->
+            Log.d("TravelController", "  Travel Type: ${detail.travelType}")
+            Log.d("TravelController", "  Travel Date: ${detail.travelDate}")
+            Log.d("TravelController", "  Cab Type: ${detail.cabType}")
+            Log.d("TravelController", "  Duration: ${detail.duration}")
+            Log.d("TravelController", "  Pickup Locations: ${detail.pickupLocations.size}")
+            Log.d("TravelController", "  Drop Location: ${detail.dropLocation}")
+            Log.d("TravelController", "  Additional Members: ${detail.additionalMembers.size}")
+        }
 
         // Make API call
         RetrofitClient.apiService.submitCabBooking(cabRequest).enqueue(

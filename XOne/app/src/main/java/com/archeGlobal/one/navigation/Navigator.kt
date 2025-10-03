@@ -99,6 +99,8 @@ interface Navigator {
 
     fun navigateToTravelApprovals()
 
+    fun navigateToTravelAdminDashboard()
+
     fun navigateToTravelApprovalDetail()
 
     fun navigateToTravelApprovalDetails()

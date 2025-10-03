@@ -7,7 +7,7 @@ data class SOSRequest(
     @SerializedName("email") val email: String,
     @SerializedName("mobile") val mobile: String,
     @SerializedName("category") val category: String, // Ensure this matches backend
-    @SerializedName("subcategory") val subcategory: String? = null, // New subcategory field
+    @SerializedName("subCategory") val subcategory: String? = null, // New subcategory field
     @SerializedName("query") val query: String, // Ensure this matches backend
     @SerializedName("anonymous") val anonymous: Boolean = false,
 )

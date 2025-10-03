@@ -3,9 +3,9 @@ package com.archeGlobal.one.model
 import com.google.gson.annotations.SerializedName
 
 /**
- * Request model for approving a travel request (V2 API)
+ * Request body for cancelling an approved travel request (Admin only)
  */
-data class TravelApprovalActionRequest(
+data class TravelCancelActionRequest(
     @SerializedName("requestId")
     val requestId: String,
     @SerializedName("token")
@@ -13,5 +13,5 @@ data class TravelApprovalActionRequest(
     @SerializedName("email")
     val email: String,
     @SerializedName("remarks")
-    val remarks: String? = "",
+    val remarks: String,
 )

@@ -1379,6 +1379,27 @@ class HomeActivity : AppCompatActivity() {
                         )
                     }
 
+                    // Add the travel_admin_dashboard route
+                    composable(
+                        route = "travel_admin_dashboard",
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        exitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                        popEnterTransition = {
+                            fadeIn(animationSpec = tween(300))
+                        },
+                        popExitTransition = {
+                            fadeOut(animationSpec = tween(300))
+                        },
+                    ) {
+                        TravelAdminDashboardScreen(
+                            controller = travelController,
+                        )
+                    }
+
                     // Add the travel_approval_detail route
                     composable(
                         route = "travel_approval_detail",

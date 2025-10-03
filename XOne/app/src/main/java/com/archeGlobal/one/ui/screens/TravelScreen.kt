@@ -177,9 +177,26 @@ fun TravelScreen(controller: TravelController) {
                                     .verticalScroll(scrollState)
                                     .padding(16.dp),
                         ) {
-                            // Load travel approvals when the screen is shown to get the latest count
-                            LaunchedEffect(Unit) {
+                            // Load travel approvals and reload isAdmin status when screen is shown and on resume
+                            val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+                            androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+                                val observer =
+                                    androidx.lifecycle.LifecycleEventObserver { _, event ->
+                                        if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                                            // Reload admin status and approval count when screen resumes
+                                            controller.reloadApprovalHistoryCount()
+                                            controller.loadTravelApprovals()
+                                        }
+                                    }
+                                lifecycleOwner.lifecycle.addObserver(observer)
+
+                                // Initial load when screen is first created
+                                controller.reloadApprovalHistoryCount()
                                 controller.loadTravelApprovals()
+
+                                onDispose {
+                                    lifecycleOwner.lifecycle.removeObserver(observer)
+                                }
                             }
 
                             // Add space above Employee Details section
@@ -198,44 +215,85 @@ fun TravelScreen(controller: TravelController) {
                                     fontFamily = GraphikFontFamily,
                                 )
 
-                                // Show approval button only if there is approval history
-                                if (controller.hasApprovalHistory()) {
+                                // Conditionally show Admin Dashboard or Approvals button based on isAdmin flag
+                                // Debug logging
+                                android.util.Log.d("TravelScreen", "Rendering button - isAdmin: ${controller.isAdmin}")
+
+                                if (controller.isAdmin) {
+                                    // Show Admin Dashboard button for admins
+                                    android.util.Log.d("TravelScreen", "Showing Admin Dashboard button")
                                     Box(
                                         modifier =
                                             Modifier
                                                 .background(
-                                                    color = Color(0xFF4CAF50),
+                                                    color = PrimaryRed,
+                                                    shape = RoundedCornerShape(16.dp),
+                                                ).clickable { controller.navigateToTravelAdminDashboard() }
+                                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    ) {
+                                        Text(
+                                            text = "Admin Dashboard",
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            fontFamily = GraphikFontFamily,
+                                        )
+                                    }
+                                } else {
+                                    // Show Approvals button for non-admins (managers)
+                                    android.util.Log.d("TravelScreen", "Showing Approvals button")
+
+                                    // Use green background if there are pending approvals, otherwise red
+                                    val buttonColor = if (controller.pendingApprovalCount > 0) {
+                                        Color(0xFF4CAF50) // Green for pending approvals
+                                    } else {
+                                        PrimaryRed // Red for no pending approvals
+                                    }
+
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .background(
+                                                    color = buttonColor,
                                                     shape = RoundedCornerShape(16.dp),
                                                 ).clickable { controller.navigateToTravelApprovals() }
                                                 .padding(horizontal = 12.dp, vertical = 6.dp),
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                                         ) {
+                                            // Bell icon
+                                            Icon(
+                                                imageVector = Icons.Default.Notifications,
+                                                contentDescription = "Approvals",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+
                                             Text(
-                                                text = "Approval",
+                                                text = "Approvals",
                                                 color = Color.White,
                                                 fontSize = 14.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 fontFamily = GraphikFontFamily,
                                             )
 
-                                            val count = controller.pendingApprovalCount
-                                            if (count > 0) {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Notifications,
-                                                        contentDescription = "Pending approvals",
-                                                        tint = Color.White,
-                                                        modifier = Modifier.size(14.dp),
-                                                    )
-
-                                                    Spacer(modifier = Modifier.width(2.dp))
+                                            // Show pending count badge if there are pending approvals
+                                            if (controller.pendingApprovalCount > 0) {
+                                                Box(
+                                                    modifier =
+                                                        Modifier
+                                                            .background(
+                                                                color = Color.White,
+                                                                shape = RoundedCornerShape(10.dp),
+                                                            )
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                                                ) {
                                                     Text(
-                                                        text = if (count > 99) "99+" else count.toString(),
-                                                        color = Color.White,
-                                                        fontSize = 10.sp,
+                                                        text = controller.pendingApprovalCount.toString(),
+                                                        color = buttonColor,
+                                                        fontSize = 12.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         fontFamily = GraphikFontFamily,
                                                     )
@@ -514,8 +572,10 @@ fun TravelScreen(controller: TravelController) {
                                 }
                             }
 
-                            // Dynamic booking notice and flight options - only show if mode of transport is selected
-                            if (controller.modeOfTransport == "Flight") {
+                            // Only show the rest of the form after Mode of Transport is selected
+                            if (controller.modeOfTransport.isNotEmpty()) {
+                                // Dynamic booking notice and flight options - only show if mode of transport is selected
+                                if (controller.modeOfTransport == "Flight") {
                                 // Booking notice appears immediately after Flight selection
                                 val bookingNotice =
                                     when {
@@ -1308,8 +1368,9 @@ fun TravelScreen(controller: TravelController) {
                                     )
                                 }
                             }
+                            } // Close modeOfTransport.isNotEmpty() conditional - destination fields only
 
-                            // Approval Chain
+                            // Approval Chain (always visible)
                             Text(
                                 text = "Approval Chain",
                                 fontSize = 18.sp,
@@ -2247,46 +2308,54 @@ fun CabBookingSection(controller: TravelController) {
                 }
             }
 
-            // Duration Dropdown (only for local travel)
-            if (controller.isLocalTravel) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = controller.cabDuration,
-                    onValueChange = { },
-                    placeholder = {
-                        Text(
-                            "Duration *",
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Normal,
-                            fontFamily = GraphikFontFamily,
-                        )
-                    },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-                            .clickable(onClick = { controller.toggleCabDurationDropdown() }),
-                    colors =
-                        OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent,
-                            cursorColor = Color.Black,
-                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                            focusedContainerColor = Color(0xFFF5F5F5),
-                            unfocusedTextColor = Color.Black,
-                            focusedTextColor = Color.Black,
-                        ),
-                    shape = RoundedCornerShape(8.dp),
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Dropdown",
-                            tint = Color.Gray,
-                        )
-                    },
-                    readOnly = true,
-                )
+            // Duration Dropdown
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                        .clickable { controller.toggleCabDurationDropdown() }
+                ) {
+                    OutlinedTextField(
+                        value = controller.cabDuration,
+                        onValueChange = { },
+                        placeholder = {
+                            Text(
+                                "Duration *",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                            )
+                        },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                cursorColor = Color.Black,
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black,
+                                disabledContainerColor = Color(0xFFF5F5F5),
+                                disabledTextColor = Color.Black,
+                                disabledBorderColor = Color.Transparent,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
+                        trailingIcon = {
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Dropdown",
+                                tint = Color.Gray,
+                            )
+                        },
+                        readOnly = true,
+                        enabled = false, // Disable text field interaction
+                    )
+                }
 
                 DropdownMenu(
                     expanded = controller.isCabDurationDropdownExpanded,
@@ -2304,7 +2373,6 @@ fun CabBookingSection(controller: TravelController) {
                         )
                     }
                 }
-            }
             }
 
             // Pickup Location 1

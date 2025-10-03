@@ -106,6 +106,8 @@ class PreviewNavigator : Navigator {
 
     override fun navigateToTravelApprovals() {}
 
+    override fun navigateToTravelAdminDashboard() {}
+
     override fun navigateToTravelApprovalDetail() {}
 
     override fun navigateToTravelApprovalConfirm() {}

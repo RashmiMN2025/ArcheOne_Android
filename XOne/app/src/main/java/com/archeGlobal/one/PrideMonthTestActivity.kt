@@ -167,6 +167,8 @@ fun PrideMonthTestScreen() {
 
                 override fun navigateToTravelApprovals() {}
 
+                override fun navigateToTravelAdminDashboard() {}
+
                 override fun navigateToTravelApprovalDetail() {}
 
                 override fun navigateToTravelApprovalDetails() {}

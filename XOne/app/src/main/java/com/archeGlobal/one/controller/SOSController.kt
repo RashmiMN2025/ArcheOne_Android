@@ -92,7 +92,11 @@ class SOSController(
     suspend fun submitEncryptedHelpdeskRequest(request: SOSRequest): Result<SOSResponse> =
         try {
             _isSubmitting.value = true
-            Log.d("SOSController", "Submitting encrypted helpdesk request: ${request.category}")
+            Log.d("SOSController", "Submitting encrypted helpdesk request:")
+            Log.d("SOSController", "  Category: ${request.category}")
+            Log.d("SOSController", "  Subcategory: ${request.subcategory}")
+            Log.d("SOSController", "  Query: ${request.query}")
+            Log.d("SOSController", "  Email: ${request.email}")
 
             val response =
                 encryptedApiService.encryptedRequest(

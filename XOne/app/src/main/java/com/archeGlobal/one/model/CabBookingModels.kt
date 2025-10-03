@@ -3,7 +3,8 @@ package com.archeGlobal.one.model
 import com.google.gson.annotations.SerializedName
 
 /**
- * Enhanced Cab Booking Request Model to match the UI design specifications
+ * Enhanced Cab Booking Request Model to match the /travel/v2/request API endpoint
+ * This matches the unified travel request format that handles both travel and cab bookings
  */
 data class CabBookingRequest(
     @SerializedName("employeeName")
@@ -14,45 +15,50 @@ data class CabBookingRequest(
     val employeeId: String,
     @SerializedName("mobile")
     val mobile: String,
+    @SerializedName("destinations")
+    val destinations: List<Any> = emptyList(), // Empty array for cab bookings
     @SerializedName("projectName")
     val projectName: String? = null,
-    @SerializedName("projectId")
-    val projectId: String? = null,
-    @SerializedName("opportunityId")
-    val opportunityId: String? = null,
-    @SerializedName("crmId")
-    val crmId: String? = null,
+    @SerializedName("projectID")
+    val projectID: String? = null,
+    @SerializedName("opportunityID")
+    val opportunityID: String? = null,
+    @SerializedName("crmID")
+    val crmID: String? = null,
     @SerializedName("businessJustification")
     val businessJustification: String,
-    @SerializedName("serviceType")
-    val serviceType: String = "Cab",
-    @SerializedName("travelType")
-    val travelType: String, // "Local Travel" or "Out of Local Station"
-    @SerializedName("travelDate")
-    val travelDate: String,
-    @SerializedName("passengerCount")
-    val passengerCount: Int, // Number of seats (5, 7, etc.)
-    @SerializedName("additionalAttendees")
-    val additionalAttendees: List<CabAttendee> = emptyList(),
-    @SerializedName("cabType")
-    val cabType: String, // "6 Seater", "7 Seater", etc.
-    @SerializedName("duration")
-    val duration: String, // "4 Hours", "8 Hours"
-    @SerializedName("pickupLocations")
-    val pickupLocations: List<CabLocation>,
-    @SerializedName("dropLocation")
-    val dropLocation: String,
+    @SerializedName("modeOfTransport")
+    val modeOfTransport: String = "Cab",
+    @SerializedName("flightType")
+    val flightType: String? = null,
     @SerializedName("reportingManagerName")
     val reportingManagerName: String,
     @SerializedName("reportingManagerEmail")
     val reportingManagerEmail: String,
+    @SerializedName("stayRequired")
+    val stayRequired: Boolean = false,
+    @SerializedName("cabRequired")
+    val cabRequired: Boolean = true,
     @SerializedName("grade")
     val grade: String,
-    @SerializedName("aadharNumber")
+    @SerializedName("aadhar_number")
     val aadharNumber: String,
-    @SerializedName("dateOfBirth")
+    @SerializedName("date_of_birth")
     val dateOfBirth: String,
+    @SerializedName("frequentFlyerNum")
+    val frequentFlyerNum: String? = null,
+    @SerializedName("mealPreference")
+    val mealPreference: String? = null,
+    @SerializedName("seatPreference")
+    val seatPreference: String? = null,
+    @SerializedName("cabDetails")
+    val cabDetails: List<CabDetail>,
+    @SerializedName("remarks")
+    val remarks: String? = null,
+    @SerializedName("user_location")
+    val userLocation: String? = null,
 )
+
 
 /**
  * Cab Attendee Model for additional passengers
@@ -251,7 +257,7 @@ data class CabHistoryItem(
 }
 
 /**
- * Helper function to create cab booking request
+ * Helper function to create cab booking request matching /travel/v2/request API format
  */
 fun createCabBookingRequest(
     employeeId: String,
@@ -276,29 +282,53 @@ fun createCabBookingRequest(
     grade: String,
     aadharNumber: String,
     dateOfBirth: String,
-): CabBookingRequest =
-    CabBookingRequest(
+): CabBookingRequest {
+    // Convert CabLocation list to simple string addresses
+    val pickupAddresses = pickupLocations.map { it.address }
+
+    // Convert CabAttendee list to AdditionalMember list
+    val additionalMembers = additionalAttendees.map {
+        AdditionalMember(name = it.name)
+    }
+
+    // Create the cabDetails array
+    val cabDetails = listOf(
+        CabDetail(
+            travelType = travelType, // "Local Travel" or "Out of Local Station"
+            cabType = cabType,
+            travelDate = travelDate,
+            duration = duration,
+            pickupLocations = pickupAddresses,
+            dropLocation = dropLocation,
+            additionalMembers = additionalMembers
+        )
+    )
+
+    return CabBookingRequest(
         employeeName = employeeName,
         employeeEmail = employeeEmail,
         employeeId = employeeId,
         mobile = mobile,
+        destinations = emptyList(), // Always empty for cab bookings
         projectName = projectName,
-        projectId = projectId,
-        opportunityId = opportunityId,
-        crmId = crmId,
+        projectID = projectId,
+        opportunityID = opportunityId,
+        crmID = crmId,
         businessJustification = businessJustification,
-        serviceType = "Cab",
-        travelType = travelType,
-        travelDate = travelDate,
-        passengerCount = passengerCount,
-        additionalAttendees = additionalAttendees,
-        cabType = cabType,
-        duration = duration,
-        pickupLocations = pickupLocations,
-        dropLocation = dropLocation,
+        modeOfTransport = "Cab",
+        flightType = null,
         reportingManagerName = reportingManagerName,
         reportingManagerEmail = reportingManagerEmail,
+        stayRequired = false,
+        cabRequired = true,
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
+        frequentFlyerNum = null,
+        mealPreference = null,
+        seatPreference = null,
+        cabDetails = cabDetails,
+        remarks = null,
+        userLocation = null
     )
+}

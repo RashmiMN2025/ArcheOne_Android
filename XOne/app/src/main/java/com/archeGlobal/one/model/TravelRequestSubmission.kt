@@ -38,6 +38,34 @@ data class TravelDetail(
 )
 
 /**
+ * Additional member for cab booking
+ */
+data class AdditionalMember(
+    @SerializedName("name")
+    val name: String,
+)
+
+/**
+ * Cab details for travel request
+ */
+data class CabDetail(
+    @SerializedName("travelType")
+    val travelType: String,
+    @SerializedName("cabType")
+    val cabType: String,
+    @SerializedName("travelDate")
+    val travelDate: String,
+    @SerializedName("duration")
+    val duration: String,
+    @SerializedName("pickupLocations")
+    val pickupLocations: List<String>,
+    @SerializedName("dropLocation")
+    val dropLocation: String,
+    @SerializedName("additionalMembers")
+    val additionalMembers: List<AdditionalMember> = emptyList(),
+)
+
+/**
  * Request model for submitting a new travel request
  * Uses exact format to match working iOS implementation
  */
@@ -51,41 +79,49 @@ data class TravelRequestSubmission(
     @SerializedName("mobile")
     val mobile: String = "",
     @SerializedName("destinations")
-    val travelDetails: List<TravelDetail>,
-    @SerializedName("frequentFlyerNumber")
-    val frequentFlyerNum: String = "",
-    @SerializedName("mealPreference")
-    val mealPref: String = "",
-    @SerializedName("seatPreference")
-    val seatPref: String = "",
+    val travelDetails: List<TravelDetail> = emptyList(),
     @SerializedName("projectName")
-    val projectName: String,
+    val projectName: String = "",
+    @SerializedName("projectID")
+    val projectID: String = "",
+    @SerializedName("opportunityID")
+    val opportunityID: String = "",
+    @SerializedName("crmID")
+    val crmID: String = "",
     @SerializedName("businessJustification")
-    val businessJustification: String,
-    @SerializedName("projectId")
-    val projectId: String = "",
-    @SerializedName("opportunityId")
-    val opportunityId: String = "",
-    @SerializedName("crmId")
-    val crmId: String = "",
+    val businessJustification: String = "",
     @SerializedName("modeOfTransport")
     val modeOfTransport: String,
     @SerializedName("flightType")
     val flightType: String = "",
     @SerializedName("reportingManagerName")
-    val reportingManagerName: String,
+    val reportingManagerName: String = "",
     @SerializedName("reportingManagerEmail")
-    val reportingManagerEmail: String,
+    val reportingManagerEmail: String = "",
     @SerializedName("stayRequired")
-    val stayRequired: Boolean,
+    val stayRequired: Boolean = false,
+    @SerializedName("cabRequired")
+    val cabRequired: Boolean = false,
     @SerializedName("grade")
-    val grade: String,
+    val grade: String = "",
     @SerializedName("aadhar_number")
-    val aadharNumber: String,
+    val aadharNumber: String = "",
     @SerializedName("date_of_birth")
-    val dateOfBirth: String,
+    val dateOfBirth: String = "",
+    @SerializedName("frequentFlyerNum")
+    val frequentFlyerNum: String = "",
+    @SerializedName("mealPreference")
+    val mealPref: String = "",
+    @SerializedName("seatPreference")
+    val seatPref: String = "",
+    @SerializedName("cabDetails")
+    val cabDetails: List<CabDetail> = emptyList(),
+    @SerializedName("remarks")
+    val remarks: String = "",
+    @SerializedName("user_location")
+    val userLocation: String = "",
     @SerializedName("multiTravel")
-    val multiTravel: Boolean,
+    val multiTravel: Boolean = false,
 )
 
 /**
@@ -128,6 +164,7 @@ fun createSingleDestinationRequest(
     reportingManagerName: String,
     reportingManagerEmail: String,
     stayRequired: Boolean,
+    cabRequired: Boolean = false,
     grade: String,
     aadharNumber: String,
     dateOfBirth: String,
@@ -135,6 +172,9 @@ fun createSingleDestinationRequest(
     mealPreference: String,
     seatPreference: String,
     flightTime: String,
+    cabDetails: List<CabDetail> = emptyList(),
+    remarks: String = "",
+    userLocation: String = "",
 ): TravelRequestSubmission {
     val travelDetail =
         TravelDetail(
@@ -151,22 +191,26 @@ fun createSingleDestinationRequest(
         employeeId = employeeId,
         mobile = mobile,
         travelDetails = listOf(travelDetail),
-        frequentFlyerNum = frequentFlyerNumber,
-        mealPref = mealPreference,
-        seatPref = seatPreference,
         projectName = projectName,
+        projectID = projectId,
+        opportunityID = opportunityId,
+        crmID = crmId,
         businessJustification = businessJustification,
-        projectId = projectId,
-        opportunityId = opportunityId,
-        crmId = crmId,
         modeOfTransport = modeOfTransport,
         flightType = "",
         reportingManagerName = reportingManagerName,
         reportingManagerEmail = reportingManagerEmail,
         stayRequired = stayRequired,
+        cabRequired = cabRequired,
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
+        frequentFlyerNum = frequentFlyerNumber,
+        mealPref = mealPreference,
+        seatPref = seatPreference,
+        cabDetails = cabDetails,
+        remarks = remarks,
+        userLocation = userLocation,
         multiTravel = false,
     )
 }
@@ -188,6 +232,7 @@ fun createMultiDestinationRequest(
     reportingManagerName: String,
     reportingManagerEmail: String,
     stayRequired: Boolean,
+    cabRequired: Boolean = false,
     grade: String,
     aadharNumber: String,
     dateOfBirth: String,
@@ -195,6 +240,9 @@ fun createMultiDestinationRequest(
     mealPreference: String,
     seatPreference: String,
     travelDetails: List<TravelDetail>,
+    cabDetails: List<CabDetail> = emptyList(),
+    remarks: String = "",
+    userLocation: String = "",
 ): TravelRequestSubmission =
     TravelRequestSubmission(
         employeeName = employeeName,
@@ -202,21 +250,25 @@ fun createMultiDestinationRequest(
         employeeId = employeeId,
         mobile = mobile,
         travelDetails = travelDetails,
-        frequentFlyerNum = frequentFlyerNumber,
-        mealPref = mealPreference,
-        seatPref = seatPreference,
         projectName = projectName,
+        projectID = projectId,
+        opportunityID = opportunityId,
+        crmID = crmId,
         businessJustification = businessJustification,
-        projectId = projectId,
-        opportunityId = opportunityId,
-        crmId = crmId,
         modeOfTransport = modeOfTransport,
         flightType = "",
         reportingManagerName = reportingManagerName,
         reportingManagerEmail = reportingManagerEmail,
         stayRequired = stayRequired,
+        cabRequired = cabRequired,
         grade = grade,
         aadharNumber = aadharNumber,
         dateOfBirth = dateOfBirth,
+        frequentFlyerNum = frequentFlyerNumber,
+        mealPref = mealPreference,
+        seatPref = seatPreference,
+        cabDetails = cabDetails,
+        remarks = remarks,
+        userLocation = userLocation,
         multiTravel = true,
     )

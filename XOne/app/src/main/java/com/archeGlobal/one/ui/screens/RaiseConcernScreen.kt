@@ -62,6 +62,19 @@ fun RaiseConcernScreen(
     var selectedCategory by remember { mutableStateOf<String?>(prefilledCategory) }
     var selectedSubcategory by remember { mutableStateOf<String?>(prefilledSubcategory) }
     var issueDescription by remember { mutableStateOf("") }
+
+    // Debug logging for initial state
+    LaunchedEffect(Unit) {
+        Log.d("RaiseConcernScreen", "=== INITIAL STATE ===")
+        Log.d("RaiseConcernScreen", "Title: '$title'")
+        Log.d("RaiseConcernScreen", "Source: '$source'")
+        Log.d("RaiseConcernScreen", "Prefilled Category: '$prefilledCategory'")
+        Log.d("RaiseConcernScreen", "Prefilled Subcategory: '$prefilledSubcategory'")
+        Log.d("RaiseConcernScreen", "Selected Category: '$selectedCategory'")
+        Log.d("RaiseConcernScreen", "Selected Subcategory: '$selectedSubcategory'")
+        Log.d("RaiseConcernScreen", "Is Help Desk Ticket: $isHelpDeskTicket")
+        Log.d("RaiseConcernScreen", "===================")
+    }
     var expanded by remember { mutableStateOf(false) }
     var subcategoryExpanded by remember { mutableStateOf(false) }
     val isCategoryLocked = prefilledCategory != null
@@ -141,7 +154,9 @@ fun RaiseConcernScreen(
             val finalSubcategoryMap =
                 subcategoriesFromFAQ
                     .mapValues { (_, subcategories) ->
-                        subcategories.toList().sorted()
+                        subcategories.toList()
+                            .filter { it.isNotBlank() && it != "undefined" }
+                            .sorted()
                     }.toMutableMap()
                     .apply {
                         // Add default subcategories for "Other Issue" category
@@ -171,10 +186,20 @@ fun RaiseConcernScreen(
     // Get available subcategories for selected category
     val availableSubcategories =
         if (source == "asset") {
-            assetSubcategories
+            assetSubcategories.filter { it.isNotBlank() && it != "undefined" }
         } else {
-            selectedCategory?.let { subcategoryMap[it] } ?: emptyList()
+            selectedCategory?.let { subcategoryMap[it] }?.filter { it.isNotBlank() && it != "undefined" } ?: emptyList()
         }
+
+    // Debug logging for available subcategories
+    LaunchedEffect(selectedCategory, availableSubcategories) {
+        Log.d("RaiseConcernScreen", "=== SUBCATEGORY DEBUG ===")
+        Log.d("RaiseConcernScreen", "Selected Category: '$selectedCategory'")
+        Log.d("RaiseConcernScreen", "Available Subcategories: $availableSubcategories")
+        Log.d("RaiseConcernScreen", "Selected Subcategory: '$selectedSubcategory'")
+        Log.d("RaiseConcernScreen", "Is subcategory in list: ${availableSubcategories.contains(selectedSubcategory)}")
+        Log.d("RaiseConcernScreen", "========================")
+    }
 
     // Reset subcategory when category changes (unless it's pre-filled)
     LaunchedEffect(selectedCategory) {
@@ -220,15 +245,18 @@ fun RaiseConcernScreen(
                     email = user.email ?: "",
                     mobile = user.mobile ?: "",
                     category = selectedCategory ?: "Other Issue",
-                    subcategory = selectedSubcategory,
+                    subcategory = selectedSubcategory?.takeIf { it.isNotBlank() },
                     query = issueDescription,
                     anonymous = false, // Help desk tickets are never anonymous
                 )
 
-            Log.d(
-                "RaiseConcern",
-                "Submitting help desk ticket via helpdesk endpoint: Category=$selectedCategory, Subcategory=$selectedSubcategory, Description=$issueDescription",
-            )
+            Log.d("RaiseConcern", "=== HELP DESK TICKET SUBMISSION ===")
+            Log.d("RaiseConcern", "Selected Category: '$selectedCategory'")
+            Log.d("RaiseConcern", "Selected Subcategory: '$selectedSubcategory'")
+            Log.d("RaiseConcern", "Available Subcategories: ${availableSubcategories}")
+            Log.d("RaiseConcern", "Issue Description: '$issueDescription'")
+            Log.d("RaiseConcern", "Request subcategory value: '${request.subcategory}'")
+            Log.d("RaiseConcern", "======================================")
 
             val result = sosController.submitEncryptedHelpdeskRequest(request)
 
@@ -623,7 +651,14 @@ fun RaiseConcernScreen(
                             value = selectedSubcategory ?: "",
                             onValueChange = { },
                             readOnly = true,
-                            placeholder = { Text("Select Sub-Category") },
+                            placeholder = {
+                                Text(
+                                    "Select Sub-Category",
+                                    fontWeight = FontWeight.Medium,
+                                    fontFamily = GraphikFontFamily,
+                                    fontSize = 16.sp,
+                                )
+                            },
                             trailingIcon = {
                                 if (!isSubcategoryLocked) {
                                     Icon(
