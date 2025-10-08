@@ -224,6 +224,13 @@ fun TravelRequestCard(
 
             Divider(modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth())
 
+            // Employee
+            DetailItem(
+                icon = R.drawable.person_3x,
+                label = "Employee",
+                value = travelRequest.employeeName ?: "N/A",
+            )
+
             // Project
             DetailItem(
                 icon = R.drawable.folder_3x,
@@ -231,90 +238,100 @@ fun TravelRequestCard(
                 value = travelRequest.project,
             )
 
-            // Handle single vs multi-destination display
-            val destinations = travelRequest.getAllDestinations()
+            // Mode of Transport
+            DetailItem(
+                icon = R.drawable.car_3x,
+                label = "Mode of Transport",
+                value = travelRequest.modeOfTransport ?: "N/A",
+            )
 
-            if (destinations.isEmpty() || destinations.size == 1) {
-                // Single destination - show origin city and destination city separately
-                if (destinations.isNotEmpty()) {
-                    val destination = destinations[0]
+            // Show trip details only for non-cab bookings
+            if (travelRequest.modeOfTransport?.lowercase() != "cab") {
+                // Handle single vs multi-destination display
+                val destinations = travelRequest.getAllDestinations()
 
-                    // Show origin city if available
-                    if (!destination.originCity.isNullOrEmpty()) {
+                if (destinations.isEmpty() || destinations.size == 1) {
+                    // Single destination - show origin city and destination city separately
+                    if (destinations.isNotEmpty()) {
+                        val destination = destinations[0]
+
+                        // Show origin city if available
+                        if (!destination.originCity.isNullOrEmpty()) {
+                            DetailItem(
+                                icon = R.drawable.mappin_and_ellipse,
+                                label = "Origin City",
+                                value = destination.originCity,
+                            )
+                        }
+
+                        // Show destination city
                         DetailItem(
                             icon = R.drawable.mappin_and_ellipse,
-                            label = "Origin City",
-                            value = destination.originCity,
+                            label = "Destination City",
+                            value = destination.destinationCity,
+                        )
+
+                        // Show travel dates for single destination
+                        if (!destination.departureDate.isNullOrEmpty() && !destination.arrivalDate.isNullOrEmpty()) {
+                            DetailItem(
+                                icon = R.drawable.ic_calendar,
+                                label = "Travel Dates",
+                                value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate),
+                            )
+                        }
+                    } else {
+                        // Fallback for cases without travel details
+                        DetailItem(
+                            icon = R.drawable.mappin_and_ellipse,
+                            label = "Destination",
+                            value = travelRequest.destination,
                         )
                     }
+                } else {
+                    // Multi-destination - show Trip 1, Trip 2, etc.
+                    destinations.forEachIndexed { index, destination ->
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    // Show destination city
-                    DetailItem(
-                        icon = R.drawable.mappin_and_ellipse,
-                        label = "Destination City",
-                        value = destination.destinationCity,
-                    )
+                        Text(
+                            text = "Trip ${index + 1}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 4.dp),
+                        )
 
-                    // Show travel dates for single destination
-                    if (!destination.departureDate.isNullOrEmpty() && !destination.arrivalDate.isNullOrEmpty()) {
+                        // Show origin city if available
+                        if (!destination.originCity.isNullOrEmpty()) {
+                            DetailItem(
+                                icon = R.drawable.mappin_and_ellipse,
+                                label = "Origin City",
+                                value = destination.originCity,
+                            )
+                        }
+
+                        // Show destination city
                         DetailItem(
-                            icon = R.drawable.ic_calendar,
+                            icon = R.drawable.mappin_and_ellipse,
+                            label = "Destination City",
+                            value = destination.destinationCity,
+                        )
+
+                        DetailItem(
+                            icon = R.drawable.airplane_departure,
                             label = "Travel Dates",
                             value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate),
                         )
                     }
-                } else {
-                    // Fallback for cases without travel details
-                    DetailItem(
-                        icon = R.drawable.mappin_and_ellipse,
-                        label = "Destination",
-                        value = travelRequest.destination,
-                    )
                 }
-            } else {
-                // Multi-destination - show Trip 1, Trip 2, etc.
-                destinations.forEachIndexed { index, destination ->
-                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Text(
-                        text = "Trip ${index + 1}",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        fontFamily = GraphikFontFamily,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 4.dp),
-                    )
-
-                    // Show origin city if available
-                    if (!destination.originCity.isNullOrEmpty()) {
-                        DetailItem(
-                            icon = R.drawable.mappin_and_ellipse,
-                            label = "Origin City",
-                            value = destination.originCity,
-                        )
-                    }
-
-                    // Show destination city
-                    DetailItem(
-                        icon = R.drawable.mappin_and_ellipse,
-                        label = "Destination City",
-                        value = destination.destinationCity,
-                    )
-
-                    DetailItem(
-                        icon = R.drawable.airplane_departure,
-                        label = "Travel Dates",
-                        value = DateFormatter.formatTravelDateRange(destination.departureDate, destination.arrivalDate),
-                    )
-                }
+                // Approver - only show for non-cab bookings
+                DetailItem(
+                    icon = R.drawable.approver,
+                    label = "Approver",
+                    value = travelRequest.approver,
+                )
             }
-
-            // Approver
-            DetailItem(
-                icon = R.drawable.approver,
-                label = "Approver",
-                value = travelRequest.approver,
-            )
 
             // Add divider line before Created date
             Divider(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())

@@ -208,25 +208,25 @@ fun TravelApproveScreen(
                             ApprovalDetailRow(
                                 iconRes = R.drawable.person_3x,
                                 label = "Employee",
-                                value = travelRequest.approver ?: "Nova O'Sullivan",
+                                value = travelRequest.employeeName ?: "N/A",
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.person_badge_clock,
                                 label = "Employee ID",
-                                value = "NT9999",
+                                value = travelRequest.employeeId ?: "N/A",
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.envelope_3x,
                                 label = "Email",
-                                value = "webtestuser@arche.global",
+                                value = travelRequest.employeeEmail ?: "N/A",
                             )
 
                             ApprovalDetailRow(
                                 iconRes = R.drawable.phone_3x,
                                 label = "Mobile",
-                                value = "7397768656",
+                                value = travelRequest.employeeMobile ?: "N/A",
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))

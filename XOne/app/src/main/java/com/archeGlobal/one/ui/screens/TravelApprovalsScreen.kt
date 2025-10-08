@@ -437,17 +437,51 @@ fun ApprovalRequestCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // Trip details based on single or multi destination
-            if (request.isMultiDestination()) {
-                MultiDestinationTripDetails(
-                    travelRequest = request,
+            // Mode of Transport
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.car_3x),
+                    contentDescription = "Mode of Transport",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(18.dp),
                 )
-            } else {
-                SingleDestinationTripDetails(
-                    travelRequest = request,
+                Text(
+                    text = "Mode of Transport",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Gray,
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = request.modeOfTransport ?: "N/A",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = GraphikFontFamily,
+                    color = Color.Black,
+                )
+            }
+
+            // Show trip details only for non-cab bookings
+            if (request.modeOfTransport?.lowercase() != "cab") {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Trip details based on single or multi destination
+                if (request.isMultiDestination()) {
+                    MultiDestinationTripDetails(
+                        travelRequest = request,
+                    )
+                } else {
+                    SingleDestinationTripDetails(
+                        travelRequest = request,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

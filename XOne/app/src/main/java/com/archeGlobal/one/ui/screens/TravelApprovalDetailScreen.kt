@@ -16,10 +16,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
 import com.archeGlobal.one.model.TravelStatus
@@ -69,23 +71,21 @@ fun TravelApprovalDetailScreen(
                         ),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(48.dp))
-
                     TopAppBar(
                         title = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = "Travel Approval Details",
-                                    color = Color.Black,
-                                    fontSize = 20.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
+                            Text(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentWidth(Alignment.CenterHorizontally)
+                                        .offset(x = (-24).dp),
+                                text = "Travel Approvals Detail View",
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center,
+                            )
                         },
                         navigationIcon = {
                             IconButton(onClick = { controller.onBackPressed() }) {
@@ -98,16 +98,13 @@ fun TravelApprovalDetailScreen(
                         },
                         backgroundColor = Color.Transparent,
                         elevation = 0.dp,
-                        actions = {
-                            Spacer(modifier = Modifier.width(48.dp))
-                        },
+                        actions = {},
                     )
 
                     Card(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .weight(1f)
                                 .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 1.dp,
@@ -121,60 +118,262 @@ fun TravelApprovalDetailScreen(
                                     .verticalScroll(scrollState)
                                     .padding(16.dp),
                         ) {
-                            // Title
-                            Text(
-                                text = "Approval Details",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = GraphikFontFamily,
-                                modifier = Modifier.padding(bottom = 16.dp),
+                            // Header with ID and Status Badge
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "#${travelRequest.id}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = GraphikFontFamily,
+                                    color = Color.Black,
+                                )
+
+                                // Status Badge
+                                TravelApprovalStatusBadge(status = travelRequest.status)
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Divider line below ticket number/status
+                            androidx.compose.material3.HorizontalDivider(
+                                thickness = 1.dp,
+                                color = Color.LightGray.copy(alpha = 0.5f),
                             )
 
-                            // Request details
-                            DetailRow(label = "Request ID:", value = travelRequest.id)
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            // Debug logging
-                            android.util.Log.d("TravelApprovalDetail", "Showing details for ${travelRequest.id}:")
-                            android.util.Log.d("TravelApprovalDetail", "  employeeName: ${travelRequest.employeeName}")
-                            android.util.Log.d("TravelApprovalDetail", "  employeeId: ${travelRequest.employeeId}")
-                            android.util.Log.d("TravelApprovalDetail", "  employeeEmail: ${travelRequest.employeeEmail}")
-                            android.util.Log.d("TravelApprovalDetail", "  employeeMobile: ${travelRequest.employeeMobile}")
-                            android.util.Log.d("TravelApprovalDetail", "  approver: ${travelRequest.approver}")
+                            // Employee Details
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.person_3x,
+                                label = "Employee",
+                                value = travelRequest.employeeName ?: "N/A",
+                            )
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.person_badge_clock,
+                                label = "Employee ID",
+                                value = travelRequest.employeeId ?: "N/A",
+                            )
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.envelope_3x,
+                                label = "Email",
+                                value = travelRequest.employeeEmail ?: "N/A",
+                            )
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.phone_3x,
+                                label = "Mobile",
+                                value = travelRequest.employeeMobile ?: "N/A",
+                            )
 
-                            DetailRow(label = "Employee:", value = travelRequest.employeeName ?: "N/A")
-                            DetailRow(label = "Employee ID:", value = travelRequest.employeeId ?: "N/A")
-                            DetailRow(label = "Email:", value = travelRequest.employeeEmail ?: "N/A")
-                            DetailRow(label = "Mobile:", value = travelRequest.employeeMobile ?: "N/A")
-                            // Show origin → destination format
-                            val destinationValue =
-                                run {
-                                    val destinations = travelRequest.getAllDestinations()
-                                    if (destinations.isNotEmpty()) {
-                                        val destination = destinations[0]
-                                        if (!destination.originCity.isNullOrEmpty()) {
-                                            "${destination.originCity} → ${destination.destinationCity}"
-                                        } else {
-                                            destination.destinationCity
-                                        }
-                                    } else {
-                                        travelRequest.destination // Fallback
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Divider line
+                            androidx.compose.material3.HorizontalDivider(
+                                thickness = 1.dp,
+                                color = Color.LightGray.copy(alpha = 0.5f),
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Project Details
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.folder_3x,
+                                label = "Project",
+                                value = travelRequest.project,
+                            )
+                            travelRequest.projectId?.let {
+                                if (it.isNotBlank()) {
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.folder_3x,
+                                        label = "Project ID",
+                                        value = it,
+                                    )
+                                }
+                            }
+                            travelRequest.opportunityId?.let {
+                                if (it.isNotBlank()) {
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.folder_3x,
+                                        label = "Opportunity ID",
+                                        value = it,
+                                    )
+                                }
+                            }
+                            travelRequest.crmId?.let {
+                                if (it.isNotBlank()) {
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.folder_3x,
+                                        label = "CRM ID",
+                                        value = it,
+                                    )
+                                }
+                            }
+
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.busjust,
+                                label = "Business Justification",
+                                value = travelRequest.businessJustification ?: "N/A",
+                            )
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.car_3x,
+                                label = "Mode of Transport",
+                                value = travelRequest.modeOfTransport ?: "N/A",
+                            )
+
+                            // Show cab-specific fields if mode of transport is Cab
+                            if (travelRequest.modeOfTransport?.lowercase() == "cab") {
+                                travelRequest.travelType?.let {
+                                    if (it.isNotBlank()) {
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.car_3x,
+                                            label = "Travel Type",
+                                            value = it,
+                                        )
                                     }
                                 }
-                            DetailRow(label = "Origin → Destination:", value = destinationValue)
-                            DetailRow(label = "Project:", value = travelRequest.project)
-                            DetailRow(label = "Business Justification:", value = travelRequest.businessJustification ?: "N/A")
-                            DetailRow(label = "Departure Date:", value = travelRequest.departureDate ?: "N/A")
-                            DetailRow(label = "Return Date:", value = travelRequest.arrivalDate ?: "N/A")
-                            DetailRow(label = "Transport Mode:", value = travelRequest.modeOfTransport ?: "N/A")
-                            DetailRow(label = "Status:", value = travelRequest.status.name)
-                            DetailRow(
-                                label = "Created Date:",
-                                value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(travelRequest.createdDate),
+                                travelRequest.cabType?.let {
+                                    if (it.isNotBlank()) {
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.car_3x,
+                                            label = "Cab Type",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                                travelRequest.duration?.let {
+                                    if (it.isNotBlank()) {
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.person_badge_clock,
+                                            label = "Duration",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                                travelRequest.pickupLocations?.let { locations ->
+                                    if (locations.isNotEmpty()) {
+                                        locations.forEachIndexed { index, location ->
+                                            TravelDetailRowWithIcon(
+                                                iconRes = R.drawable.mappin_and_ellipse,
+                                                label = "Pickup Location ${index + 1}",
+                                                value = location,
+                                            )
+                                        }
+                                    }
+                                }
+                                travelRequest.dropLocation?.let {
+                                    if (it.isNotBlank()) {
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Drop Location",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                                travelRequest.additionalMembers?.let {
+                                    if (it.isNotBlank()) {
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.person_3x,
+                                            label = "Additional Members",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                            } else {
+                                // Show travel destination fields for non-cab bookings
+                                val destinations = travelRequest.getAllDestinations()
+
+                                if (destinations.isEmpty() || destinations.size == 1) {
+                                    val destination = if (destinations.isNotEmpty()) destinations[0] else null
+
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.mappin_and_ellipse,
+                                        label = "Origin City",
+                                        value = destination?.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                    )
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.mappin_and_ellipse,
+                                        label = "Destination City",
+                                        value = destination?.destinationCity ?: travelRequest.destination,
+                                    )
+
+                                    val formattedDepartureDate = formatTravelDate(destination?.departureDate ?: travelRequest.departureDate)
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.airplane_departure,
+                                        label = "Date of Departure",
+                                        value = formattedDepartureDate,
+                                    )
+
+                                    val formattedArrivalDate = formatTravelDate(destination?.arrivalDate ?: travelRequest.arrivalDate)
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.airplane_arrival,
+                                        label = "Date of Arrival",
+                                        value = formattedArrivalDate,
+                                    )
+                                } else {
+                                    // Multi-destination
+                                    destinations.forEachIndexed { index, destination ->
+                                        if (index > 0) {
+                                            androidx.compose.material3.HorizontalDivider(
+                                                modifier = Modifier.padding(vertical = 12.dp),
+                                                thickness = 1.dp,
+                                                color = Color.Gray.copy(alpha = 0.3f),
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "Trip ${index + 1}",
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 14.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            color = Color.Black,
+                                            modifier = Modifier.padding(bottom = 8.dp, top = 4.dp),
+                                        )
+
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Origin City",
+                                            value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                        )
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Destination City",
+                                            value = destination.destinationCity,
+                                        )
+
+                                        val formattedDepartureDate = formatTravelDate(destination.departureDate)
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.airplane_departure,
+                                            label = "Date of Departure",
+                                            value = formattedDepartureDate,
+                                        )
+
+                                        val formattedArrivalDate = formatTravelDate(destination.arrivalDate)
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.airplane_arrival,
+                                            label = "Date of Arrival",
+                                            value = formattedArrivalDate,
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Created Date
+                            val formattedCreatedDate =
+                                formatTravelDate(
+                                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(travelRequest.createdDate),
+                                )
+                            TravelDetailRowWithIcon(
+                                iconRes = R.drawable.calendar_3x,
+                                label = "Created Date",
+                                value = formattedCreatedDate,
                             )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // Action buttons
+                            // Action buttons - only show for pending requests
                             if (travelRequest.status == TravelStatus.PENDING) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -215,69 +414,6 @@ fun TravelApprovalDetailScreen(
                                     }
                                 }
                             }
-
-                            // Cancel button - only show when request is approved and coming from admin dashboard
-                            if (travelRequest.status == TravelStatus.APPROVED && controller.isFromAdminDashboard) {
-                                var cancelRemarks by remember { mutableStateOf("") }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                // Remarks text field
-                                OutlinedTextField(
-                                    value = cancelRemarks,
-                                    onValueChange = { cancelRemarks = it },
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 16.dp),
-                                    placeholder = {
-                                        Text(
-                                            "Enter remark (required)",
-                                            fontFamily = GraphikFontFamily,
-                                            color = Color.Gray.copy(alpha = 0.6f),
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors =
-                                        TextFieldDefaults.outlinedTextFieldColors(
-                                            textColor = Color.Black,
-                                            backgroundColor = Color.White,
-                                            focusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                                            cursorColor = Color.Black,
-                                        ),
-                                    minLines = 4,
-                                    maxLines = 6,
-                                )
-
-                                // Submit Cancellation button
-                                Button(
-                                    onClick = {
-                                        if (cancelRemarks.isNotBlank()) {
-                                            controller.cancelTravelRequest(travelRequest.id, cancelRemarks)
-                                        }
-                                    },
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(48.dp),
-                                    colors =
-                                        ButtonDefaults.buttonColors(
-                                            backgroundColor = Color(0xFF6B7280), // Gray charcoal color
-                                            disabledBackgroundColor = Color(0xFF9CA3AF), // Lighter gray when disabled
-                                        ),
-                                    shape = RoundedCornerShape(8.dp),
-                                    enabled = cancelRemarks.isNotBlank(),
-                                ) {
-                                    Text(
-                                        text = "Submit Cancellation",
-                                        color = Color.White,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 16.sp,
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -287,35 +423,34 @@ fun TravelApprovalDetailScreen(
 }
 
 @Composable
-private fun StatusBadge(status: TravelStatus) {
-    val (backgroundColor, textColor) =
+private fun TravelApprovalStatusBadge(status: TravelStatus) {
+    val (backgroundColor, textColor, text) =
         when (status) {
-            TravelStatus.APPROVED -> Color(0xFF4CD964) to Color.White // Green
-            TravelStatus.REJECTED -> PrimaryRed to Color.White // Red
-            TravelStatus.PENDING -> Color(0xFFFFCC00) to Color.Black // Yellow
-            TravelStatus.CANCELLED -> PrimaryRed to Color.White // Red (same as rejected)
+            TravelStatus.APPROVED -> Triple(Color(0xFFE6F4EA), Color(0xFF34A853), "Approved")
+            TravelStatus.REJECTED -> Triple(Color(0xFFFCE8E6), Color(0xFFEA4335), "Rejected")
+            TravelStatus.PENDING -> Triple(Color(0xFFFEF7E0), Color(0xFFFBBC05), "Pending")
+            TravelStatus.CANCELLED -> Triple(Color(0xFFFCE8E6), Color(0xFFEA4335), "Cancelled")
         }
 
-    Box(
-        modifier =
-            Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(backgroundColor)
-                .padding(horizontal = 12.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center,
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        backgroundColor = backgroundColor,
+        elevation = 0.dp,
     ) {
         Text(
-            text = status.name.lowercase().replaceFirstChar { it.uppercase() },
-            color = textColor,
-            fontSize = 12.sp,
+            text = "Status: $text",
+            fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Medium,
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
     }
 }
 
 @Composable
-private fun DetailRow(
+private fun TravelDetailRowWithIcon(
+    iconRes: Int,
     label: String,
     value: String,
 ) {
@@ -326,41 +461,44 @@ private fun DetailRow(
                 .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = label,
+            tint = Color.Gray,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = label,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
-            modifier = Modifier.width(140.dp),
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.width(130.dp),
         )
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = value,
             fontSize = 14.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
             color = Color.Black,
+            textAlign = TextAlign.End,
         )
     }
 }
 
-private fun String.capitalize(): String = this.lowercase().replaceFirstChar { it.uppercase() }
-
-/**
- * Format date string to "d MMM yyyy" format (e.g., "10 Jun 2025")
- */
-private fun formatDate(dateString: String?): String {
-    if (dateString.isNullOrBlank()) return "N/A"
-
-    try {
-        // Parse the input date string (assuming it's in a standard format like yyyy-MM-dd)
-        val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-        val date = inputFormat.parse(dateString)
-
-        // Format to the desired output format
-        val outputFormat = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.US)
-        return date?.let { outputFormat.format(it) } ?: "N/A"
+// Helper function to format dates consistently
+private fun formatTravelDate(dateString: String?): String {
+    return try {
+        if (dateString.isNullOrEmpty()) return "N/A"
+        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateString)
+        if (date != null) {
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(date)
+        } else {
+            "N/A"
+        }
     } catch (e: Exception) {
-        // If parsing fails, return the original string
-        return dateString
+        "N/A"
     }
 }

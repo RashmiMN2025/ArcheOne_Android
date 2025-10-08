@@ -203,6 +203,21 @@ data class TravelApprovalHistoryItem(
     val arrivalDate: String? = null,
     @SerializedName("flight_time")
     val flightTime: String? = null,
+    // Cab booking fields
+    @SerializedName("travel_type")
+    val travelType: String? = null,
+    @SerializedName("cab_type")
+    val cabType: String? = null,
+    @SerializedName("travel_date")
+    val travelDate: String? = null,
+    @SerializedName("duration")
+    val duration: String? = null,
+    @SerializedName("pickup_locations")
+    val pickupLocations: List<String>? = null,
+    @SerializedName("drop_location")
+    val dropLocation: String? = null,
+    @SerializedName("additional_members")
+    val additionalMembers: String? = null,
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -307,6 +322,17 @@ data class TravelApprovalHistoryItem(
                 employeeEmail = employeeEmail,
                 employeeId = employeeId,
                 employeeMobile = mobile,
+                // Cab booking fields
+                travelType = travelType,
+                cabType = cabType,
+                travelDate = travelDate,
+                duration = duration,
+                pickupLocations = pickupLocations,
+                dropLocation = dropLocation,
+                additionalMembers = additionalMembers,
+                projectId = projectId,
+                opportunityId = opportunityId,
+                crmId = crmId,
             )
 
         // Log what we're actually putting in the TravelRequest
