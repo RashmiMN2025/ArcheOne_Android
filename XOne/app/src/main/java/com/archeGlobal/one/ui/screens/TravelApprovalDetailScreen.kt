@@ -223,8 +223,107 @@ fun TravelApprovalDetailScreen(
                                 value = travelRequest.modeOfTransport ?: "N/A",
                             )
 
-                            // Show cab-specific fields if mode of transport is Cab
-                            if (travelRequest.modeOfTransport?.lowercase() == "cab") {
+                            // Check if this is a cab-only booking or has travel destinations
+                            val hasCabDetails = (travelRequest.travelType != null && travelRequest.travelType.isNotBlank()) ||
+                                               (travelRequest.cabType != null && travelRequest.cabType.isNotBlank()) ||
+                                               (travelRequest.duration != null && travelRequest.duration.isNotBlank()) ||
+                                               (travelRequest.pickupLocations?.isNotEmpty() == true && travelRequest.pickupLocations.any { it.isNotBlank() }) ||
+                                               (travelRequest.dropLocation != null && travelRequest.dropLocation.isNotBlank()) ||
+                                               (travelRequest.additionalMembers != null && travelRequest.additionalMembers.isNotBlank())
+
+                            val destinations = travelRequest.getAllDestinations()
+                            val hasTravelDestinations = destinations.isNotEmpty() &&
+                                                       destinations.any { !it.destinationCity.isNullOrBlank() }
+
+                            // Show travel destination fields if present
+                            if (hasTravelDestinations) {
+                                if (destinations.size == 1) {
+                                    val destination = destinations[0]
+
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.mappin_and_ellipse,
+                                        label = "Origin City",
+                                        value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                    )
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.mappin_and_ellipse,
+                                        label = "Destination City",
+                                        value = destination.destinationCity ?: travelRequest.destination,
+                                    )
+
+                                    val formattedDepartureDate = formatTravelDate(destination.departureDate ?: travelRequest.departureDate)
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.airplane_departure,
+                                        label = "Date of Departure",
+                                        value = formattedDepartureDate,
+                                    )
+
+                                    val formattedArrivalDate = formatTravelDate(destination.arrivalDate ?: travelRequest.arrivalDate)
+                                    TravelDetailRowWithIcon(
+                                        iconRes = R.drawable.airplane_arrival,
+                                        label = "Date of Arrival",
+                                        value = formattedArrivalDate,
+                                    )
+                                } else {
+                                    // Multi-destination
+                                    destinations.forEachIndexed { index, destination ->
+                                        if (index > 0) {
+                                            androidx.compose.material3.HorizontalDivider(
+                                                modifier = Modifier.padding(vertical = 12.dp),
+                                                thickness = 1.dp,
+                                                color = Color.Gray.copy(alpha = 0.3f),
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "Trip ${index + 1}",
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 14.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            color = Color.Black,
+                                            modifier = Modifier.padding(bottom = 8.dp, top = 4.dp),
+                                        )
+
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Origin City",
+                                            value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                        )
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Destination City",
+                                            value = destination.destinationCity,
+                                        )
+
+                                        val formattedDepartureDate = formatTravelDate(destination.departureDate)
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.airplane_departure,
+                                            label = "Date of Departure",
+                                            value = formattedDepartureDate,
+                                        )
+
+                                        val formattedArrivalDate = formatTravelDate(destination.arrivalDate)
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.airplane_arrival,
+                                            label = "Date of Arrival",
+                                            value = formattedArrivalDate,
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Show cab details if present (can be shown along with travel destinations)
+                            if (hasCabDetails) {
+                                // Add divider if we also showed travel destinations
+                                if (hasTravelDestinations) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    androidx.compose.material3.HorizontalDivider(
+                                        thickness = 1.dp,
+                                        color = Color.LightGray.copy(alpha = 0.5f),
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+
                                 travelRequest.travelType?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithIcon(
@@ -254,13 +353,11 @@ fun TravelApprovalDetailScreen(
                                 }
                                 travelRequest.pickupLocations?.let { locations ->
                                     if (locations.isNotEmpty()) {
-                                        locations.forEachIndexed { index, location ->
-                                            TravelDetailRowWithIcon(
-                                                iconRes = R.drawable.mappin_and_ellipse,
-                                                label = "Pickup Location ${index + 1}",
-                                                value = location,
-                                            )
-                                        }
+                                        TravelDetailRowWithIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Pickup Location 1",
+                                            value = locations[0],
+                                        )
                                     }
                                 }
                                 travelRequest.dropLocation?.let {
@@ -281,8 +378,10 @@ fun TravelApprovalDetailScreen(
                                         )
                                     }
                                 }
-                            } else {
-                                // Show travel destination fields for non-cab bookings
+                            }
+
+                            // Handle old format fallback
+                            if (!hasTravelDestinations && !hasCabDetails) {
                                 val destinations = travelRequest.getAllDestinations()
 
                                 if (destinations.isEmpty() || destinations.size == 1) {

@@ -202,7 +202,7 @@ fun TravelScreen(controller: TravelController) {
                             // Add space above Employee Details section
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // Header row with Employee Details and Approval button
+                            // Header row with Employee Details and buttons
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -215,35 +215,33 @@ fun TravelScreen(controller: TravelController) {
                                     fontFamily = GraphikFontFamily,
                                 )
 
-                                // Conditionally show Admin Dashboard or Approvals button based on isAdmin flag
-                                // Debug logging
-                                android.util.Log.d("TravelScreen", "Rendering button - isAdmin: ${controller.isAdmin}")
-
-                                if (controller.isAdmin) {
-                                    // Show Admin Dashboard button for admins
-                                    android.util.Log.d("TravelScreen", "Showing Admin Dashboard button")
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .background(
-                                                    color = PrimaryRed,
-                                                    shape = RoundedCornerShape(16.dp),
-                                                ).clickable { controller.navigateToTravelAdminDashboard() }
-                                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                                    ) {
-                                        Text(
-                                            text = "Admin Dashboard",
-                                            color = Color.White,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            fontFamily = GraphikFontFamily,
-                                        )
+                                // Show both buttons side by side
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    // Admin Dashboard button - only show if isAdmin is true
+                                    if (controller.isAdmin) {
+                                        Box(
+                                            modifier =
+                                                Modifier
+                                                    .background(
+                                                        color = PrimaryRed,
+                                                        shape = RoundedCornerShape(16.dp),
+                                                    ).clickable { controller.navigateToTravelAdminDashboard() }
+                                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                        ) {
+                                            Text(
+                                                text = "Admin",
+                                                color = Color.White,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                fontFamily = GraphikFontFamily,
+                                            )
+                                        }
                                     }
-                                } else {
-                                    // Show Approvals button for non-admins (managers)
-                                    android.util.Log.d("TravelScreen", "Showing Approvals button")
 
-                                    // Use green background if there are pending approvals, otherwise red
+                                    // Approvals button - bell icon with pending count
                                     val buttonColor = if (controller.pendingApprovalCount > 0) {
                                         Color(0xFF4CAF50) // Green for pending approvals
                                     } else {
@@ -257,11 +255,11 @@ fun TravelScreen(controller: TravelController) {
                                                     color = buttonColor,
                                                     shape = RoundedCornerShape(16.dp),
                                                 ).clickable { controller.navigateToTravelApprovals() }
-                                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                                .padding(horizontal = 8.dp, vertical = 6.dp),
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
                                         ) {
                                             // Bell icon
                                             Icon(
@@ -269,14 +267,6 @@ fun TravelScreen(controller: TravelController) {
                                                 contentDescription = "Approvals",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(18.dp),
-                                            )
-
-                                            Text(
-                                                text = "Approvals",
-                                                color = Color.White,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                fontFamily = GraphikFontFamily,
                                             )
 
                                             // Show pending count badge if there are pending approvals
@@ -293,7 +283,7 @@ fun TravelScreen(controller: TravelController) {
                                                     Text(
                                                         text = controller.pendingApprovalCount.toString(),
                                                         color = buttonColor,
-                                                        fontSize = 12.sp,
+                                                        fontSize = 11.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         fontFamily = GraphikFontFamily,
                                                     )

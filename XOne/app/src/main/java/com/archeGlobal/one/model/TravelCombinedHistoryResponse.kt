@@ -32,6 +32,12 @@ data class TravelOrderHistoryItem(
     val mobile: String,
     @SerializedName("project_name")
     val projectName: String,
+    @SerializedName("project_id")
+    val projectId: String? = null,
+    @SerializedName("opportunity_id")
+    val opportunityId: String? = null,
+    @SerializedName("crm_id")
+    val crmId: String? = null,
     @SerializedName("business_justification")
     val businessJustification: String,
     @SerializedName("departure_date")
@@ -66,6 +72,8 @@ data class TravelOrderHistoryItem(
     val frequentFlyerNumber: String?,
     @SerializedName("travelDetails")
     val travelDetails: List<TravelDestination>? = null,
+    @SerializedName("cabDetails")
+    val cabDetails: CabDetails? = null,
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -116,6 +124,15 @@ data class TravelOrderHistoryItem(
                 }
             }
 
+        // Map cab details - prefer nested cabDetails object
+        val cabTravelType = cabDetails?.cabTravelType
+        val cabTypeValue = cabDetails?.cabType
+        val cabDuration = cabDetails?.duration
+        val cabTravelDate = cabDetails?.travelDate
+        val cabPickupLocations = cabDetails?.pickupLocations
+        val cabDropLocation = cabDetails?.dropLocation
+        val cabAdditionalMembers = cabDetails?.additionalMembers?.joinToString(", ")
+
         return TravelRequest(
             id = requestId,
             project = projectName,
@@ -139,9 +156,40 @@ data class TravelOrderHistoryItem(
             employeeEmail = employeeEmail,
             employeeId = employeeId,
             employeeMobile = mobile,
+            // Cab booking fields
+            travelType = cabTravelType,
+            cabType = cabTypeValue,
+            travelDate = cabTravelDate,
+            duration = cabDuration,
+            pickupLocations = cabPickupLocations,
+            dropLocation = cabDropLocation,
+            additionalMembers = cabAdditionalMembers,
+            projectId = projectId,
+            opportunityId = opportunityId,
+            crmId = crmId,
         )
     }
 }
+
+/**
+ * Cab details nested object from API
+ */
+data class CabDetails(
+    @SerializedName("cab_travel_type")
+    val cabTravelType: String? = null,
+    @SerializedName("cab_type")
+    val cabType: String? = null,
+    @SerializedName("duration")
+    val duration: String? = null,
+    @SerializedName("travel_date")
+    val travelDate: String? = null,
+    @SerializedName("pickup_locations")
+    val pickupLocations: List<String>? = null,
+    @SerializedName("drop_location")
+    val dropLocation: String? = null,
+    @SerializedName("additional_members")
+    val additionalMembers: List<String>? = null,
+)
 
 /**
  * Model for approval history items
@@ -196,6 +244,8 @@ data class TravelApprovalHistoryItem(
     val frequentFlyerNumber: String?,
     @SerializedName("travelDetails")
     val travelDetails: List<TravelDestination>? = null,
+    @SerializedName("cabDetails")
+    val cabDetails: CabDetails? = null,
     // Legacy fields for backward compatibility
     @SerializedName("departure_date")
     val departureDate: String? = null,
@@ -203,7 +253,7 @@ data class TravelApprovalHistoryItem(
     val arrivalDate: String? = null,
     @SerializedName("flight_time")
     val flightTime: String? = null,
-    // Cab booking fields
+    // Cab booking fields (root level - for backward compatibility)
     @SerializedName("travel_type")
     val travelType: String? = null,
     @SerializedName("cab_type")
@@ -297,6 +347,15 @@ data class TravelApprovalHistoryItem(
         val depDate = firstDetail?.departureDate ?: departureDate ?: ""
         val arrDate = firstDetail?.arrivalDate ?: arrivalDate ?: ""
 
+        // Map cab details - prefer nested cabDetails object, fall back to root level fields
+        val cabTravelType = cabDetails?.cabTravelType ?: travelType
+        val cabTypeValue = cabDetails?.cabType ?: cabType
+        val cabDuration = cabDetails?.duration ?: duration
+        val cabTravelDate = cabDetails?.travelDate ?: travelDate
+        val cabPickupLocations = cabDetails?.pickupLocations ?: pickupLocations
+        val cabDropLocation = cabDetails?.dropLocation ?: dropLocation
+        val cabAdditionalMembers = cabDetails?.additionalMembers?.joinToString(", ") ?: additionalMembers
+
         val travelRequest =
             TravelRequest(
                 id = requestId,
@@ -322,14 +381,14 @@ data class TravelApprovalHistoryItem(
                 employeeEmail = employeeEmail,
                 employeeId = employeeId,
                 employeeMobile = mobile,
-                // Cab booking fields
-                travelType = travelType,
-                cabType = cabType,
-                travelDate = travelDate,
-                duration = duration,
-                pickupLocations = pickupLocations,
-                dropLocation = dropLocation,
-                additionalMembers = additionalMembers,
+                // Cab booking fields (prefer cabDetails object)
+                travelType = cabTravelType,
+                cabType = cabTypeValue,
+                travelDate = cabTravelDate,
+                duration = cabDuration,
+                pickupLocations = cabPickupLocations,
+                dropLocation = cabDropLocation,
+                additionalMembers = cabAdditionalMembers,
                 projectId = projectId,
                 opportunityId = opportunityId,
                 crmId = crmId,
@@ -360,6 +419,10 @@ data class TravelV2ApprovalHistoryCountResponse(
     val status: Int,
     @SerializedName("approval_history_count")
     val approvalHistoryCount: Int,
+    @SerializedName("pending_history_count")
+    val pendingHistoryCount: Int = 0,
+    @SerializedName("isAdmin")
+    val isAdmin: Boolean = false,
 )
 
 /**

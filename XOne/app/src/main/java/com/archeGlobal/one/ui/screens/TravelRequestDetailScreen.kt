@@ -186,90 +186,104 @@ fun TravelRequestDetailScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // Travel Details - Handle multi-destination vs single destination
+                            // Check if cab details and travel destinations are present
+                            val hasCabDetails = (travelRequest.travelType != null && travelRequest.travelType.isNotBlank()) ||
+                                               (travelRequest.cabType != null && travelRequest.cabType.isNotBlank()) ||
+                                               (travelRequest.duration != null && travelRequest.duration.isNotBlank()) ||
+                                               (travelRequest.pickupLocations?.isNotEmpty() == true && travelRequest.pickupLocations.any { it.isNotBlank() }) ||
+                                               (travelRequest.dropLocation != null && travelRequest.dropLocation.isNotBlank()) ||
+                                               (travelRequest.additionalMembers != null && travelRequest.additionalMembers.isNotBlank())
+
                             val destinations = travelRequest.getAllDestinations()
+                            val hasTravelDestinations = destinations.isNotEmpty() &&
+                                                       destinations.any { !it.destinationCity.isNullOrBlank() }
 
-                            if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination - show separate origin and destination fields
-                                val destination = if (destinations.isNotEmpty()) destinations[0] else null
+                            // Show travel destination fields if present
+                            if (hasTravelDestinations) {
+                                // Travel Details - Handle multi-destination vs single destination
 
-                                // Origin City
-                                DetailRowWithDrawableIcon(
-                                    iconRes = R.drawable.mappin_and_ellipse,
-                                    label = "Origin City",
-                                    value = destination?.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
-                                )
-
-                                // Destination City
-                                DetailRowWithDrawableIcon(
-                                    iconRes = R.drawable.mappin_and_ellipse,
-                                    label = "Destination City",
-                                    value = destination?.destinationCity ?: travelRequest.destination,
-                                )
-
-                                // Format departure date
-                                val formattedDepartureDate = formatDate(destination?.departureDate ?: travelRequest.departureDate)
-                                DetailRowWithDrawableIcon(
-                                    iconRes = R.drawable.airplane_departure,
-                                    label = "Date of Departure",
-                                    value = formattedDepartureDate,
-                                )
-
-                                // Format arrival date
-                                val formattedArrivalDate = formatDate(destination?.arrivalDate ?: travelRequest.arrivalDate)
-                                DetailRowWithDrawableIcon(
-                                    iconRes = R.drawable.airplane_arrival,
-                                    label = "Date of Arrival",
-                                    value = formattedArrivalDate,
-                                )
-                            } else {
-                                // Multi-destination - show Trip 1, Trip 2, etc.
-                                destinations.forEachIndexed { index, destination ->
-                                    if (index > 0) {
-                                        // Add light divider line between trips
-                                        androidx.compose.material3.HorizontalDivider(
-                                            modifier = Modifier.padding(vertical = 12.dp),
-                                            thickness = 1.dp,
-                                            color = Color.Gray.copy(alpha = 0.3f),
-                                        )
-                                    }
-
-                                    Text(
-                                        text = "Trip ${index + 1}",
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 14.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        color = Color.Black,
-                                        modifier = Modifier.padding(bottom = 8.dp, top = 4.dp),
-                                    )
+                                if (destinations.isEmpty() || destinations.size == 1) {
+                                    // Single destination - show separate origin and destination fields
+                                    val destination = if (destinations.isNotEmpty()) destinations[0] else null
 
                                     // Origin City
                                     DetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
                                         label = "Origin City",
-                                        value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                        value = destination?.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
                                     )
 
                                     // Destination City
                                     DetailRowWithDrawableIcon(
                                         iconRes = R.drawable.mappin_and_ellipse,
                                         label = "Destination City",
-                                        value = destination.destinationCity,
+                                        value = destination?.destinationCity ?: travelRequest.destination,
                                     )
 
-                                    val formattedDepartureDate = formatDate(destination.departureDate)
+                                    // Format departure date
+                                    val formattedDepartureDate = formatDate(destination?.departureDate ?: travelRequest.departureDate)
                                     DetailRowWithDrawableIcon(
                                         iconRes = R.drawable.airplane_departure,
                                         label = "Date of Departure",
                                         value = formattedDepartureDate,
                                     )
 
-                                    val formattedArrivalDate = formatDate(destination.arrivalDate)
+                                    // Format arrival date
+                                    val formattedArrivalDate = formatDate(destination?.arrivalDate ?: travelRequest.arrivalDate)
                                     DetailRowWithDrawableIcon(
                                         iconRes = R.drawable.airplane_arrival,
                                         label = "Date of Arrival",
                                         value = formattedArrivalDate,
                                     )
+                                } else {
+                                    // Multi-destination - show Trip 1, Trip 2, etc.
+                                    destinations.forEachIndexed { index, destination ->
+                                        if (index > 0) {
+                                            // Add light divider line between trips
+                                            androidx.compose.material3.HorizontalDivider(
+                                                modifier = Modifier.padding(vertical = 12.dp),
+                                                thickness = 1.dp,
+                                                color = Color.Gray.copy(alpha = 0.3f),
+                                            )
+                                        }
+
+                                        Text(
+                                            text = "Trip ${index + 1}",
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 14.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            color = Color.Black,
+                                            modifier = Modifier.padding(bottom = 8.dp, top = 4.dp),
+                                        )
+
+                                        // Origin City
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Origin City",
+                                            value = destination.originCity?.takeIf { it.isNotEmpty() } ?: "N/A",
+                                        )
+
+                                        // Destination City
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Destination City",
+                                            value = destination.destinationCity,
+                                        )
+
+                                        val formattedDepartureDate = formatDate(destination.departureDate)
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.airplane_departure,
+                                            label = "Date of Departure",
+                                            value = formattedDepartureDate,
+                                        )
+
+                                        val formattedArrivalDate = formatDate(destination.arrivalDate)
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.airplane_arrival,
+                                            label = "Date of Arrival",
+                                            value = formattedArrivalDate,
+                                        )
+                                    }
                                 }
                             }
 
@@ -279,6 +293,34 @@ fun TravelRequestDetailScreen(
                                 label = "Project",
                                 value = travelRequest.project,
                             )
+                            travelRequest.projectId?.let {
+                                if (it.isNotBlank()) {
+                                    DetailRowWithDrawableIcon(
+                                        iconRes = R.drawable.folder_3x,
+                                        label = "Project ID",
+                                        value = it,
+                                    )
+                                }
+                            }
+                            travelRequest.opportunityId?.let {
+                                if (it.isNotBlank()) {
+                                    DetailRowWithDrawableIcon(
+                                        iconRes = R.drawable.folder_3x,
+                                        label = "Opportunity ID",
+                                        value = it,
+                                    )
+                                }
+                            }
+                            travelRequest.crmId?.let {
+                                if (it.isNotBlank()) {
+                                    DetailRowWithDrawableIcon(
+                                        iconRes = R.drawable.folder_3x,
+                                        label = "CRM ID",
+                                        value = it,
+                                    )
+                                }
+                            }
+
                             DetailRowWithDrawableIcon(
                                 iconRes = R.drawable.busjust,
                                 label = "Business Justification",
@@ -289,6 +331,74 @@ fun TravelRequestDetailScreen(
                                 label = "Mode of Transport",
                                 value = travelRequest.modeOfTransport ?: "N/A",
                             )
+
+                            // Show cab-specific fields if any cab details are present
+                            if (hasCabDetails) {
+                                // Add divider if we also showed travel destinations
+                                if (hasTravelDestinations) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    androidx.compose.material3.HorizontalDivider(
+                                        thickness = 1.dp,
+                                        color = Color.LightGray.copy(alpha = 0.5f),
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+
+                                travelRequest.travelType?.let {
+                                    if (it.isNotBlank()) {
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.car_3x,
+                                            label = "Travel Type",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                                travelRequest.cabType?.let {
+                                    if (it.isNotBlank()) {
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.car_3x,
+                                            label = "Cab Type",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                                travelRequest.duration?.let {
+                                    if (it.isNotBlank()) {
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.person_badge_clock,
+                                            label = "Duration",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                                travelRequest.pickupLocations?.let { locations ->
+                                    if (locations.isNotEmpty()) {
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Pickup Location 1",
+                                            value = locations[0],
+                                        )
+                                    }
+                                }
+                                travelRequest.dropLocation?.let {
+                                    if (it.isNotBlank()) {
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            label = "Drop Location",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                                travelRequest.additionalMembers?.let {
+                                    if (it.isNotBlank()) {
+                                        DetailRowWithDrawableIcon(
+                                            iconRes = R.drawable.person_3x,
+                                            label = "Additional Members",
+                                            value = it,
+                                        )
+                                    }
+                                }
+                            }
 
                             // Format created date
                             val formattedCreatedDate =

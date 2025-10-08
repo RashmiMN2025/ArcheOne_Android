@@ -83,6 +83,10 @@ fun LocationsScreen(
             "LocationsScreen",
             "Screen initialized with isEmergencyContact=$isEmergencyContactActual",
         )
+
+        // Ensure data is loaded first (critical for lazy loading)
+        locationController.onServiceAccessed()
+
         locationController.resetState()
 
         // Set the value in the controller
