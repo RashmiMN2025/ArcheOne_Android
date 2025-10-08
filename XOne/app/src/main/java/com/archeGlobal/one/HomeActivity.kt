@@ -73,9 +73,6 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var userDataManager: UserDataManager
     private lateinit var navigator: AndroidNavigator
     private lateinit var helpDeskController: HelpDeskController
-//    private lateinit var orderController: OrderController
-//    private lateinit var consumptionReportController: ConsumptionReportController
-//    private lateinit var smartCollateralcontroller: SmartCollateralController
     private lateinit var meetSpaceController: MeetSpaceController
     private lateinit var preferencesManager: PreferencesManager
 
@@ -370,10 +367,6 @@ class HomeActivity : AppCompatActivity() {
                     navController.navigate(route)
                 }
 
-                // Initialize order controller
-//                orderController = OrderController(this@HomeActivity, navigator, lifecycleScope)
-//                consumptionReportController = ConsumptionReportController(this@HomeActivity, navigator)
-//                smartCollateralcontroller = SmartCollateralController(this)
                 meetSpaceController = MeetSpaceController(this)
 
                 if (intent.getBooleanExtra("showUpdateDialog", false) || preferencesManager.getBoolean("showUpdateDialog", false)) {

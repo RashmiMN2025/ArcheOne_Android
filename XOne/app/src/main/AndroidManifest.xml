@@ -448,6 +448,20 @@
             android:theme="@style/Theme.XOne" />
 
         <activity
+            android:name=".MeetingHistoryActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
+            android:name=".MeetingHistoryDetailActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:label="Meet Space"
+            android:theme="@style/Theme.XOne" />
+
+        <activity
             android:name=".OrderReceivedActivity"
             android:exported="true"
             android:screenOrientation="portrait"

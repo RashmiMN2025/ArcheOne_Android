@@ -64,7 +64,13 @@ import kotlin.math.cos
 import kotlin.math.sin
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.filled.History
+import com.archeGlobal.one.MeetingHistoryActivity
 import com.archeGlobal.one.MeetingRoomListActivity
+import com.archeGlobal.one.ui.theme.PrimaryRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +80,10 @@ fun MeetSpaceScreen(
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+
+    val locations by controller.locations.collectAsState()
+    val isLoading by controller.isLoading.collectAsState()
+    val errorMessage by controller.errorMessage.collectAsState()
 
     var selectedLocation by remember { mutableStateOf("") }
     var showLocationDropdown by remember { mutableStateOf(false) }
@@ -86,6 +96,12 @@ fun MeetSpaceScreen(
 
     val timeFormatter = remember {
         SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
+    }
+    val apiDateTimeFormatter = remember {
+        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+    }
+    val dateFormatter = remember {
+        SimpleDateFormat("yyyy MMM dd", java.util.Locale.getDefault())
     }
     val currentCalendar = remember { Calendar.getInstance() }
     val fromCalendar = remember { currentCalendar.clone() as Calendar }
@@ -101,13 +117,8 @@ fun MeetSpaceScreen(
 
     var numberOfAttendees by remember { mutableStateOf("") }
 
-
-    val locations = listOf("Bengaluru", "New Delhi", "Mumbai", "Bangalore")
+//    val locations = listOf("Bengaluru", "New Delhi", "Mumbai", "Bangalore")
     val meetingTypes = listOf("Internal Meeting", "Meeting with Guest")
-
-    val dateFormatter = remember {
-        SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault())
-    }
 
     fun parseTime(time: String): Triple<Int, Int, Boolean> {
         try {
@@ -354,19 +365,20 @@ fun MeetSpaceScreen(
                 )
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
+
                 TopAppBar(
                     title = {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
+                                modifier = Modifier.offset(x = 24.dp),
                                 text = "MeetSpace",
+                                color = Color.Black,
                                 fontSize = 20.sp,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.Black,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -380,12 +392,33 @@ fun MeetSpaceScreen(
                             )
                         }
                     },
+                    backgroundColor = Color.Transparent,
+                    elevation = 0.dp,
                     actions = {
-                        Spacer(modifier = Modifier.width(48.dp))
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                        Row(
+                            modifier = Modifier
+                                .clickable {
+                                    val intent = Intent(context, MeetingHistoryActivity::class.java)
+                                    context.startActivity(intent)
+                                }
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "History",
+                                color = PrimaryRed,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 16.sp
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Filled.History,
+                                contentDescription = "Booking History",
+                                tint = PrimaryRed
+                            )
+                        }
+                    }
                 )
 
                 Card(
@@ -404,43 +437,138 @@ fun MeetSpaceScreen(
                             .padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Location Dropdown
+                        // Admin Dashboard, Manager Approval, and CEO Approval Buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Button(
+                                onClick = { /* TODO: Implement Admin Dashboard action */ },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Text(
+                                    text = "Admin Dashboard",
+                                    fontSize = 12.sp,
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { /* TODO: Implement Manager Approval action */ },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF1FC01F),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Text(
+                                    text = "Manager Approval",
+                                    fontSize = 12.sp,
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { /* TODO: Implement CEO Approval action */ },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF14B8D5),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Text(
+                                    text = "CEO Approval",
+                                    fontSize = 12.sp,
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Book Meeting Room Heading
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Book Meeting Room",
+                                fontSize = 20.sp,
+                                fontFamily = GraphikFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black
+                            )
+                            Button(
+                                onClick = { /* TODO: Implement action */ },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFDD3825),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Text(
+                                    text = "New Button",
+                                    fontSize = 14.sp,
+                                    color = Color.White,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
                         ExposedDropdownMenuBox(
                             expanded = showLocationDropdown,
                             onExpandedChange = { showLocationDropdown = !showLocationDropdown },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             OutlinedTextField(
-                                value = if (selectedLocation.isEmpty()) "Select Location" else selectedLocation,
-                                onValueChange = { },
-                                readOnly = true,
-                                trailingIcon = {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.dropdown),
-                                        contentDescription = "Dropdown",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color.LightGray,
-                                    focusedBorderColor = Color.LightGray,
-                                    cursorColor = Color.Gray,
-                                    unfocusedTextColor = if (selectedLocation.isEmpty()) Color.LightGray else Color.Black,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedContainerColor = Color.White
-                                ),
-                                textStyle = TextStyle(
-                                    fontSize = 18.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    color = if (selectedLocation.isEmpty()) Color.LightGray else Color.Black,
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()  // Required for positioning the menu
-                            )
+                                    value = if (isLoading) "Loading locations..." else if (selectedLocation.isEmpty()) "Select Location" else selectedLocation,
+                                    onValueChange = { },
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.dropdown),
+                                            contentDescription = "Dropdown",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                    },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.LightGray,
+                                        focusedBorderColor = Color.LightGray,
+                                        cursorColor = Color.Gray,
+                                        unfocusedTextColor = if (selectedLocation.isEmpty()) Color.LightGray else Color.Black,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedContainerColor = Color.White
+                                    ),
+                                    textStyle = TextStyle(
+                                        fontSize = 18.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        color = if (selectedLocation.isEmpty()) Color.LightGray else Color.Black,
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()  // Required for positioning the menu
+                                )
                             ExposedDropdownMenu(
                                 expanded = showLocationDropdown,
                                 onDismissRequest = { showLocationDropdown = false },
@@ -500,7 +628,6 @@ fun MeetSpaceScreen(
                                     unfocusedBorderColor = Color.LightGray,
                                     focusedBorderColor = Color.LightGray,
                                     cursorColor = Color.Gray,
-//                                    unfocusedTextColor = if (selectedMeetingType.isEmpty()) Color.LightGray else Color.Black,
                                     unfocusedContainerColor = Color.White,
                                     focusedContainerColor = Color.White
                                 ),
@@ -800,6 +927,7 @@ fun MeetSpaceScreen(
                             placeholder = {
                                 Text(
                                     "Number of Attendees",
+                                    fontSize = 18.sp,
                                     color = Color.LightGray,
                                     fontFamily = GraphikFontFamily,
                                     fontWeight = FontWeight.Normal,
@@ -875,8 +1003,34 @@ fun MeetSpaceScreen(
                                 }
 
                                 if (missingFields.isEmpty()) {
+                                    val startCal = Calendar.getInstance().apply { time = selectedDate }
+                                    val startTimeCal = Calendar.getInstance().apply {
+                                        time = timeFormatter.parse(fromTime)!!
+                                    }
+                                    startCal.set(Calendar.HOUR_OF_DAY, startTimeCal.get(Calendar.HOUR_OF_DAY))
+                                    startCal.set(Calendar.MINUTE, startTimeCal.get(Calendar.MINUTE))
+                                    startCal.set(Calendar.SECOND, 0)
+
+                                    val endCal = Calendar.getInstance().apply { time = selectedDate }
+                                    val endTimeCal = Calendar.getInstance().apply {
+                                        time = timeFormatter.parse(toTime)!!
+                                    }
+                                    endCal.set(Calendar.HOUR_OF_DAY, endTimeCal.get(Calendar.HOUR_OF_DAY))
+                                    endCal.set(Calendar.MINUTE, endTimeCal.get(Calendar.MINUTE))
+                                    endCal.set(Calendar.SECOND, 0)
+
+                                    val startDateStr = apiDateTimeFormatter.format(startCal.time)
+                                    val endDateStr = apiDateTimeFormatter.format(endCal.time)
+                                    val dateStr = dateFormatter.format(selectedDate)
+
                                     val intent = Intent(context, MeetingRoomListActivity::class.java).apply {
-                                        putExtra("numberOfAttendees", numberOfAttendees)
+                                        putExtra("location", selectedLocation)
+                                        putExtra("date", dateStr)
+                                        putExtra("fromTime", fromTime)
+                                        putExtra("toTime", toTime)
+                                        putExtra("startDate", startDateStr)
+                                        putExtra("endDate", endDateStr)
+                                        putExtra("noOfAttendees", numberOfAttendees)
                                         putExtra("meetingType", selectedMeetingType)
                                     }
                                     context.startActivity(intent)
@@ -900,9 +1054,29 @@ fun MeetSpaceScreen(
                             Text(
                                 text = "Book Meeting Room",
                                 fontSize = 18.sp,
+                                color = Color.White,
                                 fontFamily = GraphikFontFamily,
                                 fontWeight = FontWeight.Medium
                             )
+                        }
+
+                        // Error Message Below Button
+                        if (errorMessage != null) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = errorMessage ?: "Unknown error",
+                                    color = Color(0xFFDD3825),
+                                    fontSize = 16.sp,
+                                    fontFamily = GraphikFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
                 }

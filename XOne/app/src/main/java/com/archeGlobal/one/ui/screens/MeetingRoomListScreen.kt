@@ -24,9 +24,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.MeetingRoomListController
 import com.archeGlobal.one.model.MeetingRoom
+import com.archeGlobal.one.ui.components.UniversalLoader
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
@@ -41,14 +43,9 @@ fun MeetingRoomListScreen(
     onBackPressed: () -> Unit,
     onRoomClick: (MeetingRoom) -> Unit = {}
 ) {
-    val meetingRooms = listOf(
-        MeetingRoom("KAIVALYA", 8, "Display Unit(55 Inch)"),
-        MeetingRoom("ANANDA", 8, "Display Unit(55 Inch)"),
-        MeetingRoom("OJAS", 8, "Display Unit(55 Inch)"),
-        MeetingRoom("CONFERENCE ROOM A", 12, "Display Unit(65 Inch), Video Conferencing"),
-        MeetingRoom("CONFERENCE ROOM B", 10, "Display Unit(55 Inch), Audio System"),
-        MeetingRoom("BOARDROOM", 15, "Display Unit(75 Inch), Video Conferencing, Audio System")
-    )
+    val rooms by controller.rooms.collectAsState()
+    val isLoading by controller.isLoading.collectAsState()
+    val errorMessage by controller.errorMessage.collectAsState()
 
     BackHandler {
         onBackPressed()
@@ -110,9 +107,6 @@ fun MeetingRoomListScreen(
                     )
                 )
 
-                val attendeesInt = numberOfAttendees.toIntOrNull() ?: 0
-                val filteredRooms = meetingRooms.filter { it.capacity <= attendeesInt }
-
                 // Meeting Rooms List
                 LazyColumn(
                     modifier = Modifier
@@ -120,12 +114,34 @@ fun MeetingRoomListScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(filteredRooms) { room ->
+                    items(rooms) { room ->
                         MeetingRoomCard(
                             room = room,
                             onClick = { onRoomClick(room) }
                         )
                     }
+                }
+            }
+
+            if (isLoading) {
+                UniversalLoader(isLoading = true)
+            }
+
+            if (errorMessage != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = errorMessage ?: "Unknown error",
+                        color = Color(0xFFDD3825),
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
@@ -152,7 +168,10 @@ private fun MeetingRoomCard(
         ) {
             // Background image placeholder
             Image(
-                painter = painterResource(id = room.imageRes),
+                painter = rememberAsyncImagePainter(
+                    model = room.imageUrl,
+                    placeholder = painterResource(id = R.drawable.header_home)
+                ),
                 contentDescription = "${room.name} Meeting Room",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -185,7 +204,7 @@ private fun MeetingRoomCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Meeting Room | Capacity: ${room.capacity}",
+                    text = "${room.room_type} | Capacity: ${room.capacity}",
                     fontSize = 16.sp,
                     fontFamily = GraphikFontFamily,
                     fontWeight = FontWeight.Normal,

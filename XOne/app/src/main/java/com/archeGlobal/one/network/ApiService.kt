@@ -3,10 +3,13 @@ package com.archeGlobal.one.network
 import com.archeGlobal.one.model.AddInventoryItemRequest
 import com.archeGlobal.one.model.AddInventoryItemResponse
 import com.archeGlobal.one.model.ApiGreetingCategory
+import com.archeGlobal.one.model.AvailableRoomsRequest
+import com.archeGlobal.one.model.AvailableRoomsResponse
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
+import com.archeGlobal.one.model.LocationsResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
 import com.archeGlobal.one.model.PolicyModel
@@ -14,6 +17,7 @@ import com.archeGlobal.one.model.SOSRequest
 import com.archeGlobal.one.model.SocialContent
 import com.archeGlobal.one.model.SosBlogModel
 import com.archeGlobal.one.model.StockListResponse
+import com.archeGlobal.one.model.SuggestUsersResponse
 import com.archeGlobal.one.model.TravelApprovalActionRequest
 import com.archeGlobal.one.model.TravelApprovalActionResponse
 import com.archeGlobal.one.model.TravelCombinedHistoryResponse
@@ -39,6 +43,7 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.PartMap
 import retrofit2.http.Url
+import retrofit2.http.Query
 
 interface ApiService {
     @GET
@@ -130,9 +135,6 @@ interface ApiService {
     @GET("employee-celebration")
     suspend fun getEmployeeCelebration(): Response<CelebrationResponse>
 
-    // @GET("faq")  // Endpoint returns 404 - FAQ data comes from login response instead
-    // fun getFAQData(): Call<FAQDataResponse>
-
     @POST("tickets")
     fun getTickets(@Body request: TicketsRequest): Call<TicketsResponse>
 
@@ -162,6 +164,21 @@ interface ApiService {
 
     @POST("deskcart/orderlist/updateOrderStatus")
     suspend fun updateDeskCartOrderStatus(@Body request: DeskCartUpdateOrderStatusRequest): Response<DeskCartUpdateOrderStatusResponse>
+
+    @GET("/meeting/v1/locations")
+    suspend fun getMeetingLocations(): Response<LocationsResponse>
+
+    @POST("/meeting/v1/available_rooms")
+    suspend fun getAvailableRooms(@Body request: AvailableRoomsRequest): Response<AvailableRoomsResponse>
+
+    @GET("suggest-users")
+    suspend fun suggestUsers(@Query("name") name: String): Response<SuggestUsersResponse>
+
+    @POST("/meeting/v1/request_booking")
+    suspend fun requestBooking(@Body request: BookingRequest): Response<BookingResponse>
+
+//    @POST("/meeting/v1/booking-history")
+//    suspend fun getBookingHistory(@Body request: BookingHistoryRequest): Response<BookingHistoryResponse>
 }
 
 data class FeedbackRequest(
@@ -519,4 +536,32 @@ data class SmartCollateralCategory(
     val id: Int,
     val name: String,
     val files: List<SmartCollateralFile>
+)
+
+data class BookingRequest(
+    @SerializedName("room_id") val room_id: String ?,
+    @SerializedName("room_name") val room_name: String,
+    @SerializedName("room_location") val room_location: String ?,
+    @SerializedName("host_email") val host_email: String,
+    @SerializedName("meeting_type") val meeting_type: String,
+    @SerializedName("meeting_starttime") val meeting_starttime: String,
+    @SerializedName("meeting_endtime") val meeting_endtime: String,
+    @SerializedName("arche_attendees") val arche_attendees: List<String>,
+    @SerializedName("guest_attendees") val guest_attendees: List<String>,
+    @SerializedName("meeting_subject") val meeting_subject: String = "",
+    @SerializedName("meeting_status") val meeting_status: String? = null,
+    @SerializedName("business_justification") val business_justification: String,
+    @SerializedName("client_name") val client_name: String,
+    @SerializedName("project_name") val project_name: String,
+    @SerializedName("meeting_extension") val meeting_extension: String,
+    @SerializedName("refreshment_required") val refreshment_required: String,
+    @SerializedName("additional_request") val additional_request: String,
+    @SerializedName("approval_status") val approval_status: String = "",
+    @SerializedName("line_manager_email") val line_manager_email: String
+)
+
+data class BookingResponse(
+    val status: Int,
+    val booking_id: String,
+    val message: String
 )
