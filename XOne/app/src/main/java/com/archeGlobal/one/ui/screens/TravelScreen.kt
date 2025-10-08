@@ -2147,6 +2147,21 @@ fun CabBookingSection(controller: TravelController) {
                                 tint = Color.Gray,
                             )
                         },
+                        trailingIcon = {
+                            if (controller.attendeeSearchQuery.isNotEmpty()) {
+                                IconButton(onClick = {
+                                    controller.updateAttendeeSearchQuery("")
+                                    controller.searchSuggestedUsers("")
+                                }) {
+                                    Icon(
+                                        painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
+                                        contentDescription = "Clear",
+                                        tint = Color.Gray,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+                        },
                     )
                 }
 
