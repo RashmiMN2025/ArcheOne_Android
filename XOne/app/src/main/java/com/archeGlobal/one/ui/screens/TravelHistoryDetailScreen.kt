@@ -278,7 +278,7 @@ fun TravelHistoryDetailScreen(
                                 value = travelRequest.businessJustification ?: "N/A",
                             )
                             TravelDetailRowWithDrawableIcon(
-                                iconRes = R.drawable.car_3x,
+                                iconRes = R.drawable.modeoft,
                                 label = "Mode of Transport",
                                 value = travelRequest.modeOfTransport ?: "N/A",
                             )
@@ -298,7 +298,7 @@ fun TravelHistoryDetailScreen(
                                 travelRequest.travelType?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.car_3x,
+                                            iconRes = R.drawable.traveltype,
                                             label = "Travel Type",
                                             value = it,
                                         )
@@ -307,7 +307,7 @@ fun TravelHistoryDetailScreen(
                                 travelRequest.cabType?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.car_3x,
+                                            iconRes = R.drawable.cabtype,
                                             label = "Cab Type",
                                             value = it,
                                         )
@@ -316,7 +316,7 @@ fun TravelHistoryDetailScreen(
                                 travelRequest.duration?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.person_badge_clock,
+                                            iconRes = R.drawable.duration,
                                             label = "Duration",
                                             value = it,
                                         )
@@ -325,7 +325,7 @@ fun TravelHistoryDetailScreen(
                                 travelRequest.pickupLocations?.let { locations ->
                                     if (locations.isNotEmpty()) {
                                         TravelDetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            iconRes = R.drawable.pickupl,
                                             label = "Pickup Location 1",
                                             value = locations[0],
                                         )
@@ -334,7 +334,7 @@ fun TravelHistoryDetailScreen(
                                 travelRequest.dropLocation?.let {
                                     if (it.isNotBlank()) {
                                         TravelDetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            iconRes = R.drawable.dropl,
                                             label = "Drop Location",
                                             value = it,
                                         )
@@ -355,7 +355,7 @@ fun TravelHistoryDetailScreen(
                                                 verticalAlignment = Alignment.Top
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(id = R.drawable.person_3x),
+                                                    painter = painterResource(id = R.drawable.additional),
                                                     contentDescription = "Additional Members",
                                                     tint = Color.Gray,
                                                     modifier = Modifier.size(20.dp),

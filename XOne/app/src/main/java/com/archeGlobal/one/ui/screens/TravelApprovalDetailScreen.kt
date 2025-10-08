@@ -205,7 +205,7 @@ fun TravelApprovalDetailScreen(
                             travelRequest.crmId?.let {
                                 if (it.isNotBlank()) {
                                     TravelDetailRowWithIcon(
-                                        iconRes = R.drawable.folder_3x,
+                                        iconRes = R.drawable.crmid,
                                         label = "CRM ID",
                                         value = it,
                                     )

@@ -762,6 +762,8 @@ class HomeController(
                     if (context is com.archeGlobal.one.HomeActivity) {
                         Log.d("HomeController", "Loading travel data on-demand")
                         context.travelController.onServiceAccessed()
+                        // Load approval count immediately before navigation to prevent button delay
+                        context.travelController.reloadApprovalHistoryCount()
                     }
                     Log.d("HomeController", "Navigating to Travel Screen")
                     navigator.navigateToTravel()

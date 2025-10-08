@@ -305,7 +305,7 @@ fun TravelRequestDetailScreen(
                             travelRequest.opportunityId?.let {
                                 if (it.isNotBlank()) {
                                     DetailRowWithDrawableIcon(
-                                        iconRes = R.drawable.folder_3x,
+                                        iconRes = R.drawable.opportunityid,
                                         label = "Opportunity ID",
                                         value = it,
                                     )
@@ -314,7 +314,7 @@ fun TravelRequestDetailScreen(
                             travelRequest.crmId?.let {
                                 if (it.isNotBlank()) {
                                     DetailRowWithDrawableIcon(
-                                        iconRes = R.drawable.folder_3x,
+                                        iconRes = R.drawable.crmid,
                                         label = "CRM ID",
                                         value = it,
                                     )
@@ -327,7 +327,7 @@ fun TravelRequestDetailScreen(
                                 value = travelRequest.businessJustification ?: "N/A",
                             )
                             DetailRowWithDrawableIcon(
-                                iconRes = R.drawable.car_3x,
+                                iconRes = R.drawable.modeoft,
                                 label = "Mode of Transport",
                                 value = travelRequest.modeOfTransport ?: "N/A",
                             )
@@ -347,7 +347,7 @@ fun TravelRequestDetailScreen(
                                 travelRequest.travelType?.let {
                                     if (it.isNotBlank()) {
                                         DetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.car_3x,
+                                            iconRes = R.drawable.traveltype,
                                             label = "Travel Type",
                                             value = it,
                                         )
@@ -356,7 +356,7 @@ fun TravelRequestDetailScreen(
                                 travelRequest.cabType?.let {
                                     if (it.isNotBlank()) {
                                         DetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.car_3x,
+                                            iconRes = R.drawable.cabtype,
                                             label = "Cab Type",
                                             value = it,
                                         )
@@ -365,7 +365,7 @@ fun TravelRequestDetailScreen(
                                 travelRequest.duration?.let {
                                     if (it.isNotBlank()) {
                                         DetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.person_badge_clock,
+                                            iconRes = R.drawable.duration,
                                             label = "Duration",
                                             value = it,
                                         )
@@ -374,7 +374,7 @@ fun TravelRequestDetailScreen(
                                 travelRequest.pickupLocations?.let { locations ->
                                     if (locations.isNotEmpty()) {
                                         DetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            iconRes = R.drawable.pickupl,
                                             label = "Pickup Location 1",
                                             value = locations[0],
                                         )
@@ -383,7 +383,7 @@ fun TravelRequestDetailScreen(
                                 travelRequest.dropLocation?.let {
                                     if (it.isNotBlank()) {
                                         DetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.mappin_and_ellipse,
+                                            iconRes = R.drawable.dropl,
                                             label = "Drop Location",
                                             value = it,
                                         )
@@ -392,7 +392,7 @@ fun TravelRequestDetailScreen(
                                 travelRequest.additionalMembers?.let {
                                     if (it.isNotBlank()) {
                                         DetailRowWithDrawableIcon(
-                                            iconRes = R.drawable.person_3x,
+                                            iconRes = R.drawable.additional,
                                             label = "Additional Members",
                                             value = it,
                                         )

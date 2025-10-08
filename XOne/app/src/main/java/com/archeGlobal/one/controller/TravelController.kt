@@ -136,8 +136,16 @@ class TravelController(
     var pendingApprovalCount by mutableStateOf(0)
         private set
 
+    // Total count of approval history
+    var totalApprovalCount by mutableStateOf(0)
+        private set
+
     // Flag to indicate if user is an admin (has access to admin dashboard)
     var isAdmin by mutableStateOf(false)
+        private set
+
+    // Flag to indicate if approval count is being loaded
+    var isLoadingApprovalCount by mutableStateOf(true)
         private set
 
     // Flag to prevent concurrent API calls for travel approvals
@@ -670,7 +678,50 @@ class TravelController(
      * Reload approval history count and admin status
      */
     fun reloadApprovalHistoryCount() {
-        loadTravelApprovals()
+        // Set loading state
+        isLoadingApprovalCount = true
+
+        // Create request with employee email
+        val request = TravelV2Request(employeeEmail = employeeEmail)
+
+        // Make the API call to get approval count
+        RetrofitClient.apiService.getTravelV2ApprovalHistoryCount(request).enqueue(
+            object : Callback<com.archeGlobal.one.model.TravelV2ApprovalHistoryCountResponse> {
+                override fun onResponse(
+                    call: Call<com.archeGlobal.one.model.TravelV2ApprovalHistoryCountResponse>,
+                    response: Response<com.archeGlobal.one.model.TravelV2ApprovalHistoryCountResponse>,
+                ) {
+                    isLoadingApprovalCount = false
+                    if (response.isSuccessful) {
+                        response.body()?.let { countResponse ->
+                            if (countResponse.status == 200) {
+                                // Update approval counts
+                                totalApprovalCount = countResponse.approvalHistoryCount
+                                pendingApprovalCount = countResponse.pendingHistoryCount
+
+                                // Update isAdmin status from API response
+                                isAdmin = countResponse.isAdmin
+
+                                Log.d(
+                                    "TravelController",
+                                    "Approval count refreshed: total=$totalApprovalCount, pending=$pendingApprovalCount, isAdmin=$isAdmin",
+                                )
+                            }
+                        }
+                    } else {
+                        Log.e("TravelController", "Failed to reload approval count: ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<com.archeGlobal.one.model.TravelV2ApprovalHistoryCountResponse>,
+                    t: Throwable,
+                ) {
+                    isLoadingApprovalCount = false
+                    Log.e("TravelController", "Error reloading approval count", t)
+                }
+            },
+        )
     }
 
     /**
@@ -810,28 +861,28 @@ class TravelController(
         }
 
         // Debug logging
-        android.util.Log.d("TravelController", "Making V2 Admin History API call")
+        android.util.Log.d("TravelController", "Making V2 Approval History API call")
 
         // Create request with employee email
-        val adminRequest = TravelV2Request(employeeEmail = employeeEmail)
+        val approvalRequest = TravelV2Request(employeeEmail = employeeEmail)
 
-        // Make the API call using v2 admin history endpoint
-        RetrofitClient.apiService.getTravelV2AdminHistory(adminRequest).enqueue(
-            object : Callback<TravelV2AdminHistoryResponse> {
+        // Make the API call using v2 approval history endpoint
+        RetrofitClient.apiService.getTravelV2ApprovalHistory(approvalRequest).enqueue(
+            object : Callback<TravelV2ApprovalHistoryResponse> {
                 override fun onResponse(
-                    call: Call<TravelV2AdminHistoryResponse>,
-                    response: Response<TravelV2AdminHistoryResponse>,
+                    call: Call<TravelV2ApprovalHistoryResponse>,
+                    response: Response<TravelV2ApprovalHistoryResponse>,
                 ) {
                     isLoadingTravelApprovals = false
                     if (response.isSuccessful) {
                         val v2Response = response.body()
                         if (v2Response != null && v2Response.status == 200) {
-                            // Debug logging to see all travel admin history received
-                            android.util.Log.d("TravelController", "=== TRAVEL ADMIN HISTORY API RESPONSE ===")
-                            android.util.Log.d("TravelController", "Total admin history items received: ${v2Response.adminHistory.size}")
+                            // Debug logging to see all travel approval history received
+                            android.util.Log.d("TravelController", "=== TRAVEL APPROVAL HISTORY API RESPONSE ===")
+                            android.util.Log.d("TravelController", "Total approval history items received: ${v2Response.approvalHistory.size}")
 
-                            v2Response.adminHistory.forEachIndexed { index, item ->
-                                android.util.Log.d("TravelController", "Admin History $index:")
+                            v2Response.approvalHistory.forEachIndexed { index, item ->
+                                android.util.Log.d("TravelController", "Approval History $index:")
                                 android.util.Log.d("TravelController", "  Request ID: ${item.requestId}")
                                 android.util.Log.d("TravelController", "  Employee: ${item.employeeName}")
                                 android.util.Log.d("TravelController", "  Mode of Transport: ${item.modeOfTransport}")
@@ -840,8 +891,8 @@ class TravelController(
                                 android.util.Log.d("TravelController", "  Travel Details: ${item.travelDetails?.size ?: 0} destinations")
                             }
 
-                            // Convert API response to UI models (admin history)
-                            val approvalRequests = v2Response.adminHistory.map { it.toTravelRequest() }
+                            // Convert API response to UI models (approval history)
+                            val approvalRequests = v2Response.approvalHistory.map { it.toTravelRequest() }
 
                             // Debug logging for converted requests
                             android.util.Log.d("TravelController", "=== CONVERTED APPROVAL REQUESTS ===")
@@ -861,10 +912,76 @@ class TravelController(
                             // Update pending approvals count
                             pendingApprovalCount = approvalRequests.count { it.status == TravelStatus.PENDING }
 
-                            // Set isAdmin flag if user has approval requests (admin access)
-                            isAdmin = approvalRequests.isNotEmpty()
+                            // Note: isAdmin is now set by reloadApprovalHistoryCount() API call
                         } else {
                             travelApprovalsState = TravelApprovalsState.Error("Failed to load approval requests")
+                        }
+                    } else {
+                        travelApprovalsState = TravelApprovalsState.Error("Error: ${response.code()} ${response.message()}")
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<TravelV2ApprovalHistoryResponse>,
+                    t: Throwable,
+                ) {
+                    isLoadingTravelApprovals = false
+                    Log.e("TravelController", "Error loading travel approvals", t)
+                    travelApprovalsState = TravelApprovalsState.Error("Network error: ${t.message}")
+                }
+            },
+        )
+    }
+
+    /**
+     * Load travel admin dashboard data using /travel/v2/admin/history endpoint
+     */
+    fun loadTravelAdminDashboard() {
+        isLoadingTravelApprovals = true
+        if (travelApprovalsState is TravelApprovalsState.Idle) {
+            travelApprovalsState = TravelApprovalsState.Loading
+        }
+
+        // Debug logging
+        android.util.Log.d("TravelController", "Making V2 Admin History API call")
+
+        // Create request with employee email
+        val adminRequest = TravelV2Request(employeeEmail = employeeEmail)
+
+        // Make the API call using v2 admin history endpoint
+        RetrofitClient.apiService.getTravelV2AdminHistory(adminRequest).enqueue(
+            object : Callback<TravelV2AdminHistoryResponse> {
+                override fun onResponse(
+                    call: Call<TravelV2AdminHistoryResponse>,
+                    response: Response<TravelV2AdminHistoryResponse>,
+                ) {
+                    isLoadingTravelApprovals = false
+                    if (response.isSuccessful) {
+                        val v2Response = response.body()
+                        if (v2Response != null && v2Response.status == 200) {
+                            // Debug logging to see all admin history received
+                            android.util.Log.d("TravelController", "=== TRAVEL ADMIN HISTORY API RESPONSE ===")
+                            android.util.Log.d("TravelController", "Total admin history items received: ${v2Response.adminHistory.size}")
+
+                            v2Response.adminHistory.forEachIndexed { index, item ->
+                                android.util.Log.d("TravelController", "Admin History $index:")
+                                android.util.Log.d("TravelController", "  Request ID: ${item.requestId}")
+                                android.util.Log.d("TravelController", "  Employee: ${item.employeeName}")
+                                android.util.Log.d("TravelController", "  Mode of Transport: ${item.modeOfTransport}")
+                                android.util.Log.d("TravelController", "  Status: ${item.status}")
+                            }
+
+                            // Convert API response to UI models (admin history)
+                            val adminRequests = v2Response.adminHistory.map { it.toTravelRequest() }
+
+                            // Debug logging for converted requests
+                            android.util.Log.d("TravelController", "=== CONVERTED ADMIN REQUESTS ===")
+                            android.util.Log.d("TravelController", "Total converted requests: ${adminRequests.size}")
+                            android.util.Log.d("TravelController", "=== END ADMIN DEBUG ===")
+
+                            travelApprovalsState = TravelApprovalsState.Success(adminRequests)
+                        } else {
+                            travelApprovalsState = TravelApprovalsState.Error("Failed to load admin dashboard")
                         }
                     } else {
                         travelApprovalsState = TravelApprovalsState.Error("Error: ${response.code()} ${response.message()}")
@@ -876,7 +993,7 @@ class TravelController(
                     t: Throwable,
                 ) {
                     isLoadingTravelApprovals = false
-                    Log.e("TravelController", "Error loading travel approvals", t)
+                    Log.e("TravelController", "Error loading admin dashboard", t)
                     travelApprovalsState = TravelApprovalsState.Error("Network error: ${t.message}")
                 }
             },

@@ -177,7 +177,7 @@ fun TravelScreen(controller: TravelController) {
                                     .verticalScroll(scrollState)
                                     .padding(16.dp),
                         ) {
-                            // Load travel approvals and reload isAdmin status when screen is shown and on resume
+                            // Reload isAdmin status and approval count when screen resumes (initial load happens in HomeController before navigation)
                             val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
                             androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
                                 val observer =
@@ -185,14 +185,9 @@ fun TravelScreen(controller: TravelController) {
                                         if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                                             // Reload admin status and approval count when screen resumes
                                             controller.reloadApprovalHistoryCount()
-                                            controller.loadTravelApprovals()
                                         }
                                     }
                                 lifecycleOwner.lifecycle.addObserver(observer)
-
-                                // Initial load when screen is first created
-                                controller.reloadApprovalHistoryCount()
-                                controller.loadTravelApprovals()
 
                                 onDispose {
                                     lifecycleOwner.lifecycle.removeObserver(observer)
@@ -215,79 +210,59 @@ fun TravelScreen(controller: TravelController) {
                                     fontFamily = GraphikFontFamily,
                                 )
 
-                                // Show both buttons side by side
+                                // Show loading indicator or buttons
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    // Admin Dashboard button - only show if isAdmin is true
-                                    if (controller.isAdmin) {
-                                        Box(
-                                            modifier =
-                                                Modifier
-                                                    .background(
-                                                        color = PrimaryRed,
-                                                        shape = RoundedCornerShape(16.dp),
-                                                    ).clickable { controller.navigateToTravelAdminDashboard() }
-                                                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                                        ) {
-                                            Text(
-                                                text = "Admin",
-                                                color = Color.White,
-                                                fontSize = 13.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                fontFamily = GraphikFontFamily,
-                                            )
-                                        }
-                                    }
-
-                                    // Approvals button - bell icon with pending count
-                                    val buttonColor = if (controller.pendingApprovalCount > 0) {
-                                        Color(0xFF4CAF50) // Green for pending approvals
+                                    if (controller.isLoadingApprovalCount) {
+                                        // Show loading indicator while API is being called
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            color = PrimaryRed,
+                                            strokeWidth = 2.dp,
+                                        )
                                     } else {
-                                        PrimaryRed // Red for no pending approvals
-                                    }
+                                        // Show buttons after API completes
+                                        // Admin Dashboard button - only show if isAdmin is true
+                                        if (controller.isAdmin) {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .background(
+                                                            color = PrimaryRed,
+                                                            shape = RoundedCornerShape(16.dp),
+                                                        ).clickable { controller.navigateToTravelAdminDashboard() }
+                                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                            ) {
+                                                Text(
+                                                    text = "Admin",
+                                                    color = Color.White,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontFamily = GraphikFontFamily,
+                                                )
+                                            }
+                                        }
 
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .background(
-                                                    color = buttonColor,
-                                                    shape = RoundedCornerShape(16.dp),
-                                                ).clickable { controller.navigateToTravelApprovals() }
-                                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        ) {
-                                            // Bell icon
-                                            Icon(
-                                                imageVector = Icons.Default.Notifications,
-                                                contentDescription = "Approvals",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(18.dp),
-                                            )
-
-                                            // Show pending count badge if there are pending approvals
-                                            if (controller.pendingApprovalCount > 0) {
-                                                Box(
-                                                    modifier =
-                                                        Modifier
-                                                            .background(
-                                                                color = Color.White,
-                                                                shape = RoundedCornerShape(10.dp),
-                                                            )
-                                                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                                                ) {
-                                                    Text(
-                                                        text = controller.pendingApprovalCount.toString(),
-                                                        color = buttonColor,
-                                                        fontSize = 11.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontFamily = GraphikFontFamily,
-                                                    )
-                                                }
+                                        // Approvals button - only show if user has approval history
+                                        if (controller.totalApprovalCount > 0) {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .background(
+                                                            color = Color(0xFF4CAF50), // Always green
+                                                            shape = RoundedCornerShape(16.dp),
+                                                        ).clickable { controller.navigateToTravelApprovals() }
+                                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                            ) {
+                                                Text(
+                                                    text = "Approve",
+                                                    color = Color.White,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontFamily = GraphikFontFamily,
+                                                )
                                             }
                                         }
                                     }

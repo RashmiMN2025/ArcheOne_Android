@@ -153,13 +153,13 @@ fun TravelAdminDashboardScreen(controller: TravelController) {
                             LifecycleEventObserver { _, event ->
                                 if (event == Lifecycle.Event.ON_RESUME) {
                                     // Load admin dashboard data when screen resumes
-                                    controller.loadTravelApprovals()
+                                    controller.loadTravelAdminDashboard()
                                 }
                             }
                         lifecycleOwner.lifecycle.addObserver(observer)
 
                         // Initial load when screen is first created
-                        controller.loadTravelApprovals()
+                        controller.loadTravelAdminDashboard()
 
                         onDispose {
                             lifecycleOwner.lifecycle.removeObserver(observer)
