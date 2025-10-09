@@ -1,6 +1,5 @@
 package com.archeGlobal.one.ui.screens
 
-import android.app.TimePickerDialog
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -82,6 +81,7 @@ fun MeetSpaceScreen(
     val uriHandler = LocalUriHandler.current
 
     val locations by controller.locations.collectAsState()
+    val userRoles by controller.userRoles.collectAsState()
     val isLoading by controller.isLoading.collectAsState()
     val errorMessage by controller.errorMessage.collectAsState()
 
@@ -98,7 +98,7 @@ fun MeetSpaceScreen(
         SimpleDateFormat("hh:mm a", java.util.Locale.getDefault())
     }
     val apiDateTimeFormatter = remember {
-        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm", java.util.Locale.getDefault())
     }
     val dateFormatter = remember {
         SimpleDateFormat("yyyy MMM dd", java.util.Locale.getDefault())
@@ -398,7 +398,9 @@ fun MeetSpaceScreen(
                         Row(
                             modifier = Modifier
                                 .clickable {
-                                    val intent = Intent(context, MeetingHistoryActivity::class.java)
+                                    val intent = Intent(context, MeetingHistoryActivity::class.java).apply {
+                                        putExtra("source", "history")
+                                    }
                                     context.startActivity(intent)
                                 }
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -438,69 +440,92 @@ fun MeetSpaceScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Admin Dashboard, Manager Approval, and CEO Approval Buttons
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Button(
-                                onClick = { /* TODO: Implement Admin Dashboard action */ },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFDD3825),
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(18.dp)
+                        if (userRoles.size > 1) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = "Admin Dashboard",
-                                    fontSize = 12.sp,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { /* TODO: Implement Manager Approval action */ },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF1FC01F),
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(18.dp)
-                            ) {
-                                Text(
-                                    text = "Manager Approval",
-                                    fontSize = 12.sp,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { /* TODO: Implement CEO Approval action */ },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF14B8D5),
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(18.dp)
-                            ) {
-                                Text(
-                                    text = "CEO Approval",
-                                    fontSize = 12.sp,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
-                                )
+                                if (userRoles.contains("admin")) {
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(context, MeetingHistoryActivity::class.java).apply {
+                                                putExtra("source", "admin")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFDD3825),
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(18.dp)
+                                    ) {
+                                        Text(
+                                            text = "Admin Dashboard",
+                                            fontSize = 12.sp,
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    if (userRoles.size > 1) Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                if (userRoles.contains("line_manager")) {
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(context, MeetingHistoryActivity::class.java).apply {
+                                                putExtra("source", "line_manager")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFF1FC01F),
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(18.dp)
+                                    ) {
+                                        Text(
+                                            text = "Manager Approval",
+                                            fontSize = 12.sp,
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    if (userRoles.size > 1 && userRoles.contains("ceo")) Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                if (userRoles.contains("ceo")) {
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(context, MeetingHistoryActivity::class.java).apply {
+                                                putExtra("source", "ceo")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFF14B8D5),
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(18.dp)
+                                    ) {
+                                        Text(
+                                            text = "CEO Approval",
+                                            fontSize = 12.sp,
+                                            color = Color.White,
+                                            textAlign = TextAlign.Center,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(0.dp))
 
                         // Book Meeting Room Heading
                         Row(
@@ -515,21 +540,46 @@ fun MeetSpaceScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.Black
                             )
-                            Button(
-                                onClick = { /* TODO: Implement action */ },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFDD3825),
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Text(
-                                    text = "New Button",
-                                    fontSize = 14.sp,
-                                    color = Color.White,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium
-                                )
+                            // Show button only if userRoles has exactly one role
+                            if (userRoles.size == 1) {
+                                Button(
+                                    onClick = {
+                                        val source = when {
+                                            userRoles.contains("admin") -> "admin"
+                                            userRoles.contains("line_manager") -> "line_manager"
+                                            userRoles.contains("ceo") -> "ceo"
+                                            else -> "unknown"
+                                        }
+                                        val intent = Intent(context, MeetingHistoryActivity::class.java).apply {
+                                            putExtra("source", source)
+                                        }
+                                        context.startActivity(intent)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = when {
+                                            userRoles.contains("admin") -> Color(0xFFDD3825) // Red for Admin
+                                            userRoles.contains("line_manager") -> Color(0xFF1FC01F) // Green for Manager
+                                            userRoles.contains("ceo") -> Color(0xFF14B8D5) // Cyan for CEO
+                                            else -> Color(0xFFDD3825) // Fallback, though not expected
+                                        },
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(18.dp)
+                                ) {
+                                    Text(
+                                        text = when {
+                                            userRoles.contains("admin") -> "Admin Dashboard"
+                                            userRoles.contains("line_manager") -> "Manager Approval"
+                                            userRoles.contains("ceo") -> "CEO Approval"
+                                            else -> "" // Fallback, though not expected
+                                        },
+                                        fontSize = 12.sp,
+                                        color = Color.White,
+                                        textAlign = TextAlign.Center,
+                                        fontFamily = GraphikFontFamily,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
 
@@ -1009,7 +1059,6 @@ fun MeetSpaceScreen(
                                     }
                                     startCal.set(Calendar.HOUR_OF_DAY, startTimeCal.get(Calendar.HOUR_OF_DAY))
                                     startCal.set(Calendar.MINUTE, startTimeCal.get(Calendar.MINUTE))
-                                    startCal.set(Calendar.SECOND, 0)
 
                                     val endCal = Calendar.getInstance().apply { time = selectedDate }
                                     val endTimeCal = Calendar.getInstance().apply {
@@ -1017,7 +1066,6 @@ fun MeetSpaceScreen(
                                     }
                                     endCal.set(Calendar.HOUR_OF_DAY, endTimeCal.get(Calendar.HOUR_OF_DAY))
                                     endCal.set(Calendar.MINUTE, endTimeCal.get(Calendar.MINUTE))
-                                    endCal.set(Calendar.SECOND, 0)
 
                                     val startDateStr = apiDateTimeFormatter.format(startCal.time)
                                     val endDateStr = apiDateTimeFormatter.format(endCal.time)

@@ -5,11 +5,14 @@ import com.archeGlobal.one.model.AddInventoryItemResponse
 import com.archeGlobal.one.model.ApiGreetingCategory
 import com.archeGlobal.one.model.AvailableRoomsRequest
 import com.archeGlobal.one.model.AvailableRoomsResponse
+import com.archeGlobal.one.model.BookingHistoryResponse
 import com.archeGlobal.one.model.CalendarResponse
 import com.archeGlobal.one.model.CelebrationResponse
 import com.archeGlobal.one.model.CommuniqueModel
 import com.archeGlobal.one.model.EventResponse
 import com.archeGlobal.one.model.LocationsResponse
+import com.archeGlobal.one.model.MeetingApprovalRequest
+import com.archeGlobal.one.model.MeetingApprovalResponse
 import com.archeGlobal.one.model.PasswordResetRequest
 import com.archeGlobal.one.model.PasswordResetResponse
 import com.archeGlobal.one.model.PolicyModel
@@ -40,8 +43,10 @@ import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.PartMap
+import retrofit2.http.Path
 import retrofit2.http.Url
 import retrofit2.http.Query
 
@@ -165,8 +170,8 @@ interface ApiService {
     @POST("deskcart/orderlist/updateOrderStatus")
     suspend fun updateDeskCartOrderStatus(@Body request: DeskCartUpdateOrderStatusRequest): Response<DeskCartUpdateOrderStatusResponse>
 
-    @GET("/meeting/v1/locations")
-    suspend fun getMeetingLocations(): Response<LocationsResponse>
+    @POST("meeting/v1/locations&roles")
+    suspend fun getLocationsAndRoles(@Body request: Map<String, String>): Response<LocationsResponse>
 
     @POST("/meeting/v1/available_rooms")
     suspend fun getAvailableRooms(@Body request: AvailableRoomsRequest): Response<AvailableRoomsResponse>
@@ -177,8 +182,14 @@ interface ApiService {
     @POST("/meeting/v1/request_booking")
     suspend fun requestBooking(@Body request: BookingRequest): Response<BookingResponse>
 
-//    @POST("/meeting/v1/booking-history")
-//    suspend fun getBookingHistory(@Body request: BookingHistoryRequest): Response<BookingHistoryResponse>
+    @POST("meeting/v1/booking-history")
+    suspend fun getBookingHistory(@Body request: Map<String, String>): Response<BookingHistoryResponse>
+
+    @PUT("meeting/v1/meeting_approval_status/{booking_id}")
+    suspend fun updateMeetingApprovalStatus(
+        @Path("booking_id") bookingId: String,
+        @Body request: MeetingApprovalRequest
+    ): Response<MeetingApprovalResponse>
 }
 
 data class FeedbackRequest(

@@ -1,5 +1,6 @@
 package com.archeGlobal.one.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,21 +26,73 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
+import com.archeGlobal.one.model.BookingHistoryItem
+import com.archeGlobal.one.model.MeetingApprovalRequest
+import com.archeGlobal.one.network.RetrofitClient
 import com.archeGlobal.one.ui.theme.GraphikFontFamily
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundBottom
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundMiddle
 import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+
+private fun truncateBookingId(bookingId: String): String {
+    return if (bookingId.length > 16) {
+        "${bookingId.take(16)}..."
+    } else {
+        bookingId
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MeetingHistoryDetailScreen(
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    action: String? = null,
+    booking: BookingHistoryItem? = null,
+    source: String? = null
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
     var enterRemark by remember { mutableStateOf("") }
+
+    val showRemarkAndButton = action == "approve" || action == "reject"
+    val buttonText = if (action == "approve") "Approve" else if (action == "reject") "Reject" else "Cancel"
+    val buttonColor = if (action == "approve") Color(0xFF4CAF50) else if (action == "reject") Color(0xFFDD3825) else Color(0xFFDD3825)
+
+    val archeAttendeesList = remember(booking) {
+        if (booking != null) {
+            try {
+                Gson().fromJson(booking.archeAttendees, Array<String>::class.java).toList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else emptyList()
+    }
+
+    val guestAttendeesList = remember(booking) {
+        if (booking != null) {
+            try {
+                Gson().fromJson(booking.guestAttendees, Array<String>::class.java).toList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else emptyList()
+    }
+
+    val pendingFrom = if (booking?.meetingType == "internal") "Admin" else "Manager/CEO"
+
+    val status = booking?.approvalStatus ?: "Unknown"
+    val (statusBackgroundColor, statusTextColor) = when (status.lowercase()) {
+        "approved" -> Color(0xFF008000).copy(alpha = 0.15f) to Color(0xFF008000)
+        "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f) to Color(0xFFFF0000)
+        else -> Color(0xFFFFA500).copy(alpha = 0.15f) to Color(0xFFFFA500)
+    }
 
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
@@ -116,7 +170,7 @@ fun MeetingHistoryDetailScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "#BOOKING123",
+                                        text = "#${truncateBookingId(booking?.bookingId ?: "Unknown")}",
                                         fontSize = 18.sp,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.SemiBold,
@@ -125,17 +179,17 @@ fun MeetingHistoryDetailScreen(
                                     Card(
                                         shape = RoundedCornerShape(8.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = Color(0xFF008000).copy(alpha = 0.15f)
+                                            containerColor = statusBackgroundColor
                                         ),
                                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                     ) {
                                         Text(
-                                            text = "Status: Approved",
-                                            fontSize = 15.sp,
+                                            text = "Status: $status",
+                                            fontSize = 14.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium,
-                                            color = Color(0xFF008000),
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                            color = statusTextColor,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
                                 }
@@ -153,72 +207,175 @@ fun MeetingHistoryDetailScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black
                                 )
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Room", value = "Conference Room A")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Location", value = "Bengaluru")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Type", value = "External")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Start Time", value = "10 Oct 2025 10:00 AM")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "End Time", value = "10 Oct 2025 11:00 AM")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Arche Attendees", value = "john.doe@arche.com")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Guest Attendees", value = "guest@external.com")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Subject", value = "Client Meeting")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Business Justification", value = "Discuss project milestones")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Client Name", value = "Acme Corp")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Project Name", value = "Project Alpha")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Extension Required", value = "Yes")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Refreshment Required", value = "Yes")
-                                MeetingDetailRow(icon = R.drawable.mappin_and_ellipse, label = "Additional Request", value = "Projector and snacks")
-                                HorizontalDivider(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    thickness = 1.dp,
-                                    color = Color.LightGray
-                                )
-
-                                // Remark Text Field
-                                OutlinedTextField(
-                                    value = enterRemark,
-                                    onValueChange = { enterRemark = it },
-                                    placeholder = {
-                                        Text(
-                                            "Enter remark(optional)",
-                                            color = Color.LightGray,
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal,
-                                        ) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(100.dp),
-                                    maxLines = 4,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = Color.LightGray,
-                                        focusedBorderColor = Color.LightGray,
-                                        cursorColor = Color.Gray,
-                                        unfocusedTextColor = Color.Black,
-                                        focusedTextColor = Color.Black,
-                                        unfocusedContainerColor = Color.White,
-                                        focusedContainerColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-
-                                // Submit Button
-                                Button(
-                                    onClick = { /* TODO: Implement submit action */ },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFDD3825),
-                                        contentColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(24.dp)
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
-                                    Text(
-                                        text = "Submit",
-                                        fontSize = 16.sp,
-                                        fontFamily = GraphikFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color.White
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Room",
+                                        value = booking?.roomName ?: ""
                                     )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Host",
+                                        value = ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Meeting Date",
+                                        value = dateFormate(booking?.meetingStarttime ?: "")
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Meeting Time",
+                                        value = "${formatTime(booking?.meetingStarttime ?: "")} - ${formatTime(booking?.meetingEndtime ?: "")}"
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Meeting Type",
+                                        value = booking?.meetingType ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Arche Attendees",
+                                        value = archeAttendeesList.joinToString(", ")
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Guest Attendees",
+                                        value = guestAttendeesList.joinToString(", ")
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Justification",
+                                        value = booking?.businessJustification ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Extension",
+                                        value = booking?.meetingExtension ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Refreshment",
+                                        value = booking?.refreshmentRequired ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Additional Request",
+                                        value = booking?.additionalRequest ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Subject",
+                                        value = booking?.meetingSubject ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Client Name",
+                                        value = booking?.clientName ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.mappin_and_ellipse,
+                                        label = "Project Name",
+                                        value = booking?.projectName ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.pending,  // Adjust icon
+                                        label = "Pending from",
+                                        value = pendingFrom
+                                    )
+                                }
+
+                                if (showRemarkAndButton) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        thickness = 1.dp,
+                                        color = Color.LightGray
+                                    )
+                                    // Remark Text Field
+                                    OutlinedTextField(
+                                        value = enterRemark,
+                                        onValueChange = { enterRemark = it },
+                                        placeholder = {
+                                            Text(
+                                                "Enter remark(optional)",
+                                                color = Color.LightGray,
+                                                fontFamily = GraphikFontFamily,
+                                                fontWeight = FontWeight.Normal,
+                                            )
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(100.dp),
+                                        maxLines = 4,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            unfocusedBorderColor = Color.LightGray,
+                                            focusedBorderColor = Color.LightGray,
+                                            cursorColor = Color.Gray,
+                                            unfocusedTextColor = Color.Black,
+                                            focusedTextColor = Color.Black,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedContainerColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+
+                                    // Submit Button
+                                    Button(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                try {
+                                                    val userRole = when (source) {
+                                                        "history" -> "user"
+                                                        "admin" -> "admin"
+                                                        "line_manager" -> "line_manager"
+                                                        "ceo" -> "ceo"
+                                                        else -> "user"
+                                                    }
+                                                    val responseStr = when (buttonText) {
+                                                        "Approve" -> "approved"
+                                                        "Reject" -> "rejected"
+                                                        "Cancel" -> "canceled"
+                                                        else -> return@launch
+                                                    }
+                                                    val request = MeetingApprovalRequest(
+                                                        designation = userRole,
+                                                        response = responseStr,
+                                                        remark = if (enterRemark.isNotBlank()) enterRemark else null
+                                                    )
+                                                    val apiResponse = RetrofitClient.apiService.updateMeetingApprovalStatus(
+                                                        booking?.bookingId ?: return@launch,
+                                                        request
+                                                    )
+                                                    if (apiResponse.isSuccessful) {
+                                                        Toast.makeText(context, "$responseStr successful", Toast.LENGTH_SHORT).show()
+                                                        onBackPressed()
+                                                    } else {
+                                                        Toast.makeText(context, "Error: ${apiResponse.message()}", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = buttonColor,
+                                            contentColor = Color.White
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    ) {
+                                        Text(
+                                            text = buttonText,
+                                            fontSize = 16.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color.White
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -226,6 +383,28 @@ fun MeetingHistoryDetailScreen(
                 }
             }
         }
+    }
+}
+
+private fun dateFormate(timeStr: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+        val date = inputFormat.parse(timeStr) ?: return ""
+        val outputFormat = SimpleDateFormat("yyyy MMM dd", Locale.getDefault())
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        ""
+    }
+}
+
+private fun formatTime(timeStr: String): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+        val date = inputFormat.parse(timeStr) ?: return ""
+        val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        ""
     }
 }
 
@@ -237,8 +416,8 @@ fun MeetingDetailRow(
 ) {
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
-//            .padding(vertical = 6.dp),
+            .fillMaxWidth()
+            .padding(vertical = 0.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

@@ -72,8 +72,8 @@ fun MeetingRoomScreen(
     toTime: String,
     noOfAttendees: String,
     meetingType: String,
-    startDate: String,  // Added: "yyyy-MM-dd HH:mm:ss"
-    endDate: String,    // Added: "yyyy-MM-dd HH:mm:ss"
+    startDate: String,
+    endDate: String,
     onBackPressed: () -> Unit,
     onSubmit: () -> Unit = {}
 ) {

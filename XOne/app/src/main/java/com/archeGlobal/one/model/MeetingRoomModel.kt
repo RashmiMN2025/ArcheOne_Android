@@ -1,6 +1,6 @@
 package com.archeGlobal.one.model
 
-import com.archeGlobal.one.R
+import com.google.gson.annotations.SerializedName
 
 data class MeetingRoom(
     val room_type: String,
@@ -16,7 +16,8 @@ data class MeetingRoom(
 data class LocationsResponse(
     val status: Int,
     val message: String,
-    val data: List<String>
+    val data: List<String>,
+    val userRoles: List<String>
 )
 
 data class AvailableRoomsRequest(
@@ -50,3 +51,60 @@ data class UserInfo(
 
 // Directly use List<UserData> for the API response
 typealias SuggestUsersResponse = List<UserInfo>
+
+data class BookingHistoryItem(
+    @SerializedName("booking_id")
+    val bookingId: String,
+    @SerializedName("room_name")
+    val roomName: String,
+    @SerializedName("host_email")
+    val hostEmail: String,
+    @SerializedName("meeting_type")
+    val meetingType: String,
+    @SerializedName("meeting_starttime")
+    val meetingStarttime: String,
+    @SerializedName("meeting_endtime")
+    val meetingEndtime: String,
+    @SerializedName("arche_attendees")
+    val archeAttendees: String,
+    @SerializedName("guest_attendees")
+    val guestAttendees: String,
+    @SerializedName("meeting_subject")
+    val meetingSubject: String,
+    @SerializedName("meeting_status")
+    val meetingStatus: String,
+    @SerializedName("business_justification")
+    val businessJustification: String,
+    @SerializedName("client_name")
+    val clientName: String,
+    @SerializedName("project_name")
+    val projectName: String,
+    @SerializedName("meeting_extension")
+    val meetingExtension: String,
+    @SerializedName("refreshment_required")
+    val refreshmentRequired: String,
+    @SerializedName("additional_request")
+    val additionalRequest: String,
+    @SerializedName("approval_status")
+    val approvalStatus: String,
+    @SerializedName("room_id")
+    val roomId: String,
+    @SerializedName("remark")
+    val remark: String
+)
+
+data class BookingHistoryResponse(
+    val status: Int,
+    val data: List<BookingHistoryItem>
+)
+
+data class MeetingApprovalRequest(
+    val designation: String,
+    val response: String,
+    val remark: String? = null  // Optional remark
+)
+
+data class MeetingApprovalResponse(
+    val status: Int,
+    val message: String
+)
