@@ -59,8 +59,12 @@ data class CabDetail(
     val duration: String,
     @SerializedName("pickupLocations")
     val pickupLocations: List<String>,
+    @SerializedName("pickupMapDetails")
+    val pickupMapDetails: List<String> = emptyList(),
     @SerializedName("dropLocation")
     val dropLocation: String,
+    @SerializedName("dropMapDetails")
+    val dropMapDetails: String = "",
     @SerializedName("additionalMembers")
     val additionalMembers: List<AdditionalMember> = emptyList(),
 )

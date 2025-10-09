@@ -194,80 +194,114 @@ fun TravelScreen(controller: TravelController) {
                                 }
                             }
 
-                            // Add space above Employee Details section
-                            Spacer(modifier = Modifier.height(24.dp))
+                            // Add space above buttons
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                            // Header row with Employee Details and buttons
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "Employee Details",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontFamily = GraphikFontFamily,
-                                )
-
-                                // Show loading indicator or buttons
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
+                            // Manager Approval and Admin Dashboard buttons with loading state
+                            if (controller.isLoadingApprovalCount) {
+                                // Show loader while fetching approval count
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    if (controller.isLoadingApprovalCount) {
-                                        // Show loading indicator while API is being called
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(20.dp),
-                                            color = PrimaryRed,
-                                            strokeWidth = 2.dp,
-                                        )
-                                    } else {
-                                        // Show buttons after API completes
-                                        // Admin Dashboard button - only show if isAdmin is true
-                                        if (controller.isAdmin) {
-                                            Box(
-                                                modifier =
-                                                    Modifier
-                                                        .background(
-                                                            color = PrimaryRed,
-                                                            shape = RoundedCornerShape(16.dp),
-                                                        ).clickable { controller.navigateToTravelAdminDashboard() }
-                                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(28.dp),
+                                        strokeWidth = 3.dp,
+                                        color = Color(0xFFD32F2F)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(20.dp))
+                            } else if (controller.totalApprovalCount > 0 || controller.isAdmin) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Manager Approval button - only show if user has approval history
+                                    if (controller.totalApprovalCount > 0) {
+                                        Box(
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Button(
+                                                onClick = { controller.navigateToTravelApprovals() },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(48.dp),
+                                                shape = RoundedCornerShape(8.dp),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color.White,
+                                                    contentColor = Color.Black
+                                                ),
+                                                border = BorderStroke(1.dp, Color.LightGray)
                                             ) {
                                                 Text(
-                                                    text = "Admin",
-                                                    color = Color.White,
+                                                    text = "Manager Approval",
                                                     fontSize = 13.sp,
                                                     fontWeight = FontWeight.Medium,
-                                                    fontFamily = GraphikFontFamily,
+                                                    fontFamily = GraphikFontFamily
                                                 )
                                             }
-                                        }
 
-                                        // Approvals button - only show if user has approval history
-                                        if (controller.totalApprovalCount > 0) {
-                                            Box(
-                                                modifier =
-                                                    Modifier
+                                            // Notification badge - shows pending count
+                                            if (controller.pendingApprovalCount > 0) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .align(Alignment.CenterEnd)
+                                                        .offset(x = (-12).dp)
+                                                        .size(24.dp)
                                                         .background(
-                                                            color = Color(0xFF4CAF50), // Always green
-                                                            shape = RoundedCornerShape(16.dp),
-                                                        ).clickable { controller.navigateToTravelApprovals() }
-                                                        .padding(horizontal = 10.dp, vertical = 8.dp),
-                                            ) {
-                                                Text(
-                                                    text = "Approve",
-                                                    color = Color.White,
-                                                    fontSize = 13.sp,
-                                                    fontWeight = FontWeight.Medium,
-                                                    fontFamily = GraphikFontFamily,
-                                                )
+                                                            color = Color.Red,
+                                                            shape = RoundedCornerShape(12.dp)
+                                                        ),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = controller.pendingApprovalCount.toString(),
+                                                        color = Color.White,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = GraphikFontFamily
+                                                    )
+                                                }
                                             }
                                         }
                                     }
+
+                                    // Admin Dashboard button - only show if isAdmin is true
+                                    if (controller.isAdmin) {
+                                        Button(
+                                            onClick = { controller.navigateToTravelAdminDashboard() },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(48.dp),
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.White,
+                                                contentColor = Color.Black
+                                            ),
+                                            border = BorderStroke(1.dp, Color.LightGray)
+                                        ) {
+                                            Text(
+                                                text = "Admin Dashboard",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                fontFamily = GraphikFontFamily
+                                            )
+                                        }
+                                    }
                                 }
+
+                                Spacer(modifier = Modifier.height(20.dp))
                             }
+
+                            // Employee Details header
+                            Text(
+                                text = "Employee Details",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = GraphikFontFamily,
+                            )
 
                             // Add space between Employee Details header and employee rows
                             Spacer(modifier = Modifier.height(16.dp))
@@ -2356,34 +2390,87 @@ fun CabBookingSection(controller: TravelController) {
             }
 
             // Pickup Location 1
-            OutlinedTextField(
-                value = controller.pickupLocation,
-                onValueChange = { controller.updatePickupLocation(it) },
-                placeholder = {
-                    Text(
-                        "Pickup Location 1 *",
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Normal,
-                        fontFamily = GraphikFontFamily,
-                    )
-                },
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
-                        cursorColor = Color.Black,
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedTextColor = Color.Black,
-                        focusedTextColor = Color.Black,
-                    ),
-                shape = RoundedCornerShape(8.dp),
+            Text(
+                text = "Pickup Location 1",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+
+            // White card containing Location and Map Details
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                backgroundColor = Color.White,
+                elevation = 0.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    OutlinedTextField(
+                        value = controller.pickupLocation,
+                        onValueChange = { controller.updatePickupLocation(it) },
+                        placeholder = {
+                            Text(
+                                "Location *",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                            )
+                        },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                cursorColor = Color.Black,
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
+                    )
+
+                    OutlinedTextField(
+                        value = controller.pickupMapDetails,
+                        onValueChange = { controller.updatePickupMapDetails(it) },
+                        placeholder = {
+                            Text(
+                                "Map Details",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                            )
+                        },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                cursorColor = Color.Black,
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
+                    )
+                }
+            }
 
             // Add Pickup Location Button (only for local travel)
             if (controller.isLocalTravel) {
@@ -2421,19 +2508,140 @@ fun CabBookingSection(controller: TravelController) {
             // Additional Pickup Locations (only for local travel)
             if (controller.isLocalTravel) {
                 controller.cabPickupLocations.forEachIndexed { index, location ->
-                Row(
-                    modifier =
-                        Modifier
+                    // Header with title and delete button
+                    Row(
+                        modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Pickup Location ${index + 2}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = GraphikFontFamily,
+                            color = Color.Black,
+                        )
+
+                        IconButton(
+                            onClick = { controller.removePickupLocation(location.id) },
+                            modifier = Modifier.size(24.dp),
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.bin),
+                                contentDescription = "Remove Pickup Location",
+                                tint = Color.Red,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+
+                    // White card containing Location and Map Details
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        backgroundColor = Color.White,
+                        elevation = 0.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = location.address,
+                                onValueChange = { controller.updatePickupLocationAddress(location.id, it) },
+                                placeholder = {
+                                    Text(
+                                        "Location *",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                    )
+                                },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 12.dp)
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                                colors =
+                                    OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
+                            )
+
+                            OutlinedTextField(
+                                value = location.mapDetails,
+                                onValueChange = { controller.updatePickupLocationMapDetails(location.id, it) },
+                                placeholder = {
+                                    Text(
+                                        "Map Details",
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Normal,
+                                        fontFamily = GraphikFontFamily,
+                                    )
+                                },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                                colors =
+                                    OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = Color.Transparent,
+                                        cursorColor = Color.Black,
+                                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                                        focusedContainerColor = Color(0xFFF5F5F5),
+                                        unfocusedTextColor = Color.Black,
+                                        focusedTextColor = Color.Black,
+                                    ),
+                                shape = RoundedCornerShape(8.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Drop Location
+            Text(
+                text = "Drop Location",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = GraphikFontFamily,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // White card containing Location and Map Details
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                backgroundColor = Color.White,
+                elevation = 0.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
                     OutlinedTextField(
-                        value = location.address,
-                        onValueChange = { controller.updatePickupLocationAddress(location.id, it) },
+                        value = controller.finalDropLocation,
+                        onValueChange = { controller.updateFinalDropLocation(it) },
                         placeholder = {
                             Text(
-                                "Pickup Location ${index + 2}",
+                                "Location *",
                                 color = Color.Gray,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = GraphikFontFamily,
@@ -2441,8 +2649,8 @@ fun CabBookingSection(controller: TravelController) {
                         },
                         modifier =
                             Modifier
-                                .weight(1f)
-                                .padding(end = 8.dp)
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
                                 .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
                         colors =
                             OutlinedTextFieldDefaults.colors(
@@ -2457,50 +2665,35 @@ fun CabBookingSection(controller: TravelController) {
                         shape = RoundedCornerShape(8.dp),
                     )
 
-                    IconButton(
-                        onClick = { controller.removePickupLocation(location.id) },
-                        modifier = Modifier.size(24.dp),
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.bin),
-                            contentDescription = "Remove Pickup Location",
-                            tint = Color.Red,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
+                    OutlinedTextField(
+                        value = controller.dropMapDetails,
+                        onValueChange = { controller.updateDropMapDetails(it) },
+                        placeholder = {
+                            Text(
+                                "Map Details",
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Normal,
+                                fontFamily = GraphikFontFamily,
+                            )
+                        },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = Color.Transparent,
+                                cursorColor = Color.Black,
+                                unfocusedContainerColor = Color(0xFFF5F5F5),
+                                focusedContainerColor = Color(0xFFF5F5F5),
+                                unfocusedTextColor = Color.Black,
+                                focusedTextColor = Color.Black,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
+                    )
                 }
             }
-            }
-
-            // Drop Location
-            OutlinedTextField(
-                value = controller.finalDropLocation,
-                onValueChange = { controller.updateFinalDropLocation(it) },
-                placeholder = {
-                    Text(
-                        "Drop Location *",
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Normal,
-                        fontFamily = GraphikFontFamily,
-                    )
-                },
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
-                        cursorColor = Color.Black,
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color(0xFFF5F5F5),
-                        unfocusedTextColor = Color.Black,
-                        focusedTextColor = Color.Black,
-                    ),
-                shape = RoundedCornerShape(8.dp),
-            )
 
             // Date Selection
             Box(

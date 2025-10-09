@@ -290,7 +290,11 @@ class TravelController(
         private set
     var pickupLocation by mutableStateOf("")
         private set
+    var pickupMapDetails by mutableStateOf("")
+        private set
     var finalDropLocation by mutableStateOf("")
+        private set
+    var dropMapDetails by mutableStateOf("")
         private set
     var visitPoints by mutableStateOf(listOf<VisitPoint>())
         private set
@@ -2066,7 +2070,80 @@ class TravelController(
      * top-left back arrow behaves like the system back gesture.
      */
     fun onBackPressed() {
+        // Reset travel form when going back to home
+        resetTravelForm()
         navigator.popBackStack()
+    }
+
+    /**
+     * Reset all travel form fields to initial state
+     */
+    private fun resetTravelForm() {
+        // Basic travel fields
+        originCity = ""
+        destination = ""
+        projectName = ""
+        businessJustification = ""
+
+        // Multi-destination
+        isMultiDestination = false
+        destinations = emptyList()
+
+        // Transport and dates
+        modeOfTransport = ""
+        departureDate = currentDate
+        arrivalDate = currentDate
+
+        // Flight specific
+        flightType = ""
+        flightTimePreference = ""
+        seatPreference = ""
+        mealPreference = ""
+        mealPreferenceEnabled = false
+        frequentFlyerNumber = "0"
+
+        // Stay
+        stayRequired = false
+
+        // Cab booking fields
+        isLocalTravel = false
+        passengerCount = 1
+        cabType = ""
+        cabDuration = ""
+        pickupLocation = ""
+        pickupMapDetails = ""
+        finalDropLocation = ""
+        dropMapDetails = ""
+        visitPoints = emptyList()
+        mapDetails = ""
+
+        // Enhanced cab fields
+        projectId = ""
+        opportunityId = ""
+        crmId = ""
+        cabTravelDate = currentDate
+        attendeeSearchQuery = ""
+        additionalAttendees = emptyList()
+        cabPickupLocations = emptyList()
+
+        // Search results
+        employeeSearchResults = emptyList()
+        suggestedUsers = emptyList()
+        showAttendeeSearch = false
+
+        // Dropdown states
+        isTransportDropdownExpanded = false
+        isFlightTypeDropdownExpanded = false
+        isFlightTimeDropdownExpanded = false
+        isSeatPrefDropdownExpanded = false
+        isMealPrefDropdownExpanded = false
+        isCabTypeDropdownExpanded = false
+        isCabDurationDropdownExpanded = false
+        isTravelTypeDropdownExpanded = false
+        showFrequentFlyerDialog = false
+
+        // Submission error
+        cabSubmissionError = null
     }
 
     // Cab booking methods
@@ -2173,10 +2250,24 @@ class TravelController(
     }
 
     /**
+     * Update pickup map details
+     */
+    fun updatePickupMapDetails(details: String) {
+        pickupMapDetails = details
+    }
+
+    /**
      * Update final drop location
      */
     fun updateFinalDropLocation(location: String) {
         finalDropLocation = location
+    }
+
+    /**
+     * Update drop map details
+     */
+    fun updateDropMapDetails(details: String) {
+        dropMapDetails = details
     }
 
     /**
@@ -2463,6 +2554,23 @@ class TravelController(
     }
 
     /**
+     * Update pickup location map details
+     */
+    fun updatePickupLocationMapDetails(
+        locationId: String,
+        mapDetails: String,
+    ) {
+        cabPickupLocations =
+            cabPickupLocations.map { location ->
+                if (location.id == locationId) {
+                    location.copy(mapDetails = mapDetails)
+                } else {
+                    location
+                }
+            }
+    }
+
+    /**
      * Submit enhanced cab booking request
      */
     fun submitCabBookingRequest() {
@@ -2504,7 +2612,7 @@ class TravelController(
         // Create pickup locations list
         val allPickupLocations =
             if (pickupLocation.isNotBlank()) {
-                listOf(CabLocation(address = pickupLocation, order = 1, isPickup = true)) + cabPickupLocations
+                listOf(CabLocation(address = pickupLocation, mapDetails = pickupMapDetails, order = 1, isPickup = true)) + cabPickupLocations
             } else {
                 cabPickupLocations
             }
@@ -2529,6 +2637,7 @@ class TravelController(
                 duration = cabDuration,
                 pickupLocations = allPickupLocations,
                 dropLocation = finalDropLocation,
+                dropMapDetails = dropMapDetails,
                 reportingManagerName = reportingManagerName,
                 reportingManagerEmail = reportingManagerEmail,
                 grade = employeeGrade,
@@ -2600,7 +2709,9 @@ class TravelController(
         cabType = ""
         cabDuration = ""
         pickupLocation = ""
+        pickupMapDetails = ""
         finalDropLocation = ""
+        dropMapDetails = ""
         visitPoints = emptyList()
         mapDetails = ""
 

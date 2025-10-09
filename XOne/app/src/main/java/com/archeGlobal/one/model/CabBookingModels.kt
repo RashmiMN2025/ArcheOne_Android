@@ -85,6 +85,8 @@ data class CabLocation(
             .toString(),
     @SerializedName("address")
     val address: String,
+    @SerializedName("mapDetails")
+    val mapDetails: String = "",
     @SerializedName("order")
     val order: Int,
     @SerializedName("isPickup")
@@ -278,14 +280,16 @@ fun createCabBookingRequest(
     duration: String,
     pickupLocations: List<CabLocation>,
     dropLocation: String,
+    dropMapDetails: String = "",
     reportingManagerName: String,
     reportingManagerEmail: String,
     grade: String,
     aadharNumber: String,
     dateOfBirth: String,
 ): CabBookingRequest {
-    // Convert CabLocation list to simple string addresses
+    // Convert CabLocation list to simple string addresses and map details
     val pickupAddresses = pickupLocations.map { it.address }
+    val pickupMapDetailsList = pickupLocations.map { it.mapDetails }
 
     // Convert CabAttendee list to AdditionalMember list
     val additionalMembers = additionalAttendees.map {
@@ -300,7 +304,9 @@ fun createCabBookingRequest(
             travelDate = travelDate,
             duration = duration,
             pickupLocations = pickupAddresses,
+            pickupMapDetails = pickupMapDetailsList,
             dropLocation = dropLocation,
+            dropMapDetails = dropMapDetails,
             additionalMembers = additionalMembers
         )
     )
