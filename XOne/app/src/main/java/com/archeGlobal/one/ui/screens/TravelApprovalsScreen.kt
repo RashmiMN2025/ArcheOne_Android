@@ -22,14 +22,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.TravelController
 import com.archeGlobal.one.model.TravelRequest
@@ -177,23 +174,13 @@ fun TravelApprovalsScreen(controller: TravelController) {
                         actions = {},
                     )
 
-                    // Load travel approvals when screen is first shown and on resume
-                    val lifecycleOwner = LocalLifecycleOwner.current
-                    DisposableEffect(lifecycleOwner) {
-                        val observer =
-                            LifecycleEventObserver { _, event ->
-                                if (event == Lifecycle.Event.ON_RESUME) {
-                                    // Load travel approvals data when screen resumes
-                                    controller.loadTravelApprovals()
-                                }
-                            }
-                        lifecycleOwner.lifecycle.addObserver(observer)
-
-                        // Initial load when screen is first created
-                        controller.loadTravelApprovals()
-
-                        onDispose {
-                            lifecycleOwner.lifecycle.removeObserver(observer)
+                    // Load travel approvals only on initial screen load
+                    // The state is already updated optimistically by the controller after approve/reject
+                    // No need to reload on resume - the local state changes will be reflected automatically
+                    LaunchedEffect(Unit) {
+                        // Only load if we don't have data yet (Idle state)
+                        if (controller.travelApprovalsState is TravelController.TravelApprovalsState.Idle) {
+                            controller.loadTravelApprovals()
                         }
                     }
 
@@ -243,6 +230,9 @@ fun TravelApprovalsScreen(controller: TravelController) {
                                         ApprovalRequestCard(
                                             request = request,
                                             onApprove = {
+                                                // Set shared controller instance before navigating
+                                                TravelApproveActivity.sharedTravelController = controller
+
                                                 // Navigate to dedicated approval screen instead of calling API directly
                                                 val intent =
                                                     Intent(
@@ -254,6 +244,9 @@ fun TravelApprovalsScreen(controller: TravelController) {
                                                 context.startActivity(intent)
                                             },
                                             onReject = {
+                                                // Set shared controller instance before navigating
+                                                TravelRejectActivity.sharedTravelController = controller
+
                                                 // Navigate to dedicated rejection screen instead of direct API call
                                                 val intent =
                                                     Intent(

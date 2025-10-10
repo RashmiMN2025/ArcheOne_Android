@@ -132,6 +132,14 @@ class TravelController(
     var approvalActionState by mutableStateOf<TravelApprovalActionState>(TravelApprovalActionState.Idle)
         private set
 
+    /**
+     * Reset the approval action state to Idle
+     * This should be called when opening approve/reject screens to clear previous state
+     */
+    fun resetApprovalActionState() {
+        approvalActionState = TravelApprovalActionState.Idle
+    }
+
     // Count of pending travel approvals
     var pendingApprovalCount by mutableStateOf(0)
         private set
@@ -770,6 +778,9 @@ class TravelController(
         selectedTravelRequest = travelRequest
 
         try {
+            // Set this controller as the shared instance for the activity
+            com.archeGlobal.one.ui.activities.TravelApproveActivity.sharedTravelController = this
+
             // Use context to start the TravelApproveActivity
             val context = context as? android.app.Activity ?: return
             val intent = android.content.Intent(context, com.archeGlobal.one.ui.activities.TravelApproveActivity::class.java)
@@ -798,6 +809,9 @@ class TravelController(
         selectedTravelRequest = travelRequest
 
         try {
+            // Set this controller as the shared instance for the activity
+            com.archeGlobal.one.ui.activities.TravelRejectActivity.sharedTravelController = this
+
             // Use context to start the TravelRejectActivity
             val context = context as? android.app.Activity ?: return
             val intent = android.content.Intent(context, com.archeGlobal.one.ui.activities.TravelRejectActivity::class.java)
@@ -824,13 +838,6 @@ class TravelController(
         resetApprovalActionState()
         // Use popBackStack to go back, just like the back swipe gesture
         navigator.popBackStack()
-    }
-
-    /**
-     * Reset the approval action state to Idle
-     */
-    fun resetApprovalActionState() {
-        approvalActionState = TravelApprovalActionState.Idle
     }
 
     /**

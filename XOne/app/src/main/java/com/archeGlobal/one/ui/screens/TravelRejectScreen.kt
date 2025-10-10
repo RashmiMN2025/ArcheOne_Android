@@ -58,6 +58,11 @@ fun TravelRejectScreen(
             SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         }
 
+    // Reset approval action state when screen opens
+    LaunchedEffect(Unit) {
+        controller.resetApprovalActionState()
+    }
+
     // Observe the approval action state from the controller
     val approvalActionState = controller.approvalActionState
 
