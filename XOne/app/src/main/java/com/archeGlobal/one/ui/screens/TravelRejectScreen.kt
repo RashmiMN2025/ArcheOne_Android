@@ -202,7 +202,16 @@ fun TravelRejectScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Created At
+                            RejectDetailRow(
+                                iconRes = R.drawable.calendar_3x,
+                                label = "Created At",
+                                value = dateFormatter.format(travelRequest.createdDate),
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Employee details
                             RejectDetailRow(
@@ -229,7 +238,79 @@ fun TravelRejectScreen(
                                 value = travelRequest.employeeMobile ?: "N/A",
                             )
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Project details
+                            RejectDetailRow(
+                                iconRes = R.drawable.folder_3x,
+                                label = "Project",
+                                value = travelRequest.project,
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.projectid,
+                                label = "Project ID",
+                                value = travelRequest.projectId ?: "N/A",
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.opportunityid,
+                                label = "Opportunity ID",
+                                value = travelRequest.opportunityId ?: "N/A",
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.crmid,
+                                label = "CRM ID",
+                                value = travelRequest.crmId ?: "N/A",
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Business details
+                            RejectDetailRow(
+                                iconRes = R.drawable.busjust,
+                                label = "Business Justification",
+                                value = travelRequest.businessJustification ?: "N/A",
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.car_3x,
+                                label = "Mode of Transport",
+                                value = travelRequest.modeOfTransport ?: "Flight",
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.stayreq,
+                                label = "Stay Required",
+                                value = travelRequest.stayRequired ?: "N/A",
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.car_3x,
+                                label = "Cab Required",
+                                value = "No", // Default value, update based on actual field if available
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.meal,
+                                label = "Meal Preference",
+                                value = travelRequest.mealPreference ?: "N/A",
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.seat,
+                                label = "Seat Preference",
+                                value = travelRequest.seatPreference ?: "N/A",
+                            )
+
+                            RejectDetailRow(
+                                iconRes = R.drawable.noimage,
+                                label = "Frequent Flyer Number",
+                                value = travelRequest.frequentFlyerNumber ?: "N/A",
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Travel Details - Handle multi-destination vs single destination
                             val destinations = travelRequest.getAllDestinations()
@@ -311,32 +392,6 @@ fun TravelRejectScreen(
                                     )
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.folder_3x,
-                                label = "Project",
-                                value = travelRequest.project,
-                            )
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.busjust,
-                                label = "Business Justification",
-                                value = travelRequest.businessJustification ?: "Test",
-                            )
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.car_3x,
-                                label = "Mode of Transport",
-                                value = travelRequest.modeOfTransport ?: "Flight",
-                            )
-
-                            RejectDetailRow(
-                                iconRes = R.drawable.calendar_3x,
-                                label = "Created",
-                                value = dateFormatter.format(travelRequest.createdDate),
-                            )
 
                             Spacer(modifier = Modifier.height(24.dp))
 

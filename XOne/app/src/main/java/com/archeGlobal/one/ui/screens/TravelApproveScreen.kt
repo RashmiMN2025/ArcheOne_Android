@@ -202,7 +202,16 @@ fun TravelApproveScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Created At
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.calendar_3x,
+                                label = "Created At",
+                                value = dateFormatter.format(travelRequest.createdDate),
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Employee details
                             ApprovalDetailRow(
@@ -229,7 +238,79 @@ fun TravelApproveScreen(
                                 value = travelRequest.employeeMobile ?: "N/A",
                             )
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Project details
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.folder_3x,
+                                label = "Project",
+                                value = travelRequest.project,
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.projectid,
+                                label = "Project ID",
+                                value = travelRequest.projectId ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.opportunityid,
+                                label = "Opportunity ID",
+                                value = travelRequest.opportunityId ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.crmid,
+                                label = "CRM ID",
+                                value = travelRequest.crmId ?: "N/A",
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Business details
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.busjust,
+                                label = "Business Justification",
+                                value = travelRequest.businessJustification ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.modeoft,
+                                label = "Mode of Transport",
+                                value = travelRequest.modeOfTransport ?: "Flight",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.stayreq,
+                                label = "Stay Required",
+                                value = travelRequest.stayRequired ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.car_3x,
+                                label = "Cab Required",
+                                value = "No", // Default value, update based on actual field if available
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.meal,
+                                label = "Meal Preference",
+                                value = travelRequest.mealPreference ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.seat,
+                                label = "Seat Preference",
+                                value = travelRequest.seatPreference ?: "N/A",
+                            )
+
+                            ApprovalDetailRow(
+                                iconRes = R.drawable.noimage,
+                                label = "Frequent Flyer Number",
+                                value = travelRequest.frequentFlyerNumber ?: "N/A",
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Travel Details - Handle multi-destination vs single destination
                             val destinations = travelRequest.getAllDestinations()
@@ -311,32 +392,6 @@ fun TravelApproveScreen(
                                     )
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.folder_3x,
-                                label = "Project",
-                                value = travelRequest.project,
-                            )
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.busjust,
-                                label = "Business Justification",
-                                value = travelRequest.businessJustification ?: "Test",
-                            )
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.car_3x,
-                                label = "Mode of Transport",
-                                value = travelRequest.modeOfTransport ?: "Flight",
-                            )
-
-                            ApprovalDetailRow(
-                                iconRes = R.drawable.calendar_3x,
-                                label = "Created",
-                                value = dateFormatter.format(travelRequest.createdDate),
-                            )
 
                             Spacer(modifier = Modifier.height(24.dp))
 
