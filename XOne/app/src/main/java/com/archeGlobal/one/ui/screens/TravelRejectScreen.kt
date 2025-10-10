@@ -316,16 +316,7 @@ fun TravelRejectScreen(
                             val destinations = travelRequest.getAllDestinations()
 
                             if (destinations.isEmpty() || destinations.size == 1) {
-                                // Single destination display
-                                Text(
-                                    text = "Trip 1",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontFamily = GraphikFontFamily,
-                                    color = Color.Black,
-                                    modifier = Modifier.padding(bottom = 4.dp),
-                                )
-
+                                // Single destination display (no trip label)
                                 val destination = destinations.firstOrNull()
 
                                 RejectDetailRow(
@@ -352,7 +343,7 @@ fun TravelRejectScreen(
                                     value = destination?.arrivalDate ?: travelRequest.arrivalDate ?: "N/A",
                                 )
                             } else {
-                                // Multi-destination display
+                                // Multi-destination display (with trip labels)
                                 destinations.forEachIndexed { index, destination ->
                                     if (index > 0) {
                                         Spacer(modifier = Modifier.height(12.dp))
