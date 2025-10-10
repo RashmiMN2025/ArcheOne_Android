@@ -5,6 +5,48 @@ import com.google.gson.annotations.SerializedName
 import java.util.Date
 
 /**
+ * Response model for cab details in travel history
+ */
+data class CabDetailsResponse(
+    @SerializedName("travelType")
+    val travelType: String? = null,
+    @SerializedName("cabType")
+    val cabType: String? = null,
+    @SerializedName("duration")
+    val duration: String? = null,
+    @SerializedName("travelDate")
+    val travelDate: String? = null,
+    @SerializedName("pickups")
+    val pickups: List<PickupLocationResponse>? = null,
+    @SerializedName("dropLocation")
+    val dropLocation: String? = null,
+    @SerializedName("dropMapDetails")
+    val dropMapDetails: String? = null,
+    @SerializedName("additionalMembers")
+    val additionalMembers: List<AdditionalMemberResponse>? = null,
+)
+
+/**
+ * Response model for pickup location
+ */
+data class PickupLocationResponse(
+    @SerializedName("location")
+    val location: String,
+    @SerializedName("mapDetails")
+    val mapDetails: String? = null,
+)
+
+/**
+ * Response model for additional members in cab booking
+ */
+data class AdditionalMemberResponse(
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("email")
+    val email: String? = null,
+)
+
+/**
  * Response model for travel history API
  */
 data class TravelHistoryResponse(
@@ -66,6 +108,8 @@ data class TravelHistoryItem(
     val frequentFlyerNumber: String? = null,
     @SerializedName("Travel Details")
     val travelDetails: List<TravelDestination>? = null,
+    @SerializedName("cabDetails")
+    val cabDetails: CabDetailsResponse? = null,
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -111,6 +155,16 @@ data class TravelHistoryItem(
             arrivalDate = arrivalDate,
             rejectionReason = rejectionDescription,
             travelDestinations = travelDetails,
+            // Cab details
+            travelType = cabDetails?.travelType,
+            cabType = cabDetails?.cabType,
+            travelDate = cabDetails?.travelDate,
+            duration = cabDetails?.duration,
+            pickupLocations = cabDetails?.pickups?.map { it.location },
+            pickupMapDetails = cabDetails?.pickups?.map { "${it.location}|${it.mapDetails ?: ""}" },
+            dropLocation = cabDetails?.dropLocation,
+            dropMapDetails = cabDetails?.dropMapDetails,
+            additionalMembers = cabDetails?.additionalMembers?.joinToString(", ") { it.name },
         )
     }
 

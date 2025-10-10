@@ -76,6 +76,8 @@ data class TravelApprovalItem(
     val flightTime: String? = null,
     @SerializedName("Travel Details")
     val legacyTravelDetails: List<TravelDestination>? = null,
+    @SerializedName("cabDetails")
+    val cabDetails: CabDetailsResponse? = null,
 ) {
     /**
      * Convert to TravelRequest model for UI display
@@ -128,6 +130,20 @@ data class TravelApprovalItem(
             arrivalDate = arrDate,
             actionToken = actionToken,
             travelDestinations = allTravelDetails,
+            // Cab details
+            travelType = cabDetails?.travelType,
+            cabType = cabDetails?.cabType,
+            travelDate = cabDetails?.travelDate,
+            duration = cabDetails?.duration,
+            pickupLocations = cabDetails?.pickups?.map { it.location },
+            pickupMapDetails = cabDetails?.pickups?.map { "${it.location}|${it.mapDetails ?: ""}" },
+            dropLocation = cabDetails?.dropLocation,
+            dropMapDetails = cabDetails?.dropMapDetails,
+            additionalMembers = cabDetails?.additionalMembers?.joinToString(", ") { it.name },
+            // Additional fields
+            projectId = projectId,
+            opportunityId = opportunityId,
+            crmId = crmId,
         )
     }
 

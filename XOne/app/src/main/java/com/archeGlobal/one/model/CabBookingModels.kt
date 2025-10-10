@@ -287,13 +287,20 @@ fun createCabBookingRequest(
     aadharNumber: String,
     dateOfBirth: String,
 ): CabBookingRequest {
-    // Convert CabLocation list to simple string addresses and map details
-    val pickupAddresses = pickupLocations.map { it.address }
-    val pickupMapDetailsList = pickupLocations.map { it.mapDetails }
+    // Convert CabLocation list to PickupLocation objects with map details
+    val pickups = pickupLocations.map {
+        PickupLocation(
+            location = it.address,
+            mapDetails = it.mapDetails
+        )
+    }
 
     // Convert CabAttendee list to AdditionalMember list
     val additionalMembers = additionalAttendees.map {
-        AdditionalMember(name = it.name)
+        AdditionalMember(
+            name = it.name,
+            email = it.email
+        )
     }
 
     // Create the cabDetails array
@@ -303,8 +310,7 @@ fun createCabBookingRequest(
             cabType = cabType,
             travelDate = travelDate,
             duration = duration,
-            pickupLocations = pickupAddresses,
-            pickupMapDetails = pickupMapDetailsList,
+            pickups = pickups,
             dropLocation = dropLocation,
             dropMapDetails = dropMapDetails,
             additionalMembers = additionalMembers

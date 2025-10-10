@@ -30,6 +30,8 @@ data class TravelOrderHistoryItem(
     val employeeId: String,
     @SerializedName("mobile")
     val mobile: String,
+    @SerializedName("user_location")
+    val userLocation: String? = null,
     @SerializedName("project_name")
     val projectName: String,
     @SerializedName("project_id")
@@ -41,9 +43,9 @@ data class TravelOrderHistoryItem(
     @SerializedName("business_justification")
     val businessJustification: String,
     @SerializedName("departure_date")
-    val departureDate: String,
+    val departureDate: String? = null,
     @SerializedName("arrival_date")
-    val arrivalDate: String,
+    val arrivalDate: String? = null,
     @SerializedName("mode_of_transport")
     val modeOfTransport: String,
     @SerializedName("reporting_manager_name")
@@ -56,12 +58,14 @@ data class TravelOrderHistoryItem(
     val status: String,
     @SerializedName("rejection_description")
     val rejectionDescription: String?,
+    @SerializedName("remarks")
+    val remarks: String? = null,
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("updated_at")
     val updatedAt: String,
     @SerializedName("stay_required")
-    val stayRequired: String?,
+    val stayRequired: Boolean? = null,
     @SerializedName("meal_pref")
     val mealPreference: String?,
     @SerializedName("seat_pref")
@@ -79,6 +83,32 @@ data class TravelOrderHistoryItem(
      * Convert to TravelRequest model for UI display
      */
     fun toTravelRequest(): TravelRequest {
+        android.util.Log.d("TravelOrderHistory", "=== ORDER HISTORY ITEM CONVERSION ===")
+        android.util.Log.d("TravelOrderHistory", "Request ID: $requestId")
+        android.util.Log.d("TravelOrderHistory", "Mode of Transport: $modeOfTransport")
+        android.util.Log.d("TravelOrderHistory", "Has cabDetails: ${cabDetails != null}")
+
+        // Log cab details if present
+        cabDetails?.let { cab ->
+            android.util.Log.d("TravelOrderHistory", "=== CAB DETAILS ===")
+            android.util.Log.d("TravelOrderHistory", "  travelType: ${cab.travelType}")
+            android.util.Log.d("TravelOrderHistory", "  cabType: ${cab.cabType}")
+            android.util.Log.d("TravelOrderHistory", "  travelDate: ${cab.travelDate}")
+            android.util.Log.d("TravelOrderHistory", "  duration: ${cab.duration}")
+            android.util.Log.d("TravelOrderHistory", "  dropLocation: ${cab.dropLocation}")
+            android.util.Log.d("TravelOrderHistory", "  dropMapDetails: ${cab.dropMapDetails}")
+            android.util.Log.d("TravelOrderHistory", "  Has pickups: ${cab.pickups != null}")
+            android.util.Log.d("TravelOrderHistory", "  Pickups count: ${cab.pickups?.size ?: 0}")
+            cab.pickups?.forEachIndexed { index, pickup ->
+                android.util.Log.d("TravelOrderHistory", "    Pickup $index: location='${pickup.location}', mapDetails='${pickup.mapDetails}'")
+            }
+            android.util.Log.d("TravelOrderHistory", "  Has additionalMembers: ${cab.additionalMembers != null}")
+            android.util.Log.d("TravelOrderHistory", "  Additional members count: ${cab.additionalMembers?.size ?: 0}")
+            cab.additionalMembers?.forEachIndexed { index, member ->
+                android.util.Log.d("TravelOrderHistory", "    Member $index: name='${member.name}', email='${member.email}'")
+            }
+        }
+
         // Parse the created date using DateFormatter utility
         val createdDate = DateFormatter.parseApiDate(createdAt)
 
@@ -124,16 +154,18 @@ data class TravelOrderHistoryItem(
                 }
             }
 
-        // Map cab details - prefer nested cabDetails object
-        val cabTravelType = cabDetails?.cabTravelType
-        val cabTypeValue = cabDetails?.cabType
+        // Map cab details using helper methods to support both old and new formats
+        val cabTravelType = cabDetails?.getActualTravelType()
+        val cabTypeValue = cabDetails?.getActualCabType()
         val cabDuration = cabDetails?.duration
-        val cabTravelDate = cabDetails?.travelDate
-        val cabPickupLocations = cabDetails?.pickupLocations
-        val cabDropLocation = cabDetails?.dropLocation
-        val cabAdditionalMembers = cabDetails?.additionalMembers?.joinToString(", ")
+        val cabTravelDate = cabDetails?.getActualTravelDate()
+        val cabPickupLocations = cabDetails?.getActualPickupLocations()
+        val cabPickupMapDetails = cabDetails?.pickups?.map { "${it.location}|${it.mapDetails ?: ""}" }
+        val cabDropLocation = cabDetails?.getActualDropLocation()
+        val cabDropMapDetails = cabDetails?.dropMapDetails
+        val cabAdditionalMembers = cabDetails?.getActualAdditionalMembers()
 
-        return TravelRequest(
+        val travelRequest = TravelRequest(
             id = requestId,
             project = projectName,
             destination = destinationDisplay,
@@ -143,10 +175,10 @@ data class TravelOrderHistoryItem(
             status = travelStatus,
             businessJustification = businessJustification,
             modeOfTransport = modeOfTransport,
-            departureDate = departureDate,
-            arrivalDate = arrivalDate,
+            departureDate = departureDate ?: "",
+            arrivalDate = arrivalDate ?: "",
             rejectionReason = rejectionDescription,
-            stayRequired = stayRequired,
+            stayRequired = stayRequired?.toString(),
             mealPreference = mealPreference,
             seatPreference = seatPreference,
             flightTime = flightTime,
@@ -162,34 +194,76 @@ data class TravelOrderHistoryItem(
             travelDate = cabTravelDate,
             duration = cabDuration,
             pickupLocations = cabPickupLocations,
+            pickupMapDetails = cabPickupMapDetails,
             dropLocation = cabDropLocation,
+            dropMapDetails = cabDropMapDetails,
             additionalMembers = cabAdditionalMembers,
             projectId = projectId,
             opportunityId = opportunityId,
             crmId = crmId,
         )
+
+        // Log the mapped TravelRequest cab data
+        android.util.Log.d("TravelOrderHistory", "=== MAPPED TO TRAVELREQUEST ===")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.travelType: ${travelRequest.travelType}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.cabType: ${travelRequest.cabType}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.travelDate: ${travelRequest.travelDate}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.duration: ${travelRequest.duration}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.pickupLocations: ${travelRequest.pickupLocations}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.pickupMapDetails: ${travelRequest.pickupMapDetails}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.dropLocation: ${travelRequest.dropLocation}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.dropMapDetails: ${travelRequest.dropMapDetails}")
+        android.util.Log.d("TravelOrderHistory", "  travelRequest.additionalMembers: ${travelRequest.additionalMembers}")
+        android.util.Log.d("TravelOrderHistory", "=== END ORDER HISTORY CONVERSION ===")
+
+        return travelRequest
     }
 }
 
 /**
  * Cab details nested object from API
+ * Updated to support new pickups structure with map details
  */
 data class CabDetails(
+    @SerializedName("travelType")
+    val travelType: String? = null,
     @SerializedName("cab_travel_type")
-    val cabTravelType: String? = null,
-    @SerializedName("cab_type")
+    val cabTravelType: String? = null,  // Legacy field
+    @SerializedName("cabType")
     val cabType: String? = null,
+    @SerializedName("cab_type")
+    val legacyCabType: String? = null,  // Legacy field
     @SerializedName("duration")
     val duration: String? = null,
-    @SerializedName("travel_date")
+    @SerializedName("travelDate")
     val travelDate: String? = null,
+    @SerializedName("travel_date")
+    val legacyTravelDate: String? = null,  // Legacy field
+    @SerializedName("pickups")
+    val pickups: List<PickupLocationResponse>? = null,  // New structure with map details
     @SerializedName("pickup_locations")
-    val pickupLocations: List<String>? = null,
-    @SerializedName("drop_location")
+    val pickupLocations: List<String>? = null,  // Legacy field
+    @SerializedName("dropLocation")
     val dropLocation: String? = null,
+    @SerializedName("drop_location")
+    val legacyDropLocation: String? = null,  // Legacy field
+    @SerializedName("dropMapDetails")
+    val dropMapDetails: String? = null,
+    @SerializedName("additionalMembers")
+    val additionalMembers: List<AdditionalMemberResponse>? = null,  // New structure
     @SerializedName("additional_members")
-    val additionalMembers: List<String>? = null,
-)
+    val legacyAdditionalMembers: List<String>? = null,  // Legacy field
+) {
+    // Helper methods to get the right field regardless of format
+    fun getActualTravelType() = travelType ?: cabTravelType
+    fun getActualCabType() = cabType ?: legacyCabType
+    fun getActualTravelDate() = travelDate ?: legacyTravelDate
+    fun getActualDropLocation() = dropLocation ?: legacyDropLocation
+    fun getActualPickupLocations(): List<String>? = pickups?.map { it.location } ?: pickupLocations
+    fun getActualAdditionalMembers(): String? =
+        additionalMembers?.joinToString(", ") { it.name }
+        ?: legacyAdditionalMembers?.joinToString(", ")
+}
 
 /**
  * Model for approval history items
@@ -273,7 +347,33 @@ data class TravelApprovalHistoryItem(
      * Convert to TravelRequest model for UI display
      */
     fun toTravelRequest(): TravelRequest {
-        android.util.Log.d("DEBUG_BUILD_CHECK", "NEW TravelApprovalHistoryItem.toTravelRequest() called for $requestId")
+        android.util.Log.d("TravelApprovalHistory", "=== APPROVAL HISTORY ITEM CONVERSION ===")
+        android.util.Log.d("TravelApprovalHistory", "Request ID: $requestId")
+        android.util.Log.d("TravelApprovalHistory", "Mode of Transport: $modeOfTransport")
+        android.util.Log.d("TravelApprovalHistory", "Status: $status")
+        android.util.Log.d("TravelApprovalHistory", "Has cabDetails: ${cabDetails != null}")
+
+        // Log cab details if present
+        cabDetails?.let { cab ->
+            android.util.Log.d("TravelApprovalHistory", "=== CAB DETAILS ===")
+            android.util.Log.d("TravelApprovalHistory", "  travelType: ${cab.travelType}")
+            android.util.Log.d("TravelApprovalHistory", "  cabType: ${cab.cabType}")
+            android.util.Log.d("TravelApprovalHistory", "  travelDate: ${cab.travelDate}")
+            android.util.Log.d("TravelApprovalHistory", "  duration: ${cab.duration}")
+            android.util.Log.d("TravelApprovalHistory", "  dropLocation: ${cab.dropLocation}")
+            android.util.Log.d("TravelApprovalHistory", "  dropMapDetails: ${cab.dropMapDetails}")
+            android.util.Log.d("TravelApprovalHistory", "  Has pickups: ${cab.pickups != null}")
+            android.util.Log.d("TravelApprovalHistory", "  Pickups count: ${cab.pickups?.size ?: 0}")
+            cab.pickups?.forEachIndexed { index, pickup ->
+                android.util.Log.d("TravelApprovalHistory", "    Pickup $index: location='${pickup.location}', mapDetails='${pickup.mapDetails}'")
+            }
+            android.util.Log.d("TravelApprovalHistory", "  Has additionalMembers: ${cab.additionalMembers != null}")
+            android.util.Log.d("TravelApprovalHistory", "  Additional members count: ${cab.additionalMembers?.size ?: 0}")
+            cab.additionalMembers?.forEachIndexed { index, member ->
+                android.util.Log.d("TravelApprovalHistory", "    Member $index: name='${member.name}', email='${member.email}'")
+            }
+        }
+
         // Parse the created date using DateFormatter utility
         val createdDate = DateFormatter.parseApiDate(createdAt)
 
@@ -288,7 +388,7 @@ data class TravelApprovalHistoryItem(
 
         // Handle destination display using travelDetails array or fallback to legacy fields
         // Debug logging
-        android.util.Log.d("TravelCombinedHistory", "Request $requestId: travelDetails = ${travelDetails?.size ?: "null"}, mode = $modeOfTransport")
+        android.util.Log.d("TravelApprovalHistory", "travelDetails count: ${travelDetails?.size ?: "null"}")
         travelDetails?.forEachIndexed { index, detail ->
             android.util.Log.d(
                 "TravelCombinedHistory",
@@ -348,13 +448,15 @@ data class TravelApprovalHistoryItem(
         val arrDate = firstDetail?.arrivalDate ?: arrivalDate ?: ""
 
         // Map cab details - prefer nested cabDetails object, fall back to root level fields
-        val cabTravelType = cabDetails?.cabTravelType ?: travelType
-        val cabTypeValue = cabDetails?.cabType ?: cabType
+        val cabTravelType = cabDetails?.getActualTravelType() ?: travelType
+        val cabTypeValue = cabDetails?.getActualCabType() ?: cabType
         val cabDuration = cabDetails?.duration ?: duration
-        val cabTravelDate = cabDetails?.travelDate ?: travelDate
-        val cabPickupLocations = cabDetails?.pickupLocations ?: pickupLocations
-        val cabDropLocation = cabDetails?.dropLocation ?: dropLocation
-        val cabAdditionalMembers = cabDetails?.additionalMembers?.joinToString(", ") ?: additionalMembers
+        val cabTravelDate = cabDetails?.getActualTravelDate() ?: travelDate
+        val cabPickupLocations = cabDetails?.getActualPickupLocations() ?: pickupLocations
+        val cabPickupMapDetails = cabDetails?.pickups?.map { "${it.location}|${it.mapDetails ?: ""}" }
+        val cabDropLocation = cabDetails?.getActualDropLocation() ?: dropLocation
+        val cabDropMapDetails = cabDetails?.dropMapDetails
+        val cabAdditionalMembers = cabDetails?.getActualAdditionalMembers() ?: additionalMembers
 
         val travelRequest =
             TravelRequest(
@@ -387,7 +489,9 @@ data class TravelApprovalHistoryItem(
                 travelDate = cabTravelDate,
                 duration = cabDuration,
                 pickupLocations = cabPickupLocations,
+                pickupMapDetails = cabPickupMapDetails,
                 dropLocation = cabDropLocation,
+                dropMapDetails = cabDropMapDetails,
                 additionalMembers = cabAdditionalMembers,
                 projectId = projectId,
                 opportunityId = opportunityId,
@@ -395,13 +499,21 @@ data class TravelApprovalHistoryItem(
             )
 
         // Log what we're actually putting in the TravelRequest
-        android.util.Log.d("TravelApprovalMapping", "CREATED TravelRequest:")
-        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeName: ${travelRequest.employeeName}")
-        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeEmail: ${travelRequest.employeeEmail}")
-        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeId: ${travelRequest.employeeId}")
-        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.employeeMobile: ${travelRequest.employeeMobile}")
-        android.util.Log.d("TravelApprovalMapping", "  TravelRequest.approver: ${travelRequest.approver}")
-        android.util.Log.d("TravelApprovalMapping", "=== END MAPPING ===")
+        android.util.Log.d("TravelApprovalHistory", "=== MAPPED TO TRAVELREQUEST ===")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.id: ${travelRequest.id}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.employeeName: ${travelRequest.employeeName}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.employeeEmail: ${travelRequest.employeeEmail}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.status: ${travelRequest.status}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.travelType: ${travelRequest.travelType}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.cabType: ${travelRequest.cabType}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.travelDate: ${travelRequest.travelDate}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.duration: ${travelRequest.duration}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.pickupLocations: ${travelRequest.pickupLocations}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.pickupMapDetails: ${travelRequest.pickupMapDetails}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.dropLocation: ${travelRequest.dropLocation}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.dropMapDetails: ${travelRequest.dropMapDetails}")
+        android.util.Log.d("TravelApprovalHistory", "  travelRequest.additionalMembers: ${travelRequest.additionalMembers}")
+        android.util.Log.d("TravelApprovalHistory", "=== END APPROVAL HISTORY CONVERSION ===")
 
         return travelRequest
     }

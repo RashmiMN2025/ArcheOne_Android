@@ -1366,6 +1366,37 @@ fun TravelScreen(controller: TravelController) {
                                             ),
                                     )
                                 }
+
+                                // Cab Required Toggle (only for non-cab transport modes)
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(
+                                        text = "Cab Required",
+                                        fontSize = 16.sp,
+                                        fontFamily = GraphikFontFamily,
+                                        color = Color.Black,
+                                    )
+
+                                    // Toggle switch
+                                    androidx.compose.material.Switch(
+                                        checked = controller.cabRequired,
+                                        onCheckedChange = { controller.toggleCabRequired(it) },
+                                        modifier = Modifier.scale(1.2f),
+                                        colors =
+                                            androidx.compose.material.SwitchDefaults.colors(
+                                                checkedThumbColor = Color(0xFFF6F4EE),
+                                                checkedTrackColor = Color(0xFFADE1B6),
+                                                uncheckedThumbColor = Color(0xFFF6F4EE),
+                                                uncheckedTrackColor = Color.LightGray,
+                                            ),
+                                    )
+                                }
                             }
                             } // Close modeOfTransport.isNotEmpty() conditional - destination fields only
 

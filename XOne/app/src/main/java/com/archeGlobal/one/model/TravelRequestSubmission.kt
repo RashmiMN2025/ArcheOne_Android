@@ -43,6 +43,18 @@ data class TravelDetail(
 data class AdditionalMember(
     @SerializedName("name")
     val name: String,
+    @SerializedName("email")
+    val email: String? = null,
+)
+
+/**
+ * Pickup location with map details for cab booking
+ */
+data class PickupLocation(
+    @SerializedName("location")
+    val location: String,
+    @SerializedName("mapDetails")
+    val mapDetails: String = "",
 )
 
 /**
@@ -57,10 +69,8 @@ data class CabDetail(
     val travelDate: String,
     @SerializedName("duration")
     val duration: String,
-    @SerializedName("pickupLocations")
-    val pickupLocations: List<String>,
-    @SerializedName("pickupMapDetails")
-    val pickupMapDetails: List<String> = emptyList(),
+    @SerializedName("pickups")
+    val pickups: List<PickupLocation>,
     @SerializedName("dropLocation")
     val dropLocation: String,
     @SerializedName("dropMapDetails")

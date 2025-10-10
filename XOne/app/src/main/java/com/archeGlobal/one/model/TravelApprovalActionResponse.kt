@@ -12,5 +12,5 @@ data class TravelApprovalActionResponse(
     @SerializedName("message")
     val message: String,
     @SerializedName("approval_history")
-    val approvalHistory: List<TravelApprovalHistoryItem>? = null,
+    val approvalHistory: TravelApprovalHistoryItem? = null,
 )

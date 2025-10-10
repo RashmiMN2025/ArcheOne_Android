@@ -36,7 +36,9 @@ data class TravelRequest(
     val travelDate: String? = null, // Travel date for cab
     val duration: String? = null, // Duration of cab (4 Hours, 8 Hours)
     val pickupLocations: List<String>? = null, // List of pickup locations
+    val pickupMapDetails: List<String>? = null, // Map details for pickup locations
     val dropLocation: String? = null, // Drop location
+    val dropMapDetails: String? = null, // Map details for drop location
     val additionalMembers: String? = null, // Additional members for cab
     val projectId: String? = null, // Project ID
     val opportunityId: String? = null, // Opportunity ID

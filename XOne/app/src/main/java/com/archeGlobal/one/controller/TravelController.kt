@@ -273,6 +273,10 @@ class TravelController(
     var stayRequired by mutableStateOf(false)
         private set
 
+    // Cab required
+    var cabRequired by mutableStateOf(false)
+        private set
+
     // Frequent flyer number
     var frequentFlyerNumber by mutableStateOf("0")
         private set
@@ -1523,6 +1527,13 @@ class TravelController(
     }
 
     /**
+     * Toggle cab required state
+     */
+    fun toggleCabRequired(required: Boolean) {
+        cabRequired = required
+    }
+
+    /**
      * Update frequent flyer number
      */
     fun updateFrequentFlyerNumber(value: String) {
@@ -1653,6 +1664,7 @@ class TravelController(
                     reportingManagerName = reportingManagerName,
                     reportingManagerEmail = reportingManagerEmail,
                     stayRequired = stayRequired,
+                    cabRequired = cabRequired,
                     grade = employeeGrade,
                     aadharNumber = aadharNumber,
                     dateOfBirth = dateOfBirth,
@@ -1690,6 +1702,7 @@ class TravelController(
                     reportingManagerName = reportingManagerName,
                     reportingManagerEmail = reportingManagerEmail,
                     stayRequired = stayRequired,
+                    cabRequired = cabRequired,
                     grade = employeeGrade,
                     aadharNumber = aadharNumber,
                     dateOfBirth = dateOfBirth,
@@ -1713,6 +1726,7 @@ class TravelController(
         Log.d("TravelController", "  Business Justification: ${travelRequest.businessJustification}")
         Log.d("TravelController", "  Mode of Transport: ${travelRequest.modeOfTransport}")
         Log.d("TravelController", "  Stay Required: ${travelRequest.stayRequired}")
+        Log.d("TravelController", "  Cab Required: ${travelRequest.cabRequired}")
         Log.d("TravelController", "  Meal Preference: ${travelRequest.mealPref}")
         Log.d("TravelController", "  Seat Preference: ${travelRequest.seatPref}")
         Log.d("TravelController", "  Frequent Flyer Number: ${travelRequest.frequentFlyerNum}")
@@ -2655,7 +2669,7 @@ class TravelController(
             Log.d("TravelController", "  Travel Date: ${detail.travelDate}")
             Log.d("TravelController", "  Cab Type: ${detail.cabType}")
             Log.d("TravelController", "  Duration: ${detail.duration}")
-            Log.d("TravelController", "  Pickup Locations: ${detail.pickupLocations.size}")
+            Log.d("TravelController", "  Pickup Locations: ${detail.pickups.size}")
             Log.d("TravelController", "  Drop Location: ${detail.dropLocation}")
             Log.d("TravelController", "  Additional Members: ${detail.additionalMembers.size}")
         }
