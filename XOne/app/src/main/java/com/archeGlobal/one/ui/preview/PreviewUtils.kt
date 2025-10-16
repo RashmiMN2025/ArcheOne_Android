@@ -145,6 +145,7 @@ class PreviewNavigator : Navigator {
     override fun navigateToMedicalWithUrl(url: String) {}
     override fun navigateToAboutUsWithUrl(url: String) {}
     override fun openPulseLoginWithUrl(url: String) {}
+    override fun navigateToArcheHonoursWithUrl(url: String) {}
 
     override fun popBackStack() {
         // No-op for preview purposes

@@ -471,11 +471,11 @@ fun MeetSpaceScreen(
                                     }
                                     if (userRoles.size > 1) Spacer(modifier = Modifier.width(8.dp))
                                 }
-                                if (userRoles.contains("line_manager")) {
+                                if (userRoles.contains("linemanager")) {
                                     Button(
                                         onClick = {
                                             val intent = Intent(context, MeetingHistoryActivity::class.java).apply {
-                                                putExtra("source", "line_manager")
+                                                putExtra("source", "linemanager")
                                             }
                                             context.startActivity(intent)
                                         },
@@ -546,7 +546,7 @@ fun MeetSpaceScreen(
                                     onClick = {
                                         val source = when {
                                             userRoles.contains("admin") -> "admin"
-                                            userRoles.contains("line_manager") -> "line_manager"
+                                            userRoles.contains("linemanager") -> "linemanager"
                                             userRoles.contains("ceo") -> "ceo"
                                             else -> "unknown"
                                         }
@@ -558,9 +558,9 @@ fun MeetSpaceScreen(
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = when {
                                             userRoles.contains("admin") -> Color(0xFFDD3825) // Red for Admin
-                                            userRoles.contains("line_manager") -> Color(0xFF1FC01F) // Green for Manager
+                                            userRoles.contains("linemanager") -> Color(0xFF1FC01F) // Green for Manager
                                             userRoles.contains("ceo") -> Color(0xFF14B8D5) // Cyan for CEO
-                                            else -> Color(0xFFDD3825) // Fallback, though not expected
+                                            else -> Color(0xFFF6F4EE) // Fallback, though not expected
                                         },
                                         contentColor = Color.White
                                     ),
@@ -569,7 +569,7 @@ fun MeetSpaceScreen(
                                     Text(
                                         text = when {
                                             userRoles.contains("admin") -> "Admin Dashboard"
-                                            userRoles.contains("line_manager") -> "Manager Approval"
+                                            userRoles.contains("linemanager") -> "Manager Approval"
                                             userRoles.contains("ceo") -> "CEO Approval"
                                             else -> "" // Fallback, though not expected
                                         },

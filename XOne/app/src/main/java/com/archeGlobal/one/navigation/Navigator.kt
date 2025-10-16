@@ -107,6 +107,7 @@ interface Navigator {
     fun navigateToMedicalWithUrl(url: String)
     fun navigateToAboutUsWithUrl(url: String)
     fun openPulseLoginWithUrl(url: String)
+    fun navigateToArcheHonoursWithUrl(url: String)
     fun navigateToSmartCollateral()
 
     fun navigateToMeetSpace()

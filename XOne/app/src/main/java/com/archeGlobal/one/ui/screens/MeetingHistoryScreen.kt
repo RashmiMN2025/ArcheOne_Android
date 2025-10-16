@@ -37,6 +37,8 @@ import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 import java.text.SimpleDateFormat
 import java.util.*
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -51,6 +53,29 @@ import androidx.compose.ui.text.TextStyle
 import com.archeGlobal.one.controller.MeetingHistoryController
 import androidx.compose.foundation.lazy.items
 import com.google.gson.Gson
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.window.Dialog
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
+import com.archeGlobal.one.model.VerifyCheckInRequest
+import com.archeGlobal.one.model.VerifyCheckInResponse
+import com.archeGlobal.one.network.RetrofitClient
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.common.InputImage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
+import kotlinx.coroutines.withContext
+import retrofit2.Response
+import androidx.compose.runtime.derivedStateOf
 
 private fun truncateBookingId(bookingId: String): String {
     return if (bookingId.length > 16) {
@@ -94,9 +119,99 @@ fun MeetingHistoryScreen(
     var selectedDate by remember { mutableStateOf(Date()) }
     var isDefaultDate by remember { mutableStateOf(true) }
 
+    // QR Scanner state
+    var showQrScanner by remember { mutableStateOf(false) }
+    var selectedBookingId by remember { mutableStateOf("") }
+
     val bookings by controller.bookings.collectAsState()
     val isLoading by controller.isLoading.collectAsState()
     val errorMessage by controller.errorMessage.collectAsState()
+
+    // Filtering logic
+    val filteredBookings by remember { derivedStateOf {
+        bookings.filter { booking ->
+            // Search filter by Booking ID
+            val matchesSearch = searchQuery.isBlank() || booking.bookingId.contains(searchQuery, ignoreCase = true)
+
+            // Status filter based on meetingStatus
+            val normalizedStatus = booking.meetingStatus.lowercase()
+            val matchesStatus = when (selectedCategoryFilter) {
+                "All" -> true
+                "Approved" -> normalizedStatus.contains("approv") || normalizedStatus == "confirmed"
+                "Rejected" -> normalizedStatus == "rejected" || normalizedStatus == "canceled"
+                "Pending" -> normalizedStatus == "requested"
+                else -> true
+            }
+
+            // Date filter based on meetingStarttime
+            var matchesDate = true
+            try {
+                val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
+                val meetingDate = inputFormat.parse(booking.meetingStarttime)
+                if (meetingDate != null) {
+                    val calMeeting = Calendar.getInstance().apply { time = meetingDate }
+                    val today = Calendar.getInstance()
+                    when (selectedDateFilter) {
+                        "All" -> {}
+                        "1 Week" -> {
+                            val oneWeekAgo = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -7) }
+                            matchesDate = calMeeting.after(oneWeekAgo) && calMeeting.before(today)
+                        }
+                        "1 Month" -> {
+                            val oneMonthAgo = Calendar.getInstance().apply { add(Calendar.MONTH, -1) }
+                            matchesDate = calMeeting.after(oneMonthAgo) && calMeeting.before(today)
+                        }
+                        "Date Range" -> {
+                            val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                            val from = dateFormatter.parse(fromDate)
+                            val to = dateFormatter.parse(toDate)
+                            if (from != null && to != null) {
+                                val calFrom = Calendar.getInstance().apply {
+                                    time = from
+                                    set(Calendar.HOUR_OF_DAY, 0)
+                                    set(Calendar.MINUTE, 0)
+                                    set(Calendar.SECOND, 0)
+                                    set(Calendar.MILLISECOND, 0)
+                                }
+                                val calTo = Calendar.getInstance().apply {
+                                    time = to
+                                    set(Calendar.HOUR_OF_DAY, 23)
+                                    set(Calendar.MINUTE, 59)
+                                    set(Calendar.SECOND, 59)
+                                    set(Calendar.MILLISECOND, 999)
+                                }
+                                matchesDate = !calMeeting.before(calFrom) && !calMeeting.after(calTo)
+                            } else {
+                                matchesDate = false
+                            }
+                        }
+                        else -> {}
+                    }
+                } else {
+                    matchesDate = false
+                }
+            } catch (e: Exception) {
+                matchesDate = false
+            }
+
+            matchesSearch && matchesStatus && matchesDate
+        }
+    } }
+
+    // Camera permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showQrScanner = true
+        } else {
+            android.widget.Toast.makeText(
+                context,
+                "Camera permission is required for QR scanning",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
     FontScaleAdjusted(fontScaleAdjustment = fontAdjustment) {
         Box(
@@ -183,7 +298,7 @@ fun MeetingHistoryScreen(
                             ),
                             shape = RoundedCornerShape(12.dp),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { /* TODO: Implement search */ }),
+                            keyboardActions = KeyboardActions(onSearch = { /* Search triggered */ }),
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -314,10 +429,9 @@ fun MeetingHistoryScreen(
                                     ) {
                                         listOf(
                                             "All",
-                                            "pending",
-                                            "confirmed",
-                                            "rejected",
-                                            "canceled"
+                                            "Approved",
+                                            "Rejected",
+                                            "Pending"
                                         ).forEach { filter ->
                                             DropdownMenuItem(
                                                 text = { Text(filter) },
@@ -332,17 +446,18 @@ fun MeetingHistoryScreen(
                             }
                         }
 
-                        // Date Range Fields (shown only when Date Range is selected)
                         if (selectedDateFilter == "Date Range") {
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Date Range Fields
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // From Date Field
+                                // From Date
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "From Date",
+                                        text = "From",
                                         fontSize = 14.sp,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
@@ -357,48 +472,24 @@ fun MeetingHistoryScreen(
                                             .clickable {
                                                 isFromDatePicker = true
                                                 showDatePicker = true
-                                                selectedDate = dateFormatter.parse(fromDate) ?: Date()
-                                                Log.d("MeetSpace", "From Date field clicked")
                                             }
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.CenterStart
                                     ) {
-                                        OutlinedTextField(
-                                            value = fromDate,
-                                            onValueChange = {},
-                                            readOnly = true,
-                                            placeholder = {
-                                                Text(
-                                                    "Select From Date",
-                                                    color = Color.LightGray,
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Normal
-                                                )
-                                            },
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedBorderColor = Color.LightGray,
-                                                cursorColor = Color.Gray,
-                                                unfocusedTextColor = Color.Black,
-                                                focusedTextColor = Color.Black,
-                                                unfocusedContainerColor = Color.White,
-                                                focusedContainerColor = Color.White
-                                            ),
-                                            textStyle = TextStyle(
-                                                fontSize = 14.sp,
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Normal,
-                                                color = Color.Black
-                                            ),
-                                            shape = RoundedCornerShape(12.dp),
-                                            modifier = Modifier.fillMaxWidth(),
-                                            enabled = false // Disable direct interaction with the field
+                                        Text(
+                                            text = fromDate,
+                                            fontSize = 14.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = Color.Black
                                         )
                                     }
                                 }
 
-                                // To Date Field
+                                // To Date
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "To Date",
+                                        text = "To",
                                         fontSize = 14.sp,
                                         fontFamily = GraphikFontFamily,
                                         fontWeight = FontWeight.Medium,
@@ -413,40 +504,16 @@ fun MeetingHistoryScreen(
                                             .clickable {
                                                 isFromDatePicker = false
                                                 showDatePicker = true
-                                                selectedDate = dateFormatter.parse(toDate) ?: Date()
-                                                Log.d("MeetSpace", "To Date field clicked")
                                             }
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.CenterStart
                                     ) {
-                                        OutlinedTextField(
-                                            value = toDate,
-                                            onValueChange = {},
-                                            readOnly = true,
-                                            placeholder = {
-                                                Text(
-                                                    "Select To Date",
-                                                    color = Color.LightGray,
-                                                    fontFamily = GraphikFontFamily,
-                                                    fontWeight = FontWeight.Normal
-                                                )
-                                            },
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                unfocusedBorderColor = Color.LightGray,
-                                                focusedBorderColor = Color.LightGray,
-                                                cursorColor = Color.Gray,
-                                                unfocusedTextColor = Color.Black,
-                                                focusedTextColor = Color.Black,
-                                                unfocusedContainerColor = Color.White,
-                                                focusedContainerColor = Color.White
-                                            ),
-                                            textStyle = TextStyle(
-                                                fontSize = 14.sp,
-                                                fontFamily = GraphikFontFamily,
-                                                fontWeight = FontWeight.Normal,
-                                                color = Color.Black
-                                            ),
-                                            shape = RoundedCornerShape(12.dp),
-                                            modifier = Modifier.fillMaxWidth(),
-                                            enabled = false // Disable direct interaction with the field
+                                        Text(
+                                            text = toDate,
+                                            fontSize = 14.sp,
+                                            fontFamily = GraphikFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            color = Color.Black
                                         )
                                     }
                                 }
@@ -455,7 +522,7 @@ fun MeetingHistoryScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Original LazyColumn
+                        // LazyColumn with filtered bookings
                         if (isLoading) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator()
@@ -471,7 +538,8 @@ fun MeetingHistoryScreen(
                                     .padding(6.dp),
                                 verticalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
-                                items(bookings) { item ->
+                                items(filteredBookings) { item ->
+                                    val normalizedStatus = item.approvalStatus.lowercase()
                                     MeetingBookingCard(
                                         bookingId = truncateBookingId(item.bookingId),
                                         roomName = item.roomName.trim(),
@@ -479,7 +547,8 @@ fun MeetingHistoryScreen(
                                         meetingDate = dateFormate(item.meetingStarttime),
                                         meetingTime = "${formatTime(item.meetingStarttime)} - ${formatTime(item.meetingEndtime)}",
                                         pendingFrom = if (item.meetingType == "internal") "Admin" else "Manager/CEO",
-                                        status = item.approvalStatus,
+                                        status = item.meetingStatus,
+                                        remark = item.remark,
                                         onClick = {
                                             val intent = Intent(context, MeetingHistoryDetailActivity::class.java).apply {
                                                 putExtra("source", source)
@@ -504,10 +573,79 @@ fun MeetingHistoryScreen(
                                             }
                                             context.startActivity(intent)
                                         },
-                                        showButtons = source != "history"
+                                        onCheckIn = {
+                                            if (ContextCompat.checkSelfPermission(
+                                                    context,
+                                                    Manifest.permission.CAMERA
+                                                ) == PackageManager.PERMISSION_GRANTED
+                                            ) {
+                                                selectedBookingId = item.bookingId
+                                                showQrScanner = true
+                                            } else {
+                                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                                            }
+                                        },
+                                        onCancel = {
+                                            val intent = Intent(context, MeetingHistoryDetailActivity::class.java).apply {
+                                                putExtra("source", source)
+                                                putExtra("action", "cancel")
+                                                putExtra("booking_json", Gson().toJson(item))
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        source = source ?: "history",
+                                        meetingType = item.meetingType
                                     )
                                 }
                             }
+                        }
+
+                        // QR Scanner Dialog
+                        if (showQrScanner) {
+                            QrScannerDialog(
+                                bookingId = selectedBookingId,
+                                onDismiss = { showQrScanner = false },
+                                onQrCodeScanned = { scannedQrCode ->
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        try {
+                                            val request =
+                                                VerifyCheckInRequest(qr_code = scannedQrCode)
+                                            val response: Response<VerifyCheckInResponse> = withContext(Dispatchers.IO) {
+                                                RetrofitClient.apiService.verifyAndCheckIn(selectedBookingId, request)
+                                            }
+                                            if (response.isSuccessful) {
+                                                val body = response.body()
+                                                if (body?.status == 200 && body.data?.is_valid == true) {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Check-in successful: ${body.data.message}",
+                                                        android.widget.Toast.LENGTH_LONG
+                                                    ).show()
+                                                    showQrScanner = false
+                                                } else {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Check-in failed: ${body?.data?.message ?: "Invalid QR code"}",
+                                                        android.widget.Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
+                                            } else {
+                                                android.widget.Toast.makeText(
+                                                    context,
+                                                    "API error: HTTP ${response.code()} - ${response.message()}",
+                                                    android.widget.Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Network error: ${e.message}",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                }
+                            )
                         }
 
                         // Custom Date Picker Dialog
@@ -523,7 +661,7 @@ fun MeetingHistoryScreen(
                                             set(Calendar.SECOND, 0)
                                             set(Calendar.MILLISECOND, 0)
                                         }.timeInMillis
-                                        return utcTimeMillis >= today
+                                        return utcTimeMillis <= today
                                     }
                                 }
                             )
@@ -568,6 +706,158 @@ fun MeetingHistoryScreen(
     }
 }
 
+@Composable
+fun QrScannerDialog(
+    bookingId: String,
+    onDismiss: () -> Unit,
+    onQrCodeScanned: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var previewView by remember { mutableStateOf<PreviewView?>(null) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Scan QR Code For Check-in",
+                    fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "for Meeting ID",
+                    fontSize = 12.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = bookingId,
+                    fontSize = 14.sp,
+                    fontFamily = GraphikFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // QR Scanner Preview with matching border
+                Box(
+                    modifier = Modifier
+                        .size(250.dp)
+                        .border(2.dp, Color(0xFF4CAF50), RoundedCornerShape(18.dp))
+                        .clip(RoundedCornerShape(18.dp))
+                ) {
+                    AndroidView(
+                        factory = {
+                            PreviewView(context).apply {
+                                this.scaleType = PreviewView.ScaleType.FILL_CENTER
+                                previewView = this
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black)
+                    )
+                }
+
+                // Cancel Button
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryRed,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontSize = 16.sp,
+                        fontFamily = GraphikFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
+        // Setup CameraX and QR scanning
+        LaunchedEffect(Unit) {
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView?.surfaceProvider)
+                }
+
+                val barcodeScanner = BarcodeScanning.getClient()
+                val imageAnalysis = ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+
+                imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
+                    val mediaImage = imageProxy.image
+                    if (mediaImage != null) {
+                        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+                        barcodeScanner.process(image)
+                            .addOnSuccessListener { barcodes ->
+                                for (barcode in barcodes) {
+                                    val value = barcode.rawValue
+                                    if (value != null) {
+                                        onQrCodeScanned(value)
+                                    }
+                                }
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("QrScanner", "QR scan failed: ${e.message}")
+                            }
+                            .addOnCompleteListener {
+                                imageProxy.close()
+                            }
+                    }
+                }
+
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        CameraSelector.DEFAULT_BACK_CAMERA,
+                        preview,
+                        imageAnalysis
+                    )
+                } catch (e: Exception) {
+                    Log.e("QrScanner", "Camera binding failed: ${e.message}")
+                }
+            }, ContextCompat.getMainExecutor(context))
+        }
+    }
+}
+
 private fun dateFormate(dateString: String): String {
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
@@ -599,14 +889,34 @@ fun MeetingBookingCard(
     meetingTime: String,
     pendingFrom: String,
     status: String,
+    remark: String,
     onClick: () -> Unit,
     onApprove: () -> Unit,
     onReject: () -> Unit,
-    showButtons: Boolean = true
+    onCheckIn: () -> Unit,
+    onCancel: () -> Unit,
+    source: String,
+    meetingType: String
 ) {
-    val (backgroundColor, textColor) = when (status.lowercase()) {
-        "approved" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000))
-        "rejected" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000))
+    val normalizedStatus = status.lowercase()
+    val normalizedType = meetingType.lowercase()
+    val isInternal = normalizedType == "internal"
+    val isPending = normalizedStatus == "requested"
+    val isStatus = normalizedStatus == "approved by line manager"
+
+    val showApproveReject = when (source) {
+        "admin" -> isInternal && isPending
+        "linemanager" -> !isInternal && isPending
+        "ceo" -> !isInternal && isStatus
+        else -> false
+    }
+
+    val showCheckInCancel = source == "history" &&
+            (normalizedStatus == "approve" || normalizedStatus == "approved" || normalizedStatus == "approved by admin")
+
+    val (backgroundColor, textColor) = when (normalizedStatus) {
+        "confirmed" -> Pair(Color(0xFF008000).copy(alpha = 0.15f), Color(0xFF008000))
+        "rejected" , "canceled" -> Pair(Color(0xFFFF0000).copy(alpha = 0.15f), Color(0xFFFF0000))
         else -> Pair(Color(0xFFFFA500).copy(alpha = 0.15f), Color(0xFFFFA500))
     }
 
@@ -664,17 +974,17 @@ fun MeetingBookingCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             MeetingDetailItem(
-                icon = R.drawable.ic_location,
+                icon = R.drawable.mroomtype,
                 label = "Room",
                 value = "$roomName"
             )
             MeetingDetailItem(
-                icon = R.drawable.ic_person,
+                icon = R.drawable.person_3x,
                 label = "Host",
                 value = host
             )
             MeetingDetailItem(
-                icon = R.drawable.ic_calendar,
+                icon = R.drawable.meetcalender,
                 label = "Meeting date",
                 value = meetingDate
             )
@@ -684,15 +994,24 @@ fun MeetingBookingCard(
                 value = meetingTime
             )
             MeetingDetailItem(
-                icon = R.drawable.pending,
+                icon = R.drawable.mrrompending,
                 label = "Pending from",
                 value = pendingFrom
+            )
+            MeetingDetailItem(
+                icon = R.drawable.justification,
+                label = "Remark",
+                value = remark
+            )
+            MeetingDetailItem(
+                icon = R.drawable.checkinstatus,
+                label = "Check-in Status",
+                value = remark
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (showButtons) {
-
+            if (showApproveReject || showCheckInCancel) {
                 Divider(
                     color = Color.LightGray.copy(alpha = 0.5f),
                     thickness = 1.dp,
@@ -705,42 +1024,78 @@ fun MeetingBookingCard(
                         .padding(top = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Approve button
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(color = Color(0xFF4CAF50))
-                            .padding(vertical = 12.dp)
-                            .clickable(onClick = onApprove),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Approve",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily
-                        )
-                    }
+                    if (showApproveReject) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = Color(0xFF4CAF50))
+                                .padding(vertical = 12.dp)
+                                .clickable(onClick = onApprove),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Approve",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
 
-                    // Reject button
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(color = PrimaryRed)
-                            .padding(vertical = 12.dp)
-                            .clickable(onClick = onReject),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Reject",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            fontFamily = GraphikFontFamily
-                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = PrimaryRed)
+                                .padding(vertical = 12.dp)
+                                .clickable(onClick = onReject),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Reject",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
+                    } else if (showCheckInCancel) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = Color(0xFF14B8D5))
+                                .padding(vertical = 12.dp)
+                                .clickable(onClick = onCheckIn),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Check-in",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(color = PrimaryRed)
+                                .padding(vertical = 12.dp)
+                                .clickable(onClick = onCancel),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = GraphikFontFamily
+                            )
+                        }
                     }
                 }
             }

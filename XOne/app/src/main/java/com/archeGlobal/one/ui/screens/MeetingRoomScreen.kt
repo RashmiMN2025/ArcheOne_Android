@@ -1,6 +1,5 @@
 package com.archeGlobal.one.ui.screens
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,10 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,7 +34,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.text.TextStyle
 import coil.compose.rememberAsyncImagePainter
 import com.archeGlobal.one.R
 import com.archeGlobal.one.controller.MeetingRoomController
@@ -52,11 +46,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
-import com.archeGlobal.one.model.UserData
 import com.archeGlobal.one.network.BookingRequest
 import com.archeGlobal.one.network.BookingResponse
 import com.archeGlobal.one.network.RetrofitClient
-import com.archeGlobal.one.network.UserDetails
 import retrofit2.Response
 import androidx.compose.runtime.LaunchedEffect
 import com.archeGlobal.one.utils.UserDataManager
@@ -91,7 +83,7 @@ fun MeetingRoomScreen(
     var showAttendeesDropdown by remember { mutableStateOf(false) }
     var isSearchFieldFocused by remember { mutableStateOf(false) }
 
-    var meetingExtensionRequired by remember { mutableStateOf(false) }
+//    var meetingExtensionRequired by remember { mutableStateOf(false) }
     var refreshmentRequired by remember { mutableStateOf(false) }
     var additionalRequests by remember { mutableStateOf(false) }
 
@@ -272,7 +264,7 @@ fun MeetingRoomScreen(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         Icon(
-                                            painter = painterResource(id = android.R.drawable.ic_menu_info_details),
+                                            painter = painterResource(id = R.drawable.mroomname),
                                             contentDescription = "Room",
                                             tint = Color.Gray,
                                             modifier = Modifier.size(30.dp)
@@ -292,7 +284,7 @@ fun MeetingRoomScreen(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         Icon(
-                                            painter = painterResource(id = android.R.drawable.ic_menu_mapmode),
+                                            painter = painterResource(id = R.drawable.mroomtype),
                                             contentDescription = "Type",
                                             tint = Color.Gray,
                                             modifier = Modifier.size(30.dp)
@@ -312,7 +304,7 @@ fun MeetingRoomScreen(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         Icon(
-                                            painter = painterResource(id = android.R.drawable.ic_menu_gallery),
+                                            painter = painterResource(id = R.drawable.equipment),
                                             contentDescription = "Equipment",
                                             tint = Color.Gray,
                                             modifier = Modifier.size(30.dp)
@@ -332,7 +324,7 @@ fun MeetingRoomScreen(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Person,
+                                            painter = painterResource(id = R.drawable.capacity),
                                             contentDescription = "Capacity",
                                             tint = Color.Gray,
                                             modifier = Modifier.size(30.dp)
@@ -365,7 +357,7 @@ fun MeetingRoomScreen(
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(id = android.R.drawable.ic_menu_help),
+                                                    painter = painterResource(id = R.drawable.meethelpdesk),
                                                     contentDescription = "Helpdesk",
                                                     tint = Color.Black,
                                                     modifier = Modifier.size(24.dp)
@@ -399,7 +391,7 @@ fun MeetingRoomScreen(
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(id = android.R.drawable.ic_menu_set_as),
+                                                    painter = painterResource(id = R.drawable.panatry),
                                                     contentDescription = "Pantry",
                                                     tint = Color.Black,
                                                     modifier = Modifier.size(24.dp)
@@ -433,7 +425,7 @@ fun MeetingRoomScreen(
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
-                                                    painter = painterResource(id = android.R.drawable.ic_menu_manage),
+                                                    painter = painterResource(id = R.drawable.facility),
                                                     contentDescription = "Facility",
                                                     tint = Color.Black,
                                                     modifier = Modifier.size(24.dp)
@@ -486,7 +478,7 @@ fun MeetingRoomScreen(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.Person,
+                                                painter = painterResource(id = R.drawable.username),
                                                 contentDescription = "User",
                                                 tint = Color.Gray,
                                                 modifier = Modifier.size(24.dp)
@@ -506,7 +498,7 @@ fun MeetingRoomScreen(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.LocationOn,
+                                                painter = painterResource(id = R.drawable.meetroomlocation),
                                                 contentDescription = "Location",
                                                 tint = Color.Gray,
                                                 modifier = Modifier.size(24.dp)
@@ -531,7 +523,7 @@ fun MeetingRoomScreen(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.DateRange,
+                                                painter = painterResource(id = R.drawable.meetcalender),
                                                 contentDescription = "Date",
                                                 tint = Color.Gray,
                                                 modifier = Modifier.size(24.dp)
@@ -551,7 +543,7 @@ fun MeetingRoomScreen(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.AccessTime,
+                                                painter = painterResource(id = R.drawable.meettime),
                                                 contentDescription = "Time",
                                                 tint = Color.Gray,
                                                 modifier = Modifier.size(24.dp)
@@ -1147,7 +1139,7 @@ fun MeetingRoomScreen(
                                     if (archeEmailList.isNotEmpty()) {
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = "Selected Attendees",
+                                            text = "Arche Attendees",
                                             fontSize = 16.sp,
                                             fontFamily = GraphikFontFamily,
                                             fontWeight = FontWeight.Medium,
@@ -1249,102 +1241,6 @@ fun MeetingRoomScreen(
                             verticalArrangement = Arrangement.spacedBy(5.dp)
                         )
                         {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Meeting Extension Required?",
-                                    fontSize = 16.sp,
-                                    fontFamily = GraphikFontFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Black
-                                )
-                                Switch(
-                                    checked = meetingExtensionRequired,
-                                    onCheckedChange = { meetingExtensionRequired = it },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = Color(0xFFDD3825),
-                                        uncheckedThumbColor = Color.White,
-                                        uncheckedTrackColor = Color.LightGray
-                                    )
-                                )
-                            }
-                            if (meetingExtensionRequired) {
-                                ExposedDropdownMenuBox(
-                                    expanded = showExtensionDropdown,
-                                    onExpandedChange = { showExtensionDropdown = !showExtensionDropdown },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    OutlinedTextField(
-                                        readOnly = true,
-                                        value = if (extensionDuration.isEmpty()) "Select Duration" else extensionDuration,
-                                        onValueChange = {},
-                                        trailingIcon = {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.dropdown),
-                                                contentDescription = "Dropdown",
-                                                tint = Color.Gray,
-                                                modifier = Modifier.size(15.dp)
-                                            )
-                                        },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            unfocusedBorderColor = Color.LightGray,
-                                            focusedBorderColor = Color.LightGray,
-                                            cursorColor = Color.Gray,
-                                            unfocusedContainerColor = Color.White,
-                                            focusedContainerColor = Color.White
-                                        ),
-                                        textStyle = TextStyle(
-                                            fontFamily = GraphikFontFamily,
-                                            fontWeight = FontWeight.Normal,
-                                            color = if (extensionDuration.isEmpty()) Color.LightGray else Color.Black
-                                        ),
-                                        shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .menuAnchor()
-                                    )
-                                    ExposedDropdownMenu(
-                                        expanded = showExtensionDropdown,
-                                        onDismissRequest = { showExtensionDropdown = false },
-                                        modifier = Modifier
-                                            .exposedDropdownSize()
-                                            .background(Color.White),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
-                                        extensionOptions.forEachIndexed { index, option ->
-                                            Column {
-                                                DropdownMenuItem(
-                                                    text = {
-                                                        Text(
-                                                            text = option,
-                                                            color = Color.Black,
-                                                            fontFamily = GraphikFontFamily,
-                                                            fontWeight = FontWeight.Normal
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        extensionDuration = option
-                                                        showExtensionDropdown = false
-                                                    }
-                                                )
-                                                // Add divider except for the last item
-                                                if (index < extensionOptions.size - 1) {
-                                                    Divider(
-                                                        color = Color.LightGray,
-                                                        thickness = 1.dp,
-                                                        modifier = Modifier.padding(horizontal = 8.dp)
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1453,13 +1349,13 @@ fun MeetingRoomScreen(
                             // Submit Button
                             Button(
                                 onClick = {
-                                    val meetingExtension = if (meetingExtensionRequired) "yes" else "no"
+//                                    val meetingExtension = if (meetingExtensionRequired) "yes" else "no"
                                     val refreshmentReq = if (refreshmentRequired) "yes" else "no"
 
                                     var additional = additionalDetails
-                                    if (meetingExtensionRequired && extensionDuration.isNotBlank()) {
-                                        additional = "Extension: $extensionDuration\n$additional"
-                                    }
+//                                    if (meetingExtensionRequired && extensionDuration.isNotBlank()) {
+//                                        additional = "Extension: $extensionDuration\n$additional"
+//                                    }
                                     if (refreshmentRequired && refreshmentDetails.isNotBlank()) {
                                         additional = "Refreshment: $refreshmentDetails\n$additional"
                                     }
@@ -1490,7 +1386,7 @@ fun MeetingRoomScreen(
                                         business_justification = business,
                                         client_name = client,
                                         project_name = project,
-                                        meeting_extension = meetingExtension,
+//                                        meeting_extension = meetingExtension,
                                         refreshment_required = refreshmentReq,
                                         additional_request = additional,
                                         line_manager_email = lineManager
@@ -1517,7 +1413,7 @@ fun MeetingRoomScreen(
                                                 archeEmailList = emptyList()
                                                 showAttendeesDropdown = false
                                                 isSearchFieldFocused = false
-                                                meetingExtensionRequired = false
+//                                                meetingExtensionRequired = false
                                                 refreshmentRequired = false
                                                 additionalRequests = false
                                                 extensionDuration = ""

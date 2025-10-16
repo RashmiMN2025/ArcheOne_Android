@@ -31,6 +31,8 @@ import com.archeGlobal.one.model.TravelRequestResponse
 import com.archeGlobal.one.model.TravelRequestSubmission
 import com.archeGlobal.one.model.UpdateInventoryItemRequest
 import com.archeGlobal.one.model.UpdateInventoryItemResponse
+import com.archeGlobal.one.model.VerifyCheckInRequest
+import com.archeGlobal.one.model.VerifyCheckInResponse
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -190,6 +192,12 @@ interface ApiService {
         @Path("booking_id") bookingId: String,
         @Body request: MeetingApprovalRequest
     ): Response<MeetingApprovalResponse>
+
+    @POST("meeting/v1/qr_code/verify_and_checkin/{booking_id}")
+    suspend fun verifyAndCheckIn(
+        @Path("booking_id") bookingId: String,
+        @Body request: VerifyCheckInRequest
+    ): Response<VerifyCheckInResponse>
 }
 
 data class FeedbackRequest(
@@ -564,7 +572,7 @@ data class BookingRequest(
     @SerializedName("business_justification") val business_justification: String,
     @SerializedName("client_name") val client_name: String,
     @SerializedName("project_name") val project_name: String,
-    @SerializedName("meeting_extension") val meeting_extension: String,
+//    @SerializedName("meeting_extension") val meeting_extension: String,
     @SerializedName("refreshment_required") val refreshment_required: String,
     @SerializedName("additional_request") val additional_request: String,
     @SerializedName("approval_status") val approval_status: String = "",

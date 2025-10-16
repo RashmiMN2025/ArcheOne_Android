@@ -126,4 +126,15 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //QR Scanner
+    implementation("androidx.camera:camera-core:1.5.1")
+    implementation("androidx.camera:camera-camera2:1.5.1")
+    implementation("androidx.camera:camera-lifecycle:1.5.1")
+    implementation("androidx.camera:camera-view:1.5.1")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("com.squareup.retrofit2:retrofit:2.x.x")
+    implementation("com.squareup.retrofit2:converter-gson:2.x.x")
+
+    implementation("androidx.compose.ui:ui-tooling-preview:1.9.3")
 }

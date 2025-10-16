@@ -1458,6 +1458,7 @@ private fun formatServiceTitle(title: String): String {
         "Idea Vault", "IdeaVault" -> "IdeaVault"
         "Smart Collateral" -> "Smart\nCollateral"
         "MeetSpace" -> "MeetSpace"
+        "ArcheHonours" -> "ArcheHonours"
         else -> {
             // For any other multi-word titles, always split at a space
             if (title.contains(" ")) {
@@ -1607,7 +1608,7 @@ private fun AppIcon(
     Box(modifier = modifier) {
         // Check if it's a default app
         when (title) {
-            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart", "Smart Collateral", "MeetSpace",
+            "My Documents", "MyDocuments", "ID", "Asset", "Business Card", "Leave", "DeskCart", "Smart Collateral", "MeetSpace", "ArcheHonours",
             "eLearning", "My Career", "Timesheet", "TimeSheet", "Goal Setting/KPI", "Admin", "Vision",
             "MyPay", "SAP", "Ample", "SOS", "Holiday Calendar", "Calendar", "About Us", "Communique", "Core Values", "CoreValues", "Greetings", "Medical", "Blogs",
             "Locations", "TravelDesk", "Policy", "New Onboarding", "Profile", "Profile Connect", "ZenTask", "Password Reset", "Know Your Org", "Arche Odyssey", "ZingHR", "IdeaVault", "Pulse", "HelpDesk" -> {
@@ -1659,6 +1660,7 @@ private fun AppIcon(
                                 "helpdesk" -> R.drawable.helpdesk
                                 "smartcollateral" -> R.drawable.smart
                                 "meetspace" -> R.drawable.meeting
+                                "archehonours" -> R.drawable.archehonours
                                 else -> R.drawable.mydocuments
                             }
                         ),

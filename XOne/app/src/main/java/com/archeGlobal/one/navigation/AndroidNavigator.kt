@@ -694,6 +694,10 @@ class AndroidNavigator(
         openWebView(url, "Pulse")
     }
 
+    override fun navigateToArcheHonoursWithUrl(url: String) {
+        openWebView(url, "Arche Honours")
+    }
+
     override fun navigateToSmartCollateral() {
         val intent = Intent(activity, SmartCollateralActivity::class.java)
         startActivity(intent)

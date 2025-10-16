@@ -12,9 +12,9 @@ class MeetingHistoryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val source = intent.getStringExtra("source")
         val userRole = when (source) {
-            "history" -> "user"
+            "history" -> "host"
             "admin" -> "admin"
-            "line_manager" -> "line_manager"
+            "linemanager" -> "linemanager"
             "ceo" -> "ceo"
             else -> "user"
         }

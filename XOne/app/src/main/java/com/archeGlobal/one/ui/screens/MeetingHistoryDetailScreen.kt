@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.archeGlobal.one.R
@@ -36,6 +37,7 @@ import com.archeGlobal.one.ui.theme.WelcomeBackgroundTop
 import com.archeGlobal.one.utils.FontScaleAdjusted
 import com.archeGlobal.one.utils.getDeviceSpecificFontAdjustment
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -61,36 +63,44 @@ fun MeetingHistoryDetailScreen(
     val fontAdjustment = remember { getDeviceSpecificFontAdjustment(context) }
     var enterRemark by remember { mutableStateOf("") }
 
-    val showRemarkAndButton = action == "approve" || action == "reject"
+    val showRemarkAndButton = action == "approve" || action == "reject" || action == "cancel"
     val buttonText = if (action == "approve") "Approve" else if (action == "reject") "Reject" else "Cancel"
     val buttonColor = if (action == "approve") Color(0xFF4CAF50) else if (action == "reject") Color(0xFFDD3825) else Color(0xFFDD3825)
 
     val archeAttendeesList = remember(booking) {
-        if (booking != null) {
+        if (booking != null && !booking.archeAttendees.isNullOrBlank()) {
             try {
+                // Try parsing as JSON array
                 Gson().fromJson(booking.archeAttendees, Array<String>::class.java).toList()
-            } catch (e: Exception) {
-                emptyList()
+            } catch (e: JsonSyntaxException) {
+                // If JSON parsing fails, treat as comma-separated string
+                booking.archeAttendees.split(",").map { it.trim() }.filter { it.isNotEmpty() }
             }
-        } else emptyList()
+        } else {
+            emptyList()
+        }
     }
 
     val guestAttendeesList = remember(booking) {
-        if (booking != null) {
+        if (booking != null && !booking.guestAttendees.isNullOrBlank()) {
             try {
+                // Try parsing as JSON array
                 Gson().fromJson(booking.guestAttendees, Array<String>::class.java).toList()
-            } catch (e: Exception) {
-                emptyList()
+            } catch (e: JsonSyntaxException) {
+                // If JSON parsing fails, treat as comma-separated string
+                booking.guestAttendees.split(",").map { it.trim() }.filter { it.isNotEmpty() }
             }
-        } else emptyList()
+        } else {
+            emptyList()
+        }
     }
 
     val pendingFrom = if (booking?.meetingType == "internal") "Admin" else "Manager/CEO"
 
-    val status = booking?.approvalStatus ?: "Unknown"
+    val status = booking?.meetingStatus ?: "Unknown"
     val (statusBackgroundColor, statusTextColor) = when (status.lowercase()) {
-        "approved" -> Color(0xFF008000).copy(alpha = 0.15f) to Color(0xFF008000)
-        "rejected" -> Color(0xFFFF0000).copy(alpha = 0.15f) to Color(0xFFFF0000)
+        "confirmed" -> Color(0xFF008000).copy(alpha = 0.15f) to Color(0xFF008000)
+        "rejected" , "canceled" -> Color(0xFFFF0000).copy(alpha = 0.15f) to Color(0xFFFF0000)
         else -> Color(0xFFFFA500).copy(alpha = 0.15f) to Color(0xFFFFA500)
     }
 
@@ -211,57 +221,57 @@ fun MeetingHistoryDetailScreen(
                                     verticalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.mroomtype,
                                         label = "Room",
                                         value = booking?.roomName ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.host,
                                         label = "Host",
-                                        value = ""
+                                        value = booking?.hostEmail ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.meetcalender,
                                         label = "Meeting Date",
                                         value = dateFormate(booking?.meetingStarttime ?: "")
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.meettime,
                                         label = "Meeting Time",
                                         value = "${formatTime(booking?.meetingStarttime ?: "")} - ${formatTime(booking?.meetingEndtime ?: "")}"
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.meetingtype,
                                         label = "Meeting Type",
                                         value = booking?.meetingType ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.archeattendees,
                                         label = "Arche Attendees",
                                         value = archeAttendeesList.joinToString(", ")
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.guestattendees,
                                         label = "Guest Attendees",
                                         value = guestAttendeesList.joinToString(", ")
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.justification,
                                         label = "Justification",
                                         value = booking?.businessJustification ?: ""
                                     )
+//                                    MeetingDetailRow(
+//                                        icon = R.drawable.mappin_and_ellipse,
+//                                        label = "Extension",
+//                                        value = booking?.meetingExtension ?: ""
+//                                    )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
-                                        label = "Extension",
-                                        value = booking?.meetingExtension ?: ""
-                                    )
-                                    MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.panatry,
                                         label = "Refreshment",
                                         value = booking?.refreshmentRequired ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.mappin_and_ellipse,
+                                        icon = R.drawable.additionalrequest,
                                         label = "Additional Request",
                                         value = booking?.additionalRequest ?: ""
                                     )
@@ -281,8 +291,18 @@ fun MeetingHistoryDetailScreen(
                                         value = booking?.projectName ?: ""
                                     )
                                     MeetingDetailRow(
-                                        icon = R.drawable.pending,  // Adjust icon
+                                        icon = R.drawable.mrrompending,  // Adjust icon
                                         label = "Pending from",
+                                        value = pendingFrom
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.justification,  // Adjust icon
+                                        label = "Remark",
+                                        value = booking?.remark ?: ""
+                                    )
+                                    MeetingDetailRow(
+                                        icon = R.drawable.checkinstatus,  // Adjust icon
+                                        label = "Check-in Status",
                                         value = pendingFrom
                                     )
                                 }
@@ -329,7 +349,7 @@ fun MeetingHistoryDetailScreen(
                                                     val userRole = when (source) {
                                                         "history" -> "user"
                                                         "admin" -> "admin"
-                                                        "line_manager" -> "line_manager"
+                                                        "linemanager" -> "linemanager"
                                                         "ceo" -> "ceo"
                                                         else -> "user"
                                                     }
@@ -417,14 +437,16 @@ fun MeetingDetailRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 0.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 2.dp),
+        verticalAlignment = Alignment.Top
     ) {
         Icon(
             painter = painterResource(id = icon),
             contentDescription = label,
             tint = Color.Gray,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier
+                .size(20.dp)
+                .padding(top = 2.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
@@ -433,15 +455,22 @@ fun MeetingDetailRow(
             fontFamily = GraphikFontFamily,
             color = Color.Gray,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(0.4f)
+                .padding(top = 2.dp)
         )
         Text(
             text = value,
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontFamily = GraphikFontFamily,
             fontWeight = FontWeight.Normal,
             color = Color.Black,
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(0.6f)
+                .padding(end = 8.dp)
         )
     }
 }

@@ -108,3 +108,38 @@ data class MeetingApprovalResponse(
     val status: Int,
     val message: String
 )
+
+data class VerifyCheckInRequest(
+    @SerializedName("qr_code")
+    val qr_code: String
+)
+
+data class VerifyCheckInResponse(
+    val status: Int,
+    val data: VerifyData?
+)
+
+data class VerifyData(
+    @SerializedName("booking_id")
+    val booking_id: String,
+    @SerializedName("is_valid")
+    val is_valid: Boolean,
+    @SerializedName("verification_timestamp")
+    val verification_timestamp: String,
+    val message: String,
+    @SerializedName("qr_data")
+    val qr_data: QrData
+)
+
+data class QrData(
+    @SerializedName("booking_id")
+    val booking_id: String,
+    @SerializedName("room_id")
+    val room_id: String,
+    @SerializedName("qr_token")
+    val qr_token: String,
+    @SerializedName("meeting_starttime")
+    val meeting_starttime: String,
+    @SerializedName("meeting_endtime")
+    val meeting_endtime: String
+)
