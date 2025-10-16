@@ -33,7 +33,7 @@ class MeetingRoomController(private val context: Context) {
             _isLoadingSuggestions.value = true
             _errorMessage.value = null
             try {
-                val response: Response<SuggestUsersResponse> = RetrofitClient.apiService.suggestUsers(name)
+                val response: Response<SuggestUsersResponse> = RetrofitClient.apiService.suggestUser(name)
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null && body.isNotEmpty()) {

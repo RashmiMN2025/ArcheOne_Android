@@ -246,7 +246,12 @@ interface ApiService {
     suspend fun getAvailableRooms(@Body request: AvailableRoomsRequest): Response<AvailableRoomsResponse>
 
     @GET("suggest-users")
-    suspend fun suggestUsers(@Query("name") name: String): Response<SuggestUsersResponse>
+    suspend fun suggestUser(@Query("name") name: String): Response<SuggestUsersResponse>
+
+    @GET("suggest-users")
+    fun suggestUsers(
+        @retrofit2.http.Query("name") name: String,
+    ): Call<List<SuggestedUser>>
 
     @POST("/meeting/v1/request_booking")
     suspend fun requestBooking(@Body request: BookingRequest): Response<BookingResponse>
@@ -282,10 +287,7 @@ interface ApiService {
         @Body request: EmployeeSearchRequest,
     ): Call<EmployeeSearchResponse>
 
-    @GET("suggest-users")
-    fun suggestUsers(
-        @retrofit2.http.Query("name") name: String,
-    ): Call<List<SuggestedUser>>
+
 
     // V2 Travel APIs
     @POST("travel/v2/approval-history-count")

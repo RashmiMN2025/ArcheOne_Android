@@ -64,14 +64,11 @@ import java.util.Calendar
 import java.util.Date
 import kotlin.math.cos
 import kotlin.math.sin
-import android.content.Intent
-import android.widget.Toast
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.filled.History
 import com.archeGlobal.one.MeetingHistoryActivity
-import com.archeGlobal.one.MeetingRoomListActivity
 import com.archeGlobal.one.ui.theme.PrimaryRed
 
 @OptIn(ExperimentalMaterial3Api::class)
